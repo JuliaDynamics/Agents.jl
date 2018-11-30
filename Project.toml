@@ -1,0 +1,10 @@
+authors = ["Ali Rezaee <arv.kavir@gmail.com>"]
+name = "Agents"
+uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+version = "0.1.0"
+
+[deps]
+
+
+[compat]
+julia = "1.0"
