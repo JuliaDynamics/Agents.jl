@@ -10,6 +10,5 @@ end
 """
 abstract type AbstractAgent end
 
-function step(a::AbstractAgent, m::Model)
-  
-end
+# function step(a::AbstractAgent, m::AbstractModel)
+# end
