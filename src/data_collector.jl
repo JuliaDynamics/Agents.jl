@@ -1,3 +1,4 @@
+# collect data with these specifications: https://mesa.readthedocs.io/en/master/tutorials/intro_tutorial.html#collecting-data
 
 """
     agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Function})
@@ -59,13 +60,14 @@ Plots the agents_data_complete() results in your browser.
 
 You can add more plot types by adding more if statements in the function.
 """
-function agents_plots_complete(property_plot::Array{Tuple{Symbol,Symbol}}, model::AbstractModel)
+function agents_plots_complete(property_plot::Array{Tuple{Symbol}}, model::AbstractModel)
   properties = [i[1] for i in property_plot]
   data = agents_data_complete(properties, model)
   for (property, pt) in property_plot
     if pt == :hist
       # data |> @vlplot(:bar, x={property, bin=true}, y="count()") # This is a bug and doesn't work
       data |> @vlplot(:bar, x=property, y="count()") # this is temporary until the above bug is fixed
+      save("histogram.pdf")
     end
   end
 end

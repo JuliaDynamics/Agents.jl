@@ -14,21 +14,32 @@ Despite its simplicity, this model yields results that are often unexpected to t
 
 mutable struct MyAgent <: AbstractAgent
   id::Integer
+  pos::Tuple{Integer, Integer, Integer}  # x,y,z coords
   wealth::Integer
 end
 
 # 2 define a model
 
-mutable struct MyModel4 <: AbstractModel
-  grid
+mutable struct MyModel <: AbstractModel
+  grid::AbstractGrid
   agents::Array{AbstractAgent}  # a list of agents
   scheduler::Function
 end
 
-# 2.1 instantiate the model
-mygrid = grid2D(50, 50)
-agents = [MyAgent(i, 1) for i in 1:100]
-model = MyModel4(mygrid, agents, random_activation)
+# 2.1 define a grid
+
+mutable struct MyGrid <: AbstractGrid
+  dimensions::Tuple{Integer, Integer, Integer}
+  grid
+  agent_positions::Array  # an array of arrays for each grid node
+end
+
+# 2.2 instantiate the model
+agents = [MyAgent(i, (1,1,1), 1) for i in 1:100]
+griddims = (5, 5, 1)
+agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
+mygrid = MyGrid(griddims, grid(griddims), agent_positions)
+model = MyModel(mygrid, agents, random_activation)
 
 # 3 define what the agent does at each step
 
@@ -42,14 +53,38 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
   end
 end
 
-# Run the model 10 steps (only agent activations)
+# 4. Run the model 10 steps (only agent activations)
 step!(agent_step!, model, 10)
 
-# Plot some model results
+# 5. Plot some model results
 
-agents_plots_complete([:wealth, :hist], model)
+agents_plots_complete([(:wealth, :hist)], model)
 
-# you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument. TODO
+# 6. you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument. TODO
 
 
-# TODO: run replicates of the model
+# 7. TODO: run replicates of the model
+
+# 8. You may add agents to the grid
+# add agents to random positions. This update the `agent_positions` field of `model.grid`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
+for agent in model.agents
+  add_agent_to_grid!(agent, model)
+end
+
+# Now we need to add to the agents’ behaviors, letting them move around and only give money to other agents in the same cell.
+function agent_step!(agent::AbstractAgent, model::AbstractModel)
+  if agent.wealth == 0
+    return
+  else
+    available_agents = get_node_contents(agent, model)
+    agent2id = rand(available_agents)
+    agent.wealth -= 1
+    agent2 = [i for i in model.agents if i.id == agent2id][1]
+    agent2.wealth += 1
+    # now move
+    neighboring_nodes = node_neighbors(agent, model)
+    move_agent_on_grid!(agent, rand(neighboring_nodes), model)
+  end
+end
+
+step!(agent_step!, model, 10)
