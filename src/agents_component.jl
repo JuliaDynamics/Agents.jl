@@ -9,6 +9,3 @@ mutable struct MyAgent <: AbstractAgents
 end
 """
 abstract type AbstractAgent end
-
-# function step(a::AbstractAgent, m::AbstractModel)
-# end
