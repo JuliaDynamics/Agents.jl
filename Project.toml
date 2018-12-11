@@ -5,8 +5,11 @@ version = "0.1.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataVoyager = "5721bf48-af8e-5845-8445-c9e18126e773"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 VegaLite = "112f6efa-9a02-5b7d-90c0-432ed331239a"
 
 [compat]

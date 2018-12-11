@@ -2,8 +2,9 @@
 """
 Update the agents as they have been added to the schedules
 """
-function as_added()
-  #TODO
+function as_added(model::AbstractModel)
+  agent_ids = [i.id for i in model.agents]
+  return sortperm(agent_ids)
 end
 
 """

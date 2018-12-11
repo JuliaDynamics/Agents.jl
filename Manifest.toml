@@ -39,9 +39,9 @@ version = "0.5.6"
 
 [[CategoricalArrays]]
 deps = ["Compat", "Future", "Missings", "Printf", "Reexport", "Requires"]
-git-tree-sha1 = "11419d157ab75a54a8af63315e7a279a593971bc"
+git-tree-sha1 = "94d16e77dfacc59f6d6c1361866906dbb65b6f6b"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "0.5.1"
+version = "0.5.2"
 
 [[CodecZlib]]
 deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
@@ -91,6 +91,12 @@ git-tree-sha1 = "4fedccda7e5111354c7dcc832c7da83ff7258765"
 uuid = "e7dc6d0d-1eca-5fa6-8ad6-5aecde8b7ea5"
 version = "0.4.5"
 
+[[DataVoyager]]
+deps = ["DataValues", "Electron", "IterableTables", "IteratorInterfaceExtensions", "JSON", "TableTraits", "Test", "URIParser", "VegaLite"]
+git-tree-sha1 = "1d2844192be173ce729c196649c08d0692a4442b"
+uuid = "5721bf48-af8e-5845-8445-c9e18126e773"
+version = "0.3.1"
+
 [[Dates]]
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -108,6 +114,12 @@ deps = ["Distributed", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", 
 git-tree-sha1 = "c24e9b6500c037673f0241a2783472b8c3d080c7"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
 version = "0.16.4"
+
+[[Electron]]
+deps = ["Base64", "JSON", "Sockets", "Test", "URIParser"]
+git-tree-sha1 = "edf977fbc9aadeb330084732d3b8c279ca8af787"
+uuid = "a1bb12fb-d4d1-54b4-b10a-ee7951ef7ad3"
+version = "0.3.0"
 
 [[FileIO]]
 deps = ["Pkg", "Random", "Test"]
@@ -273,9 +285,9 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[QuadGK]]
 deps = ["DataStructures", "LinearAlgebra", "Test"]
-git-tree-sha1 = "7e8dff9c205f36eceaf6e62a43ff851637ca45fc"
+git-tree-sha1 = "3ce467a8e76c6030d4c3786e7d3a73442017cdc0"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.0.2"
+version = "2.0.3"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]

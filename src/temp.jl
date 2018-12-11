@@ -64,9 +64,7 @@ step!(agent_step!, model, 10)
 # step!(agent_step::Function, model_step::Function, model::AbstractModel, repeat::Integer)
 
 
-# 7. TODO: run replicates of the model
-
-# 8. You may add agents to the grid
+# 7. You may add agents to the grid
 # add agents to random positions. This update the `agent_positions` field of `model.grid`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
 for agent in model.agents
   add_agent_to_grid!(agent, model)
@@ -90,7 +88,7 @@ end
 
 step!(agent_step!, model, 10)
 
-# 9. collect data
+# 8. collect data
 
 model_step!(model::AbstractModel) = return;  # a dummy model step
 properties = [:wealth]
@@ -99,5 +97,13 @@ steps_to_collect_data = collect(1:10)
 data = step!(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data)
 data = step!(agent_step!, model_step!, model, 10, properties, steps_to_collect_data)
 
-# explore data visually
-explore_data(data)
+# 9. explore data visually
+visualize_data(data)
+
+# 10. Running batch
+data = batchrunner(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data, 10)
+
+###########
+### END ###
+###########
+

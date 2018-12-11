@@ -24,6 +24,6 @@ function agents_plots_complete(property_plot::Array, model::AbstractModel)
 end
 
 
-function explore_data(data::DataFrame)
+function visualize_data(data::DataFrame)
   v = Voyager(data)
 end

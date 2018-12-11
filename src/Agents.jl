@@ -1,5 +1,7 @@
 module Agents
 
+export step!, AbstractModel, AbstractAgent, AbstractGrid, batchrunner, data_collector, grid, gridsize, move_agent_on_grid!, add_agent_to_grid!, coord_to_vertex, vertex_to_coord, get_node_contents, node_neighbors, nagents, return_activation_order, random_activation, as_added, visualize_data
+
 using LightGraphs
 # using Distributions
 using DataFrames
@@ -16,7 +18,5 @@ include("scheduler.jl")
 include("data_collector.jl")
 include("batch_runner.jl")
 include("visualization.jl")
-
-# greet() = print("Hello World!")
 
 end # module
