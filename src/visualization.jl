@@ -27,3 +27,5 @@ end
 function visualize_data(data::DataFrame)
   v = Voyager(data)
 end
+
+# TODO: visualize grids and networks

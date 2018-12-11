@@ -2,11 +2,14 @@
 
 """
 An abstract grid type. Your grid type should have the following fields: `dimensions` (Tuple{Integer, Integer, Integer}), agent_positions (Array{Array{Integer}}), and `grid`.
+
+`agent_positions` should always be a list of lists that accept `Integers`, i.e. agent ids.
 """
 abstract type AbstractGrid end
 
 # TODO: Continuous space where each agent can have an arbitrary position.
-# TODO: Hexagonal Grid: Extends Grid to handle hexagonal neighbors.
+# TODO: Hexagonal Grid: Extends Grid to handle hexagonal neighbors. This is the triangle grid where ever other node is removed
+# TODO: write functions to add and move agents on irregular networks
 
 function grid0D() <: AbstractSpace
 end
@@ -126,9 +129,9 @@ function grid2D_triangles(n::Integer, m::Integer; periodic=false)
 end
 
 """
-    grid(x::Ingeter, y::Integer, z::Integer)
+    grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
 
-Return a grid based on its size.
+Return a grid based on its dimensions.
 """
 function grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
   if x < 1 || y < 1 || z < 1
@@ -152,6 +155,11 @@ function grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false
   return g
 end
 
+"""
+    grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
+
+Return a grid based on its dimensions.
+"""
 function grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
   grid(dims[1], dims[2], dims[3], periodic, triangle)
 end

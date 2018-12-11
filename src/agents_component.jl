@@ -11,6 +11,6 @@ mutable struct MyAgent <: AbstractAgents
 end
 ```
 
-Agents should have an id.
+Agents should have an `id` and a `pos` (position) field. If your space is a grid, the position should accept a `Tuple{Integer, Integer, Integer}` representing x, y, z coordinates. Your grid does not have to be 3D, and can keep `z=1`.
 """
 abstract type AbstractAgent end
