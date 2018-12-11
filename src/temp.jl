@@ -107,3 +107,83 @@ data = batchrunner(agent_step!, model_step!, model, 10, properties, aggregators,
 ### END ###
 ###########
 
+#####################################
+### Schelling's segregation model ###
+#####################################
+
+#=
+
+# Schelling Segregation Model
+
+## Summary
+
+The Schelling segregation model is a classic agent-based model, demonstrating how even a mild preference for similar neighbors can lead to a much higher degree of segregation than we would intuitively expect. The model consists of agents on a square grid, where each grid cell can contain at most one agent. Agents come in two colors: red and blue. They are happy if a certain number of their eight possible neighbors are of the same color, and unhappy otherwise. Unhappy agents will pick a random empty cell to move to each step, until they are happy. The model keeps running until there are no unhappy agents.
+By default, the number of similar neighbors the agents need to be happy is set to 3. That means the agents would be perfectly happy with a majority of their neighbors being of a different color (e.g. a Blue agent would be happy with five Red neighbors and three Blue ones). Despite this, the model consistently leads to a high degree of segregation, with most agents ending up with no neighbors of a different color.
+=#
+
+# Create agent, model, and grid types
+mutable struct SchellingAgent3 <: AbstractAgent
+  id::Integer
+  pos::Tuple{Integer, Integer, Integer}
+  mood::Bool # true is happy and false is unhappy
+  ethnicity::Integer  # type of agent
+end
+
+mutable struct SchellingModel <: AbstractModel
+  grid::AbstractGrid
+  agents::Array{AbstractAgent}  # a list of agents
+  scheduler::Function
+end
+
+mutable struct MyGrid <: AbstractGrid
+  dimensions::Tuple{Integer, Integer, Integer}
+  grid
+  agent_positions::Array  # an array of arrays for each grid node
+end
+
+# initialize the model
+agents = vcat([SchellingAgent3(i, (1,1,1), false, 0) for i in 1:160], [SchellingAgent3(i, (1,1,1), false, 1) for i in 161:320])
+griddims = (20, 20, 1)
+agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
+mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)
+model = SchellingModel(mygrid, agents, random_activation)
+
+# randomly distribute the agents on the grid
+for agent in model.agents
+  add_agent_to_grid_single!(agent, model)
+end
+
+# let them move
+function agent_step!(agent, model)
+  if agent.mood == true
+    return
+  end
+  neighbor_cells = node_neighbors(agent, model)
+  same = 0
+  for nn in neighbor_cells
+    nsid = get_node_contents(nn, model)
+    if length(nsid) == 0
+      continue
+    else
+      nsid = nsid[1]
+    end
+    ns = model.agents[nsid].ethnicity
+    if ns == agent.ethnicity
+      same += 1
+    end
+  end
+  if same >= 5
+    agent.mood = true
+  else
+    agent.mood = true
+    # move
+    move_agent_on_grid_single!(agent, model)
+  end
+end
+
+step!(agent_step!, model)
+
+###########
+### END ###
+###########
+
