@@ -31,16 +31,16 @@ end
 
 Return a grid based on its size.
 """
-function grid(x::Integer, y::Integer, z::Integer)
+function grid(x::Integer, y::Integer, z::Integer; periodic=false)
   if x < 1 || y < 1 || z < 1
     throw("x, y, or z can be minimum 1!")
   end
   if x + y + z == 1
     g = grid0D()
   elseif x > 1 && y == 1 && z == 1
-    g = grid1D(x)
+    g = grid1D(x, periodic=periodic)
   elseif x > 1 && y > 1 && z == 1
-    g = grid2D(x, y)
+    g = grid2D(x, y, periodic=periodic)
   elseif x > 1 && y > 1 && z > 1
     g = grid3D(x, y, z)
   else

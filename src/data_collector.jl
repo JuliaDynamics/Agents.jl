@@ -1,5 +1,3 @@
-# collect data with these specifications: https://mesa.readthedocs.io/en/master/tutorials/intro_tutorial.html#collecting-data
-
 """
     agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Function})
 
@@ -7,12 +5,13 @@ Collect data from a `property` of agents (a `fieldname`) and apply `aggregators`
 
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
 
-TODO
+TODO (BUG) aggregators type will not be Array{Function} if there is only one element in the array.
 """
-function agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Function}, model::AbstractModel)
-  output = Array{Real}(undef, length(properties) * length(aggregators))
+function agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Function}, model::AbstractModel; step=1)
+  output = Array{Real}(undef, length(properties) * length(aggregators) + 1)
+  output[1] = step
   agentslen = nagents(model)
-  counter = 1
+  counter = 2
   for fn in properties
     if typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
@@ -24,8 +23,10 @@ function agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Func
       counter += 1
     end
   end
-  return output
+  colnames = hcat(["step"], [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)])
+  return output, colnames
 end
+
 
 """
     agents_data_complete(properties::Array{Symbol}, model::AbstractModel)
@@ -34,7 +35,7 @@ Collect data from a `property` of agents (a `fieldname`) into a dataframe.
 
 If a fieldname of agents returns an array, this will use the `mean` of the array
 """
-function agents_data_complete(properties::Array{Symbol}, model::AbstractModel)
+function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; step=1)
   # colnames = [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)]
   dd = DataFrame()
   agentslen = nagents(model)
@@ -44,30 +45,33 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel)
     else
       temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
     end
-    dd[fn] = temparray
+    dd[:id] = [i.id for i in model.agents]
+    fieldname = Symbol(join([string(fn), step], "_"))
+    dd[fieldname] = temparray
   end
   return dd
 end
 
-"""
-    agents_plots_complete(property_plot::Array{Tuple}, model::AbstractModel)
+function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+  d = agents_data_per_step(properties, aggregators, model, step=step)
+  dict = Dict(d[2][i] => d[1][i] for i in 1:length(d[1]))
+  df = DataFrame(dict)
+  return df
+end
 
-Plots the agents_data_complete() results in your browser.
+function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+  d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
+  push!(df, d)
+  return df
+end
 
-# Parameters
+function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+  df = agents_data_complete(properties, model, step=step)
+  return df
+end
 
-* property_plot: An array of tuples. The first element of the tuple is the agent property you would like to plot (as a symbol). The second element of the tuple is the type of plot you want on that property (as a symbol). Example: [(:wealth, :hist)]. Available plot types: :hist.
-
-You can add more plot types by adding more if statements in the function.
-"""
-function agents_plots_complete(property_plot::Array{Tuple{Symbol}}, model::AbstractModel)
-  properties = [i[1] for i in property_plot]
-  data = agents_data_complete(properties, model)
-  for (property, pt) in property_plot
-    if pt == :hist
-      # data |> @vlplot(:bar, x={property, bin=true}, y="count()") # This is a bug and doesn't work
-      data |> @vlplot(:bar, x=property, y="count()") # this is temporary until the above bug is fixed
-      save("histogram.pdf")
-    end
-  end
+function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+  d = agents_data_complete(properties, model, step=step)
+  df = join(df, d, on=:id, kind=:outer)
+  return df
 end

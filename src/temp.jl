@@ -58,9 +58,10 @@ step!(agent_step!, model, 10)
 
 # 5. Plot some model results
 
-agents_plots_complete([(:wealth, :hist)], model)
+# agents_plots_complete([(:wealth, :hist)], model)  # TODO: VegaLite does not show the plot
 
-# 6. you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument. TODO
+# 6. you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument.
+# step!(agent_step::Function, model_step::Function, model::AbstractModel, repeat::Integer)
 
 
 # 7. TODO: run replicates of the model
@@ -88,3 +89,15 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
 end
 
 step!(agent_step!, model, 10)
+
+# 9. collect data
+
+model_step!(model::AbstractModel) = return;  # a dummy model step
+properties = [:wealth]
+aggregators = [StatsBase.mean, StatsBase.median, StatsBase.std]
+steps_to_collect_data = collect(1:10)
+data = step!(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data)
+data = step!(agent_step!, model_step!, model, 10, properties, steps_to_collect_data)
+
+# explore data visually
+explore_data(data)
