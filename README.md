@@ -1,5 +1,12 @@
 # Agents: agent-based modeling in Julia
 
-Agents is inspired by [Mesa](https://github.com/projectmesa/mesa), an agent-based modeling framework for Python.
+Agents.jl is a [Julia](https://julialang.org/) framework for an agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
 
-It allows users to quickly create agent-based models using built-in core components (such as spatial grids and agent schedulers) or customized implementations; visualize them; and analyze their results. Its goal is to be the Julia-based alternative to NetLogo, Repast, or MASON.
+* Default grids to run the simulation, including simple or toroidal 1D grids, and simple or toroidal regular rectangular and triangular 2D grids. More grids to be implemented include arbitrary random networks and 3D spaces.
+* Running the simulations in parallel on multiple cores or on clusters. (This is not ready yet)
+* Automatic data collection in a `DataFrame` at desired intervals.
+* Exploring the simulation results interactively in [Data Voyegar 2](https://github.com/vega/voyager).
+
+Julia is a language that is especially suitable for ABMs, because a) [it runs fast](https://julialang.org/benchmarks/), b) it is easy to express your ideas in and quick to write, and c) it has rich and easy-to-use packages for data analysis.
+
+Agents.jl is lightweight and modular. It has a short learning curve, and allows one to extend its capabilities and express complicated modeling scenarios. Agents.jl is inspired by [Mesa](https://github.com/projectmesa/mesa) framework for Python.
