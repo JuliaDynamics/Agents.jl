@@ -46,15 +46,12 @@ end
 # 4. Run the model 10 steps (only agent activations)
 step!(agent_step!, model, 10)
 
-# 5. Plot some model results
 
-# agents_plots_complete([(:wealth, :hist)], model)  # TODO: VegaLite does not show the plot
-
-# 6. you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument.
+# you may add one more function to the step!() function. This new function applies after the agent_step!(). Such functions can apply to change the model, e.g. change the number of individuals or change to the environment. Therefore, such models should only accept the model as their argument.
 # step!(agent_step::Function, model_step::Function, model::AbstractModel, repeat::Integer)
 
 
-# 7. You may add agents to the grid
+# 7. You can add agents to the grid
 # add agents to random positions. This update the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
 for agent in model.agents
   add_agent_to_grid!(agent, model)
@@ -80,15 +77,14 @@ step!(agent_step!, model, 10)
 
 # 8. collect data
 
-model_step!(model::AbstractModel) = return;  # a dummy model step
 properties = [:wealth]
 aggregators = [StatsBase.mean, StatsBase.median, StatsBase.std]
 steps_to_collect_data = collect(1:10)
-data = step!(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data)
-data = step!(agent_step!, model_step!, model, 10, properties, steps_to_collect_data)
+#data = step!(agent_step!, model, 10, properties, aggregators, steps_to_collect_data)
+data = step!(agent_step!, model, 10, properties, steps_to_collect_data)
 
 # 9. explore data visually
 visualize_data(data)
 
 # 10. Running batch
-data = batchrunner(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data, 10)
+data = batchrunner(agent_step!, model, 10, properties, aggregators, steps_to_collect_data, 10)

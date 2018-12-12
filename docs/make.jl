@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
-# push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
+#push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
+push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
 
 using Documenter, Agents
 
