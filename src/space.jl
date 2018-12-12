@@ -1,11 +1,11 @@
 # A grid can be 0D (a node), 1D (a line of nodes), 2D (a surface of nodes) or 3D (a surface of nodes with values at each node).
 
 """
-An abstract grid type. Your grid type should have the following fields: `dimensions` (Tuple{Integer, Integer, Integer}), agent_positions (Array{Array{Integer}}), and `grid`.
+An abstract space type. Your grid type should have the following fields: `dimensions` (Tuple{Integer, Integer, Integer}), agent_positions (Array{Array{Integer}}), and `grid`.
 
 `agent_positions` should always be a list of lists that accept `Integers`, i.e. agent ids.
 """
-abstract type AbstractGrid end
+abstract type AbstractSpace end
 
 # TODO: Continuous space where each agent can have an arbitrary position.
 # TODO: Hexagonal Grid: Extends Grid to handle hexagonal neighbors. This is the triangle grid where ever other node is removed
@@ -14,6 +14,9 @@ abstract type AbstractGrid end
 function grid0D() <: AbstractSpace
 end
 
+"""
+A path graph. A 1D grid that can optionally be toroidal (a ring).
+"""
 function grid1D(length::Integer; periodic=false)
   if periodic
     g = PathGraph(length)
@@ -23,6 +26,9 @@ function grid1D(length::Integer; periodic=false)
   end
 end
 
+"""
+A regular 2D grid where each node is at most connected to four neighbors. It can optionally be toroidal.
+"""
 function grid2D(n::Integer, m::Integer; periodic=false)
   g = Grid([n, m], periodic=periodic)
 end
@@ -33,7 +39,7 @@ function grid3D()
 end
 
 """
-A regular grid with equilateral triangles. 
+A regular 2D grid where each node is at most connected to eight neighbors. It can optionally be toroidal
 """
 function grid2D_triangles(n::Integer, m::Integer; periodic=false)
   g = Grid([n, m], periodic=periodic)
@@ -131,7 +137,10 @@ end
 """
     grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
 
-Return a grid based on its dimensions.
+Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid. 3D grids are not implemented yet.
+
+* `periodic=true` will create toroidal grids.
+* `triangle=true` works when the dimensions of the grid are 2D. It will return a regular grid in which each node is at most connected to eight neighbors. If `false`, each node will be at most connected to four neighbors.
 """
 function grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
   if x < 1 || y < 1 || z < 1
@@ -158,12 +167,20 @@ end
 """
     grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
 
-Return a grid based on its dimensions.
+Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid. 3D grids are not implemented yet.
+
+* `periodic=true` will create toroidal grids.
+* `triangle=true` works when the dimensions of the grid are 2D. It will return a regular grid in which each node is at most connected to eight neighbors. If `false`, each node will be at most connected to four neighbors.
 """
 function grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
   grid(dims[1], dims[2], dims[3], periodic, triangle)
 end
 
+"""
+    gridsize(dims::Tuple{Integer, Integer, Integer})
+
+Returns the size of a grid with dimenstions `dims`.
+"""
 function gridsize(dims::Tuple{Integer, Integer, Integer})
   dims[1] * dims[2] * dims[3]
 end
@@ -172,97 +189,128 @@ end
 #   container = Array{Array{AbstractAgent}}(undef, )
 # end
 
+
 """
-Add `agentID` to a position in the grid. `pos` is tuple of x, y, z coordinates of the grid node. if `pos` is not given, the agent is added to a random position 
+    move_agent_on_grid!(agent::AbstractAgent, pos::Tuple{Integer, Integer, Integer}, model::AbstractModel)
+  
+Adds `agentID` to a new position in the grid and removes it from the old position. Also updates the agent to represent the new position. `pos` is tuple of x, y, z coordinates of the grid node. If `pos` is not given, the agent is moved to a random position on the grid. 
 """
 function move_agent_on_grid!(agent::AbstractAgent, pos::Tuple{Integer, Integer, Integer}, model::AbstractModel)
   agentID = agent.id
   # node number from x, y, z coordinates
   nodenumber = coord_to_vertex(pos, model)
-  push!(model.grid.agent_positions[nodenumber], agentID)
+  push!(model.space.agent_positions[nodenumber], agentID)
   # remove agent from old position
   oldnode = coord_to_vertex(agent.pos, model)
-  splice!(model.grid.agent_positions[oldnode], findfirst(a->a==agent.id, model.grid.agent_positions[oldnode]))
+  splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
   agent.pos = pos  # update agent position
 end
 
+"""
+    move_agent_on_grid!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
+
+Adds `agentID` to a new position in the grid and removes it from the old position. Also updates the agent to represent the new position. `pos` is an integer showing the number of the node on the grid node. If `pos` is not given, the agent is moved to a random position on the grid.
+"""
 function move_agent_on_grid!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   agentID = agent.id
   nodenumber = pos
-  push!(model.grid.agent_positions[nodenumber], agentID)
+  push!(model.space.agent_positions[nodenumber], agentID)
   # remove agent from old position
   oldnode = coord_to_vertex(agent.pos, model)
-  splice!(model.grid.agent_positions[oldnode], findfirst(a->a==agent.id, model.grid.agent_positions[oldnode]))
+  splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
   agent.pos = vertex_to_coord(pos, model)  # update agent position
 end
 
 function move_agent_on_grid!(agent::AbstractAgent, model::AbstractModel)
   agentID = agent.id
-  nodenumber = rand(1:nv(model.grid.grid))
-  push!(model.grid.agent_positions[nodenumber], agentID)
+  nodenumber = rand(1:nv(model.space.space))
+  push!(model.space.agent_positions[nodenumber], agentID)
   # remove agent from old position
   oldnode = coord_to_vertex(agent.pos, model)
-  splice!(model.grid.agent_positions[oldnode], findfirst(a->a==agent.id, model.grid.agent_positions[oldnode]))
+  splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
   agent.pos = vertex_to_coord(nodenumber, model) # update agent position
 end
 
 """
-Add `agentID` to a position in the grid. `pos` is tuple of x, y, z coordinates of the grid node. if `pos` is not given, the agent is added to a random position 
+    add_agent_to_grid!(agent::AbstractAgent, pos::Tuple{Integer, Integer, Integer}, model::AbstractModel)
+
+Add `agentID` to a position on the grid. `pos` is tuple of x, y, z coordinates of the grid node. If `pos` is not given, the agent is added to a random position.
+
+This function is for positioning agents on the grid for the first time.
 """
 function add_agent_to_grid!(agent::AbstractAgent, pos::Tuple{Integer, Integer, Integer}, model::AbstractModel)
   agentID = agent.id
   # node number from x, y, z coordinates
   nodenumber = coord_to_vertex(pos, model)
-  push!(model.grid.agent_positions[nodenumber], agentID)
+  push!(model.space.agent_positions[nodenumber], agentID)
   agent.pos = pos  # update agent position
+end
+
+"""
+    add_agent_to_grid!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
+
+Add `agentID` to a position in the grid. `pos` is the node number of the grid. If `pos` is not given, the agent is added to a random position.
+
+This function is for positioning agents on the grid for the first time.
+"""
+function add_agent_to_grid!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
+  push!(model.space.agent_positions[pos], agent.id)
+  agent.pos = vertex_to_coord(pos, model)  # update agent position
 end
 
 function add_agent_to_grid!(agent::AbstractAgent, model::AbstractModel)
   agentID = agent.id
-  nodenumber = rand(1:nv(model.grid.grid))
-  push!(model.grid.agent_positions[nodenumber], agentID)
+  nodenumber = rand(1:nv(model.space.space))
+  push!(model.space.agent_positions[nodenumber], agentID)
   agent.pos = vertex_to_coord(nodenumber, model) # update agent position
 end
 
 """
     move_agent_on_grid_single!(agent::AbstractAgent, model::AbstractModel)
 
-Randomly move agents to another nodes on the grid while keeping a maximum one agent per node.
+Moves agent to a random nodes on the grid while respecting a maximum of one agent per node.
 """
 function move_agent_on_grid_single!(agent::AbstractAgent, model::AbstractModel)
-  empty_cells = [i for i in 1:length(model.grid.agent_positions) if length(model.grid.agent_positions[i]) == 0]
+  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
   random_node = rand(empty_cells)
   move_agent_on_grid!(agent, random_node, model)
 end
 
 """
+    find_empty_nodes(model::AbstractModel)
+
+Returns the coordinates of empty nodes on the model grid.
+"""
+function find_empty_nodes(model::AbstractModel)
+  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
+  empty_cells_coord = [vertex_to_coord(i, model) for i in empty_cells]
+end
+
+"""
     add_agent_to_grid_single!(agent::AbstractAgent, model::AbstractModel)
 
-Randomly add agent to a node on the grid while keeping a maximum one agent per node.
+Adds agent to a random node on the grid while respecting a maximum one agent per node.
 """
 function add_agent_to_grid_single!(agent::AbstractAgent, model::AbstractModel)
-  empty_cells = [i for i in 1:length(model.grid.agent_positions) if length(model.grid.agent_positions[i]) == 0]
+  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
   random_node = rand(empty_cells)
   add_agent_to_grid!(agent, vertex_to_coord(random_node, model), model)
 end
 
-
 """
-get node number from x, y, z coordinates
+    coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, model::AbstractModel)
+
+Returns the node number from x, y, z coordinates.
 """
 function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, model::AbstractModel)
-  dims = model.grid.dimensions
-  if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
-    nodeid = coord[1]
-  elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    nodeid = (coord[2] * dims[2]) - (dims[2] - coord[1])  # (y * xlength) - (xlength - x)
-  else # 3D grid
-    #TODO
-  end
+  dims = model.space.dimensions
+  coord_to_vertex(coord, dims)
 end
 
 """
-get node number from x, y, z coordinates
+    coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{Integer, Integer, Integer})
+
+Returns node number from x, y, z coordinates.
 """
 function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{Integer, Integer, Integer})
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
@@ -277,29 +325,17 @@ end
 """
     vertex_to_coord(vertex::Integer, model::AbstractModel)
 
-Return the coordinates of a node number on the grid
+Returns the coordinates of a node given its number on the graph.
 """
 function vertex_to_coord(vertex::Integer, model::AbstractModel)
-  dims = model.grid.dimensions
-  if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
-    coord = (vertex, 1, 1)
-  elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    x = vertex % dims[1]
-    if x == 0
-      x = dims[1]
-    end
-    y = ceil(Integer, vertex/dims[1])
-    coord = (x, y, 1)
-  else # 3D grid
-    #TODO
-  end
-  return coord
+  dims = model.space.dimensions
+  vertex_to_coord(vertex, dims)
 end
 
 """
     vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
 
-Return the coordinates of a node number on the grid
+Returns the coordinates of a node given its number on the graph.
 """
 function vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
@@ -320,29 +356,42 @@ end
 """
     get_node_contents(agent::AbstractAgent, model::AbstractModel)
   
-Return other agents in the same node as the `agent`.
+Returns other agents' ids in the same node as the `agent`.
 """
 function get_node_contents(agent::AbstractAgent, model::AbstractModel)
   agent_node = coord_to_vertex(agent.pos, model)
-  ns = model.grid.agent_positions[agent_node] # TODO: exclude agent
+  ns = model.space.agent_positions[agent_node] # TODO: exclude agent
 end
 
 """
     get_node_contents(coords::Tuple, model::AbstractModel)
 
-Return the content of the node at `coords`
+Returns the id of agents in the node at `coords`
 """
 function get_node_contents(coords::Tuple, model::AbstractModel)
   node_number = coord_to_vertex(coords, model)
-  ns = model.grid.agent_positions[node_number] # TODO: exclude agent
+  ns = model.space.agent_positions[node_number]
 end
 
 """
-Return neighboring nodes of the node on which the agent resides.
+    id_to_agent(id::Integer, model::AbstractModel)
+
+Returns an agent given its ID.
+"""
+function id_to_agent(id::Integer, model::AbstractModel)
+  agent_index = findfirst(a-> a.id==id, model.agents)
+  agent = model.agents[agent_index]
+  return agent
+end
+
+"""
+    node_neighbors(agent::AbstractAgent, model::AbstractModel)
+
+Returns neighboring node coords of the node on which the agent resides.
 """
 function node_neighbors(agent::AbstractAgent, model::AbstractModel)
   agent_node = coord_to_vertex(agent.pos, model)
-  nn = neighbors(model.grid.grid, agent_node)
+  nn = neighbors(model.space.space, agent_node)
   nc = [vertex_to_coord(i, model) for i in nn]
 end
 

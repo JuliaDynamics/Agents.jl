@@ -7,7 +7,7 @@ e.g.
 ```
 mutable struct MyModel <: AbstractModel
   scheduler::Function
-  grid
+  space
   agents::Array{Integer}  # a list of agents ids
 end
 ```
@@ -16,12 +16,28 @@ end
 """
 abstract type AbstractModel end
 
+"""
+  nagents(model::AbstractModel)
+
+Returns the number of agents.
+"""
 nagents(model::AbstractModel) = length(model.agents)
+
+"""
+    kill_agent!(agent::AbstractAgent, model::AbstractModel)
+
+Removes an agent from the list of agents and from the space.
+"""
+function kill_agent!(agent::AbstractAgent, model::AbstractModel)
+  agentnode = coord_to_vertex(agent.pos, model)
+  splice!(model.space.agent_positions[agentnode], findfirst(a->a==agent.id, model.space.agent_positions[agentnode]))  # remove from the grid
+  splice!(model.agents, findfirst(a->a==agent, model.agents))  # remove from the model.agents
+end
 
 """
     step!(agent_step::Function, model::AbstractModel)
 
-The step function of an agent.
+Updates agents one step. Agents will be updated as specified by the `model.scheduler`.
 """
 function step!(agent_step, model::AbstractModel)
   activation_order = return_activation_order(model)
@@ -33,9 +49,7 @@ end
 """
     step!(agent_step::Function, model::AbstractModel, nsteps::Integer)
 
-Repeat the `step` function `nsteps` times.
-
-Does not collect data.
+Repeats the `step` function `nsteps` times without collecting data.
 """
 function step!(agent_step, model::AbstractModel, nsteps::Integer)
   for i in 1:nsteps
@@ -44,20 +58,22 @@ function step!(agent_step, model::AbstractModel, nsteps::Integer)
 end
 
 """
-Repeat the `step` function `nsteps` times.
+    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::Array{Int64})
+
+Repeats the `step` function `nsteps` times, and collects all agent fields in `agent_properties` at steps `steps_to_collect_data`.
 
 """
-function step!(agent_step::Function, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64})
+function step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::Array{Int64})
 
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model)
-  df = data_collector(properties, steps_to_collect_data, model, 1)
+  df = data_collector(agent_properties, steps_to_collect_data, model, 1)
 
   for ss in 1:nsteps
     step!(agent_step, model)
     # collect data
     if ss in steps_to_collect_data
-      df = data_collector(properties, steps_to_collect_data, model, ss, df)
+      df = data_collector(agent_properties, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.
@@ -68,23 +84,21 @@ function step!(agent_step::Function, model::AbstractModel, nsteps::Integer, prop
 end
 
 """
-    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
 
-Repeat the `step` function `nsteps` times.
-
-Includes an aggregator to collect data.
+Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model)
-  df = data_collector(properties, aggregators, steps_to_collect_data, model, 1)
+  df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, 1)
 
   for ss in 2:nsteps
     step!(agent_step, model)
     # collect data
     if ss in steps_to_collect_data
-      df = data_collector(properties, aggregators, steps_to_collect_data, model, ss, df)
+      df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.
@@ -98,7 +112,7 @@ end
 """
     step!(agent_step::Function, model_step::Function, model::AbstractModel)
 
-The step function with `agent_step` and `model_step` functions.
+Updates agents one step without collecting data. This function accepts two functions, one for update agents and one for updating the whole model one after all the agents have been updated.
 """
 function step!(agent_step, model_step, model::AbstractModel)
   activation_order = return_activation_order(model)
@@ -111,9 +125,7 @@ end
 """
     step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer)
 
-Repeat the `step` function `nsteps` times.
-
-Does not collect data.
+Repeats the `step` function `nsteps` times without collecting data.
 """
 function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer)
   for ss in 1:nsteps
@@ -122,22 +134,21 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer)
 end
 
 """
-    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Integer})
-Repeat the `step` function `nsteps` times.
+    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::Array{Integer})
 
-Does not include an aggregator, collects raw data.
+Repeats the `step` function `nsteps` times, and collects all agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::Array{Int64})
 
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model_step, model)
-  df = data_collector(properties, steps_to_collect_data, model, 1)
+  df = data_collector(agent_properties, steps_to_collect_data, model, 1)
 
   for ss in 2:nsteps
     step!(agent_step, model_step, model)
     # collect data
     if ss in steps_to_collect_data
-      df = data_collector(properties, steps_to_collect_data, model, ss, df)
+      df = data_collector(agent_properties, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.
@@ -148,23 +159,21 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, pr
 end
 
 """
-    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
 
-Repeat the `step` function `nsteps` times.
-
-Includes an aggregator to collect data.
+Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model_step, model)
-  df = data_collector(properties, aggregators, steps_to_collect_data, model, 1)
+  df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, 1)
 
   for ss in 2:nsteps
     step!(agent_step, model_step, model)
     # collect data
     if ss in steps_to_collect_data
-      df = data_collector(properties, aggregators, steps_to_collect_data, model, ss, df)
+      df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.

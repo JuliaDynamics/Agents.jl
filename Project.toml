@@ -4,6 +4,7 @@ authors = ["Ali Vahdati <arv.kavir@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataVoyager = "5721bf48-af8e-5845-8445-c9e18126e773"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

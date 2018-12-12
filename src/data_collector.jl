@@ -6,7 +6,7 @@ Collect data from a `property` of agents (a `fieldname`) and apply `aggregators`
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
 
 """
-function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, model::AbstractModel; step=1)
+function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, model::AbstractModel; step=1)    
   output = Array{Real}(undef, length(properties) * length(aggregators) + 1)
   output[1] = step
   agentslen = nagents(model)
@@ -52,15 +52,16 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
 end
 
 function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
-  d = agents_data_per_step(properties, aggregators, model, step=step)
-  dict = Dict(d[2][i] => d[1][i] for i in 1:length(d[1]))
+  d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
+  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
 function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
-  push!(df, d)
+  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
+  push!(df, dict)
   return df
 end
 
@@ -76,3 +77,10 @@ function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{
 end
 
 # TODO: all the above function collect data from agents. add functions to collect data from model too.
+
+"""
+Writes a dataframe to file
+"""
+function write_to_file(;df::DataFrame, filename::AbstractString)
+  CSV.write(filename, df, append=false, delim="\t", writeheader=true)
+end

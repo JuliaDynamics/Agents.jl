@@ -1,6 +1,8 @@
 
 """
-Update the agents as they have been added to the schedules
+    as_added(model::AbstractModel)
+
+Activates all agents at each step as they have been added to the model.
 """
 function as_added(model::AbstractModel)
   agent_ids = [i.id for i in model.agents]
@@ -8,7 +10,9 @@ function as_added(model::AbstractModel)
 end
 
 """
-Activates all the agents once per step, in random order.
+    random_activation(model::AbstractModel)
+
+Activates all agents randomly at each step.
 """
 function random_activation(model::AbstractModel)
   order = shuffle(1:length(model.agents))
