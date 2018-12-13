@@ -1,3 +1,19 @@
+language: julia
+os:
+  - linux
+
+julia:
+  - 0.7
+  - 1.0
+notifications:
+  email: false
+git:
+  depth: 99999999
+matrix:
+  allow_failures:
+  - julia: nightly
+
+
 jobs:
     include:
       - stage: "Documentation"
