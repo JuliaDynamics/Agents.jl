@@ -8,26 +8,25 @@ An abstract space type. Your grid type should have the following fields: `dimens
 abstract type AbstractSpace end
 
 
-function grid0D() <: AbstractSpace
+function grid0D()
 end
 
 """
 A path graph. A 1D grid that can optionally be toroidal (a ring).
 """
 function grid1D(length::Integer; periodic=false)
+  g = PathGraph(length)
   if periodic
-    g = PathGraph(length)
     add_edge!(g, 1, length)
-  else
-    g = PathGraph(length)
   end
+  return g
 end
 
 """
 A regular 2D grid where each node is at most connected to four neighbors. It can optionally be toroidal.
 """
-function grid2D(n::Integer, m::Integer; periodic=false)
-  g = Grid([n, m], periodic=periodic)
+function grid2D(x::Integer, y::Integer; periodic=false)
+  g = Grid([x, y], periodic=periodic)
 end
 
 function grid3D()
@@ -38,26 +37,26 @@ end
 """
 A regular 2D grid where each node is at most connected to eight neighbors. It can optionally be toroidal
 """
-function grid2D_triangles(n::Integer, m::Integer; periodic=false)
-  g = Grid([n, m], periodic=periodic)
-  for x in 1:n
-    for y in 1:m
-      nodeid = coord_to_vertex((x, y, 1), (n, m, 1))
+function grid2D_triangles(xdim::Integer, ydim::Integer; periodic=false)
+  g = Grid([xdim, ydim], periodic=periodic)
+  for x in 1:xdim
+    for y in 1:ydim
+      nodeid = coord_to_vertex((x, y, 1), (xdim, ydim, 1))
       connect_to = []
-      if y == m
+      if y == ydim
         if x == 1
           if periodic
-            tp = (n, 1, 1); push!(connect_to, tp)
-            tp = (2, m-1, 1); push!(connect_to, tp)
+            tp = (xdim, 1, 1); push!(connect_to, tp)
+            tp = (2, ydim-1, 1); push!(connect_to, tp)
           else
-            tp = (2, m-1, 1); push!(connect_to, tp)
+            tp = (2, ydim-1, 1); push!(connect_to, tp)
           end
-        elseif x == n
+        elseif x == xdim
           if periodic
             tp = (1, 1, 1); push!(connect_to, tp)
-            tp = (n-1, m-1, 1); push!(connect_to, tp)
+            tp = (xdim-1, ydim-1, 1); push!(connect_to, tp)
           else
-            tp = (n-1, m-1, 1); push!(connect_to, tp)
+            tp = (xdim-1, ydim-1, 1); push!(connect_to, tp)
           end
         else
           if periodic
@@ -73,40 +72,40 @@ function grid2D_triangles(n::Integer, m::Integer; periodic=false)
       elseif y == 1
         if x == 1
           if periodic
-            tp = (n, m, 1); push!(connect_to, tp)
+            tp = (xdim, ydim, 1); push!(connect_to, tp)
             tp = (2, y+1, 1); push!(connect_to, tp)
           else
             tp = (2, y+1, 1); push!(connect_to, tp)
           end
-        elseif x == n
+        elseif x == xdim
           if periodic
             tp = (1, y, 1); push!(connect_to, tp)
-            tp = (n-1, y+1, 1); push!(connect_to, tp)
+            tp = (xdim-1, y+1, 1); push!(connect_to, tp)
           else
-            tp = (n-1, y+1, 1); push!(connect_to, tp)
+            tp = (xdim-1, y+1, 1); push!(connect_to, tp)
           end
         else
           if periodic
             tp = (x-1, y+1, 1); push!(connect_to, tp)
             tp = (x+1, y+1, 1); push!(connect_to, tp)
-            tp = (x-1, m, 1); push!(connect_to, tp)
-            tp = (x+1, m, 1); push!(connect_to, tp)
+            tp = (x-1, ydim, 1); push!(connect_to, tp)
+            tp = (x+1, ydim, 1); push!(connect_to, tp)
           else
             tp = (x-1, y+1, 1); push!(connect_to, tp)
             tp = (x+1, y+1, 1); push!(connect_to, tp)
           end
         end
-      elseif y != 1 && y != m && x == 1
+      elseif y != 1 && y != ydim && x == 1
         if periodic
           tp = (x+1, y+1, 1); push!(connect_to, tp)
           tp = (x+1, y-1, 1); push!(connect_to, tp)
-          tp = (n, y+1, 1); push!(connect_to, tp)
-          tp = (n, y-1, 1); push!(connect_to, tp)
+          tp = (xdim, y+1, 1); push!(connect_to, tp)
+          tp = (xdim, y-1, 1); push!(connect_to, tp)
         else
           tp = (x+1, y+1, 1); push!(connect_to, tp)
           tp = (x+1, y-1, 1); push!(connect_to, tp)
         end       
-      elseif y != 1 && y != m && x == n
+      elseif y != 1 && y != ydim && x == xdim
         if periodic
           tp = (x-1, y+1, 1); push!(connect_to, tp)
           tp = (x-1, y-1, 1); push!(connect_to, tp)
@@ -124,7 +123,7 @@ function grid2D_triangles(n::Integer, m::Integer; periodic=false)
       end
 
       for pp in connect_to
-        add_edge!(g, nodeid, coord_to_vertex((pp[1], pp[2], 1), (n, m, 1)))
+        add_edge!(g, nodeid, coord_to_vertex((pp[1], pp[2], 1), (xdim, ydim, 1)))
       end
     end
   end
@@ -143,7 +142,7 @@ function grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false
   if x < 1 || y < 1 || z < 1
     throw("x, y, or z can be minimum 1!")
   end
-  if x + y + z == 1
+  if x ==1 && y == 1 && z == 1
     g = grid0D()
   elseif x > 1 && y == 1 && z == 1
     g = grid1D(x, periodic=periodic)
@@ -182,9 +181,9 @@ function gridsize(dims::Tuple{Integer, Integer, Integer})
   dims[1] * dims[2] * dims[3]
 end
 
-# function empty_pos_container(model::AbstractModel)
-#   container = Array{Array{AbstractAgent}}(undef, )
-# end
+function gridsize(x::Integer, y::Integer, z::Integer)
+  gridsize((x,y,z))
+end
 
 
 """
@@ -226,6 +225,7 @@ function move_agent_on_grid!(agent::AbstractAgent, model::AbstractModel)
   oldnode = coord_to_vertex(agent.pos, model)
   splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
   agent.pos = vertex_to_coord(nodenumber, model) # update agent position
+  return agent.pos
 end
 
 """
@@ -241,6 +241,7 @@ function add_agent_to_grid!(agent::AbstractAgent, pos::Tuple{Integer, Integer, I
   nodenumber = coord_to_vertex(pos, model)
   push!(model.space.agent_positions[nodenumber], agentID)
   agent.pos = pos  # update agent position
+  return agent.pos
 end
 
 """
@@ -304,6 +305,15 @@ function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, model::Abstrac
   coord_to_vertex(coord, dims)
 end
 
+function coord_to_vertex(x::Integer, y::Integer, z::Integer, model::AbstractModel)
+  coord_to_vertex((x,y,z), model)
+end
+
+function coord_to_vertex(x::Integer, y::Integer, z::Integer,dims::Tuple{Integer, Integer, Integer})
+  coord_to_vertex((x,y,z), dims)
+end
+
+
 """
     coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{Integer, Integer, Integer})
 
@@ -313,10 +323,11 @@ function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{In
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
     nodeid = coord[1]
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    nodeid = (coord[2] * dims[2]) - (dims[2] - coord[1])  # (y * xlength) - (xlength - x)
+    nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
   else # 3D grid
     #TODO
   end
+  return nodeid
 end
 
 """
@@ -353,11 +364,11 @@ end
 """
     get_node_contents(agent::AbstractAgent, model::AbstractModel)
   
-Returns other agents' ids in the same node as the `agent`.
+Returns all agents' ids in the same node as the `agent`.
 """
 function get_node_contents(agent::AbstractAgent, model::AbstractModel)
   agent_node = coord_to_vertex(agent.pos, model)
-  ns = model.space.agent_positions[agent_node] # TODO: exclude agent
+  ns = model.space.agent_positions[agent_node]
 end
 
 """

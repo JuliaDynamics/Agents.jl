@@ -1,4 +1,4 @@
-# Agents: agent-based modeling in Julia
+# Agents: agent-based modeling framework in Julia
 
 [![](https://img.shields.io/badge/Agents.jl-v0.1-blue.svg)](https://github.com/kavir1698/Agents.jl) 
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/latest)
@@ -30,7 +30,7 @@ For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-latest-blu
 
 This is still work in progress. I am working on the following:
 
-* Writing unit tests
+* Adding more unit tests
 * Implementing more examples
 * Implementing arbitrary network spaces
 * Better batch data collector

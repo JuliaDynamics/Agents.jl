@@ -1,4 +1,6 @@
+push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
 using Test
+using Agents
 
-j = 1
-@test j ==1
+include("forest_fire_defs.jl")
+include("space_test.jl")
