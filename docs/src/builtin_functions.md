@@ -1,5 +1,4 @@
-
-# Built-in functions
+# Built-in function
 
 ## Scheduler functions
 

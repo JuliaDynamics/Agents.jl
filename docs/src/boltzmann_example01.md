@@ -6,7 +6,7 @@ This is a simple agent-based model in economics. Despite its simplicity, it show
 * At every step, agents give one unit of their money (if they have any) to a random agent.
 * We will see how wealth will be distributed after a few steps.
 
-The code of this tutorial is in the `examples/boltzmann_wealth_distribution.jl` file on the Github repository. The `examples` directory contains implementations of more examples too.
+The code of this tutorial is in the `examples/boltzmann_wealth_distribution.jl` file on the Github repository.
 
 ## Building the model
 

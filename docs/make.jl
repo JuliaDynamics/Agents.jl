@@ -9,6 +9,7 @@ makedocs(
         "Introduction" => "index.md",
         "Examples" => [
           "Boltzmann wealth distribution" => "boltzmann_example01.md",
+          "Forest fire" => "forest_fire.md"
         ],
         "Built-in funtions" => "builtin_functions.md"
     ]
@@ -17,8 +18,4 @@ makedocs(
 
 deploydocs(
 	    repo = "github.com/kavir1698/Agents.jl.git",
-      julia = "1.0",
-      target = "build",
-      deps = nothing,
-      make = nothing
    )
