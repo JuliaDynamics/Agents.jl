@@ -1,6 +1,6 @@
 # Agents: agent-based modeling in Julia
 
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://kavir1698.github.io/Agents.jl)
 
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
 
