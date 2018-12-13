@@ -37,7 +37,6 @@ The agent type has to have the `id` and the `pos` (for position) fields, but it 
 ```julia
 # 2. define a model type
 mutable struct MyModel <: AbstractModel
-  space::AbstractSpace
   agents::Array{AbstractAgent}  # an array of agents
   scheduler::Function
 end
@@ -50,7 +49,7 @@ Since for this first step, we do not need a space structure, we will not define 
 Now we write a function to instantiate the model:
 
 ```julia
-# 4. instantiate the model
+# 3. instantiate the model
 function instantiate_model(;numagents)
   agents = [MyAgent(i, (1,1,1), 1) for i in 1:numagents]  # create a list of agents
   model = MyModel(agents, random_activation)  # instantiate the model
@@ -109,15 +108,15 @@ visualize_data(data)
 Often, in ABM we want to run a model many times and observe the average behavior of the system. We can do this easily with the `batchrunner` function. It accepts the same arguments and in the same order as the `step!` function:
 
 ```julia
-data = batchrunner(agent_step!, model_step!, model, 10, properties, aggregators, steps_to_collect_data, 10)
+data = batchrunner(agent_step!, model, 10, agent_properties, steps_to_collect_data, 10)
 ```
 
 We can include a grid in our model and let the agents interact only with those in the same node. To that end, we will have to modify the model type and write a space type:
 
 ```julia
 # Add grid field to the model type
-mutable struct MyModel <: AbstractModel
-  grid::AbstractSpace
+mutable struct MyModel2 <: AbstractModel
+  space::AbstractSpace
   agents::Array{AbstractAgent}  # an array of agents
   scheduler::Function
 end
@@ -139,7 +138,7 @@ function instantiate_model(;numagents, griddims)
   agents = [MyAgent(i, (1,1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
-  model = MyModel(mygrid, agents, random_activation)  # instantiate the model
+  model = MyModel2(mygrid, agents, random_activation)  # instantiate the model
   return model
 end
 

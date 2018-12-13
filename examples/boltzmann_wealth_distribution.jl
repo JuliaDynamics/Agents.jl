@@ -1,4 +1,4 @@
-
+using StatsBase
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
@@ -8,7 +8,7 @@ end
 
 # 2. define a model type
 mutable struct MyModel <: AbstractModel
-  grid::AbstractSpace
+  space::AbstractSpace
   agents::Array{AbstractAgent}  # an array of agents
   scheduler::Function
 end
