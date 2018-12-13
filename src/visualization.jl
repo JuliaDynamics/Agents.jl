@@ -27,3 +27,24 @@ end
 function visualize_data(data::DataFrame)
   v = Voyager(data)
 end
+
+"""
+    visualize_2D_agent_distribution(model::AbstractModel)
+
+Creates a heatmap that shows the density of agents on each node of the 2D grid.
+"""
+function visualize_2D_agent_distribution(model::AbstractModel)
+  x = [j for i in 1:model.space.dimensions[1], j in 1:model.space.dimensions[1]]
+  y = [i for i in 1:model.space.dimensions[2], j in 1:model.space.dimensions[2]]
+  # create an empty color for all the nodes
+  z = [0 for i in 1:model.space.dimensions[1], j in 1:model.space.dimensions[1]]
+  # Add color to each node:
+  for node in 1:length(model.space.agent_positions)
+    z[node] = length(model.space.agent_positions[node])
+  end
+
+  data = DataFrame(x=vec(x'),y=vec(y'),z=vec(z'))
+
+  data |> @vlplot(:rect, x="x:o", y="y:o", color=:z)
+
+end
