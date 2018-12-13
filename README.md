@@ -1,6 +1,6 @@
 # Agents: agent-based modeling in Julia
 
-Agents.jl is a [Julia](https://julialang.org/) framework for an agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
+Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
 
 * Default grids to run the simulation, including simple or toroidal 1D grids, and simple or toroidal regular rectangular and triangular 2D grids. More grids to be implemented include arbitrary random networks and 3D spaces.
 * Running the simulations in parallel on multiple cores or on clusters. (This is not ready yet)
