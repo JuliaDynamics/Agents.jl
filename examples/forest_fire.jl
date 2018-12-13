@@ -3,17 +3,6 @@
 ### Forest fire model ###
 #########################
 
-#=
-from Wikipedia:
-
-The model is defined as a cellular automaton on a grid with Ld cells. L is the sidelength of the grid and d is its dimension. A cell can be empty, occupied by a tree, or burning. The model of Drossel and Schwabl (1992) is defined by four rules which are executed simultaneously: 
-
-1. A burning cell turns into an empty cell
-1. A tree will burn if at least one neighbor is burning
-1. A tree ignites with probability f even if no neighbor is burning
-1. An empty space fills with a tree with probability p
-=#
-
 mutable struct Tree <: AbstractAgent
   id::Integer
   pos::Tuple{Integer, Integer, Integer}

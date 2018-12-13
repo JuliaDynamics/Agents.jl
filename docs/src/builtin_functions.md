@@ -1,12 +1,14 @@
 
-# Scheduler functions
+# Built-in functions
+
+## Scheduler functions
 
 ```@docs
 as_added
 random_activation
 ```
 
-# Space functions
+## Space functions
 
 ```@docs
 grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
@@ -23,7 +25,7 @@ id_to_agent
 node_neighbors
 ```
 
-# Model functions
+## Model functions
 
 ```@docs
 nagents
