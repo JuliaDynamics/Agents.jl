@@ -76,7 +76,6 @@ function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{
   return df
 end
 
-# TODO: all the above function collect data from agents. add functions to collect data from model too.
 
 """
 Writes a dataframe to file

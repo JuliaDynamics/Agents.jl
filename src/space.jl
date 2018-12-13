@@ -7,9 +7,6 @@ An abstract space type. Your grid type should have the following fields: `dimens
 """
 abstract type AbstractSpace end
 
-# TODO: Continuous space where each agent can have an arbitrary position.
-# TODO: Hexagonal Grid: Extends Grid to handle hexagonal neighbors. This is the triangle grid where ever other node is removed
-# TODO: write functions to add and move agents on irregular networks
 
 function grid0D() <: AbstractSpace
 end

@@ -9,7 +9,7 @@ Plots the agents_data_complete() results in your browser.
 
 You can add more plot types by adding more if statements in the function.
 
-TODO: VegaLite does not show the plot.
+Not working: VegaLite does not show the plot.
 """
 function agents_plots_complete(property_plot::Array, model::AbstractModel)
   properties = [i[1] for i in property_plot]
@@ -27,5 +27,3 @@ end
 function visualize_data(data::DataFrame)
   v = Voyager(data)
 end
-
-# TODO: visualize grids and networks

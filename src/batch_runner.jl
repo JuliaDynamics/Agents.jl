@@ -33,5 +33,3 @@ function batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properti
   end
   return dataall
 end
-
-# TODO take mean or any other function of the same columns
