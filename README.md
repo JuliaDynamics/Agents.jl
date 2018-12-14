@@ -1,6 +1,7 @@
 # Agents: agent-based modeling framework in Julia
 
 [![](https://img.shields.io/badge/Agents.jl-v0.1-blue.svg)](https://github.com/kavir1698/Agents.jl) 
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
 [![Build Status](https://travis-ci.org/kavir1698/Agents.jl.svg?branch=master)](https://travis-ci.org/kavir1698/Agents.jl)
 
@@ -26,7 +27,7 @@ Currently, the package is not registered to Julia's package list, therefore, ins
 
 It is compatible with Julia 0.7+.
 
-For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
+For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
 
 This is still work in progress. I am working on the following:
 
