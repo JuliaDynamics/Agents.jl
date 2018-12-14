@@ -49,9 +49,6 @@ end
     visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
 
 Show the distribution of agents on a 2D grid
-
-using ColorTypes  for RGBA
-using PerceptualColourMaps
 """
 function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
   g = model.space.space

@@ -10,6 +10,8 @@ import Base.Iterators: product
 import StatsBase
 using DataVoyager
 using CSV
+using ColorTypes
+# using PerceptualColourMaps
 
 include("agents_component.jl")
 include("model_component.jl")
