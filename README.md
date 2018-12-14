@@ -36,4 +36,3 @@ This is still work in progress. I am working on the following:
 * Implementing arbitrary network spaces
 * Better batch data collector
 * Parallel computing of batch simulations
-* 2D and 3D spatial plots

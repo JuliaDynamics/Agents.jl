@@ -48,7 +48,7 @@ function model_initiation(;f, d, p, griddims, seed)
   # initialize the model
   # we start the model without creating the agents first
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)
+  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid where each node is connected to at most 8 neighbors.
   forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
 
   # create and add trees to each node with probability d, which determines the density of the forest
@@ -123,7 +123,7 @@ That is all before we run the model.
 forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20, 1), seed=2)
 
 # choose which agent properties you want to collect
-agent_properties = [:status]
+agent_properties = [:status, :pos]
 
 # what functions to apply to the chosen agent properties before collecting them. `length` will show the number of trees and `count` the number of green trees.
 aggregators = [length, count]
@@ -136,11 +136,35 @@ data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggr
 
 # explore data visually
 visualize_data(data)
+```
 
-# Optionally Running batch
+Alternatively, collect agent positions and plot them on a 2D grid
+
+```julia
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20, 1), seed=2)
+data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, collect(1:10))
+for i in 1:10
+  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
+end
+```
+
+Step 1
+
+![](fire_step_1.png)
+
+Step 2
+
+![](fire_step_2.png)
+
+Step 3
+
+![](fire_step_3.png)
+
+```julia
+# Optionally Run batch simulation
 forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20, 1), 2)
 data = batchrunner(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data, 10)
 
-# Optionally write the results to file
+# And write the results to file
 write_to_file(df=data, filename="forest_model.csv")
 ```

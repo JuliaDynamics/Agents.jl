@@ -34,7 +34,7 @@ end
 
 Collect data from a `property` of agents (a `fieldname`) into a dataframe.
 
-If a fieldname of agents returns an array, this will use the `mean` of the array
+If a fieldname of agents returns an array, this will use the `mean` of the array. If you want to record positions of the agents, use the `pos` field.
 """
 function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; step=1)
   # colnames = [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)]

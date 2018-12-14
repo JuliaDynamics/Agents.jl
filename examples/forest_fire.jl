@@ -31,7 +31,7 @@ function model_initiation(;f, d, p, griddims, seed)
   # initialize the model
   # we start the model without creating the agents first
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)
+  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)
   forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
 
   # create and add trees to each node with probability d, which determines the density of the forest
@@ -88,13 +88,21 @@ function forest_step!(forest)
 end
 
 
-forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20, 1), seed=2)
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20, 1), seed=2)
 agent_properties = [:status, :pos]
-aggregators = [length, count]
 steps_to_collect_data = collect(1:100)
-data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
+
+# aggregators = [length, count]
+# data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
+data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, steps_to_collect_data)
+
 # 9. explore data visually
 visualize_data(data)
+
+# or plot trees on a grid
+for i in 1:10
+  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
+end
 
 # 10. Running batch
 data = batchrunner(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data, 10)

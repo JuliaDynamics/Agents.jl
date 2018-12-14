@@ -23,26 +23,10 @@ end
 
 function model_initiation(;f, d, p, griddims, seed)
   Random.seed!(seed)
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)
-  forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
-  for node in 1:gridsize(forest.space.dimensions)
-    pp = rand()
-    if pp <= forest.d
-      tree = Tree(node, (1,1,1), true)
-      add_agent_to_grid!(tree, node, forest)
-      push!(forest.agents, tree)
-    end
-  end
-  return forest
-end
-
-function model_initiation(;f, d, p, griddims, seed)
-  Random.seed!(seed)
   # initialize the model
   # we start the model without creating the agents first
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)
+  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)
   forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
 
   # create and add trees to each node with probability d, which determines the density of the forest
@@ -55,6 +39,9 @@ function model_initiation(;f, d, p, griddims, seed)
     end
   end
   return forest
+end
+
+function dummy_agent_step(a, b)  # because we do not need it, but it is required by the step! function
 end
 
 
