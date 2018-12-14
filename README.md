@@ -1,7 +1,7 @@
 # Agents: agent-based modeling framework in Julia
 
 [![](https://img.shields.io/badge/Agents.jl-v0.1-blue.svg)](https://github.com/kavir1698/Agents.jl) 
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/latest)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
 [![Build Status](https://travis-ci.org/kavir1698/Agents.jl.svg?branch=master)](https://travis-ci.org/kavir1698/Agents.jl)
 
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
@@ -26,7 +26,7 @@ Currently, the package is not registered to Julia's package list, therefore, ins
 
 It is compatible with Julia 0.7+.
 
-For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/latest)
+For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
 
 This is still work in progress. I am working on the following:
 
@@ -35,4 +35,4 @@ This is still work in progress. I am working on the following:
 * Implementing arbitrary network spaces
 * Better batch data collector
 * Parallel computing of batch simulations
-* Bug fixes
+* 2D and 3D spatial plots

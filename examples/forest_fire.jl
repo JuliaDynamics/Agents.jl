@@ -89,7 +89,7 @@ end
 
 
 forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20, 1), seed=2)
-agent_properties = [:status]
+agent_properties = [:status, :pos]
 aggregators = [length, count]
 steps_to_collect_data = collect(1:100)
 data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)

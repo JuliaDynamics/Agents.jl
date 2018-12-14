@@ -29,22 +29,61 @@ function visualize_data(data::DataFrame)
 end
 
 """
-    visualize_2D_agent_distribution(model::AbstractModel)
+    plot_locs(g, dims::Tuple{Integer, Integer, Integer})
 
-Creates a heatmap that shows the density of agents on each node of the 2D grid.
+Return three arrays for x, y, z coordinates of each node
 """
-function visualize_2D_agent_distribution(model::AbstractModel)
-  x = [j for i in 1:model.space.dimensions[1], j in 1:model.space.dimensions[1]]
-  y = [i for i in 1:model.space.dimensions[2], j in 1:model.space.dimensions[2]]
-  # create an empty color for all the nodes
-  z = [0 for i in 1:model.space.dimensions[1], j in 1:model.space.dimensions[1]]
-  # Add color to each node:
-  for node in 1:length(model.space.agent_positions)
-    z[node] = length(model.space.agent_positions[node])
+function node_locs(g, dims::Tuple{Integer, Integer, Integer})
+  nver = nv(g)
+  coords = []
+  for nn in 1:nver
+    push!(coords, vertex_to_coord(nn, dims))
+  end
+  locs_x = [Float64(i[1]) for i in coords]
+  locs_y = [Float64(i[2]) for i in coords]
+  locs_z = [Float64(i[3]) for i in coords]
+  return locs_x, locs_y, locs_z
+end
+
+"""
+    visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
+
+Show the distribution of agents on a 2D grid
+
+using ColorTypes  for RGBA
+using PerceptualColourMaps
+"""
+function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
+  g = model.space.space
+  locs_x, locs_y, locs_z = node_locs(g, model.space.dimensions)
+  
+  # base node color is light grey
+  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model.space.dimensions)]
+
+  # change node color given the position of the agents. Automatically uses any columns with names: pos, or pos_{some number}
+  # TODO a new plot where the alpha value of a node corresponds to the value of an individual on a node
+  if types == :id  # there is only one type
+    pos = position_colomn
+    d = by(data, pos, N = pos => length)
+    maxval = maximum(d[:N])
+    nodefillc[d[pos]] .= [RGBA(0.1, 0.1, 0.1, i) for i in  (d[:N] ./ maxval) .- 0.001]
+  else  # there are different types of agents based on the values of the "types" column
+    unique_types = unique(data[types])
+    pos = position_colomn
+    colors = [(0.9,0.1,0.1), (0.1, 0.9, 0.1), (0.1,0.1,0.9)]  # TODO: add more colors and check their names
+    colornames = ["red", "green", "blue"]
+    for index in 1:length(unique_types)
+      tt = unique_types[index]
+      d = by(data[data[types] .== tt, :], pos, N = pos => length)
+      maxval = maximum(d[:N])
+      # colormapname = "L$(index+1)"  # a linear colormap
+      # (cmapc, name, desc) = cmap(colormapname, returnname=true)
+      # nodefillc[d[pos]] .= [cmapc[round(Int64, i*256)] for i in  (d[:N] ./ maxval) .- 0.001]
+      # println("$tt: $name")
+      nodefillc[d[pos]] .= [RGBA(colors[index][1], colors[index][2], colors[index][3], i) for i in  (d[:N] ./ maxval) .- 0.001]
+      println("$tt: $(colornames[index])")
+    end
   end
 
-  data = DataFrame(x=vec(x'),y=vec(y'),z=vec(z'))
-
-  data |> @vlplot(:rect, x="x:o", y="y:o", color=:z)
-
+  draw(PDF("2D_agent_distribution.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc))
 end

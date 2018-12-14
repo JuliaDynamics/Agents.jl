@@ -15,7 +15,7 @@ For a quick tutorial see the example models.
 
 ## Installation
 
-Currently, the package is not added to Julia's package list, therefore, install is by following command:
+Currently, the package is not added to Julia's package list, therefore, install it using this command:
 
 ```julia
 ]add https://github.com/kavir1698/Agents.jl.git
