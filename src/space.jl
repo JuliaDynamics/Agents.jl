@@ -29,9 +29,44 @@ function grid2D(x::Integer, y::Integer; periodic=false)
   g = Grid([x, y], periodic=periodic)
 end
 
-function grid3D()
-  #TODO
-  throw("3D grids are not implemented yet!")
+"""
+A regular 3D grid where each node is at most connected to 6 neighbors. It can optionally be toroidal.
+"""
+function grid3D(x::Integer, y::Integer, z::Integer; periodic=false, rectangular=false)
+  if periodic
+    if rectangular
+      g = grid2D_triangles(x, y, periodic=true)
+    else
+      g = grid2D(x, y, periodic=true)
+    end
+  else
+    if rectangular
+      g = grid2D_triangles(x, y, periodic=false)
+    else
+      g = grid2D(x, y)
+    end
+  end
+  gp = deepcopy(g)
+  gv = nv(gp)
+  for layer in 2:z
+    factor = layer-1
+    for newnode in 1:gv
+      newnodeid = newnode + (factor*gv)
+      connect_to = newnodeid - gv
+      if newnodeid > nv(g)
+        add_vertex!(g)
+      end
+      add_edge!(g, newnodeid, connect_to)
+      for nn in neighbors(gp, newnode)
+        newneighbor = nn + (factor*gv)
+        if newneighbor > nv(g)
+          add_vertex!(g)
+        end
+        add_edge!(g, newnodeid, newneighbor)
+      end
+    end
+  end
+  return g
 end
 
 """
@@ -133,7 +168,7 @@ end
 """
     grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
 
-Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid. 3D grids are not implemented yet.
+Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
 * `triangle=true` works when the dimensions of the grid are 2D. It will return a regular grid in which each node is at most connected to eight neighbors. If `false`, each node will be at most connected to four neighbors.
@@ -163,7 +198,7 @@ end
 """
     grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
 
-Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid. 3D grids are not implemented yet.
+Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
 * `triangle=true` works when the dimensions of the grid are 2D. It will return a regular grid in which each node is at most connected to eight neighbors. If `false`, each node will be at most connected to four neighbors.
@@ -305,6 +340,10 @@ function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, model::Abstrac
   coord_to_vertex(coord, dims)
 end
 
+function coord_to_vertex(agent::AbstractAgent, model::AbstractModel)
+  coord_to_vertex(agent.pos, model)
+end
+
 function coord_to_vertex(x::Integer, y::Integer, z::Integer, model::AbstractModel)
   coord_to_vertex((x,y,z), model)
 end
@@ -325,7 +364,8 @@ function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{In
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
     nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
   else # 3D grid
-    #TODO
+    nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
+    nodeid = nodeid + ((dims[1]*dims[2]) * (coord[3]-1))
   end
   return nodeid
 end
@@ -355,8 +395,14 @@ function vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer}
     end
     y = ceil(Integer, vertex/dims[1])
     coord = (x, y, 1)
-  else # 3D grid
-    #TODO
+  elseif dims[1] > 1 && dims[2] > 1 && dims[3] > 1  # 3D grid
+    gridbasesize = dims[1]*dims[2]
+    zcoord = ceil(Integer, vertex/gridbasesize)
+    vertex2d = vertex - ((zcoord-1) * gridbasesize)
+    coord2d = vertex_to_coord(vertex2d, (dims[1], dims[2], 1))
+    coord = (coord2d[1], coord2d[2], zcoord)
+  else
+    error("Wrong coords!")
   end
   return coord
 end

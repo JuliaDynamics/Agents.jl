@@ -50,7 +50,7 @@ function dummy_agent_step(a, b)  # because we do not need it, but it is required
 end
 
 function forest_step!(forest)
-  shuffled_nodes = shuffle(1:gridsize(forest.space.dimensions))
+  shuffled_nodes = Random.shuffle(1:gridsize(forest.space.dimensions))
   for node in shuffled_nodes  # randomly go through the cells and 
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()

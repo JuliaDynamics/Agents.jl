@@ -56,3 +56,42 @@ function model_initiation(;f, d, p, griddims, seed)
   end
   return forest
 end
+
+
+function forest_step!(forest)
+  shuffled_nodes = Random.shuffle(1:gridsize(forest.space.dimensions))
+  for node in shuffled_nodes  # randomly go through the cells and 
+    if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
+      p = rand()
+      if p <= forest.p
+        treeid = forest.agents[end].id +1
+        tree = Tree(treeid, (1,1,1), true)
+        add_agent_to_grid!(tree, node, forest)
+        push!(forest.agents, tree)
+      end
+    else
+      treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell
+      tree = id_to_agent(treeid, forest)  # the tree on this cell
+      if tree.status == false  # if it is has been burning, remove it.
+        kill_agent!(tree, forest)
+      else
+        f = rand()
+        if f <= forest.f  # the tree ignites on fire
+          tree.status = false
+        else  # if any neighbor is on fire, set this tree on fire too
+          neighbor_cells = node_neighbors(tree, forest)
+          for cell in neighbor_cells
+            treeid = get_node_contents(cell, forest)
+            if length(treeid) != 0  # the cell is not empty
+              treen = id_to_agent(treeid[1], forest)
+              if treen.status == false
+                tree.status = false
+                break
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end

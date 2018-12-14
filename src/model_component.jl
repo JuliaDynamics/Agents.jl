@@ -151,9 +151,11 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, ag
       df = data_collector(agent_properties, steps_to_collect_data, model, ss, df)
     end
   end
-  # if 1 is not in `steps_to_collect_data`, remove the first row.
+  # if 1 is not in `steps_to_collect_data`, remove the first columns. TODO: remove ids that were only present in the first step
   if !in(1, steps_to_collect_data)
-    df = df[2:end, :]
+    first_col = length(agent_properties)+2 # 1 for id and 1 for passing these agent properties
+    end_col = size(df)[2]
+    df = df[:, vcat([1], collect(first_col:end_col))]
   end
   return df
 end

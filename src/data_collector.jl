@@ -12,7 +12,9 @@ function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, mod
   agentslen = nagents(model)
   counter = 2
   for fn in properties
-    if typeof(getproperty(model.agents[1], fn)) <: AbstractArray
+    if fn == :pos
+      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
     else
       temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
@@ -39,7 +41,9 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
   dd = DataFrame()
   agentslen = nagents(model)
   for fn in properties
-    if typeof(getproperty(model.agents[1], fn)) <: AbstractArray
+    if fn == :pos
+      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
     else
       temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]

@@ -45,15 +45,35 @@ end
 end
 
 @testset "3D grid" begin
-  @test_throws String Agents.grid3D()
+  g1 = Agents.grid3D(2,3,2)
+  g2 = Agents.grid3D(2,3,3)
+  g3 = Agents.grid3D(2,3,2, periodic=true)
+  g4 = Agents.grid3D(2,3,3, periodic=true)
+  @test Agents.ne(g1) == 20
+  @test Agents.ne(g2) == 33
+  @test Agents.ne(g3) == 24
+  @test Agents.ne(g4) == 39
 end
 
 @testset "grid coord/vertex conversions" begin
-  g = Agents.grid2D(3, 4)
-  coord = (2,2,1)
   @test coord_to_vertex((2,2,1), (3,4,1)) == 5
   @test coord_to_vertex(2,2,1, (3,4,1)) == 5
   @test vertex_to_coord(5, (3,4,1)) == (2,2,1)
+
+  @test coord_to_vertex((2,2,1), (2,3,3)) == 4
+  @test coord_to_vertex((2,2,2), (2,3,3)) == 10
+  @test coord_to_vertex((2,2,3), (2,3,3)) == 16
+  @test coord_to_vertex((1,3,1), (2,3,3)) == 5
+  @test coord_to_vertex((1,3,2), (2,3,3)) == 11
+  @test coord_to_vertex((1,3,3), (2,3,3)) == 17
+  
+  @test vertex_to_coord(5, (2,3,3)) == (1,3,1)
+  @test vertex_to_coord(7, (2,3,3)) == (1,1,2)
+  @test vertex_to_coord(13, (2,3,3)) == (1,1,3)
+  @test vertex_to_coord(13, (2,3,3)) == (1,1,3)
+  @test vertex_to_coord(15, (2,3,3)) == (1,2,3)
+  @test vertex_to_coord(18, (2,3,3)) == (2,3,3)
+  @test vertex_to_coord(18, (2,3,3)) == (2,3,3)
 end
 
 @testset "grid" begin
