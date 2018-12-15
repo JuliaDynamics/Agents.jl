@@ -105,7 +105,11 @@ for i in 1:10
 end
 
 # 10. Running batch
-data = batchrunner(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data, 10)
+data = batchrunner(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
+# Create a column with the mean and std of the :status_count columns from differen steps.
+columnnames = vcat([:status_count], [Symbol("status_count_$i") for i in 1:9])
+using StatsBase
+combine_columns!(data, columnnames, [StatsBase.mean, StatsBase.std])
 
 # optionally write the results to file
 write_to_file(df=data, filename="forest_model.csv")

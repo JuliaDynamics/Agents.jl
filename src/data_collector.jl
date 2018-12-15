@@ -80,6 +80,30 @@ function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{
   return df
 end
 
+"""
+    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::Array{Function})
+Combine columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
+"""
+function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregators)
+  for ag in aggregators
+    d = by(data, :step, column_names => x-> (ag([getproperty(x, i) for i in column_names])))
+    colname = Symbol(string(column_names[1])[1:end-1] * string(ag))
+    data[colname] = d[names(d)[end]]
+  end
+  return data
+end
+
+function combine_columns!(data::DataFrame, column_base_name::String, aggregators)
+  column_names = vcat([column_base_name], [column_base_name*string(i) for i in 1:size(data)[2]])
+  datanames = [string(i) for i in names(data)]
+  final_names = Array{Symbol}(undef, 0)
+  for cn in column_names
+    if cn in datanames
+      push!(final_names, Symbol(cn))
+    end
+  end
+  combine_columns!(data, final_names, aggregators)
+end
 
 """
 Writes a dataframe to file
