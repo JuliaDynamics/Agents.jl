@@ -1,6 +1,6 @@
 # Agents: agent-based modeling framework in Julia
 
-[![](https://img.shields.io/badge/Agents.jl-v0.1-blue.svg)](https://github.com/kavir1698/Agents.jl) 
+[![](https://img.shields.io/badge/Agents.jl-v0.2-blue.svg)](https://github.com/kavir1698/Agents.jl) 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
 [![Build Status](https://travis-ci.org/kavir1698/Agents.jl.svg?branch=master)](https://travis-ci.org/kavir1698/Agents.jl)
@@ -11,6 +11,8 @@ Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modelin
 * Running the simulations in parallel on multiple cores or on clusters. (This is not ready yet)
 * Automatic data collection in a `DataFrame` at desired intervals.
 * Exploring the simulation results interactively in [Data Voyegar 2](https://github.com/vega/voyager).
+* Batch running and batch data collection
+* Visualize agent distributions on grids
 
 Julia is a language that is especially suitable for ABMs, because a) [it runs fast](https://julialang.org/benchmarks/), b) it is easy to express your ideas in and quick to write, and c) it has rich and easy-to-use packages for data analysis.
 
@@ -34,5 +36,5 @@ This is still work in progress. I am working on the following:
 * Adding more unit tests
 * Implementing more examples
 * Implementing arbitrary network spaces
-* Better batch data collector
 * Parallel computing of batch simulations
+* 3D visualization
