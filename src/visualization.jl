@@ -8,17 +8,14 @@ Plots the agents_data_complete() results in your browser.
 * property_plot: An array of tuples. The first element of the tuple is the agent property you would like to plot (as a symbol). The second element of the tuple is the type of plot you want on that property (as a symbol). Example: [(:wealth, :hist)]. Available plot types: :hist.
 
 You can add more plot types by adding more if statements in the function.
-
-Not working: VegaLite does not show the plot.
 """
 function agents_plots_complete(property_plot::Array, model::AbstractModel)
   properties = [i[1] for i in property_plot]
   data = agents_data_complete(properties, model)
   for (property, pt) in property_plot
     if pt == :hist
-      # data |> @vlplot(:bar, x={property, bin=true}, y="count()") # This is a bug and doesn't work
-      data |> @vlplot(:bar, x=property, y="count()") # this is temporary until the above bug is fixed
-      # save("histogram.pdf")
+      # data |> @vlplot(:bar, x={property, bin=true, title=property}, y={"count()", title="Frequency"}) # This is a bug and doesn't work
+      data |> @vlplot(:bar, x=property, y="count()") |> save("histogram.pdf") # this is temporary until the above bug is fixed
     end
   end
 end
@@ -47,7 +44,7 @@ end
 """
     visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
 
-Show the distribution of agents on a 2D grid. You should provide `position_colomn` which is the name of the column that holds agent positions. If agents have different types and you want each type to be a different color, provide types=<column name>. Use a dictionary with `cc` to pass colors for each type. Available colors are "red", "green", "blue", "cyan", "pink", "yellow", "green2", and "black".
+Show the distribution of agents on a 2D grid. You should provide `position_colomn` which is the name of the column that holds agent positions. If agents have different types and you want each type to be a different color, provide types=<column name>. Use a dictionary with `cc` to pass colors for each type. You may choose any color name as is on the [list of colors on Wikipedia](https://en.wikipedia.org/wiki/Lists_of_colors).
 """
 function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", cc::Dict=Dict())
   g = model.space.space
@@ -67,18 +64,21 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
     dd = dropmissing(data[[position_column, types]])
     unique_types = sort(unique(dd[types]))
     pos = position_column
-    colors = Dict("red"=>(0.9,0.1,0.1), "green"=>(0.1, 0.9, 0.1), "blue"=> (0.1,0.1,0.9), "cyan" => (0.5, 0.99, 0.99), "pink" => (0.99, 0.5, 0.99), "yellow" => (0.2, 0.9, 0.9), "green2"=>(0.01, 70, 0.4), "black" => (0.01,0.01,0.01))
     if length(cc) == 0
+      colors = colorrgb(length(unique_types))
       colordict = Dict{Any, Tuple}()
+      colorvalues = collect(values(colors))
       for ut in 1:length(unique_types)
-        colordict[unique_types[ut]] = collect(values(colors))[ut]
+        colordict[unique_types[ut]] = colorvalues[ut]
       end
     else
+      colors = colorrgb(collect(values(cc)))
       colordict = Dict{Any, Tuple}()
       for key in keys(cc)
         colordict[key] = colors[cc[key]]
       end
     end
+    colorrev = Dict(v=>k for (k,v) in colors)
     for index in 1:length(unique_types)
       tt = unique_types[index]
       d = by(dd[dd[types] .== tt, :], pos, N = pos => length)
@@ -88,9 +88,54 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
       # nodefillc[d[pos]] .= [cmapc[round(Int64, i*256)] for i in  (d[:N] ./ maxval) .- 0.001]
       # println("$tt: $name")
       nodefillc[d[pos]] .= [RGBA(colordict[tt][1], colordict[tt][2], colordict[tt][3], i) for i in  (d[:N] ./ maxval) .- 0.001]
-      println("$tt: $(colordict[tt])")
+      println("$tt: $(colorrev[colordict[tt]])")
     end
   end
 
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc))
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1)))
+end
+
+"""
+    colorrgb(color_names::Array)
+Returns a dictionary of each colorname and its RGB values. See colors and names on [list of colors on Wikipedia](https://en.wikipedia.org/wiki/Lists_of_colors)
+"""
+function colorrgb(color_names::Array)
+  script_path = splitdir(realpath(@__FILE__))[1]
+  f = joinpath(script_path, "color_names.csv")
+  ff = CSV.File(f)
+  rgb_dict = Dict{AbstractString, Tuple}()
+  for row in ff 
+    if row.cname in color_names || row.cname2 in color_names
+      rgb_dict[row.cname] = (row.R/256, row.G/256, row.B/256)
+    end
+  end
+  if length(rgb_dict) < length(color_names)
+    simm = intersect(keys(rgb_dict), color_names)
+    for ss in keys(rgb_dict)
+      if !in(ss, color_names)
+        println("$ss is not a valid color name!")
+      end
+    end
+    throw("Provide valid colornames.")
+  end
+  return rgb_dict
+end
+
+"""
+    colornames(n::Integer)
+
+Returns n random colors as a dictionary (Dict{colorname=>rgb})
+"""
+function colorrgb(n::Integer)
+  script_path = splitdir(realpath(@__FILE__))[1]
+  f = joinpath(script_path, "color_names.csv")
+  ff = CSV.File(f)
+  randcolors = rand(1:length(ff), n)
+  rgb_dict = Dict{AbstractString, Tuple}()
+  for (index,row) in enumerate(ff) 
+    if index in randcolors
+      rgb_dict[row.cname] = (row.R/256, row.G/256, row.B/256)
+    end
+  end
+  return rgb_dict
 end

@@ -9,9 +9,9 @@
 This model shows that even a slight preference for being around neighbors of the same kind leads to segregated neighborhoods
 =#
 
+using Agents
 
 # Create agent, model, and grid types
-
 mutable struct SchellingAgent <: AbstractAgent
   id::Integer
   pos::Tuple{Integer, Integer, Integer}

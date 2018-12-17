@@ -1,7 +1,7 @@
-
 #########################
 ### Forest fire model ###
 #########################
+using Agents
 
 mutable struct Tree <: AbstractAgent
   id::Integer
@@ -90,22 +90,23 @@ end
 
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20, 1), seed=2)
 agent_properties = [:status, :pos]
-steps_to_collect_data = collect(1:100)
+steps_to_collect_data = collect(1:10)
 
 # aggregators = [length, count]
-# data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
-data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, steps_to_collect_data)
+# data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data)
+data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, steps_to_collect_data)
 
 # 9. explore data visually
 visualize_data(data)
 
 # or plot trees on a grid
 for i in 1:10
-  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
+  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green_ryb", false=>"red"))
 end
 
 # 10. Running batch
-data = batchrunner(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
+agent_properties = [:status, :pos]
+data = batchrunner(dummy_agent_step, forest_step!, forest, 10, agent_properties, steps_to_collect_data, 10)
 # Create a column with the mean and std of the :status_count columns from differen steps.
 columnnames = vcat([:status_count], [Symbol("status_count_$i") for i in 1:9])
 using StatsBase

@@ -1,4 +1,6 @@
 using StatsBase
+using Agents
+
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
