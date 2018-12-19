@@ -12,7 +12,7 @@ random_activation
 ```@docs
 grid
 gridsize
-Graph_iter
+Node_iter
 add_agent!
 move_agent!
 add_agent_single!
