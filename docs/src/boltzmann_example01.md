@@ -145,7 +145,7 @@ end
 model = instantiate_model(numagents=100, griddims=(5,5,1))
 ```
 
-We should now add agents to random positions on the grid. The `add_agent_to_grid!`  function updates the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates (see [Space functions](@ref) for more details).
+We should now add agents to random positions on the grid. The `add_agent!`  function updates the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates (see [Space functions](@ref) for more details).
 
 ```julia
 for agent in model.agents

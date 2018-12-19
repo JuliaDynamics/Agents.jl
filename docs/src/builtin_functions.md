@@ -12,10 +12,10 @@ random_activation
 ```@docs
 grid
 gridsize
-add_agent_to_grid!
-move_agent_on_grid!
-add_agent_to_grid_single!
-move_agent_on_grid_single!
+add_agent!
+move_agent!
+add_agent_single!
+move_agent_single!
 find_empty_nodes_coords
 find_empty_nodes
 coord_to_vertex

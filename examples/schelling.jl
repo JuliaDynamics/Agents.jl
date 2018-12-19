@@ -72,7 +72,7 @@ function agent_step!(agent, model)
   else
     agent.mood = true
     # move
-    move_agent_on_grid_single!(agent, model)
+    move_agent_single!(agent, model)
   end
 end
 

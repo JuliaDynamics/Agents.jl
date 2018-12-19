@@ -71,7 +71,7 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
     agent2.wealth += 1
     # now move
     neighboring_nodes = node_neighbors(agent, model)
-    move_agent_on_grid!(agent, rand(neighboring_nodes), model)
+    move_agent!(agent, rand(neighboring_nodes), model)
   end
 end
 

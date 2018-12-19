@@ -247,7 +247,7 @@ function gridsize(x::Integer, y::Integer, z::Integer)
 end
 
 """
-    move_agent_on_grid!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
+    move_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
   
 Adds `agentID` to a new position in the grid and removes it from the old position. Also updates the agent to represent the new position. `pos` is tuple of x, y, z (only if its a 3D space) coordinates of the grid node. If `pos` is not given, the agent is moved to a random position on the grid. 
 """
@@ -258,7 +258,7 @@ function move_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
 end
 
 """
-    move_agent_on_grid!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
+    move_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
 
 Adds `agentID` to a new position in the grid and removes it from the old position. Also updates the agent to represent the new position. `pos` is an integer showing the number of the node on the grid node. If `pos` is not given, the agent is moved to a random position on the grid.
 """
@@ -282,7 +282,7 @@ function move_agent!(agent::AbstractAgent, model::AbstractModel)
 end
 
 """
-    move_agent_on_grid_single!(agent::AbstractAgent, model::AbstractModel)
+    move_agent_single!(agent::AbstractAgent, model::AbstractModel)
 
 Moves agent to a random nodes on the grid while respecting a maximum of one agent per node. If there are no empty nodes, the agent wont move.
 
