@@ -1,6 +1,6 @@
 
 @testset "0D grid" begin
-  @test Agents.grid0D() == nothing
+  @test Agents.grid0D() == Agents.Graph(1)
 end
 
 Random.seed!(209)

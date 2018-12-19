@@ -9,6 +9,7 @@ abstract type AbstractSpace end
 
 
 function grid0D()
+  g = Agents.Graph(1)
 end
 
 """
@@ -25,7 +26,7 @@ end
 """
 A regular 2D grid where each node is at most connected to four neighbors. It can optionally be toroidal.
 """
-function grid2D(x::Integer, y::Integer; periodic=false)
+function grid2D(x::Integer, y::Integer; periodic::Bool=false)
   g = Grid([x, y], periodic=periodic)
 end
 
@@ -247,6 +248,15 @@ function gridsize(x::Integer, y::Integer, z::Integer)
 end
 
 """
+    gridsize(model::AbstractModel)
+
+Returns the size of the grid in the model
+"""
+function gridsize(model::AbstractModel)
+  gridsize(model.space.dimensions)
+end
+
+"""
     move_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
   
 Adds `agentID` to a new position in the grid and removes it from the old position. Also updates the agent to represent the new position. `pos` is tuple of x, y, z (only if its a 3D space) coordinates of the grid node. If `pos` is not given, the agent is moved to a random position on the grid. 
@@ -371,11 +381,53 @@ end
 """
     find_empty_nodes(model::AbstractModel)
 
-Returns the numbers of empty nodes on the model space.
+Returns the IDs of empty nodes on the model space.
 """
 function find_empty_nodes(model::AbstractModel)
   empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
   return empty_cells
+end
+
+"""
+    pick_empty(model)
+
+Returns the ID of a random empty cell. Returns 0 if there are no empty cells 
+"""
+function pick_empty(model)
+  empty_cells = find_empty_nodes(model)
+  if length(empty_cells) == 0
+    return 0
+  else
+    random_node = rand(empty_cells)
+    return random_node
+  end
+end
+
+"""
+
+Returns true if the cell at `cell_id` is empty.
+"""
+function is_empty(cell_id::Integer, model::AbstractModel)
+  if length(model.space.agent_positions[cell_id]) == 0
+    return true
+  else
+    return false
+  end
+end
+
+"""
+    empty_cells(model::AbstractArray)
+
+Returns true if there are empty cells, otherwise returns false.
+"""
+function empty_cells(model::AbstractArray)
+  ee = false
+  for el in model.space.agent_positions
+    if length(el) == 0
+      return true
+    end
+  end
+  return ee
 end
 
 """
@@ -530,7 +582,7 @@ end
 """
     node_neighbors(node_number::Integer, model::AbstractModel)
 
-Returns neighboring node numbers of the node with `node_number`.
+Returns neighboring node IDs of the node with `node_number`.
 """
 function node_neighbors(node_number::Integer, model::AbstractModel)
   nn = neighbors(model.space.space, node_number)
@@ -547,5 +599,80 @@ function node_neighbors(node_coord::Tuple, model::AbstractModel)
   nn = node_neighbors(node_number, model)
   nc = [vertex_to_coord(i, model) for i in nn]
   return nc
+end
+
+"""
+    node_neighbors(node_number::Integer, model::AbstractModel, radius::Integer)
+
+Returns a list of neighboring cells to the node `node_number` within the `radius`.
+"""
+function node_neighbors(node_number::Integer, model::AbstractModel, radius::Integer)
+  neighbor_cells = Set(node_neighbors(node_number, model))
+  included_cells = Set()
+  for rad in 2:radius
+    templist = Array{Integer}(undef, 0)
+    for nn in neighbor_cells
+      if !in(nn, included_cells)
+        newns = node_neighbors(nn, model)
+        for newn in newns
+          push!(templist, newn)
+        end
+      end
+    end
+    for tt in templist
+      push!(neighbor_cells, tt)
+    end
+  end
+  nlist = collect(neighbor_cells)
+  j = findfirst(a-> a==node_number, nlist)
+  if j != nothing
+    splice!(nlist, j)
+  end
+  return nlist
+end
+
+"""
+    Node_iter(model::AbstractModel)
+
+An iterator that returns node coordinates, if the graph is a grid, or otherwise node numbers, and the agents in each node.
+"""
+struct Node_iter
+  model::AbstractModel
+  length::Integer
+  postype::DataType
+end
+
+Node_iter(model::AbstractModel) = Node_iter(model, length(model.space.agent_positions), typeof(model.agents[1].pos))
+
+Base.length(iter::Node_iter) = iter.length
+
+function Base.iterate(iter::Node_iter, state=1)
+  if state > iter.length
+      return nothing
+  end
+
+  cellcontent = iter.model.space.agent_positions[state]
+  nagents = length(cellcontent)
+  if nagents == 0
+    element = (Integer[], Array{AbstractArray}(undef,0))
+  else
+    if iter.postype <: Tuple
+      pp = vertex_to_coord(state, iter.model)
+      agentlist = Array{AbstractAgent}(undef, nagents)
+      for n in 1:nagents 
+        agentlist[n] = id_to_agent(cellcontent[n], iter.model)
+      end
+      element = (pp, agentlist)
+    else
+      pp = state
+      agentlist = Array{AbstractAgent}(undef, nagents)
+      for n in 1:nagents 
+        agentlist[n] = id_to_agent(cellcontent[n], iter.model)
+      end
+      element = (pp, agentlist)      
+    end
+  end
+
+  return (element, state+1)
 end
 
