@@ -1,7 +1,7 @@
 # from the forest fire model in the `examples` directory
 mutable struct Tree <: AbstractAgent
   id::Integer
-  pos::Tuple{Integer, Integer, Integer}
+  pos::Tuple{Integer, Integer}
   status::Bool  # true is green and false is burning
 end
 
@@ -15,11 +15,10 @@ mutable struct Forest <: AbstractModel
 end
 
 mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer, Integer}
+  dimensions::Tuple{Integer, Integer}
   space
   agent_positions::Array  # an array of arrays for each grid node
 end
-
 
 function model_initiation(;f, d, p, griddims, seed)
   Random.seed!(seed)
@@ -33,9 +32,8 @@ function model_initiation(;f, d, p, griddims, seed)
   for node in 1:gridsize(forest.space.dimensions)
     pp = rand()
     if pp <= forest.d
-      tree = Tree(node, (1,1,1), true)
-      add_agent_to_grid!(tree, node, forest)
-      push!(forest.agents, tree)
+      tree = Tree(node, (1,1), true)
+      add_agent!(tree, node, forest)
     end
   end
   return forest
@@ -52,9 +50,8 @@ function forest_step!(forest)
       p = rand()
       if p <= forest.p
         treeid = forest.agents[end].id +1
-        tree = Tree(treeid, (1,1,1), true)
-        add_agent_to_grid!(tree, node, forest)
-        push!(forest.agents, tree)
+        tree = Tree(treeid, (1,1), true)
+        add_agent!(tree, node, forest)
       end
     else
       treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell

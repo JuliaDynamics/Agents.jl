@@ -14,7 +14,7 @@ using Agents
 # Create agent, model, and grid types
 mutable struct SchellingAgent <: AbstractAgent
   id::Integer
-  pos::Tuple{Integer, Integer, Integer}
+  pos::Tuple{Integer, Integer}
   mood::Bool # true is happy and false is unhappy
   ethnicity::Integer  # type of agent
 end
@@ -26,22 +26,22 @@ mutable struct SchellingModel <: AbstractModel
 end
 
 mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer, Integer}
+  dimensions::Tuple{Integer, Integer}
   space
   agent_positions::Array  # an array of arrays for each grid node
   min_to_be_happy::Integer  # minimum number of neighbors to be of the same kind so that they are happy
 end
 
 # instantiate the model
-function instantiate_model(;numagents=320, griddims=(20, 20, 1), min_to_be_happy=3)
-  agents = vcat([SchellingAgent(i, (1,1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(i, (1,1,1), false, 1) for i in (numagents/2)+1:numagents])
+function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
+  agents = vcat([SchellingAgent(i, (1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(i, (1,1), false, 1) for i in (numagents/2)+1:numagents])
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, true, true), agent_positions)  # create a 2D grid with nodes have a max of 8 neighbors
   model = SchellingModel(mygrid, agents, random_activation, min_to_be_happy) 
 
   # randomly distribute the agents on the grid
   for agent in model.agents
-    add_agent_to_grid_single!(agent, model)
+    add_agent_single!(agent, model)
   end
 end
 

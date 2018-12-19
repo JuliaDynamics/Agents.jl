@@ -32,6 +32,5 @@ This is still work in progress. I am working on the following:
 
 * Adding more unit tests
 * Implementing more examples
-* Implementing arbitrary network spaces
 * Parallel computing of batch simulations
 * 3D visualization

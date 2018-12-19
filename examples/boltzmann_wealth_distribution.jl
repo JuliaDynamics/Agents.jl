@@ -4,7 +4,7 @@ using Agents
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
-  pos::Tuple{Integer, Integer, Integer}  # x,y,z coords
+  pos::Tuple{Integer, Integer}  # x,y,z coords
   wealth::Integer
 end
 
@@ -18,14 +18,14 @@ end
 
 # 3. define a space type
 mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer, Integer}
+  dimensions::Tuple{Integer, Integer}
   space
   agent_positions::Array  # an array of arrays for each grid node
 end
 
 # 4. instantiate the model
 function instantiate_model(;numagents, griddims)
-  agents = [MyAgent(i, (1,1,1), 1) for i in 1:numagents]  # create a list of agents
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
   model = MyModel(mygrid, agents, random_activation)  # instantiate the model
@@ -56,7 +56,7 @@ step!(agent_step!, model, 10)
 # 7. You can add agents to the grid
 # add agents to random positions. This update the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
 for agent in model.agents
-  add_agent_to_grid!(agent, model)
+  add_agent!(agent, model)
 end
 
 # Now we need to add to the agents’ behaviors, letting them move around and only give money to other agents in the same cell.

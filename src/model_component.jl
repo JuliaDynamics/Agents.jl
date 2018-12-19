@@ -29,7 +29,11 @@ nagents(model::AbstractModel) = length(model.agents)
 Removes an agent from the list of agents and from the space.
 """
 function kill_agent!(agent::AbstractAgent, model::AbstractModel)
-  agentnode = coord_to_vertex(agent.pos, model)
+  if typeof(agent.pos) <: Tuple
+    agentnode = coord_to_vertex(agent.pos, model)
+  else
+    agentnode = agent.pos
+  end
   splice!(model.space.agent_positions[agentnode], findfirst(a->a==agent.id, model.space.agent_positions[agentnode]))  # remove from the grid
   splice!(model.agents, findfirst(a->a==agent, model.agents))  # remove from the model.agents
 end

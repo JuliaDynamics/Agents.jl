@@ -26,11 +26,11 @@ function visualize_data(data::DataFrame)
 end
 
 """
-    plot_locs(g, dims::Tuple{Integer, Integer, Integer})
+    plot_locs(g, dims::Tuple)
 
 Return three arrays for x, y, z coordinates of each node
 """
-function node_locs(g, dims::Tuple{Integer, Integer, Integer})
+function node_locs(g, dims::Tuple)
   coords = []
   for nn in 1:nv(g)
     push!(coords, vertex_to_coord(nn, dims))

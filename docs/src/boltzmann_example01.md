@@ -28,11 +28,11 @@ This subtyping will allow all the built-in functions to work on your define type
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
-  pos::Tuple{Integer, Integer, Integer}  # x,y,z coords
+  pos::Tuple{Integer, Integer}  # x,y coords
   wealth::Integer
 end
 ```
-The agent type has to have the `id` and the `pos` (for position) fields, but it can have any other fields that you desire. Here we add a `wealth` field that accepts integers. If your space is a grid, the position should accept a `Tuple{Integer, Integer, Integer}` representing x, y, z coordinates. Your grid does not have to be 3D. Here we want a regular 2D grid, so we will always keep `z=1`.
+The agent type has to have the `id` and the `pos` (for position) fields, but it can have any other fields that you desire. Here we add a `wealth` field that accepts integers. If your space is a grid, the position should accept a `Tuple{Integer, Integer}` representing x, y coordinates.
 
 ```julia
 # 2. define a model type
@@ -51,7 +51,7 @@ Now we write a function to instantiate the model:
 ```julia
 # 3. instantiate the model
 function instantiate_model(;numagents)
-  agents = [MyAgent(i, (1,1,1), 1) for i in 1:numagents]  # create a list of agents
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   model = MyModel(agents, random_activation)  # instantiate the model
   return model
 end
@@ -123,7 +123,7 @@ end
 
 # define a space type
 mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer, Integer}
+  dimensions::Tuple{Integer, Integer}
   space
   agent_positions::Array  # an array of arrays for each grid node
 end
@@ -135,7 +135,7 @@ We also have to modify the model instantiation function:
 
 ```julia
 function instantiate_model(;numagents, griddims)
-  agents = [MyAgent(i, (1,1,1), 1) for i in 1:numagents]  # create a list of agents
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
   model = MyModel2(mygrid, agents, random_activation)  # instantiate the model
@@ -149,7 +149,7 @@ We should now add agents to random positions on the grid. The `add_agent_to_grid
 
 ```julia
 for agent in model.agents
-  add_agent_to_grid!(agent, model)
+  add_agent!(agent, model)
 end
 ```
 
