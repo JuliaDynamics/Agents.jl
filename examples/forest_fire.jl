@@ -86,7 +86,7 @@ function forest_step!(forest)
 end
 
 
-forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20, 1), seed=2)
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
 agent_properties = [:status, :pos]
 steps_to_collect_data = collect(1:10)
 

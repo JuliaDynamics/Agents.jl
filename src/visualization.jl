@@ -26,11 +26,11 @@ function visualize_data(data::DataFrame)
 end
 
 """
-    plot_locs(g, dims::Tuple)
+    plot_locs(g, dims::Tuple{Integer,Integer,Integer})
 
 Return three arrays for x, y, z coordinates of each node
 """
-function node_locs(g, dims::Tuple)
+function node_locs(g, dims::Tuple{Integer,Integer,Integer})
   coords = []
   for nn in 1:nv(g)
     push!(coords, vertex_to_coord(nn, dims))
@@ -39,6 +39,21 @@ function node_locs(g, dims::Tuple)
   locs_y = [Float64(i[2]) for i in coords]
   locs_z = [Float64(i[3]) for i in coords]
   return locs_x, locs_y, locs_z
+end
+
+"""
+    plot_locs(g, dims::Tuple{Integer,Integer})
+
+Return arrays for x, y coordinates of each node
+"""
+function node_locs(g, dims::Tuple{Integer,Integer})
+  coords = []
+  for nn in 1:nv(g)
+    push!(coords, vertex_to_coord(nn, dims))
+  end
+  locs_x = [Float64(i[1]) for i in coords]
+  locs_y = [Float64(i[2]) for i in coords]
+  return locs_x, locs_y
 end
 
 """
@@ -138,4 +153,34 @@ function colorrgb(n::Integer)
     end
   end
   return rgb_dict
+end
+
+
+"""
+    visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="2D_agent_distribution")
+
+Visualize data of a 1D cellular automaton. `data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `nrows` is the number of times the model was run.
+"""
+function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="CA_1D")
+  dims = (model.space.dimensions[1], nrows)
+  g = Agents.grid2D(dims[1], dims[2])
+  locs_x, locs_y = node_locs(g, dims)
+  
+  # base node color is light grey
+  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
+
+  for row in 1:nrows
+    pos = Symbol(string(position_column)*"_$row")
+    status = Symbol(string(status_column)*"_$row")
+    newcolors = [RGBA(0.1, 0.1, 0.1, 0.01) for i in 1:dims[1]]
+    for ll in 1:dims[1]
+      if data[status][ll] == "1"
+        newcolors[ll] = RGBA(0.1, 0.1, 0.1, 1.0)
+      end
+    end
+    nodefillc[(dims[1]*row)-(dims[1]-1):dims[1]*row] .= newcolors
+  end
+
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01)))
+
 end

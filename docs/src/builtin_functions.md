@@ -5,6 +5,7 @@
 ```@docs
 as_added
 random_activation
+partial_activation
 ```
 
 ## Space functions

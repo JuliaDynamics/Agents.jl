@@ -23,6 +23,9 @@ Returns the number of agents.
 """
 nagents(model::AbstractModel) = length(model.agents)
 
+function dummystep(a::AbstractAgent, b::AbstractModel)
+end
+
 """
     kill_agent!(agent::AbstractAgent, model::AbstractModel)
 
