@@ -107,7 +107,8 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
     end
   end
 
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1)))
+  NODESIZE = 1/sqrt(gridsize(model))
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1), NODESIZE=NODESIZE))
 end
 
 """
@@ -181,6 +182,25 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
     nodefillc[(dims[1]*row)-(dims[1]-1):dims[1]*row] .= newcolors
   end
 
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01)))
+  NODESIZE = 1/sqrt(gridsize(dims))
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
 
+end
+
+function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
+  dims = model.space.dimensions
+  g = model.space.space
+  locs_x, locs_y = node_locs(g, dims)
+  NODESIZE = 1/sqrt(gridsize(dims))
+
+  for r in 1:runs
+    # base node color is light grey
+    nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
+    stat = Symbol(string(status_column)*"_$r")
+    nonzeros = findall(a-> a =="1", data[stat])
+    
+    nodefillc[nonzeros] .= RGBA(0.1, 0.1, 0.1, 1)
+
+    draw(PNG("$(savename)_$r.png"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
+  end
 end
