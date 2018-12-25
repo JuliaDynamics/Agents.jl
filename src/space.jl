@@ -339,6 +339,7 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   end
 end
 
+
 """
     add_agent!(agent::AbstractAgent, model::AbstractModel)
 Adds agent to a random node in the space and to the agent to the list of agents. 
@@ -346,7 +347,6 @@ Adds agent to a random node in the space and to the agent to the list of agents.
 Returns the agent's new position.
 """
 function add_agent!(agent::AbstractAgent, model::AbstractModel)
-  agentID = agent.id
   nodenumber = rand(1:nv(model.space.space))
   add_agent!(agent, nodenumber, model)
   return agent.pos

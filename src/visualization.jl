@@ -63,7 +63,7 @@ Show the distribution of agents on a 2D grid. You should provide `position_colom
 """
 function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", cc::Dict=Dict())
   g = model.space.space
-  locs_x, locs_y, locs_z = node_locs(g, model.space.dimensions)
+  locs_x, locs_y, = node_locs(g, model.space.dimensions)
   
   # base node color is light grey
   nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model.space.dimensions)]
@@ -107,7 +107,7 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
     end
   end
 
-  NODESIZE = 1/sqrt(gridsize(model))
+  NODESIZE = 0.8/sqrt(gridsize(model))
   draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1), NODESIZE=NODESIZE))
 end
 
@@ -191,7 +191,7 @@ function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::
   dims = model.space.dimensions
   g = model.space.space
   locs_x, locs_y = node_locs(g, dims)
-  NODESIZE = 1/sqrt(gridsize(dims))
+  NODESIZE = 0.8/sqrt(gridsize(dims))
 
   for r in 1:runs
     # base node color is light grey
