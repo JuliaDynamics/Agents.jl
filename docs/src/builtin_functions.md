@@ -18,7 +18,7 @@ add_agent!
 move_agent!
 add_agent_single!
 move_agent_single!
-empty_cells
+empty_nodes
 pick_empty
 find_empty_nodes_coords
 find_empty_nodes

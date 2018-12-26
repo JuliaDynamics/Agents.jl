@@ -29,17 +29,17 @@ end
   @test Agents.ne(obj2) == 24
 end
 
-@testset "2D triangle" begin
-  obj1 = Agents.grid2D_triangles(3, 3)
+@testset "2D Moore" begin
+  obj1 = Agents.grid2D_Moore(3, 3)
   @test Agents.nv(obj1) == 9
   @test Agents.ne(obj1) == 20
-  obj1 = Agents.grid2D_triangles(3, 4)
+  obj1 = Agents.grid2D_Moore(3, 4)
   @test Agents.nv(obj1) == 12
   @test Agents.ne(obj1) == 29
-  obj2 = Agents.grid2D_triangles(3, 2, periodic=true)
+  obj2 = Agents.grid2D_Moore(3, 2, periodic=true)
   @test Agents.nv(obj2) == 6
   @test Agents.ne(obj2) == 15
-  obj2 = Agents.grid2D_triangles(3, 3, periodic=true)
+  obj2 = Agents.grid2D_Moore(3, 3, periodic=true)
   @test Agents.nv(obj2) == 9
   @test Agents.ne(obj2) == 36
 end
@@ -84,10 +84,10 @@ end
   @test Agents.grid(1,1,1, true, true) == Agents.grid0D()
   @test Agents.grid(6,1,1, true, true) == Agents.grid1D(6, periodic=true)
   @test Agents.grid(6,1,1, false, true) == Agents.grid1D(6, periodic=false)
-  @test Agents.grid(6,5,1, false, true) == Agents.grid2D_triangles(6, 5, periodic=false)
-  @test Agents.grid(6,5, false, true) == Agents.grid2D_triangles(6, 5, periodic=false)
-  @test Agents.grid(6,5,1, true, true) == Agents.grid2D_triangles(6, 5, periodic=true)
-  @test Agents.grid(6,5, true, true) == Agents.grid2D_triangles(6, 5, periodic=true)
+  @test Agents.grid(6,5,1, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
+  @test Agents.grid(6,5, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
+  @test Agents.grid(6,5,1, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
+  @test Agents.grid(6,5, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
   @test Agents.grid(6,5,1, true, false) == Agents.grid2D(6, 5, periodic=true)
   @test Agents.grid(6,5, true, false) == Agents.grid2D(6, 5, periodic=true)
   @test Agents.grid(6,5,1, false, false) == Agents.grid2D(6, 5, periodic=false)

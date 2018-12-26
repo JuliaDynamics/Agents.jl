@@ -25,11 +25,13 @@ end
 
 # 4. instantiate the model
 function instantiate_model(;numagents, griddims)
-  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
-  agent_positions[1] = collect(1:numagents)
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
-  model = MyModel(mygrid, agents, random_activation)  # instantiate the model
+  model = MyModel(mygrid, AbstractAgent[], random_activation)  # instantiate the model
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
+  for ag in agents
+    add_agent!(agent, model)
+  end
   return model
 end
 

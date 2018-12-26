@@ -2,7 +2,7 @@ using Agents
 using Agents.CA2D
 
 # 0. Define the rule
-# Rules of Conway's game of life: DSR (Death, Survival, Reproduction). Cells with living neighbors < D, die. Cell with living agents <= S, survives. Cell with living neighbors = R, come to life.
+# Rules of Conway's game of life: DSR (Death, Survival, Reproduction). Cells die if the number of their living neighbors are $<D$, survive if the number of their living neighbors are $<=S$, come to life if their living neighbors are as many as $R$.
 rules = (2,3,3)
 
 # 1. Build the model
