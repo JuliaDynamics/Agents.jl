@@ -22,8 +22,12 @@ mutable struct Space <: AbstractSpace
 end
 
 
-# initialize the model
-function build_model(;rules::Dict, ncols=101)
+```
+    build_model(;rules::Dict, ncols=101)
+
+Builds a 1D cellular automaton. `rules` is a dictionary with this format: `Dict("000" => "0")`. `ncols` is the number of cells in a 1D CA.
+```
+function build_model(;rules::Dict, ncols::Integer=101)
   gridsize=(ncols,1)
   agents = [Agent(i, (i,1), "0") for i in 1:gridsize[1]]
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize[1]]
@@ -59,7 +63,12 @@ function ca_step!(model)
   end
 end
 
-function ca_run(model::AbstractModel, runs::Integer, filename::String="CA1D")
+```
+    ca_run(model::AbstractModel, runs::Integer, filename::String="CA_1D")
+
+Runs a 1D cellular automaton.
+```
+function ca_run(model::AbstractModel, runs::Integer, filename::String="CA_1D")
   data = step!(dummystep, CA1D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
   visualize_1DCA(data, model, :pos, :status, runs, savename=filename)
 end

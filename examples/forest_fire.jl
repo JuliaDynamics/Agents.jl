@@ -2,6 +2,7 @@
 ### Forest fire model ###
 #########################
 using Agents
+using Random
 
 mutable struct Tree <: AbstractAgent
   id::Integer
@@ -43,9 +44,6 @@ function model_initiation(;f, d, p, griddims, seed)
     end
   end
   return forest
-end
-
-function dummy_agent_step(a, b)  # because we do not need it, but it is required by the step! function
 end
 
 function forest_step!(forest)
@@ -91,8 +89,8 @@ agent_properties = [:status, :pos]
 steps_to_collect_data = collect(1:10)
 
 # aggregators = [length, count]
-# data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data)
-data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, steps_to_collect_data)
+# data = step!(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data)
+data = step!(dummystep, forest_step!, forest, 10, agent_properties, steps_to_collect_data)
 
 # 9. explore data visually
 visualize_data(data)

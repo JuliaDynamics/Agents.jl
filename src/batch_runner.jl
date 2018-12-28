@@ -1,3 +1,8 @@
+```
+    batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, replicates::Integer)
+
+Runs `replicates` number of simulation replicates and returns a `DataFrame`.
+```
 function batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, replicates::Integer)
   dataall = step!(agent_step, model_step, model, nsteps, properties, aggregators, steps_to_collect_data)
   for i in 2:replicates
@@ -7,6 +12,11 @@ function batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integ
   return dataall
 end
 
+```
+    batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, replicates::Integer)
+
+Runs `replicates` number of simulation replicates and returns a `DataFrame`.
+```
 function batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, replicates::Integer)
   dataall = step!(agent_step, model_step, model, nsteps, properties, steps_to_collect_data)
   for i in 2:replicates
@@ -16,6 +26,11 @@ function batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integ
   return dataall
 end
 
+```
+    batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, replicates::Integer)
+
+Runs `replicates` number of simulation replicates and returns a `DataFrame`.
+```
 function batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, replicates::Integer)
   dataall = step!(agent_step, model, nsteps, properties, aggregators, steps_to_collect_data)
   for i in 2:replicates
@@ -25,6 +40,11 @@ function batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properti
   return dataall
 end
 
+```
+    batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, replicates::Integer)
+
+Runs `replicates` number of simulation replicates and returns a `DataFrame`.
+```
 function batchrunner(agent_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, replicates::Integer)
   dataall = step!(agent_step, model, nsteps, properties, steps_to_collect_data)
   for i in 2:replicates

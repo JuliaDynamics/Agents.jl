@@ -22,8 +22,11 @@ mutable struct Space <: AbstractSpace
   agent_positions::Array  # an array of arrays for each grid node
 end
 
+```
+    build_model(;rules::Tuple, dims=(100,100), Moore=true)
 
-# initialize the model
+Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Integer}`. The numbers are DSR (Death, Survival, Reproduction). Cells die if the number of their living neighbors are <D, survive if the number of their living neighbors are <=S, come to life if their living neighbors are as many as R. `dims` is the x and y size a grid. `Moore` specifies whether cells should connect to their diagonal neighbors.
+```
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   nnodes = gridsize(dims)
   agents = [Agent(i, vertex_to_coord(i, dims), "0") for i in 1:nnodes]
@@ -117,6 +120,11 @@ function ca_step!(model)
   end
 end
 
+```
+    ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
+
+Runs a 2D cellular automaton.
+```
 function ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
   data = step!(dummystep, CA2D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
   visualize_2DCA(data, model, :pos, :status, runs, savename=filename)

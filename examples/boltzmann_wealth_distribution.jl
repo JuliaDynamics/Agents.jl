@@ -56,8 +56,8 @@ step!(agent_step!, model, 10)
 # step!(agent_step::Function, model_step::Function, model::AbstractModel, repeat::Integer)
 
 
-# 7. You can add agents to the grid
-# add agents to random positions. This update the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
+# 7. You can move agents on the grid
+# add agents to random positions. This update the `agent_positions` field of `model.space` and the `pos` for of each agent. It is possible to add agents to specific nodes by specifying a node number of x,y coordinates
 for agent in model.agents
   move_agent!(agent, model)
 end

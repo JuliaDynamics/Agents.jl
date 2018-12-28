@@ -25,6 +25,8 @@ These types should be subtypes of the following abstract types:
 This subtyping will allow all the built-in functions to work on your define types.
 
 ```julia
+using Agents
+
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
@@ -108,6 +110,7 @@ visualize_data(data)
 Often, in ABM we want to run a model many times and observe the average behavior of the system. We can do this easily with the `batchrunner` function. It accepts the same arguments and in the same order as the `step!` function:
 
 ```julia
+model = instantiate_model(numagents=100)
 data = batchrunner(agent_step!, model, 10, agent_properties, steps_to_collect_data, 10)
 ```
 
@@ -135,21 +138,38 @@ We also have to modify the model instantiation function:
 
 ```julia
 function instantiate_model(;numagents, griddims)
-  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
-  model = MyModel2(mygrid, agents, random_activation)  # instantiate the model
+  model = MyModel(mygrid, AbstractAgent[], random_activation)  # instantiate the model
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
+  for ag in agents
+    add_agent!(agent, model)
+  end
   return model
 end
 
-model = instantiate_model(numagents=100, griddims=(5,5,1))
+model = instantiate_model(numagents=100, griddims=(5,5))
 ```
 
-We should now add agents to random positions on the grid. The `add_agent!`  function updates the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates (see [Space functions](@ref) for more details).
+We should now add agents to random positions on the grid. The `move_agent!`  function updates the `agent_positions` field of `model.space` and the `pos` field of each agent. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates (see [Space functions](@ref) for more details).
 
 ```julia
 for agent in model.agents
-  add_agent!(agent, model)
+  move_agent!(agent, model)
+end
+```
+
+We need a new step function that allows agents to give money only to other agents in the same cell:
+
+```julia
+function agent_step!(agent::AbstractAgent, model::AbstractModel)
+  if agent.wealth == 0
+    return
+  else
+    agent2 = model.agents[rand(1:nagents(model))]
+    agent.wealth -= 1
+    agent2.wealth += 1
+  end
 end
 ```
 
