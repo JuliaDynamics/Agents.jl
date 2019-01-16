@@ -36,13 +36,13 @@ A regular 3D grid where each node is at most connected to 6 neighbors. It can op
 function grid3D(x::Integer, y::Integer, z::Integer; periodic=false, triangular=false)
   if periodic
     if triangular
-      g = grid2D_triangles(x, y, periodic=true)
+      g = grid2D_Moore(x, y, periodic=true)
     else
       g = grid2D(x, y, periodic=true)
     end
   else
     if triangular
-      g = grid2D_triangles(x, y, periodic=false)
+      g = grid2D_Moore(x, y, periodic=false)
     else
       g = grid2D(x, y)
     end
@@ -71,9 +71,9 @@ function grid3D(x::Integer, y::Integer, z::Integer; periodic=false, triangular=f
 end
 
 """
-A regular 2D grid where each node is at most connected to eight neighbors. It can optionally be toroidal
+A regular 2D grid where each node connects to its orthogonal and diagonal neighbors. It can optionally be toroidal
 """
-function grid2D_triangles(xdim::Integer, ydim::Integer; periodic=false)
+function grid2D_Moore(xdim::Integer, ydim::Integer; periodic=false)
   g = Grid([xdim, ydim], periodic=periodic)
   for x in 1:xdim
     for y in 1:ydim
@@ -167,14 +167,14 @@ function grid2D_triangles(xdim::Integer, ydim::Integer; periodic=false)
 end
 
 """
-    grid(x::Integer, y::Integer, z::Integer, periodic=false, triangle=false)
+    grid(x::Integer, y::Integer, z::Integer, periodic=false, Moore=false)
 
 Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
-* `triangle=true` works when the dimensions of the grid are 2D. It will return a regular grid in which each node is at most connected to eight neighbors. If `false`, each node will be at most connected to four neighbors.
+* `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
 """
-function grid(x::Integer, y::Integer, z::Integer, periodic::Bool=false, triangle::Bool=false)
+function grid(x::Integer, y::Integer, z::Integer, periodic::Bool=false, Moore::Bool=false)
   if x < 1 || y < 1 || z < 1
     throw("x, y, z each can be minimum 1.")
   end
@@ -183,7 +183,7 @@ function grid(x::Integer, y::Integer, z::Integer, periodic::Bool=false, triangle
   elseif x > 1 && y == 1 && z == 1
     g = grid1D(x, periodic=periodic)
   elseif x > 1 && y > 1 && z == 1
-    g = grid(x, y, periodic, triangle)
+    g = grid(x, y, periodic, Moore)
   elseif x > 1 && y > 1 && z > 1
     g = grid3D(x, y, z)
   else
@@ -192,9 +192,9 @@ function grid(x::Integer, y::Integer, z::Integer, periodic::Bool=false, triangle
   return g
 end
 
-function grid(x::Integer, y::Integer, periodic::Bool=false, triangle::Bool=false)
-  if triangle
-    g = grid2D_triangles(x, y, periodic=periodic)
+function grid(x::Integer, y::Integer, periodic::Bool=false, Moore::Bool=false)
+  if Moore
+    g = grid2D_Moore(x, y, periodic=periodic)
   else
     g = grid2D(x, y, periodic=periodic)
   end
@@ -202,27 +202,27 @@ function grid(x::Integer, y::Integer, periodic::Bool=false, triangle::Bool=false
 end
 
 """
-    grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, triangle=false)
+    grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, Moore=false)
 
 Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
-* `triangle=true` will return a regular grid in which each node is at most connected to eight neighbors in one plane. If `false`, each node will be at most connected to four neighbors.
+* `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
 """
-function grid(dims::Tuple{Integer, Integer, Integer}, periodic::Bool=false, triangle::Bool=false)
-  grid(dims[1], dims[2], dims[3], periodic, triangle)
+function grid(dims::Tuple{Integer, Integer, Integer}, periodic::Bool=false, Moore::Bool=false)
+  grid(dims[1], dims[2], dims[3], periodic, Moore)
 end
 
 """
-    grid(dims::Tuple{Integer, Integer}, periodic=false, triangle=false)
+    grid(dims::Tuple{Integer, Integer}, periodic=false, Moore=false)
 
 Return a grid based on its dimensions. `x`, `y` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` is 1, it will return a 1D grid.
 
 * `periodic=true` will create toroidal grids.
-* `triangle=true` will return a regular grid in which each node is at most connected to eight neighbors in one plane. If `false`, each node will be at most connected to four neighbors.
+* `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
 """
-function grid(dims::Tuple{Integer,Integer}, periodic::Bool=false, triangle::Bool=false)
-  grid(dims[1], dims[2], periodic, triangle)
+function grid(dims::Tuple{Integer,Integer}, periodic::Bool=false, Moore::Bool=false)
+  grid(dims[1], dims[2], periodic, Moore)
 end
 
 """
@@ -339,6 +339,7 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   end
 end
 
+
 """
     add_agent!(agent::AbstractAgent, model::AbstractModel)
 Adds agent to a random node in the space and to the agent to the list of agents. 
@@ -346,7 +347,6 @@ Adds agent to a random node in the space and to the agent to the list of agents.
 Returns the agent's new position.
 """
 function add_agent!(agent::AbstractAgent, model::AbstractModel)
-  agentID = agent.id
   nodenumber = rand(1:nv(model.space.space))
   add_agent!(agent, nodenumber, model)
   return agent.pos
@@ -416,11 +416,11 @@ function is_empty(cell_id::Integer, model::AbstractModel)
 end
 
 """
-    empty_cells(model::AbstractArray)
+    empty_nodes(model::AbstractArray)
 
-Returns true if there are empty cells, otherwise returns false.
+Returns true if there are empty nodes, otherwise returns false.
 """
-function empty_cells(model::AbstractArray)
+function empty_nodes(model::AbstractArray)
   ee = false
   for el in model.space.agent_positions
     if length(el) == 0

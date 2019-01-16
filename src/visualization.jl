@@ -20,7 +20,11 @@ function agents_plots_complete(property_plot::Array, model::AbstractModel)
   end
 end
 
+```
+    visualize_data(data::DataFrame)
 
+sends data to Data Voyager.
+```
 function visualize_data(data::DataFrame)
   v = Voyager(data)
 end
@@ -63,7 +67,7 @@ Show the distribution of agents on a 2D grid. You should provide `position_colom
 """
 function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", cc::Dict=Dict())
   g = model.space.space
-  locs_x, locs_y, locs_z = node_locs(g, model.space.dimensions)
+  locs_x, locs_y, = node_locs(g, model.space.dimensions)
   
   # base node color is light grey
   nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model.space.dimensions)]
@@ -107,7 +111,8 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
     end
   end
 
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1)))
+  NODESIZE = 0.8/sqrt(gridsize(model))
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1), NODESIZE=NODESIZE))
 end
 
 """
@@ -181,6 +186,30 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
     nodefillc[(dims[1]*row)-(dims[1]-1):dims[1]*row] .= newcolors
   end
 
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01)))
+  NODESIZE = 1/sqrt(gridsize(dims))
+  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
 
+end
+
+```
+    visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
+
+Visualize data of a 2D cellular automaton. `data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `runs` is the number of times the simulation was run.
+```
+function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
+  dims = model.space.dimensions
+  g = model.space.space
+  locs_x, locs_y = node_locs(g, dims)
+  NODESIZE = 0.8/sqrt(gridsize(dims))
+
+  for r in 1:runs
+    # base node color is light grey
+    nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
+    stat = Symbol(string(status_column)*"_$r")
+    nonzeros = findall(a-> a =="1", data[stat])
+    
+    nodefillc[nonzeros] .= RGBA(0.1, 0.1, 0.1, 1)
+
+    draw(PNG("$(savename)_$r.png"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
+  end
 end

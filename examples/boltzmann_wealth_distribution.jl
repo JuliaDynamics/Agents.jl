@@ -4,7 +4,7 @@ using Agents
 # 1. define agent type
 mutable struct MyAgent <: AbstractAgent
   id::Integer
-  pos::Tuple{Integer, Integer}  # x,y,z coords
+  pos::Tuple{Integer, Integer}  # x,y coords
   wealth::Integer
 end
 
@@ -25,14 +25,17 @@ end
 
 # 4. instantiate the model
 function instantiate_model(;numagents, griddims)
-  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
-  model = MyModel(mygrid, agents, random_activation)  # instantiate the model
+  model = MyModel(mygrid, AbstractAgent[], random_activation)  # instantiate the model
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
+  for ag in agents
+    add_agent!(agent, model)
+  end
   return model
 end
 
-model = instantiate_model(numagents=100, griddims=(5,5,1))
+model = instantiate_model(numagents=100, griddims=(5,5))
 
 # 5 Agent step function: define what the agent does at each step
 function agent_step!(agent::AbstractAgent, model::AbstractModel)
@@ -53,10 +56,10 @@ step!(agent_step!, model, 10)
 # step!(agent_step::Function, model_step::Function, model::AbstractModel, repeat::Integer)
 
 
-# 7. You can add agents to the grid
-# add agents to random positions. This update the `agent_positions` field of `model.space`. It is possible to add agents to specific nodes by specifying a node number of x,y,z coordinates
+# 7. You can move agents on the grid
+# add agents to random positions. This update the `agent_positions` field of `model.space` and the `pos` for of each agent. It is possible to add agents to specific nodes by specifying a node number of x,y coordinates
 for agent in model.agents
-  add_agent!(agent, model)
+  move_agent!(agent, model)
 end
 
 # Now we need to add to the agents’ behaviors, letting them move around and only give money to other agents in the same cell.
@@ -75,6 +78,7 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
   end
 end
 
+model = instantiate_model(numagents=100, griddims=(5,5))
 step!(agent_step!, model, 10)
 
 # 8. collect data
@@ -89,4 +93,6 @@ data = step!(agent_step!, model, 10, properties, steps_to_collect_data)
 visualize_data(data)
 
 # 10. Running batch
+model = instantiate_model(numagents=100, griddims=(5,5))
 data = batchrunner(agent_step!, model, 10, properties, aggregators, steps_to_collect_data, 10)
+visualize_data(data)

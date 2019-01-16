@@ -14,6 +14,8 @@ The complete code of this example is in the `examples/forest_fire.jl` file on th
 As usual, we define the agent, model, and space types. 
 
 ```julia
+using Agents
+using Random
 
 mutable struct Tree <: AbstractAgent
   id::Integer
@@ -107,21 +109,14 @@ end
 
 ```
 
-Because an agent step function is necessary for the built-in `step!` methods, we make a dummy agent step function that accepts two arguments (one for the agent object and one for the model object):
-
-```julia
-function dummy_agent_step(a, b)  # because we do not need it, but it is required by the step! function
-end
-```
-
-That is all before we run the model.
+That is all before we run the model. Because an agent step function is necessary for the built-in `step!` method, we use a dummy agent step function (`dummystep`) that accepts two arguments (one for the agent object and one for the model object).
 
 ```julia
 # create the model
-forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20, 1), seed=2)
+forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)
 
 # choose which agent properties you want to collect
-agent_properties = [:status, :pos]
+agent_properties = [:status]
 
 # what functions to apply to the chosen agent properties before collecting them. `length` will show the number of trees and `count` the number of green trees.
 aggregators = [length, count]
@@ -130,7 +125,7 @@ aggregators = [length, count]
 steps_to_collect_data = collect(1:100)
 
 # Run the model for 100 steps
-data = step!(dummy_agent_step, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
+data = step!(dummystep, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
 
 # explore data visually
 visualize_data(data)
@@ -139,8 +134,8 @@ visualize_data(data)
 Alternatively, collect agent positions and plot them on a 2D grid
 
 ```julia
-forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20, 1), seed=2)
-data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, collect(1:10))
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
+data = step!(dummystep, forest_step!, forest, 10, agent_properties, collect(1:10))
 for i in 1:10
   visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
 end
@@ -160,7 +155,7 @@ Step 3
 
 ```julia
 # Optionally Run batch simulation
-data = batchrunner(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
+data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
 # Create a column with the mean and std of the :status_count columns from differen steps.
 columnnames = vcat([:status_count], [Symbol("status_count_$i") for i in 1:9])
 using StatsBase
