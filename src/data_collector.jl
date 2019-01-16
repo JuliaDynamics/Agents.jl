@@ -1,5 +1,5 @@
 """
-    agents_data_per_step(properties::Array{Symbol}, aggregators::Array{Function})
+    agents_data_per_step(properties::Array{Symbol}, aggregators::Array)
 
 Collect data from a `property` of agents (a `fieldname`) and apply `aggregators` function to them.
 
@@ -55,14 +55,14 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
   return dd
 end
 
-function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
-function data_collector(properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -81,7 +81,7 @@ function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{
 end
 
 """
-    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::Array{Function})
+    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::Array)
 Combine columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
 """
 function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregators)

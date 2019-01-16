@@ -91,11 +91,11 @@ function step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agen
 end
 
 """
-    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Integer})
 
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model)
@@ -168,11 +168,11 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, ag
 end
 
 """
-    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Integer})
 
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   step!(agent_step, model_step, model)
