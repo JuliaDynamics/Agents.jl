@@ -4,16 +4,19 @@
 Collect data from a `property` of agents (a `fieldname`) and apply `aggregators` function to them.
 
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
-
 """
 function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, model::AbstractModel; step=1)    
-  output = Array{Real}(undef, length(properties) * length(aggregators) + 1)
+  output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
   output[1] = step
   agentslen = nagents(model)
   counter = 2
   for fn in properties
     if fn == :pos
       temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+    elseif fn == :agent
+      temparray = model.agents
+    elseif fn == :model
+      temparray = model
     elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
     else
@@ -25,6 +28,44 @@ function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, mod
     end
   end
   colnames = hcat(["step"], [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)])
+  return output, colnames
+end
+
+"""
+    agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
+
+Collect data from keys of `propagg` and apply the function in the value of each key to aggregate those data.
+"""
+function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)    
+  ncols = 1
+  colnames = ["step"]
+  for (k,v) in propagg
+    ncols += length(v)
+    for vv in v
+      push!(colnames, join([string(k), vv], "_"))
+    end
+  end
+  output = Array{Any}(undef, ncols)
+  output[1] = step
+  agentslen = nagents(model)
+  counter = 2
+  for (fn, aggs) in propagg
+    if fn == :pos
+      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+    elseif fn == :agent
+      temparray = model.agents
+    elseif fn == :model
+      temparray = model
+    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
+      temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
+    else
+      temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
+    end
+    for agg in aggs
+      output[counter] = agg(temparray)
+      counter += 1
+    end
+  end
   return output, colnames
 end
 
@@ -74,6 +115,30 @@ Used in the `step!` function.
 ```
 function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
+  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
+  push!(df, dict)
+  return df
+end
+
+```
+    data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+
+Used in the `step!` function.
+```
+function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+  d, colnames = agents_data_per_step(propagg, model, step=step)
+  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
+  df = DataFrame(dict)
+  return df
+end
+
+```
+    data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+
+Used in the `step!` function.
+```
+function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+  d, colnames = agents_data_per_step(propagg, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
   return df
