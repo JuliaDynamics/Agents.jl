@@ -91,11 +91,11 @@ function step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agen
 end
 
 """
-    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Integer})
 
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model)
@@ -106,6 +106,31 @@ function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properti
     # collect data
     if ss in steps_to_collect_data
       df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, ss, df)
+    end
+  end
+  # if 1 is not in `steps_to_collect_data`, remove the first row.
+  if !in(1, steps_to_collect_data)
+    df = df[2:end, :]
+  end
+  return df
+end
+
+"""
+    step!(agent_step::Function, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Integer})
+
+Repeats the `step` function `nsteps` times, and applies functions in values of the `propagg` dict to its keys at steps `steps_to_collect_data`.
+"""
+function step!(agent_step, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Int64})
+  
+  # Run the first step of the model to fill in the dataframe
+  # step!(agent_step, model)
+  df = data_collector(propagg, steps_to_collect_data, model, 1)
+
+  for ss in 2:nsteps
+    step!(agent_step, model)
+    # collect data
+    if ss in steps_to_collect_data
+      df = data_collector(propagg, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.
@@ -168,11 +193,11 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, ag
 end
 
 """
-    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Integer})
+    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Integer})
 
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
-function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array{Function}, steps_to_collect_data::Array{Int64})
+function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
   
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model_step, model)
@@ -183,6 +208,31 @@ function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, ag
     # collect data
     if ss in steps_to_collect_data
       df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, ss, df)
+    end
+  end
+  # if 1 is not in `steps_to_collect_data`, remove the first row.
+  if !in(1, steps_to_collect_data)
+    df = df[2:end, :]
+  end
+  return df
+end
+
+"""
+    step!(agent_step::Function, model_step::Function, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Integer})
+
+Repeats the `step` function `nsteps` times, and applies functions in values of the `propagg` dict to its keys at steps `steps_to_collect_data`.
+"""
+function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Int64})
+  
+  # Run the first step of the model to fill in the dataframe
+  # step!(agent_step, model_step, model)
+  df = data_collector(propagg, steps_to_collect_data, model, 1)
+
+  for ss in 2:nsteps
+    step!(agent_step, model_step, model)
+    # collect data
+    if ss in steps_to_collect_data
+      df = data_collector(propagg, steps_to_collect_data, model, ss, df)
     end
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.

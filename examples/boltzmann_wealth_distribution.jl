@@ -30,7 +30,7 @@ function instantiate_model(;numagents, griddims)
   model = MyModel(mygrid, AbstractAgent[], random_activation)  # instantiate the model
   agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   for ag in agents
-    add_agent!(agent, model)
+    add_agent!(ag, model)
   end
   return model
 end

@@ -1,6 +1,6 @@
 # Agents: agent-based modeling framework in Julia
 
-[![](https://img.shields.io/badge/Agents.jl-v0.2-blue.svg)](https://github.com/kavir1698/Agents.jl) 
+[![](https://img.shields.io/badge/Agents.jl-v1.0-blue.svg)](https://github.com/kavir1698/Agents.jl) 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
 [![Build Status](https://travis-ci.org/kavir1698/Agents.jl.svg?branch=master)](https://travis-ci.org/kavir1698/Agents.jl)
@@ -21,19 +21,12 @@ Agents.jl is lightweight and modular. It has a short learning curve, and allows 
 
 ## Installation
 
-Currently, the package is not registered to Julia's package list, therefore, install is using this command:
+Install using the following command inside Julia:
 
 ```julia
-]add https://github.com/kavir1698/Agents.jl.git
+]add Agents
 ```
 
 It is compatible with Julia 0.7+.
 
 For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
-
-This is still work in progress. I am working on the following:
-
-* Adding more unit tests
-* Implementing more examples
-* Parallel computing of batch simulations
-* 3D visualization
