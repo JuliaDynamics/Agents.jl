@@ -10,7 +10,7 @@ Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modelin
 * Default grids to run the simulation, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods. More space structure are to be implemented include arbitrary random networks.
 * Running the simulations in parallel on multiple cores or on clusters. (This is not ready yet)
 * Automatic data collection in a `DataFrame` at desired intervals.
-* Exploring the simulation results interactively in [Data Voyegar 2](https://github.com/vega/voyager).
+* Exploring the simulation results interactively in [Data Voyager 2](https://github.com/vega/voyager).
 * Batch running and batch data collection
 * Visualize agent distributions on grids
 
