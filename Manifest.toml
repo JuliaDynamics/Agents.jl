@@ -57,12 +57,6 @@ git-tree-sha1 = "94d16e77dfacc59f6d6c1361866906dbb65b6f6b"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 version = "0.5.2"
 
-[[CodecZlib]]
-deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
-git-tree-sha1 = "36bbf5374c661054d41410dc53ff752972583b9b"
-uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.5.2"
-
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random", "Test"]
 git-tree-sha1 = "f73b0e10f2a5756de7019818a41654686da06b09"
@@ -88,10 +82,10 @@ uuid = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
 version = "0.7.3"
 
 [[DataFrames]]
-deps = ["CategoricalArrays", "CodecZlib", "Compat", "DataStreams", "Dates", "InteractiveUtils", "IteratorInterfaceExtensions", "LinearAlgebra", "Missings", "Printf", "Random", "Reexport", "SortingAlgorithms", "Statistics", "StatsBase", "TableTraits", "Tables", "Test", "TranscodingStreams", "Unicode", "WeakRefStrings"]
-git-tree-sha1 = "9cfed75401d25d281076eb5d82de148ac2933f9e"
+deps = ["CategoricalArrays", "Compat", "IteratorInterfaceExtensions", "Missings", "PooledArrays", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "StatsBase", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "4b83473baad52fbfe3b33b720e4fa722cdd62ce8"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "0.17.1"
+version = "0.18.1"
 
 [[DataStreams]]
 deps = ["Dates", "Missings", "Test", "WeakRefStrings"]
@@ -323,6 +317,12 @@ version = "0.2.22"
 deps = ["Dates", "LibGit2", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
+[[PooledArrays]]
+deps = ["Test"]
+git-tree-sha1 = "6ea4cfb9136d3ff2b9d30d6696cd72166a3b837c"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "0.5.1"
+
 [[Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -457,12 +457,6 @@ deps = ["Printf", "Test"]
 git-tree-sha1 = "3e83f60b74911d3042d3550884ca2776386a02b8"
 uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
 version = "0.5.3"
-
-[[TranscodingStreams]]
-deps = ["Random", "Test"]
-git-tree-sha1 = "a25d8e5a28c3b1b06d3859f30757d43106791919"
-uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.4"
 
 [[URIParser]]
 deps = ["Test", "Unicode"]

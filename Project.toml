@@ -18,4 +18,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VegaLite = "112f6efa-9a02-5b7d-90c0-432ed331239a"
 
 [compat]
-julia = "1.0"
+julia = "≥ 0.7.0"
