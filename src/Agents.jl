@@ -6,7 +6,7 @@ using LightGraphs
 using DataFrames
 using VegaLite
 using Random
-import Base.Iterators: product
+import Base.Iterators.product
 import StatsBase
 using DataVoyager
 using CSV
