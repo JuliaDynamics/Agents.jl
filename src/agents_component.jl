@@ -5,7 +5,7 @@ Define your agents to be a subtype of AbstractAgent. Your agent type has to have
 e.g.
 
 """
-mutable struct MyAgent <: AbstractAgents
+mutable struct MyAgent <: AbstractAgent
   id::Integer
   pos::Tuple{Integer, Integer, Integer}
 end
