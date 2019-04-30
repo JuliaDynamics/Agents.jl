@@ -4,13 +4,13 @@ Define your model to be a subtype of `AbstractModel`. Your model has to have the
 
 e.g.
 
-"""
+```
 mutable struct MyModel <: AbstractModel
   scheduler::Function
   space
   agents::Array{Integer}  # a list of agents ids
 end
-"""
+```
 
 `scheduler` can be one of the default functions (`random_activation`), or your own function.
 """
