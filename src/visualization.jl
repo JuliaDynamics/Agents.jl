@@ -20,11 +20,11 @@ function agents_plots_complete(property_plot::Array, model::AbstractModel)
   end
 end
 
-```
+"""
     visualize_data(data::DataFrame)
 
 sends data to Data Voyager.
-```
+"""
 function visualize_data(data::DataFrame)
   v = Voyager(data)
 end
@@ -191,11 +191,11 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
 
 end
 
-```
+"""
     visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
 
 Visualize data of a 2D cellular automaton. `data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `runs` is the number of times the simulation was run.
-```
+"""
 function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
   dims = model.space.dimensions
   g = model.space.space

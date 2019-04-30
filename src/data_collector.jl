@@ -96,11 +96,11 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
   return dd
 end
 
-```
+"""
     data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
 
 Used in the `step!` function.
-```
+"""
 function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
@@ -108,11 +108,11 @@ function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_
   return df
 end
 
-```
+"""
     data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
 
 Used in the `step!` function.
-```
+"""
 function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
@@ -120,11 +120,11 @@ function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_
   return df
 end
 
-```
+"""
     data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
 
 Used in the `step!` function.
-```
+"""
 function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
   d, colnames = agents_data_per_step(propagg, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
@@ -132,11 +132,11 @@ function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, mode
   return df
 end
 
-```
+"""
     data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
 
 Used in the `step!` function.
-```
+"""
 function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d, colnames = agents_data_per_step(propagg, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
@@ -144,20 +144,20 @@ function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, mode
   return df
 end
 
-```
+"""
     data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
 
 Used in the `step!` function.
-```
+"""
 function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
   df = agents_data_complete(properties, model, step=step)
   return df
 end
 
-```
+"""
     data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
 Used in the `step!` function.
-```
+"""
 function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
   d = agents_data_complete(properties, model, step=step)
   df = join(df, d, on=:id, kind=:outer)
@@ -178,12 +178,12 @@ function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregat
   return data
 end
 
-```
+"""
     combine_columns!(data::DataFrame, column_base_name::String, aggregators)
   column_names = vcat([column_base_name], [column_base_name*string(i) for i in 1:size(data)[2]])
 
 Combine columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
-```
+"""
 function combine_columns!(data::DataFrame, column_base_name::String, aggregators)
   column_names = vcat([column_base_name], [column_base_name*string(i) for i in 1:size(data)[2]])
   datanames = [string(i) for i in names(data)]
