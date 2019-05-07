@@ -1,7 +1,7 @@
 # A grid can be 0D (a node), 1D (a line of nodes), 2D (a surface of nodes) or 3D (a surface of nodes with values at each node).
 
 """
-An abstract space type. Your grid type should have the following fields: `dimensions` (Tuple{Integer, Integer, Integer}), agent_positions (Array{Array{Integer}}), and `grid`.
+An abstract space type. Your grid type should have the following fields: `dimensions` (Tuple{Integer, Integer, Integer}), agent_positions (Array{Array{Integer}}), and a `grid` named space.
 
 `agent_positions` should always be a list of lists that accept `Integers`, i.e. agent ids.
 """

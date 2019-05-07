@@ -12,37 +12,37 @@ This model shows that even a slight preference for being around neighbors of the
 using Agents
 
 # Create agent, model, and grid types
-mutable struct SchellingAgent <: AbstractAgent # An agent
+mutable struct SchellingAgent{T<:Integer} <: AbstractAgent # An agent
 # object should always be a subtype of AbstractAgent
-  id::Integer
-  pos::Tuple{Integer, Integer}
+  id::T
+  pos::Tuple{T, T}
   mood::Bool # true is happy and false is unhappy
-  group::Integer
+  group::T
 end
 
-mutable struct SchellingModel <: AbstractModel  # A model
+mutable struct SchellingModel{T<:Integer, Y<:AbstractArray, Z<:AbstractSpace} <: AbstractModel  # A model
 	# object should always be a subtype of AbstractModel
-	space::AbstractSpace  # A space object, which is a field
+	space::Z  # A space object, which is a field
 	# of the model object is always subtype of AbstractSpace
-	agents::Array{AbstractAgent}  # a list of agents
+	agents::Y  # a list of agents
 	scheduler::Function
-	min_to_be_happy::Integer  # minimum number of neighbors 
+	min_to_be_happy::T  # minimum number of neighbors 
 	#to be of the same kind so that they are happy
 end
 
-mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer}
+mutable struct MyGrid{T<:Integer, Y<:AbstractArray} <: AbstractSpace
+  dimensions::Tuple{T, T}
   space
-  agent_positions::Array  # an array of arrays for each grid node
+  agent_positions::Y  # an array of arrays for each grid node
 end
 
 # instantiate the model
 function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
+  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid with nodes have a max of 8 neighbors
   model = SchellingModel(mygrid, AbstractAgent[], random_activation, min_to_be_happy) 
   
-  agents = vcat([SchellingAgent(i, (1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(i, (1,1), false, 1) for i in (numagents/2)+1:numagents])
+  agents = vcat([SchellingAgent(Int(i), (1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(Int(i), (1,1), false, 1) for i in (numagents/2)+1:numagents])
   for agent in agents
     add_agent_single!(agent, model)
   end

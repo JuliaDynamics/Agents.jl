@@ -2,30 +2,30 @@ using StatsBase
 using Agents
 
 # 1. define agent type
-mutable struct MyAgent <: AbstractAgent
-  id::Integer
-  pos::Tuple{Integer, Integer}  # x,y coords
-  wealth::Integer
+mutable struct MyAgent{T<:Integer} <: AbstractAgent
+  id::T
+  pos::Tuple{T, T}  # x,y coords
+  wealth::T
 end
 
-# 2. define a model type
-mutable struct MyModel <: AbstractModel
-  space::AbstractSpace
-  agents::Array{AbstractAgent}  # an array of agents
+# 2. define a space type
+mutable struct MyGrid{T<:Integer, Y<:AbstractVector} <: AbstractSpace
+  dimensions::Tuple{T, T}
+  space
+  agent_positions::Y  # an array of arrays for each grid node
+end
+
+# 3. define a model type
+mutable struct MyModel{T<:AbstractSpace, Y<:Array{AbstractAgent}} <: AbstractModel
+  space::T
+  agents::Y  # an array of agents
   scheduler::Function
 end
 
 
-# 3. define a space type
-mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer}
-  space
-  agent_positions::Array  # an array of arrays for each grid node
-end
-
 # 4. instantiate the model
 function instantiate_model(;numagents, griddims)
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
+  agent_positions = [Int64[] for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
   model = MyModel(mygrid, AbstractAgent[], random_activation)  # instantiate the model
   agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
