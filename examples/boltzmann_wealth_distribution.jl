@@ -11,12 +11,12 @@ end
 # 2. define a space type
 mutable struct MyGrid{T<:Integer, Y<:AbstractVector} <: AbstractSpace
   dimensions::Tuple{T, T}
-  space
+  space::SimpleGraph
   agent_positions::Y  # an array of arrays for each grid node
 end
 
 # 3. define a model type
-mutable struct MyModel{T<:AbstractSpace, Y<:Array{AbstractAgent}} <: AbstractModel
+mutable struct MyModel{T<:AbstractSpace, Y<:AbstractVector} <: AbstractModel
   space::T
   agents::Y  # an array of agents
   scheduler::Function

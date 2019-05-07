@@ -2,24 +2,24 @@
 module CA2D
 using Agents
 
-mutable struct Agent <: AbstractAgent
-  id::Integer
-  pos::Tuple{Integer, Integer}
-  status::String
+mutable struct Agent{T<:Integer, Y<:AbstractString} <: AbstractAgent
+  id::T
+  pos::Tuple{T, T}
+  status::Y
 end
 
-mutable struct Model <: AbstractModel
-  space::AbstractSpace
-  agents::Array{AbstractAgent}
+mutable struct Model{T<:AbstractSpace, Y<:AbstractVector, Z<:Tuple} <: AbstractModel
+  space::T
+  agents::Y  # Array{AbstractAgent}
   scheduler::Function
-  rules::Tuple
+  rules::Z
   Moore::Bool
 end
 
-mutable struct Space <: AbstractSpace
-  dimensions
-  space
-  agent_positions::Array  # an array of arrays for each grid node
+mutable struct Space{T<:Integer, Y<:AbstractVector} <: AbstractSpace
+  dimensions::Tuple{T, T}
+  space::SimpleGraph
+  agent_positions::Y  # an array of arrays for each grid node
 end
 
 """

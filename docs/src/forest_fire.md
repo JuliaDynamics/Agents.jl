@@ -17,25 +17,25 @@ As usual, we define the agent, model, and space types.
 using Agents
 using Random
 
-mutable struct Tree <: AbstractAgent
-  id::Integer
-  pos::Tuple{Integer, Integer}
+mutable struct Tree{T<:Integer} <: AbstractAgent
+  id::T
+  pos::Tuple{T, T}
   status::Bool  # true is green and false is burning
 end
 
-mutable struct Forest <: AbstractModel
-  space::AbstractSpace
-  agents::Array{AbstractAgent}
+mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: AbstractModel
+  space::T
+  agents::Y
   scheduler::Function
-  f::Float64  # probability that a tree will ignite
-  d::Float64  # forest density
-  p::Float64  # probability that a tree will grow in an empty space
+  f::Z  # probability that a tree will ignite
+  d::Z  # forest density
+  p::Z  # probability that a tree will grow in an empty space
 end
 
-mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer}
-  space
-  agent_positions::Array  # an array of arrays for each grid node
+mutable struct MyGrid{T<:Integer, Y<:AbstractVector} <: AbstractSpace
+  dimensions::Tuple{T, T}
+  space::SimpleGraph
+  agent_positions::Y  # an array of arrays for each grid node
 end
 
 ```
@@ -156,10 +156,6 @@ Step 3
 ```julia
 # Optionally Run batch simulation
 data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
-# Create a column with the mean and std of the :status_count columns from differen steps.
-columnnames = vcat([:status_count], [Symbol("status_count_$i") for i in 1:9])
-using StatsBase
-combine_columns!(data, columnnames, [StatsBase.mean, StatsBase.std])
 
 # And write the results to file
 write_to_file(df=data, filename="forest_model.csv")

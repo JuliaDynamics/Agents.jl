@@ -32,7 +32,7 @@ end
 
 mutable struct MyGrid{T<:Integer, Y<:AbstractArray} <: AbstractSpace
   dimensions::Tuple{T, T}
-  space
+  space::SimpleGraph
   agent_positions::Y  # an array of arrays for each grid node
 end
 
