@@ -140,7 +140,7 @@ We also have to modify the model instantiation function:
 function instantiate_model(;numagents, griddims)
   agent_positions = [Int64[] for i in 1:gridsize(griddims)]  # an array of arrays for each node of the space
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)  # instantiate the grid structure
-  model = MyModel2(mygrid, AbstractAgent[], random_activation)  # instantiate the model
+  model = MyModel2(mygrid, MyAgent[], random_activation)  # instantiate the model
   agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]  # create a list of agents
   for ag in agents
     add_agent!(ag, model)

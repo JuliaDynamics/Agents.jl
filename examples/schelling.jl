@@ -40,7 +40,7 @@ end
 function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
   agent_positions = [Int64[] for i in 1:gridsize(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid with nodes have a max of 8 neighbors
-  model = SchellingModel(mygrid, AbstractAgent[], random_activation, min_to_be_happy) 
+  model = SchellingModel(mygrid, SchellingAgent[], random_activation, min_to_be_happy) 
   
   agents = vcat([SchellingAgent(Int(i), (1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(Int(i), (1,1), false, 1) for i in (numagents/2)+1:numagents])
   for agent in agents
