@@ -165,11 +165,11 @@ function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{
 end
 
 """
-    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::Array)
+    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::AbstractVector)
 
-Combine columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
+Combines columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
 """
-function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregators)
+function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregators::AbstractVector)
   for ag in aggregators
     d = by(data, :step, column_names => x-> (ag([getproperty(x, i) for i in column_names])))
     colname = Symbol(string(column_names[1])[1:end-1] * string(ag))
@@ -179,13 +179,12 @@ function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregat
 end
 
 """
-    combine_columns!(data::DataFrame, column_base_name::String, aggregators)
-  column_names = vcat([column_base_name], [column_base_name*string(i) for i in 1:size(data)[2]])
+    combine_columns!(data::DataFrame, column_base_name::String, aggregators::AbstractVector)
 
-Combine columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
+Combines columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
 """
-function combine_columns!(data::DataFrame, column_base_name::String, aggregators)
-  column_names = vcat([column_base_name], [column_base_name*string(i) for i in 1:size(data)[2]])
+function combine_columns!(data::DataFrame, column_base_name::String, aggregators::AbstractVector)
+  column_names = vcat([column_base_name], [column_base_name*"_"*string(i) for i in 1:size(data)[2]])
   datanames = [string(i) for i in names(data)]
   final_names = Array{Symbol}(undef, 0)
   for cn in column_names
