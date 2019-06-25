@@ -8,8 +8,10 @@ makedocs(
     pages = [
         "Introduction" => "index.md",
         "Examples" => [
+          "Schelling's segregation model" => "schelling.md"
           "Boltzmann wealth distribution" => "boltzmann_example01.md",
-          "Forest fire" => "forest_fire.md"
+          "Forest fire" => "forest_fire.md",
+          "Cellular Automata" => "CA.md"
         ],
         "Built-in funtions" => "builtin_functions.md"
     ]
