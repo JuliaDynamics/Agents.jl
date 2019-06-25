@@ -1,4 +1,3 @@
-push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
 using Test
 using Agents
 
