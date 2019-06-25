@@ -45,10 +45,10 @@ For a quick tutorial see the example models. I recommend starting with Schelling
 
 ## Installation
 
-Currently, the package is not added to Julia's package list, therefore, install it using this command:
+The package is in Julia's package list. Install it using this command:
 
 ```julia
-]add https://github.com/kavir1698/Agents.jl.git
+]add Agents
 ```
 
 ## Table of contents

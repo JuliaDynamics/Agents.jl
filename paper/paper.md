@@ -1,5 +1,5 @@
 ---
-title: 'Agent.jl: agent-based modeling framework in Julia'
+title: 'Agents.jl: agent-based modeling framework in Julia'
 tags:
   - Julia
   - ABM
