@@ -1,15 +1,17 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["Ali Vahdati <arv.kavir@gmail.com>"]
-version = "1.1.1"
+version = "1.1.2"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataVoyager = "5721bf48-af8e-5845-8445-c9e18126e773"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Fontconfig = "186bb1d3-e1f7-5a2c-a377-96d770f13627"
 GraphPlot = "a2cc645c-3eea-5389-862e-a155d0052231"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
