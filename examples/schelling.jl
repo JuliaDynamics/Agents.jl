@@ -79,7 +79,7 @@ end
 model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
 agent_properties = [:pos, :mood, :group]
 steps_to_collect_data = collect(1:2)
-data = step!(agent_step!, model, 2, agent_properties, steps_to_collect_data)
+data = step!(agent_step!, model, 2, agent_properties, steps_to_collect_data);
 for i in 1:2
   visualize_2D_agent_distribution(data, model, Symbol("pos_$i"), types=Symbol("group_$i"), savename="step_$i", cc=Dict(0=>"blue", 1=>"red"))
 end
