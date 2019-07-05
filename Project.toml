@@ -1,7 +1,7 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["Ali Vahdati <arv.kavir@gmail.com>"]
-version = "1.1.2"
+version = "1.1.3"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
