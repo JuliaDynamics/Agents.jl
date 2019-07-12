@@ -58,22 +58,22 @@ end
 """
 A function to be used in `pmap` in `batchrunner_parallel`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
 """
-function parallel_step_dummy!(agent_step!, model, nsteps, agent_properties, steps_to_collect_data, dummyvar)
+function parallel_step_dummy!(agent_step!::T, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::AbstractArray{V}, dummyvar) where {T<:Function, V<:Integer}
   data = step!(agent_step!, model, nsteps, agent_properties, steps_to_collect_data);
   return data
 end
 
-function parallel_step_dummy!(agent_step!, model, nsteps, agent_properties, aggregators, steps_to_collect_data, dummyvar)
+function parallel_step_dummy!(agent_step!::T, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::AbstractVector{W}, steps_to_collect_data::AbstractArray{V}, dummyvar) where {T<:Function, V<:Integer, W<:Function}
   data = step!(agent_step!, model, nsteps, agent_properties, aggregators, steps_to_collect_data);
   return data
 end
 
-function parallel_step_dummy!(agent_step!, model_step!, model, nsteps, properties, steps_to_collect_data, dummyvar)
+function parallel_step_dummy!(agent_step!::T, model_step!::U, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, steps_to_collect_data::AbstractArray{V}, dummyvar) where {T<:Function, U<:Function, V<:Integer}
   data = step!(agent_step!, model_step!, deepcopy(model), nsteps, properties, steps_to_collect_data);
   return data
 end
 
-function parallel_step_dummy!(agent_step!, model_step!, model, nsteps, properties, aggregators, steps_to_collect_data, dummyvar)
+function parallel_step_dummy!(agent_step!::T, model_step!::U, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::AbstractVector{W}, steps_to_collect_data::AbstractArray{V}, dummyvar) where {T<:Function, U<:Function, V<:Integer, W<:Function}
   data = step!(agent_step!, model_step!, deepcopy(model), nsteps, properties, aggregators, steps_to_collect_data);
   return data
 end
