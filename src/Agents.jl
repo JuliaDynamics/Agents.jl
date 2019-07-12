@@ -13,7 +13,8 @@ using CSV
 using ColorTypes
 using Compose
 using GraphPlot
-import Cairo, Fontconfig
+import Cairo
+import Fontconfig
 import Base.iterate
 import Base.length
 # using PerceptualColourMaps
