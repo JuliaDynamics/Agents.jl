@@ -14,8 +14,8 @@ using CSV
 using ColorTypes
 using Compose
 using GraphPlot
-import Cairo
-import Fontconfig
+using Cairo
+using Fontconfig
 import Base.iterate
 import Base.length
 include("agents_component.jl")
