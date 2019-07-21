@@ -17,7 +17,11 @@ We implement the following definition of Schelling's segregation model:
 
 ### Defining a model object
 
-Building models using Agents.jl, we always start by defining three basic objects for the model, the agents and the space. A model object is a subtype of `AbstractModel`. Making the model a subtype of `AbstractModel` will make Agents.jl methods available to the model. It needs to have the following three fields: `scheduler`, `space}, and `agents}. We can add more fields if needed. The `scheduler` field accepts a function that defines the order with which agents will activate at each step. The function should accept the model object as its input and return a list of agent indices. Agents.jl provides three schedulers: `as_added` to activate agents as they have been added to the model, `random_activation` to activate agents randomly, and `partial_activation` to activate only a random fraction of agents at each step.
+Building models using Agents.jl, we always start by defining three basic objects: one for the model, one for the the agents and one for the space.
+
+A model object is a subtype of `AbstractModel`. Making the model a subtype of `AbstractModel` will make Agents.jl methods available to the model. It needs to have the following three fields: `scheduler`, `space`, and `agents`. We can add more fields if needed.
+
+The `scheduler` field accepts a function that defines the order with which agents will activate at each step. The function should accept the model object as its input and return a list of agent indices. Agents.jl provides three schedulers: `as_added` to activate agents as they have been added to the model, `random_activation` to activate agents randomly, and `partial_activation` to activate only a random fraction of agents at each step.
 
 ```julia
 using Agents
@@ -32,7 +36,7 @@ end
 
 It is best to make any model parameter a field of the model object. We add the minimum number of neighbors of the same kind for an agent to be happy as a field of the model (`min_to_be_happy`). 
 
-\subsubsection*{Defining an agent object}
+### Defining an agent object
 
 Next, we define an agent object. Agent objects are subtypes of `AbstractAgent` and should always have the following fields: `id` which stores agent IDs as integers, and `pos` to store each agent's position. Agent positions can be tuple of integers as coordinates of nodes of a grid (1D, 2D or 3D). Positions can also be integers only, referring to the number of a node in an irregular network.
 
@@ -49,7 +53,9 @@ We add two more fields for this model, namely a `mood` field which will store `t
 
 ### Defining a space object
 
-Finally, we define a space object. The space object is always a subtype of `AbstractSpace` and should have at least the following three fields. First, a `space` field which holds the spatial structure of the model. Agents.jl uses network structures from the [LightGraphs package](https://github.com/JuliaGraphs/LightGraphs.jl) to represent space.  It provides 1D, 2D and 3D grids. The grids may have periodic boundary conditions, meaning nodes on the left and right edges and top and bottom edges are connected to one another. Furthermore, the nodes on a grid may have von Neumann neighborhoods, i.e. only connect to their orthogonal neighbors, or Moore neighborhoods, i.e. connect to their orthogonal and diagonal neighbors. Users may also provide arbitrary networks as their model's spatial structure. The second field of the space object is the `dimensions` of the grid or network. Lastly, every space object should have an `agent_positions` field. This field is an array of arrays for each node of the network. Each inner array will record the ID of the agents on that position. Agents.jl keeps the position of agents in two places. One in each agent's object and one in the `agent_positions`.
+Finally, we define a space object. The space object is always a subtype of `AbstractSpace` and should have at least the following three fields. First, a `space` field which holds the spatial structure of the model. Agents.jl uses network structures from the [LightGraphs package](https://github.com/JuliaGraphs/LightGraphs.jl) to represent space.  It provides 1D, 2D and 3D grids. The grids may have periodic boundary conditions, meaning nodes on the left and right edges and top and bottom edges are connected to one another. Furthermore, the nodes on a grid may have von Neumann neighborhoods, i.e. only connect to their orthogonal neighbors, or Moore neighborhoods, i.e. connect to their orthogonal and diagonal neighbors. Users may also provide arbitrary networks as their model's spatial structure.
+
+The second field of the space object is the `dimensions` of the grid or network. Lastly, every space object should have an `agent_positions` field. This field is an array of arrays for each node of the network. Each inner array will record the ID of the agents on that position. Agents.jl keeps the position of agents in two places. One in each agent's object and one in the `agent_positions`.
 
 ```julia
 mutable struct MyGrid <: AbstractSpace # A space object should always be a subtype of AbstractSpace
@@ -89,7 +95,9 @@ Explanations below correspond to the numbered lines in the code snippet above:
 
 ### Defining a step function
 
-The last step of building our ABM is defining a _step_ function. Any ABM model should have at least one and at most two step functions. An _agent step function_ is always required. Such an agent step function defines what happens to an agent when it activates. Sometimes, that is not enough and we will need a function that changes all agents at once, or change a model property. In such cases, we can also provide a _model step function_. An agent step function should only accept two arguments, the first of which an agent object and the second of which a model object. The model step function should accept only one argument, that is the model object. It is possible to only have a _model step function_, in which case users have to use the built-in `dummystep` as the _agent step function_.
+The last step of building our ABM is defining a _step_ function. Any ABM model should have at least one and at most two step functions. An _agent step function_ is always required. Such an agent step function defines what happens to an agent when it activates. Sometimes we will need also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
+
+An agent step function should only accept two arguments, the first of which an agent object and the second of which a model object. The model step function should accept only one argument, that is the model object. It is possible to only have a _model step function_, in which case users have to use the built-in `dummystep` as the _agent step function_.
 
 ```julia
 function agent_step!(agent, model)
@@ -121,11 +129,20 @@ function agent_step!(agent, model)
 end
 ```
 
-For building this implementation of Schelling's segregation model, we only need an agent step function. When an agent activates it does one of the following. If it is already happy, it does not do anything. Otherwise, it counts the number of its neighbors that are from the same group. If they are as many as `min_to_be_happy`, the agent will be happy. Otherwise it will keep moving to random empty nodes on the grid until it is happy. For doing these operations, we used some of the built-in functions of Agents.jl, such as `node_neighbors` that returns the neighboring nodes of the node on which the agent resides, `get_node_contents` that returns the IDs of the agents on a given node, and `move_agent_single!` which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available in the online manual.
+For building this implementation of Schelling's segregation model, we only need an agent step function.
+
+When an agent activates, it follows the following process:
+
+* If the agent is already happy, it does not do anything.
+* If it is not happy, it counts the number of its neighbors that are from the same group.
+* If this count is equal to `min_to_be_happy`, the agent will be happy...
+* ...otherwise the agent will keep moving to random empty nodes on the grid until it is happy.
+
+For doing these operations, we used some of the built-in functions of Agents.jl, such as `node_neighbors` that returns the neighboring nodes of the node on which the agent resides, `get_node_contents` that returns the IDs of the agents on a given node, and `move_agent_single!` which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available in the online manual.
 
 ### Running the model
 
-We can run each step of the function using the built-in ` step!` function. This will update the agents and the model as defined by the `agent_step!` function.
+We can run each step of the function using the built-in `step!` function. This will update the agents and the model as defined by the `agent_step!` function.
 
 ```julia
 model = instantiate_model(numagents=200, griddims=(20,20), min_to_be_happy=2)
