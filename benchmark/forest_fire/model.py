@@ -56,9 +56,9 @@ class ForestFire(Model):
         # collect data
         self.datacollector.collect(self)
 
-        # Halt if no more fire
-        if self.count_type(self, "On Fire") == 0:
-            self.running = False
+        # # Halt if no more fire
+        # if self.count_type(self, "On Fire") == 0:
+        #     self.running = False
 
     @staticmethod
     def count_type(model, tree_condition):

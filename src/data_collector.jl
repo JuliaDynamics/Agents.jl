@@ -97,11 +97,11 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
 end
 
 """
-    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer)  where T<: Integer
 
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
@@ -109,11 +109,11 @@ function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_
 end
 
 """
-    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) T<:Integer 
 
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer 
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -121,11 +121,11 @@ function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_
 end
 
 """
-    data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+    data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
 
 Used in the `step!` function.
 """
-function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+function data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
   d, colnames = agents_data_per_step(propagg, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
@@ -133,11 +133,11 @@ function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, mode
 end
 
 """
-    data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+    data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
 
 Used in the `step!` function.
 """
-function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+function data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
   d, colnames = agents_data_per_step(propagg, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -145,20 +145,20 @@ function data_collector(propagg::Dict, steps_to_collect_data::Array{Int64}, mode
 end
 
 """
-    data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+    data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<:Integer
 
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer)
+function data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<:Integer
   df = agents_data_complete(properties, model, step=step)
   return df
 end
 
 """
-    data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+    data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame)  where T<:Integer
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, steps_to_collect_data::Array{Int64}, model::AbstractModel, step::Integer, df::DataFrame)
+function data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
   d = agents_data_complete(properties, model, step=step)
   df = join(df, d, on=:id, kind=:outer)
   return df
