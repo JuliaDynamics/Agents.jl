@@ -13,9 +13,9 @@ using DataVoyager
 using CSV
 using ColorTypes
 using GraphPlot
-using Cairo
 using Fontconfig
 using Compose
+using Cairo
 import Base.iterate
 import Base.length
 include("agents_component.jl")

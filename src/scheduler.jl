@@ -5,7 +5,7 @@
 Activates agents at each step in the same order as they have been added to the model.
 """
 function as_added(model::AbstractModel)
-  agent_ids = [i.id for i in model.agents]
+  agent_ids = [i.id for i in 1:length(model.agents)]
   return sortperm(agent_ids)
 end
 
