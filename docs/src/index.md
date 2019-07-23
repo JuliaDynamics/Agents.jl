@@ -4,7 +4,7 @@ Agents.jl is a [Julia](https://julialang.org/) framework for an agent-based mode
 
 * Default grids to run the simulation, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods. Users can use their defined graphs too.
 * Automatic data collection in a `DataFrame` at desired intervals.
-* Exploring the simulation results interactively in [Data Voyegar 2](https://github.com/vega/voyager).
+* Exploring the simulation results interactively in [Data Voyager 2](https://github.com/vega/voyager).
 * Batch running and batch data collection
 * Visualize agent distributions on grids
 
@@ -16,6 +16,10 @@ Agents.jl is lightweight and modular. It has a short learning curve, and allows 
 
 ## Other features
 
+### Distributed computing
+
+The `batchrunner_parallel` function allows you to run several simulation replicates in parallel and get all their results in a single Data Frame. It works the same as `batchrunner` except each replicate runs independently.
+
 ### Aggregating collected data
 
 Sometimes, it is easier to take summary statistics than collect all the raw data. The `step!` function accepts a list of aggregating functions, e.g. `mean` and `median`. If such a list is provided, each function will apply to a list of the agent fields at each step. Only the summary statistics will be returned. It is possible to pass a dictionary of agent fields and aggregator functions that only apply to those fields. To collect data from the model object, pass `:model` instead of an agent field. To collect data from a list of agent objects, rather than a list of agents' fields, pass `:agent`.
@@ -26,13 +30,13 @@ Since ABMs are stochastic, researchers often run multiple replicates of a simula
 
 ### Exploratory data analysis
 
-Julia has extensive tools for data analysis. Having the results of simulations in `DataFrame` format makes it easy to take advantage of most of such tools. Examples include the VegaLite.jl package for data visualization, which uses a grammar of graphics syntax to produce interactive plots. Moreover, DataVoyager.jl provides an [interactive environment](https://github.com/vega/voyager) to build custom plots from `DataFrame`s. Agents.jl provides `visualize_data` function that sends the simulation outputs to Data Voyager. 
+Julia has extensive tools for data analysis. Having the results of simulations in `DataFrame` format makes it easy to take advantage of most of such tools. Examples include the VegaLite.jl package for data visualization, which uses a grammar of graphics syntax to produce interactive plots. Moreover, DataVoyager.jl provides an [interactive environment](https://github.com/vega/voyager) to build custom plots from `DataFrame`s. Agents.jl provides `visualize_data` function that sends the simulation outputs to Data Voyager.
 
 ## Why we need agent-based modeling
 
-Agent-based models (ABMs) are increasingly recognized as the approach for studying complex systems. Complex systems cannot be fully understood using the traditional mathematical tools that aggregate the behavior of elements in a system. The behavior of a complex system depends on the behavior and interaction of its elements (agents). Small changes in the input to complex systems or the behavior of its agents can lead to large changes in system's outcome. That is to say a complex system's behavior is nonlinear, and that it is not the sum of the behavior of its elements. Use of ABMs have become feasible after the availability of computers and has been growing since, especially in modeling biological and economical systems, and has extended to social studies and archeology.
+Agent-based models (ABMs) are increasingly recognized as the approach for studying complex systems. Complex systems cannot be fully understood using the traditional mathematical tools that aggregate the behavior of elements in a system. The behavior of a complex system depends on the behavior and interaction of its elements (agents). Small changes in the input to complex systems or the behavior of its agents can lead to large changes in system's outcome. That is to say a complex system's behavior is nonlinear, and that it is not the sum of the behavior of its elements. Use of ABMs have become feasible after the availability of computers and has been growing since, especially in modeling biological and economical systems, and has extended to social studies and archaeology.
 
-An ABM consists of autonomous agents that behave given a set of rules. A classic and simple example of an ABM is a cellular automaton. A cellular automaton is a regular grid where each _cell_ is an agent. Cells have different _states_, for example, on or off. A cell's state can change at each step depending on the state of its _neighbors_. This simple model can lead to unpredicted emergent patterns on the grid. Famous examples of which are Wolfram's rule 22 and rule 30 (see [here](https://link.aps.org/doi/10.1103/RevModPhys.55.601) and figure below).
+An ABM consists of autonomous agents that behave given a set of rules. A classic and simple example of an ABM is a cellular automaton. A cellular automaton is a regular grid where each _cell_ is an agent. Cells have different _states_, for example, on or off. A cell's state can change at each step depending on the state of its _neighbors_. This simple model can lead to unpredictable emergent patterns on the grid. Famous examples of which are Wolfram's rule 22 and rule 30 (see [here](https://link.aps.org/doi/10.1103/RevModPhys.55.601) and figure below).
 
 ![Wolfram's rule 22 implemented in Agents.jl](CA1D_22.png)
 ![Wolfram's rule 30 implemented in Agents.jl](CA1D_30.png)
@@ -49,6 +53,14 @@ The package is in Julia's package list. Install it using this command:
 
 ```julia
 ]add Agents
+```
+
+## Running tests
+
+To run tests, just run the `runtests.jl` file in the `test` folder:
+
+```bash
+$julia runtests.jl
 ```
 
 ## Table of contents

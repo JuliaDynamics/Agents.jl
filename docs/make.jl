@@ -7,6 +7,7 @@ makedocs(
   sitename="Agents.jl",
     pages = [
         "Introduction" => "index.md",
+        "Comparison against Mesa" => "mesa.md",
         "Examples" => [
           "Schelling's segregation model" => "schelling.md",
           "Boltzmann wealth distribution" => "boltzmann_example01.md",
