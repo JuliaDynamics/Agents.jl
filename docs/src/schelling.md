@@ -26,11 +26,22 @@ The `scheduler` field accepts a function that defines the order with which agent
 ```julia
 using Agents
 
-mutable struct SchellingModel <: AbstractModel  # A model object should always be a subtype of AbstractModel
- space::AbstractSpace  # A space object, which is a field of the model object is always subtype of AbstractSpace
- agents::Array{AbstractAgent}  # a list of agents
- scheduler::Function
- min_to_be_happy::Integer  # minimum number of neighbors to be of the same kind so that they are happy
+"""
+AbstractModel type for the Schelling Model
+
+Object should always be a subtype of AbstractModel.
+"""
+mutable struct SchellingModel{T<:Integer, Y<:AbstractArray,
+                              Z<:AbstractSpace} <: AbstractModel 
+
+  "A field of the model for a space object, always a subtype of AbstractSpace."
+  space::Z
+  "A list of agents."
+  agents::Y
+  "A field for the scheduler function."
+  scheduler::Function
+  "The minimum number of neighbors for agent to be happy."
+  min_to_be_happy::T
 end
 ```
 
@@ -41,11 +52,25 @@ It is best to make any model parameter a field of the model object. We add the m
 Next, we define an agent object. Agent objects are subtypes of `AbstractAgent` and should always have the following fields: `id` which stores agent IDs as integers, and `pos` to store each agent's position. Agent positions can be tuple of integers as coordinates of nodes of a grid (1D, 2D or 3D). Positions can also be integers only, referring to the number of a node in an irregular network.
 
 ```julia
-mutable struct SchellingAgent <: AbstractAgent # An agent object should always be a subtype of AbstractAgent
- id::Integer
- pos::Tuple{Integer, Integer}
- mood::Bool # true is happy and false is unhappy
- group::Integer
+"""
+AbstractAgent type for the Schelling Agent
+
+Object should always be a subtype of AbstractAgent.
+"""
+mutable struct SchellingAgent{T<:Integer} <: AbstractAgent
+  "The identifier number of the agent."
+  id::T
+  "The x, y location of the agent."
+  pos::Tuple{T, T}
+  """
+  Whether or not the agent is happy with cell.
+
+  Where true is "happy" and false is "unhappy"
+
+  """
+  mood::Bool
+  "The group of the agent, determines mood as it interacts with neighbors."
+  group::T
 end
 ```
 
@@ -58,10 +83,14 @@ Finally, we define a space object. The space object is always a subtype of `Abst
 The second field of the space object is the `dimensions` of the grid or network. Lastly, every space object should have an `agent_positions` field. This field is an array of arrays for each node of the network. Each inner array will record the ID of the agents on that position. Agents.jl keeps the position of agents in two places. One in each agent's object and one in the `agent_positions`.
 
 ```julia
-mutable struct MyGrid <: AbstractSpace # A space object should always be a subtype of AbstractSpace
- dimensions::Tuple{Integer, Integer}
- space
- agent_positions::Array  # an array of arrays for each grid node
+"The space of the experiment."
+mutable struct MyGrid{T<:Integer, Y<:AbstractArray} <: AbstractSpace
+  "Dimensions of the grid."
+  dimensions::Tuple{T, T}
+  "The space type."
+  space::SimpleGraph
+  "An array of arrays for each grid node."
+  agent_positions::Y  
 end
 ```
 
@@ -70,28 +99,46 @@ end
 Now that we have defined the basic objects, we should instantiate the model. We put the model instantiation in a function so that it will be easy to recreate the model and change its parameters.
 
 ```julia
-function instantiate_model(; numagents=320, griddims=(20, 20), min_to_be_happy=3)
- agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]  # 1
- mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # 2
- model = SchellingModel(mygrid, AbstractAgent[], random_activation, min_to_be_happy)  # 3
-  
- agents = vcat(
-  [SchellingAgent(i, (1,1), false, 0) for i in 1:(numagents/2)], [SchellingAgent(i, (1,1), false, 1) for i in (numagents/2)+1:numagents])  # 4
+"Function to instantiate the model."
+function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
 
- for agent in agents 
-  add_agent_single!(agent, model)  # 5
- end
- return model
+  # 1) Creates an array of empty arrays as many as there are agents.
+  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+
+  # 2) Use MyGrid to create a grid from griddims and agent_positions using the
+  #    grid function.
+  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)
+
+  # 3) Instantiate the model using mygrid, the SchellingAgent type, the
+  #    random_activation function from Agents.jl and the
+  #    argument min_to_be_happy.
+  model = SchellingModel(mygrid, SchellingAgent[], random_activation,
+                         min_to_be_happy) 
+
+  # 4) Create a 1-dimension list of agents, balanced evenly between group 0
+  #    and group 1.
+  agents = vcat(
+    [SchellingAgent(Int(i), (1,1), false, 0) for i in 1:(numagents/2)],
+    [SchellingAgent(Int(i), (1,1), false, 1) for i in (numagents/2)+1:numagents]
+  )
+
+  # 5) Add the agents to the model.
+  for agent in agents
+    # Use add_agent_single (from Agents.jl) to add the agents to the grid at
+    # random locations.
+    add_agent_single!(agent, model)
+  end
+  return model
 end
 ```
 
 Explanations below correspond to the numbered lines in the code snippet above:
 
-* creates an array of empty arrays as many as there are agents.
-* creates a 2D grid with nodes that have Moore neighborhoods. The grid does not have periodic edges.
-* instantiates the model. It uses an empty array for `agents`.
-* creates an array of agents with two different groups. All agents have a temporary coordinate of (1, 1).
-* adds agents to random nodes in space and to the `agents` array in the model object. `add_agent_single!` ensures that there are no more than one agent per node.
+1. Creates an array of empty arrays as many as there are agents.
+2. Creates a 2D grid with nodes that have Moore neighborhoods. The grid does not have periodic edges.
+3. Instantiates the model. It uses an empty array for `agents`.
+4. Creates an array of agents with two different groups. All agents have a temporary coordinate of (1, 1).
+5. Adds agents to random nodes in space and to the `agents` array in the model object. `add_agent_single!` ensures that there are no more than one agent per node.
 
 ### Defining a step function
 
@@ -100,36 +147,48 @@ The last step of building our ABM is defining a _step_ function. Any ABM model s
 An agent step function should only accept two arguments, the first of which an agent object and the second of which a model object. The model step function should accept only one argument, that is the model object. It is possible to only have a _model step function_, in which case users have to use the built-in `dummystep` as the _agent step function_.
 
 ```julia
+"Move a single agent until a satisfactory location is found."
 function agent_step!(agent, model)
- if agent.mood == true
-  return
- end
- while agent.mood == false
-  neighbor_cells = node_neighbors(agent, model)
-  same = 0
-  for nn in neighbor_cells
-   nsid = get_node_contents(nn, model)
-   if length(nsid) == 0
-    continue
-   else
-    nsid = nsid[1]
-   end
-   ns = model.agents[nsid].group
-   if ns == agent.group
-    same += 1
-   end
+  if agent.mood == true
+    return
   end
-  if same >= model.min_to_be_happy
-   agent.mood = true
-  else
-   # move
-   move_agent_single!(agent, model)
+  while agent.mood == false
+    neighbor_cells = node_neighbors(agent, model)
+    count_neighbors_same_group = 0
+
+    # For each neighbor, get group and compare to current agent's group...
+    # ...and increment count_neighbors_same_group as appropriately.  
+    for neighbor_cell in neighbor_cells
+      node_contents = get_node_contents(neighbor_cell, model)
+      # Skip iteration if the node is empty.
+      if length(node_contents) == 0
+        continue
+      else
+        # Otherwise, get the first agent in the node...
+        node_contents = node_contents[1]
+      end
+      # ...and increment count_neighbors_same_group if the neighbor's group is
+      # the same.
+      neighbor_agent_group = model.agents[node_contents].group
+      if neighbor_agent_group == agent.group
+        count_neighbors_same_group += 1
+      end
+    end
+
+    # After evaluating and adding up the groups of the neighbors, decide
+    # whether or not to move the agent.
+    # If count_neighbors_same_group is at least the min_to_be_happy, set the
+    # mood to true. Otherwise, move the agent using move_agent_single.
+    if count_neighbors_same_group >= model.min_to_be_happy
+      agent.mood = true
+    else
+      move_agent_single!(agent, model)
+    end
   end
- end
 end
 ```
 
-For building this implementation of Schelling's segregation model, we only need an agent step function.
+For the purpose of this implementation of Schelling's segregation model, we only need an agent step function.
 
 When an agent activates, it follows the following process:
 
@@ -145,9 +204,10 @@ For doing these operations, we used some of the built-in functions of Agents.jl,
 We can run each step of the function using the built-in `step!` function. This will update the agents and the model as defined by the `agent_step!` function.
 
 ```julia
-model = instantiate_model(numagents=200, griddims=(20,20), min_to_be_happy=2)
-step!(agent_step!, model)  # run the model one step or
-step!(agent_step!, model, 3)  # run the model multiple (3) steps
+# Instantiate the model with 370 agents on a 20 by 20 grid. 
+model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
+step!(agent_step!, model)  # Run the model one step...
+step!(agent_step!, model, 3)  # ...run the model multiple (3) steps.
 ```
 
 ### Running the model and collecting data
@@ -155,21 +215,27 @@ step!(agent_step!, model, 3)  # run the model multiple (3) steps
 There is however a more efficient way to run the model and collect data. We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
 ```julia
-model = instantiate_model(numagents=200, griddims=(20,20), min_to_be_happy=2)
+# Instantiate the model with 370 agents on a 20 by 20 grid. 
+model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
+# An array of Symbols for the agent fields that are to be collected.
 agent_properties = [:pos, :mood, :group]
-steps_to_collect_data = collect(1:4)
-data = step!(agent_step!, model, 4, agent_properties, steps_to_collect_data)
-```julia
+# Specifies at which steps data should be collected.
+steps_to_collect_data = collect(1:2)
+# Use the step function to run the model and collect data into a DataFrame.
+data = step!(agent_step!, model, 2, agent_properties, steps_to_collect_data)
+```
 
-`agent_properties` is an array of `Symbols` for the agent fields that we want to collect. `steps_to_collect_data` specifies at which steps data should be collected.
+`agent_properties` is an array of [`Symbols`](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/metaprogramming.html#Symbols-1) for the agent fields that we want to collect. `steps_to_collect_data` specifies at which steps data should be collected.
 
 ### Visualizing the data
 
 We can use the `visualize_2D_agent_distribution` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
 
 ```julia
-for i in 1:4
- visualize_2D_agent_distribution(data, model, Symbol("pos_$i"), types=Symbol("group_$i"), savename="step_$i", cc=Dict(0=>"blue", 1=>"red"))
+# Use visualize_2D_agent_distribution to plot distribution of agents at every step.
+for i in 1:2
+  visualize_2D_agent_distribution(data, model, Symbol("pos_$i"),
+  types=Symbol("group_$i"), savename="step_$i", cc=Dict(0=>"blue", 1=>"red"))
 end
 ```
 
