@@ -4,7 +4,9 @@
 
 Agents.jl is composed of components for building models, building and managing space structures, collecting data, running batch simulations, and data visualization.
 
-For building any ABM, users have to define at least three objects and one function (Fig. 1). Agents.jl's tools manage the rest of the path to producing data and visualizations (Fig. 1). We now demonstrate Agents.jl's architecture and features through building Schelling's segregation model.
+Agents.jl structures simulations in three components: a _model_ component that keeps all model-level variables and data, an _agent_ component that keeps all agent-level variables and data, and a _space_ component that keeps space-level data.
+
+For building any ABM, users have to define at least three objects (_model_, _agent_ and _space_) and one function (Fig. 1). Agents.jl's tools manage the rest of the path to producing data and visualizations (Fig. 1). We now demonstrate Agents.jl's architecture and features through building Schelling's segregation model.
 
 ![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](agentscomponents.png)
 
