@@ -89,9 +89,13 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
     else
       temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
     end
-    dd[:id] = [i.id for i in model.agents]
+    begin
+      dd[!, :id] = [i.id for i in model.agents]
+    end
     fieldname = Symbol(join([string(fn), step], "_"))
-    dd[fieldname] = temparray
+    begin
+      dd[!, fieldname] = temparray
+    end
   end
   return dd
 end
@@ -173,7 +177,7 @@ function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregat
   for ag in aggregators
     d = by(data, :step, column_names => x-> (ag([getproperty(x, i) for i in column_names])))
     colname = Symbol(string(column_names[1])[1:end-1] * string(ag))
-    data[colname] = d[names(d)[end]]
+    data[!, colname] = d[!, names(d)[end]]
   end
   return data
 end

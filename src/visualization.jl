@@ -77,11 +77,11 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
   if types == :id  # there is only one type
     pos = position_column
     d = by(data, pos, N = pos => length)
-    maxval = maximum(d[:N])
-    nodefillc[d[pos]] .= [RGBA(0.1, 0.1, 0.1, i) for i in  (d[:N] ./ maxval) .- 0.001]
+    maxval = maximum(d[!, :N])
+    nodefillc[d[pos]] .= [RGBA(0.1, 0.1, 0.1, i) for i in  (d[!, :N] ./ maxval) .- 0.001]
   else  # there are different types of agents based on the values of the "types" column
-    dd = dropmissing(data[[position_column, types]])
-    unique_types = sort(unique(dd[types]))
+    dd = dropmissing(data[:, [position_column, types]])
+    unique_types = sort(unique(dd[!, types]))
     pos = position_column
     if length(cc) == 0
       colors = colorrgb(length(unique_types))
@@ -100,13 +100,13 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
     colorrev = Dict(v=>k for (k,v) in colors)
     for index in 1:length(unique_types)
       tt = unique_types[index]
-      d = by(dd[dd[types] .== tt, :], pos, N = pos => length)
-      maxval = maximum(d[:N])
+      d = by(dd[dd[!, types] .== tt, :], pos, N = pos => length)
+      maxval = maximum(d[!, :N])
       # colormapname = "L$(index+1)"  # a linear colormap
       # (cmapc, name, desc) = cmap(colormapname, returnname=true)
       # nodefillc[d[pos]] .= [cmapc[round(Int64, i*256)] for i in  (d[:N] ./ maxval) .- 0.001]
       # println("$tt: $name")
-      nodefillc[d[pos]] .= [RGBA(colordict[tt][1], colordict[tt][2], colordict[tt][3], i) for i in  (d[:N] ./ maxval) .- 0.001]
+      nodefillc[d[!, pos]] .= [RGBA(colordict[tt][1], colordict[tt][2], colordict[tt][3], i) for i in  (d[!, :N] ./ maxval) .- 0.001]
       println("$tt: $(colorrev[colordict[tt]])")
     end
   end
@@ -179,7 +179,7 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
     status = Symbol(string(status_column)*"_$row")
     newcolors = [RGBA(0.1, 0.1, 0.1, 0.01) for i in 1:dims[1]]
     for ll in 1:dims[1]
-      if data[status][ll] == "1"
+      if data[!, status][ll] == "1"
         newcolors[ll] = RGBA(0.1, 0.1, 0.1, 1.0)
       end
     end
@@ -206,7 +206,7 @@ function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::
     # base node color is light grey
     nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
     stat = Symbol(string(status_column)*"_$r")
-    nonzeros = findall(a-> a =="1", data[stat])
+    nonzeros = findall(a-> a =="1", data[!, stat])
     
     nodefillc[nonzeros] .= RGBA(0.1, 0.1, 0.1, 1)
 
