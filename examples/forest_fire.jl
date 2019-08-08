@@ -96,7 +96,7 @@ visualize_data(data)
 
 # or plot trees on a grid
 for i in 1:10
-  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green_ryb", false=>"red"))
+  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
 end
 
 # 10. Running batch

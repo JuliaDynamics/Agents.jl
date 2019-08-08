@@ -135,6 +135,7 @@ Alternatively, collect agent positions and plot them on a 2D grid
 
 ```julia
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
+agent_properties = [:status, :pos]
 data = step!(dummystep, forest_step!, forest, 10, agent_properties, collect(1:10))
 for i in 1:10
   visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
