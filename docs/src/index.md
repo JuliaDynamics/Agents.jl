@@ -51,10 +51,6 @@ An ABM consists of autonomous agents that behave given a set of rules. A classic
 
 Another classic example of an ABM is [Schelling's segregation model](https://www.tandfonline.com/doi/abs/10.1080/0022250X.1971.9989794). This model also uses a regular grid and defines agents as the cells of the grid. Agents can be from different social groups. Agents are happy/unhappy based on the fraction of their neighbors that belong to the same group as they are. If they are unhappy, they keep moving to new locations until they are happy. Schelling's model shows that even small preferences of agents to have neighbors belonging to the same group (e.g. preferring that at least 30% of neighbors to be in the same group) could lead to total segregation of neighborhoods. This is another example of an emergent phenomenon from simple interactions of agents.
 
-## Tutorial
-
-For a quick tutorial see the example models. I recommend starting with Schelling's segregation model.
-
 ## Installation
 
 The package is in Julia's package list. Install it using this command:
@@ -74,4 +70,5 @@ $julia runtests.jl
 ## Table of contents
 
 ```@contents
+Pages = ["index.md", "tutorial.md", "boltzmann_example01.md", "forest_fire.md", "CA.md", "builtin_functions.md", "mesa.md"]
 ```

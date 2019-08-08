@@ -7,14 +7,14 @@ makedocs(
   sitename="Agents.jl",
     pages = [
         "Introduction" => "index.md",
-        "Comparison against Mesa" => "mesa.md",
+        "Tutorial" => "tutorial.md",
         "Examples" => [
-          "Schelling's segregation model" => "schelling.md",
           "Boltzmann wealth distribution" => "boltzmann_example01.md",
           "Forest fire" => "forest_fire.md",
           "Cellular Automata" => "CA.md"
         ],
-        "Built-in funtions" => "builtin_functions.md"
+        "Built-in funtions" => "builtin_functions.md",
+        "Comparison against Mesa" => "mesa.md"
     ]
   
 )

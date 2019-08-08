@@ -13,8 +13,8 @@ using DataVoyager
 using CSV
 using ColorTypes
 using GraphPlot
-using Cairo, Fontconfig
 using Compose
+using Cairo, Fontconfig
 import Base.iterate
 import Base.length
 include("agents_component.jl")
