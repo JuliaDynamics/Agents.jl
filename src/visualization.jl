@@ -61,11 +61,16 @@ function node_locs(g, dims::Tuple{Integer,Integer})
 end
 
 """
-    visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_colomn::Symbol; types::Symbol=:id)
+    visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", saveloc::AbstractString="./", cc::Dict=Dict())
 
-Show the distribution of agents on a 2D grid. You should provide `position_colomn` which is the name of the column that holds agent positions. If agents have different types and you want each type to be a different color, provide types=<column name>. Use a dictionary with `cc` to pass colors for each type. You may choose any color name as is on the [list of colors on Wikipedia](https://en.wikipedia.org/wiki/Lists_of_colors).
+Plots the distribution of agents on a 2D grid.
+
+Plots are saved as PDF files under the name given by the `savename` argument. Optionally, choose a path to save the plots using the `saveloc` argument. The default behavior is to save in the current directory, where the code is run.
+
+* You should provide `position_colomn` which is the name of the column that holds agent positions.
+* If agents have different types and you want each type to be a different color, provide types=<column name>. Use a dictionary (the `cc` argument) to pass colors for each type. You may choose any color name from the [list of colors on Wikipedia](https://en.wikipedia.org/wiki/Lists_of_colors).
 """
-function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", cc::Dict=Dict())
+function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", saveloc::AbstractString="./", cc::Dict=Dict())
   g = model.space.space
   locs_x, locs_y, = node_locs(g, model.space.dimensions)
   
@@ -112,7 +117,7 @@ function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, 
   end
 
   NODESIZE = 0.8/sqrt(gridsize(model))
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1), NODESIZE=NODESIZE))
+  draw(PDF(joinpath(saveloc, "$savename.pdf")), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,.1), NODESIZE=NODESIZE))
 end
 
 """
@@ -162,11 +167,17 @@ end
 
 
 """
-    visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="2D_agent_distribution")
+    visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="CA_1D", saveloc::AbstractString="./")
 
-Visualize data of a 1D cellular automaton. `data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `nrows` is the number of times the model was run.
+Visualizes data of a 1D cellular automaton and saves it in a PDF file under the name given by the `savename` argument. Optionally provide a location for the plots to be saved using the `saveloc` argument. The default behavior is to save them in the currently active directory.
+
+
+* `data` are the result of multiple runs of the simulation.
+* `position_column` is the field of the agent that holds their position.
+* `status_column` is the field of the agents that holds their status.
+* `nrows` is the number of times the model was run.
 """
-function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="CA_1D")
+function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="CA_1D", saveloc::AbstractString="./")
   dims = (model.space.dimensions[1], nrows)
   g = Agents.grid2D(dims[1], dims[2])
   locs_x, locs_y = node_locs(g, dims)
@@ -187,16 +198,18 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
   end
 
   NODESIZE = 1/sqrt(gridsize(dims))
-  draw(PDF("$savename.pdf"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
+  draw(PDF(joinpath(saveloc, "$savename.pdf")), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
 
 end
 
 """
     visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
 
-Visualize data of a 2D cellular automaton. `data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `runs` is the number of times the simulation was run.
+Visualizes data of a 2D cellular automaton and saves it in PNG format under the name given by the `savename` argument. Optionally provide a location for the plots to be saved using the `saveloc` argument. The default behavior is to save them in the currently active directory.
+
+`data` are the result of multiple runs of the simulation. `position_column` is the field of the agent that holds their position. `status_column` is the field of the agents that holds their status. `runs` is the number of times the simulation was run.
 """
-function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D")
+function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D", saveloc::AbstractString="./")
   dims = model.space.dimensions
   g = model.space.space
   locs_x, locs_y = node_locs(g, dims)
@@ -210,6 +223,6 @@ function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::
     
     nodefillc[nonzeros] .= RGBA(0.1, 0.1, 0.1, 1)
 
-    draw(PNG("$(savename)_$r.png"), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
+    draw(PNG(joinpath(saveloc, "$(savename)_$r.png")), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
   end
 end
