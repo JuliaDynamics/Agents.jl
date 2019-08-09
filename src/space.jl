@@ -24,14 +24,14 @@ function grid1D(length::Integer; periodic=false)
 end
 
 """
-A regular 2D grid where each node is at most connected to four neighbors. It can optionally be toroidal.
+A regular 2D grid (SimpleGraph object) where each node is at most connected to four neighbors. It can optionally be toroidal.
 """
 function grid2D(x::Integer, y::Integer; periodic::Bool=false)
   g = Grid([x, y], periodic=periodic)
 end
 
 """
-A regular 3D grid where each node is at most connected to 6 neighbors. It can optionally be toroidal.
+A regular 3D grid (`SimpleGraph` object) where each node is at most connected to 6 neighbors. It can optionally be toroidal.
 """
 function grid3D(x::Integer, y::Integer, z::Integer; periodic=false, triangular=false)
   if periodic
@@ -71,7 +71,7 @@ function grid3D(x::Integer, y::Integer, z::Integer; periodic=false, triangular=f
 end
 
 """
-A regular 2D grid where each node connects to its orthogonal and diagonal neighbors. It can optionally be toroidal
+A regular 2D grid (`SimpleGraph` object) where each node connects to its orthogonal and diagonal neighbors. It can optionally be toroidal
 """
 function grid2D_Moore(xdim::Integer, ydim::Integer; periodic=false)
   g = Grid([xdim, ydim], periodic=periodic)
@@ -169,7 +169,7 @@ end
 """
     grid(x::Integer, y::Integer, z::Integer, periodic=false, Moore=false)
 
-Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
+Return a grid (`SimpleGraph` object) based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
 * `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
@@ -204,7 +204,7 @@ end
 """
     grid(dims::Tuple{Integer, Integer, Integer}, periodic=false, Moore=false)
 
-Return a grid based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
+Return a grid (`SimpleGraph` object) based on its dimensions. `x`, `y`, and `z` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` and `z` are 1, it will return a 1D grid. If `x` and `y` are more than 1, and `z=1`, it will return a 2D regular grid.
 
 * `periodic=true` will create toroidal grids.
 * `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
@@ -216,7 +216,7 @@ end
 """
     grid(dims::Tuple{Integer, Integer}, periodic=false, Moore=false)
 
-Return a grid based on its dimensions. `x`, `y` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` is 1, it will return a 1D grid.
+Return a grid (`SimpleGraph` object) based on its dimensions. `x`, `y` are the dimensions of the grid. If all dimensions are 1, it will return a 0D space, where all agents are in the same position. If `x` is more than 1, but `y` is 1, it will return a 1D grid.
 
 * `periodic=true` will create toroidal grids.
 * `Moore=true` will return a regular grid in which each node is connected to its diagonal neighbors. If `false`, each node will only connect to its orthogonal neighbors.
