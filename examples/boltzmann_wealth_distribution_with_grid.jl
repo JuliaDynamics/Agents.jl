@@ -1,5 +1,5 @@
 """
-The first part of the Boltzmann Wealth Distribution example. 
+The second part of the Boltzmann Wealth Distribution example. 
 
 In the first part of the Boltzmann example, the experiment is ran without
 a spatial structure. In the second part, a spatial structure is added,
@@ -10,7 +10,7 @@ This example can be ran by navigating to the examples/ folder, starting
 a julia REPL session and running:
 
 ```
-julia> include("boltzmann_wealth_distribution.jl")
+julia> include("boltzmann_wealth_distribution_with_grid.jl")
 ```
 
 This will instantiate the model and create a `DataFrame` `data` that 
@@ -25,6 +25,7 @@ julia> visualize_data(data);
 depicting the results of the experiment.
 
 """
+
 using Agents
 
 """
@@ -32,34 +33,54 @@ Defines the agent type.
 
 The agent type must be a subtype of AbstractAgent.
 
-Commonly, an agent type will require a field for location value in the form
-`pos::Tuple{T, T}`. In the first part of this example we will not be using a spatial
-structure, therefore we will not define a field for position.
-
 """
 mutable struct MyAgent{T<:Integer} <: AbstractAgent
   "The identifier number of the agent."
   id::T
+  "The agent's grid position."
+  pos::Tuple{T, T}
   "The agent's wealth."
   wealth::T
 end
 
 "Define the model type."
-mutable struct MyModel{T<:AbstractVector} <: AbstractModel
+mutable struct MyModel{A<:AbstractVector, S<:AbstractSpace} <: AbstractModel
+  "A space dimension."
+  space::S
   "An array of agents."
-  agents::T
+  agents::A
   "A field for the scheduler function."
   scheduler::Function
 end
 
+"The space type that serves as the grid for the model."
+mutable struct MyGrid{T<:Integer, Y<:AbstractVector} <: AbstractSpace
+  "The dimensions of the grid."
+  dimensions::Tuple{T, T}
+  "A field for the space type."
+  space::SimpleGraph
+  "An array of arrays for each grid node."
+  agent_positions::Y  
+end
+
 "Function to instantiate the model."
-function instantiate_model(; numagents)
+function instantiate_model(; numagents, griddims)
+  # An array of arrays for each node of the space.
+  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+  # Instantiate the grid structure.
+  mygrid = MyGrid(griddims, grid(griddims), agent_positions)
   # Create a list of agents, each with position (1,1) and one unit of
   # wealth.
-  agents = [MyAgent(i, 1) for i in 1:numagents]  
+  agents = [MyAgent(i, (1,1), 1) for i in 1:numagents]
 
   # Instantiate and return the model.
-  model = MyModel(agents, random_activation)
+  model = MyModel(mygrid, MyAgent[], random_activation)
+
+  # Use the `add_agent!` function to add agents to the model.
+  for agent in agents
+    add_agent!(agent, model)
+  end
+
   return model
 end
 
@@ -68,6 +89,11 @@ end
 Define the agent step function.
 
 Defines what the agent should do at each step.
+
+TODO - this needs to be modified so that it actually only gives money 
+to agents in the same cell, as described in the latter part of the
+example. As of this writing, the below is the same function.
+
 """
 function agent_step!(agent::AbstractAgent, model::AbstractModel)
   # If the agent's wealth is zero, then do nothing.
@@ -83,7 +109,13 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
 end
 
 # Instantiate the model.
-model = instantiate_model(numagents=100)
+model = instantiate_model(numagents=100, griddims=(5,5))
+
+# For each agent, move the agent to a random location on the grid by using the 
+# `move_agent!` function.
+for agent in model.agents
+  move_agent!(agent, model)
+end
 
 # Run the model multiple steps and collect data.
 # An array of Symbols for the agent fields that are to be collected, in
