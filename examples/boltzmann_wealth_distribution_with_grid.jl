@@ -90,21 +90,21 @@ Define the agent step function.
 
 Defines what the agent should do at each step.
 
-TODO - this needs to be modified so that it actually only gives money 
-to agents in the same cell, as described in the latter part of the
-example. As of this writing, the below is the same function.
-
 """
 function agent_step!(agent::AbstractAgent, model::AbstractModel)
   # If the agent's wealth is zero, then do nothing.
   if agent.wealth == 0
     return
-  # Otherwise, choose a random agent, subtract one unit of own wealth
-  # and add one unit of wealth to the randomly chosen agent.
+  # Otherwise..
   else
-    random_agent = model.agents[rand(1:nagents(model))]
+    #...create a list of all agents on the same node and select a random agent.
+    available_agents = get_node_contents(agent, model)
+    random_neighbor_agent_id = rand(available_agents)
+    random_neighbor_agent = [i for i in model.agents
+							 if i.id == random_neighbor_agent_id][1]
+    # Then decrement the current agent's wealth and increment the neighbor's wealth.
     agent.wealth -= 1
-    random_agent.wealth += 1
+	random_neighbor_agent.wealth += 1
   end
 end
 
