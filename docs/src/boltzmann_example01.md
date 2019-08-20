@@ -222,7 +222,7 @@ for agent in model.agents
 end
 ```
 
-We need a new step function that allows agents to give money only to other agents in the same cell:
+We need a new step function that allows agents to give money only to other agents in the same cell. Also, the `agent_step!` function must move the agent to a different location in every step - if the agent were not moved on every step, the agents would just trade wealth amongst themselves.
 
 ```julia
 """
@@ -245,6 +245,13 @@ function agent_step!(agent::AbstractAgent, model::AbstractModel)
     # Then decrement the current agent's wealth and increment the neighbor's wealth.
     agent.wealth -= 1
     random_neighbor_agent.wealth += 1
+
+    # Now move the agent to a random node.
+    # If the agent weren't moved, agents would merely trade wealth 
+    # amongst themselves on the same node.
+    neighboring_nodes = node_neighbors(agent, model)
+    move_agent!(agent, rand(neighboring_nodes), model)
+
   end
 end
 ```
