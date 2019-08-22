@@ -16,7 +16,7 @@ end
 A path graph. A 1D grid that can optionally be toroidal (a ring).
 """
 function grid1D(length::Integer; periodic=false)
-  g = PathGraph(length)
+  g = LightGraphs.path_graph(length)
   if periodic
     add_edge!(g, 1, length)
   end
@@ -27,7 +27,7 @@ end
 A regular 2D grid (SimpleGraph object) where each node is at most connected to four neighbors. It can optionally be toroidal.
 """
 function grid2D(x::Integer, y::Integer; periodic::Bool=false)
-  g = Grid([x, y], periodic=periodic)
+  g = LightGraphs.grid([x, y], periodic=periodic)
 end
 
 """
@@ -74,7 +74,7 @@ end
 A regular 2D grid (`SimpleGraph` object) where each node connects to its orthogonal and diagonal neighbors. It can optionally be toroidal
 """
 function grid2D_Moore(xdim::Integer, ydim::Integer; periodic=false)
-  g = Grid([xdim, ydim], periodic=periodic)
+  g = LightGraphs.grid([xdim, ydim], periodic=periodic)
   for x in 1:xdim
     for y in 1:ydim
       nodeid = coord_to_vertex((x, y), (xdim, ydim))
