@@ -225,6 +225,11 @@ function grid(dims::Tuple{Integer,Integer}, periodic::Bool=false, Moore::Bool=fa
   grid(dims[1], dims[2], periodic, Moore)
 end
 
+function grid()
+  g = grid0D()
+  return g
+end
+
 """
     gridsize(dims::Tuple{Integer, Integer, Integer})
 
@@ -245,6 +250,10 @@ end
 
 function gridsize(x::Integer, y::Integer, z::Integer)
   gridsize((x,y,z))
+end
+
+function gridsize(x::T) where T<:SimpleGraph
+  return nv(obj1)
 end
 
 """

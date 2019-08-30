@@ -5,6 +5,14 @@ end
 
 Random.seed!(209)
 
+@testset "0D grid" begin
+  obj1 = grid()
+  obj2 = Agents.grid0D()
+  @test Agents.nv(obj1) == Agents.nv(obj2)
+  @test Agents.ne(obj1) == Agents.ne(obj2)
+  @test gridsize(obj1) == 1
+end
+
 @testset "1D grid" begin
   obj1 = Agents.grid1D(5)
   obj2 = Agents.grid1D(5, periodic=true)
