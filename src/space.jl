@@ -339,7 +339,7 @@ This function is for positioning agents on the grid for the first time.
 function add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   push!(model.space.agent_positions[pos], agent.id)
   push!(model.agents, agent)
-  if typeof(agent.pos) == Integer
+  if typeof(agent.pos) <: Integer
     agent.pos = pos
   elseif typeof(agent.pos) <: Tuple
     agent.pos = vertex_to_coord(pos, model)  # update agent position
@@ -470,13 +470,13 @@ function coord_to_vertex(x::Integer, y::Integer,dims::Tuple{Integer, Integer})
 end
 
 """
-    coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{Integer, Integer, Integer})
+    coord_to_vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
 
 Returns node number from x, y, z coordinates.
 """
-function coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, dims::Tuple{Integer, Integer, Integer})
-  if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
-    nodeid = coord[1]
+function coord_to_vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
+  if (dims[2] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[2] == 1) # 1D grid
+    nodeid = maximum(coord[1])
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
     nodeid = coord_to_vertex((coord[1], coord[2]), (dims[1], dims[2]))
   else # 3D grid
@@ -506,18 +506,18 @@ end
 
 Returns the coordinates of a node given its number on a 3D grid.
 """
-function vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
+function vertex_to_coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where T<:Integer
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
-    coord = (vertex, 1)
+    coord = (vertex, T(1))
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    coord = vertex_to_coord(vertex::Integer, (dims[1], dims[2]))
-    coord = (coord[1], coord[2], 1)
+    coord = vertex_to_coord(vertex, (dims[1], dims[2]))
+    coord = (coord[1], coord[2], T(1))
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] > 1  # 3D grid
     gridbasesize = dims[1]*dims[2]
-    zcoord = ceil(Integer, vertex/gridbasesize)
-    vertex2d = vertex - ((zcoord-1) * gridbasesize)
+    zcoord = ceil(T, vertex/gridbasesize)
+    vertex2d = vertex - ((zcoord-T(1)) * gridbasesize)
     coord2d = vertex_to_coord(vertex2d, (dims[1], dims[2]))
-    coord = (coord2d[1], coord2d[2], zcoord)
+    coord = (T(coord2d[1]), T(coord2d[2]), zcoord)
   else
     error("Wrong coords!")
   end
@@ -525,16 +525,16 @@ function vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer}
 end
 
 """
-    vertex_to_coord(vertex::Integer, dims::Tuple{Integer,Integer})
+    vertex_to_coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
 
 Returns the coordinates of a node given its number on a 2D grid.
 """
-function vertex_to_coord(vertex::Integer, dims::Tuple{Integer,Integer})
-  x = vertex % dims[1]
+function vertex_to_coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
+  x = T(vertex % dims[1])
   if x == 0
-    x = dims[1]
+    x = T(dims[1])
   end
-  y = ceil(Integer, vertex/dims[1])
+  y = ceil(T, vertex/dims[1])
   coord = (x, y)
   return coord
 end

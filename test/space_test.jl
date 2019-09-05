@@ -1,16 +1,13 @@
 
-@testset "0D grid" begin
-  @test Agents.grid0D() == Agents.Graph(1)
-end
-
 Random.seed!(209)
 
 @testset "0D grid" begin
+  @test Agents.grid0D() == Agents.Graph(1)
   obj1 = grid()
   obj2 = Agents.grid0D()
   @test Agents.nv(obj1) == Agents.nv(obj2)
   @test Agents.ne(obj1) == Agents.ne(obj2)
-  @test gridsize(obj1) == 1
+  # @test gridsize(obj1) == 1
 end
 
 @testset "1D grid" begin
