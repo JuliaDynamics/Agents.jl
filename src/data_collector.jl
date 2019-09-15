@@ -5,7 +5,7 @@ Collect data from a `property` of agents (a `fieldname`) and apply `aggregators`
 
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
 """
-function agents_data_per_step(properties::AbstractArrayArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)    
+function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)    
   output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
   output[1] = step
   agentslen = nagents(model)
