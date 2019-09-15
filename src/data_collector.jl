@@ -5,13 +5,13 @@ Collect data from a `property` of agents (a `fieldname`) and apply `aggregators`
 
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
 """
-function agents_data_per_step(properties::Array{Symbol}, aggregators::Array, model::AbstractModel; step=1)    
+function agents_data_per_step(properties::AbstractArrayArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)    
   output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
   output[1] = step
   agentslen = nagents(model)
   counter = 2
   for fn in properties
-    if fn == :pos
+    if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
       temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
     elseif fn == :agent
       temparray = model.agents
@@ -50,7 +50,7 @@ function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
   agentslen = nagents(model)
   counter = 2
   for (fn, aggs) in propagg
-    if fn == :pos
+    if fn == :pos && typeof(model.agents[1].pos) <: Tuple
       temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
     elseif fn == :agent
       temparray = model.agents
@@ -82,7 +82,7 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
   dd = DataFrame()
   agentslen = nagents(model)
   for fn in properties
-    if fn == :pos
+    if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
       temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
     elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
@@ -105,7 +105,7 @@ end
 
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
+function data_collector(properties::AbstractArray{Symbol}, aggregators::AbstractArray, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)

@@ -23,6 +23,10 @@ Returns the number of agents.
 """
 nagents(model::AbstractModel) = length(model.agents)
 
+
+"""
+A dummy agent step function
+"""
 function dummystep(a::AbstractAgent, b::AbstractModel)
 end
 
