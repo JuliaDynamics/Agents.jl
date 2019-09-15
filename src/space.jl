@@ -289,7 +289,7 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
     splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
     agent.pos = vertex_to_coord(pos, model)  # update agent position
   else
-    splice!(model.space.agent_positions[pos], findfirst(a->a==agent.id, model.space.agent_positions[pos]))
+    splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
     agent.pos = pos
   end
 end
