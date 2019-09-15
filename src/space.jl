@@ -320,8 +320,6 @@ end
     add_agent!(agent::AbstractAgent, pos::Tuple{Integer, Integer, Integer}, model::AbstractModel)
 
 Adds the agent to the `pos` in the space and to the list of agents. `pos` is tuple of x, y, and z (only if its a 3D space) coordinates of the grid node. If `pos` is not given, the agent is added to a random position.
-
-This function is for positioning agents on the grid for the first time.
 """
 function add_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
   # node number from x, y, z coordinates
@@ -333,8 +331,6 @@ end
     add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
 
 Adds the agent to the `pos` in the space and to the list of agents. `pos` is the node number of the space. If `pos` is not given, the agent is added to a random position.
-
-This function is for positioning agents on the grid for the first time.
 """
 function add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   push!(model.space.agent_positions[pos], agent.id)
@@ -351,7 +347,7 @@ end
 
 """
     add_agent!(agent::AbstractAgent, model::AbstractModel)
-Adds agent to a random node in the space and to the agent to the list of agents. 
+Adds agent to a random node in the space and to the list of agents. 
 
 Returns the agent's new position.
 """
