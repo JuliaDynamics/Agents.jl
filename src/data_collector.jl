@@ -4,6 +4,10 @@
 Collect data from a `property` of agents (a `fieldname`) and apply `aggregators` function to them.
 
 If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
+
+If a fieldname is `:agent`, it applies the aggregator function to the list of agents.
+
+If a fieldname is `:model`, it applies the aggregator function to the model object.
 """
 function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)    
   output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
