@@ -25,7 +25,7 @@ There are currently several agent-based modeling frameworks available (notable e
 
 ![Speed comparison of a version of "forest fire" model in Agents.jl vs Mesa. The same implementation of the model in Agents.jl (originally taken from Mesa's example and then re-implemented in Agents.jl) shows more than 8x speed gain. See the docs for more details.](benchmark01.png)
 
-Agent.jl framework allows users to only think about what needs to happen during each step of their model, and the rest will be managed by the framework. In its current version, it does not provide tools to visualize simulations in real time. Moreover, a GUI can make the package even more accessible. The examples in the documentation show the workflow and features of the package.
+Agent.jl framework allows users to only think about what needs to happen during each step of their model, and the rest will be managed by the framework. In its current version, it does not provide tools to visualize simulations in real time. Moreover, a GUI would make the package even more accessible. The examples in the documentation show the workflow and features of the package.
 
 ## Features
 
