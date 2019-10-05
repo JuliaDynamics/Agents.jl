@@ -25,17 +25,17 @@ There are currently several agent-based modeling frameworks available (notable e
 
 ![Speed comparison of a version of the "forest fire" model in Agents.jl vs Mesa. The same implementation of the model in Agents.jl (originally taken from Mesa's example and then re-implemented in Agents.jl) shows more than 8x speed gain. See the documentation for more details.](benchmark01.png)
 
-Agents.jl allows users to only think about what needs to happen during each step of their model, and the rest will be managed by the framework. In its current version, it does not provide tools to visualize simulations in real time. Moreover, a GUI would make the package even more accessible. The [documentation](https://kavir1698.github.io/Agents.jl/dev/) contains a tutorial and several example agent-based models to demonstrate the features and workflows supported by the package.
+Agents.jl allows users to only think about what needs to happen during each step of their model, and the rest will be managed by the framework. Future development can include building a GUI to help users with less programming knowledge, and implementing real-time visualization of simulations. The [documentation](https://kavir1698.github.io/Agents.jl/dev/) contains a tutorial and several example agent-based models to demonstrate the features and workflows supported by the package.
 
 ## Features
 
-* Built-in 2D and 3D regular grids with Moore and von Neumann neighborhoods and periodic edges
-* Automatic data collection into a "DataFrame"
+* Built-in 2D and 3D regular grids with Moore and von Neumann neighborhoods and periodic edges.
+* Automatic data collection into a "DataFrame".
 * Automatic aggregation of collected data with user defined functions.
-* Sometimes, it is easier to take summary statistics than collect all the raw data. The `step!` function accepts a list of aggregating functions, e.g. `mean` and `median`.
-* Data visualization with "DataVoyager": it allows users to interactively plot and explore simulation outputs.
-* Running and aggregation of simulation replicates: Agents.jl provides functions to run multiple simulation replicates and collect their data into a "DataFrame". Furthermore, it allows merging the the results of each replicate into single columns using user-defined aggregator functions.
-* Automatic plotting of Cellular Automata.
-* Automatic distributed computing: Agents.jl allows simulation replicates to run in parallel. It then collects the data from all replicates into a single "Data Frame".
+* Automatic aggregation of raw outputs with user-defined summary statistics. 
+* Interactive visualization of simulation outputs with "DataVoyager".
+* Running and aggregating simulation replicates.
+* Visualizing Cellular Automata.
+* Parallel computation of simulation replicates.
 
 # References
