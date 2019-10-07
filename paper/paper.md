@@ -35,7 +35,7 @@ Agents.jl allows users to only think about what needs to happen during each step
 * Automatic aggregation of raw outputs with user-defined summary statistics. 
 * Interactive visualization of simulation outputs with "DataVoyager".
 * Running and aggregating simulation replicates.
-* Visualizing Cellular Automata.
+* Visualizing cellular automata.
 * Parallel computation of simulation replicates.
 
 # References
