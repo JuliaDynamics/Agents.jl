@@ -1,10 +1,10 @@
 # Agents: agent-based modeling framework in Julia
 
-[![](https://img.shields.io/badge/Agents.jl-v1.1.7-blue.svg)](https://github.com/kavir1698/Agents.jl) 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://kavir1698.github.io/Agents.jl/dev)
+[![](https://img.shields.io/badge/Agents.jl-v1.1.8-blue.svg)](https://github.com/JuliaDynamics/Agents.jl) 
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/dev)
 [![status](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580/status.svg)](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580)
-[![Build Status](https://travis-ci.org/kavir1698/Agents.jl.svg?branch=master)](https://travis-ci.org/kavir1698/Agents.jl)
+[![Build Status](https://travis-ci.org/JuliaDynamics/Agents.jl.svg?branch=master)](https://travis-ci.org/JuliaDynamics/Agents.jl)
 
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
 
@@ -30,7 +30,7 @@ Install using the following command inside Julia:
 
 It is compatible with Julia 0.7+.
 
-For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://kavir1698.github.io/Agents.jl/stable)
+For a tutorial, read the docs: [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 
 
 ## Contributions
