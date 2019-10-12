@@ -1,8 +1,14 @@
 # Agents.jl Documentation
 
+![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents_logo.gif?raw=true)
+
+!!! info "JuliaDynamics"
+    Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/), check out our [website](https://juliadynamics.github.io/JuliaDynamics/) for more cool stuff!
+
+
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). An agent-based (or individual-based) model is a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules [[1](http://doi.org/10.1016/j.ecolmodel.2006.04.023)]. ABM has gained wide usage in a variety of research disciplines. One reason for its popularity is that it allows relaxing many simplifying assumptions usually made by mathematical models. Relaxing such assumptions of a "perfect world" can change a model's behavior [[2](http://doi.org/10.1038/460685a)]. ABM is specifically an important tool for studying complex systems where a system's behavior cannot be predicted and has to be explored (see the "Why we need ABM" section for detailed examples).
 
-Agent.jl provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
+Agent.jl provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities:
 
 * Default grids to run the simulation, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods. Users can use their defined graphs too.
 * Automatic data collection in a `DataFrame` at desired intervals.

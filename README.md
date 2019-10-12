@@ -1,12 +1,13 @@
-# Agents: agent-based modeling framework in Julia
+# Agents.jl: agent-based modeling framework in Julia
 
-[![](https://img.shields.io/badge/Agents.jl-v1.1.8-blue.svg)](https://github.com/JuliaDynamics/Agents.jl) 
+![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents_logo.gif?raw=true)
+
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/dev)
 [![status](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580/status.svg)](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580)
 [![Build Status](https://travis-ci.org/JuliaDynamics/Agents.jl.svg?branch=master)](https://travis-ci.org/JuliaDynamics/Agents.jl)
 
-Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities: 
+Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities:
 
 * Default grids to run the simulations, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods.
 * Running the simulations in parallel on multiple cores.
