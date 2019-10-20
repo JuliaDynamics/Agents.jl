@@ -15,7 +15,7 @@ struct GridSpace{G, D, I<:Integer} <: AbstractSpace
 end
 
 """
-    space(graph::AbstractGraph)
+    space(graph::AbstractGraph) -> GraphSpace
 Create a space instance that is underlined by an arbitrary graph.
 """
 function space(graph::G) where {G<:AbstractGraph}
@@ -24,7 +24,7 @@ function space(graph::G) where {G<:AbstractGraph}
 end
 
 """
-    space(dims::NTuple, periodic = false, moore = false)
+    space(dims::NTuple, periodic = false, moore = false) -> GridSpace
 Create a space instance that represents a gird of dimensionality `size(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 """
@@ -175,30 +175,28 @@ end
 #######################################################################################
 # vertex ⇄ coordinates
 #######################################################################################
-coord2vertex(coord, model::AbstractModel) = coord2vertex(coord, model.space)
-coord2vertex(coord, model::AbstractModel) = coord2vertex(coord, model.space)
-
-"""
-    coord2vertex(coord::Tuple{Integer, Integer, Integer}, model::AbstractModel)
-
-Returns the node number from x, y, z coordinates.
-"""
-function coord2vertex(coord::Tuple, model::AbstractModel)
-  dims = model.space.dimensions
-  coord2vertex(coord, dims)
-end
-
-function coord2vertex(agent::AbstractAgent, model::AbstractModel)
-  coord2vertex(agent.pos, model)
+for f in (:coord2vertex, :vertex2coord)
+  @eval ($f)(c, model::AbstractModel) = ($f)(c, model.space)
+  @eval ($f)(c, space::GridSpace) = ($f)(c, space.dimensions)
+  @eval ($f)(coord, space::GraphSpace) =
+        error("This functionality does not make sense for a GraphSpace.")
 end
 
 """
-    coord2vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
+    coord2vertex(coord::NTuple{Int}, model_or_space) → n
+    coord2vertex(coord::AbstractAgent, model_or_space) → n
 
-Returns node number from x, y, z coordinates.
+Return the node number `n` of the given coordinates or the agent's position.
 """
-function coord2vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
-  if (dims[2] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[2] == 1) # 1D grid
+function coord2vertex end
+
+coord2vertex(agent::AbstractAgent, model::AbstractModel) =
+coord2vertex(agent.pos, model.space)
+
+function coord2vertex(coord::Tuple{T, T, T}, dims) where T<: Integer
+  if (dims[2] == 1 && dims[3] == 1) ||
+     (dims[1] == 1 && dims[3] == 1) ||
+     (dims[1] == 1 && dims[2] == 1) # 1D grid
     nodeid = maximum(coord[1])
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
     nodeid = coord2vertex((coord[1], coord[2]), (dims[1], dims[2]))
@@ -213,6 +211,8 @@ function coord2vertex(coord::Tuple{Integer,Integer}, dims::Tuple{Integer,Integer
   nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
   return nodeid
 end
+
+coord2vertex(coord::Tuple{Integer}, dims) = coord[1]
 
 """
     vertex_to_coord(vertex::Integer, model::AbstractModel)
