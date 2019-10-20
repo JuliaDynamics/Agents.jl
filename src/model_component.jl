@@ -37,7 +37,7 @@ Removes an agent from the list of agents and from the space.
 """
 function kill_agent!(agent::AbstractAgent, model::AbstractModel)
   if typeof(agent.pos) <: Tuple
-    agentnode = coord_to_vertex(agent.pos, model)
+    agentnode = coord2vertex(agent.pos, model)
   else
     agentnode = agent.pos
   end

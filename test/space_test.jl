@@ -61,19 +61,19 @@ end
 end
 
 @testset "grid coord/vertex conversions" begin
-  @test coord_to_vertex((2,2,1), (3,4,1)) == 5
-  @test coord_to_vertex((2,2), (3,4)) == 5
-  @test coord_to_vertex(2,2,1, (3,4,1)) == 5
-  @test coord_to_vertex(2,2, (3,4)) == 5
+  @test coord2vertex((2,2,1), (3,4,1)) == 5
+  @test coord2vertex((2,2), (3,4)) == 5
+  @test coord2vertex(2,2,1, (3,4,1)) == 5
+  @test coord2vertex(2,2, (3,4)) == 5
   @test vertex_to_coord(5, (3,4,1)) == (2,2,1)
   @test vertex_to_coord(5, (3,4)) == (2,2)
 
-  @test coord_to_vertex((2,2,1), (2,3,3)) == 4
-  @test coord_to_vertex((2,2,2), (2,3,3)) == 10
-  @test coord_to_vertex((2,2,3), (2,3,3)) == 16
-  @test coord_to_vertex((1,3,1), (2,3,3)) == 5
-  @test coord_to_vertex((1,3,2), (2,3,3)) == 11
-  @test coord_to_vertex((1,3,3), (2,3,3)) == 17
+  @test coord2vertex((2,2,1), (2,3,3)) == 4
+  @test coord2vertex((2,2,2), (2,3,3)) == 10
+  @test coord2vertex((2,2,3), (2,3,3)) == 16
+  @test coord2vertex((1,3,1), (2,3,3)) == 5
+  @test coord2vertex((1,3,2), (2,3,3)) == 11
+  @test coord2vertex((1,3,3), (2,3,3)) == 17
   
   @test vertex_to_coord(5, (2,3,3)) == (1,3,1)
   @test vertex_to_coord(7, (2,3,3)) == (1,1,2)
@@ -122,12 +122,12 @@ end
   @test agent.id in model.space.agent_positions[83]
   
   new_pos = move_agent!(agent, model)
-  @test agent.id in model.space.agent_positions[coord_to_vertex(new_pos, model)]
+  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
   add_agent!(agent, (2,9), model)
   @test agent.pos == (2,9)
-  @test agent.id in model.space.agent_positions[coord_to_vertex((2,9), model)]
-  @test agent.id in model.space.agent_positions[coord_to_vertex(new_pos, model)]
+  @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
+  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
   @test agent.id in get_node_contents(agent, model)
 

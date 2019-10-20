@@ -22,7 +22,7 @@ empty_nodes
 pick_empty
 find_empty_nodes_coords
 find_empty_nodes
-coord_to_vertex
+coord2vertex
 vertex_to_coord
 get_node_contents
 id_to_agent

@@ -82,14 +82,14 @@ function ca_step!(model)
     coord = agent.pos
     center = agent.status
     before, after = periodic_neighbors(coord, model.space.dimensions)
-    right = model.agents[coord_to_vertex(after[1], coord[2], model)].status
-    left = model.agents[coord_to_vertex(before[1], coord[2], model)].status
-    top = model.agents[coord_to_vertex(coord[1], after[2], model)].status
-    bottom = model.agents[coord_to_vertex(coord[1], after[2], model)].status
-    topright = model.agents[coord_to_vertex(after[1], after[2], model)].status
-    topleft = model.agents[coord_to_vertex(before[1], after[2], model)].status
-    bottomright = model.agents[coord_to_vertex(after[1], before[2], model)].status
-    bottomleft = model.agents[coord_to_vertex(before[1], before[2], model)].status
+    right = model.agents[coord2vertex(after[1], coord[2], model)].status
+    left = model.agents[coord2vertex(before[1], coord[2], model)].status
+    top = model.agents[coord2vertex(coord[1], after[2], model)].status
+    bottom = model.agents[coord2vertex(coord[1], after[2], model)].status
+    topright = model.agents[coord2vertex(after[1], after[2], model)].status
+    topleft = model.agents[coord2vertex(before[1], after[2], model)].status
+    bottomright = model.agents[coord2vertex(after[1], before[2], model)].status
+    bottomleft = model.agents[coord2vertex(before[1], before[2], model)].status
 
     if model.Moore
       nstatus = [topleft, top, topright, left, right, bottomleft, bottom, bottomright]

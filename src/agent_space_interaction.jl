@@ -10,7 +10,7 @@ If `pos` is not given, the agent is moved to a random position on the grid.
 """
 function move_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
   # node number from x, y, z coordinates
-  nodenumber = coord_to_vertex(pos, model)
+  nodenumber = coord2vertex(pos, model)
   move_agent!(agent, nodenumber, model)
 end
 
@@ -18,7 +18,7 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   push!(model.space.agent_positions[pos], agent.id)
   # remove agent from old position
   if typeof(agent.pos) <: Tuple
-    oldnode = coord_to_vertex(agent.pos, model)
+    oldnode = coord2vertex(agent.pos, model)
     splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
     agent.pos = vertex_to_coord(pos, model)  # update agent position
   else
@@ -58,7 +58,7 @@ Adds the agent to the `pos` in the space and to the list of agents. `pos` is tup
 """
 function add_agent!(agent::AbstractAgent, pos::Tuple, model::AbstractModel)
   # node number from x, y, z coordinates
-  nodenumber = coord_to_vertex(pos, model)
+  nodenumber = coord2vertex(pos, model)
   add_agent!(agent, nodenumber, model)
 end
 

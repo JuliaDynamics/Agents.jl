@@ -16,7 +16,7 @@ function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::Ab
   counter = 2
   for fn in properties
     if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
     elseif fn == :agent
       temparray = model.agents
     elseif fn == :model
@@ -55,7 +55,7 @@ function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
   counter = 2
   for (fn, aggs) in propagg
     if fn == :pos && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
     elseif fn == :agent
       temparray = model.agents
     elseif fn == :model
@@ -87,7 +87,7 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
   agentslen = nagents(model)
   for fn in properties
     if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord_to_vertex(model.agents[i], model) for i in 1:agentslen]
+      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
     elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
     else

@@ -57,7 +57,7 @@ function _grid2d_moore(xdim::Integer, ydim::Integer, periodic=false)
   g = LightGraphs.grid([xdim, ydim], periodic=periodic)
   for x in 1:xdim
     for y in 1:ydim
-      nodeid = coord_to_vertex((x, y), (xdim, ydim))
+      nodeid = coord2vertex((x, y), (xdim, ydim))
       connect_to = []
       if y == ydim
         if x == 1
@@ -139,7 +139,7 @@ function _grid2d_moore(xdim::Integer, ydim::Integer, periodic=false)
       end
 
       for pp in connect_to
-        add_edge!(g, nodeid, coord_to_vertex((pp[1], pp[2]), (xdim, ydim)))
+        add_edge!(g, nodeid, coord2vertex((pp[1], pp[2]), (xdim, ydim)))
       end
     end
   end
@@ -175,46 +175,33 @@ end
 #######################################################################################
 # vertex ⇄ coordinates
 #######################################################################################
+coord2vertex(coord, model::AbstractModel) = coord2vertex(coord, model.space)
+coord2vertex(coord, model::AbstractModel) = coord2vertex(coord, model.space)
+
 """
-    coord_to_vertex(coord::Tuple{Integer, Integer, Integer}, model::AbstractModel)
+    coord2vertex(coord::Tuple{Integer, Integer, Integer}, model::AbstractModel)
 
 Returns the node number from x, y, z coordinates.
 """
-function coord_to_vertex(coord::Tuple, model::AbstractModel)
+function coord2vertex(coord::Tuple, model::AbstractModel)
   dims = model.space.dimensions
-  coord_to_vertex(coord, dims)
+  coord2vertex(coord, dims)
 end
 
-function coord_to_vertex(agent::AbstractAgent, model::AbstractModel)
-  coord_to_vertex(agent.pos, model)
-end
-
-function coord_to_vertex(x::Integer, y::Integer, z::Integer, model::AbstractModel)
-  coord_to_vertex((x,y,z), model)
-end
-
-function coord_to_vertex(x::Integer, y::Integer, model::AbstractModel)
-  coord_to_vertex((x,y), model)
-end
-
-function coord_to_vertex(x::Integer, y::Integer, z::Integer,dims::Tuple{Integer, Integer, Integer})
-  coord_to_vertex((x,y,z), dims)
-end
-
-function coord_to_vertex(x::Integer, y::Integer,dims::Tuple{Integer, Integer})
-  coord_to_vertex((x,y), dims)
+function coord2vertex(agent::AbstractAgent, model::AbstractModel)
+  coord2vertex(agent.pos, model)
 end
 
 """
-    coord_to_vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
+    coord2vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
 
 Returns node number from x, y, z coordinates.
 """
-function coord_to_vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
+function coord2vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, Integer}) where T<: Integer
   if (dims[2] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[3] == 1) || (dims[1] == 1 && dims[2] == 1) # 1D grid
     nodeid = maximum(coord[1])
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    nodeid = coord_to_vertex((coord[1], coord[2]), (dims[1], dims[2]))
+    nodeid = coord2vertex((coord[1], coord[2]), (dims[1], dims[2]))
   else # 3D grid
     nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
     nodeid = nodeid + ((dims[1]*dims[2]) * (coord[3]-1))
@@ -222,7 +209,7 @@ function coord_to_vertex(coord::Tuple{T, T, T}, dims::Tuple{Integer, Integer, In
   return nodeid
 end
 
-function coord_to_vertex(coord::Tuple{Integer,Integer}, dims::Tuple{Integer,Integer})
+function coord2vertex(coord::Tuple{Integer,Integer}, dims::Tuple{Integer,Integer})
   nodeid = (coord[2] * dims[1]) - (dims[1] - coord[1])  # (y * xlength) - (xlength - x)
   return nodeid
 end
@@ -355,7 +342,7 @@ end
 Returns the id of agents in the node at `coords`
 """
 function get_node_contents(coords::Tuple, model::AbstractModel)
-  node_number = coord_to_vertex(coords, model)
+  node_number = coord2vertex(coords, model)
   get_node_contents(node_number, model)
 end
 
@@ -405,7 +392,7 @@ end
 Returns neighboring node coords of the node with `node_coord`.
 """
 function node_neighbors(node_coord::Tuple, model::AbstractModel)
-  node_number = coord_to_vertex(node_coord, model)
+  node_number = coord2vertex(node_coord, model)
   nn = node_neighbors(node_number, model)
   nc = [vertex_to_coord(i, model) for i in nn]
   return nc
