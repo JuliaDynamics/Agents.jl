@@ -178,7 +178,7 @@ end
 for f in (:coord2vertex, :vertex2coord)
   @eval ($f)(c, model::AbstractModel) = ($f)(c, model.space)
   @eval ($f)(c, space::GridSpace) = ($f)(c, space.dimensions)
-  @eval ($f)(coord, space::GraphSpace) =
+  @eval ($f)(c, space::GraphSpace) =
         error("This functionality does not make sense for a GraphSpace.")
 end
 
@@ -215,23 +215,15 @@ end
 coord2vertex(coord::Tuple{Integer}, dims) = coord[1]
 
 """
-    vertex2coord(vertex::Integer, model::AbstractModel)
+    vertex2coord(vertex::Integer, model_or_space) → coords
 
 Returns the coordinates of a node given its number on the graph.
 """
-function vertex2coord(vertex::Integer, model::AbstractModel)
-  dims = model.space.dimensions
-  vertex2coord(vertex, dims)
-end
+function vertex2coord end
 
-"""
-    vertex2coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
-
-Returns the coordinates of a node given its number on a 3D grid.
-"""
-function vertex2coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where T<:Integer
+function vertex2coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where {T<:Integer}
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
-    coord = (vertex, T(1))
+    coord = (vertex, T(1), T(1))
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
     coord = vertex2coord(vertex, (dims[1], dims[2]))
     coord = (coord[1], coord[2], T(1))
@@ -247,19 +239,13 @@ function vertex2coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where T
   return coord
 end
 
-"""
-    vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
-
-Returns the coordinates of a node given its number on a 2D grid.
-"""
-function vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
+function vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where {T<:Integer}
   x = T(vertex % dims[1])
   if x == 0
     x = T(dims[1])
   end
   y = ceil(T, vertex/dims[1])
-  coord = (x, y)
-  return coord
+  return (x, y)
 end
 
 #######################################################################################
