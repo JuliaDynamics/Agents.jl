@@ -20,7 +20,7 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   if typeof(agent.pos) <: Tuple
     oldnode = coord2vertex(agent.pos, model)
     splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
-    agent.pos = vertex_to_coord(pos, model)  # update agent position
+    agent.pos = vertex2coord(pos, model)  # update agent position
   else
     splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
     agent.pos = pos
@@ -73,7 +73,7 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::AbstractModel)
   if typeof(agent.pos) <: Integer
     agent.pos = pos
   elseif typeof(agent.pos) <: Tuple
-    agent.pos = vertex_to_coord(pos, model)  # update agent position
+    agent.pos = vertex2coord(pos, model)  # update agent position
   else
     throw("Unknown type of agent.pos.")
   end

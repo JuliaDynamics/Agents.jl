@@ -29,7 +29,7 @@ Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Intege
 """
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   nnodes = gridsize(dims)
-  agents = [Agent(i, vertex_to_coord(i, dims), "0") for i in 1:nnodes]
+  agents = [Agent(i, vertex2coord(i, dims), "0") for i in 1:nnodes]
   agent_positions = [Array{Integer}(undef, 0) for i in 1:nnodes]
   mygrid = Space(dims, grid(dims, true, Moore), agent_positions)
   # mygrid = Space(gridsize, grid(gridsize, false, false), agent_positions)  # this is for when there space is not toroidal  model = Model(mygrid, agents, as_added, rules)

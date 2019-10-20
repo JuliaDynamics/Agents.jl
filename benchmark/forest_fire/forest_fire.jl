@@ -37,7 +37,7 @@ function model_initiation(;d, griddims, seed)
     pp = rand()
     if pp <= forest.d
       idcounter += 1
-      if vertex_to_coord(node, forest)[1] == 1
+      if vertex2coord(node, forest)[1] == 1
         tree = Tree(idcounter, (1,1), 2)
       else
         tree = Tree(idcounter, (1,1), 1)

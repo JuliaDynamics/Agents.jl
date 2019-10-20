@@ -215,31 +215,31 @@ end
 coord2vertex(coord::Tuple{Integer}, dims) = coord[1]
 
 """
-    vertex_to_coord(vertex::Integer, model::AbstractModel)
+    vertex2coord(vertex::Integer, model::AbstractModel)
 
 Returns the coordinates of a node given its number on the graph.
 """
-function vertex_to_coord(vertex::Integer, model::AbstractModel)
+function vertex2coord(vertex::Integer, model::AbstractModel)
   dims = model.space.dimensions
-  vertex_to_coord(vertex, dims)
+  vertex2coord(vertex, dims)
 end
 
 """
-    vertex_to_coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
+    vertex2coord(vertex::Integer, dims::Tuple{Integer, Integer, Integer})
 
 Returns the coordinates of a node given its number on a 3D grid.
 """
-function vertex_to_coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where T<:Integer
+function vertex2coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) where T<:Integer
   if dims[1] > 1 && dims[2] == 1 && dims[3] == 1  # 1D grid
     coord = (vertex, T(1))
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] == 1  # 2D grid
-    coord = vertex_to_coord(vertex, (dims[1], dims[2]))
+    coord = vertex2coord(vertex, (dims[1], dims[2]))
     coord = (coord[1], coord[2], T(1))
   elseif dims[1] > 1 && dims[2] > 1 && dims[3] > 1  # 3D grid
     gridbasesize = dims[1]*dims[2]
     zcoord = ceil(T, vertex/gridbasesize)
     vertex2d = vertex - ((zcoord-T(1)) * gridbasesize)
-    coord2d = vertex_to_coord(vertex2d, (dims[1], dims[2]))
+    coord2d = vertex2coord(vertex2d, (dims[1], dims[2]))
     coord = (T(coord2d[1]), T(coord2d[2]), zcoord)
   else
     error("Wrong coords!")
@@ -248,11 +248,11 @@ function vertex_to_coord(vertex::T, dims::Tuple{Integer, Integer, Integer}) wher
 end
 
 """
-    vertex_to_coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
+    vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
 
 Returns the coordinates of a node given its number on a 2D grid.
 """
-function vertex_to_coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
+function vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where T<: Integer
   x = T(vertex % dims[1])
   if x == 0
     x = T(dims[1])
@@ -272,7 +272,7 @@ Returns the coordinates of empty nodes on the model grid.
 """
 function find_empty_nodes_coords(model::AbstractModel)
   empty_cells = find_empty_nodes(model::AbstractModel)
-  empty_cells_coord = [vertex_to_coord(i, model) for i in empty_cells]
+  empty_cells_coord = [vertex2coord(i, model) for i in empty_cells]
 end
 
 """
@@ -394,7 +394,7 @@ Returns neighboring node coords of the node with `node_coord`.
 function node_neighbors(node_coord::Tuple, model::AbstractModel)
   node_number = coord2vertex(node_coord, model)
   nn = node_neighbors(node_number, model)
-  nc = [vertex_to_coord(i, model) for i in nn]
+  nc = [vertex2coord(i, model) for i in nn]
   return nc
 end
 
@@ -454,7 +454,7 @@ function Base.iterate(iter::Node_iter, state=1)
     element = (Integer[], Array{AbstractArray}(undef,0))
   else
     if iter.postype <: Tuple
-      pp = vertex_to_coord(state, iter.model)
+      pp = vertex2coord(state, iter.model)
       agentlist = Array{AbstractAgent}(undef, nagents)
       for n in 1:nagents
         agentlist[n] = id_to_agent(cellcontent[n], iter.model)
