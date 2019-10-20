@@ -55,7 +55,7 @@ function forest_step!(forest)
       end
     else
       treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell
-      tree = id_to_agent(treeid, forest)  # the tree on this cell
+      tree = id2agent(treeid, forest)  # the tree on this cell
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
@@ -67,7 +67,7 @@ function forest_step!(forest)
           for cell in neighbor_cells
             treeid = get_node_contents(cell, forest)
             if length(treeid) != 0  # the cell is not empty
-              treen = id_to_agent(treeid[1], forest)
+              treen = id2agent(treeid[1], forest)
               if treen.status == false
                 tree.status = false
                 break

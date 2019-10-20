@@ -132,5 +132,5 @@ end
   @test agent.id in get_node_contents(agent, model)
 
   ii = model.agents[end].id
-  @test id_to_agent(ii, model) == model.agents[end]
+  @test id2agent(ii, model) == model.agents[end]
 end
