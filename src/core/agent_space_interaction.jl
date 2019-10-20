@@ -1,3 +1,23 @@
+export move_agent!, add_agent!, add_agent_single!,
+move_agent_single!, kill_agent!
+
+"""
+    kill_agent!(agent::AbstractAgent, model::AbstractModel)
+
+Remove an agent from the list of agents and from the space.
+"""
+function kill_agent!(agent::AbstractAgent, model::AbstractModel)
+  if typeof(agent.pos) <: Tuple
+    agentnode = coord2vertex(agent.pos, model)
+  else
+    agentnode = agent.pos
+  end
+   # remove from the space
+  splice!(agent_positions(model)[agentnode],
+          findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
+  splice!(model.agents, findfirst(a->a==agent, model.agents))  # remove from the model
+end
+
 """
     move_agent!(agent::AbstractAgent, pos, model::AbstractModel)
 

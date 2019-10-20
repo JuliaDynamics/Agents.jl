@@ -1,51 +1,5 @@
 
 """
-Define your model to be a subtype of `AbstractModel`. Your model has to have the following fields, but can also have other fields of your choice.
-
-e.g.
-
-```
-mutable struct MyModel <: AbstractModel
-  scheduler::Function
-  space
-  agents::Array{Integer}  # a list of agents ids
-end
-```
-
-`scheduler` can be one of the default functions (`random_activation`), or your own function.
-"""
-abstract type AbstractModel end
-
-"""
-  nagents(model::AbstractModel)
-
-Returns the number of agents.
-"""
-nagents(model::AbstractModel) = length(model.agents)
-
-
-"""
-A dummy agent step function
-"""
-function dummystep(a::AbstractAgent, b::AbstractModel)
-end
-
-"""
-    kill_agent!(agent::AbstractAgent, model::AbstractModel)
-
-Removes an agent from the list of agents and from the space.
-"""
-function kill_agent!(agent::AbstractAgent, model::AbstractModel)
-  if typeof(agent.pos) <: Tuple
-    agentnode = coord2vertex(agent.pos, model)
-  else
-    agentnode = agent.pos
-  end
-  splice!(model.space.agent_positions[agentnode], findfirst(a->a==agent.id, model.space.agent_positions[agentnode]))  # remove from the grid
-  splice!(model.agents, findfirst(a->a==agent, model.agents))  # remove from the model.agents
-end
-
-"""
     step!(agent_step::Function, model::AbstractModel)
 
 Updates agents one step. Agents will be updated as specified by the `model.scheduler`.
@@ -100,7 +54,7 @@ end
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
 function step!(agent_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
-  
+
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model)
   df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, 1)
@@ -125,7 +79,7 @@ end
 Repeats the `step` function `nsteps` times, and applies functions in values of the `propagg` dict to its keys at steps `steps_to_collect_data`.
 """
 function step!(agent_step, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Int64})
-  
+
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model)
   df = data_collector(propagg, steps_to_collect_data, model, 1)
@@ -202,7 +156,7 @@ end
 Repeats the `step` function `nsteps` times, and applies functions in `aggregators` to values of agent fields in `agent_properties` at steps `steps_to_collect_data`.
 """
 function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::Array{Int64})
-  
+
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model_step, model)
   df = data_collector(agent_properties, aggregators, steps_to_collect_data, model, 1)
@@ -227,7 +181,7 @@ end
 Repeats the `step` function `nsteps` times, and applies functions in values of the `propagg` dict to its keys at steps `steps_to_collect_data`.
 """
 function step!(agent_step, model_step, model::AbstractModel, nsteps::Integer, propagg::Dict, steps_to_collect_data::Array{Int64})
-  
+
   # Run the first step of the model to fill in the dataframe
   # step!(agent_step, model_step, model)
   df = data_collector(propagg, steps_to_collect_data, model, 1)

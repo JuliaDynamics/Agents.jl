@@ -1,9 +1,7 @@
 module Agents
 
-export step!, AbstractModel, AbstractAgent, batchrunner, data_collector,
-move_agent!, add_agent!, get_node_contents, node_neighbors, nagents,
-return_activation_order, random_activation, as_added, visualize_data, add_agent_single!,
-move_agent_single!, kill_agent!,
+export batchrunner, data_collector,
+visualize_data,
 write_to_file, visualize_2D_agent_distribution,
 combine_columns!, partial_activation,
 dummystep, visualize_1DCA, visualize_2DCA, batchrunner_parallel
@@ -23,11 +21,13 @@ using Compose
 using Cairo, Fontconfig
 import Base.iterate
 import Base.length
-include("agents_component.jl")
-include("model_component.jl")
-include("space.jl")
-include("scheduler.jl")
-include("data_collector.jl")
+
+include("core/model.jl")
+include("core/space.jl")
+include("core/agent_space_interaction.jl")
+include("simulation/data_collector.jl")
+include("simulation/step.jl")
+include("simulation/batch_runner.jl")
 include("batch_runner.jl")
 include("visualization.jl")
 include("CA1D.jl")
