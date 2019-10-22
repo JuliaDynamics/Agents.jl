@@ -3,12 +3,18 @@ random_activation, as_added, partial_activation
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** the following fields: `id`, `pos`.
+Your agent type **must have** the following fields:
+```julia
+mutable struct MyAgent{P} <: AbstractAgent
+    id::Int
+    pos::P
+end
+```
+Only for grid spaces, `pos` can be an `NTuple`. For arbitrary graph spaces
+it must always be an integer (the graph node number).
 
-For grid spaces, `pos` should be an `NTuple`, while for graph spaces it should be
-an integer.
-
-Your agent type may have other additional fields relevant to your system.
+Your agent type may have other additional fields relevant to your system,
+for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
 
@@ -16,15 +22,19 @@ abstract type AbstractAgent end
 All models must be a subtype of `AbstractModel`.
 Your model type **must have** the following fields:
 ```julia
-mutable struct MyModel{F, S} <: AbstractModel
-  scheduler::F
-  space::S
-  agents::Vector{Int}  # a list of agents ids
+struct MyModel{F, S} <: AbstractModel
+    scheduler::F
+    space::S
+    agents::Vector{Int}  # a list of agents ids, always of this type
 end
 ```
-`scheduler` can be from Agents.jl ([`random_activation`](@ref), [`as_added`](@ref),
-[`partial_activation`](@ref)), or your own function.
-Your model type may have other additional fields relevant to your system.
+`scheduler` is a function that defines the order with which agents will activate
+at each step. The function should accept the model object as its input and return a list
+of agent indices. You can use [`random_activation`](@ref), [`as_added`](@ref),
+[`partial_activation`](@ref) from Agents.jl, or your own function.
+
+Your model type may have other additional fields relevant to your system,
+for example parameter values.
 """
 abstract type AbstractModel end
 

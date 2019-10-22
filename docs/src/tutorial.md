@@ -1,32 +1,59 @@
-# Agents.jl's architecture
+# Tutorial
+
+## Agents.jl's basic usage
 
 Agents.jl is composed of components for building models, building and managing space structures, collecting data, running batch simulations, and data visualization.
 
-Agents.jl structures simulations in three components: a _model_ component that keeps all model-level variables and data, an _agent_ component that keeps all agent-level variables and data, and a _space_ component that keeps space-level data.
+Agents.jl structures simulations in three components: a _model_ component that keeps all model-level variables and data, an _agent_ component that keeps all agent-level variables and data, and a _space_ component that represents the space where the agents live.
 
-For building any ABM, users have to define at least three objects (_model_, _agent_ and _space_) and one function (Fig. 1). Agents.jl's tools manage the rest of the path to producing data and visualizations (Fig. 1).
+For building any ABM, users have to define at least the following four quantities:
+1. A `struct` for the model.
+2. A `struct` for the agents.
+3. A `Space` instance.  
+4. A stepping function that controls how the model and the agents evolve.
+
+With these, Agents.jl's tools manage the rest of the path to producing data and visualizations (Fig. 1).
 
 ![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](agentscomponents.png)
 
-A **model object** is a subtype of `AbstractModel`. Making the model a subtype of `AbstractModel` will make Agents.jl methods available to the model. It needs to have the following three fields: `scheduler`, `space`, and `agents`. More fields can be added if needed. It is best to make any model parameter a field of the model object.
+### The model
+```@docs
+AbstractModel
+```
 
-The **`scheduler` field** accepts a function that defines the order with which agents will activate at each step. The function should accept the model object as its input and return a list of agent indices. Agents.jl provides three schedulers: `as_added` to activate agents as they have been added to the model, `random_activation` to activate agents randomly, and `partial_activation` to activate only a random fraction of agents at each step.
+### The agent
+```@docs
+AbstractAgent
+```
 
-The **space object** is always a subtype of `AbstractSpace` and should have at least the following three fields.
+## The space
+Under the hood, all spaces are represented by a graph from LightGraphs.jl. However, if
+your space is a regular grid then there is some additional functionality that allows
+converting graph nodes to coordinates on the multidimensional grid.
 
-  * First, a **`space` field** which holds the spatial structure of the model. Agents.jl uses network structures from the [LightGraphs package](https://github.com/JuliaGraphs/LightGraphs.jl) to represent space.  It provides 1D, 2D and 3D grids. The grids may have periodic boundary conditions, meaning nodes on the left and right edges and top and bottom edges are connected to one another. Furthermore, the nodes on a grid may have von Neumann neighborhoods, i.e. only connect to their orthogonal neighbors, or Moore neighborhoods, i.e. connect to their orthogonal and diagonal neighbors. Users may also provide arbitrary networks as their model's spatial structure.
-  * Second, **`dimensions`** of the grid or network in a `Tuple`.
-  * Third, **`agent_positions`** field. This field is an array of arrays for each node of the network. Each inner array will record the ID of the agents on that position. Agents.jl keeps the position of agents in two places. One in each agent's object and one in the `agent_positions`.
+Regardless, in every case you initialize your space by calling `Space`:
+```@docs
+Space
+```
 
-**Agent objects** are subtypes of `AbstractAgent` and should always have the following fields: `id` which stores agent IDs as integers, and `pos` to store each agent's position. Agent positions can be tuple of integers as coordinates of nodes of a grid (1D, 2D or 3D). Positions can also be integers only, referring to the number of a node in an irregular network.
-
-**_step_ function.** Any ABM model should have at least one and at most two step functions. An _agent step function_ is always required. Such an agent step function defines what happens to an agent when it activates. Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
+### The stepping function
+Any ABM model should have at least one and at most two step functions.
+An _agent step function_ is always required.
+Such an agent step function defines what happens to an agent when it activates.
+Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
 
 An agent step function should only accept two arguments: first, an agent object, and second, a model object.
 
-The model step function should accept only one argument, that is the model object. It is possible to only have a _model step function_, in which case users have to use the built-in `dummystep` as the _agent step function_.
+The model step function should accept only one argument, that is the model object.
+To use only model step function, users can use the built-in `dummystep` as the agent step function.
 
-**Running the model**. We can run the model using the built-in `step!` function. This will update the agents and the model as defined by the `agent_step!` function.
+### Running the model & collecting data
+
+After the basic types and functions are defined, we can run the model using the built-in `step!` function. This will update the agents and the model as defined by the agent and model stepping functions.
+```@docs
+Agents.step!
+```
+
 
 ## Schelling's segregation model Example
 
@@ -51,7 +78,7 @@ AbstractModel type for the Schelling Model
 Object should always be a subtype of AbstractModel.
 """
 mutable struct SchellingModel{T<:Integer, Y<:AbstractArray,
-                              Z<:AbstractSpace} <: AbstractModel 
+                              Z<:AbstractSpace} <: AbstractModel
 
   "A field of the model for a space object, always a subtype of AbstractSpace."
   space::Z
@@ -64,7 +91,7 @@ mutable struct SchellingModel{T<:Integer, Y<:AbstractArray,
 end
 ```
 
-We add the minimum number of neighbors of the same kind for an agent to be happy as a field of the model (`min_to_be_happy`). 
+We add the minimum number of neighbors of the same kind for an agent to be happy as a field of the model (`min_to_be_happy`).
 
 ### Defining an agent object
 
@@ -130,7 +157,7 @@ function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
   #    random_activation function from Agents.jl and the
   #    argument min_to_be_happy.
   model = SchellingModel(mygrid, SchellingAgent[], random_activation,
-                         min_to_be_happy) 
+                         min_to_be_happy)
 
   # 4) Create a 1-dimension list of agents, balanced evenly between group 0
   #    and group 1.
@@ -218,7 +245,7 @@ For doing these operations, we used some of the built-in functions of Agents.jl,
 
 
 ```julia
-# Instantiate the model with 370 agents on a 20 by 20 grid. 
+# Instantiate the model with 370 agents on a 20 by 20 grid.
 model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
 step!(agent_step!, model)  # Run the model one step...
 step!(agent_step!, model, 3)  # ...run the model multiple (3) steps.
@@ -229,7 +256,7 @@ step!(agent_step!, model, 3)  # ...run the model multiple (3) steps.
 There is however a more efficient way to run the model and collect data. We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
 ```julia
-# Instantiate the model with 370 agents on a 20 by 20 grid. 
+# Instantiate the model with 370 agents on a 20 by 20 grid.
 model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
 # An array of Symbols for the agent fields that are to be collected.
 agent_properties = [:pos, :mood, :group]

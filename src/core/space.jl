@@ -1,4 +1,4 @@
-export space, vertex2coords, coords2vertex,
+export Space, vertex2coords, coords2vertex, AbstractSpace,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, node_neighbors
 
@@ -18,27 +18,27 @@ struct GridSpace{G, D, I<:Integer} <: AbstractSpace
   dimensions::NTuple{D, I}
 end
 
-space(m::AbstractModel) = m.space
+Space(m::AbstractModel) = m.space
 agent_positions(m::AbstractModel) = m.space.agent_positions
 agent_positions(m::AbstractSpace) = m.agent_positions
 
 """
-    space(graph::AbstractGraph) -> GraphSpace
+    Space(graph::AbstractGraph) -> GraphSpace
 Create a space instance that is underlined by an arbitrary graph.
 In this case, your agent positions (field `pos`) should be of type `Integer`.
 """
-function space(graph::G) where {G<:AbstractGraph}
+function Space(graph::G) where {G<:AbstractGraph}
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GraphSpace{G}(graph, agent_positions)
 end
 
 """
-    space(dims::NTuple, periodic = false, moore = false) -> GridSpace
+    Space(dims::NTuple, periodic = false, moore = false) -> GridSpace
 Create a space instance that represents a gird of dimensionality `size(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
 """
-function space(dims::NTuple{D, I}, periodic = false, moore = false) where {D, I}
+function Space(dims::NTuple{D, I}, periodic = false, moore = false) where {D, I}
   graph = _grid(dims..., periodic, moore)
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
@@ -409,7 +409,7 @@ end
 
 NodeIterator(model::AbstractModel) = NodeIterator(model, model.space)
 
-function NodeIterator(m::M, s::S)
+function NodeIterator(m::M, s::S) where {M, S}
   L = LightGraphs.nv(s)
   return NodeIterator{M, S}(m, L)
 end
