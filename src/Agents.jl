@@ -1,9 +1,9 @@
 module Agents
 
-export batchrunner, data_collector,
+export batchrunner,
 visualize_data,
-write_to_file, visualize_2D_agent_distribution,
-combine_columns!, partial_activation,
+visualize_2D_agent_distribution,
+partial_activation,
 dummystep, visualize_1DCA, visualize_2DCA, batchrunner_parallel
 
 using Distributed

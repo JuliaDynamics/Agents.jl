@@ -27,7 +27,7 @@ dummystep(agent, model) = nothing
 step!(model::AbstractModel, agent_step!, n::Int = 1) =
 step!(model, agent_step!, dummystep, n)
 
-function step!(model::AbstractModel, agent_step!, model::AbstractModel, n::Int = 1)
+function step!(model::AbstractModel, agent_step!, model_step!, n::Int = 1)
   for i in 1:n
     activation_order = return_activation_order(model)
     for index in activation_order

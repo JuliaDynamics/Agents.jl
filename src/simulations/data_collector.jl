@@ -9,7 +9,7 @@ If a fieldname is `:agent`, it applies the aggregator function to the list of ag
 
 If a fieldname is `:model`, it applies the aggregator function to the model object.
 """
-function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)    
+function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)
   output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
   output[1] = step
   agentslen = nagents(model)
@@ -40,7 +40,7 @@ end
 
 Collect data from keys of `propagg` and apply the function in the value of each key to aggregate those data.
 """
-function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)    
+function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
   ncols = 1
   colnames = ["step"]
   for (k,v) in propagg
@@ -117,11 +117,11 @@ function data_collector(properties::AbstractArray{Symbol}, aggregators::Abstract
 end
 
 """
-    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) T<:Integer 
+    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) T<:Integer
 
 Used in the `step!` function.
 """
-function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer 
+function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
   d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -201,13 +201,4 @@ function combine_columns!(data::DataFrame, column_base_name::String, aggregators
     end
   end
   combine_columns!(data, final_names, aggregators)
-end
-
-"""
-    write_to_file(;df::DataFrame, filename::AbstractString)
-
-Writes a DataFrame to file.
-"""
-function write_to_file(;df::DataFrame, filename::AbstractString)
-  CSV.write(filename, df, append=false, delim="\t", writeheader=true)
 end
