@@ -1,47 +1,39 @@
-export step!
+export step!, dummystep
 
 """
-    step!(agent_step! [, model_step!], model::AbstractModel, n::Int = 1)
+    step!(model, agent_step! [, model_step!], n::Int = 1)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
+    step!(model, agent_step! [, model_step!], n; kwargs...)
 
-# TODO: CHANGE THIS FUNCTION NAME!
-    step!(agent_step! [, model_step!], model, n, properties, when)
+The keyword version of `step!` also performs data collection and processing
+in parallel with evolving the model.
 
-This version of `step!` also performs data collection, by collecting the properties
-of the Agent type dictated by `properties <: AbstractArray{Symbol}`. The collection happens
-at the steps indicated by `when <: AbstractArray{Int}`
+### Keywords
+* `when` : at which steps `n` to perform the data collection and processing.
+* `properties` : which fields of the agents to be collected as data.
 """
 function step! end
 
 #######################################################################################
 # basic stepping
 #######################################################################################
-function step!(agent_step!, model::AbstractModel)
-  activation_order = return_activation_order(model)
-  for index in activation_order
-    agent_step!(model.agents[index], model)
-  end
-end
-function step!(agent_step!, model::AbstractModel, n::Int)
-  for i in 1:n
-    step!(agent_step!, model)
-  end
-end
+dummystep(agent) = nothing
+dummystep(agent, model) = nothing
 
-function step!(agent_step!, model_step!, model::AbstractModel)
-  activation_order = return_activation_order(model)
-  for index in activation_order
-    agent_step!(model.agents[index], model)
-  end
-  model_step!(model)
-end
-function step!(agent_step!, model_step!, model::AbstractModel, n::Int)
-  for ss in 1:nsteps
-    step!(agent_step!, model_step!, model)
+step!(model::AbstractModel, agent_step!, n::Int = 1) =
+step!(model, agent_step!, dummystep, n)
+
+function step!(model::AbstractModel, agent_step!, model::AbstractModel, n::Int = 1)
+  for i in 1:n
+    activation_order = return_activation_order(model)
+    for index in activation_order
+      agent_step!(model.agents[index], model)
+    end
+    model_step!(model)
   end
 end
 
