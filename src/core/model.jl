@@ -22,10 +22,10 @@ abstract type AbstractAgent end
 All models must be a subtype of `AbstractModel`.
 Your model type **must have** the following fields:
 ```julia
-struct MyModel{F, S} <: AbstractModel
+struct MyModel{F, S, A} <: AbstractModel
     scheduler::F
     space::S
-    agents::Vector{Int}  # a list of agents ids, always of this type
+    agents::Vector{A}  # a vector of agents (of type `A`)
 end
 ```
 `scheduler` is a function that defines the order with which agents will activate

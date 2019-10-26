@@ -34,7 +34,7 @@ end
 
 """
     Space(dims::NTuple, periodic = false, moore = false) -> GridSpace
-Create a space instance that represents a gird of dimensionality `size(dims)`,
+Create a space instance that represents a gird of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
 """

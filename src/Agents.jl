@@ -1,10 +1,9 @@
 module Agents
 
-export batchrunner,
-visualize_data,
+export visualize_data,
 visualize_2D_agent_distribution,
 partial_activation,
-dummystep, visualize_1DCA, visualize_2DCA, batchrunner_parallel
+dummystep, visualize_1DCA, visualize_2DCA
 
 using Distributed
 using LightGraphs

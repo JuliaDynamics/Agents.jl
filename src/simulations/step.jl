@@ -15,6 +15,7 @@ in parallel with evolving the model.
 ### Keywords
 * `when` : at which steps `n` to perform the data collection and processing.
 * `properties` : which fields of the agents to be collected as data.
+* `propagators` : whatever this is.
 """
 function step! end
 
@@ -55,7 +56,7 @@ function step!(agent_step!::Function, model::AbstractModel, nsteps::Integer, age
   end
   # if 1 is not in `steps_to_collect_data`, remove the first row.
   if !in(1, steps_to_collect_data)
-    df = df[2:end, :]
+    df = df[2:end, :] # TODO: This should be deleteat!
   end
   return df
 end
