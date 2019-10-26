@@ -38,14 +38,14 @@ Create a space instance that represents a gird of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
 """
-function Space(dims::NTuple{D, I}, periodic = false, moore = false) where {D, I}
+function Space(dims::NTuple{D, I}, periodic::Bool = false, moore::Bool = false) where {D, I}
   graph = _grid(dims..., periodic, moore)
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
 end
 
 # 1d grid
-function _grid(length::Integer, periodic=false, moore = false)
+function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
   g = LightGraphs.path_graph(length)
   if periodic
     add_edge!(g, 1, length)
@@ -54,7 +54,7 @@ function _grid(length::Integer, periodic=false, moore = false)
 end
 
 # 2d grid
-function _grid(x::Integer, y::Integer, periodic = false, moore = false)
+function _grid(x::Integer, y::Integer, periodic::Bool = false, moore::Bool = false)
   if moore
     g = _grid2d_moore(x, y, periodic)
   else
@@ -63,7 +63,7 @@ function _grid(x::Integer, y::Integer, periodic = false, moore = false)
   return g
 end
 
-function _grid2d_moore(xdim::Integer, ydim::Integer, periodic=false)
+function _grid2d_moore(xdim::Integer, ydim::Integer, periodic::Bool=false)
   g = LightGraphs.grid([xdim, ydim], periodic=periodic)
   for x in 1:xdim
     for y in 1:ydim

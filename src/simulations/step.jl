@@ -15,7 +15,9 @@ in parallel with evolving the model.
 ### Keywords
 * `when` : at which steps `n` to perform the data collection and processing.
 * `properties` : which fields of the agents to be collected as data.
-* `propagators` : whatever this is.
+* `propagators` : An optional dictionary that maps agent fields (`Symbol`) to
+  functions. These functions are applied to the collected fields which are the keys
+  of `propagators`.
 """
 function step! end
 
@@ -30,7 +32,7 @@ step!(model, agent_step!, dummystep, n)
 
 function step!(model::AbstractModel, agent_step!, model_step!, n::Int = 1)
   for i in 1:n
-    activation_order = return_activation_order(model)
+    activation_order = model.scheduler(model)
     for index in activation_order
       agent_step!(model.agents[index], model)
     end
