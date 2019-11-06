@@ -33,12 +33,17 @@ function Space(graph::G) where {G<:AbstractGraph}
 end
 
 """
-    Space(dims::NTuple, periodic = false, moore = false) -> GridSpace
-Create a space instance that represents a gird of dimensionality `length(dims)`,
+    Space(dims::NTuple; periodic = false, moore = false) -> GridSpace
+Create a space instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
+
+The two keyword arguments denote if the grid should be periodic on its ends,
+and if the connections should be of type Moore or not (in the Moore case
+the diagonal connections are also valid. E.g. for a 2D grid, each node has
+8 neighbors).
 """
-function Space(dims::NTuple{D, I}, periodic = false, moore = false) where {D, I}
+function Space(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
   graph = _grid(dims..., periodic, moore)
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)

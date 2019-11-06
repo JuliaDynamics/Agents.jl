@@ -38,7 +38,7 @@ The agent type **must** be mutable. Once an Agent is created it can be added to 
 add_agent!
 add_agent_single!
 ```
-Then, the agent can interact with the model and the space futher by using
+Then, the agent can interact with the model and the space further by using
 ```@docs
 move_agent!
 move_agent_single!
@@ -116,19 +116,19 @@ For the schedulling function in this example we will use the provided [`random_a
 "Function to instantiate the model."
 function instantiate(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
 
-  space = Space(griddims, false, true) # make a Moore grid
+  space = Space(griddims; moore = true) # make a Moore grid
   # use random_activation function from Agents.jl and the argument min_to_be_happy
   # give the model an empty list of agents, as they will be added incrementally
   model = SchellingModel(random_activation, space, SchellingAgent[], min_to_be_happy)
 
-  # 4) Create a 1-dimension list of agents, balanced evenly between group 0
-  #    and group 1.
+  # Create a 1-dimension list of agents, balanced evenly between group 0
+  # and group 1.
   agents = vcat(
     [SchellingAgent(Int(i), (1,1), false, 0) for i in 1:(numagents/2)],
     [SchellingAgent(Int(i), (1,1), false, 1) for i in (numagents/2)+1:numagents]
   )
 
-  # 5) Add the agents to the model.
+  # Add the agents to the model.
   for agent in agents
     # Use add_agent_single (from Agents.jl) to add the agents to the grid at
     # random locations.
