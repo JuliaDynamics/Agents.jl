@@ -116,17 +116,17 @@ step!(agent_step!, model)
 step!(agent_step!, model, 10)
 ```
 
-To run the model multiple steps and collect data we need to specify which properties to collect (`agent_properties` below) and on which steps to collect the data (`steps_to_collect_data` below):
+To run the model multiple steps and collect data we need to specify which properties to collect (`agent_properties` below) and on which steps to collect the data (`when` below):
 
 ```julia
 # An array of Symbols for the agent fields that are to be collected, in
 # this case wealth is the only variable to be collected.
 agent_properties = [:wealth]
 # Specifies at which steps data should be collected.
-steps_to_collect_data = collect(1:10)
+when = collect(1:10)
 # Use the step function to run the model 10 times and collect data at
 # each step.
-data = step!(agent_step!, model, 10, agent_properties, steps_to_collect_data)
+data = step!(agent_step!, model, 10, agent_properties, when)
 ```
 
 This code collects all agents' wealth at each step and stores them in a `DataFrame`. We can then interactively plot the data in DataVoyager and see the distribution of wealth at each step. This can be accomplished by simply using the `visualize_data` function:
@@ -140,7 +140,7 @@ Often, in ABM we want to run a model many times and observe the average behavior
 ```julia
 model = instantiate_model(numagents=100)
 # Run the model through 10 steps 15 separate times.
-data = batchrunner(agent_step!, model, 10, agent_properties, steps_to_collect_data, 15)
+data = batchrunner(agent_step!, model, 10, agent_properties, when, 15)
 ```
 
 In the model that we built so far, agents choose to give part of their wealth to any random agent. In the real world, transfers of wealth between people or groups are not likely to be completely random. Transfers are more likely to happen between people in the same network. 
@@ -264,10 +264,10 @@ The model can be run as we did previously:
 # this case wealth is the only variable to be collected.
 agent_properties = [:wealth]
 # Specifies at which steps data should be collected.
-steps_to_collect_data = collect(1:10)
+when = collect(1:10)
 # Use the step function to run the model 10 times and collect data at
 # each step.
-data = step!(agent_step!, model, 10, agent_properties, steps_to_collect_data)
+data = step!(agent_step!, model, 10, agent_properties, when)
 ```
 
 ...and the `visualize_data` function can be used to visualized the outcome of the experiment.

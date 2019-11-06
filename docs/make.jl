@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
+push!(LOAD_PATH, "/home/alirv/Desktop/agentspr/Agents.jl")
 #push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
 
 using Documenter, Agents

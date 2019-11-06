@@ -116,7 +116,7 @@ For the schedulling function in this example we will use the provided [`random_a
 "Function to instantiate the model."
 function instantiate(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
 
-  space = Space(griddims; moore = true) # make a Moore grid
+  space = Space(griddims, moore = true) # make a Moore grid
   # use random_activation function from Agents.jl and the argument min_to_be_happy
   # give the model an empty list of agents, as they will be added incrementally
   model = SchellingModel(random_activation, space, SchellingAgent[], min_to_be_happy)
@@ -191,29 +191,27 @@ For defining `agent_step!` we used some of the built-in functions of Agents.jl, 
 ### Running the model
 ```@example schelling
 # Instantiate the model with 370 agents on a 20 by 20 grid.
-model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
-step!(agent_step!, model)  # Run the model one step...
-step!(agent_step!, model, 3)  # ...run the model 3 steps.
+model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3)
+step!(model, agent_step!)  # Run the model one step...
+step!(model, agent_step!, 3)  # ...run the model 3 steps.
 ```
 
 ### Running the model and collecting data
-
-TODO: This must be fixed / updated.
 
 There is however a more efficient way to run the model and collect data. We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
 ```julia
 # Instantiate the model with 370 agents on a 20 by 20 grid.
-model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
+model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3)
 # An array of Symbols for the agent fields that are to be collected.
-agent_properties = [:pos, :mood, :group]
+properties = [:pos, :mood, :group]
 # Specifies at which steps data should be collected.
-steps_to_collect_data = collect(1:2)
+when = collect(1:2)
 # Use the step function to run the model and collect data into a DataFrame.
-data = step!(agent_step!, model, 2, agent_properties, steps_to_collect_data)
+data = step!(model, agent_step!, 2, properties, when=when)
 ```
 
-`agent_properties` is an array of [`Symbols`](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/metaprogramming.html#Symbols-1) for the agent fields that we want to collect. `steps_to_collect_data` specifies at which steps data should be collected.
+`properties` is an array of [`Symbols`](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/metaprogramming.html#Symbols-1) for the agent fields that we want to collect. `when` specifies at which steps data should be collected.
 
 ### Visualizing the data
 
@@ -223,7 +221,7 @@ We can use the `visualize_2D_agent_distribution` function to plot the distributi
 # Use visualize_2D_agent_distribution to plot distribution of agents at every step.
 for i in 1:2
   visualize_2D_agent_distribution(data, model, Symbol("pos_$i"),
-  types=Symbol("group_$i"), savename="step_$i", cc=Dict(0=>"blue", 1=>"red"))
+  types=Symbol("group_$i"), savename="step_$i", cc=Dict(1=>"blue", 2=>"red"))
 end
 ```
 

@@ -6,7 +6,7 @@ agent_properties = [:model]
 height=100
 d=0.6
 nsteps = 100
-steps_to_collect_data = collect(1:nsteps);
+when = collect(1:nsteps);
 
 
 function counter(model::AbstractModel)
@@ -29,7 +29,7 @@ size_range = 100:100:1000
 
 results = Float64[]
 for width in size_range
-  b = @benchmarkable data=step!(dummystep, forest_step!, forest, nsteps, agent_properties, aggregators, steps_to_collect_data) setup=(forest=model_initiation(d=d, griddims=($width, height), seed=2))
+  b = @benchmarkable data=step!(dummystep, forest_step!, forest, nsteps, agent_properties, aggregators, when) setup=(forest=model_initiation(d=d, griddims=($width, height), seed=2))
 
   j = run(b)
   push!(results, minimum(j.times)/1e9)  # convert them to seconds

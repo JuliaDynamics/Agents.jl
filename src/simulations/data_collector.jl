@@ -1,49 +1,20 @@
 """
-    agents_data_per_step(properties::Array{Symbol}, aggregators::Array)
+    data_collecter_aggregate(model::AbstractModel, field_aggregator::Dict; step=1)
 
-Collect data from a `property` of agents (a `fieldname`) and apply `aggregators` function to them.
+`field_aggregator` is a dictionary whose keys are field names of agents (they should be symbols) and whose values are aggregator functions to be applied to those fields. For example, if your agents have a field called `wealth`, and you want to calculate mean and median population wealth, your `field_aggregator` dict will be `Dict(:wealth => [mean, median])`.
 
-If a fieldname of agents returns an array, this will use the `mean` of the array on which to apply aggregators.
+If an agent field returns an array instead of a single number, the mean of that array will be calculated before the aggregator functions are applied to them.
 
-If a fieldname is `:agent`, it applies the aggregator function to the list of agents.
+To apply a function to the list of agents, use `:agent` as a dictionary key.
 
-If a fieldname is `:model`, it applies the aggregator function to the model object.
+To apply a function to the model object, use `:model` as a dictionary key.
+
+Returns two arrays: the first one is the values of applying aggregator functions to the fields, and the second one is a header column for the first array.
 """
-function agents_data_per_step(properties::AbstractArray{Symbol}, aggregators::AbstractArray, model::AbstractModel; step=1)
-  output = Array{Any}(undef, length(properties) * length(aggregators) + 1)
-  output[1] = step
-  agentslen = nagents(model)
-  counter = 2
-  for fn in properties
-    if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
-    elseif fn == :agent
-      temparray = model.agents
-    elseif fn == :model
-      temparray = model
-    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
-      temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
-    else
-      temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
-    end
-    for agg in aggregators
-      output[counter] = agg(temparray)
-      counter += 1
-    end
-  end
-  colnames = hcat(["step"], [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)])
-  return output, colnames
-end
-
-"""
-    agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
-
-Collect data from keys of `propagg` and apply the function in the value of each key to aggregate those data.
-"""
-function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
+function data_collecter_aggregate(model::AbstractModel, field_aggregator::Dict; step=1)
   ncols = 1
   colnames = ["step"]
-  for (k,v) in propagg
+  for (k,v) in field_aggregator
     ncols += length(v)
     for vv in v
       push!(colnames, join([string(k), vv], "_"))
@@ -53,7 +24,7 @@ function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
   output[1] = step
   agentslen = nagents(model)
   counter = 2
-  for (fn, aggs) in propagg
+  for (fn, aggs) in field_aggregator
     if fn == :pos && typeof(model.agents[1].pos) <: Tuple
       temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
     elseif fn == :agent
@@ -73,16 +44,15 @@ function agents_data_per_step(propagg::Dict, model::AbstractModel; step=1)
   return output, colnames
 end
 
+"""
+    data_collecter_raw( model::AbstractModel, properties::Array{Symbol})
+
+Collects agent properties (fields of the agent object) into a dataframe.
+
+If  an agent field returns an array, the mean of those arrays will be recorded.
 
 """
-    agents_data_complete(properties::Array{Symbol}, model::AbstractModel)
-
-Collect data from a `property` of agents (a `fieldname`) into a dataframe.
-
-If a fieldname of agents returns an array, this will use the `mean` of the array. If you want to record positions of the agents, use the `pos` field.
-"""
-function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; step=1)
-  # colnames = [join([string(i[1]), split(string(i[2]), ".")[end]], "_") for i in product(properties, aggregators)]
+function data_collecter_raw( model::AbstractModel, properties::Array{Symbol}; step=1)
   dd = DataFrame()
   agentslen = nagents(model)
   for fn in properties
@@ -105,69 +75,40 @@ function agents_data_complete(properties::Array{Symbol}, model::AbstractModel; s
 end
 
 """
-    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer)  where T<: Integer
+    data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<: Integer
 
 Used in the `step!` function.
+
+Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(properties::AbstractArray{Symbol}, aggregators::AbstractArray, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
-  d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
+function data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer) where T<: Integer
+  d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
-"""
-    data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) T<:Integer
-
-Used in the `step!` function.
-"""
-function data_collector(properties::Array{Symbol}, aggregators::Array, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
-  d, colnames = agents_data_per_step(properties, aggregators, model, step=step)
+function data_collector(field_aggregator::Dict, when::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
+  d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
   return df
 end
 
 """
-    data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
+    data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<:Integer
 
 Used in the `step!` function.
+
+Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<: Integer
-  d, colnames = agents_data_per_step(propagg, model, step=step)
-  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
-  df = DataFrame(dict)
+function data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer) where T<:Integer
+  df = data_collecter_raw(model, properties, step=step)
   return df
 end
 
-"""
-    data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
-
-Used in the `step!` function.
-"""
-function data_collector(propagg::Dict, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
-  d, colnames = agents_data_per_step(propagg, model, step=step)
-  dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
-  push!(df, dict)
-  return df
-end
-
-"""
-    data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<:Integer
-
-Used in the `step!` function.
-"""
-function data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer) where T<:Integer
-  df = agents_data_complete(properties, model, step=step)
-  return df
-end
-
-"""
-    data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame)  where T<:Integer
-Used in the `step!` function.
-"""
-function data_collector(properties::Array{Symbol}, steps_to_collect_data::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
-  d = agents_data_complete(properties, model, step=step)
+function data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
+  d = data_collecter_raw(model, properties, step=step)
   df = join(df, d, on=:id, kind=:outer)
   return df
 end
@@ -186,11 +127,6 @@ function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregat
   return data
 end
 
-"""
-    combine_columns!(data::DataFrame, column_base_name::String, aggregators::AbstractVector)
-
-Combines columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
-"""
 function combine_columns!(data::DataFrame, column_base_name::String, aggregators::AbstractVector)
   column_names = vcat([column_base_name], [column_base_name*"_"*string(i) for i in 1:size(data, 2)])
   datanames = [string(i) for i in names(data)]

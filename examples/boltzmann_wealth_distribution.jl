@@ -90,7 +90,7 @@ model = instantiate_model(numagents=100)
 # this case wealth is the only variable to be collected.
 agent_properties = [:wealth]
 # Specifies at which steps data should be collected.
-steps_to_collect_data = collect(1:10)
+when = collect(1:10)
 # Use the step function to run the model 10 times and collect data at
 # each step.
-data = step!(agent_step!, model, 10, agent_properties, steps_to_collect_data)
+data = step!(agent_step!, model, 10, agent_properties, when)

@@ -1,7 +1,7 @@
 """
     agents_plots_complete(property_plot::Array{Tuple}, model::AbstractModel)
 
-Plots the agents_data_complete() results in your browser.
+Plots the data_collecter_raw() results in your browser.
 
 # Parameters
 
@@ -11,7 +11,7 @@ You can add more plot types by adding more if statements in the function.
 """
 function agents_plots_complete(property_plot::Array, model::AbstractModel)
   properties = [i[1] for i in property_plot]
-  data = agents_data_complete(properties, model)
+  data = data_collecter_raw(properties, model)
   for (property, pt) in property_plot
     if pt == :hist
       # data |> @vlplot(:bar, x={property, bin=true, title=property}, y={"count()", title="Frequency"}) # This is a bug and doesn't work
@@ -71,11 +71,11 @@ Plots are saved as PDF files under the name given by the `savename` argument. Op
 * If agents have different types and you want each type to be a different color, provide types=<column name>. Use a dictionary (the `cc` argument) to pass colors for each type. You may choose any color name from the [list of colors on Wikipedia](https://en.wikipedia.org/wiki/Lists_of_colors).
 """
 function visualize_2D_agent_distribution(data::DataFrame, model::AbstractModel, position_column::Symbol; types::Symbol=:id, savename::AbstractString="2D_agent_distribution", saveloc::AbstractString="./", cc::Dict=Dict())
-  g = model.space.space
+  g = model.space.graph
   locs_x, locs_y, = node_locs(g, model.space.dimensions)
   
   # base node color is light grey
-  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model.space.dimensions)]
+  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model)]
 
   # change node color given the position of the agents. Automatically uses any columns with names: pos, or pos_{some number}
   # TODO a new plot where the alpha value of a node corresponds to the value of an individual on a node
@@ -183,7 +183,7 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
   locs_x, locs_y = node_locs(g, dims)
   
   # base node color is light grey
-  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
+  nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model)]
 
   for row in 1:nrows
     pos = Symbol(string(position_column)*"_$row")
@@ -197,7 +197,7 @@ function visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::
     nodefillc[(dims[1]*row)-(dims[1]-1):dims[1]*row] .= newcolors
   end
 
-  NODESIZE = 1/sqrt(gridsize(dims))
+  NODESIZE = 1/sqrt(gridsize(model))
   draw(PDF(joinpath(saveloc, "$savename.pdf")), gplot(g, locs_x, locs_y, nodefillc=nodefillc, edgestrokec=RGBA(0.1,0.1,0.1,0.01), NODESIZE=NODESIZE))
 
 end
@@ -211,13 +211,13 @@ Visualizes data of a 2D cellular automaton and saves it in PNG format under the 
 """
 function visualize_2DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, runs::Integer; savename::AbstractString="CA_2D", saveloc::AbstractString="./")
   dims = model.space.dimensions
-  g = model.space.space
+  g = model.space.graph
   locs_x, locs_y = node_locs(g, dims)
-  NODESIZE = 0.8/sqrt(gridsize(dims))
+  NODESIZE = 0.8/sqrt(gridsize(model))
 
   for r in 1:runs
     # base node color is light grey
-    nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:Agents.gridsize(dims)]
+    nodefillc = [RGBA(0.1,0.1,0.1,.1) for i in 1:gridsize(model)]
     stat = Symbol(string(status_column)*"_$r")
     nonzeros = findall(a-> a =="1", data[!, stat])
     

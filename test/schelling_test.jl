@@ -3,8 +3,8 @@ Random.seed!(123)
 @testset "Schelling example" begin
   model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=3)
   agent_properties = [:pos, :mood, :group]
-  steps_to_collect_data = collect(1:2)
-  data = step!(agent_step!, model, 2, agent_properties, steps_to_collect_data)
+  when = collect(1:2)
+  data = step!(agent_step!, model, 2, agent_properties, when)
 
   @test data[1, :pos_1] == 261
   @test data[1, :pos_2] == 363

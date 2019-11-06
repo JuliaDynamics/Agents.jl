@@ -122,10 +122,10 @@ agent_properties = [:status]
 aggregators = [length, count]
 
 # at which steps to collect the data
-steps_to_collect_data = collect(1:100)
+when = collect(1:100)
 
 # Run the model for 100 steps
-data = step!(dummystep, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
+data = step!(dummystep, forest_step!, forest, 100, agent_properties, aggregators, when)
 
 # explore data visually
 visualize_data(data)
@@ -156,7 +156,7 @@ Step 3
 
 ```julia
 # Optionally Run batch simulation
-data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
+data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, aggregators, when, 10)
 
 # And write the results to file
 write_to_file(df=data, filename="forest_model.csv")

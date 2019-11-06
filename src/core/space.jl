@@ -7,6 +7,7 @@ id2agent, NodeIterator, node_neighbors
 #######################################################################################
 abstract type AbstractSpace end
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
+gridsize(model::AbstractModel) = LightGraphs.nv(model.space.graph)
 
 struct GraphSpace{G} <: AbstractSpace
   graph::G

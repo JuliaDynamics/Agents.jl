@@ -85,11 +85,11 @@ end
 
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
 agent_properties = [:status, :pos]
-steps_to_collect_data = collect(1:10)
+when = collect(1:10)
 
 # aggregators = [length, count]
-# data = step!(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data)
-data = step!(dummystep, forest_step!, forest, 10, agent_properties, steps_to_collect_data)
+# data = step!(dummystep, forest_step!, forest, 10, agent_properties, aggregators, when)
+data = step!(dummystep, forest_step!, forest, 10, agent_properties, when)
 
 # 9. explore data visually
 visualize_data(data)
@@ -101,7 +101,7 @@ end
 
 # 10. Running batch
 agent_properties = [:status, :pos]
-data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, steps_to_collect_data, 10)
+data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, when, 10)
 # Create a column with the mean and std of the :status_count columns from differen steps.
 columnnames = vcat([:status_count], [Symbol("status_count_$i") for i in 1:9])
 using StatsBase
