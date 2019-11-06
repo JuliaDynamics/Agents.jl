@@ -15,9 +15,9 @@ mutable struct Model{T<:AbstractVector, Y<:AbstractDict, X<:AbstractSpace} <: Ab
   rules::Y
 end
 
-mutable struct Space{T<:Integer, Y<:AbstractVector} <: AbstractSpace
+mutable struct Space{T, Y, S} <: AbstractSpace
   dimensions::Tuple{T, T}
-  space::SimpleGraph
+  space::S
   agent_positions::Y  # an array of arrays for each grid node
 end
 

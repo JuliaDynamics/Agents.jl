@@ -1,6 +1,9 @@
 module Agents
 
-export step!, AbstractModel, AbstractAgent, AbstractSpace, batchrunner, data_collector, grid, gridsize, move_agent!, add_agent!, coord_to_vertex, vertex_to_coord, get_node_contents, node_neighbors, nagents, return_activation_order, random_activation, as_added, visualize_data, add_agent_single!, move_agent_single!, kill_agent!, find_empty_nodes, find_empty_nodes_coords, id_to_agent, write_to_file, visualize_2D_agent_distribution, Random, combine_columns!, Node_iter, empty_nodes, is_empty, pick_empty, partial_activation, dummystep, visualize_1DCA, visualize_2DCA, SimpleGraph, batchrunner_parallel
+export visualize_data,
+visualize_2D_agent_distribution,
+partial_activation,
+dummystep, visualize_1DCA, visualize_2DCA
 
 using Distributed
 using LightGraphs
@@ -17,14 +20,15 @@ using Compose
 using Cairo, Fontconfig
 import Base.iterate
 import Base.length
-include("agents_component.jl")
-include("model_component.jl")
-include("space.jl")
-include("scheduler.jl")
-include("data_collector.jl")
-include("batch_runner.jl")
+
+include("core/model.jl")
+include("core/space.jl")
+include("core/agent_space_interaction.jl")
+include("simulations/data_collector.jl")
+include("simulations/step.jl")
+include("simulations/batch_runner.jl")
 include("visualization.jl")
-include("CA1D.jl")
-include("CA2D.jl")
+# include("CA1D.jl")
+# include("CA2D.jl")
 
 end # module

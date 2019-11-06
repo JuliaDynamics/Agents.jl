@@ -13,19 +13,19 @@ partial_activation
 ```@docs
 grid
 gridsize
-Node_iter
+NodeIterator
 add_agent!
 move_agent!
 add_agent_single!
 move_agent_single!
-empty_nodes
+has_empty_nodes
 pick_empty
 find_empty_nodes_coords
 find_empty_nodes
-coord_to_vertex
-vertex_to_coord
+coord2vertex
+vertex2coord
 get_node_contents
-id_to_agent
+id2agent
 node_neighbors
 ```
 

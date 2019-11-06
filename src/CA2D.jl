@@ -29,7 +29,7 @@ Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Intege
 """
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   nnodes = gridsize(dims)
-  agents = [Agent(i, vertex_to_coord(i, dims), "0") for i in 1:nnodes]
+  agents = [Agent(i, vertex2coord(i, dims), "0") for i in 1:nnodes]
   agent_positions = [Array{Integer}(undef, 0) for i in 1:nnodes]
   mygrid = Space(dims, grid(dims, true, Moore), agent_positions)
   # mygrid = Space(gridsize, grid(gridsize, false, false), agent_positions)  # this is for when there space is not toroidal  model = Model(mygrid, agents, as_added, rules)
@@ -82,14 +82,14 @@ function ca_step!(model)
     coord = agent.pos
     center = agent.status
     before, after = periodic_neighbors(coord, model.space.dimensions)
-    right = model.agents[coord_to_vertex(after[1], coord[2], model)].status
-    left = model.agents[coord_to_vertex(before[1], coord[2], model)].status
-    top = model.agents[coord_to_vertex(coord[1], after[2], model)].status
-    bottom = model.agents[coord_to_vertex(coord[1], after[2], model)].status
-    topright = model.agents[coord_to_vertex(after[1], after[2], model)].status
-    topleft = model.agents[coord_to_vertex(before[1], after[2], model)].status
-    bottomright = model.agents[coord_to_vertex(after[1], before[2], model)].status
-    bottomleft = model.agents[coord_to_vertex(before[1], before[2], model)].status
+    right = model.agents[coord2vertex(after[1], coord[2], model)].status
+    left = model.agents[coord2vertex(before[1], coord[2], model)].status
+    top = model.agents[coord2vertex(coord[1], after[2], model)].status
+    bottom = model.agents[coord2vertex(coord[1], after[2], model)].status
+    topright = model.agents[coord2vertex(after[1], after[2], model)].status
+    topleft = model.agents[coord2vertex(before[1], after[2], model)].status
+    bottomright = model.agents[coord2vertex(after[1], before[2], model)].status
+    bottomleft = model.agents[coord2vertex(before[1], before[2], model)].status
 
     if model.Moore
       nstatus = [topleft, top, topright, left, right, bottomleft, bottom, bottomright]

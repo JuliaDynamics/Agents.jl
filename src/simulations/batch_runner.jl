@@ -1,3 +1,5 @@
+export batchrunner, batchrunner_parallel
+
 """
     batchrunner(agent_step, model_step, model::AbstractModel, nsteps::Integer, properties::Array{Symbol}, aggregators::AbstractVector{T}, steps_to_collect_data::Array{Int64}, replicates::Integer) where T<:Function
 
@@ -79,7 +81,7 @@ function parallel_step_dummy!(agent_step!::T, model_step!::U, model::AbstractMod
 end
 
 """
-    batchrunner_parallel(agent_step!, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::AbstractArray{Integer}, nreplicates::Integer)    
+    batchrunner_parallel(agent_step!, model::AbstractModel, nsteps::Integer, agent_properties::Array{Symbol}, steps_to_collect_data::AbstractArray{Integer}, nreplicates::Integer)
 
 Runs `nreplicates` number of simulations in parallel and returns a `DataFrame`.
 """

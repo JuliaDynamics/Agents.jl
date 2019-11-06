@@ -37,7 +37,7 @@ Return three arrays for x, y, z coordinates of each node
 function node_locs(g, dims::Tuple{Integer,Integer,Integer})
   coords = []
   for nn in 1:nv(g)
-    push!(coords, vertex_to_coord(nn, dims))
+    push!(coords, vertex2coord(nn, dims))
   end
   locs_x = [Float64(i[1]) for i in coords]
   locs_y = [Float64(i[2]) for i in coords]
@@ -53,7 +53,7 @@ Return arrays for x, y coordinates of each node
 function node_locs(g, dims::Tuple{Integer,Integer})
   coords = []
   for nn in 1:nv(g)
-    push!(coords, vertex_to_coord(nn, dims))
+    push!(coords, vertex2coord(nn, dims))
   end
   locs_x = [Float64(i[1]) for i in coords]
   locs_y = [Float64(i[2]) for i in coords]
