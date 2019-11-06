@@ -50,7 +50,7 @@ function Space(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
 end
 
 # 1d grid
-function _grid(length::Integer, periodic=false, moore = false)
+function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
   g = LightGraphs.path_graph(length)
   if periodic
     add_edge!(g, 1, length)
@@ -59,7 +59,7 @@ function _grid(length::Integer, periodic=false, moore = false)
 end
 
 # 2d grid
-function _grid(x::Integer, y::Integer, periodic = false, moore = false)
+function _grid(x::Integer, y::Integer, periodic::Bool = false, moore::Bool = false)
   if moore
     g = _grid2d_moore(x, y, periodic)
   else
@@ -68,7 +68,7 @@ function _grid(x::Integer, y::Integer, periodic = false, moore = false)
   return g
 end
 
-function _grid2d_moore(xdim::Integer, ydim::Integer, periodic=false)
+function _grid2d_moore(xdim::Integer, ydim::Integer, periodic::Bool=false)
   g = LightGraphs.grid([xdim, ydim], periodic=periodic)
   for x in 1:xdim
     for y in 1:ydim

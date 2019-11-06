@@ -77,6 +77,8 @@ We now demonstrate Agents.jl's architecture and features through building the fo
 
 ### Defining the agent type
 ```@example schelling
+using Agents
+
 mutable struct SchellingAgent <: AbstractAgent
   id::Int # The identifier number of the agent
   pos::Tuple{Int,Int} # The x, y location of the agent
@@ -92,8 +94,6 @@ We added two more fields for this model, namely a `mood` field which will store 
 
 ### Defining the model type
 ```@example schelling
-using Agents
-
 mutable struct SchellingModel{S, F} <: AbstractModel
   scheduler::F
   space::S
@@ -120,23 +120,17 @@ function instantiate(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
   # use random_activation function from Agents.jl and the argument min_to_be_happy
   # give the model an empty list of agents, as they will be added incrementally
   model = SchellingModel(random_activation, space, SchellingAgent[], min_to_be_happy)
-
-  # Create a 1-dimension list of agents, balanced evenly between group 0
-  # and group 1.
-  agents = vcat(
-    [SchellingAgent(Int(i), (1,1), false, 0) for i in 1:(numagents/2)],
-    [SchellingAgent(Int(i), (1,1), false, 1) for i in (numagents/2)+1:numagents]
-  )
-
-  # Add the agents to the model.
-  for agent in agents
-    # Use add_agent_single (from Agents.jl) to add the agents to the grid at
-    # random locations.
+  # populate the model with agents, adding equal amount of the two types of agents
+  # at random positions in the model
+  for n in 1:numagents
+    agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
     add_agent_single!(agent, model)
   end
   return model
 end
 ```
+Notice that the position that an agent is initialized does not matter.
+Both of them are set properly when adding an agent to the model.
 
 Explanations below correspond to the numbered lines in the code snippet above:
 
@@ -150,8 +144,7 @@ Explanations below correspond to the numbered lines in the code snippet above:
 
 Finally, we define a _step_ function to determine what happens to an agent when activated.
 
-```julia
-"Move a single agent until a satisfactory location is found."
+```@example schelling
 function agent_step!(agent, model)
   if agent.mood == true
     return
@@ -161,59 +154,51 @@ function agent_step!(agent, model)
     count_neighbors_same_group = 0
 
     # For each neighbor, get group and compare to current agent's group...
-    # ...and increment count_neighbors_same_group as appropriately.  
+    # ...and increment count_neighbors_same_group as appropriately.
     for neighbor_cell in neighbor_cells
       node_contents = get_node_contents(neighbor_cell, model)
       # Skip iteration if the node is empty.
-      if length(node_contents) == 0
-        continue
-      else
-        # Otherwise, get the first agent in the node...
-        node_contents = node_contents[1]
-      end
+      length(node_contents) == 0 && continue
+      # Otherwise, get the first agent in the node...
+      agent_id = node_contents[1]
       # ...and increment count_neighbors_same_group if the neighbor's group is
       # the same.
-      neighbor_agent_group = model.agents[node_contents].group
+      neighbor_agent_group = model.agents[agent_id].group
       if neighbor_agent_group == agent.group
         count_neighbors_same_group += 1
       end
     end
 
-    # After evaluating and adding up the groups of the neighbors, decide
-    # whether or not to move the agent.
+    # After counting the neighbors, decide whether or not to move the agent.
     # If count_neighbors_same_group is at least the min_to_be_happy, set the
     # mood to true. Otherwise, move the agent using move_agent_single.
-    if count_neighbors_same_group >= model.min_to_be_happy
+    if count_neighbors_same_group ≥ model.min_to_be_happy
       agent.mood = true
     else
       move_agent_single!(agent, model)
     end
   end
+  return
 end
+
+happyperc(model) = count(x -> x.mood == true, model.agents)/nagents(model)
 ```
 
 For the purpose of this implementation of Schelling's segregation model, we only need an agent step function.
 
-When an agent activates, it follows the following process:
-
-* If the agent is already happy, it does not do anything.
-* If it is not happy, it counts the number of its neighbors that are from the same group.
-* If this count is equal to `min_to_be_happy`, the agent will be happy...
-* ...otherwise the agent will keep moving to random empty nodes on the grid until it is happy.
-
-For doing these operations, we used some of the built-in functions of Agents.jl, such as `node_neighbors` that returns the neighboring nodes of the node on which the agent resides, `get_node_contents` that returns the IDs of the agents on a given node, and `move_agent_single!` which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available in the online manual.
+For defining `agent_step!` we used some of the built-in functions of Agents.jl, such as [`node_neighbors`](@ref) that returns the neighboring nodes of the node on which the agent resides, [`get_node_contents`](@ref) that returns the IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available [Built-in functions](@ref) page.
 
 ### Running the model
-
-
-```julia
+```@example schelling
 # Instantiate the model with 370 agents on a 20 by 20 grid.
 model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3)
 step!(agent_step!, model)  # Run the model one step...
-step!(agent_step!, model, 3)  # ...run the model multiple (3) steps.
+step!(agent_step!, model, 3)  # ...run the model 3 steps.
 ```
 
 ### Running the model and collecting data
+
+TODO: This must be fixed / updated.
 
 There is however a more efficient way to run the model and collect data. We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
