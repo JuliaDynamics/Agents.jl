@@ -52,7 +52,7 @@ Collects agent properties (fields of the agent object) into a dataframe.
 If  an agent field returns an array, the mean of those arrays will be recorded.
 
 """
-function data_collecter_raw( model::AbstractModel, properties::Array{Symbol}; step=1)
+function data_collecter_raw(model::AbstractModel, properties::Array{Symbol}; step=1)
   dd = DataFrame()
   agentslen = nagents(model)
   for fn in properties
@@ -88,7 +88,7 @@ function data_collector(model::AbstractModel, field_aggregator::Dict, when::Abst
   return df
 end
 
-function data_collector(field_aggregator::Dict, when::AbstractArray{T}, model::AbstractModel, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
