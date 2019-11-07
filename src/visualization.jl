@@ -1,33 +1,3 @@
-"""
-    agents_plots_complete(property_plot::Array{Tuple}, model::AbstractModel)
-
-Plots the data_collecter_raw() results in your browser.
-
-# Parameters
-
-* property_plot: An array of tuples. The first element of the tuple is the agent property you would like to plot (as a symbol). The second element of the tuple is the type of plot you want on that property (as a symbol). Example: [(:wealth, :hist)]. Available plot types: :hist.
-
-You can add more plot types by adding more if statements in the function.
-"""
-function agents_plots_complete(property_plot::Array, model::AbstractModel)
-  properties = [i[1] for i in property_plot]
-  data = data_collecter_raw(properties, model)
-  for (property, pt) in property_plot
-    if pt == :hist
-      # data |> @vlplot(:bar, x={property, bin=true, title=property}, y={"count()", title="Frequency"}) # This is a bug and doesn't work
-      data |> @vlplot(:bar, x=property, y="count()") |> save("histogram.pdf") # this is temporary until the above bug is fixed
-    end
-  end
-end
-
-"""
-    visualize_data(data::DataFrame)
-
-sends data to Data Voyager.
-"""
-function visualize_data(data::DataFrame)
-  v = Voyager(data)
-end
 
 """
     plot_locs(g, dims::Tuple{Integer,Integer,Integer})

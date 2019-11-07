@@ -8,11 +8,9 @@ dummystep, visualize_1DCA, visualize_2DCA
 using Distributed
 using LightGraphs
 using DataFrames
-using VegaLite
 using Random
 import Base.Iterators.product
 import StatsBase
-using DataVoyager
 using CSV
 using ColorTypes
 using GraphPlot
