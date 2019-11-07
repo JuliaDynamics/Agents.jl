@@ -121,7 +121,7 @@ end
 
 Returns n random colors as a dictionary (Dict{colorname=>rgb})
 """
-function colorrgb2(n::Integer)
+function colorrgb(n::Integer)
   script_path = splitdir(realpath(@__FILE__))[1]
   f = joinpath(script_path, "color_names.csv")
   randcolors = rand(1:866, n)  # 866 is the number of colors in the file above
