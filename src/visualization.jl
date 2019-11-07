@@ -97,11 +97,11 @@ Returns a dictionary of each colorname and its RGB values. See colors and names 
 function colorrgb(color_names::Array)
   script_path = splitdir(realpath(@__FILE__))[1]
   f = joinpath(script_path, "color_names.csv")
-  ff = CSV.File(f)
   rgb_dict = Dict{AbstractString, Tuple}()
-  for row in ff 
-    if row.cname in color_names || row.cname2 in color_names
-      rgb_dict[row.cname] = (row.R/256, row.G/256, row.B/256)
+  for row in eachline(f) 
+    fields = split(strip(row), ",")
+    if fields[1] in color_names || fields[2] in color_names
+      rgb_dict[fields[1]] = (parse(Int, fields[4])/256, parse(Int, fields[5])/256, parse(Int, fields[6])/256)
     end
   end
   if length(rgb_dict) < length(color_names)
@@ -121,20 +121,19 @@ end
 
 Returns n random colors as a dictionary (Dict{colorname=>rgb})
 """
-function colorrgb(n::Integer)
+function colorrgb2(n::Integer)
   script_path = splitdir(realpath(@__FILE__))[1]
   f = joinpath(script_path, "color_names.csv")
-  ff = CSV.File(f)
-  randcolors = rand(1:length(ff), n)
+  randcolors = rand(1:866, n)  # 866 is the number of colors in the file above
   rgb_dict = Dict{AbstractString, Tuple}()
-  for (index,row) in enumerate(ff) 
+  for (index,row) in enumerate(eachline(f)) 
     if index in randcolors
-      rgb_dict[row.cname] = (row.R/256, row.G/256, row.B/256)
+      fields = split(strip(row), ",")
+      rgb_dict[fields[1]] = (parse(Int, fields[4])/256, parse(Int, fields[5])/256, parse(Int, fields[6])/256)
     end
   end
   return rgb_dict
 end
-
 
 """
     visualize_1DCA(data::DataFrame, model::AbstractModel, position_column::Symbol, status_column::Symbol, nrows::Integer; savename::AbstractString="CA_1D", saveloc::AbstractString="./")

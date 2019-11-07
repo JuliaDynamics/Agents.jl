@@ -11,7 +11,6 @@ using DataFrames
 using Random
 import Base.Iterators.product
 import StatsBase
-using CSV
 using ColorTypes
 using GraphPlot
 using Compose
