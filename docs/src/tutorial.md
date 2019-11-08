@@ -218,7 +218,9 @@ data = step!(model, agent_step!, 2, properties, when=when)
 We can use the `visualize_2D_agent_distribution` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
 
 ```julia
-# Use visualize_2D_agent_distribution to plot distribution of agents at every step.
+# Use the visualize_2D_agent_distribution function from AgentPlots.jl to plot distribution of agents at every step.
+using AgentPlots
+
 for i in 1:2
   visualize_2D_agent_distribution(data, model, Symbol("pos_$i"),
   types=Symbol("group_$i"), savename="step_$i", cc=Dict(1=>"blue", 2=>"red"))

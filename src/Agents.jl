@@ -1,20 +1,10 @@
 module Agents
 
-export visualize_data,
-visualize_2D_agent_distribution,
-partial_activation,
-dummystep, visualize_1DCA, visualize_2DCA
-
 using Distributed
 using LightGraphs
 using DataFrames
 using Random
 import Base.Iterators.product
-import StatsBase
-using ColorTypes
-using GraphPlot
-using Compose
-using Cairo, Fontconfig
 import Base.iterate
 import Base.length
 
@@ -24,8 +14,7 @@ include("core/agent_space_interaction.jl")
 include("simulations/data_collector.jl")
 include("simulations/step.jl")
 include("simulations/parallel.jl")
-include("visualization.jl")
-# include("CA1D.jl")
-# include("CA2D.jl")
+include("CA1D.jl")
+include("CA2D.jl")
 
 end # module

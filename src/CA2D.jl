@@ -120,14 +120,14 @@ function ca_step!(model)
   end
 end
 
-"""
-    ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
+# """
+#     ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
 
-Runs a 2D cellular automaton.
-"""
-function ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
-  data = step!(dummystep, CA2D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
-  visualize_2DCA(data, model, :pos, :status, runs, savename=filename)
-end
+# Runs a 2D cellular automaton.
+# """
+# function ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
+#   data = step!(dummystep, CA2D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
+#   visualize_2DCA(data, model, :pos, :status, runs, savename=filename)
+# end
 
 end  # module
