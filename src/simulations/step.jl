@@ -43,9 +43,9 @@ step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep
 
 function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   for i in 1:n
-    activation_order = model.scheduler(model)
-    for index in activation_order
-      agent_step!(model.agents[index], model)
+    actived_agents = model.scheduler(model)
+    for agent in activated_agents
+      agent_step!(agent, model)
     end
     model_step!(model)
   end
