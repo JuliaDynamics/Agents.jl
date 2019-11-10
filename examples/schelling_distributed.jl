@@ -17,8 +17,8 @@ addprocs(3)  # Add the number of parallel processing units
   group::T
 end
 
-@everywhere mutable struct SchellingModel{T<:Integer, Y<:AbstractArray, Z<:AbstractSpace} <: AbstractModel  # A model
-	# object should always be a subtype of AbstractModel
+@everywhere mutable struct SchellingModel{T<:Integer, Y<:AbstractArray, Z<:AbstractSpace} <: ABM  # A model
+	# object should always be a subtype of ABM
 	space::Z  # A space object, which is a field
 	# of the model object is always subtype of AbstractSpace
 	agents::Y  # a list of agents

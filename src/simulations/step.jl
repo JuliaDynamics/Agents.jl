@@ -39,9 +39,9 @@ function step! end
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-step!(model::AbstractModel, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::AbstractModel, agent_step!, model_step!, n::Int = 1)
+function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   for i in 1:n
     activation_order = model.scheduler(model)
     for index in activation_order
@@ -55,9 +55,9 @@ end
 # data collection
 #######################################################################################
 
-step!(model::AbstractModel, agent_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0) = step!(model, agent_step!, dummystep, n::Int, properties, when=when, nreplicates=nreplicates, parallel=false)
+step!(model::ABM, agent_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0) = step!(model, agent_step!, dummystep, n::Int, properties, when=when, nreplicates=nreplicates, parallel=false)
 
-function step!(model::AbstractModel, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0, parallel::Bool=false)
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0, parallel::Bool=false)
 
   if nreplicates > 0
     if parallel

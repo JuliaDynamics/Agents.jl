@@ -1,12 +1,11 @@
-export nagents, AbstractAgent, AbstractModel,
+export nagents, AbstractAgent, ABM,
 random_activation, as_added, partial_activation
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** the following fields:
+Your agent type **must have** at least the `pos` field, i.e.:
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
-    id::Int
     pos::P
 end
 ```
@@ -18,60 +17,82 @@ for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
 
-"""
-All models must be a subtype of `AbstractModel`.
-Your model type **must have** the following fields:
-```julia
-struct MyModel{F, S, A} <: AbstractModel
-    scheduler::F
+struct AgentBasedModel{A<:AbstractAgent, S<:AbstractSpace, F, P}
+    agents::Vector{Union{A, Missing}}
     space::S
-    agents::Vector{A}  # a vector of agents (of type `A`)
+    scheduler::F
+    properties::P
 end
-```
-`scheduler` is a function that defines the order with which agents will activate
-at each step. The function should accept the model object as its input and return a list
-of agent indices. You can use [`random_activation`](@ref), [`as_added`](@ref),
-[`partial_activation`](@ref) from Agents.jl, or your own function.
-
-Your model type may have other additional fields relevant to your system,
-for example parameter values.
-"""
-abstract type AbstractModel end
+const ABM = AgentBasedModel
 
 """
-  nagents(model::AbstractModel)
+    AgentBasedModel(agents, space[, scheduler, properties])
+Create an agent based model from the given agents (one or many),
+the `space` (from [`Space`](@ref)).
 
-Return the number of agents.
+Optionally provide a `scheduler` that creates the order with which agents
+are activated in the model, and `properties` (a dictionary of key-type `Symbol`)
+for additional model-level properties.
 """
-nagents(model::AbstractModel) = length(model.agents)
+function AgentBasedModel(
+        agent::A, space::S,
+        scheduler::F = as_added, properties::P = nothing
+        ) where {A<:AbstractAgent, S<:AbstractSpace, F, P}
+    agents = Union{A, Missing}[agent]
+    return ABM{A, S, F, P}(agents, space, scheduler, properties)
+end
+
+
 
 """
-    as_added(model::AbstractModel)
+  nagents(model::ABM)
+
+Return the number of (alive) agents.
+"""
+nagents(model::ABM) = count(!ismissing, model.agents)
+
+"""
+    as_added(model::ABM)
 
 Activate agents at each step in the same order as they have been added to the model.
 """
-function as_added(model::AbstractModel)
-  agent_ids = [i.id for i in 1:length(model.agents)]
-  return sortperm(agent_ids)
-end
+as_added(model::ABM) = skipmissing(model.agents)
 
 """
-    random_activation(model::AbstractModel)
+    random_activation(model::ABM)
 
 Activate agents once per step in a random order.
 """
-function random_activation(model::AbstractModel)
-  order = shuffle(1:length(model.agents))
+random_activation(model::ABM) = randomskipmissing(model.agents)
+
+struct RandomSkipMissing{A}
+    agents::A
+    n::Int
+    perm::Vector{Int}
+end
+function RandomSkipMissing(agents::A) where {A}
+    n = length(agents)
+    perm = randperm(n)
+    return RandomSkipMissing{A}(agents, n, perm)
+end
+function Base.iterate(r::RandomSkipMissing, s = 1)
+    s > r.n && return nothing
+    while @inbounds ismissing(r.agents[r.perm[s]])
+        s += 1
+        s > r.n && return nothing
+    end
+    return @inbounds (r.agents[r.perm[s]], s+1)
 end
 
 """
-    partial_activation(model::AbstractModel)
+    partial_activation(model::ABM)
 
 At each step, activate only `activation_prob` number of randomly chosen of individuals
 with a `activation_prob` probability.
 `activation_prob` must be a field in the model and between 0 and 1.
 """
-function partial_activation(model::AbstractModel)
+function partial_activation(model::ABM)
+    error("update me!")
   agentnum = nagents(model)
   return randsubseq(1:agentnum, model.activation_prob)
 end

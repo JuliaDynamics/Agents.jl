@@ -1,7 +1,7 @@
 # Create the agent, model, and grid types.
-"AbstractModel type for the Schelling Model"
-mutable struct SchellingModel{T<:Integer, Y<:AbstractArray, Z<:AbstractSpace} <: AbstractModel 
-  # Object should always be a subtype of AbstractModel.
+"ABM type for the Schelling Model"
+mutable struct SchellingModel{T<:Integer, Y<:AbstractArray, Z<:AbstractSpace} <: ABM 
+  # Object should always be a subtype of ABM.
   "A field of the model for a space object, always a subtype of AbstractSpace."
   space::Z 
   "A list of agents."

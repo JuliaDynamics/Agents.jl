@@ -9,7 +9,7 @@ nsteps = 100
 when = collect(1:nsteps);
 
 
-function counter(model::AbstractModel)
+function counter(model::ABM)
   on_fire = 0
   green = 0
   burned = 0

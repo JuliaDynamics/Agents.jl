@@ -5,7 +5,7 @@ mutable struct Tree <: AbstractAgent
   status::Bool  # true is green and false is burning
 end
 
-mutable struct Forest <: AbstractModel
+mutable struct Forest <: ABM
   space::AbstractSpace
   agents::Array{AbstractAgent}
   scheduler::Function

@@ -18,7 +18,7 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 
 ### The model
 ```@docs
-AbstractModel
+ABM
 ```
 The model type may not necessarily be a mutable type, it depends on your problem.
 ## The space
@@ -94,7 +94,7 @@ We added two more fields for this model, namely a `mood` field which will store 
 
 ### Defining the model type
 ```@example schelling
-mutable struct SchellingModel{S, F} <: AbstractModel
+mutable struct SchellingModel{S, F} <: ABM
   scheduler::F
   space::S
   agents::Vector{SchellingAgent}
