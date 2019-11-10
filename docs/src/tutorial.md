@@ -98,7 +98,6 @@ mutable struct SchellingModel{S, F} <: AbstractModel
   scheduler::F
   space::S
   agents::Vector{SchellingAgent}
-  "A field for the scheduler function."
   min_to_be_happy::Int # minimum number of neighbors for agent to be happy
 end
 ```
@@ -115,18 +114,17 @@ For the schedulling function in this example we will use the provided [`random_a
 ```@example schelling
 "Function to instantiate the model."
 function instantiate(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
-
-  space = Space(griddims, moore = true) # make a Moore grid
-  # use random_activation function from Agents.jl and the argument min_to_be_happy
-  # give the model an empty list of agents, as they will be added incrementally
-  model = SchellingModel(random_activation, space, SchellingAgent[], min_to_be_happy)
-  # populate the model with agents, adding equal amount of the two types of agents
-  # at random positions in the model
-  for n in 1:numagents
-    agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
-    add_agent_single!(agent, model)
-  end
-  return model
+    space = Space(griddims, moore = true) # make a Moore grid
+    # use random_activation function from Agents.jl and the argument min_to_be_happy
+    # give the model an empty list of agents, as they will be added incrementally
+    model = SchellingModel(random_activation, space, SchellingAgent[], min_to_be_happy)
+    # populate the model with agents, adding equal amount of the two types of agents
+    # at random positions in the model
+    for n in 1:numagents
+        agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
+        add_agent_single!(agent, model)
+    end
+    return model
 end
 ```
 Notice that the position that an agent is initialized does not matter.
@@ -198,9 +196,9 @@ step!(model, agent_step!, 3)  # ...run the model 3 steps.
 
 ### Running the model and collecting data
 
-There is however a more efficient way to run the model and collect data. We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
+We can use the same `step!` function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
-```julia
+```@example schelling
 # Instantiate the model with 370 agents on a 20 by 20 grid.
 model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3)
 # An array of Symbols for the agent fields that are to be collected.

@@ -9,16 +9,22 @@ agent has acted.
 
     step!(model, agent_step! [, model_step!], n [, properties]; kwargs...)
 
-The version the `properties` argument also performs data collection and processing
-in parallel with evolving the model.
+This version of `step!` also performs data collection/processing while
+running the model.
 
-* `properties` : which agent fields to be collected as data. It can be either an array, in which case agent fields will be saved as they are. Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions. These functions are applied to the collected fields, that is, the keys of `properties`. For example, if your agents have a field called `wealth`, and you want to calculate mean and median population wealth at steps defined by `when`, your `properties` dict will be `Dict(:wealth => [mean, median])`.
+`properties` dictates which agent fields should be collected as data.
+It can be either an array, in which case agent fields will be saved as they are.
+Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions.
+These functions are applied to the collected fields, that is, the keys of `properties`.
+For example, if your agents have a field called `wealth`,
+and you want to calculate mean and median population wealth at steps defined
+by `when`, your `properties` dict will be `Dict(:wealth => [mean, median])`.
 
-  If an agent field returns an array instead of a single number, the mean of that array will be calculated before the aggregator functions are applied to them.
-  
-  To apply a function to the list of agents, use `:agent` as a dictionary key.
-  
-  To apply a function to the model object, use `:model` as a dictionary key.
+If an agent field returns an array instead of a single number, the mean of that
+array will be calculated before the functions are applied to them.
+
+To apply a function to the list of agents, use `:agent` as a dictionary key.
+To apply a function to the model object, use `:model` as a dictionary key.
 
 ### Keywords
 * `when` : at which steps `n` to perform the data collection and processing.

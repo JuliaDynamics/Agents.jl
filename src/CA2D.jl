@@ -1,6 +1,7 @@
 # 2D CA using Agents.jl
 module CA2D
 using Agents
+using Agents: SimpleGraph
 
 mutable struct Agent{T<:Integer, Y<:AbstractString} <: AbstractAgent
   id::T
@@ -40,7 +41,7 @@ end
 """
     periodic_neighbors(pos::Tuple{Integer, Integer}, dims::Tuple{Integer, Integer})
 
-Returns the the row and column numbers of the rows and columns before and after the pos. 
+Returns the the row and column numbers of the rows and columns before and after the pos.
 """
 function periodic_neighbors(pos::Tuple{Integer, Integer}, dims::Tuple{Integer, Integer})
   if pos[1] == 1
