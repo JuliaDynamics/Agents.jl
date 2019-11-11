@@ -1,6 +1,67 @@
 export move_agent!, add_agent!, add_agent_single!,
 move_agent_single!, kill_agent!
 
+function agentnode(a::AbstractAgent, model)
+    if typeof(a.pos) <: Integer
+        return a.pos
+    else
+        return coord2vertex(a.pos, model)
+    end
+end
+
+function update_position!(agent, pos)
+    if typeof(agent.pos) <: Integer
+        agent.pos = pos
+    elseif typeof(agent.pos) <: Tuple
+        agent.pos = vertex2coord(pos, model)
+    else
+        throw("Unknown type of agent.pos.")
+    end
+    return pos
+end
+
+################################################################################
+# Adding
+################################################################################
+"""
+    add_agent!(agent::AbstractAgent [, pos], model::ABM)
+
+Adds the agent to the `pos` in the space and to the list of agents.
+If `pos` is not given, the agent is added to a random position.
+
+The agent's position is then updated to match `pos`, and is returned.
+"""
+function add_agent!(agent::AbstractAgent, pos, model::ABM)
+    node = coord2vertex(pos, model)
+    push!(model.agents, agent)
+    # The agent's ID is the same as its location in the agents vector
+    push!(model.space.agent_positions[pos], length(model.agents))
+    update_position!(agent, pos)
+end
+
+function add_agent!(agent::AbstractAgent, model::ABM)
+  nodenumber = rand(1:nv(model.space))
+  add_agent!(agent, nodenumber, model)
+end
+
+"""
+    add_agent_single!(agent::AbstractAgent, model::ABM)
+
+Add agent to a random node in the space while respecting a maximum one agent per node.
+This function errors if there are no empty nodes.
+
+Return the agent's new position.
+"""
+function add_agent_single!(agent::AbstractAgent, model::ABM)
+    N = nv(model.space)
+    apos = model.space.agent_positions
+    empty_nodes = [i for i in 1:length(apos) if length(apos[i]) == 0]
+    length(empty_nodes) == 0 && error("There are no empty nodes!")
+    random_node = rand(empty_cells)
+    add_agent!(agent, random_node, model)
+end
+
+
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
 
@@ -67,56 +128,6 @@ function move_agent_single!(agent::AbstractAgent, model::ABM)
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     move_agent!(agent, random_node, model)
-  end
-  return agent.pos
-end
-
-"""
-    add_agent!(agent::AbstractAgent [, pos], model::ABM)
-
-Adds the agent to the `pos` in the space and to the list of agents.
-If `pos` is not given, the agent is added to a random position.
-
-The agent's position is then updated to match `pos`, and is returned
-"""
-function add_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
-  # node number from x, y, z coordinates
-  nodenumber = coord2vertex(pos, model)
-  add_agent!(agent, nodenumber, model)
-end
-
-function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
-  push!(model.space.agent_positions[pos], agent.id)
-  push!(model.agents, agent)
-  # update agent position
-  if typeof(agent.pos) <: Integer
-    agent.pos = pos
-  elseif typeof(agent.pos) <: Tuple
-    agent.pos = vertex2coord(pos, model)
-  else
-    throw("Unknown type of agent.pos.")
-  end
-end
-
-function add_agent!(agent::AbstractAgent, model::ABM)
-  nodenumber = rand(1:nv(model.space))
-  add_agent!(agent, nodenumber, model)
-  return agent.pos
-end
-
-"""
-    add_agent_single!(agent::AbstractAgent, model::ABM)
-
-Add agent to a random node in the space while respecting a maximum one agent per node.
-This function does not do anything if there are no empty nodes.
-
-Return the agent's new position.
-"""
-function add_agent_single!(agent::AbstractAgent, model::ABM)
-  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
-  if length(empty_cells) > 0
-    random_node = rand(empty_cells)
-    add_agent!(agent, random_node, model)
   end
   return agent.pos
 end

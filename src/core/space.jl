@@ -208,6 +208,7 @@ function coord2vertex end
 
 coord2vertex(agent::AbstractAgent, model::ABM) =
 coord2vertex(agent.pos, model.space)
+coord2vertex(pos::Integer, model) = pos
 
 function coord2vertex(coord::Tuple{T, T, T}, dims) where T<: Integer
   if (dims[2] == 1 && dims[3] == 1) ||
