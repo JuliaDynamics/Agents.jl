@@ -1,4 +1,4 @@
-# 2D CA using Agents.jl
+# 2D CA using Agents.jl  TODO: update model definition according to the new API
 module CA2D
 using Agents
 using Agents: SimpleGraph

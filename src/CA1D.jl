@@ -1,4 +1,4 @@
-# 1D CA using Agents.jl
+# 1D CA using Agents.jl TODO: update model definition according to the new API
 module CA1D
 using Agents
 

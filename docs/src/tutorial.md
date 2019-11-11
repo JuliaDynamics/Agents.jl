@@ -204,7 +204,7 @@ model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3)
 # An array of Symbols for the agent fields that are to be collected.
 properties = [:pos, :mood, :group]
 # Specifies at which steps data should be collected.
-when = collect(1:2)
+when = 1:2
 # Use the step function to run the model and collect data into a DataFrame.
 data = step!(model, agent_step!, 2, properties, when=when)
 ```
@@ -229,7 +229,30 @@ The first and second arguments of the `visualize_2D_agent_distribution` are the 
 
 Custom plots can be easily made with [`DataVoyager`](https://github.com/queryverse/DataVoyager.jl) because the outputs of simulations are always as a `DataFrame` object.
 
-```jl
+@example schelling
 using DataVoyager
 v = Voyager(data)
+```
+
+### Replicats and parallel computing
+
+We can run replicates of a simulation and collect all of them in a single `DataFrame`. To that end, we only need to specify the correct arguments to the `step!` function:
+
+@example schelling
+data = step!(model, agent_step!, 2, properties, when=when, nreplicates=5)
+```
+
+It is possible to run the replicates in parallel. For that, we should start julia with `julia -p n` where is the number of processing cores. Alternatively, we can define the number of cores from within a Julia session:
+
+@example schelling
+using Distributed
+addprocs(4)
+```
+
+Next, we should import `Agents` on all cores: `@everywhere using Agents`.
+
+Finally, we can tell the `step!` function to run replicates in parallel:
+
+@example schelling
+data = step!(model, agent_step!, 2, properties, when=when, nreplicates=5, parallel=true)
 ```

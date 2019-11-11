@@ -55,31 +55,37 @@ end
 # data collection
 #######################################################################################
 
-step!(model::AbstractModel, agent_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0) = step!(model, agent_step!, dummystep, n::Int, properties, when=when, nreplicates=nreplicates, parallel=false)
+step!(model::AbstractModel, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], nreplicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, nreplicates=nreplicates, parallel=parallel)
 
-function step!(model::AbstractModel, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}, nreplicates::Int=0, parallel::Bool=false)
+function step!(model::AbstractModel, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], nreplicates::Int=0, parallel::Bool=false)
+
+  single_df = true
+  if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a list of dataframes for each simulation replicate
+    single_df = false
+  end
 
   if nreplicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, nreplicates=nreplicates)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, nreplicates=nreplicates, single_df=single_df)
     else
-      dataall = step!(model, agent_step!, model_step!, n, properties, when=when)
-      for i in 2:replicates
-        data = step!(model, agent_step!, model_step!, n, properties, when=when)
-        dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)
+      if single_df
+        dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+      else
+        dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n)]
+      end
+      for i in 2:nreplicates
+        data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+        if single_df
+          dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)
+        else
+          push!(dataall, data)
+        end
       end
     end
     return dataall
   end
 
-  df = data_collector(model, properties, when, 1)
-  for ss in 2:n
-    step!(model, agent_step!, model_step!)
-    # collect data
-    if ss in when
-      df = data_collector(model, properties, when, ss, df)
-    end
-  end
+  df = _step(model, agent_step!, model_step!, properties, when, n)
 
   if !in(1, when)
     if typeof(properties) <: Dict
@@ -89,7 +95,7 @@ function step!(model::AbstractModel, agent_step!, model_step!, n::Int, propertie
       df = df[:, vcat([1], collect(first_col:end_col))]
     else
       # if 1 is not in `when`, remove the first row.
-        df = df[2:end, :]
+      df = df[2:end, :]
     end
   end
 
