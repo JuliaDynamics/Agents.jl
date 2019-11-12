@@ -44,7 +44,7 @@ mutable struct MyAgent{T<:Integer} <: AbstractAgent
 end
 
 "Define the model type."
-mutable struct MyModel{A<:AbstractVector, S<:AbstractSpace} <: AbstractModel
+mutable struct MyModel{A<:AbstractVector, S<:AbstractSpace} <: ABM
   "A space dimension."
   space::S
   "An array of agents."
@@ -91,7 +91,7 @@ Define the agent step function.
 Defines what the agent should do at each step.
 
 """
-function agent_step!(agent::AbstractAgent, model::AbstractModel)
+function agent_step!(agent::AbstractAgent, model::ABM)
   # If the agent's wealth is zero, then do nothing.
   if agent.wealth == 0
     return

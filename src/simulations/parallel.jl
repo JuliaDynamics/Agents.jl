@@ -8,7 +8,7 @@ function parallel_step_dummy!(model::AbstractModel, agent_step!, model_step!, n:
 end
 
 """
-    parallel_replicates(agent_step!, model::AbstractModel, n::Integer, agent_properties::Array{Symbol}, when::AbstractArray{Integer}, nreplicates::Integer)
+    parallel_replicates(agent_step!, model::ABM, n::Integer, agent_properties::Array{Symbol}, when::AbstractArray{Integer}, nreplicates::Integer)
 
 Runs `nreplicates` number of simulations in parallel and returns a `DataFrame`.
 """

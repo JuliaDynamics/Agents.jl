@@ -7,7 +7,7 @@ id2agent, NodeIterator, node_neighbors
 #######################################################################################
 abstract type AbstractSpace end
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
-gridsize(model::AbstractModel) = LightGraphs.nv(model.space.graph)
+gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 
 struct GraphSpace{G} <: AbstractSpace
   graph::G
@@ -19,8 +19,8 @@ struct GridSpace{G, D, I<:Integer} <: AbstractSpace
   dimensions::NTuple{D, I}
 end
 
-Space(m::AbstractModel) = m.space
-agent_positions(m::AbstractModel) = m.space.agent_positions
+Space(m::ABM) = m.space
+agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::AbstractSpace) = m.agent_positions
 
 """
@@ -192,7 +192,7 @@ end
 # vertex ⇄ coordinates
 #######################################################################################
 for f in (:coord2vertex, :vertex2coord)
-  @eval ($f)(c, model::AbstractModel) = ($f)(c, model.space)
+  @eval ($f)(c, model::ABM) = ($f)(c, model.space)
   @eval ($f)(c, space::GridSpace) = ($f)(c, space.dimensions)
   @eval ($f)(c, space::GraphSpace) =
         error("This functionality does not make sense for a GraphSpace.")
@@ -206,7 +206,7 @@ Return the node number `n` of the given coordinates or the agent's position.
 """
 function coord2vertex end
 
-coord2vertex(agent::AbstractAgent, model::AbstractModel) =
+coord2vertex(agent::AbstractAgent, model::ABM) =
 coord2vertex(agent.pos, model.space)
 
 function coord2vertex(coord::Tuple{T, T, T}, dims) where T<: Integer
@@ -268,11 +268,11 @@ end
 # finding specific nodes or agents
 #######################################################################################
 """
-    find_empty_nodes(model::AbstractModel)
+    find_empty_nodes(model::ABM)
 
 Returns the IDs of empty nodes on the model space.
 """
-function find_empty_nodes(model::AbstractModel)
+function find_empty_nodes(model::ABM)
   ap = agent_positions(model)
   empty_nodes = [i for i in 1:length(ap) if length(ap[i]) == 0]
   return empty_nodes
@@ -334,20 +334,20 @@ end
 
 Return an agent given its ID.
 """
-function id2agent(id::Integer, model::AbstractModel)
+function id2agent(id::Integer, model::ABM)
   agent_index = findfirst(a-> a.id==id, model.agents)
   return model.agents[agent_index]
 end
 
 """
-    node_neighbors(agent::AbstractAgent, model::AbstractModel)
+    node_neighbors(agent::AbstractAgent, model::ABM)
 
 Return neighboring node coordinates/numbers of the node on which the agent resides.
 
 If the model's space is `GraphSpace`, then the function will return node numbers.
 If space is `GridSpace` then the neighbors are returned as coordinates (tuples).
 """
-function node_neighbors(agent::AbstractAgent, model::AbstractModel)
+function node_neighbors(agent::AbstractAgent, model::ABM)
   if typeof(model.space) <: GraphSpace
     @assert agent.pos isa Integer
   elseif typeof(model.space) <: GridSpace
@@ -356,12 +356,12 @@ function node_neighbors(agent::AbstractAgent, model::AbstractModel)
   node_neighbors(agent.pos, model)
 end
 
-function node_neighbors(node_number::Integer, model::AbstractModel)
+function node_neighbors(node_number::Integer, model::ABM)
   nn = neighbors(model.space.graph, node_number)
   return nn
 end
 
-function node_neighbors(node_coord::Tuple, model::AbstractModel)
+function node_neighbors(node_coord::Tuple, model::ABM)
   node_number = coord2vertex(node_coord, model)
   nn = neighbors(model.space.graph, node_number)
   nc = [vertex2coord(i, model) for i in nn]
@@ -369,11 +369,11 @@ function node_neighbors(node_coord::Tuple, model::AbstractModel)
 end
 
 """
-    node_neighbors(node_number::Integer, model::AbstractModel, radius::Integer)
+    node_neighbors(node_number::Integer, model::ABM, radius::Integer)
 
 Returns a list of neighboring nodes to the node `node_number` within the `radius`.
 """
-function node_neighbors(node_number::Integer, model::AbstractModel, radius::Integer)
+function node_neighbors(node_number::Integer, model::ABM, radius::Integer)
   neighbor_nodes = Set(node_neighbors(node_number, model))
   included_nodes = Set()
   for rad in 2:radius
@@ -408,12 +408,12 @@ end
 Create an iterator that returns node coordinates, if the space is a grid,
 or otherwise node number, and the agent IDs in each node.
 """
-struct NodeIterator{M<:AbstractModel, S}
+struct NodeIterator{M<:ABM, S}
   model::M
   length::Int
 end
 
-NodeIterator(model::AbstractModel) = NodeIterator(model, model.space)
+NodeIterator(model::ABM) = NodeIterator(model, model.space)
 
 function NodeIterator(m::M, s::S) where {M, S}
   L = LightGraphs.nv(s)

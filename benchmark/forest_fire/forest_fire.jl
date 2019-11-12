@@ -10,7 +10,7 @@ mutable struct Tree{T<:Integer} <: AbstractAgent
   status::T  # 1 is green, 2 is burning, 3 is burned
 end
 
-mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: AbstractModel
+mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: ABM
   space::T
   agents::Y
   scheduler::Function
