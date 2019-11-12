@@ -55,9 +55,9 @@ end
 # data collection
 #######################################################################################
 
-step!(model::AbstractModel, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], nreplicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, nreplicates=nreplicates, parallel=parallel)
+step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], nreplicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, nreplicates=nreplicates, parallel=parallel)
 
-function step!(model::AbstractModel, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], nreplicates::Int=0, parallel::Bool=false)
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], nreplicates::Int=0, parallel::Bool=false)
 
   single_df = true
   if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a list of dataframes for each simulation replicate

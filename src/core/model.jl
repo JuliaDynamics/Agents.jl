@@ -1,6 +1,8 @@
 export nagents, AbstractAgent, ABM,
 random_activation, as_added, partial_activation
 
+abstract type AbstractSpace end
+
 """
 All agents must be a mutable subtype of `AbstractAgent`.
 Your agent type **must have** at least the `pos` field, i.e.:
@@ -26,8 +28,8 @@ end
 const ABM = AgentBasedModel
 
 """
-    AgentBasedModel(agent, space[, scheduler, properties])
-Create an agent based model from the given agent (one, only for type information),
+    AgentBasedModel(agent_type, space; scheduler, properties)
+Create an agent based model from the given agent type,
 and the `space` (from [`Space`](@ref)).
 `ABM` is equivalent with `AgentBasedModel`.
 
@@ -36,7 +38,7 @@ are activated in the model, and `properties` (a dictionary of key-type `Symbol`)
 for additional model-level properties.
 """
 function AgentBasedModel(
-        agent::A, space::S,
+        ::Type{A}, space::S;
         scheduler::F = as_added, properties::P = nothing
         ) where {A<:AbstractAgent, S<:AbstractSpace, F, P}
     agents = A[]
@@ -45,35 +47,35 @@ end
 
 
 """
-  nagents(model::AbstractModel)
+  nagents(model::ABM)
 Return the number of agents.
 """
-nagents(model::AbstractModel) = length(model.agents)
+nagents(model::ABM) = length(model.agents)
 
 """
-    as_added(model::AbstractModel)
+    as_added(model::ABM)
 Activate agents at each step in the same order as they have been added to the model.
 """
-function as_added(model::AbstractModel)
+function as_added(model::ABM)
   agent_ids = [i.id for i in 1:length(model.agents)]
   return sortperm(agent_ids)
 end
 
 """
-    random_activation(model::AbstractModel)
+    random_activation(model::ABM)
 Activate agents once per step in a random order.
 """
-function random_activation(model::AbstractModel)
+function random_activation(model::ABM)
   order = shuffle(1:length(model.agents))
 end
 
 """
-    partial_activation(model::AbstractModel)
+    partial_activation(model::ABM)
 At each step, activate only `activation_prob` number of randomly chosen of individuals
 with a `activation_prob` probability.
 `activation_prob` must be a field in the model and between 0 and 1.
 """
-function partial_activation(model::AbstractModel)
+function partial_activation(model::ABM)
   agentnum = nagents(model)
   return randsubseq(1:agentnum, model.activation_prob)
 end

@@ -5,7 +5,6 @@ id2agent, NodeIterator, node_neighbors
 #######################################################################################
 # Basic space definition
 #######################################################################################
-abstract type AbstractSpace end
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
 gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 

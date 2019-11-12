@@ -2,7 +2,7 @@
 """
 A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
 """
-function parallel_step_dummy!(model::AbstractModel, agent_step!, model_step!, n::Int, properties, when::AbstractArray{V}, dummyvar) where {V<:Integer}
+function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n::Int, properties, when::AbstractArray{V}, dummyvar) where {V<:Integer}
   data = step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when);
   return data
 end
@@ -12,7 +12,7 @@ end
 
 Runs `nreplicates` number of simulations in parallel and returns a `DataFrame`.
 """
-function parallel_replicates(model::AbstractModel, agent_step!, model_step!, n::T, properties; when::AbstractArray{T}, nreplicates::T, single_df::Bool) where {T<:Integer}
+function parallel_replicates(model::ABM, agent_step!, model_step!, n::T, properties; when::AbstractArray{T}, nreplicates::T, single_df::Bool) where {T<:Integer}
 
   if single_df
     dd = step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when);
