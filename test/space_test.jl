@@ -118,4 +118,10 @@ end
 
   ii = model.agents[end].id
   @test id2agent(ii, model) == model.agents[end]
+
+  agent = model.agents[1]
+  agent_pos = coord2vertex(agent.pos, model)
+  kill_agent!(agent, model)
+  @test_throws ArgumentError id2agent(1, model) 
+  @test !in(1, Agents.agent_positions(model)[agent_pos])
 end
