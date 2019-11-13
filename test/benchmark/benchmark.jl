@@ -22,5 +22,5 @@ display(a)
 
 println("Schelling model")
 include("../test/schelling_defs.jl")
-b = @benchmark data=step!(model, agent_step!, 10, [:pos, :mood, :group], when=1:10) setup=(model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=5))
+a = @benchmark data=step!(model, agent_step!, 10, [:pos, :mood, :group], when=1:10) setup=(model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=5))
 display(a)
