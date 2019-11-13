@@ -4,7 +4,7 @@ using Random
 Random.seed!(10)
 
 println("Forest fire model")
-include("../test/forest_fire_defs.jl")
+include("../forest_fire_defs.jl")
 a = @benchmark data=step!(forest, dummystep, forest_step!, 100, Dict(:status => [length, count]), when=1:100) setup=(forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2))
 display(a)
 
@@ -21,6 +21,6 @@ a = @benchmark kill_agent!(model.agents[250], model) setup=(model = model_initia
 display(a)
 
 println("Schelling model")
-include("../test/schelling_defs.jl")
+include("../schelling_defs.jl")
 a = @benchmark data=step!(model, agent_step!, 10, [:pos, :mood, :group], when=1:10) setup=(model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=5))
 display(a)
