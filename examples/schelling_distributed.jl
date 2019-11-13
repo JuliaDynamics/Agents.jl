@@ -78,5 +78,5 @@ end
 @everywhere when = collect(1:2)
 model = instantiate_model(numagents=370, griddims=(20,20), min_to_be_happy=3);
 nsteps = 3
-nreplicates = 10
-all_data = batchrunner_parallel(agent_step!, model, nsteps, agent_properties, when, nreplicates);
+replicates = 10
+all_data = batchrunner_parallel(agent_step!, model, nsteps, agent_properties, when, replicates);

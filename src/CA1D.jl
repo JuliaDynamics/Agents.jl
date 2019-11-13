@@ -1,26 +1,12 @@
-# 1D CA using Agents.jl TODO: update model definition according to the new API
+# 1D CA using Agents.jl
 module CA1D
 using Agents
 
-mutable struct Agent{T<:Integer, Y<:AbstractString} <: AbstractAgent
+mutable struct Cell{T<:Integer, Y<:AbstractString} <: AbstractAgent
   id::T
   pos::Tuple{T, T}
   status::Y
 end
-
-mutable struct Model{T<:AbstractVector, Y<:AbstractDict, X<:AbstractSpace} <: ABM
-  space::X
-  agents::T  #Array{AbstractAgent}
-  scheduler::Function
-  rules::Y
-end
-
-mutable struct Space{T, Y, S} <: AbstractSpace
-  dimensions::Tuple{T, T}
-  space::S
-  agent_positions::Y  # an array of arrays for each grid node
-end
-
 
 """
     build_model(;rules::Dict, ncols=101)
@@ -29,11 +15,12 @@ Builds a 1D cellular automaton. `rules` is a dictionary with this format: `Dict(
 """
 function build_model(;rules::Dict, ncols::Integer=101)
   gridsize=(ncols,1)
-  agents = [Agent(i, (i,1), "0") for i in 1:gridsize[1]]
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize[1]]
-  mygrid = Space(gridsize, grid(gridsize, true, false), agent_positions)
-  # mygrid = Space(gridsize, grid(gridsize, false, false), agent_positions)  # this is for when there space is not toroidal
-  model = Model(mygrid, agents, as_added, rules)
+  space = Space(gridsize)
+  properties = Dict(:rules => rules)
+  model = ABM(Cell, space; properties = properties, scheduler=as_added)
+  for n in 1:ncols
+    add_agent!(Cell(n, (n,1), "0"), (n,1), model)
+  end
   return model
 end
 
@@ -56,21 +43,20 @@ function ca_step!(model)
       right = model.agents[agent.id+1].status
     end
     rule = left*center*right
-    new_status[agid] = model.rules[rule]
+    new_status[agid] = model.properties[:rules][rule]
   end
   for ss in 1:agentnum
     model.agents[ss].status = new_status[ss]
   end
 end
 
-# """
-#     ca_run(model::ABM, runs::Integer, filename::String="CA_1D")
+"""
+    ca_run(model::ABM, runs::Integer)
 
-# Runs a 1D cellular automaton.
-# """
-# function ca_run(model::ABM, runs::Integer, filename::String="CA_1D")
-#   data = step!(dummystep, CA1D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
-#   visualize_1DCA(data, model, :pos, :status, runs, savename=filename)
-# end
+Runs a 1D cellular automaton.
+"""
+function ca_run(model::ABM, runs::Integer)
+  data = step!(model, dummystep, ca_step!, runs, [:pos, :status], when=1:runs)
+end
 
 end  # module

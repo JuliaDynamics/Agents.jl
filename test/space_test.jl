@@ -1,59 +1,67 @@
 
 Random.seed!(209)
 
-@testset "0D grid" begin
-  @test Agents.grid0D() == Agents.Graph(1)
-  obj1 = grid()
-  obj2 = Agents.grid0D()
-  @test Agents.nv(obj1) == Agents.nv(obj2)
-  @test Agents.ne(obj1) == Agents.ne(obj2)
-  # @test gridsize(obj1) == 1
+@testset "0D grids" begin
+  @test Space((1,)).graph == Agents.Graph(1)
 end
 
-@testset "1D grid" begin
-  obj1 = Agents.grid1D(5)
-  obj2 = Agents.grid1D(5, periodic=true)
-  @test Agents.nv(obj1) == 5
-  @test Agents.nv(obj2) == 5
-  @test Agents.ne(obj1) == 4
-  @test Agents.ne(obj2) == 5
-  last_edge1 = collect(Agents.edges(obj1))[end]
-  last_edge2 = collect(Agents.edges(obj2))[2]
-  @test last_edge1.src == 4
-  @test last_edge1.dst == 5
-  @test last_edge2.src == 1
-  @test last_edge2.dst == 5
+@testset "1D grids" begin
+  a = Space((5,1))
+  ae = collect(Agents.LightGraphs.edges(a.graph))
+
+  b = Space((5,1), periodic=true)
+  be = collect(Agents.LightGraphs.edges(b.graph))
+
+  @test ae == [Agents.LightGraphs.Edge(1,2),Agents.LightGraphs.Edge(2,3), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(4,5)]
+  @test be == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,5), Agents.LightGraphs.Edge(2,3), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(4,5)]
 end
 
-@testset "2D grid" begin
-  obj1 = Agents.grid2D(3, 4)
-  obj2 = Agents.grid2D(3, 4, periodic=true)
-  @test Agents.nv(obj1) == 12
-  @test Agents.nv(obj2) == 12
-  @test Agents.ne(obj1) == 17
-  @test Agents.ne(obj2) == 24
+@testset "2D grids" begin
+  @test Space((2,1)).graph == Agents.Graph(2,1)
+  
+  a = Space((2,3))
+  b = Space((2,3), periodic=true) # 2D grid
+
+  @test a.dimensions == (2,3)
+  @test b.dimensions == (2,3)
+  @test length(a.agent_positions) == 6
+  @test length(b.agent_positions) == 6
+  
+  @test Agents.nv(a) == 6
+  @test Agents.ne(a) == 7
+  @test Agents.nv(b) == 6
+  @test Agents.ne(b) == 9
+  
+  ae = collect(Agents.LightGraphs.edges(a.graph))
+  be = collect(Agents.LightGraphs.edges(b.graph))
+
+  @test ae == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,3), Agents.LightGraphs.Edge(2,4), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(3,5), Agents.LightGraphs.Edge(4,6), Agents.LightGraphs.Edge(5,6)]
+  @test be == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,3), Agents.LightGraphs.Edge(1,5), Agents.LightGraphs.Edge(2,4), Agents.LightGraphs.Edge(2,6), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(3,5), Agents.LightGraphs.Edge(4,6), Agents.LightGraphs.Edge(5,6)]
 end
 
 @testset "2D Moore" begin
-  obj1 = Agents.grid2D_Moore(3, 3)
-  @test Agents.nv(obj1) == 9
-  @test Agents.ne(obj1) == 20
-  obj1 = Agents.grid2D_Moore(3, 4)
-  @test Agents.nv(obj1) == 12
-  @test Agents.ne(obj1) == 29
-  obj2 = Agents.grid2D_Moore(3, 2, periodic=true)
-  @test Agents.nv(obj2) == 6
-  @test Agents.ne(obj2) == 15
-  obj2 = Agents.grid2D_Moore(3, 3, periodic=true)
-  @test Agents.nv(obj2) == 9
-  @test Agents.ne(obj2) == 36
+  a = Space((3, 3), moore=true)
+  @test Agents.nv(a) == 9
+  @test Agents.ne(a) == 20
+
+  a = Space((3, 4), moore=true)
+  @test Agents.nv(a) == 12
+  @test Agents.ne(a) == 29
+
+  b = Space((3, 2), moore=true, periodic=true)
+  @test Agents.nv(b) == 6
+  @test Agents.ne(b) == 15
+
+  b = Space((3, 3), moore=true, periodic=true)
+  @test Agents.nv(b) == 9
+  @test Agents.ne(b) == 36
 end
 
 @testset "3D grid" begin
-  g1 = Agents.grid3D(2,3,2)
-  g2 = Agents.grid3D(2,3,3)
-  g3 = Agents.grid3D(2,3,2, periodic=true)
-  g4 = Agents.grid3D(2,3,3, periodic=true)
+  g1 = Space((2,3,2))
+  g2 = Space((2,3,3))
+  g3 = Space((2,3,2), periodic=true)
+  g4 = Space((2,3,3), periodic=true)
   @test Agents.ne(g1) == 20
   @test Agents.ne(g2) == 33
   @test Agents.ne(g3) == 24
@@ -63,15 +71,15 @@ end
 @testset "grid coord/vertex conversions" begin
   @test coord2vertex((2,2,1), (3,4,1)) == 5
   @test coord2vertex((2,2), (3,4)) == 5
-  @test coord2vertex(2,2,1, (3,4,1)) == 5
-  @test coord2vertex(2,2, (3,4)) == 5
+  @test coord2vertex((2,2,1), (3,4,1)) == 5
+  @test coord2vertex((2,2), (3,4)) == 5
   @test vertex2coord(5, (3,4,1)) == (2,2,1)
   @test vertex2coord(5, (3,4)) == (2,2)
 
   @test coord2vertex((2,2,1), (2,3,3)) == 4
   @test coord2vertex((2,2,2), (2,3,3)) == 10
   @test coord2vertex((2,2,3), (2,3,3)) == 16
-  @test coord2vertex((1,3,1), (2,3,3)) == 5
+  @test coord2vertex(((1,3,1)), (2,3,3)) == 5
   @test coord2vertex((1,3,2), (2,3,3)) == 11
   @test coord2vertex((1,3,3), (2,3,3)) == 17
   
@@ -84,32 +92,9 @@ end
   @test vertex2coord(18, (2,3,3)) == (2,3,3)
 end
 
-@testset "grid" begin
-  @test Agents.grid(1,1,1, false, true) == Agents.grid0D()
-  @test Agents.grid(1,1,1, true, true) == Agents.grid0D()
-  @test Agents.grid(6,1,1, true, true) == Agents.grid1D(6, periodic=true)
-  @test Agents.grid(6,1,1, false, true) == Agents.grid1D(6, periodic=false)
-  @test Agents.grid(6,5,1, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
-  @test Agents.grid(6,5, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
-  @test Agents.grid(6,5,1, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
-  @test Agents.grid(6,5, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
-  @test Agents.grid(6,5,1, true, false) == Agents.grid2D(6, 5, periodic=true)
-  @test Agents.grid(6,5, true, false) == Agents.grid2D(6, 5, periodic=true)
-  @test Agents.grid(6,5,1, false, false) == Agents.grid2D(6, 5, periodic=false)
-  @test Agents.grid(6,5, false, false) == Agents.grid2D(6, 5, periodic=false)
-  @test Agents.grid((3,2,1), false, true) == Agents.grid(3,2,1, false, true) 
-  @test Agents.grid((3,2), false, true) == Agents.grid(3,2, false, true) 
-end
+@testset "Agent-Space interactions" begin
 
-@testset "gridsize" begin
-  @test Agents.gridsize((3,4,6)) == 3*4*6
-  @test Agents.gridsize((3,4)) == 12
-  @test Agents.gridsize((3,4)) == Agents.gridsize((3,4,1))
-end
-
-@testset "all the rest" begin
-
-  model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)
+  model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)  # forest fire model
 
   agent = model.agents[1]
   move_agent!(agent, (3,4), model)  # node number 63

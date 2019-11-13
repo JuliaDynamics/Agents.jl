@@ -1,11 +1,12 @@
 export Space, vertex2coords, coords2vertex, AbstractSpace,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, node_neighbors
+id2agent, NodeIterator, node_neighbors, gridsize
 
 #######################################################################################
 # Basic space definition
 #######################################################################################
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
+LightGraphs.ne(space::AbstractSpace) = LightGraphs.ne(space.graph)
 gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 
 struct GraphSpace{G} <: AbstractSpace

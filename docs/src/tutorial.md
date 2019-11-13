@@ -7,46 +7,60 @@ Agents.jl is composed of components for building models, building and managing s
 Agents.jl structures simulations in three components: a _model_ component that keeps all model-level variables and data, an _agent_ component that keeps all agent-level variables and data, and a _space_ component that represents the space where the agents live.
 
 For building any Agent-Based-Model (ABM), users have to define at least the following four quantities:
+
 1. An [`AgentBasedModel`](@ref) instance.
-3. A [`Space`](@ref) instance.  
-2. A subtype of [`AbstractAgent`](@ref) for the agents.
-4. A stepping function that controls how the agents and the model evolve.
+1. A [`Space`](@ref) instance.  
+1. A subtype of [`AbstractAgent`](@ref) for the agents.
+1. A stepping function that controls how the agents and the model evolve.
 
 With these, Agents.jl's tools manage the rest of the path to producing and processing data, as well as visualizations (Fig. 1).
 
 ![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](agentscomponents.png)
 
 ### The model
+
 ```@docs
 AgentBasedModel
 ```
+
 The model type may not necessarily be a mutable type, it depends on your problem.
+
 ## The space
+
 Under the hood, all spaces are represented by a graph from LightGraphs.jl.
 However, if your space is a regular grid then there is some additional functionality that allows converting graph nodes to coordinates on the multidimensional grid.
 
 Regardless, in every case you initialize your space by calling `Space`:
+
 ```@docs
 Space
 ```
+
 ### The agent
+
 ```@docs
 AbstractAgent
 ```
+
 The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g.
+
 ```@docs
 add_agent!
 add_agent_single!
 ```
+
 Then, the agent can interact with the model and the space further by using
+
 ```@docs
 move_agent!
 move_agent_single!
 kill_agent!
 ```
+
 For more functions visit the [Built-in functions](@ref) page.
 
 ### The stepping function
+
 Any ABM model should have at least one and at most two step functions.
 An _agent step function_ is always required.
 Such an agent step function defines what happens to an agent when it activates.
@@ -61,10 +75,10 @@ To use only a model step function, users can use the built-in `dummystep` as the
 
 After the basic types and functions are defined, we can run the model using the built-in `step!` function. This will update the agents and the model as defined by the agent and model stepping functions.
 In addition, by providing keywords to `step!`, it is also possible to collect and process data while the model evolves.
+
 ```@docs
 Agents.step!
 ```
-
 
 ## Example: Schelling's segregation model
 
@@ -76,6 +90,7 @@ We now demonstrate Agents.jl's architecture and features through building the fo
 * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
 ### Defining the agent type
+
 ```@example schelling
 using Agents
 
@@ -87,13 +102,15 @@ mutable struct SchellingAgent <: AbstractAgent
              # determines mood as it interacts with neighbors
 end
 ```
+
 Notice that the position of this Agent type is a `Tuple{Int,Int}` because we will use a grid `Space`.
 
 We added two more fields for this model, namely a `mood` field which will store `true` for a happy agent and `false` for an unhappy one, and an `group` field which stores `0` or `1` representing two groups.
 
-
 ### Creating a space
+
 For this example, we will be using a Moore 2D grid, e.g.
+
 ```@example schelling
 space = Space((10,10), moore = true)
 ```
@@ -102,6 +119,7 @@ space = Space((10,10), moore = true)
 
 To make our model we follow the instructions of [`AgentBasedModel`](@ref).
 We also want to include a property `min_to_be_happy` in our model, and so we have:
+
 ```@example schelling
 properties = Dict(:min_to_be_happy => 3)
 schelling = ABM(SchellingAgent, space; properties = properties)
@@ -110,6 +128,7 @@ schelling = ABM(SchellingAgent, space; properties = properties)
 Here we used the default scheduler.
 
 ### Creating the ABM through a function
+
 Here we put the model instantiation in a function so that it will be easy to recreate the model and change its parameters.
 
 In addition, inside this function, we populate the model with some agents.
@@ -140,33 +159,31 @@ Finally, we define a _step_ function to determine what happens to an agent when 
 function agent_step!(agent, model)
     agent.mood == true && return # do nothing if already happy
     minhappy = model.properties[:min_to_be_happy]
-    while agent.mood == false
-        neighbor_cells = node_neighbors(agent, model)
-        count_neighbors_same_group = 0
-        # For each neighbor, get group and compare to current agent's group
-        # and increment count_neighbors_same_group as appropriately.
-        for neighbor_cell in neighbor_cells
-            node_contents = get_node_contents(neighbor_cell, model)
-            # Skip iteration if the node is empty.
-            length(node_contents) == 0 && continue
-            # Otherwise, get the first agent in the node...
-            agent_id = node_contents[1]
-            # ...and increment count_neighbors_same_group if the neighbor's group is
-            # the same.
-            neighbor_agent_group = model.agents[agent_id].group
-            if neighbor_agent_group == agent.group
-                count_neighbors_same_group += 1
-            end
+    neighbor_cells = node_neighbors(agent, model)
+    count_neighbors_same_group = 0
+    # For each neighbor, get group and compare to current agent's group
+    # and increment count_neighbors_same_group as appropriately.
+    for neighbor_cell in neighbor_cells
+        node_contents = get_node_contents(neighbor_cell, model)
+        # Skip iteration if the node is empty.
+        length(node_contents) == 0 && continue
+        # Otherwise, get the first agent in the node...
+        agent_id = node_contents[1]
+        # ...and increment count_neighbors_same_group if the neighbor's group is
+        # the same.
+        neighbor_agent_group = model.agents[agent_id].group
+        if neighbor_agent_group == agent.group
+            count_neighbors_same_group += 1
         end
+    end
 
-        # After counting the neighbors, decide whether or not to move the agent.
-        # If count_neighbors_same_group is at least the min_to_be_happy, set the
-        # mood to true. Otherwise, move the agent to a random node.
-        if count_neighbors_same_group ≥ minhappy
-            agent.mood = true
-        else
-            move_agent_single!(agent, model)
-        end
+    # After counting the neighbors, decide whether or not to move the agent.
+    # If count_neighbors_same_group is at least the min_to_be_happy, set the
+    # mood to true. Otherwise, move the agent to a random node.
+    if count_neighbors_same_group ≥ minhappy
+        agent.mood = true
+    else
+        move_agent_single!(agent, model)
     end
     return
 end
@@ -192,12 +209,31 @@ model = instantiate()
 # An array of Symbols for the agent fields that are to be collected.
 properties = [:pos, :mood]
 # Specifies at which steps data should be collected.
-when = 1:2
+n = 5  # number of time steps to run the simulation
+when = 1:n  # At which steps to collect data
 # Use the step function to run the model and collect data into a DataFrame.
-data = step!(model, agent_step!, 2, properties, when=when)
+data = step!(model, agent_step!, n, properties, when=when)
 ```
 
 `properties` is an array of [`Symbols`](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/metaprogramming.html#Symbols-1) for the agent fields that we want to collect. `when` specifies at which steps data should be collected.
+
+With the above `properties` vector, we collected all agents data. We can instead only collected aggregated data. For example, let's only get the number of happy individuals:
+
+```@example schelling
+model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
+properties = Dict(:mood => [sum])
+n = 5; when = 1:n
+data = step!(model, agent_step!, 5, properties, when=when)
+5×2 DataFrames.DataFrame
+│ Row │ mood_sum │ step  │
+│     │ Int64    │ Int64 │
+├─────┼──────────┼───────┤
+│ 1   │ 0        │ 1     │
+│ 2   │ 275      │ 2     │
+│ 3   │ 337      │ 3     │
+│ 4   │ 351      │ 4     │
+│ 5   │ 361      │ 5     │
+```
 
 ### Visualizing the data
 
@@ -227,7 +263,32 @@ v = Voyager(data)
 We can run replicates of a simulation and collect all of them in a single `DataFrame`. To that end, we only need to specify the correct arguments to the `step!` function:
 
 ```@example schelling
-data = step!(model, agent_step!, 2, properties, when=when, nreplicates=5)
+model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
+data = step!(model, agent_step!, 5, properties, when=when, replicates=5)
+5×6 DataFrames.DataFrame. Omitted printing of 1 columns
+│ Row │ mood_sum │ step   │ mood_sum_1 │ mood_sum_2 │ mood_sum_3 │
+│     │ Int64⍰   │ Int64⍰ │ Int64⍰     │ Int64⍰     │ Int64⍰     │
+├─────┼──────────┼────────┼────────────┼────────────┼────────────┤
+│ 1   │ 0        │ 1      │ 0          │ 0          │ 0          │
+│ 2   │ 262      │ 2      │ 262        │ 264        │ 264        │
+│ 3   │ 327      │ 3      │ 326        │ 332        │ 331        │
+│ 4   │ 341      │ 4      │ 349        │ 354        │ 353        │
+│ 5   │ 355      │ 5      │ 356        │ 361        │ 355        │
+```
+
+The replicates are numbered as `_n`.
+
+We can also merge the replicate values with any aggregator function using the `combine_columns!` functions. It will add an extra column to `data`. For example, in the following, we get the mean of number of happy individuals per step across the replicates.
+
+```@example schelling
+combine_columns!(data, "mood_sum", [mean])
+data[!, end]
+5-element Array{Float64,1}:
+   0.0
+ 264.0
+ 329.2
+ 349.6
+ 357.8
 ```
 
 It is possible to run the replicates in parallel. For that, we should start julia with `julia -p n` where is the number of processing cores. Alternatively, we can define the number of cores from within a Julia session:
@@ -242,6 +303,6 @@ Next, we should import `Agents` on all cores: `@everywhere using Agents`.
 Finally, we can tell the `step!` function to run replicates in parallel:
 
 ```julia
-data = step!(model, agent_step!, 2, properties;
-             when=when, nreplicates=5, parallel=true)
+data = step!(model, agent_step!, 2, properties,
+             when=when, replicates=5, parallel=true)
 ```

@@ -1,5 +1,5 @@
 export move_agent!, add_agent!, add_agent_single!,
-move_agent_single!, kill_agent!
+move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 
 """
     kill_agent!(agent::AbstractAgent, model::ABM)

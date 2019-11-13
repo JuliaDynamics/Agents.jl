@@ -28,8 +28,8 @@ To apply a function to the model object, use `:model` as a dictionary key.
 
 ### Keywords
 * `when` : at which steps `n` to perform the data collection and processing.
-* `nreplicates` : Optional. Run `nreplicates` replicates of the simulation. Defaults to 0.
-* `parallel` : Optional. Only when `nreplicates`>0. Run replicate simulations in parallel. Defaults to `false`.
+* `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
+* `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
 """
 function step! end
 
@@ -55,25 +55,25 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], nreplicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, nreplicates=nreplicates, parallel=parallel)
+step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], replicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], nreplicates::Int=0, parallel::Bool=false)
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], replicates::Int=0, parallel::Bool=false)
 
   single_df = true
   if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a list of dataframes for each simulation replicate
     single_df = false
   end
 
-  if nreplicates > 0
+  if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, nreplicates=nreplicates, single_df=single_df)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df)
     else
       if single_df
         dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
       else
         dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n)]
       end
-      for i in 2:nreplicates
+      for i in 2:replicates
         data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
         if single_df
           dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)

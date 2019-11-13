@@ -1,26 +1,11 @@
-# 2D CA using Agents.jl  TODO: update model definition according to the new API
+# 2D CA using Agents.jl
 module CA2D
 using Agents
-using Agents: SimpleGraph
 
-mutable struct Agent{T<:Integer, Y<:AbstractString} <: AbstractAgent
+mutable struct Cell{T<:Integer, Y<:AbstractString} <: AbstractAgent
   id::T
   pos::Tuple{T, T}
   status::Y
-end
-
-mutable struct Model{T<:AbstractSpace, Y<:AbstractVector, Z<:Tuple} <: ABM
-  space::T
-  agents::Y  # Array{AbstractAgent}
-  scheduler::Function
-  rules::Z
-  Moore::Bool
-end
-
-mutable struct Space{T<:Integer, Y<:AbstractVector} <: AbstractSpace
-  dimensions::Tuple{T, T}
-  space::SimpleGraph
-  agent_positions::Y  # an array of arrays for each grid node
 end
 
 """
@@ -29,12 +14,13 @@ end
 Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Integer}`. The numbers are DSR (Death, Survival, Reproduction). Cells die if the number of their living neighbors are <D, survive if the number of their living neighbors are <=S, come to life if their living neighbors are as many as R. `dims` is the x and y size a grid. `Moore` specifies whether cells should connect to their diagonal neighbors.
 """
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
-  nnodes = gridsize(dims)
-  agents = [Agent(i, vertex2coord(i, dims), "0") for i in 1:nnodes]
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:nnodes]
-  mygrid = Space(dims, grid(dims, true, Moore), agent_positions)
-  # mygrid = Space(gridsize, grid(gridsize, false, false), agent_positions)  # this is for when there space is not toroidal  model = Model(mygrid, agents, as_added, rules)
-  model = Model(mygrid, agents, as_added, rules, Moore)
+  space = Space(dims, moore=Moore)
+  properties = Dict(:rules => rules, :Moore=>Moore)
+  model = ABM(Cell, space; properties = properties, scheduler=as_added)
+  nnodes = dims[1]*dims[2]
+  for n in 1:nnodes
+    add_agent!(Cell(n, vertex2coord(n, dims), "0"), (n,1), model)
+  end
   return model
 end
 
@@ -83,16 +69,16 @@ function ca_step!(model)
     coord = agent.pos
     center = agent.status
     before, after = periodic_neighbors(coord, model.space.dimensions)
-    right = model.agents[coord2vertex(after[1], coord[2], model)].status
-    left = model.agents[coord2vertex(before[1], coord[2], model)].status
-    top = model.agents[coord2vertex(coord[1], after[2], model)].status
-    bottom = model.agents[coord2vertex(coord[1], after[2], model)].status
-    topright = model.agents[coord2vertex(after[1], after[2], model)].status
-    topleft = model.agents[coord2vertex(before[1], after[2], model)].status
-    bottomright = model.agents[coord2vertex(after[1], before[2], model)].status
-    bottomleft = model.agents[coord2vertex(before[1], before[2], model)].status
+    right = model.agents[coord2vertex((after[1], coord[2]), model)].status
+    left = model.agents[coord2vertex((before[1], coord[2]), model)].status
+    top = model.agents[coord2vertex((coord[1], after[2]), model)].status
+    bottom = model.agents[coord2vertex((coord[1], after[2]), model)].status
+    topright = model.agents[coord2vertex((after[1], after[2]), model)].status
+    topleft = model.agents[coord2vertex((before[1], after[2]), model)].status
+    bottomright = model.agents[coord2vertex((after[1], before[2]), model)].status
+    bottomleft = model.agents[coord2vertex((before[1], before[2]), model)].status
 
-    if model.Moore
+    if model.properties[:Moore]
       nstatus = [topleft, top, topright, left, right, bottomleft, bottom, bottomright]
       nlive = length(findall(a->a=="1", nstatus))
     else
@@ -101,15 +87,15 @@ function ca_step!(model)
     end
 
     if agent.status == "1"
-      if nlive < model.rules[1]
+      if nlive < model.properties[:rules][1]
         new_status[agid] = "0"
-      elseif nlive > model.rules[2]
+      elseif nlive > model.properties[:rules][2]
         new_status[agid] = "0"
       else
         new_status[agid] = "1"
       end
     else
-      if nlive == model.rules[3]
+      if nlive == model.properties[:rules][3]
         new_status[agid] = "1"
       else
         new_status[agid] = "0"
@@ -121,14 +107,13 @@ function ca_step!(model)
   end
 end
 
-# """
-#     ca_run(model::ABM, runs::Integer, filename::String="CA_2D")
+"""
+    ca_run(model::ABM, runs::Integer)
 
-# Runs a 2D cellular automaton.
-# """
-# function ca_run(model::ABM, runs::Integer, filename::String="CA_2D")
-#   data = step!(dummystep, CA2D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
-#   visualize_2DCA(data, model, :pos, :status, runs, savename=filename)
-# end
+Runs a 2D cellular automaton.
+"""
+function ca_run(model::ABM, runs::Integer)
+  data = step!(model, dummystep, ca_step!, runs, [:pos, :status], when=1:runs)
+end
 
 end  # module

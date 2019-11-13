@@ -9,6 +9,10 @@ rules = Dict("111"=>"0", "110"=>"0", "101"=>"0", "100"=>"1", "011"=>"0", "010"=>
 model = CA1D.build_model(rules=rules, ncols=101)  # creates a model where all columns are "0"
 model.agents[50].status="1"
 
-# 2. Run the model, collect data, and visualize it 
+# 2. Run the model and collect data.
 runs = 100
-CA1D.ca_run(model, runs)
+data = CA1D.ca_run(model, runs);
+
+# 3. Visualize the data
+using AgentsPlots
+visualize_1DCA(data, model, :pos, :status, runs, savename="rule30")

@@ -8,7 +8,7 @@ rules = (2,3,3)
 # 1. Build the model
 model = CA2D.build_model(rules=rules, dims=(100, 100), Moore=true)  # creates a model where all cells are "0"
 # make some random cells alive
-for i in 1:gridsize(model.space.dimensions)
+for i in 1:gridsize(model)
   if rand() < 0.1
     model.agents[i].status="1"
   end
@@ -16,6 +16,12 @@ end
 
 # 2. Run the model, collect data, and visualize it 
 runs = 50
-CA2D.ca_run(model, runs)
+data = CA2D.ca_run(model, runs);
 
+
+# 3. Visualize the data
+using AgentsPlots
+visualize_2DCA(data, model, :pos, :status, runs, savename="gameOfLife")
+
+# Animate the figures:
 # convert -delay 10 -loop 1 *.png animation.gif

@@ -1,3 +1,5 @@
+export combine_columns!
+
 """
     data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
 

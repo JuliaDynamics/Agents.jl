@@ -78,4 +78,4 @@ when = 1:2
 data = step!(model, agent_step!, 2, properties, when=when)
 
 model = instantiate()
-data = step!(model, agent_step!, 2, properties, when=when, nreplicates=5)
+data = step!(model, agent_step!, 2, properties, when=when, replicates=5)
