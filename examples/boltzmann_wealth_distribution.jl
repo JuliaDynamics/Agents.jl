@@ -45,7 +45,7 @@ mutable struct MyAgent{T<:Integer} <: AbstractAgent
 end
 
 "Define the model type."
-mutable struct MyModel{T<:AbstractVector} <: AbstractModel
+mutable struct MyModel{T<:AbstractVector} <: ABM
   "An array of agents."
   agents::T
   "A field for the scheduler function."
@@ -69,7 +69,7 @@ Define the agent step function.
 
 Defines what the agent should do at each step.
 """
-function agent_step!(agent::AbstractAgent, model::AbstractModel)
+function agent_step!(agent::AbstractAgent, model::ABM)
   # If the agent's wealth is zero, then do nothing.
   if agent.wealth == 0
     return

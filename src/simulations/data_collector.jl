@@ -1,5 +1,5 @@
 """
-    data_collecter_aggregate(model::AbstractModel, field_aggregator::Dict; step=1)
+    data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
 
 `field_aggregator` is a dictionary whose keys are field names of agents (they should be symbols) and whose values are aggregator functions to be applied to those fields. For example, if your agents have a field called `wealth`, and you want to calculate mean and median population wealth, your `field_aggregator` dict will be `Dict(:wealth => [mean, median])`.
 
@@ -11,7 +11,7 @@ To apply a function to the model object, use `:model` as a dictionary key.
 
 Returns two arrays: the first one is the values of applying aggregator functions to the fields, and the second one is a header column for the first array.
 """
-function data_collecter_aggregate(model::AbstractModel, field_aggregator::Dict; step=1)
+function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
   ncols = 1
   colnames = ["step"]
   for (k,v) in field_aggregator
@@ -45,14 +45,14 @@ function data_collecter_aggregate(model::AbstractModel, field_aggregator::Dict; 
 end
 
 """
-    data_collecter_raw( model::AbstractModel, properties::Array{Symbol})
+    data_collecter_raw( model::ABM, properties::Array{Symbol})
 
 Collects agent properties (fields of the agent object) into a dataframe.
 
 If  an agent field returns an array, the mean of those arrays will be recorded.
 
 """
-function data_collecter_raw(model::AbstractModel, properties::Array{Symbol}; step=1)
+function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
   dd = DataFrame()
   agentslen = nagents(model)
   for fn in properties
@@ -75,20 +75,20 @@ function data_collecter_raw(model::AbstractModel, properties::Array{Symbol}; ste
 end
 
 """
-    data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<: Integer
+    data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<: Integer
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer) where T<: Integer
+function data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer) where T<: Integer
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
-function data_collector(model::AbstractModel, field_aggregator::Dict, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -96,18 +96,18 @@ function data_collector(model::AbstractModel, field_aggregator::Dict, when::Abst
 end
 
 """
-    data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<:Integer
+    data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<:Integer
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer) where T<:Integer
   df = data_collecter_raw(model, properties, step=step)
   return df
 end
 
-function data_collector(model::AbstractModel, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
   d = data_collecter_raw(model, properties, step=step)
   df = join(df, d, on=:id, kind=:outer)
   return df

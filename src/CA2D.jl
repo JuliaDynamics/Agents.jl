@@ -9,7 +9,7 @@ mutable struct Agent{T<:Integer, Y<:AbstractString} <: AbstractAgent
   status::Y
 end
 
-mutable struct Model{T<:AbstractSpace, Y<:AbstractVector, Z<:Tuple} <: AbstractModel
+mutable struct Model{T<:AbstractSpace, Y<:AbstractVector, Z<:Tuple} <: ABM
   space::T
   agents::Y  # Array{AbstractAgent}
   scheduler::Function
@@ -122,11 +122,11 @@ function ca_step!(model)
 end
 
 # """
-#     ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
+#     ca_run(model::ABM, runs::Integer, filename::String="CA_2D")
 
 # Runs a 2D cellular automaton.
 # """
-# function ca_run(model::AbstractModel, runs::Integer, filename::String="CA_2D")
+# function ca_run(model::ABM, runs::Integer, filename::String="CA_2D")
 #   data = step!(dummystep, CA2D.ca_step!, model, runs, [:pos, :status], collect(1:runs))
 #   visualize_2DCA(data, model, :pos, :status, runs, savename=filename)
 # end

@@ -17,7 +17,7 @@ Recall that Agents.jl structures simulations in three components: a _model_ comp
 Subtyping the model components in the following way will allow all the built-in functions to work on your defined types:
 
 * The agent type should be a subtype of `AbstractAgent`.
-* The model type should be a subtype of `AbstractModel`.
+* The model type should be a subtype of `ABM`.
 * The space type should be a subtype of `AbstractSpace`.
 
 At first in this example, we will not be using a spatial structure:
@@ -47,7 +47,7 @@ The agent type has to have the `id` field and a `pos` field for position (if a s
 
 ```julia
 "Define the model type."
-mutable struct MyModel{T<:AbstractVector} <: AbstractModel
+mutable struct MyModel{T<:AbstractVector} <: ABM
   "An array of agents."
   agents::T
   "A field for the scheduler function."
@@ -88,7 +88,7 @@ Define the agent step function.
 
 Defines what the agent should do at each step.
 """
-function agent_step!(agent::AbstractAgent, model::AbstractModel)
+function agent_step!(agent::AbstractAgent, model::ABM)
   # If the agent's wealth is zero, then do nothing.
   if agent.wealth == 0
     return
@@ -153,7 +153,7 @@ To that end, we will have to modify the model and agent types as well as write a
 
 ```julia
 "Define the model type."
-mutable struct MyModel{T<:AbstractVector} <: AbstractModel
+mutable struct MyModel{T<:AbstractVector} <: ABM
   "An array of agents."
   agents::T
   "A field for the scheduler function."
@@ -231,7 +231,7 @@ Define the agent step function.
 Defines what the agent should do at each step.
 
 """
-function agent_step!(agent::AbstractAgent, model::AbstractModel)
+function agent_step!(agent::AbstractAgent, model::ABM)
   # If the agent's wealth is zero, then do nothing.
   if agent.wealth == 0
     return
