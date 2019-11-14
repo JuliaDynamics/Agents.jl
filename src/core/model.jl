@@ -48,7 +48,7 @@ end
 
 function Base.show(io::IO, abm::ABM{A}) where {A}
     s = "AgentBasedModel with $(nagents(abm)) agents of type $A"
-    s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes"
+    s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes and $(ne(abm)) edges"
     s*= "\n scheduler: $(nameof(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
