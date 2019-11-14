@@ -6,6 +6,6 @@
   when = 1:5
   data = step!(model, agent_step!, 2, agent_properties, when=when)
 
-  @test data[1, :pos_1] == 261
-  @test data[1, :pos_2] == 378
+  @test data[1, :pos_1] == 363
+  @test data[1, :pos_2] == 393
 end

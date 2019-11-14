@@ -188,11 +188,13 @@ function agent_step!(agent, model)
     return
 end
 ```
+
 For the purpose of this implementation of Schelling's segregation model, we only need an agent step function.
 
 For defining `agent_step!` we used some of the built-in functions of Agents.jl, such as [`node_neighbors`](@ref) that returns the neighboring nodes of the node on which the agent resides, [`get_node_contents`](@ref) that returns the IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available [Built-in functions](@ref) page.
 
 ### Running the model
+
 ```@example schelling
 # Instantiate the model with 370 agents on a 20 by 20 grid.
 model = instantiate()
