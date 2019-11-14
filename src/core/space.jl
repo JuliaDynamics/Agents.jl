@@ -7,6 +7,8 @@ id2agent, NodeIterator, node_neighbors, gridsize
 #######################################################################################
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
 LightGraphs.ne(space::AbstractSpace) = LightGraphs.ne(space.graph)
+LightGraphs.nv(abm::ABM) = LightGraphs.nv(abm.space.graph)
+LightGraphs.ne(abm::ABM) = LightGraphs.ne(abm.space.graph)
 gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 
 struct GraphSpace{G} <: AbstractSpace
@@ -17,6 +19,10 @@ struct GridSpace{G, D, I<:Integer} <: AbstractSpace
   graph::G # Graph
   agent_positions::Vector{Vector{Int}}
   dimensions::NTuple{D, I}
+end
+function Base.show(io::IO, abm::AbstractSpace)
+    s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    print(io, s)
 end
 
 Space(m::ABM) = m.space
