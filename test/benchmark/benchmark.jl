@@ -17,8 +17,8 @@ a = @benchmark id2agent(250, model) setup=(model = model_initiation(f=0.1, d=0.8
 display(a)
 
 println("\nkill_agent!")
-a = @benchmark kill_agent!(model.agents[250], model) setup=(model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(100, 50), seed=2))
-display(a)
+a = @benchmarkable kill_agent!(model.agents[250], model) setup=(model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(100, 50), seed=2))
+display(run(a))
 
 println("\nSchelling model")
 include("../schelling_defs.jl")

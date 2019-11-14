@@ -36,7 +36,8 @@ function forest_step!(forest)
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()
       if p <= forest.properties[:p]
-        treeid = forest.agents[end].id +1
+        bigest_id = maximum(keys(forest.agents))
+        treeid = bigest_id +1
         tree = Tree(treeid, (1,1), true)
         add_agent!(tree, node, forest)
       end

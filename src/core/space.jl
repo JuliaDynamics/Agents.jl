@@ -335,8 +335,7 @@ end
 Return an agent given its ID.
 """
 function id2agent(id::Integer, model::ABM)
-  agent_index = findfirst(a-> a.id==id, model.agents)
-  return model.agents[agent_index]
+  return model.agents[id]
 end
 
 """

@@ -20,7 +20,7 @@ for example variable quantities like "status" or other "counters".
 abstract type AbstractAgent end
 
 struct AgentBasedModel{A<:AbstractAgent, S<:AbstractSpace, F, P}
-    agents::Vector{A}
+    agents::Dict{Int,A}
     space::S
     scheduler::F
     properties::P
@@ -41,7 +41,7 @@ function AgentBasedModel(
         ::Type{A}, space::S;
         scheduler::F = as_added, properties::P = nothing
         ) where {A<:AbstractAgent, S<:AbstractSpace, F, P}
-    agents = A[]
+    agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
@@ -57,8 +57,8 @@ nagents(model::ABM) = length(model.agents)
 Activate agents at each step in the same order as they have been added to the model.
 """
 function as_added(model::ABM)
-  agent_ids = [i.id for i in model.agents]
-  return sortperm(agent_ids)
+  agent_ids = sort(collect(keys(model.agents)))
+  return agent_ids
 end
 
 """
@@ -66,7 +66,7 @@ end
 Activate agents once per step in a random order.
 """
 function random_activation(model::ABM)
-  order = shuffle(1:length(model.agents))
+  order = shuffle(collect(keys(model.agents)))
 end
 
 """

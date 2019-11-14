@@ -15,7 +15,7 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
    # remove from the space
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
-  splice!(model.agents, findfirst(a->a==agent, model.agents))  # remove from the model
+  delete!(model.agents, agent.id)
 end
 
 """
@@ -87,7 +87,7 @@ end
 
 function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
   push!(model.space.agent_positions[pos], agent.id)
-  push!(model.agents, agent)
+  model.agents[agent.id] = agent
   # update agent position
   if typeof(agent.pos) <: Integer
     agent.pos = pos
