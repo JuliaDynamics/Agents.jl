@@ -57,8 +57,8 @@ nagents(model::ABM) = length(model.agents)
 Activate agents at each step in the same order as they have been added to the model.
 """
 function as_added(model::ABM)
-  agent_ids = [i.id for i in values(model.agents)]
-  return sortperm(agent_ids)
+  agent_ids = sort(collect(keys(model.agents)))
+  return agent_ids
 end
 
 """
@@ -66,7 +66,7 @@ end
 Activate agents once per step in a random order.
 """
 function random_activation(model::ABM)
-  order = shuffle([i.id for i in values(model.agents)])
+  order = shuffle(collect(keys(model.agents)))
 end
 
 """

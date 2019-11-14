@@ -78,7 +78,7 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
       temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
     end
     begin
-      dd[!, :id] = [i.id for i in values(model.agents)]
+      dd[!, :id] = sort(collect(keys(model.agents)))
     end
     fieldname = Symbol(join([string(fn), step], "_"))
     begin
