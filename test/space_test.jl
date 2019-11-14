@@ -1,4 +1,4 @@
-
+using Random
 Random.seed!(209)
 
 @testset "0D grids" begin
@@ -116,12 +116,12 @@ end
 
   @test agent.id in get_node_contents(agent, model)
 
-  ii = model.agents[end].id
-  @test id2agent(ii, model) == model.agents[end]
+  ii = model.agents[length(model.agents)]
+  @test id2agent(ii.id, model) == model.agents[ii.id]
 
   agent = model.agents[1]
   agent_pos = coord2vertex(agent.pos, model)
   kill_agent!(agent, model)
-  @test_throws ArgumentError id2agent(1, model) 
+  @test_throws KeyError id2agent(1, model) 
   @test !in(1, Agents.agent_positions(model)[agent_pos])
 end

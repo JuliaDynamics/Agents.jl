@@ -24,19 +24,24 @@ function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
   end
   output = Array{Any}(undef, ncols)
   output[1] = step
-  agentslen = nagents(model)
+  agent_ids = keys(model.agents)
   counter = 2
+  rand_agent_id = 0
+  for aa in agent_ids
+    rand_agent_id = aa 
+    break
+  end
   for (fn, aggs) in field_aggregator
-    if fn == :pos && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
+    if fn == :pos && typeof(model.agents[rand_agent_id].pos) <: Tuple
+      temparray = [coord2vertex(model.agents[i], model) for i in agent_ids]
     elseif fn == :agent
-      temparray = model.agents
+      temparray = values(model.agents)
     elseif fn == :model
       temparray = model
-    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
-      temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
+    elseif typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
+      temparray = [mean(getproperty(model.agents[i], fn)) for i in agent_ids]
     else
-      temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
+      temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
     end
     for agg in aggs
       output[counter] = agg(temparray)
@@ -56,17 +61,24 @@ If  an agent field returns an array, the mean of those arrays will be recorded.
 """
 function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
   dd = DataFrame()
+  agent_ids = keys(model.agents)
+  counter = 2
+  rand_agent_id = 0
+  for aa in agent_ids
+    rand_agent_id = aa 
+    break
+  end
   agentslen = nagents(model)
   for fn in properties
-    if fn == :pos  && typeof(model.agents[1].pos) <: Tuple
-      temparray = [coord2vertex(model.agents[i], model) for i in 1:agentslen]
-    elseif typeof(getproperty(model.agents[1], fn)) <: AbstractArray
-      temparray = [mean(getproperty(model.agents[i], fn)) for i in 1:agentslen]
+    if fn == :pos  && typeof(model.agents[rand_agent_id].pos) <: Tuple
+      temparray = [coord2vertex(model.agents[i], model) for i in agent_ids]
+    elseif typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
+      temparray = [mean(getproperty(model.agents[i], fn)) for i in agent_ids]
     else
-      temparray = [getproperty(model.agents[i], fn) for i in 1:agentslen]
+      temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
     end
     begin
-      dd[!, :id] = [i.id for i in model.agents]
+      dd[!, :id] = sort(collect(keys(model.agents)))
     end
     fieldname = Symbol(join([string(fn), step], "_"))
     begin

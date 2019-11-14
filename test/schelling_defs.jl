@@ -56,4 +56,4 @@ function agent_step!(agent, model)
   # return
 end
 
-happyperc(model) = count(x -> x.mood == true, model.agents)/nagents(model)
+happyperc(model) = count(x -> x.mood == true, values(model.agents))/nagents(model)
