@@ -36,6 +36,7 @@ and the `space` (from [`Space`](@ref)).
 Optionally provide a `scheduler` that creates the order with which agents
 are activated in the model, and `properties` (a dictionary of key-type `Symbol`)
 for additional model-level properties.
+This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S;
@@ -43,6 +44,16 @@ function AgentBasedModel(
         ) where {A<:AbstractAgent, S<:AbstractSpace, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
+end
+
+function Base.show(io::IO, abm::ABM{A}) where {A}
+    s = "AgentBasedModel with $(nagents(abm)) agents of type $A"
+    s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    s*= "\n scheduler: $(nameof(abm.scheduler))"
+    print(io, s)
+    if abm.properties ≠ nothing
+        print(io, "\n properties: ", abm.properties)
+    end
 end
 
 
