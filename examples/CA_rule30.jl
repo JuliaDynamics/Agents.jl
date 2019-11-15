@@ -7,7 +7,7 @@ rules = Dict("111"=>"0", "110"=>"0", "101"=>"0", "100"=>"1", "011"=>"0", "010"=>
 
 # 1. Build the model
 model = CA1D.build_model(rules=rules, ncols=101)  # creates a model where all columns are "0"
-model.agents[50].status="1"
+model.agents[51].status="1"
 
 # 2. Run the model and collect data.
 runs = 100

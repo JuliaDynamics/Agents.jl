@@ -209,7 +209,7 @@ We can use the same [`step!`](@ref) function with more arguments to run multiple
 ```@example schelling
 model = instantiate()
 # An array of Symbols for the agent fields that are to be collected.
-properties = [:pos, :mood]
+properties = [:pos, :mood, :group]
 # Specifies at which steps data should be collected.
 n = 5  # number of time steps to run the simulation
 when = 1:n  # At which steps to collect data
@@ -251,7 +251,7 @@ for i in 1:2
 end
 ```
 
-The first and second arguments of the `visualize_2D_agent_distribution` are the `data` and the `model` objects. The third argument is the column name in `data` that has the position of each agent. The fourth argument is the column name in `data` that stores agents'  groups. `savename` is the name of the plot file. `cc` is a dictionary that defines the colors of each agent group.
+The first and second arguments of the `visualize_2D_agent_distribution` are the `data` and the `model` objects. The third argument is the column name in `data` that has the position of each agent. The fourth argument is the column name in `data` that stores agents' groups. `savename` is the name of the plot file. `cc` is a dictionary that defines the colors of each agent group.
 
 Custom plots can be easily made with [`DataVoyager`](https://github.com/queryverse/DataVoyager.jl) because the outputs of simulations are always as a `DataFrame` object.
 

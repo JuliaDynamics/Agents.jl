@@ -5,9 +5,10 @@ abstract type AbstractSpace end
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** at least the `pos` field, i.e.:
+Your agent type **must have** at least the `pos` and `id` fields, i.e.:
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
+    id::P
     pos::P
 end
 ```
@@ -19,7 +20,7 @@ for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
 
-struct AgentBasedModel{A<:AbstractAgent, S<:AbstractSpace, F, P}
+struct AgentBasedModel{A<:AbstractAgent, S<:Union{Nothing, AbstractSpace}, F, P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
@@ -28,10 +29,12 @@ end
 const ABM = AgentBasedModel
 
 """
-    AgentBasedModel(agent_type, space; scheduler, properties)
+    AgentBasedModel(agent_type [, space]; scheduler, properties)
 Create an agent based model from the given agent type,
 and the `space` (from [`Space`](@ref)).
 `ABM` is equivalent with `AgentBasedModel`.
+
+`space` can be omitted, in which it will equal to `nothing`. This means that all agents are virtualy in one node and have no spatial structure. If space is omitted, functions that fascilitate agent-space interactions will not work.
 
 Optionally provide a `scheduler` that creates the order with which agents
 are activated in the model, and `properties` (a dictionary of key-type `Symbol`)
@@ -39,16 +42,20 @@ for additional model-level properties.
 This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
-        ::Type{A}, space::S;
+        ::Type{A}, space::S = nothing;
         scheduler::F = as_added, properties::P = nothing
-        ) where {A<:AbstractAgent, S<:AbstractSpace, F, P}
+        ) where {A<:AbstractAgent, S<:Union{Nothing, AbstractSpace}, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
 function Base.show(io::IO, abm::ABM{A}) where {A}
     s = "AgentBasedModel with $(nagents(abm)) agents of type $A"
-    s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    if abm.space == nothing
+        s*= "\n no space"
+    else
+        s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    end
     s*= "\n scheduler: $(nameof(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
