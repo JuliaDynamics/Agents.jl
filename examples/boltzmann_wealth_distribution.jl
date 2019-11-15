@@ -44,22 +44,17 @@ mutable struct MyAgent{T<:Integer} <: AbstractAgent
   wealth::T
 end
 
-"Define the model type."
-mutable struct MyModel{T<:AbstractVector} <: ABM
-  "An array of agents."
-  agents::T
-  "A field for the scheduler function."
-  scheduler::Function
-end
 
 "Function to instantiate the model."
 function instantiate_model(; numagents)
-  # Create a list of agents, each with position (1,1) and one unit of
-  # wealth.
-  agents = [MyAgent(i, 1) for i in 1:numagents]  
-
   # Instantiate and return the model.
-  model = MyModel(agents, random_activation)
+  model = ABM(MyAgent{Int64}, scheduler=random_activation)
+
+  # Add agents, each with one unit of
+  # wealth.
+  for i in 1:numagents
+    model.agents[i] = MyAgent(i, 1)
+  end
   return model
 end
 
@@ -76,7 +71,7 @@ function agent_step!(agent::AbstractAgent, model::ABM)
   # Otherwise, choose a random agent, subtract one unit of own wealth
   # and add one unit of wealth to the randomly chosen agent.
   else
-    random_agent = model.agents[rand(1:nagents(model))]
+    random_agent = model.agents[rand(keys(model.agents))]
     agent.wealth -= 1
     random_agent.wealth += 1
   end
@@ -90,7 +85,7 @@ model = instantiate_model(numagents=100)
 # this case wealth is the only variable to be collected.
 agent_properties = [:wealth]
 # Specifies at which steps data should be collected.
-when = collect(1:10)
+when = 1:10
 # Use the step function to run the model 10 times and collect data at
 # each step.
-data = step!(agent_step!, model, 10, agent_properties, when)
+data = step!(model, agent_step!, 10, agent_properties, when=when)

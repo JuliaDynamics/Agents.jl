@@ -5,7 +5,7 @@ abstract type AbstractSpace end
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** at least the `pos` and `id` fields, i.e.:
+Your agent type **must have** at least the `id` field, and if there is a space structure, the `pos` field, i.e.:
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
     id::P
@@ -20,7 +20,8 @@ for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
 
-struct AgentBasedModel{A<:AbstractAgent, S<:Union{Nothing, AbstractSpace}, F, P}
+SpaceType=Union{Nothing, AbstractSpace}
+struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
@@ -44,7 +45,7 @@ This is accessed as `model.properties` for later use.
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
         scheduler::F = as_added, properties::P = nothing
-        ) where {A<:AbstractAgent, S<:Union{Nothing, AbstractSpace}, F, P}
+        ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
