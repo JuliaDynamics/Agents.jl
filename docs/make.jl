@@ -1,7 +1,4 @@
-push!(LOAD_PATH, "/home/alirv/Desktop/agentspr/Agents.jl")
-#push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
-
-using Documenter, Agents
+using Documenter, Agents, AgentsPlots
 
 makedocs(
   sitename="Agents.jl",
@@ -16,7 +13,7 @@ makedocs(
         "Built-in funtions" => "builtin_functions.md",
         "Comparison against Mesa" => "mesa.md"
     ]
-  
+
 )
 
 deploydocs(

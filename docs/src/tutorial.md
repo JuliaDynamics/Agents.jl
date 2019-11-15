@@ -42,22 +42,11 @@ Space
 AbstractAgent
 ```
 
-The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g.
-
-```@docs
-add_agent!
-add_agent_single!
-```
-
+The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
 Then, the agent can interact with the model and the space further by using
+e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
 
-```@docs
-move_agent!
-move_agent_single!
-kill_agent!
-```
-
-For more functions visit the [Built-in functions](@ref) page.
+For more functions visit the [API](@ref) page.
 
 ### The stepping function
 
