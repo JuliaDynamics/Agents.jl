@@ -1,3 +1,4 @@
+export parallel_replicates
 
 """
 A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
@@ -22,7 +23,7 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n::T, propert
     for d in all_data
       dd = join(dd, d, on=:step, kind=:outer, makeunique=true)
     end
-    
+
     return dd
   else
     dd = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n, properties, when, j), 1:replicates)

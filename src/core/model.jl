@@ -1,4 +1,4 @@
-export nagents, AbstractAgent, ABM,
+export nagents, AbstractAgent, ABM, AgentBasedModel,
 random_activation, as_added, partial_activation
 
 abstract type AbstractSpace end
@@ -40,7 +40,7 @@ This means that all agents are virtualy in one node and have no spatial structur
 If space is omitted, functions that fascilitate agent-space interactions will not work.
 
 Optionally provide a `scheduler` that creates the order with which agents
-are activated in the model, and `properties` 
+are activated in the model, and `properties`
 for additional model-level properties.
 This is accessed as `model.properties` for later use.
 """
@@ -68,8 +68,8 @@ end
 
 
 """
-  nagents(model::ABM)
-Return the number of agents.
+    nagents(model::ABM)
+Return the number of agents in the `model`.
 """
 nagents(model::ABM) = length(model.agents)
 

@@ -4,8 +4,7 @@
 ```@docs
 nagents
 has_empty_nodes
-fid_empty_nodes
-node_neighbors
+find_empty_nodes
 nv(::ABM)
 ne(::ABM)
 ```
@@ -28,6 +27,7 @@ add_agent!
 move_agent!
 add_agent_single!
 move_agent_single!
+kill_agent!
 ```
 
 ## Iteration
@@ -49,18 +49,11 @@ coord2vertex
 vertex2coord
 ```
 
-## Data collectors
+## Parallelization
 
 ```@docs
+parallel_replicates
 combine_columns!
-write_to_file
-data_collector
-```
-
-## Batch runner
-
-```@docs
-batchrunner
 ```
 
 ## Visualization functions

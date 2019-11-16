@@ -1,12 +1,11 @@
 using Pkg
 Pkg.activate(@__DIR__)
 
-using Documenter, Agents, AgentsPlots, DataFrames
+using Documenter, Agents, DataFrames, Random, Statistics
+using AgentsPlots
 
 # %%
-isdir(datadir()) && rm(datadir(); force = true, recursive = true)
-
-makedocs(modules = [Agents, AgentsPlots],
+makedocs(modules = [Agents,],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris and contributors.",
 doctest = false,
@@ -16,7 +15,7 @@ format = Documenter.HTML(
 pages = [
     "Introduction" => "index.md",
 	"Tutorial" => "tutorial.md",
-	"API" => "API.md",
+	"API" => "api.md",
 	"Examples" => [
 	  "Boltzmann wealth distribution" => "boltzmann_example01.md",
 	  "Forest fire" => "forest_fire.md",
