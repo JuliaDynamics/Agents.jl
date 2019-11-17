@@ -13,9 +13,12 @@ This version of `step!` also performs data collection/processing while
 running the model.
 
 `properties` dictates which agent fields should be collected as data.
-It can be either an array, in which case agent fields will be saved as they are.
+It can be either an array, in which case, the specified fields of all agents will be saved.
 Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions.
-These functions are applied to the collected fields, that is, the keys of `properties`.
+
+If `properties` is an array, each row of the output `DataFrame` corresponds to a single agents and each column is a requested field value.
+
+If `properties` is a dictionary, each row of the output `DataFrame` corresponds to all agents and each column is the a function applied to a field. The functions in a dictionary `properties` are applied to the collected fields, that is, the keys of `properties`.
 For example, if your agents have a field called `wealth`,
 and you want to calculate mean and median population wealth at steps defined
 by `when`, your `properties` dict will be `Dict(:wealth => [mean, median])`.

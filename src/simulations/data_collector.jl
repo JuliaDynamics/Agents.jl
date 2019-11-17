@@ -19,7 +19,7 @@ function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
   for (k,v) in field_aggregator
     ncols += length(v)
     for vv in v
-      push!(colnames, join([string(k), vv], "_"))
+      push!(colnames, join([vv,"(", string(k), ")"], ""))
     end
   end
   output = Array{Any}(undef, ncols)
