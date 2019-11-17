@@ -1,13 +1,24 @@
 export Space, vertex2coords, coords2vertex, AbstractSpace,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, node_neighbors, gridsize
+export nv, ne
 
 #######################################################################################
 # Basic space definition
 #######################################################################################
 LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
 LightGraphs.ne(space::AbstractSpace) = LightGraphs.ne(space.graph)
+
+"""
+    nv(model::ABM)
+Return the number of nodes (vertices) in the `model` space.
+"""
 LightGraphs.nv(abm::ABM) = LightGraphs.nv(abm.space.graph)
+
+"""
+    ne(model::ABM)
+Return the number of edges in the `model` space.
+"""
 LightGraphs.ne(abm::ABM) = LightGraphs.ne(abm.space.graph)
 gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 

@@ -17,7 +17,7 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 
 ![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](agentscomponents.png)
 
-### The model
+### 1. The model
 
 ```@docs
 AgentBasedModel
@@ -25,7 +25,7 @@ AgentBasedModel
 
 The model type may not necessarily be a mutable type, it depends on your problem.
 
-## The space
+### 2. The space
 
 Under the hood, all spaces are represented by a graph from LightGraphs.jl.
 However, if your space is a regular grid then there is some additional functionality that allows converting graph nodes to coordinates on the multidimensional grid.
@@ -36,30 +36,19 @@ Regardless, in every case you initialize your space by calling `Space`:
 Space
 ```
 
-### The agent
+### 3. The agent
 
 ```@docs
 AbstractAgent
 ```
 
-The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g.
-
-```@docs
-add_agent!
-add_agent_single!
-```
-
+The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
 Then, the agent can interact with the model and the space further by using
+e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
 
-```@docs
-move_agent!
-move_agent_single!
-kill_agent!
-```
+For more functions visit the [API](@ref) page.
 
-For more functions visit the [Built-in functions](@ref) page.
-
-### The stepping function
+### 4. The stepping function
 
 Any ABM model should have at least one and at most two step functions.
 An _agent step function_ is always required.
@@ -71,7 +60,7 @@ An agent step function should only accept two arguments: first, an agent object,
 The model step function should accept only one argument, that is the model object.
 To use only a model step function, users can use the built-in `dummystep` as the agent step function.
 
-### Running the model & collecting data
+### 5. Running the model & collecting data
 
 After the basic types and functions are defined, we can run the model using the built-in `step!` function. This will update the agents and the model as defined by the agent and model stepping functions.
 In addition, by providing keywords to `step!`, it is also possible to collect and process data while the model evolves.
@@ -191,7 +180,7 @@ end
 
 For the purpose of this implementation of Schelling's segregation model, we only need an agent step function.
 
-For defining `agent_step!` we used some of the built-in functions of Agents.jl, such as [`node_neighbors`](@ref) that returns the neighboring nodes of the node on which the agent resides, [`get_node_contents`](@ref) that returns the IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available [Built-in functions](@ref) page.
+For defining `agent_step!` we used some of the built-in functions of Agents.jl, such as [`node_neighbors`](@ref) that returns the neighboring nodes of the node on which the agent resides, [`get_node_contents`](@ref) that returns the IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves agents to random empty nodes on the grid. A full list of built-in functions and their explanations are available in the [API](@ref) page.
 
 ### Running the model
 
@@ -215,6 +204,7 @@ n = 5  # number of time steps to run the simulation
 when = 1:n  # At which steps to collect data
 # Use the step function to run the model and collect data into a DataFrame.
 data = step!(model, agent_step!, n, properties, when=when)
+data[1:10, :] # print only a few rows
 ```
 
 `properties` is an array of [`Symbols`](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/metaprogramming.html#Symbols-1) for the agent fields that we want to collect. `when` specifies at which steps data should be collected.
@@ -226,16 +216,9 @@ model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
 properties = Dict(:mood => [sum])
 n = 5; when = 1:n
 data = step!(model, agent_step!, 5, properties, when=when)
-5×2 DataFrames.DataFrame
-│ Row │ mood_sum │ step  │
-│     │ Int64    │ Int64 │
-├─────┼──────────┼───────┤
-│ 1   │ 0        │ 1     │
-│ 2   │ 275      │ 2     │
-│ 3   │ 337      │ 3     │
-│ 4   │ 351      │ 4     │
-│ 5   │ 361      │ 5     │
 ```
+
+In the `Examples` pages there are more realistic examples with meaningful data processing steps. 
 
 ### Visualizing the data
 
@@ -267,15 +250,6 @@ We can run replicates of a simulation and collect all of them in a single `DataF
 ```@example schelling
 model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
 data = step!(model, agent_step!, 5, properties, when=when, replicates=5)
-5×6 DataFrames.DataFrame. Omitted printing of 1 columns
-│ Row │ mood_sum │ step   │ mood_sum_1 │ mood_sum_2 │ mood_sum_3 │
-│     │ Int64⍰   │ Int64⍰ │ Int64⍰     │ Int64⍰     │ Int64⍰     │
-├─────┼──────────┼────────┼────────────┼────────────┼────────────┤
-│ 1   │ 0        │ 1      │ 0          │ 0          │ 0          │
-│ 2   │ 262      │ 2      │ 262        │ 264        │ 264        │
-│ 3   │ 327      │ 3      │ 326        │ 332        │ 331        │
-│ 4   │ 341      │ 4      │ 349        │ 354        │ 353        │
-│ 5   │ 355      │ 5      │ 356        │ 361        │ 355        │
 ```
 
 The replicates are numbered as `_n`.
@@ -283,14 +257,9 @@ The replicates are numbered as `_n`.
 We can also merge the replicate values with any aggregator function using the `combine_columns!` functions. It will add an extra column to `data`. For example, in the following, we get the mean of number of happy individuals per step across the replicates.
 
 ```@example schelling
+using Statistics
 combine_columns!(data, "mood_sum", [mean])
 data[!, end]
-5-element Array{Float64,1}:
-   0.0
- 264.0
- 329.2
- 349.6
- 357.8
 ```
 
 It is possible to run the replicates in parallel. For that, we should start julia with `julia -p n` where is the number of processing cores. Alternatively, we can define the number of cores from within a Julia session:

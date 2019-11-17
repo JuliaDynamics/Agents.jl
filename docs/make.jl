@@ -1,24 +1,31 @@
-push!(LOAD_PATH, "/home/alirv/Desktop/agentspr/Agents.jl")
-#push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
+using Pkg
+Pkg.activate(@__DIR__)
 
-using Documenter, Agents
+using Documenter, Agents, DataFrames, Random, Statistics
+using AgentsPlots
 
-makedocs(
-  sitename="Agents.jl",
-    pages = [
-        "Introduction" => "index.md",
-        "Tutorial" => "tutorial.md",
-        "Examples" => [
-          "Boltzmann wealth distribution" => "boltzmann_example01.md",
-          "Forest fire" => "forest_fire.md",
-          "Cellular Automata" => "CA.md"
-        ],
-        "Built-in funtions" => "builtin_functions.md",
-        "Comparison against Mesa" => "mesa.md"
-    ]
-  
+# %%
+makedocs(modules = [Agents,],
+sitename= "Agents.jl",
+authors = "Ali R. Vahdati, George Datseris and contributors.",
+doctest = false,
+format = Documenter.HTML(
+    prettyurls = get(ENV, "CI", nothing) == "true",
+    ),
+pages = [
+    "Introduction" => "index.md",
+	"Tutorial" => "tutorial.md",
+	"API" => "api.md",
+	"Examples" => [
+	  "Boltzmann wealth distribution" => "boltzmann_example01.md",
+	  "Forest fire" => "forest_fire.md",
+	  "Cellular Automata" => "CA.md"
+		],
+	"Comparison against Mesa" => "mesa.md"
+    ],
 )
 
-deploydocs(
-	    repo = "github.com/kavir1698/Agents.jl.git",
-   )
+if get(ENV, "CI", nothing) == "true"
+    deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
+               target = "build")
+end

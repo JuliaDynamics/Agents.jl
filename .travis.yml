@@ -2,29 +2,33 @@ language: julia
 os:
   - linux
   - windows
+  - osx
 
 julia:
-  - 1.0
   - 1.2
-notifications:
-  email: false
-git:
-  depth: 99999999
+  - 1.0
+  # - nightly
+
+before_script:
+  - git config --global user.name "GitUser"
+  - git config --global user.email "git@us.er"
+
 matrix:
   allow_failures:
   - julia: nightly
 
+notifications:
+  email:
+    on_success: never
+    on_failure: never
 
 jobs:
-    include:
-      - stage: "Documentation"
-        julia: 1.0
-        os: linux
-        script:
-          - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                                 Pkg.instantiate()'
-          - julia --project=docs/ docs/make.jl
-        after_success: skip
-
-script:
-- julia --color=yes -e 'using Pkg; Pkg.build(); Pkg.test()'
+  include:
+    - stage: "Documentation"
+      julia: 1
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.instantiate()'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
