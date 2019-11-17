@@ -187,7 +187,7 @@ We also have to modify the model instantiation function:
 "Function to instantiate the model."
 function instantiate_model(; numagents, griddims)
   # An array of arrays for each node of the space.
-  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+  agent_positions = [Int64[] for i in 1:nv(griddims)]
   # Instantiate the grid structure.
   mygrid = MyGrid(griddims, grid(griddims), agent_positions)
   # Create a list of agents, each with position (1,1) and one unit of

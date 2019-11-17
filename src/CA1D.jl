@@ -14,8 +14,8 @@ end
 Builds a 1D cellular automaton. `rules` is a dictionary with this format: `Dict("000" => "0")`. `ncols` is the number of cells in a 1D CA.
 """
 function build_model(;rules::Dict, ncols::Integer=101)
-  gridsize=(ncols,1)
-  space = Space(gridsize)
+  nv=(ncols,1)
+  space = Space(nv)
   properties = Dict(:rules => rules)
   model = ABM(Cell, space; properties = properties, scheduler=as_added)
   for n in 1:ncols

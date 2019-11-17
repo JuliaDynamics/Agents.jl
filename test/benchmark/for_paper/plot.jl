@@ -32,14 +32,14 @@ pyresults = [
 
 size_range = (100:100:1000) .* 100
 
-dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i in 1:10], ["Mesa" for i in 1:10]), gridsize=vcat(size_range, size_range));
+dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i in 1:10], ["Mesa" for i in 1:10]), nv=vcat(size_range, size_range));
 
 @vlplot(data=dd,
   mark={:line,
     size=4,
     point={filled=false, fill="white", size=60}
   },
-  x={:gridsize,
+  x={:nv,
     type="ordinal",
     title="Grid size",
     axis={titleFontSize=16, labelFontSize=14},
@@ -62,11 +62,11 @@ dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i 
   width=500,
 )
 
-dd2 = DataFrame(ratio=pyresults./jlresults, gridsize=size_range);
+dd2 = DataFrame(ratio=pyresults./jlresults, nv=size_range);
 
 @vlplot(data=dd2,
   mark={:bar},
-  x={:gridsize,
+  x={:nv,
     type="ordinal",
     title="Grid size",
     axis={titleFontSize=16, labelFontSize=14},

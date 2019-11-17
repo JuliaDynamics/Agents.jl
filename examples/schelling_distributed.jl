@@ -35,7 +35,7 @@ end
 
 # instantiate the model
 @everywhere function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
-  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+  agent_positions = [Int64[] for i in 1:nv(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid with nodes have a max of 8 neighbors
   model = SchellingModel(mygrid, SchellingAgent[], random_activation, min_to_be_happy) 
   
