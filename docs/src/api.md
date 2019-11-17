@@ -14,6 +14,7 @@ ne(::ABM)
 node_neighbors
 pick_empty
 get_node_contents
+isempty(::Integer, ::ABM)
 ```
 
 ## Agent information

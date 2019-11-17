@@ -41,6 +41,13 @@ agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::AbstractSpace) = m.agent_positions
 
 """
+    isempty(node::Int, model::ABM)
+Return `true` if there are no agents in `node`.
+"""
+Base.isempty(node::Integer, model::ABM) =
+length(model.space.agent_positions[node]) == 0
+
+"""
     Space(graph::AbstractGraph) -> GraphSpace
 Create a space instance that is underlined by an arbitrary graph.
 In this case, your agent positions (field `pos`) should be of type `Integer`.
