@@ -218,6 +218,8 @@ n = 5; when = 1:n
 data = step!(model, agent_step!, 5, properties, when=when)
 ```
 
+In the `Examples` pages there are more realistic examples with meaningful data processing steps. 
+
 ### Visualizing the data
 
 We can use the `visualize_2D_agent_distribution` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
