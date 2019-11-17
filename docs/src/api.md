@@ -25,8 +25,8 @@ id2agent
 ## Model-Agent interaction
 ```@docs
 add_agent!
-move_agent!
 add_agent_single!
+move_agent!
 move_agent_single!
 kill_agent!
 ```
