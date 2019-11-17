@@ -77,3 +77,8 @@ data = step!(model, agent_step!, 2, properties, when=when)
 
 model = instantiate()
 data = step!(model, agent_step!, 2, properties, when=when, replicates=5)
+
+model = instantiate()
+properties = Dict(:mood=>[sum])
+when = 1:2
+data = step!(model, agent_step!, 2, properties, when=when)
