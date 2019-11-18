@@ -164,3 +164,20 @@ function _step(model, agent_step!, model_step!, properties, when, n)
   end
   return df
 end
+
+function series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates)
+  if single_df
+    dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+  else
+    dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n)]
+  end
+  for i in 2:replicates
+    data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+    if single_df
+      dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)
+    else
+      push!(dataall, data)
+    end
+  end
+  return dataall
+end
