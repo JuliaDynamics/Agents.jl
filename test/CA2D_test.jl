@@ -2,7 +2,7 @@
   using Agents.CA2D
   rules = (2,3,3)
   model = CA2D.build_model(rules=rules, dims=(100, 10), Moore=true)
-  for i in 1:gridsize(model)
+  for i in 1:nv(model)
     if rand() < 0.1
       model.agents[i].status="1"
     end
