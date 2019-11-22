@@ -56,13 +56,3 @@ vertex2coord
 parallel_replicates
 combine_columns!
 ```
-
-## Visualization functions
-
-```@docs
-agents_plots_complete
-visualize_data
-visualize_2D_agent_distribution
-visualize_1DCA
-visualize_2DCA
-```
