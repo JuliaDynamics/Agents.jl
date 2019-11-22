@@ -16,7 +16,7 @@ running the model.
 It can be either an array, in which case, the specified fields of all agents will be saved.
 Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions.
 
-If `properties` is an array, each row of the output `DataFrame` corresponds to a single agents and each column is a requested field value.
+If `properties` is an array, each row of the output `DataFrame` corresponds to a single agent and each column is a requested field value.
 
 If `properties` is a dictionary, each row of the output `DataFrame` corresponds to all agents and each column is the a function applied to a field. The functions in a dictionary `properties` are applied to the collected fields, that is, the keys of `properties`.
 For example, if your agents have a field called `wealth`,
@@ -63,7 +63,7 @@ step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::A
 function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], replicates::Int=0, parallel::Bool=false)
 
   single_df = true
-  if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a list of dataframes for each simulation replicate
+  if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a separate dataframe for each simulation replicate
     single_df = false
   end
 
@@ -71,19 +71,7 @@ function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::A
     if parallel
       dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df)
     else
-      if single_df
-        dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
-      else
-        dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n)]
-      end
-      for i in 2:replicates
-        data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
-        if single_df
-          dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)
-        else
-          push!(dataall, data)
-        end
-      end
+      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates)
     end
     return dataall
   end

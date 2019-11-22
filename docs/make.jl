@@ -2,7 +2,7 @@ using Pkg
 Pkg.activate(@__DIR__)
 
 using Documenter, Agents, DataFrames, Random, Statistics
-using AgentsPlots
+# using AgentsPlots
 
 # %%
 makedocs(modules = [Agents,],

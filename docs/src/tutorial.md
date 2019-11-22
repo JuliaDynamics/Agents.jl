@@ -15,7 +15,11 @@ For building any Agent-Based-Model (ABM), users have to define at least the foll
 
 With these, Agents.jl's tools manage the rest of the path to producing and processing data, as well as visualizations (Fig. 1).
 
-![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](agentscomponents.png)
+![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](overviewModel.png)
+
+-----
+
+![Fig. 2. __Fields of a model object and their types.__](overviewModelObject.png)
 
 ### 1. The model
 
