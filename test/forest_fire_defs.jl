@@ -25,8 +25,7 @@ function model_initiation(;f, d, p, griddims, seed)
 end
 
 function forest_step!(forest)
-  shuffled_nodes = Random.shuffle(1:nv(forest))
-  for node in shuffled_nodes  # randomly go through the cells and 
+  for node in nodes(forest; by = :random)
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()
       if p <= forest.properties[:p]

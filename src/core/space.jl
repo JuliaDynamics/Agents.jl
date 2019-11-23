@@ -1,6 +1,6 @@
 export Space, vertex2coords, coords2vertex, AbstractSpace,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, node_neighbors
+id2agent, NodeIterator, node_neighbors, nodes
 export nv, ne
 
 #######################################################################################
@@ -465,13 +465,15 @@ The `ns` are sorted depending on `by`:
   The more populated nodes are first.
 """
 function nodes(model; by = :id)
-  if by == :id
-    return 1:nv(model)
-  elseif by == :id
-    return shuffle!(collect(1:nv(model)))
-  elseif by == :population
-    c = collect(1:nv(model))
-    sort!(c, by = i -> length(get_node_contents(i, model)), rev = true)
-    return c
-  end
+    if by == :id
+        return 1:nv(model)
+    elseif by == :random
+        return shuffle!(collect(1:nv(model)))
+    elseif by == :population
+        c = collect(1:nv(model))
+        sort!(c, by = i -> length(get_node_contents(i, model)), rev = true)
+        return c
+    else
+        error("unknown `by`.")
+    end
 end
