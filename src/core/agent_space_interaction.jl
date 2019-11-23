@@ -138,5 +138,5 @@ function add_agent!(node, model::ABM, properties...)
     id = biggest_id(model) + 1
     A = agenttype(model)
     agent = A(id, node, properties...)
-    add_agent!(agent, node, model)
+    add_agent!(agent, correct_pos_type(node), model)
 end
