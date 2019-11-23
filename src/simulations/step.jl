@@ -30,7 +30,7 @@ To apply a function to the list of agents, use `:agent` as a dictionary key.
 To apply a function to the model object, use `:model` as a dictionary key.
 
 ### Keywords
-* `when` : at which steps `n` to perform the data collection and processing.
+* `when=1:n` : at which steps `n` to perform the data collection and processing.
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
 """
@@ -58,9 +58,9 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=[1], replicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel)
+step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=[1], replicates::Int=0, parallel::Bool=false)
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false)
 
   single_df = true
   if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a separate dataframe for each simulation replicate

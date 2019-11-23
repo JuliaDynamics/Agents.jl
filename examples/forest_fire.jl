@@ -98,9 +98,8 @@ forest
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
 percentage(x) = count(x)/nv(forest)
 agent_properties = Dict(:status => [aliveperc])
-when = 1:10
 
-data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when)
+data = step!(forest, dummystep, forest_step!, 10, agent_properties)
 
 # Or we can run parallel/batch simulations
 # ```julia
