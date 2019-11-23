@@ -14,6 +14,7 @@ ne(::ABM)
 node_neighbors
 pick_empty
 get_node_contents
+isempty(::Integer, ::ABM)
 ```
 
 ## Agent information
@@ -24,8 +25,8 @@ id2agent
 ## Model-Agent interaction
 ```@docs
 add_agent!
-move_agent!
 add_agent_single!
+move_agent!
 move_agent_single!
 kill_agent!
 ```
@@ -33,6 +34,7 @@ kill_agent!
 ## Iteration
 ```@docs
 NodeIterator
+nodes
 ```
 
 ## Schedulers
@@ -54,14 +56,4 @@ vertex2coord
 ```@docs
 parallel_replicates
 combine_columns!
-```
-
-## Visualization functions
-
-```@docs
-agents_plots_complete
-visualize_data
-visualize_2D_agent_distribution
-visualize_1DCA
-visualize_2DCA
 ```

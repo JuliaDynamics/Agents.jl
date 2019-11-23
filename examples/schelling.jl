@@ -53,7 +53,7 @@ end
 "Function to instantiate the model."
 function instantiate_model(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
   # Create an empty Array of Arrays.
-  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+  agent_positions = [Int64[] for i in 1:nv(griddims)]
   # Use MyGrid to create a grid from griddims and agent_positions using the grid function.
   # Create a 2D grid with nodes have a max of 8 neighbors.
   mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)

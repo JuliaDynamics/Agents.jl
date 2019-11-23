@@ -169,7 +169,6 @@ function agent_step!(agent, model)
             count_neighbors_same_group += 1
         end
     end
-
     # After counting the neighbors, decide whether or not to move the agent.
     # If count_neighbors_same_group is at least the min_to_be_happy, set the
     # mood to true. Otherwise, move the agent to a random node.
@@ -222,7 +221,7 @@ n = 5; when = 1:n
 data = step!(model, agent_step!, 5, properties, when=when)
 ```
 
-In the `Examples` pages there are more realistic examples with meaningful data processing steps. 
+In the `Examples` pages there are more realistic examples with meaningful data processing steps.
 
 ### Visualizing the data
 

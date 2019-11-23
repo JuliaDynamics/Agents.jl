@@ -2,7 +2,7 @@ using Pkg
 Pkg.activate(@__DIR__)
 
 using Documenter, Agents, DataFrames, Random, Statistics
-using AgentsPlots
+# using AgentsPlots
 
 # %%
 makedocs(modules = [Agents,],
@@ -16,12 +16,12 @@ pages = [
     "Introduction" => "index.md",
 	"Tutorial" => "tutorial.md",
 	"API" => "api.md",
-	"Examples" => [
-	  "Boltzmann wealth distribution" => "boltzmann_example01.md",
-	  "Forest fire" => "forest_fire.md",
-	  "Cellular Automata" => "CA.md"
-		],
-	"Comparison against Mesa" => "mesa.md"
+	# "Examples" => [
+	#   "Boltzmann wealth distribution" => "boltzmann_example01.md",
+	#   "Forest fire" => "forest_fire.md",
+	#   "Cellular Automata" => "CA.md"
+	# 	],
+	# "Comparison against Mesa" => "mesa.md"
     ],
 )
 

@@ -49,12 +49,12 @@ function model_initiation(;f, d, p, griddims, seed)
   Random.seed!(seed)
   # initialize the model
   # we start the model without creating the agents first
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
+  agent_positions = [Array{Integer}(undef, 0) for i in 1:nv(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid where each node is connected to at most 8 neighbors.
   forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
 
   # create and add trees to each node with probability d, which determines the density of the forest
-  for node in 1:gridsize(forest.space.dimensions)
+  for node in 1:nv(forest.space.dimensions)
     pp = rand()
     if pp <= forest.d
       tree = Tree(node, (1,1), true)
@@ -71,7 +71,7 @@ We should now make a step function. It maybe easier to randomly go through every
 
 ```julia
 function forest_step!(forest)
-  shuffled_nodes = shuffle(1:gridsize(forest.space.dimensions))
+  shuffled_nodes = shuffle(1:nv(forest.space.dimensions))
   for node in shuffled_nodes  # randomly go through the cells and 
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()

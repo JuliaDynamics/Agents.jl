@@ -20,7 +20,7 @@ function model_initiation(;f, d, p, griddims, seed)
   forest = ABM(Tree, space; properties=properties, scheduler=random_activation)
 
   # create and add trees to each node with probability d, which determines the density of the forest
-  for node in 1:gridsize(forest)
+  for node in 1:nv(forest)
     pp = rand()
     if pp <= forest.properties[:d]
       tree = Tree(node, (1,1), true)
@@ -31,7 +31,7 @@ function model_initiation(;f, d, p, griddims, seed)
 end
 
 function forest_step!(forest)
-  shuffled_nodes = Random.shuffle(1:gridsize(forest))
+  shuffled_nodes = Random.shuffle(1:nv(forest))
   for node in shuffled_nodes  # randomly go through the cells and 
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()

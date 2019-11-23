@@ -1,6 +1,6 @@
 export Space, vertex2coords, coords2vertex, AbstractSpace,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, node_neighbors, gridsize
+id2agent, NodeIterator, node_neighbors, nodes
 export nv, ne
 
 #######################################################################################
@@ -20,7 +20,6 @@ LightGraphs.nv(abm::ABM) = LightGraphs.nv(abm.space.graph)
 Return the number of edges in the `model` space.
 """
 LightGraphs.ne(abm::ABM) = LightGraphs.ne(abm.space.graph)
-gridsize(model::ABM) = LightGraphs.nv(model.space.graph)
 
 struct GraphSpace{G} <: AbstractSpace
   graph::G
@@ -39,6 +38,13 @@ end
 Space(m::ABM) = m.space
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::AbstractSpace) = m.agent_positions
+
+"""
+    isempty(node::Int, model::ABM)
+Return `true` if there are no agents in `node`.
+"""
+Base.isempty(node::Integer, model::ABM) =
+length(model.space.agent_positions[node]) == 0
 
 """
     Space(graph::AbstractGraph) -> GraphSpace
@@ -441,11 +447,33 @@ Base.length(iter::NodeIterator) = iter.length
 function Base.iterate(iter::NodeIterator{M,S}, state=1) where {M, S}
   state > iter.length && return nothing
   nodecontent = agent_positions(iter.model)[state]
-  nagents = length(nodecontent)
   if S <: GridSpace
     node = vertex2coord(state, iter.model)
   else
     node = state
   end
   return ( (node, nodecontent), state+1 )
+end
+
+"""
+  nodes(model; by = :id) -> ns
+Return a vector of the node ids of the `model` that you can iterate over.
+The `ns` are sorted depending on `by`:
+* `:id` - just sorted by their number
+* `:random` - randomly sorted
+* `:population` - nodes are sorted depending on how many agents they accommodate.
+  The more populated nodes are first.
+"""
+function nodes(model; by = :id)
+    if by == :id
+        return 1:nv(model)
+    elseif by == :random
+        return shuffle!(collect(1:nv(model)))
+    elseif by == :population
+        c = collect(1:nv(model))
+        sort!(c, by = i -> length(get_node_contents(i, model)), rev = true)
+        return c
+    else
+        error("unknown `by`.")
+    end
 end

@@ -31,7 +31,7 @@ rules = (2,3,3)
 model = CA2D.build_model(rules=rules, 
  dims=(100, 100), Moore=true)
 # make some random cells alive
-for i in 1:gridsize(model.space.dimensions)
+for i in 1:nv(model.space.dimensions)
  if rand() < 0.05
   model.agents[i].status="1"
  end
