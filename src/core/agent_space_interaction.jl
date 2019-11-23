@@ -123,7 +123,7 @@ end
 
 function biggest_id(model)
     if isempty(model.agents)
-        return 1
+        return 0
     else
         return maximum(keys(model.agents))
     end
@@ -137,6 +137,7 @@ the `model` and propagating all extra `properties` to the constructor.
 function add_agent!(node, model::ABM, properties...)
     id = biggest_id(model) + 1
     A = agenttype(model)
-    agent = A(id, node, properties...)
-    add_agent!(agent, correct_pos_type(node), model)
+    cnode = correct_pos_type(node, model)
+    agent = A(id, cnode, properties...)
+    add_agent!(agent, cnode, model)
 end

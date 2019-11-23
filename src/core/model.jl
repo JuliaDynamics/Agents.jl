@@ -20,13 +20,11 @@ for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
 
-function correct_pos_type(n, a::AbstractAgent, model)
-    if typeof(n) == typeof(a.pos)
-        return n
-    elseif typeof(n) <: Integer && typeof(a.pos) <: Tuple
-        return vertex2coord(n, model)
-    elseif typeof(n) <: Tuple && typeof(a.pos) <: Integer
+function correct_pos_type(n, model)
+    if typeof(model.space) <: GraphSpace
         return coord2vertex(n, model)
+    elseif typeof(model.space) <: GridSpace
+        return vertex2coord(n, model)
     end
 end
 

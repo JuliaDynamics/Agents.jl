@@ -15,7 +15,7 @@
 # This model is an example that does _not_ have an `agent_step!` function. It only
 # uses a `model_step!`
 
-# ## Defining the types
+# ## Defining the core structures
 
 # We start by defining the agent type
 using Agents, Random
@@ -31,20 +31,18 @@ end
 # The `status` field will hold `true` for a green tree and `false` for a burning one.
 # All other model parameters go into the `AgentBasedModel`
 
-# We then make a setup function that initializes the model:
+# We then make a setup function that initializes the model
 function model_initiation(; f, d, p, griddims, seed = 111)
     Random.seed!(seed)
     space = Space(griddims, moore = true)
     properties = Dict(:f => f, :d => d, :p => p)
-    forest = ABM(Tree, space; properties=properties)
+    forest = AgentBasedModel(Tree, space; properties=properties)
 
-    # create and add trees to each node with probability d,
-    # which determines the density of the forest
-    for node in 1:gridsize(forest)
-        pp = rand()
-        if pp ≤ forest.properties[:d]
-            tree = Tree(node, (1,1), true)
-            add_agent!(tree, node, forest)
+    ## create and add trees to each node with probability d,
+    ## which determines the density of the forest
+    for node in nodes(forest)
+        if rand() ≤ forest.properties[:d]
+            add_agent!(node, forest, true)
         end
     end
     return forest
@@ -53,23 +51,17 @@ end
 forest = model_initiation(f=0.05, d=0.8, p=0.05, griddims=(20, 20), seed=2)
 
 # ## Defining the step!
-# Here we define the `model_step!` function:
+# Because of the way the forest fire model is defined, we only need a
+# stepping function for the model
 
 function forest_step!(forest)
-  shuffled_nodes = Random.shuffle(1:gridsize(forest))
-  for node in shuffled_nodes  # randomly go through the cells and
-    # the cell is empty, maybe a tree grows here?
-    if length(forest.space.agent_positions[node]) == 0
-      p = rand()
-      if p ≤ forest.properties[:p]
-        bigest_id = maximum(keys(forest.agents))
-        treeid = bigest_id +1
-        tree = Tree(treeid, (1,1), true)
-        add_agent!(tree, node, forest)
-      end
+  for node in nodes(forest, by = :random)
+    nc = get_node_contents(node, forest)
+    ## the cell is empty, maybe a tree grows here
+    if length(nc) == 0
+        rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
     else
-      treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell
-      tree = id2agent(treeid, forest)  # the tree on this cell
+      tree = forest.agents[nc[1]] # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
@@ -77,15 +69,12 @@ function forest_step!(forest)
         if f ≤ forest.properties[:f]  # the tree ignites on fire
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
-          neighbor_cells = node_neighbors(tree, forest)
-          for cell in neighbor_cells
-            treeid = get_node_contents(cell, forest)
-            if length(treeid) != 0  # the cell is not empty
-              treen = id2agent(treeid[1], forest)
-              if treen.status == false
-                tree.status = false
-                break
-              end
+          for cell in node_neighbors(node, forest)
+            neighbors = get_node_contents(cell, forest)
+            length(neighbors) == 0 && continue
+            if any(n -> !forest.agents[n].status, neighbors)
+              tree.status = false
+              break
             end
           end
         end
@@ -98,37 +87,26 @@ end
 # Now we can run the model a bit:
 
 step!(forest, dummystep, forest_step!)
-nagents(forest)
+forest
 
 #
 
 step!(forest, dummystep, forest_step!, 10)
-nagents(forest)
+forest
 
 # Now we can do some data collection as well
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
-agent_properties = Dict(:status => [x -> count(x)/400])
+percentage(x) = count(x)/nv(forest)
+agent_properties = Dict(:status => [aliveperc])
 when = 1:10
 
-
 data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when)
 
-average_green(x) = count(x)/400
-agent_properties = Dict(:status => [average_green])
-forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
-data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when)
-
-# We can perform some basic visualization of our model using `AgentsPlots`
-using AgentsPlots
-for i in 1:2
-    visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
-end
-# TODO: save and display the plots
-
-# 10. Running batch
-agent_properties = [:status, :pos]
-data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when, replicates=10)
-
+# Or we can run parallel/batch simulations
+# ```julia
+# agent_properties = [:status, :pos]
+# data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when, replicates=10);
+# ```
 
 # Remember that it is possible to explore a `DataFrame` visually and interactively
 # through `DataVoyager`, by doing

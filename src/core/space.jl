@@ -252,6 +252,7 @@ function coord2vertex(coord::Tuple{Integer,Integer}, dims::Tuple{Integer,Integer
 end
 
 coord2vertex(coord::Tuple{Integer}, dims) = coord[1]
+coord2vertex(coord::Integer, args...) = coord
 
 """
     vertex2coord(vertex::Integer, model_or_space) → coords
@@ -286,6 +287,8 @@ function vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where {T<:Integer
   y = ceil(T, vertex/dims[1])
   return (x, y)
 end
+
+vertex2coord(v::Tuple, args...) = v
 
 #######################################################################################
 # finding specific nodes or agents
@@ -363,6 +366,7 @@ end
 
 """
     node_neighbors(agent::AbstractAgent, model::ABM)
+    node_neighbors(node::Int, model::ABM)
 
 Return neighboring node coordinates/numbers of the node on which the agent resides.
 
