@@ -124,11 +124,11 @@ end
 biggest_id(model) = maximum(keys(model.agents))
 
 """
-    add_agent!(node::Int, model::ABM, properties...)
+    add_agent!(node, model::ABM, properties...)
 Add a new agent in the given `node`, by constructing the agent type of
 the `model` and propagating all extra `properties` to the constructor.
 """
-function add_agent!(node::Integer, model::ABM, properties...)
+function add_agent!(node, model::ABM, properties...)
     id = biggest_id(model) + 1
     A = agenttype(abm)
     agent = A(id, node, properties...)

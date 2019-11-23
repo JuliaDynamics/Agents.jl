@@ -34,6 +34,7 @@ kill_agent!
 ## Iteration
 ```@docs
 NodeIterator
+nodes
 ```
 
 ## Schedulers

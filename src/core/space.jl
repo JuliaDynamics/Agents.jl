@@ -447,11 +447,31 @@ Base.length(iter::NodeIterator) = iter.length
 function Base.iterate(iter::NodeIterator{M,S}, state=1) where {M, S}
   state > iter.length && return nothing
   nodecontent = agent_positions(iter.model)[state]
-  nagents = length(nodecontent)
   if S <: GridSpace
     node = vertex2coord(state, iter.model)
   else
     node = state
   end
   return ( (node, nodecontent), state+1 )
+end
+
+"""
+  nodes(model; by = :id) -> ns
+Return a vector of the node ids of the `model` that you can iterate over.
+The `ns` are sorted depending on `by`:
+* `:id` - just sorted by their number
+* `:random` - randomly sorted
+* `:population` - nodes are sorted depending on how many agents they accommodate.
+  The more populated nodes are first.
+"""
+function nodes(model; by = :id)
+  if by == :id
+    return 1:nv(model)
+  elseif by == :id
+    return shuffle!(collect(1:nv(model)))
+  elseif by == :population
+    c = collect(1:nv(model))
+    sort!(c, by = i -> length(get_node_contents(i, model)), rev = true)
+    return c
+  end
 end
