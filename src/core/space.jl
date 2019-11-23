@@ -360,9 +360,7 @@ end
 
 Return an agent given its ID.
 """
-function id2agent(id::Integer, model::ABM)
-  return model.agents[id]
-end
+id2agent(id::Integer, model::ABM) = model.agents[id]
 
 """
     node_neighbors(agent::AbstractAgent, model::ABM)
@@ -460,7 +458,7 @@ function Base.iterate(iter::NodeIterator{M,S}, state=1) where {M, S}
 end
 
 """
-  nodes(model; by = :id) -> ns
+    nodes(model; by = :id) -> ns
 Return a vector of the node ids of the `model` that you can iterate over.
 The `ns` are sorted depending on `by`:
 * `:id` - just sorted by their number

@@ -61,12 +61,11 @@ function forest_step!(forest)
     if length(nc) == 0
         rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
     else
-      tree = forest.agents[nc[1]] # by definition only 1 agent per node
+      tree = id2agent(nc[1], forest) # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
-        f = rand()
-        if f ≤ forest.properties[:f]  # the tree ignites on fire
+        if rand() ≤ forest.properties[:f]  # the tree ignites spntaneously
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
           for cell in node_neighbors(node, forest)
@@ -84,7 +83,8 @@ function forest_step!(forest)
 end
 
 # as we discussed, there is no agent_step! function here, so we will just use `dummystep`.
-# Now we can run the model a bit:
+
+# ## Running the model
 
 step!(forest, dummystep, forest_step!)
 forest
@@ -97,7 +97,7 @@ forest
 # Now we can do some data collection as well
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
 percentage(x) = count(x)/nv(forest)
-agent_properties = Dict(:status => [aliveperc])
+agent_properties = Dict(:status => [percentage])
 
 data = step!(forest, dummystep, forest_step!, 10, agent_properties)
 
