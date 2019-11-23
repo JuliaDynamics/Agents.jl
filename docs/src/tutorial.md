@@ -261,7 +261,7 @@ We can also merge the replicate values with any aggregator function using the `c
 
 ```@example schelling
 using Statistics
-combine_columns!(data, "mood_sum", [mean])
+combine_columns!(data, "sum(mood)", [mean])
 data[!, end]
 ```
 
