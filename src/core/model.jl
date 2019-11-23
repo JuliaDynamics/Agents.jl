@@ -8,7 +8,7 @@ All agents must be a mutable subtype of `AbstractAgent`.
 Your agent type **must have** at least the `id` field, and if there is a space structure, the `pos` field, i.e.:
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
-    id::P
+    id::Int
     pos::P
 end
 ```
@@ -19,6 +19,14 @@ Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
 """
 abstract type AbstractAgent end
+
+function correct_pos_type(n, model)
+    if typeof(model.space) <: GraphSpace
+        return coord2vertex(n, model)
+    elseif typeof(model.space) <: GridSpace
+        return vertex2coord(n, model)
+    end
+end
 
 SpaceType=Union{Nothing, AbstractSpace}
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
