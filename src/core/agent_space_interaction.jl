@@ -121,7 +121,13 @@ function add_agent_single!(agent::AbstractAgent, model::ABM)
   return agent.pos
 end
 
-biggest_id(model) = maximum(keys(model.agents))
+function biggest_id(model)
+    if isempty(model.agents)
+        return 1
+    else
+        return maximum(keys(model.agents))
+    end
+end
 
 """
     add_agent!(node, model::ABM, properties...)
@@ -130,7 +136,7 @@ the `model` and propagating all extra `properties` to the constructor.
 """
 function add_agent!(node, model::ABM, properties...)
     id = biggest_id(model) + 1
-    A = agenttype(abm)
+    A = agenttype(model)
     agent = A(id, node, properties...)
     add_agent!(agent, node, model)
 end
