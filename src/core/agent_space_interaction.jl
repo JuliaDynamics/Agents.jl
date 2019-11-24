@@ -16,12 +16,14 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
   delete!(model.agents, agent.id)
+  return 
 end
 
 """
-    move_agent!(agent::AbstractAgent, pos, model::ABM)
+    move_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
-Add `agentID` to the new position `pos` in the model and remove it from the old position
+Add `agentID` to the new position `pos` (either tuple or integer) in the model
+and remove it from the old position
 (also update the agent to have the new position).
 
 If `pos` is a tuple, it represents the coordinates of the grid node.
@@ -29,7 +31,6 @@ If `pos` is an integer, it represents the node number in the graph.
 If `pos` is not given, the agent is moved to a random position on the grid.
 """
 function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
-  # node number from x, y, z coordinates
   nodenumber = coord2vertex(pos, model)
   move_agent!(agent, nodenumber, model)
 end
@@ -45,12 +46,13 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
     splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
     agent.pos = pos
   end
+  return agent
 end
 
 function move_agent!(agent::AbstractAgent, model::ABM)
   nodenumber = rand(1:nv(model.space))
   move_agent!(agent, nodenumber, model)
-  return agent.pos
+  return agent
 end
 
 """
@@ -68,7 +70,7 @@ function move_agent_single!(agent::AbstractAgent, model::ABM)
     random_node = rand(empty_cells)
     move_agent!(agent, random_node, model)
   end
-  return agent.pos
+  return agent
 end
 
 """
