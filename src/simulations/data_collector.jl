@@ -154,8 +154,8 @@ function combine_columns!(data::DataFrame, column_base_name::String, aggregators
 end
 
 function _step(model, agent_step!, model_step!, properties, when, n)
-  df = data_collector(model, properties, when, 1)
-  for ss in 2:n
+  df = data_collector(model, properties, when, 0)
+  for ss in 1:n
     step!(model, agent_step!, model_step!)
     # collect data
     if ss in when

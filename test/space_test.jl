@@ -124,4 +124,22 @@ end
   kill_agent!(agent, model)
   @test_throws KeyError id2agent(1, model) 
   @test !in(1, Agents.agent_positions(model)[agent_pos])
+  
+  
+  # mutable struct Agent1 <: AbstractAgent
+  #   id::Int 
+  #   pos::Tuple{Int,Int}
+  # end
+  # model1 = ABM(Agent1, Space((3,3)))
+  # @test add_agent!(1, model1) == (1,1)
+  # @test add_agent!((2,1), model1) == (2,1)
+  
+  # mutable struct Agent2 <: AbstractAgent
+  #   id::Int 
+  #   pos::Tuple{Int,Int}
+  #   p::Int
+  # end
+  # model2 = ABM(Agent2, Space((3,3)))
+  # @test add_agent!(1, model2, 3) == (1,1)
+  # @test add_agent!((2,1), model2, 2) == (2,1)
 end
