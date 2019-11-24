@@ -46,13 +46,30 @@ function agent_step!(agent::AbstractAgent, model::ABM)
     agent.wealth == 0 && return # do nothing
     ragent = random_agent(model)
     agent.wealth -= 1
-    random_agent.wealth += 1
+    ragent.wealth += 1
 end
 
 # We use `random_agent` as a convenient way to just grab a random agent.
 # (this may return the same agent as `agent`, but we disregard it as noise)
 
 # ## Running the space-less model
-
+# Let's do some data collection, running a large model for a lot of time
+N = 50
+M = 5000
+when = 1:(N÷5):N
 agent_properties = [:wealth]
-data = step!(wmodel, agent_step!, 10, agent_properties)
+model = wealth_model(M)
+data = step!(model, agent_step!, N, agent_properties, when=when)
+
+# What we mostly care about is the distribution of wealth.
+# Let's see how this changes at different times:
+
+using PyPlot
+figure()
+for i in 2:size(data)[2]
+    wealths = data[:, i]
+    plt.hist(wealths, bins=0:(maximum(wealths)+1), alpha = 0.5,
+    label = "n=")
+end
+legend()
+gcf()
