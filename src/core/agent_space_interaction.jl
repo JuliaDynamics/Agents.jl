@@ -115,7 +115,8 @@ This function does not do anything if there are no empty nodes.
 Return the new agent.
 """
 function add_agent_single!(agent::AbstractAgent, model::ABM)
-  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
+  msa = model.space.agent_positions
+  empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     add_agent!(agent, random_node, model)
@@ -142,4 +143,17 @@ function add_agent!(node, model::ABM, properties...)
     cnode = correct_pos_type(node, model)
     agent = A(id, cnode, properties...)
     add_agent!(agent, cnode, model)
+end
+
+"""
+    add_agent!(model::ABM, properties...)
+Similar with `add_agent!(node, model, properties...)` but this
+version is used for models without a spatial structure.
+"""
+function add_agent!(model::ABM, properties...)
+  @assert model.space == nothing
+  A = agenttype(model)
+  id = biggest_id(model) + 1
+  model.agents[id] = A(id, properties...)
+  return model.agents[id]
 end
