@@ -5,7 +5,8 @@ abstract type AbstractSpace end
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** at least the `id` field, and if there is a space structure, the `pos` field, i.e.:
+Your agent type **must have** at least the `id` field, and if there is a
+space structure the `pos` field, (fields are expected in this order)
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
     id::Int

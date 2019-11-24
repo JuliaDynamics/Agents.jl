@@ -1,5 +1,6 @@
 using Test, Agents
 
+include("api_tests.jl")
 include("forest_fire_defs.jl")
 include("space_test.jl")
 include("data_collector_test.jl")
