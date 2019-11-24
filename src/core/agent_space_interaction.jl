@@ -72,12 +72,11 @@ function move_agent_single!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    add_agent!(agent::AbstractAgent [, pos], model::ABM)
+    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
 Adds the agent to the `pos` in the space and to the list of agents.
 If `pos` is not given, the agent is added to a random position.
-
-The agent's position is then updated to match `pos`, and is returned
+The agent's position is always updated to match `pos`.
 """
 function add_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
   # node number from x, y, z coordinates
@@ -101,16 +100,16 @@ end
 function add_agent!(agent::AbstractAgent, model::ABM)
   nodenumber = rand(1:nv(model.space))
   add_agent!(agent, nodenumber, model)
-  return agent.pos
+  return agent
 end
 
 """
-    add_agent_single!(agent::AbstractAgent, model::ABM)
+    add_agent_single!(agent::AbstractAgent, model::ABM) → agent
 
 Add agent to a random node in the space while respecting a maximum one agent per node.
 This function does not do anything if there are no empty nodes.
 
-Return the agent's new position.
+Return the new agent.
 """
 function add_agent_single!(agent::AbstractAgent, model::ABM)
   empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
@@ -118,7 +117,7 @@ function add_agent_single!(agent::AbstractAgent, model::ABM)
     random_node = rand(empty_cells)
     add_agent!(agent, random_node, model)
   end
-  return agent.pos
+  return agent
 end
 
 function biggest_id(model)
