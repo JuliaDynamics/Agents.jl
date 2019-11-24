@@ -2,11 +2,10 @@
 
 ## Model and space information
 ```@docs
-nagents
-has_empty_nodes
-find_empty_nodes
 nv(::ABM)
 ne(::ABM)
+has_empty_nodes
+find_empty_nodes
 ```
 
 ## Content from a node
@@ -19,6 +18,7 @@ isempty(::Integer, ::ABM)
 
 ## Agent information and retrieval
 ```@docs
+nagents
 id2agent
 random_agent
 ```
