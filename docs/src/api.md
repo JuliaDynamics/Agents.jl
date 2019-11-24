@@ -17,9 +17,10 @@ get_node_contents
 isempty(::Integer, ::ABM)
 ```
 
-## Agent information
+## Agent information and retrieval
 ```@docs
 id2agent
+random_agent
 ```
 
 ## Model-Agent interaction

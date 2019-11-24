@@ -1,5 +1,5 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
-random_activation, as_added, partial_activation
+random_activation, as_added, partial_activation, random_agent
 
 abstract type AbstractSpace end
 
@@ -44,10 +44,13 @@ agenttype(::ABM{A}) where {A} = A
 Create an agent based model from the given agent type,
 and the `space` (from [`Space`](@ref)).
 `ABM` is equivalent with `AgentBasedModel`.
+The agents are stored in a dictionary `model.agents`, where the keys are the
+agent IDs, while the values are the agents themselves.
+It is recommended however to use [`id2agent`](@ref) to get an agent.
 
 `space` can be omitted, in which it will equal to `nothing`.
 This means that all agents are virtualy in one node and have no spatial structure.
-If space is omitted, functions that fascilitate agent-space interactions will not work.
+If space is omitted, some functions that fascilitate agent-space interactions will not work.
 
 Optionally provide a `scheduler` that creates the order with which agents
 are activated in the model, and `properties`
@@ -76,6 +79,11 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     end
 end
 
+"""
+    random_agent(model)
+Return a random agent from the model.
+"""
+random_agent(model) = model.agents[rand(keys(model.agents))]
 
 """
     nagents(model::ABM)
