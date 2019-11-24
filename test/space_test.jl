@@ -114,6 +114,28 @@ end
   @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
   @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
+  mutable struct Agent1 <: AbstractAgent
+    id::Int 
+    pos::Tuple{Int,Int}
+  end
+  model1 = ABM(Agent1, Space((3,3)))
+  add_agent!(1, model1)
+  @test model1.agents[1].pos == (1, 1)
+  add_agent!((2,1), model1)
+  @test model1.agents[2].pos == (2, 1)
+  
+  mutable struct Agent2 <: AbstractAgent
+    id::Int 
+    pos::Tuple{Int,Int}
+    p::Int
+  end
+  model2 = ABM(Agent2, Space((3,3)))
+  add_agent!(1, model2, 3)
+  @test model2.agents[1].pos == (1,1)
+  add_agent!((2,1), model2, 2)
+  @test model2.agents[2].pos == (2,1)
+
+  
   @test agent.id in get_node_contents(agent, model)
 
   ii = model.agents[length(model.agents)]
@@ -124,22 +146,4 @@ end
   kill_agent!(agent, model)
   @test_throws KeyError id2agent(1, model) 
   @test !in(1, Agents.agent_positions(model)[agent_pos])
-  
-  
-  # mutable struct Agent1 <: AbstractAgent
-  #   id::Int 
-  #   pos::Tuple{Int,Int}
-  # end
-  # model1 = ABM(Agent1, Space((3,3)))
-  # @test add_agent!(1, model1) == (1,1)
-  # @test add_agent!((2,1), model1) == (2,1)
-  
-  # mutable struct Agent2 <: AbstractAgent
-  #   id::Int 
-  #   pos::Tuple{Int,Int}
-  #   p::Int
-  # end
-  # model2 = ABM(Agent2, Space((3,3)))
-  # @test add_agent!(1, model2, 3) == (1,1)
-  # @test add_agent!((2,1), model2, 2) == (2,1)
 end
