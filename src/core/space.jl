@@ -288,7 +288,7 @@ function vertex2coord(vertex::T, dims::Tuple{Integer,Integer}) where {T<:Integer
   return (x, y)
 end
 
-vertex2coord(v::Tuple, args...) = v
+vertex2coord(v::Tuple, model::ABM) = v
 
 #######################################################################################
 # finding specific nodes or agents
