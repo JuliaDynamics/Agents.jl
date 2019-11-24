@@ -16,7 +16,7 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
   delete!(model.agents, agent.id)
-  return 
+  return
 end
 
 """
@@ -97,6 +97,7 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
   else
     throw("Unknown type of agent.pos.")
   end
+  return agent
 end
 
 function add_agent!(agent::AbstractAgent, model::ABM)
