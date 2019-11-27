@@ -78,17 +78,5 @@ function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::A
 
   df = _step(model, agent_step!, model_step!, properties, when, n)
 
-  if !in(1, when)
-    if typeof(properties) <: Dict
-    # if 1 is not in `when`, remove the first columns. TODO: remove ids that were only present in the first step
-      first_col = length(properties)+2 # 1 for id and 1 for passing these agent properties
-      end_col = size(df, 2)
-      df = df[:, vcat([1], collect(first_col:end_col))]
-    else
-      # if 1 is not in `when`, remove the first row.
-      df = df[2:end, :]
-    end
-  end
-
   return df
 end
