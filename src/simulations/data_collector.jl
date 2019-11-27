@@ -1,4 +1,4 @@
-export combine_columns!
+export combine_columns!, gridsearch
 
 """
     data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
@@ -180,4 +180,101 @@ function series_replicates(model, agent_step!, model_step!, properties, when, n,
     end
   end
   return dataall
+end
+
+
+"""
+    gridsearch(;param_ranges::Dict, model_properties::Dict, n::Int,
+  collect_fields::Dict, when::AbstractArray, model_initiation, agent_step, model_step)
+
+Runs the model with all the parameter value combinations given in `param_ranges`.
+`param_ranges` is a dictionary that maps parameter names (symbol) to parameter
+ranges.
+
+`model_properties` is a dictionary that includes all the items to be passed as 
+`properties` to the `ABM` object, and also any arguments that are passed to a function
+that builds the model object.
+
+`model_initiation` is a function that accepts one argument which is a dictionary 
+(`model_properties`).
+
+`collect_fields` is the same dictionary used in the `step!` function that determines
+what information should be collected. Here, it should only be a dictionary.
+
+Running replicates is not implemented yet. 
+
+"""
+function gridsearch(;param_ranges::Dict, model_properties::Dict, n::Int,
+  collect_fields::Dict, when::AbstractArray, model_initiation, agent_step, model_step)
+
+  pvalues, pnames = combinations(param_ranges)
+
+  comb = 1
+  for p in 1:length(pnames)
+    model_properties[pnames[p]] = pvalues[comb][p]
+  end
+  model = model_initiation(model_properties)
+  data = step!(model, agent_step, model_step, n, collect_fields,
+  when=when)
+  nrows = size(data, 1)
+  for p in 1:length(pnames)
+    data[!, pnames[p]] = [pvalues[comb][p] for i in 1:nrows]
+  end
+
+  for comb in 2:length(pvalues)
+    for p in 1:length(pnames)
+      model_properties[pnames[p]] = pvalues[comb][p]
+    end
+    model = model_initiation(model_properties)
+    d = step!(model, agent_step, model_step, n, collect_fields, when=when)
+    nrows = size(d, 1)
+    for p in 1:length(pnames)
+      d[!, pnames[p]] = [pvalues[comb][p] for i in 1:nrows]
+    end
+    data = vcat(data, d)
+  end
+
+  return data
+end
+
+
+"""
+  combinations(param_ranges::Dict)
+
+Returns all parameter combinations with the ranges given in `param_ranges`.
+`param_ranges` is a dictionary that maps parameter names (symbol) to parameter
+ranges.
+"""
+function combinations(param_ranges::Dict)
+  pnames = collect(keys(param_ranges))
+  pranges = collect(values(param_ranges))
+  nparams = length(pnames)
+  if nparams <= 1
+    return [i for i in pranges[1]], pnames
+  end
+
+  outorder = [pnames[1], pnames[2]]
+  out = Array{Array}(undef, length(pranges[1]) * length(pranges[2]))
+  counter = 1
+  for l1 in pranges[1]
+    for l2 in pranges[2]
+      out[counter] = Any[l1, l2]
+      counter += 1
+    end
+  end
+
+  for param in 3:nparams
+    out2 = Array{Array}(undef, length(out) * length(pranges[param]))
+    counter = 1
+    for l1 in out
+      for l2 in pranges[param]
+        out2[counter] = vcat(l1, l2)
+        counter += 1
+      end
+    end
+    out = out2
+    push!(outorder, pnames[param])
+  end
+
+  return out, outorder
 end
