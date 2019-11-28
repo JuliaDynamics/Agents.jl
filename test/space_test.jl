@@ -92,6 +92,17 @@ end
   @test vertex2coord(18, (2,3,3)) == (2,3,3)
 end
 
+mutable struct Agent1 <: AbstractAgent
+  id::Int 
+  pos::Tuple{Int,Int}
+end
+
+mutable struct Agent2 <: AbstractAgent
+  id::Int 
+  pos::Tuple{Int,Int}
+  p::Int
+end
+
 @testset "Agent-Space interactions" begin
 
   model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)  # forest fire model
@@ -114,21 +125,12 @@ end
   @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
   @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
-  mutable struct Agent1 <: AbstractAgent
-    id::Int 
-    pos::Tuple{Int,Int}
-  end
   model1 = ABM(Agent1, Space((3,3)))
   add_agent!(1, model1)
   @test model1.agents[1].pos == (1, 1)
   add_agent!((2,1), model1)
   @test model1.agents[2].pos == (2, 1)
   
-  mutable struct Agent2 <: AbstractAgent
-    id::Int 
-    pos::Tuple{Int,Int}
-    p::Int
-  end
   model2 = ABM(Agent2, Space((3,3)))
   add_agent!(1, model2, 3)
   @test model2.agents[1].pos == (1,1)
