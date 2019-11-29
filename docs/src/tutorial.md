@@ -73,6 +73,10 @@ In addition, by providing keywords to `step!`, it is also possible to collect an
 Agents.step!
 ```
 
+---
+
+Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection, see below.
+
 ## Example: Schelling's segregation model
 
 We now demonstrate Agents.jl's architecture and features through building the following definition of Schelling's segregation model:
@@ -81,6 +85,8 @@ We now demonstrate Agents.jl's architecture and features through building the fo
 * The agents leave in a two-dimensional Moore grid (8 neighbors per node).
 * If an agent is in the same group with at least three neighbors, then it is happy.
 * If an agent is unhappy, it keeps moving to new locations until it is happy.
+
+Schelling's model shows that even small preferences of agents to have neighbors belonging to the same group (e.g. preferring that at least 30% of neighbors to be in the same group) could lead to total segregation of neighborhoods.
 
 ### Defining the agent type
 
@@ -126,9 +132,10 @@ Here we put the model instantiation in a function so that it will be easy to rec
 
 In addition, inside this function, we populate the model with some agents.
 We also change the scheduler to [`random_activation`](@ref).
+Because the function is defined based on keywords, it will be of further use in [`paramscan`](@ref) below.
 
 ```@example schelling
-function instantiate(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
+function initialize(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
     space = Space(griddims, moore = true) # make a Moore grid
     properties = Dict(:min_to_be_happy => 3)
     model = ABM(SchellingAgent, space; properties=properties, scheduler = random_activation)
@@ -188,8 +195,8 @@ For defining `agent_step!` we used some of the built-in functions of Agents.jl, 
 ### Running the model
 
 ```@example schelling
-# Instantiate the model with 370 agents on a 20 by 20 grid.
-model = instantiate()
+# initialize the model with 370 agents on a 20 by 20 grid.
+model = initialize()
 step!(model, agent_step!)     # run the model one step
 step!(model, agent_step!, 3)  # run the model 3 steps.
 ```
@@ -199,7 +206,7 @@ step!(model, agent_step!, 3)  # run the model 3 steps.
 We can use the same [`step!`](@ref) function with more arguments to run multiple steps and collect values of our desired fields from every agent and put these data in a `DataFrame` object.
 
 ```@example schelling
-model = instantiate()
+model = initialize()
 # An array of Symbols for the agent fields that are to be collected.
 properties = [:pos, :mood, :group]
 # Specifies at which steps data should be collected.
@@ -215,7 +222,7 @@ data[1:10, :] # print only a few rows
 With the above `properties` vector, we collected all agents data. We can instead only collected aggregated data. For example, let's only get the number of happy individuals:
 
 ```@example schelling
-model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
+model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
 properties = Dict(:mood => [sum])
 n = 5; when = 1:n
 data = step!(model, agent_step!, 5, properties, when=when)
@@ -251,7 +258,7 @@ v = Voyager(data)
 We can run replicates of a simulation and collect all of them in a single `DataFrame`. To that end, we only need to specify the correct arguments to the `step!` function:
 
 ```@example schelling
-model = instantiate(numagents=370, griddims=(20,20), min_to_be_happy=3);
+model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
 data = step!(model, agent_step!, 5, properties, when=when, replicates=5)
 ```
 
@@ -286,67 +293,22 @@ data = step!(model, agent_step!, 2, properties,
 We often are interested in the effect of different parameters on the behavior of an
 agent-based model. `Agents.jl` provides a function `paramscan` to automatically explore
 the effect of different parameter values:
-
-First, we redefine our model initialization function to have keyword arguments for all
-model parameters, even if those parameters are not used to initialize the model.
-
-```@example schelling
-function instantiate(;numagents, griddims, min_to_be_happy, n)
-    space = Space(griddims, moore = true) # make a Moore grid
-    properties = Dict(:min_to_be_happy=>min_to_be_happy)
-    model = ABM(SchellingAgent, space, scheduler=random_activation, properties=properties)
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
-        add_agent_single!(agent, model)
-    end
-    return model
-end
+```@docs
+paramscan
 ```
+
+We have already defined our model initialization function as `initialize`.
+We now also define a processing function, that returns the percentage of
+happy agents:
 
 ```@example schelling
 happyperc(moods) = count(x -> x == true, moods)/length(moods)
+```
 
+```@example schelling
 properties= Dict(:mood=>[happyperc])
 parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20), :n=>3)
 when=1:3
 
-data = paramscan(parameters=parameters, properties=properties, when=when, initialize=instantiate, agent_step=agent_step!, model_step=dummystep)
-
-32×4 DataFrames.DataFrame
-│ Row │ happyperc(mood) │ step  │ min_to_be_happy │ numagents │
-│     │ Float64         │ Int64 │ Int64           │ Int64     │
-├─────┼─────────────────┼───────┼─────────────────┼───────────┤
-│ 1   │ 0.0             │ 0     │ 5               │ 300       │
-│ 2   │ 0.123333        │ 1     │ 5               │ 300       │
-│ 3   │ 0.273333        │ 2     │ 5               │ 300       │
-│ 4   │ 0.423333        │ 3     │ 5               │ 300       │
-│ 5   │ 0.0             │ 0     │ 4               │ 300       │
-│ 6   │ 0.333333        │ 1     │ 4               │ 300       │
-│ 7   │ 0.58            │ 2     │ 4               │ 300       │
-│ 8   │ 0.683333        │ 3     │ 4               │ 300       │
-│ 9   │ 0.0             │ 0     │ 3               │ 300       │
-│ 10  │ 0.603333        │ 1     │ 3               │ 300       │
-│ 11  │ 0.823333        │ 2     │ 3               │ 300       │
-│ 12  │ 0.896667        │ 3     │ 3               │ 300       │
-│ 13  │ 0.0             │ 0     │ 2               │ 300       │
-│ 14  │ 0.836667        │ 1     │ 2               │ 300       │
-│ 15  │ 0.946667        │ 2     │ 2               │ 300       │
-│ 16  │ 0.986667        │ 3     │ 2               │ 300       │
-│ 17  │ 0.0             │ 0     │ 5               │ 200       │
-│ 18  │ 0.035           │ 1     │ 5               │ 200       │
-│ 19  │ 0.06            │ 2     │ 5               │ 200       │
-│ 20  │ 0.075           │ 3     │ 5               │ 200       │
-│ 21  │ 0.0             │ 0     │ 4               │ 200       │
-│ 22  │ 0.12            │ 1     │ 4               │ 200       │
-│ 23  │ 0.275           │ 2     │ 4               │ 200       │
-│ 24  │ 0.37            │ 3     │ 4               │ 200       │
-│ 25  │ 0.0             │ 0     │ 3               │ 200       │
-│ 26  │ 0.36            │ 1     │ 3               │ 200       │
-│ 27  │ 0.595           │ 2     │ 3               │ 200       │
-│ 28  │ 0.695           │ 3     │ 3               │ 200       │
-│ 29  │ 0.0             │ 0     │ 2               │ 200       │
-│ 30  │ 0.605           │ 1     │ 2               │ 200       │
-│ 31  │ 0.86            │ 2     │ 2               │ 200       │
-│ 32  │ 0.94            │ 3     │ 2               │ 200       │
-
+data = paramscan(parameters=parameters, properties=properties, when=when, initialize=initialize, agent_step=agent_step!, model_step=dummystep)
 ```

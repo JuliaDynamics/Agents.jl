@@ -7,9 +7,9 @@ Update agents `n` steps. Agents will be updated as specified by the `model.sched
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
-    step!(model, agent_step! [, model_step!], n [, properties]; kwargs...)
+    step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
-This version of `step!` also performs data collection/processing while
+This keyword version of `step!` also performs data collection/processing while
 running the model.
 
 `properties` dictates which agent fields should be collected as data.
