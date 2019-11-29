@@ -90,20 +90,20 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
 end
 
 """
-    data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<: Integer
+    data_collector(model::ABM, field_aggregator::Dict, step::Integer [, df::DataFrame]) where T<: Integer
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer) where T<: Integer
+function data_collector(model::ABM, field_aggregator::Dict, step::Integer) where T<: Integer
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
-function data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, field_aggregator::Dict, step::Integer, df::DataFrame) where T<:Integer
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -111,18 +111,18 @@ function data_collector(model::ABM, field_aggregator::Dict, when::AbstractArray{
 end
 
 """
-    data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer [, df::DataFrame]) where T<:Integer
+    data_collector(model::ABM, properties::Array{Symbol}, step::Integer [, df::DataFrame]) where T<:Integer
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, step::Integer) where T<:Integer
   df = data_collecter_raw(model, properties, step=step)
   return df
 end
 
-function data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, step::Integer, df::DataFrame) where T<:Integer
   d = data_collecter_raw(model, properties, step=step)
   df = vcat(df, d) #join(df, d, on=:id, kind=:outer)
   return df
@@ -154,26 +154,33 @@ function combine_columns!(data::DataFrame, column_base_name::String, aggregators
   combine_columns!(data, final_names, aggregators)
 end
 
-function _step(model, agent_step!, model_step!, properties, when, n)
-  df = data_collector(model, properties, when, 0)
+function _step(model, agent_step!, model_step!, properties, when, n, step0)
+  if step0
+    df = data_collector(model, properties, 0)
+  else
+    df = data_collector(model, properties, 0)
+    colnames = names(df)
+    coltypes = [eltype(df[!, i]) for i in colnames]
+    df = DataFrame(coltypes, colnames)
+  end
   for ss in 1:n
     step!(model, agent_step!, model_step!)
     # collect data
     if ss in when
-      df = data_collector(model, properties, when, ss, df)
+      df = data_collector(model, properties, ss, df)
     end
   end
   return df
 end
 
-function series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates)
+function series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates, step0)
   if single_df
-    dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+    dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
   else
-    dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n)]
+    dataall = [_step(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)]
   end
   for i in 2:replicates
-    data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n)
+    data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
     if single_df
       dataall = join(dataall, data, on=:step, kind=:outer, makeunique=true)
     else
