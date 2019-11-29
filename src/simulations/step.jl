@@ -9,8 +9,8 @@ agent has acted.
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
-This keyword version of `step!` also performs data collection/processing while
-running the model.
+This version of `step!`, with the `properties` argument and extra keywords,
+performs data collection/processing while running the model.
 
 `properties` dictates which agent fields should be collected as data.
 It can be either an array, in which case, the specified fields of all agents will be

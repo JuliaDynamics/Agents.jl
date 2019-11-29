@@ -28,7 +28,7 @@ function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
   counter = 2
   rand_agent_id = 0
   for aa in agent_ids
-    rand_agent_id = aa 
+    rand_agent_id = aa
     break
   end
   for (fn, aggs) in field_aggregator
@@ -65,7 +65,7 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
   counter = 2
   rand_agent_id = 0
   for aa in agent_ids
-    rand_agent_id = aa 
+    rand_agent_id = aa
     break
   end
   agentslen = nagents(model)
@@ -184,23 +184,27 @@ end
 
 
 """
-    paramscan(;parameters::Dict, properties, when::AbstractArray, initialize, agent_step, model_step)
+    paramscan(parameters, initialize; kwargs...)
 
-Runs the model with all the parameter value combinations given in `parameters`.
-`parameters` is a dictionary that maps parameter names (symbol) to parameter
-values. If you want to test a range of parameters, you should specify those ranges in a 
-`Vector`.
+Run the model with all the parameter value combinations given in `parameters`,
+while initializing the model with `initialize`.
+This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
+internally. This means that every entry of `parameters` that is a `Vector`,
+contains many parameters and thus is scanned. All other entries of
+`parameters` that are not `Vector`s are not expanded in the scan.
 
-`initialize` is a function that creates an ABM object. It should accepts keyword arguments.
-It should have arguments for every key in the `parameters` dict, even if it does not use them..
+`initialize` is a function that creates an ABM. It should accept keyword arguments.
 
-`properties` is the same dictionary used in the `step!` function that determines
-what information should be collected.
+Running replicates is not yet implemented in `paramscan`.
 
-Running replicates is not implemented, yet.
+### Keywords
+All keywords `agent_step!, properties, n, when = 1:n,  model_step! = dummystep`
+are propagated into [`step!`](@ref).
 """
-function paramscan(;parameters::Dict, properties, when::AbstractArray, initialize,
-  agent_step, model_step)
+function paramscan(parameters::Dict, initialize;
+  agent_step!, properties, n,
+  when = 1:n,  model_step! = dummystep,
+  )
 
   params = dict_list(parameters)
   changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
@@ -208,7 +212,7 @@ function paramscan(;parameters::Dict, properties, when::AbstractArray, initializ
   alldata = DataFrame()
   for d in dict_list(parameters)
     model = initialize(; d...)
-    data = step!(model, agent_step, model_step, parameters[:n], properties, when=when)
+    data = step!(model, agent_step!, model_step!, n, properties, when=when)
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
   end
@@ -226,44 +230,7 @@ function addparams!(df::AbstractDataFrame, params::Dict, changing_params)
   end
 end
 
-
-"""
-    dict_list(c::Dict)
-Expand the dictionary `c` into a vector of dictionaries.
-Each entry has a unique combination from the product of the `Vector`
-values of the dictionary while the non-`Vector` values are kept constant
-for all possibilities. The keys of the entries are the same.
-Whether the values of `c` are iterable or not is of no concern;
-the function considers as "iterable" only subtypes of `Vector`.
-Use the function [`dict_list_count`](@ref) to get the number of
-dictionaries that `dict_list` will produce.
-## Examples
-```julia
-julia> c = Dict(:a => [1, 2], :b => 4);
-julia> dict_list(c)
-3-element Array{Dict{Symbol,Int64},1}:
- Dict(:a=>1,:b=>4)
- Dict(:a=>2,:b=>4)
-julia> c[:model] = "linear"; c[:run] = ["bi", "tri"];
-julia> dict_list(c)
-4-element Array{Dict{Symbol,Any},1}:
- Dict(:a=>1,:b=>4,:run=>"bi",:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"bi",:model=>"linear")
- Dict(:a=>1,:b=>4,:run=>"tri",:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"tri",:model=>"linear")
-julia> c[:e] = [[1, 2], [3, 5]];
-julia> dict_list(c)
-8-element Array{Dict{Symbol,Any},1}:
- Dict(:a=>1,:b=>4,:run=>"bi",:e=>[1, 2],:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"bi",:e=>[1, 2],:model=>"linear")
- Dict(:a=>1,:b=>4,:run=>"tri",:e=>[1, 2],:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"tri",:e=>[1, 2],:model=>"linear")
- Dict(:a=>1,:b=>4,:run=>"bi",:e=>[3, 5],:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"bi",:e=>[3, 5],:model=>"linear")
- Dict(:a=>1,:b=>4,:run=>"tri",:e=>[3, 5],:model=>"linear")
- Dict(:a=>2,:b=>4,:run=>"tri",:e=>[3, 5],:model=>"linear")
-```
-"""
+# This function is taken from DrWatson:
 function dict_list(c::Dict)
     iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
     non_iterables = setdiff(keys(c), iterable_fields)

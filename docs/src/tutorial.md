@@ -307,8 +307,8 @@ happyperc(moods) = count(x -> x == true, moods)/length(moods)
 
 ```@example schelling
 properties= Dict(:mood=>[happyperc])
-parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20), :n=>3)
-when=1:3
+parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20))
 
-data = paramscan(parameters=parameters, properties=properties, when=when, initialize=initialize, agent_step=agent_step!, model_step=dummystep)
+data = paramscan(parameters, initialize;
+       properties=properties, n = 3, agent_step! = agent_step!)
 ```
