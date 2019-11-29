@@ -280,3 +280,73 @@ Finally, we can tell the `step!` function to run replicates in parallel:
 data = step!(model, agent_step!, 2, properties,
              when=when, replicates=5, parallel=true)
 ```
+
+### Scanning parameter ranges
+
+We often are interested in the effect of different parameters on the behavior of an
+agent-based model. `Agents.jl` provides a function `paramscan` to automatically explore
+the effect of different parameter values:
+
+First, we redefine our model initialization function to have keyword arguments for all
+model parameters, even if those parameters are not used to initialize the model.
+
+```@example schelling
+function instantiate(;numagents, griddims, min_to_be_happy, n)
+    space = Space(griddims, moore = true) # make a Moore grid
+    properties = Dict(:min_to_be_happy=>min_to_be_happy)
+    model = ABM(SchellingAgent, space, scheduler=random_activation, properties=properties)
+    for n in 1:numagents
+        agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
+        add_agent_single!(agent, model)
+    end
+    return model
+end
+```
+
+```@example schelling
+happyperc(moods) = count(x -> x == true, moods)/length(moods)
+
+properties= Dict(:mood=>[happyperc])
+parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20), :n=>3)
+when=1:3
+
+data = paramscan(parameters=parameters, properties=properties, when=when, initialize=instantiate, agent_step=agent_step!, model_step=dummystep)
+
+32×4 DataFrames.DataFrame
+│ Row │ happyperc(mood) │ step  │ min_to_be_happy │ numagents │
+│     │ Float64         │ Int64 │ Int64           │ Int64     │
+├─────┼─────────────────┼───────┼─────────────────┼───────────┤
+│ 1   │ 0.0             │ 0     │ 5               │ 300       │
+│ 2   │ 0.123333        │ 1     │ 5               │ 300       │
+│ 3   │ 0.273333        │ 2     │ 5               │ 300       │
+│ 4   │ 0.423333        │ 3     │ 5               │ 300       │
+│ 5   │ 0.0             │ 0     │ 4               │ 300       │
+│ 6   │ 0.333333        │ 1     │ 4               │ 300       │
+│ 7   │ 0.58            │ 2     │ 4               │ 300       │
+│ 8   │ 0.683333        │ 3     │ 4               │ 300       │
+│ 9   │ 0.0             │ 0     │ 3               │ 300       │
+│ 10  │ 0.603333        │ 1     │ 3               │ 300       │
+│ 11  │ 0.823333        │ 2     │ 3               │ 300       │
+│ 12  │ 0.896667        │ 3     │ 3               │ 300       │
+│ 13  │ 0.0             │ 0     │ 2               │ 300       │
+│ 14  │ 0.836667        │ 1     │ 2               │ 300       │
+│ 15  │ 0.946667        │ 2     │ 2               │ 300       │
+│ 16  │ 0.986667        │ 3     │ 2               │ 300       │
+│ 17  │ 0.0             │ 0     │ 5               │ 200       │
+│ 18  │ 0.035           │ 1     │ 5               │ 200       │
+│ 19  │ 0.06            │ 2     │ 5               │ 200       │
+│ 20  │ 0.075           │ 3     │ 5               │ 200       │
+│ 21  │ 0.0             │ 0     │ 4               │ 200       │
+│ 22  │ 0.12            │ 1     │ 4               │ 200       │
+│ 23  │ 0.275           │ 2     │ 4               │ 200       │
+│ 24  │ 0.37            │ 3     │ 4               │ 200       │
+│ 25  │ 0.0             │ 0     │ 3               │ 200       │
+│ 26  │ 0.36            │ 1     │ 3               │ 200       │
+│ 27  │ 0.595           │ 2     │ 3               │ 200       │
+│ 28  │ 0.695           │ 3     │ 3               │ 200       │
+│ 29  │ 0.0             │ 0     │ 2               │ 200       │
+│ 30  │ 0.605           │ 1     │ 2               │ 200       │
+│ 31  │ 0.86            │ 2     │ 2               │ 200       │
+│ 32  │ 0.94            │ 3     │ 2               │ 200       │
+
+```
