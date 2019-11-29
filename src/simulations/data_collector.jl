@@ -1,4 +1,4 @@
-export combine_columns!, gridsearch
+export combine_columns!, paramscan
 
 """
     data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
@@ -184,97 +184,209 @@ end
 
 
 """
-    gridsearch(;param_ranges::Dict, model_properties::Dict, n::Int,
-  collect_fields::Dict, when::AbstractArray, model_initiation, agent_step, model_step)
+    paramscan(;parameters::Dict, properties, when::AbstractArray, initialize, agent_step, model_step)
 
-Runs the model with all the parameter value combinations given in `param_ranges`.
-`param_ranges` is a dictionary that maps parameter names (symbol) to parameter
-ranges.
+Runs the model with all the parameter value combinations given in `parameters`.
+`parameters` is a dictionary that maps parameter names (symbol) to parameter
+values. If you want to test a range of parameters, you should specify those ranges in a 
+`Vector`.
 
-`model_properties` is a dictionary that includes all the items to be passed as 
-`properties` to the `ABM` object, and also any arguments that are passed to a function
-that builds the model object.
+`initialize` is a function that creates an ABM object. It should accepts keyword arguments.
+It should have arguments for every key in the `parameters` dict, even if it does not use them..
 
-`model_initiation` is a function that accepts one argument which is a dictionary 
-(`model_properties`).
+`properties` is the same dictionary used in the `step!` function that determines
+what information should be collected.
 
-`collect_fields` is the same dictionary used in the `step!` function that determines
-what information should be collected. Here, it should only be a dictionary.
+Running replicates is not implemented, yet.
 
-Running replicates is not implemented yet. 
+# Example
+
+Here is an example of using `paramscan` with the Schelling model:
+
+```julia
+using Agents
+
+mutable struct SchellingAgent <: AbstractAgent
+  id::Int # The identifier number of the agent
+  pos::Tuple{Int,Int} # The x, y location of the agent
+  mood::Bool # whether the agent is happy in its node. (true = happy)
+  group::Int # The group of the agent,
+             # determines mood as it interacts with neighbors
+end
+
+function instantiate(;numagents, griddims, min_to_be_happy, n)
+    space = Space(griddims, moore = true) # make a Moore grid
+    properties = Dict(:min_to_be_happy=>min_to_be_happy)
+    model = ABM(SchellingAgent, space, scheduler=random_activation, properties=properties)
+    for n in 1:numagents
+        agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
+        add_agent_single!(agent, model)
+    end
+    return model
+end
+
+function agent_step!(agent, model)
+    agent.mood == true && return # do nothing if already happy
+    minhappy = model.properties[:min_to_be_happy]
+    neighbor_cells = node_neighbors(agent, model)
+    count_neighbors_same_group = 0
+    # For each neighbor, get group and compare to current agent's group
+    # and increment count_neighbors_same_group as appropriately.
+    for neighbor_cell in neighbor_cells
+        node_contents = get_node_contents(neighbor_cell, model)
+        # Skip iteration if the node is empty.
+        length(node_contents) == 0 && continue
+        # Otherwise, get the first agent in the node...
+        agent_id = node_contents[1]
+        # ...and increment count_neighbors_same_group if the neighbor's group is
+        # the same.
+        neighbor_agent_group = model.agents[agent_id].group
+        if neighbor_agent_group == agent.group
+            count_neighbors_same_group += 1
+        end
+    end
+    # After counting the neighbors, decide whether or not to move the agent.
+    # If count_neighbors_same_group is at least the min_to_be_happy, set the
+    # mood to true. Otherwise, move the agent to a random node.
+    if count_neighbors_same_group ≥ minhappy
+        agent.mood = true
+    else
+        move_agent_single!(agent, model)
+    end
+    return
+end
+
+happyperc(moods) = count(x -> x == true, moods)/length(moods)
+
+
+properties= Dict(:mood=>[happyperc])
+parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20), :n=>3)
+when=1:3
+
+data = paramscan(parameters=parameters, properties=properties, when=when, initialize=instantiate, agent_step=agent_step!, model_step=dummystep)
+
+32×4 DataFrames.DataFrame
+│ Row │ happyperc(mood) │ step  │ min_to_be_happy │ numagents │
+│     │ Float64         │ Int64 │ Int64           │ Int64     │
+├─────┼─────────────────┼───────┼─────────────────┼───────────┤
+│ 1   │ 0.0             │ 0     │ 5               │ 300       │
+│ 2   │ 0.123333        │ 1     │ 5               │ 300       │
+│ 3   │ 0.273333        │ 2     │ 5               │ 300       │
+│ 4   │ 0.423333        │ 3     │ 5               │ 300       │
+│ 5   │ 0.0             │ 0     │ 4               │ 300       │
+│ 6   │ 0.333333        │ 1     │ 4               │ 300       │
+│ 7   │ 0.58            │ 2     │ 4               │ 300       │
+│ 8   │ 0.683333        │ 3     │ 4               │ 300       │
+│ 9   │ 0.0             │ 0     │ 3               │ 300       │
+│ 10  │ 0.603333        │ 1     │ 3               │ 300       │
+│ 11  │ 0.823333        │ 2     │ 3               │ 300       │
+│ 12  │ 0.896667        │ 3     │ 3               │ 300       │
+│ 13  │ 0.0             │ 0     │ 2               │ 300       │
+│ 14  │ 0.836667        │ 1     │ 2               │ 300       │
+│ 15  │ 0.946667        │ 2     │ 2               │ 300       │
+│ 16  │ 0.986667        │ 3     │ 2               │ 300       │
+│ 17  │ 0.0             │ 0     │ 5               │ 200       │
+│ 18  │ 0.035           │ 1     │ 5               │ 200       │
+│ 19  │ 0.06            │ 2     │ 5               │ 200       │
+│ 20  │ 0.075           │ 3     │ 5               │ 200       │
+│ 21  │ 0.0             │ 0     │ 4               │ 200       │
+│ 22  │ 0.12            │ 1     │ 4               │ 200       │
+│ 23  │ 0.275           │ 2     │ 4               │ 200       │
+│ 24  │ 0.37            │ 3     │ 4               │ 200       │
+│ 25  │ 0.0             │ 0     │ 3               │ 200       │
+│ 26  │ 0.36            │ 1     │ 3               │ 200       │
+│ 27  │ 0.595           │ 2     │ 3               │ 200       │
+│ 28  │ 0.695           │ 3     │ 3               │ 200       │
+│ 29  │ 0.0             │ 0     │ 2               │ 200       │
+│ 30  │ 0.605           │ 1     │ 2               │ 200       │
+│ 31  │ 0.86            │ 2     │ 2               │ 200       │
+│ 32  │ 0.94            │ 3     │ 2               │ 200       │
+
+```
 
 """
-function gridsearch(;param_ranges::Dict, model_properties::Dict, n::Int,
-  collect_fields::Dict, when::AbstractArray, model_initiation, agent_step, model_step)
+function paramscan(;parameters::Dict, properties, when::AbstractArray, initialize,
+  agent_step, model_step)
 
-  pvalues, pnames = combinations(param_ranges)
+  params = dict_list(parameters)
+  changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
 
-  comb = 1
-  for p in 1:length(pnames)
-    model_properties[pnames[p]] = pvalues[comb][p]
-  end
-  model = model_initiation(model_properties)
-  data = step!(model, agent_step, model_step, n, collect_fields,
-  when=when)
-  nrows = size(data, 1)
-  for p in 1:length(pnames)
-    data[!, pnames[p]] = [pvalues[comb][p] for i in 1:nrows]
+  alldata = DataFrame()
+  for d in dict_list(parameters)
+    model = initialize(; d...)
+    data = step!(model, agent_step, model_step, parameters[:n], properties, when=when)
+    addparams!(data, d, changing_params)
+    alldata = vcat(data, alldata)
   end
 
-  for comb in 2:length(pvalues)
-    for p in 1:length(pnames)
-      model_properties[pnames[p]] = pvalues[comb][p]
-    end
-    model = model_initiation(model_properties)
-    d = step!(model, agent_step, model_step, n, collect_fields, when=when)
-    nrows = size(d, 1)
-    for p in 1:length(pnames)
-      d[!, pnames[p]] = [pvalues[comb][p] for i in 1:nrows]
-    end
-    data = vcat(data, d)
-  end
+  return alldata
+end
 
-  return data
+"""
+Adds new columns for each parameter in `changing_params`.
+"""
+function addparams!(df::AbstractDataFrame, params::Dict, changing_params)
+  nrows = size(df, 1)
+  for c in changing_params
+    df[!, c] = [params[c] for i in 1:nrows]
+  end
 end
 
 
 """
-  combinations(param_ranges::Dict)
-
-Returns all parameter combinations with the ranges given in `param_ranges`.
-`param_ranges` is a dictionary that maps parameter names (symbol) to parameter
-ranges.
+    dict_list(c::Dict)
+Expand the dictionary `c` into a vector of dictionaries.
+Each entry has a unique combination from the product of the `Vector`
+values of the dictionary while the non-`Vector` values are kept constant
+for all possibilities. The keys of the entries are the same.
+Whether the values of `c` are iterable or not is of no concern;
+the function considers as "iterable" only subtypes of `Vector`.
+Use the function [`dict_list_count`](@ref) to get the number of
+dictionaries that `dict_list` will produce.
+## Examples
+```julia
+julia> c = Dict(:a => [1, 2], :b => 4);
+julia> dict_list(c)
+3-element Array{Dict{Symbol,Int64},1}:
+ Dict(:a=>1,:b=>4)
+ Dict(:a=>2,:b=>4)
+julia> c[:model] = "linear"; c[:run] = ["bi", "tri"];
+julia> dict_list(c)
+4-element Array{Dict{Symbol,Any},1}:
+ Dict(:a=>1,:b=>4,:run=>"bi",:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"bi",:model=>"linear")
+ Dict(:a=>1,:b=>4,:run=>"tri",:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"tri",:model=>"linear")
+julia> c[:e] = [[1, 2], [3, 5]];
+julia> dict_list(c)
+8-element Array{Dict{Symbol,Any},1}:
+ Dict(:a=>1,:b=>4,:run=>"bi",:e=>[1, 2],:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"bi",:e=>[1, 2],:model=>"linear")
+ Dict(:a=>1,:b=>4,:run=>"tri",:e=>[1, 2],:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"tri",:e=>[1, 2],:model=>"linear")
+ Dict(:a=>1,:b=>4,:run=>"bi",:e=>[3, 5],:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"bi",:e=>[3, 5],:model=>"linear")
+ Dict(:a=>1,:b=>4,:run=>"tri",:e=>[3, 5],:model=>"linear")
+ Dict(:a=>2,:b=>4,:run=>"tri",:e=>[3, 5],:model=>"linear")
+```
 """
-function combinations(param_ranges::Dict)
-  pnames = collect(keys(param_ranges))
-  pranges = collect(values(param_ranges))
-  nparams = length(pnames)
-  if nparams <= 1
-    return [i for i in pranges[1]], pnames
-  end
+function dict_list(c::Dict)
+    iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
+    non_iterables = setdiff(keys(c), iterable_fields)
 
-  outorder = [pnames[1], pnames[2]]
-  out = Array{Array}(undef, length(pranges[1]) * length(pranges[2]))
-  counter = 1
-  for l1 in pranges[1]
-    for l2 in pranges[2]
-      out[counter] = Any[l1, l2]
-      counter += 1
-    end
-  end
+    iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
+    non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
 
-  for param in 3:nparams
-    out2 = Array{Array}(undef, length(out) * length(pranges[param]))
-    counter = 1
-    for l1 in out
-      for l2 in pranges[param]
-        out2[counter] = vcat(l1, l2)
-        counter += 1
-      end
-    end
-    out = out2
-    push!(outorder, pnames[param])
-  end
-
-  return out, outorder
+    vec(
+        map(Iterators.product(values(iterable_dict)...)) do vals
+            dd = Dict(keys(iterable_dict) .=> vals)
+            if isempty(non_iterable_dict)
+                dd
+            elseif isempty(iterable_dict)
+                non_iterable_dict
+            else
+                merge(non_iterable_dict, dd)
+            end
+        end
+    )
 end
