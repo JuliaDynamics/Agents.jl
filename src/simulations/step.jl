@@ -40,6 +40,7 @@ To apply a function to the model object, use `:model` as a dictionary key.
 * `when=1:n` : at which steps `n` to perform the data collection and processing.
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
+* `step0`: Whether to collect data at step zero, before running the model. Defaults to true.
 """
 function step! end
 
@@ -65,9 +66,9 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel)
+step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false)
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
   single_df = true
   if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a separate dataframe for each simulation replicate
@@ -76,14 +77,14 @@ function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::A
 
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df, step0=step0)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates)
+      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates, step0)
     end
     return dataall
   end
 
-  df = _step(model, agent_step!, model_step!, properties, when, n)
+  df = _step(model, agent_step!, model_step!, properties, when, n, step0)
 
   return df
 end
