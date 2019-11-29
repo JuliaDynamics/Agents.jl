@@ -80,11 +80,12 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
     begin
       dd[!, :id] = sort(collect(keys(model.agents)))
     end
-    fieldname = Symbol(join([string(fn), step], "_"))
+    fieldname = fn
     begin
       dd[!, fieldname] = temparray
     end
   end
+  dd[!, :step] = [step for i in 1:size(dd, 1)]
   return dd
 end
 
@@ -123,7 +124,7 @@ end
 
 function data_collector(model::ABM, properties::Array{Symbol}, when::AbstractArray{T}, step::Integer, df::DataFrame) where T<:Integer
   d = data_collecter_raw(model, properties, step=step)
-  df = join(df, d, on=:id, kind=:outer)
+  df = vcat(df, d) #join(df, d, on=:id, kind=:outer)
   return df
 end
 
