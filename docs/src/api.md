@@ -56,5 +56,4 @@ vertex2coord
 
 ```@docs
 parallel_replicates
-combine_columns!
 ```

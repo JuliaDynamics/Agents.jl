@@ -110,29 +110,29 @@ end
 # ## Running the model with space
 using Random
 Random.seed!(5)
-init_wealth = 5
-model2D = wealth_model_2D(;wealth = init_wealth)
+init_wealth = 4
+model = wealth_model_2D(;wealth = init_wealth)
 agent_properties = [:wealth]
 data = step!(model, agent_step!, 10, agent_properties, when = [1, 5, 10], step0=false)
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
-function wealth_distr(data, model2D, n)
-    W = zeros(Int, size(model2D.space))
+function wealth_distr(data, model, n)
+    W = zeros(Int, size(model.space))
     for row in eachrow(filter(r -> r.step == n, data)) # iterate over rows at a specific step
         W[id2agent(row.id, model).pos...] += row.wealth
     end
     return W
 end
 
-W = wealth_distr(data, model2D, 1)
+W1 = wealth_distr(data, model2D, 1)
 
 #
 
-W = wealth_distr(data, model2D, 5)
+W5 = wealth_distr(data, model2D, 5)
 
 #
 
-W = wealth_distr(data, model2D, 10)
+W10 = wealth_distr(data, model2D, 10)
 
 # What we see is that wealth gets more and more localized.
