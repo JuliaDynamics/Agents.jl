@@ -302,3 +302,24 @@ parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddi
 data = paramscan(parameters, initialize;
        properties=properties, n = 3, agent_step! = agent_step!)
 ```
+
+`paramscan` allows running replicates per parameter setting:
+
+```@example schelling
+data = paramscan(parameters, initialize;
+              properties=properties, n = 3, agent_step! = agent_step!, replicates=3)
+```
+
+We can combine all replicates with an aggregating function, such as mean, using
+the `aggregate` function from the `DataFrames` package:
+
+```@example schelling
+import Statistics: mean
+data_mean = Agents.aggregate(data, [:step, :min_to_be_happy, :numagents],  mean);
+select!(data_mean, Not(:replicate_mean))
+```
+
+Note that the second argument takes the column names on which to split the data,
+i.e., it denotes which columns should not be aggregated. It should include
+the `:step` column and any parameter that changes among simulations. But it should
+not include the `:replicate` column.
