@@ -3,12 +3,13 @@ Pkg.activate(@__DIR__)
 
 using Documenter, Agents, DataFrames, Random, Statistics
 using Literate
+using UnicodePlots
 # using AgentsPlots
 
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src")
-for file in ("forest_fire.jl",)
+for file in ("forest_fire.jl", "wealth_distribution.jl")
 	Literate.markdown(joinpath(indir, file), outdir)
 end
 
