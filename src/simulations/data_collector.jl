@@ -198,16 +198,25 @@ contains many parameters and thus is scanned. All other entries of
 Running replicates is not yet implemented in `paramscan`.
 
 ### Keywords
-All keywords `agent_step!, properties, n, when = 1:n,  model_step! = dummystep`
+All the following keywords `agent_step!, properties, n, when = 1:n,
+model_step! = dummystep`
 are propagated into [`step!`](@ref).
+
+`include_constants::Bool=false` determines whether constant parameters should be
+included in the output `DataFrame`.
 """
 function paramscan(parameters::Dict, initialize;
   agent_step!, properties, n,
   when = 1:n,  model_step! = dummystep,
+  include_constants::Bool=false
   )
 
   params = dict_list(parameters)
-  changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
+  if include_constants
+    changing_params = keys(parameters)
+  else
+    changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
+  end
 
   alldata = DataFrame()
   for d in dict_list(parameters)
