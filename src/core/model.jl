@@ -66,7 +66,7 @@ function AgentBasedModel(
 end
 
 function Base.show(io::IO, abm::ABM{A}) where {A}
-    s = "AgentBasedModel with $(nagents(abm)) agents of type $A"
+    s = "AgentBasedModel with $(nagents(abm)) agents of type $(nameof(A))"
     if abm.space == nothing
         s*= "\n no space"
     else
