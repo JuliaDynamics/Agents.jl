@@ -1,4 +1,4 @@
-export combine_columns!, paramscan
+export paramscan
 
 """
     data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
@@ -128,32 +128,6 @@ function data_collector(model::ABM, properties::Array{Symbol}, step::Integer, df
   return df
 end
 
-"""
-    combine_columns(data::DataFrame, column_names::Array{Symbol}, aggregator::AbstractVector)
-
-Combines columns of the data that contain the same type of info from different steps of the model into one column using an aggregator, e.g. mean. You should either supply all column names that contain the same type of data, or one name (as a string) that precedes a number in different columns, e.g. "pos_"{some number}.
-"""
-function combine_columns!(data::DataFrame, column_names::Array{Symbol}, aggregators::AbstractVector)
-  for ag in aggregators
-    d = by(data, :step, column_names => x-> (ag([getproperty(x, i) for i in column_names])))
-    colname = Symbol(string(column_names[1])[1:end-1] * string(ag))
-    data[!, colname] = d[!, names(d)[end]]
-  end
-  return data
-end
-
-function combine_columns!(data::DataFrame, column_base_name::String, aggregators::AbstractVector)
-  column_names = vcat([column_base_name], [column_base_name*"_"*string(i) for i in 1:size(data, 2)])
-  datanames = [string(i) for i in names(data)]
-  final_names = Array{Symbol}(undef, 0)
-  for cn in column_names
-    if cn in datanames
-      push!(final_names, Symbol(cn))
-    end
-  end
-  combine_columns!(data, final_names, aggregators)
-end
-
 function _step(model, agent_step!, model_step!, properties, when, n, step0)
   if step0
     df = data_collector(model, properties, 0)
@@ -200,8 +174,6 @@ contains many parameters and thus is scanned. All other entries of
 
 `initialize` is a function that creates an ABM. It should accept keyword arguments.
 
-Running replicates is not yet implemented in `paramscan`.
-
 ### Keywords
 All the following keywords `agent_step!, properties, n, when = 1:n,
 model_step! = dummystep`
@@ -209,11 +181,14 @@ are propagated into [`step!`](@ref).
 
 `include_constants::Bool=false` determines whether constant parameters should be
 included in the output `DataFrame`.
+
+`replicates::Int=0` specifies the number of replicates per parameter setting.
 """
 function paramscan(parameters::Dict, initialize;
   agent_step!, properties, n,
   when = 1:n,  model_step! = dummystep,
-  include_constants::Bool=false
+  include_constants::Bool=false,
+  replicates::Int=0
   )
 
   params = dict_list(parameters)
@@ -226,7 +201,7 @@ function paramscan(parameters::Dict, initialize;
   alldata = DataFrame()
   for d in dict_list(parameters)
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when)
+    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates)
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
   end

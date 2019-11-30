@@ -262,16 +262,6 @@ model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
 data = step!(model, agent_step!, 5, properties, when=when, replicates=5)
 ```
 
-The replicates are numbered as `_n`.
-
-We can also merge the replicate values with any aggregator function using the `combine_columns!` functions. It will add an extra column to `data`. For example, in the following, we get the mean of number of happy individuals per step across the replicates.
-
-```@example schelling
-using Statistics
-combine_columns!(data, "sum(mood)", [mean])
-data[!, end]
-```
-
 It is possible to run the replicates in parallel. For that, we should start julia with `julia -p n` where is the number of processing cores. Alternatively, we can define the number of cores from within a Julia session:
 
 ```julia

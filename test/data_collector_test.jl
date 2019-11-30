@@ -62,5 +62,17 @@ end
   @test unique(data.step) == collect(0:10)
   @test unique(data.f) == [0.07,0.05]
   @test unique(data.d) == [0.8, 0.7, 0.6]
+end
 
+@testset "paramscan with replicates" begin
+  agent_properties = Dict(:status => [length, count])
+  n=10
+  when = 1:n
+  replicates=3
+  parameters = Dict(:f=>[0.05,0.07], :d=>[0.6, 0.7, 0.8], :p=>0.01,
+  :griddims=>(20, 20), :seed=>2)
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!, replicates=replicates)
+  @test size(data) == (((n+1)*6)*replicates, 6)  # the first 6 is the number of combinations of changing params
 end
