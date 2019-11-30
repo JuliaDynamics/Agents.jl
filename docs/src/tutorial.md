@@ -314,7 +314,8 @@ We can combine all replicates with an aggregating function, such as mean, using
 the `aggregate` function from the `DataFrames` package:
 
 ```@example schelling
-import Statistics: mean
+using DataFrames: Not
+using Statistics: mean
 data_mean = Agents.aggregate(data, [:step, :min_to_be_happy, :numagents],  mean);
 select!(data_mean, Not(:replicate_mean))
 ```
@@ -323,3 +324,4 @@ Note that the second argument takes the column names on which to split the data,
 i.e., it denotes which columns should not be aggregated. It should include
 the `:step` column and any parameter that changes among simulations. But it should
 not include the `:replicate` column.
+So in principle wha we are doing here is simply averaging our result across the replicates.
