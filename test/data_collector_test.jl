@@ -39,3 +39,28 @@ Random.seed!(223)
   step0=false);
   @test size(data) == (666, 3)
 end
+
+@testset "paramscan" begin
+  agent_properties = Dict(:status => [length, count])
+  n=10
+  when = 1:n
+  parameters = Dict(:f=>[0.05,0.07], :d=>[0.6, 0.7, 0.8], :p=>0.01,
+  :griddims=>(20, 20), :seed=>2)
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!)
+  @test size(data) == ((n+1)*6, 5)  # 6 is the number of combinations of changing params
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!, include_constants=true)
+  @test size(data) == ((n+1)*6, 8)  # 6 is the number of combinations of changing params, 8 is 5+3, where 3 is the number of constant parameters
+
+  agent_properties = [:status]
+  data = paramscan(parameters, model_initiation;
+      properties=agent_properties, n = n, agent_step! = dummystep,
+      model_step! = forest_step!)
+  @test unique(data.step) == collect(0:10)
+  @test unique(data.f) == [0.07,0.05]
+  @test unique(data.d) == [0.8, 0.7, 0.6]
+
+end
