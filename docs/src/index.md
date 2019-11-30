@@ -81,9 +81,3 @@ To run tests, just run the `runtests.jl` file in the `test` folder:
 ```bash
 $julia runtests.jl
 ```
-
-## Table of contents
-
-```@contents
-Pages = ["index.md", "tutorial.md", "boltzmann_example01.md", "forest_fire.md", "CA.md", "builtin_functions.md", "mesa.md"]
-```
