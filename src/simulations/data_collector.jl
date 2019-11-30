@@ -183,12 +183,15 @@ are propagated into [`step!`](@ref).
 included in the output `DataFrame`.
 
 `replicates::Int=0` specifies the number of replicates per parameter setting.
+
+`step0::Bool=true` whether to collect data at step 0, before updating the model.
 """
 function paramscan(parameters::Dict, initialize;
   agent_step!, properties, n,
   when = 1:n,  model_step! = dummystep,
   include_constants::Bool=false,
-  replicates::Int=0
+  replicates::Int=0,
+  step0::Bool=true
   )
 
   params = dict_list(parameters)
@@ -201,7 +204,7 @@ function paramscan(parameters::Dict, initialize;
   alldata = DataFrame()
   for d in dict_list(parameters)
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates)
+    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
   end
