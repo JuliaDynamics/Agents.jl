@@ -1,24 +1,40 @@
-push!(LOAD_PATH, "/mnt/Data/Documents/Agents")
-#push!(LOAD_PATH, "D:\\projects\\Agents.jl\\")
+using Pkg
+Pkg.activate(@__DIR__)
 
-using Documenter, Agents
+using Documenter, Agents, DataFrames, Random, Statistics
+using Literate
+using UnicodePlots
+# using AgentsPlots
 
-makedocs(
-  sitename="Agents.jl",
-    pages = [
-        "Introduction" => "index.md",
-        "Tutorial" => "tutorial.md",
-        "Examples" => [
-          "Boltzmann wealth distribution" => "boltzmann_example01.md",
-          "Forest fire" => "forest_fire.md",
-          "Cellular Automata" => "CA.md"
-        ],
-        "Built-in funtions" => "builtin_functions.md",
-        "Comparison against Mesa" => "mesa.md"
-    ]
-  
+# %% Literate convertion
+indir = joinpath(@__DIR__, "..", "examples")
+outdir = joinpath(@__DIR__, "src")
+for file in ("forest_fire.jl", "wealth_distribution.jl")
+	Literate.markdown(joinpath(indir, file), outdir)
+end
+
+# %%
+makedocs(modules = [Agents,],
+sitename= "Agents.jl",
+authors = "Ali R. Vahdati, George Datseris and contributors.",
+doctest = false,
+format = Documenter.HTML(
+    prettyurls = get(ENV, "CI", nothing) == "true",
+    ),
+pages = [
+    "Introduction" => "index.md",
+	"Tutorial" => "tutorial.md",
+	"API" => "api.md",
+	"Examples" => [
+	  "Wealth distribution" => "wealth_distribution.md",
+	  "Forest fire" => "forest_fire.md",
+	#   "Game of life" => "game.md"
+		],
+	# "Comparison against Mesa" => "mesa.md"
+    ],
 )
 
-deploydocs(
-	    repo = "github.com/kavir1698/Agents.jl.git",
-   )
+if get(ENV, "CI", nothing) == "true"
+    deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
+               target = "build")
+end

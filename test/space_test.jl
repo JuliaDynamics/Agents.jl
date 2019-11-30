@@ -1,59 +1,67 @@
-
+using Random
 Random.seed!(209)
 
-@testset "0D grid" begin
-  @test Agents.grid0D() == Agents.Graph(1)
-  obj1 = grid()
-  obj2 = Agents.grid0D()
-  @test Agents.nv(obj1) == Agents.nv(obj2)
-  @test Agents.ne(obj1) == Agents.ne(obj2)
-  # @test gridsize(obj1) == 1
+@testset "0D grids" begin
+  @test Space((1,)).graph == Agents.Graph(1)
 end
 
-@testset "1D grid" begin
-  obj1 = Agents.grid1D(5)
-  obj2 = Agents.grid1D(5, periodic=true)
-  @test Agents.nv(obj1) == 5
-  @test Agents.nv(obj2) == 5
-  @test Agents.ne(obj1) == 4
-  @test Agents.ne(obj2) == 5
-  last_edge1 = collect(Agents.edges(obj1))[end]
-  last_edge2 = collect(Agents.edges(obj2))[2]
-  @test last_edge1.src == 4
-  @test last_edge1.dst == 5
-  @test last_edge2.src == 1
-  @test last_edge2.dst == 5
+@testset "1D grids" begin
+  a = Space((5,1))
+  ae = collect(Agents.LightGraphs.edges(a.graph))
+
+  b = Space((5,1), periodic=true)
+  be = collect(Agents.LightGraphs.edges(b.graph))
+
+  @test ae == [Agents.LightGraphs.Edge(1,2),Agents.LightGraphs.Edge(2,3), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(4,5)]
+  @test be == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,5), Agents.LightGraphs.Edge(2,3), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(4,5)]
 end
 
-@testset "2D grid" begin
-  obj1 = Agents.grid2D(3, 4)
-  obj2 = Agents.grid2D(3, 4, periodic=true)
-  @test Agents.nv(obj1) == 12
-  @test Agents.nv(obj2) == 12
-  @test Agents.ne(obj1) == 17
-  @test Agents.ne(obj2) == 24
+@testset "2D grids" begin
+  @test Space((2,1)).graph == Agents.Graph(2,1)
+  
+  a = Space((2,3))
+  b = Space((2,3), periodic=true) # 2D grid
+
+  @test a.dimensions == (2,3)
+  @test b.dimensions == (2,3)
+  @test length(a.agent_positions) == 6
+  @test length(b.agent_positions) == 6
+  
+  @test Agents.nv(a) == 6
+  @test Agents.ne(a) == 7
+  @test Agents.nv(b) == 6
+  @test Agents.ne(b) == 9
+  
+  ae = collect(Agents.LightGraphs.edges(a.graph))
+  be = collect(Agents.LightGraphs.edges(b.graph))
+
+  @test ae == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,3), Agents.LightGraphs.Edge(2,4), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(3,5), Agents.LightGraphs.Edge(4,6), Agents.LightGraphs.Edge(5,6)]
+  @test be == [Agents.LightGraphs.Edge(1,2), Agents.LightGraphs.Edge(1,3), Agents.LightGraphs.Edge(1,5), Agents.LightGraphs.Edge(2,4), Agents.LightGraphs.Edge(2,6), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(3,5), Agents.LightGraphs.Edge(4,6), Agents.LightGraphs.Edge(5,6)]
 end
 
 @testset "2D Moore" begin
-  obj1 = Agents.grid2D_Moore(3, 3)
-  @test Agents.nv(obj1) == 9
-  @test Agents.ne(obj1) == 20
-  obj1 = Agents.grid2D_Moore(3, 4)
-  @test Agents.nv(obj1) == 12
-  @test Agents.ne(obj1) == 29
-  obj2 = Agents.grid2D_Moore(3, 2, periodic=true)
-  @test Agents.nv(obj2) == 6
-  @test Agents.ne(obj2) == 15
-  obj2 = Agents.grid2D_Moore(3, 3, periodic=true)
-  @test Agents.nv(obj2) == 9
-  @test Agents.ne(obj2) == 36
+  a = Space((3, 3), moore=true)
+  @test Agents.nv(a) == 9
+  @test Agents.ne(a) == 20
+
+  a = Space((3, 4), moore=true)
+  @test Agents.nv(a) == 12
+  @test Agents.ne(a) == 29
+
+  b = Space((3, 2), moore=true, periodic=true)
+  @test Agents.nv(b) == 6
+  @test Agents.ne(b) == 15
+
+  b = Space((3, 3), moore=true, periodic=true)
+  @test Agents.nv(b) == 9
+  @test Agents.ne(b) == 36
 end
 
 @testset "3D grid" begin
-  g1 = Agents.grid3D(2,3,2)
-  g2 = Agents.grid3D(2,3,3)
-  g3 = Agents.grid3D(2,3,2, periodic=true)
-  g4 = Agents.grid3D(2,3,3, periodic=true)
+  g1 = Space((2,3,2))
+  g2 = Space((2,3,3))
+  g3 = Space((2,3,2), periodic=true)
+  g4 = Space((2,3,3), periodic=true)
   @test Agents.ne(g1) == 20
   @test Agents.ne(g2) == 33
   @test Agents.ne(g3) == 24
@@ -61,55 +69,43 @@ end
 end
 
 @testset "grid coord/vertex conversions" begin
-  @test coord_to_vertex((2,2,1), (3,4,1)) == 5
-  @test coord_to_vertex((2,2), (3,4)) == 5
-  @test coord_to_vertex(2,2,1, (3,4,1)) == 5
-  @test coord_to_vertex(2,2, (3,4)) == 5
-  @test vertex_to_coord(5, (3,4,1)) == (2,2,1)
-  @test vertex_to_coord(5, (3,4)) == (2,2)
+  @test coord2vertex((2,2,1), (3,4,1)) == 5
+  @test coord2vertex((2,2), (3,4)) == 5
+  @test coord2vertex((2,2,1), (3,4,1)) == 5
+  @test coord2vertex((2,2), (3,4)) == 5
+  @test vertex2coord(5, (3,4,1)) == (2,2,1)
+  @test vertex2coord(5, (3,4)) == (2,2)
 
-  @test coord_to_vertex((2,2,1), (2,3,3)) == 4
-  @test coord_to_vertex((2,2,2), (2,3,3)) == 10
-  @test coord_to_vertex((2,2,3), (2,3,3)) == 16
-  @test coord_to_vertex((1,3,1), (2,3,3)) == 5
-  @test coord_to_vertex((1,3,2), (2,3,3)) == 11
-  @test coord_to_vertex((1,3,3), (2,3,3)) == 17
+  @test coord2vertex((2,2,1), (2,3,3)) == 4
+  @test coord2vertex((2,2,2), (2,3,3)) == 10
+  @test coord2vertex((2,2,3), (2,3,3)) == 16
+  @test coord2vertex(((1,3,1)), (2,3,3)) == 5
+  @test coord2vertex((1,3,2), (2,3,3)) == 11
+  @test coord2vertex((1,3,3), (2,3,3)) == 17
   
-  @test vertex_to_coord(5, (2,3,3)) == (1,3,1)
-  @test vertex_to_coord(7, (2,3,3)) == (1,1,2)
-  @test vertex_to_coord(13, (2,3,3)) == (1,1,3)
-  @test vertex_to_coord(13, (2,3,3)) == (1,1,3)
-  @test vertex_to_coord(15, (2,3,3)) == (1,2,3)
-  @test vertex_to_coord(18, (2,3,3)) == (2,3,3)
-  @test vertex_to_coord(18, (2,3,3)) == (2,3,3)
+  @test vertex2coord(5, (2,3,3)) == (1,3,1)
+  @test vertex2coord(7, (2,3,3)) == (1,1,2)
+  @test vertex2coord(13, (2,3,3)) == (1,1,3)
+  @test vertex2coord(13, (2,3,3)) == (1,1,3)
+  @test vertex2coord(15, (2,3,3)) == (1,2,3)
+  @test vertex2coord(18, (2,3,3)) == (2,3,3)
+  @test vertex2coord(18, (2,3,3)) == (2,3,3)
 end
 
-@testset "grid" begin
-  @test Agents.grid(1,1,1, false, true) == Agents.grid0D()
-  @test Agents.grid(1,1,1, true, true) == Agents.grid0D()
-  @test Agents.grid(6,1,1, true, true) == Agents.grid1D(6, periodic=true)
-  @test Agents.grid(6,1,1, false, true) == Agents.grid1D(6, periodic=false)
-  @test Agents.grid(6,5,1, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
-  @test Agents.grid(6,5, false, true) == Agents.grid2D_Moore(6, 5, periodic=false)
-  @test Agents.grid(6,5,1, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
-  @test Agents.grid(6,5, true, true) == Agents.grid2D_Moore(6, 5, periodic=true)
-  @test Agents.grid(6,5,1, true, false) == Agents.grid2D(6, 5, periodic=true)
-  @test Agents.grid(6,5, true, false) == Agents.grid2D(6, 5, periodic=true)
-  @test Agents.grid(6,5,1, false, false) == Agents.grid2D(6, 5, periodic=false)
-  @test Agents.grid(6,5, false, false) == Agents.grid2D(6, 5, periodic=false)
-  @test Agents.grid((3,2,1), false, true) == Agents.grid(3,2,1, false, true) 
-  @test Agents.grid((3,2), false, true) == Agents.grid(3,2, false, true) 
+mutable struct Agent1 <: AbstractAgent
+  id::Int 
+  pos::Tuple{Int,Int}
 end
 
-@testset "gridsize" begin
-  @test Agents.gridsize((3,4,6)) == 3*4*6
-  @test Agents.gridsize((3,4)) == 12
-  @test Agents.gridsize((3,4)) == Agents.gridsize((3,4,1))
+mutable struct Agent2 <: AbstractAgent
+  id::Int 
+  pos::Tuple{Int,Int}
+  p::Int
 end
 
-@testset "all the rest" begin
+@testset "Agent-Space interactions" begin
 
-  model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)
+  model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)  # forest fire model
 
   agent = model.agents[1]
   move_agent!(agent, (3,4), model)  # node number 63
@@ -122,15 +118,34 @@ end
   @test agent.id in model.space.agent_positions[83]
   
   new_pos = move_agent!(agent, model)
-  @test agent.id in model.space.agent_positions[coord_to_vertex(new_pos, model)]
+  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
   add_agent!(agent, (2,9), model)
   @test agent.pos == (2,9)
-  @test agent.id in model.space.agent_positions[coord_to_vertex((2,9), model)]
-  @test agent.id in model.space.agent_positions[coord_to_vertex(new_pos, model)]
+  @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
+  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
+  model1 = ABM(Agent1, Space((3,3)))
+  add_agent!(1, model1)
+  @test model1.agents[1].pos == (1, 1)
+  add_agent!((2,1), model1)
+  @test model1.agents[2].pos == (2, 1)
+  
+  model2 = ABM(Agent2, Space((3,3)))
+  add_agent!(1, model2, 3)
+  @test model2.agents[1].pos == (1,1)
+  add_agent!((2,1), model2, 2)
+  @test model2.agents[2].pos == (2,1)
+
+  
   @test agent.id in get_node_contents(agent, model)
 
-  ii = model.agents[end].id
-  @test id_to_agent(ii, model) == model.agents[end]
+  ii = model.agents[length(model.agents)]
+  @test id2agent(ii.id, model) == model.agents[ii.id]
+
+  agent = model.agents[1]
+  agent_pos = coord2vertex(agent.pos, model)
+  kill_agent!(agent, model)
+  @test_throws KeyError id2agent(1, model) 
+  @test !in(1, Agents.agent_positions(model)[agent_pos])
 end

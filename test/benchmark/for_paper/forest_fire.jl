@@ -10,7 +10,7 @@ mutable struct Tree{T<:Integer} <: AbstractAgent
   status::T  # 1 is green, 2 is burning, 3 is burned
 end
 
-mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: AbstractModel
+mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: ABM
   space::T
   agents::Y
   scheduler::Function
@@ -27,17 +27,17 @@ function model_initiation(;d, griddims, seed)
   Random.seed!(seed)
   # initialize the model
   # we start the model without creating the agents first
-  agent_positions = [Int64[] for i in 1:gridsize(griddims)]
+  agent_positions = [Int64[] for i in 1:nv(griddims)]
   mygrid = MyGrid(griddims, grid(griddims, false, false), agent_positions)
   forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, d)
 
   # create and add trees to each node with probability d, which determines the density of the forest. If a tree is on one edge of the grid (x=0), set it on fire.
   idcounter = 0
-  for node in 1:gridsize(forest.space.dimensions)
+  for node in 1:nv(forest.space.dimensions)
     pp = rand()
     if pp <= forest.d
       idcounter += 1
-      if vertex_to_coord(node, forest)[1] == 1
+      if vertex2coord(node, forest)[1] == 1
         tree = Tree(idcounter, (1,1), 2)
       else
         tree = Tree(idcounter, (1,1), 1)

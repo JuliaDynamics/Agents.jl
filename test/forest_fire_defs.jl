@@ -1,37 +1,22 @@
-# from the forest fire model in the `examples` directory
-mutable struct Tree <: AbstractAgent
-  id::Integer
-  pos::Tuple{Integer, Integer}
+mutable struct Tree{T<:Integer} <: AbstractAgent
+  id::T
+  pos::Tuple{T, T}
   status::Bool  # true is green and false is burning
 end
 
-mutable struct Forest <: AbstractModel
-  space::AbstractSpace
-  agents::Array{AbstractAgent}
-  scheduler::Function
-  f::Float64  # probability that a tree will ignite
-  d::Float64  # forest density
-  p::Float64  # probability that a tree will grow in an empty space
-end
-
-mutable struct MyGrid <: AbstractSpace
-  dimensions::Tuple{Integer, Integer}
-  space
-  agent_positions::Array  # an array of arrays for each grid node
-end
-
+# we can put the model initiation in a function
 function model_initiation(;f, d, p, griddims, seed)
   Random.seed!(seed)
-  # initialize the model
-  # we start the model without creating the agents first
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)
-  forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
+
+  space = Space(griddims, moore = true)
+
+  properties = Dict(:f => f, :d => d, :p => p)
+  forest = ABM(Tree, space; properties=properties, scheduler=random_activation)
 
   # create and add trees to each node with probability d, which determines the density of the forest
-  for node in 1:gridsize(forest.space.dimensions)
+  for node in 1:nv(forest)
     pp = rand()
-    if pp <= forest.d
+    if pp <= forest.properties[:d]
       tree = Tree(node, (1,1), true)
       add_agent!(tree, node, forest)
     end
@@ -39,35 +24,31 @@ function model_initiation(;f, d, p, griddims, seed)
   return forest
 end
 
-function dummy_agent_step(a, b)  # because we do not need it, but it is required by the step! function
-end
-
-
 function forest_step!(forest)
-  shuffled_nodes = Random.shuffle(1:gridsize(forest.space.dimensions))
-  for node in shuffled_nodes  # randomly go through the cells and 
+  for node in nodes(forest; by = :random)
     if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
       p = rand()
-      if p <= forest.p
-        treeid = forest.agents[end].id +1
+      if p <= forest.properties[:p]
+        bigest_id =  maximum(keys(forest.agents))
+        treeid = bigest_id +1
         tree = Tree(treeid, (1,1), true)
         add_agent!(tree, node, forest)
       end
     else
       treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell
-      tree = id_to_agent(treeid, forest)  # the tree on this cell
+      tree = id2agent(treeid, forest)  # the tree on this cell
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
         f = rand()
-        if f <= forest.f  # the tree ignites on fire
+        if f <= forest.properties[:f]  # the tree ignites on fire
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
           neighbor_cells = node_neighbors(tree, forest)
           for cell in neighbor_cells
             treeid = get_node_contents(cell, forest)
             if length(treeid) != 0  # the cell is not empty
-              treen = id_to_agent(treeid[1], forest)
+              treen = id2agent(treeid[1], forest)
               if treen.status == false
                 tree.status = false
                 break

@@ -1,104 +1,90 @@
+```@meta
+EditURL = "<unknown>/../Agents/examples/forest_fire.jl"
+```
+
 # Forest fire model
 
-The model is defined as a cellular automaton on a grid with Ld cells. L is the side length of the grid and d is its dimension. A cell can be empty, occupied by a tree, or burning. The model of Drossel and Schwabl (1992) is defined by four rules which are executed simultaneously: 
+The forest fire model is defined as a cellular automaton on a grid.
+A cell can be empty, occupied by a tree, or burning.
+The model of [Drossel and Schwabl (1992)](https://en.wikipedia.org/wiki/Forest-fire_model)
+is defined by four rules which are executed simultaneously:
 
 1. A burning cell turns into an empty cell
 1. A tree will burn if at least one neighbor is burning
-1. A tree ignites with probability f even if no neighbor is burning
-1. An empty space fills with a tree with probability p
+1. A tree ignites with probability `f` even if no neighbor is burning
+1. An empty space fills with a tree with probability `p`
 
-The above explanation is from [Wikipedia](https://en.wikipedia.org/wiki/Forest-fire_model). Given that, we can build our model.
+The forest has an innate density `d`, which is the proportion of trees initialized as
+green.
+This model is an example that does _not_ have an `agent_step!` function. It only
+uses a `model_step!`
 
-The complete code of this example is in the `examples/forest_fire.jl` file on the Github repository.
+## Defining the core structures
 
-As usual, we define the agent, model, and space types. 
+We start by defining the agent type
 
-```julia
-using Agents
-using Random
+```@example forest_fire
+using Agents, Random
 
-mutable struct Tree{T<:Integer} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::Bool  # true is green and false is burning
+mutable struct Tree <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    status::Bool  # true is green and false is burning
 end
-
-mutable struct Forest{T<:AbstractSpace, Y<:AbstractVector, Z<:AbstractFloat} <: AbstractModel
-  space::T
-  agents::Y
-  scheduler::Function
-  f::Z  # probability that a tree will ignite
-  d::Z  # forest density
-  p::Z  # probability that a tree will grow in an empty space
-end
-
-mutable struct MyGrid{T<:Integer, Y<:AbstractVector} <: AbstractSpace
-  dimensions::Tuple{T, T}
-  space::SimpleGraph
-  agent_positions::Y  # an array of arrays for each grid node
-end
-
 ```
 
-The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any model, and a `status` field that we introduce for this specific mode. The `status` field will hold `true` for a green tree and `false` for a burning one. All model parameters go to the model type `Forest` in addition to the compulsory `space`, `agents`, and `scheduler` fields. The space type has the three minimum fields.
+The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any agent,
+and a `status` field that we introduce for this specific model.
+The `status` field will hold `true` for a green tree and `false` for a burning one.
+All other model parameters go into the `AgentBasedModel`
 
-We can now instantiate the model. It is a good idea to put the instantiate lines in a function so that it will be easy to restart the model and change its parameters.:
+We then make a setup function that initializes the model
 
-```julia
-function model_initiation(;f, d, p, griddims, seed)
-  Random.seed!(seed)
-  # initialize the model
-  # we start the model without creating the agents first
-  agent_positions = [Array{Integer}(undef, 0) for i in 1:gridsize(griddims)]
-  mygrid = MyGrid(griddims, grid(griddims, false, true), agent_positions)  # create a 2D grid where each node is connected to at most 8 neighbors.
-  forest = Forest(mygrid, Array{Tree}(undef, 0), random_activation, f, d, p)
+```@example forest_fire
+function model_initiation(; f, d, p, griddims, seed = 111)
+    Random.seed!(seed)
+    space = Space(griddims, moore = true)
+    properties = Dict(:f => f, :d => d, :p => p)
+    forest = AgentBasedModel(Tree, space; properties=properties)
 
-  # create and add trees to each node with probability d, which determines the density of the forest
-  for node in 1:gridsize(forest.space.dimensions)
-    pp = rand()
-    if pp <= forest.d
-      tree = Tree(node, (1,1), true)
-      add_agent!(tree, node, forest)
+    # create and add trees to each node with probability d,
+    # which determines the density of the forest
+    for node in nodes(forest)
+        if rand() ≤ forest.properties[:d]
+            add_agent!(node, forest, true)
+        end
     end
-  end
-  return forest
+    return forest
 end
+
+forest = model_initiation(f=0.05, d=0.8, p=0.05, griddims=(20, 20), seed=2)
 ```
 
-Note that to keep the simulation results repeatable, we include `Random.seed!(seed)`, so that the random number generator start from the same position everytime.
+## Defining the step!
+Because of the way the forest fire model is defined, we only need a
+stepping function for the model
 
-We should now make a step function. It maybe easier to randomly go through every node on the grid and decide what happens to the node depending on its state. If its empty, add a tree with probability `p`, if it has a burning tree, remove it from the node, and if it has a green tree with a burning neighbor, burn the tree. Doing this requires a step function for the model, not every single agent. A model step function only accepts a model type as its argument.
-
-```julia
+```@example forest_fire
 function forest_step!(forest)
-  shuffled_nodes = shuffle(1:gridsize(forest.space.dimensions))
-  for node in shuffled_nodes  # randomly go through the cells and 
-    if length(forest.space.agent_positions[node]) == 0  # the cell is empty, maybe a tree grows here?
-      p = rand()
-      if p <= forest.p
-        treeid = forest.agents[end].id +1
-        tree = Tree(treeid, (1,1), true)
-        add_agent!(tree, node, forest)
-      end
+  for node in nodes(forest, by = :random)
+    nc = get_node_contents(node, forest)
+    # the cell is empty, maybe a tree grows here
+    if length(nc) == 0
+        rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
     else
-      treeid = forest.space.agent_positions[node][1]  # id of the tree on this cell
-      tree = id_to_agent(treeid, forest)  # the tree on this cell
+      tree = id2agent(nc[1], forest) # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
-        f = rand()
-        if f <= forest.f  # the tree ignites on fire
+        if rand() ≤ forest.properties[:f]  # the tree ignites spntaneously
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
-          neighbor_cells = node_neighbors(tree, forest)
-          for cell in neighbor_cells
-            treeid = get_node_contents(cell, forest)
-            if length(treeid) != 0  # the cell is not empty
-              treen = id_to_agent(treeid[1], forest)
-              if treen.status == false
-                tree.status = false
-                break
-              end
+          for cell in node_neighbors(node, forest)
+            neighbors = get_node_contents(cell, forest)
+            length(neighbors) == 0 && continue
+            if any(n -> !forest.agents[n].status, neighbors)
+              tree.status = false
+              break
             end
           end
         end
@@ -106,58 +92,44 @@ function forest_step!(forest)
     end
   end
 end
-
 ```
 
-That is all before we run the model. Because an agent step function is necessary for the built-in `step!` method, we use a dummy agent step function (`dummystep`) that accepts two arguments (one for the agent object and one for the model object).
+as we discussed, there is no agent_step! function here, so we will just use `dummystep`.
 
-```julia
-# create the model
-forest = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(20, 20), seed=2)
+## Running the model
 
-# choose which agent properties you want to collect
-agent_properties = [:status]
-
-# what functions to apply to the chosen agent properties before collecting them. `length` will show the number of trees and `count` the number of green trees.
-aggregators = [length, count]
-
-# at which steps to collect the data
-steps_to_collect_data = collect(1:100)
-
-# Run the model for 100 steps
-data = step!(dummystep, forest_step!, forest, 100, agent_properties, aggregators, steps_to_collect_data)
-
-# explore data visually
-visualize_data(data)
+```@example forest_fire
+step!(forest, dummystep, forest_step!)
+forest
 ```
 
-Alternatively, collect agent positions and plot them on a 2D grid
+```@example forest_fire
+step!(forest, dummystep, forest_step!, 10)
+forest
+```
 
-```julia
+Now we can do some data collection as well
+
+```@example forest_fire
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
-agent_properties = [:status, :pos]
-data = step!(dummystep, forest_step!, forest, 10, agent_properties, collect(1:10))
-for i in 1:10
-  visualize_2D_agent_distribution(data, forest, Symbol("pos_$i"), types=Symbol("status_$i"), savename="step_$i", cc=Dict(true=>"green", false=>"red"))
-end
+percentage(x) = count(x)/nv(forest)
+agent_properties = Dict(:status => [percentage])
+
+data = step!(forest, dummystep, forest_step!, 10, agent_properties)
 ```
 
-Step 1
-
-![](fire_step_1.png)
-
-Step 2
-
-![](fire_step_2.png)
-
-Step 3
-
-![](fire_step_3.png)
-
+Or we can run parallel/batch simulations
 ```julia
-# Optionally Run batch simulation
-data = batchrunner(dummystep, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data, 10)
-
-# And write the results to file
-write_to_file(df=data, filename="forest_model.csv")
+agent_properties = [:status, :pos]
+data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when, replicates=10);
 ```
+
+Remember that it is possible to explore a `DataFrame` visually and interactively
+through `DataVoyager`, by doing
+```julia
+using DataVoyager
+Voyager(data)
+```
+
+*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
+

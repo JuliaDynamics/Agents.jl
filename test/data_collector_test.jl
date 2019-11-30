@@ -2,17 +2,77 @@ Random.seed!(223)
 
 @testset "data_collector" begin
   forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
-  agent_properties = [:status, :pos]
-  aggregators = [length, count]
-  steps_to_collect_data = collect(1:10);
-  data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, steps_to_collect_data);
-  @test size(data)[2] == 21
-  colnames = names(data)
-  @test colnames[1] == :id
-  @test colnames[end] == :pos_10
+  agent_properties = Dict(:status => [length, count])
+  when = 1:10
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when);
+  @test size(data) == (11, 3)
+  
+  forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
+  agent_properties = Dict(:status => [length, count])
+  when = 1:10
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when,
+  step0=false);
+  @test size(data) == (when[end], 3)
+
+  forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
+  agent_properties = Dict(:status => [length, count])
+  when = 1:10
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when,
+  step0=false, replicates=3);
+  @test size(data) == (when[end]*3, 4)
 
   agent_properties = [:status]
   forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
-  data = step!(dummy_agent_step, forest_step!, forest, 10, agent_properties, aggregators, steps_to_collect_data);
-  @test size(data) == (10,3)
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when);
+  @test size(data) == (993, 3)
+
+  agent_properties = [:status]
+  forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when,
+  replicates=1);
+  @test size(data) == (993, 4)
+
+  forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
+  agent_properties = [:status]
+  when = 1:10
+  data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when,
+  step0=false);
+  @test size(data) == (666, 3)
+end
+
+@testset "paramscan" begin
+  agent_properties = Dict(:status => [length, count])
+  n=10
+  when = 1:n
+  parameters = Dict(:f=>[0.05,0.07], :d=>[0.6, 0.7, 0.8], :p=>0.01,
+  :griddims=>(20, 20), :seed=>2)
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!)
+  @test size(data) == ((n+1)*6, 5)  # 6 is the number of combinations of changing params
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!, include_constants=true)
+  @test size(data) == ((n+1)*6, 8)  # 6 is the number of combinations of changing params, 8 is 5+3, where 3 is the number of constant parameters
+
+  agent_properties = [:status]
+  data = paramscan(parameters, model_initiation;
+      properties=agent_properties, n = n, agent_step! = dummystep,
+      model_step! = forest_step!)
+  @test unique(data.step) == collect(0:10)
+  @test unique(data.f) == [0.07,0.05]
+  @test unique(data.d) == [0.8, 0.7, 0.6]
+end
+
+@testset "paramscan with replicates" begin
+  agent_properties = Dict(:status => [length, count])
+  n=10
+  when = 1:n
+  replicates=3
+  parameters = Dict(:f=>[0.05,0.07], :d=>[0.6, 0.7, 0.8], :p=>0.01,
+  :griddims=>(20, 20), :seed=>2)
+  data = paramscan(parameters, model_initiation;
+       properties=agent_properties, n = n, agent_step! = dummystep,
+       model_step! = forest_step!, replicates=replicates)
+  @test size(data) == (((n+1)*6)*replicates, 6)  # the first 6 is the number of combinations of changing params
 end
