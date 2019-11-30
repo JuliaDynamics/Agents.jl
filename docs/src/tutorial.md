@@ -232,19 +232,21 @@ In the `Examples` pages there are more realistic examples with meaningful data p
 
 ### Visualizing the data
 
-We can use the `visualize_2D_agent_distribution` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
+We can use the `plot2D` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
 
 ```julia
-# Use the visualize_2D_agent_distribution function from AgentPlots.jl to plot distribution of agents at every step.
+# Use the plot2D function from AgentPlots.jl to plot distribution of agents at every step.
 using AgentPlots
 
 for i in 1:2
-  visualize_2D_agent_distribution(data, model, Symbol("pos_$i"),
-  types=Symbol("group_$i"), savename="step_$i", cc=Dict(1=>"blue", 2=>"red"))
+  plot2D(data, :group, savename="step_$i", nodesize=10)
 end
 ```
 
-The first and second arguments of the `visualize_2D_agent_distribution` are the `data` and the `model` objects. The third argument is the column name in `data` that has the position of each agent. The fourth argument is the column name in `data` that stores agents' groups. `savename` is the name of the plot file. `cc` is a dictionary that defines the colors of each agent group.
+The first argument of the `plot2D` is the output data. The second argument is the
+column name in `data` that has the categories of each agent, which is `:group` in
+this case. `savename` is the name of the plot file and nodesize determines the size of cells
+in the plot.
 
 Custom plots can be easily made with [`DataVoyager`](https://github.com/queryverse/DataVoyager.jl) because the outputs of simulations are always as a `DataFrame` object.
 
