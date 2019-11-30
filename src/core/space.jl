@@ -38,6 +38,7 @@ end
 Space(m::ABM) = m.space
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::AbstractSpace) = m.agent_positions
+Base.size(s::GridSpace) = s.dimensions
 
 """
     isempty(node::Int, model::ABM)
@@ -395,7 +396,12 @@ end
 """
     node_neighbors(node_number::Integer, model::ABM, radius::Integer)
 
-Returns a list of neighboring nodes to the node `node_number` within the `radius`. `radius` defines higher degree neighbors. For example, neighbors with a radius=2 include first and second degree neighbors, that is, neighbors and neighbors of neighbors.
+Returns a list of neighboring nodes to the node `node_number` within the `radius`.
+`radius` defines higher degree neighbors. For example, neighbors with a radius=2
+include first and second degree neighbors, that is, neighbors and neighbors
+of neighbors.
+
+Notice that `node_neighbors` *excludes* the node that is given.
 """
 function node_neighbors(node_number::Integer, model::ABM, radius::Integer)
   neighbor_nodes = Set(node_neighbors(node_number, model))

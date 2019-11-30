@@ -147,13 +147,41 @@ end
 
 """
     add_agent!(model::ABM, properties...)
-Similar with `add_agent!(node, model, properties...)` but this
-version is used for models without a spatial structure.
+Similar with `add_agent!(node, model, properties...)`, but adds the
+created agent to a random node.
+This function also works for models without a spatial structure.
 """
-function add_agent!(model::ABM, properties...)
+function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
   @assert model.space == nothing
-  A = agenttype(model)
   id = biggest_id(model) + 1
   model.agents[id] = A(id, properties...)
   return model.agents[id]
+end
+
+function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
+  id = biggest_id(model) + 1
+  n = rand(1:nv(model))
+  cnode = correct_pos_type(n, model)
+  model.agents[id] = A(id, cnode, properties...)
+  return model.agents[id]
+end
+
+
+"""
+    add_agent_single!(model::ABM, properties...)
+Same as `add_agent!(model, properties...)` but ensures that it adds an agent
+into a node with no other agents (does nothing if no such node exists).
+"""
+function add_agent_single!(model::ABM, properties...)
+  msa = model.space.agent_positions
+  id = biggest_id(model) + 1
+  A = agenttype(model)
+  empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
+  if length(empty_cells) > 0
+    random_node = rand(empty_cells)
+    cnode = correct_pos_type(node, model)
+    agent = A(id, cnode, properties...)
+    add_agent!(agent, random_node, model)
+    return agent
+  end
 end
