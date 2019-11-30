@@ -70,16 +70,11 @@ step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::A
 
 function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
-  single_df = true
-  if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a separate dataframe for each simulation replicate
-    single_df = false
-  end
-
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df, step0=step0)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates, step0)
+      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
     end
     return dataall
   end
