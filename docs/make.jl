@@ -26,9 +26,9 @@ pages = [
 	"Tutorial" => "tutorial.md",
 	"API" => "api.md",
 	"Examples" => [
-	#   "Boltzmann wealth distribution" => "boltzmann_example01.md",
+	  "Wealth distribution" => "wealth_distribution.md",
 	  "Forest fire" => "forest_fire.md",
-	#   "Cellular Automata" => "CA.md"
+	#   "Game of life" => "game.md"
 		],
 	# "Comparison against Mesa" => "mesa.md"
     ],
