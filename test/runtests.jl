@@ -1,4 +1,4 @@
-using Test, Agents
+using Test, Agents, Random
 
 include("api_tests.jl")
 include("forest_fire_defs.jl")

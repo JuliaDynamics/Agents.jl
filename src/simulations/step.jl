@@ -7,24 +7,31 @@ Update agents `n` steps. Agents will be updated as specified by the `model.sched
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
-    step!(model, agent_step! [, model_step!], n [, properties]; kwargs...)
+    step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
-This version of `step!` also performs data collection/processing while
-running the model.
+This version of `step!`, with the `properties` argument and extra keywords,
+performs data collection/processing while running the model.
 
 `properties` dictates which agent fields should be collected as data.
-It can be either an array, in which case, the specified fields of all agents will be saved.
+It can be either an array, in which case, the specified fields of all agents will be
+saved.
 Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions.
 
-If `properties` is an array, each row of the output `DataFrame` corresponds to a single agent and each column is a requested field value.
+If `properties` is an array, each row of the output `DataFrame` corresponds to a
+single agent and each column is a requested field value.
 
-If `properties` is a dictionary, each row of the output `DataFrame` corresponds to all agents and each column is the a function applied to a field. The functions in a dictionary `properties` are applied to the collected fields, that is, the keys of `properties`.
+If `properties` is a dictionary, each row of the output `DataFrame` corresponds to
+all agents and each column is the a function applied to a field. The functions in a
+dictionary `properties` are applied to the collected fields, that is, the keys of
+`properties`.
 For example, if your agents have a field called `wealth`,
 and you want to calculate mean and median population wealth at steps defined
 by `when`, your `properties` dict will be `Dict(:wealth => [mean, median])`.
 
 If an agent field returns an array instead of a single number, the mean of that
 array will be calculated before the functions are applied to them.
+
+Collected data always also include the initial status of the model at step 0.
 
 To apply a function to the list of agents, use `:agent` as a dictionary key.
 To apply a function to the model object, use `:model` as a dictionary key.
@@ -33,6 +40,7 @@ To apply a function to the model object, use `:model` as a dictionary key.
 * `when=1:n` : at which steps `n` to perform the data collection and processing.
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
+* `step0`: Whether to collect data at step zero, before running the model. Defaults to true.
 """
 function step! end
 
@@ -58,37 +66,20 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel)
+step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false)
-
-  single_df = true
-  if typeof(properties) <: AbstractArray # if the user is collecting raw data, it is best to save a separate dataframe for each simulation replicate
-    single_df = false
-  end
+function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, single_df=single_df)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, single_df, replicates)
+      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
     end
     return dataall
   end
 
-  df = _step(model, agent_step!, model_step!, properties, when, n)
-
-  if !in(1, when)
-    if typeof(properties) <: Dict
-    # if 1 is not in `when`, remove the first columns. TODO: remove ids that were only present in the first step
-      first_col = length(properties)+2 # 1 for id and 1 for passing these agent properties
-      end_col = size(df, 2)
-      df = df[:, vcat([1], collect(first_col:end_col))]
-    else
-      # if 1 is not in `when`, remove the first row.
-      df = df[2:end, :]
-    end
-  end
+  df = _step(model, agent_step!, model_step!, properties, when, n, step0)
 
   return df
 end
