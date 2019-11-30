@@ -32,9 +32,7 @@ function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
     break
   end
   for (fn, aggs) in field_aggregator
-    if fn == :pos && typeof(model.agents[rand_agent_id].pos) <: Tuple
-      temparray = [coord2vertex(model.agents[i], model) for i in agent_ids]
-    elseif fn == :agent
+    if fn == :agent
       temparray = values(model.agents)
     elseif fn == :model
       temparray = model
@@ -70,9 +68,7 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
   end
   agentslen = nagents(model)
   for fn in properties
-    if fn == :pos  && typeof(model.agents[rand_agent_id].pos) <: Tuple
-      temparray = [coord2vertex(model.agents[i], model) for i in agent_ids]
-    elseif typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
+    if typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in agent_ids]
     else
       temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
