@@ -55,6 +55,7 @@ M = 2000
 agent_properties = [:wealth]
 model = wealth_model(numagents=M)
 data = step!(model, agent_step!, N, agent_properties)
+data[end-20:end, :]
 
 # What we mostly care about is the distribution of wealth,
 # which we can obtain for example by doing the following query:
@@ -114,6 +115,7 @@ init_wealth = 4
 model = wealth_model_2D(;wealth = init_wealth)
 agent_properties = [:wealth]
 data = step!(model, agent_step!, 10, agent_properties, when = [1, 5, 10], step0=false)
+data[end-20:end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
