@@ -2,11 +2,10 @@
 
 ## Model and space information
 ```@docs
-nagents
-has_empty_nodes
-find_empty_nodes
 nv(::ABM)
 ne(::ABM)
+has_empty_nodes
+find_empty_nodes
 ```
 
 ## Content from a node
@@ -17,9 +16,11 @@ get_node_contents
 isempty(::Integer, ::ABM)
 ```
 
-## Agent information
+## Agent information and retrieval
 ```@docs
+nagents
 id2agent
+random_agent
 ```
 
 ## Model-Agent interaction
@@ -55,5 +56,4 @@ vertex2coord
 
 ```@docs
 parallel_replicates
-combine_columns!
 ```
