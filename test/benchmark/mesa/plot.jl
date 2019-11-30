@@ -5,34 +5,28 @@ using DataFrames
 
 # Agents.jl benchmark results
 jlresults = [
-0.124292399,
-0.261890796,
-0.382272875,
-0.526156528,
-0.643057459,
-0.795138978,
-1.012378349,
-1.180964479,
-1.248486157,
-1.369958317]
+0.0623855,
+0.1409112,
+0.2434189,
+0.3797918]#,
+# 0.8206902,
+# 0.7178797,
+# 0.9326405,
+# 1.364939,
+# 1.5469985,
+# 2.051536]
 
 # Mesa benchmark results
 pyresults = [
-0.9389688929659314,
-1.9137998179649003,
-2.9129630780080333,
-4.070444974990096,
-5.039975131978281,
-6.156719513994176,
-7.4113737950101495,
-8.584513186011463,
-10.217067367048003,
-11.377028140006587
+0.8042,
+1.9173,
+3.1619,
+4.7495
 ]
 
-size_range = (100:100:1000) .* 100
+size_range = ((100:100:1000) .* 100)[1:4]
 
-dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i in 1:10], ["Mesa" for i in 1:10]), nv=vcat(size_range, size_range));
+dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i in 1:4], ["Mesa" for i in 1:4]), nv=vcat(size_range, size_range));
 
 @vlplot(data=dd,
   mark={:line,
