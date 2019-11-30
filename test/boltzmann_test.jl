@@ -32,5 +32,5 @@ end
 
   nreps = 3
   data = step!(model, Boltzmann_step!, n, agent_properties, when=1:n, replicates=nreps)
-  @test length(data) == nreps
+  @test size(data) == ((numagents*(n+1))*nreps, 4)
 end
