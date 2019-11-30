@@ -1,6 +1,6 @@
 # # Wealth distribution model
 
-# This model is a simple agent-based economy that is taken modelled according
+# This model is a simple agent-based economy that is modelled according
 # to the work of [Dragulescu *et al.*](https://arxiv.org/abs/cond-mat/0211175).
 # This work introduces statistical mechanics concepts to study wealth distributions.
 # For this reason what we show here is also referred to as "Boltzmann wealth
@@ -29,7 +29,7 @@ end
 # Because it is pre-determined how many agents the model we have, we can
 # even make it a parameter of the model for easy access.
 
-function wealth_model(numagents = 100)
+function wealth_model(;numagents = 100)
     p = (n = numagents,)
     model = ABM(WealthyAgent, scheduler=random_activation, properties = p)
 
@@ -39,10 +39,10 @@ function wealth_model(numagents = 100)
     return model
 end
 
-model = wealth_model(100)
+model = wealth_model()
 
 # The next step is to define the agent step function
-function agent_step!(agent::AbstractAgent, model::ABM)
+function agent_step!(agent, model)
     agent.wealth == 0 && return # do nothing
     ragent = random_agent(model)
     agent.wealth -= 1
@@ -50,26 +50,20 @@ function agent_step!(agent::AbstractAgent, model::ABM)
 end
 
 # We use `random_agent` as a convenient way to just grab a random agent.
-# (this may return the same agent as `agent`, but we disregard it as noise)
+# (this may return the same agent as `agent`, but we don't care in the long run)
 
 # ## Running the space-less model
 # Let's do some data collection, running a large model for a lot of time
-N = 50
+N = 5
 M = 5000
-when = 1:(N÷5):N
 agent_properties = [:wealth]
 model = wealth_model(M)
-data = step!(model, agent_step!, N, agent_properties, when=when)
+data = step!(model, agent_step!, N, agent_properties)
 
-# What we mostly care about is the distribution of wealth.
-# Let's see how this changes at different times:
+# What we mostly care about is the distribution of wealth,
+# which we can obtain for example by doing the following query:
+using DataFrames # to access the `filter` operation
 
-using PyPlot
-figure()
-for i in 2:size(data)[2]
-    wealths = data[:, i]
-    plt.hist(wealths, bins=0:(maximum(wealths)+1), alpha = 0.5,
-    label = "n=")
-end
-legend()
-gcf()
+wealths = filter(x -> x.step == N, data)[!, :wealth]
+
+# and then we can make a histogram of the result.
