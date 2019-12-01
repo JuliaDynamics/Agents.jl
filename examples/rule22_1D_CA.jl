@@ -1,3 +1,4 @@
+using Agents
 using Agents.CA1D
 using AgentsPlots
 
