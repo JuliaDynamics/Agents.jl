@@ -171,23 +171,26 @@ contains many parameters and thus is scanned. All other entries of
 `initialize` is a function that creates an ABM. It should accept keyword arguments.
 
 ### Keywords
-All the following keywords `agent_step!, properties, n, when = 1:n,
-model_step! = dummystep`, `step0::Bool=true`
-are propagated into [`step!`](@ref).
+All the following keywords are propagated into [`step!`](@ref):
+`agent_step!, properties, n, when = 1:n, model_step! = dummystep`,
+`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
+
+The following keywords modify the `paramscan` function:
 
 `include_constants::Bool=false` determines whether constant parameters should be
 included in the output `DataFrame`.
 
-`replicates::Int=0` specifies the number of replicates per parameter setting.
-
-`step0::Bool=true` whether to collect data at step 0, before updating the model.
+`progress::Bool = true` whether to show the progress of simulations.
 """
 function paramscan(parameters::Dict, initialize;
   agent_step!, properties, n,
-  when = 1:n,  model_step! = dummystep,
-  include_constants::Bool=false,
-  replicates::Int=0,
-  step0::Bool=true
+  when = 1:n,
+  model_step! = dummystep,
+  include_constants::Bool = false,
+  replicates::Int = 0,
+  step0::Bool = true,
+  progress::Bool = true,
+  parallel::Bool = false
   )
 
   params = dict_list(parameters)
@@ -203,15 +206,17 @@ function paramscan(parameters::Dict, initialize;
   counter = 0
   for d in combs
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
+    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0, parallel=parallel)
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
-    # show progress
-    counter += 1
-    print("\u1b[1G")
-    percent = round(counter*100/ncombs, digits=2)
-    print("Progress: $percent%")
-    print("\u1b[K") 
+    if progress
+      # show progress
+      counter += 1
+      print("\u1b[1G")
+      percent = round(counter*100/ncombs, digits=2)
+      print("Progress: $percent%")
+      print("\u1b[K")
+    end
   end
   println()
   return alldata
