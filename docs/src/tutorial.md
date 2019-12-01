@@ -235,8 +235,8 @@ In the `Examples` pages there are more realistic examples with meaningful data p
 We can use the `plot2D` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
 
 ```julia
-# Use the plot2D function from AgentPlots.jl to plot distribution of agents at every step.
-using AgentPlots
+# Use the plot2D function from AgentsPlots.jl to plot distribution of agents at every step.
+using AgentsPlots
 
 for i in 1:2
   plot2D(data, :group, savename="step_$i", nodesize=10)
