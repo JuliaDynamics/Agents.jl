@@ -1,4 +1,3 @@
-using AgentsPlots
 
 @testset "Cellular automata 1D" begin
   using Agents.CA1D
@@ -10,6 +9,9 @@ using AgentsPlots
   runs = 10
   data = CA1D.ca_run(model, runs);
   @test size(data) == (ncols * (runs + 1), 4)
+end
+
+function dummyplot(data; nodesize=2.0, anim=2)
 end
 
 @testset "Cellular automata 2D" begin
@@ -24,7 +26,7 @@ end
   end
 
   runs = 2
-  anim = CA2D.ca_run(model, runs, plot_CA2Dgif);
+  anim = CA2D.ca_run(model, runs, dummyplot);
 
-  @test typeof(anim) <: AgentsPlots.Animation
+  @test anim == nothing
 end
