@@ -9,7 +9,7 @@ using AgentsPlots
   model.agents[51].status="1"
   runs = 10
   data = CA1D.ca_run(model, runs);
-  @test typeof(plot_CA1D(data, nodesize=2)) <: AgentsPlots.AbstractPlot
+  @test size(data) == (ncols * (runs + 1), 4)
 end
 
 @testset "Cellular automata 2D" begin
