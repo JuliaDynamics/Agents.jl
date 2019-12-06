@@ -23,4 +23,4 @@ runs = 100
 data = CA1D.ca_run(model, runs);
 
 # ## 4. Visualize the data
-plot_CA1D(data, savename="rule22", nodesize=2)
+p = plot_CA1D(data, nodesize=2)

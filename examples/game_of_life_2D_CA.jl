@@ -2,8 +2,8 @@
 # Agents.jl provides a module (CA2D) to create and plot 2D cellular automata.
 
 using Agents
-using Agents.CA2D
 using AgentsPlots
+using Agents.CA2D
 
 # ## 1. Define the rule
 # Rules of Conway's game of life: DSR (Death, Survival, Reproduction). 
@@ -23,10 +23,11 @@ for i in 1:nv(model)
   end
 end
 
-# ## 3. Run the model and collect data
-runs = 10
-data = CA2D.ca_run(model, runs);
+# ## 3. Run the model and collect data and create an `Animation` object. `plot_CA2Dgif` is a function from `AgentsPlots` that creates the animation.
 
-# ## 4. Visualize the data
-# This creates one figure for each step of the simulation
-plot_CA2D(data, savename="gameOfLife", nodesize=2)
+runs = 10
+anim = CA2D.ca_run(model, runs, plot_CA2Dgif);
+
+# We can now save the animation to a gif.
+
+AgentsPlots.gif(anim, "game_of_life.gif")

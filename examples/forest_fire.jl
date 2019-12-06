@@ -94,17 +94,34 @@ forest
 step!(forest, dummystep, forest_step!, 10)
 forest
 
-# Now we can do some data collection as well
+# Now we can do some data collection as well using an aggregate function `percentage`:
+
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
 percentage(x) = count(x)/nv(forest)
 agent_properties = Dict(:status => [percentage])
 
 data = step!(forest, dummystep, forest_step!, 10, agent_properties)
 
+# Or we can just collect raw data without aggregation:
+
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
+agent_properties = [:status, :pos]
+
+data = step!(forest, dummystep, forest_step!, 10, agent_properties);
+
+# And plot the green and burning trees:
+
+using AgentsPlots
+# At time 1
+p = plot2D(data, :status, t=1, cc=Dict(true=>"green", false=>"red"), nodesize=8)
+# At time 2
+p = plot2D(data, :status, t=2, cc=Dict(true=>"green", false=>"red"), nodesize=8)
+
+
 # Or we can run parallel/batch simulations
 # ```julia
 # agent_properties = [:status, :pos]
-# data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when, replicates=10);
+# data = step!(forest, dummystep, forest_step!, 10, agent_properties, replicates=10)
 # ```
 
 # Remember that it is possible to explore a `DataFrame` visually and interactively

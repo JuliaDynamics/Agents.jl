@@ -4,12 +4,13 @@ Pkg.activate(@__DIR__)
 using Documenter, Agents, DataFrames, Random, Statistics
 using Literate
 using UnicodePlots
-# using AgentsPlots
+using AgentsPlots
 
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src")
-for file in ("forest_fire.jl", "wealth_distribution.jl")
+for file in ("forest_fire.jl", "wealth_distribution.jl",
+						"rule22_1D_CA.jl", "game_of_life_2D_CA.jl")
 	Literate.markdown(joinpath(indir, file), outdir)
 end
 
@@ -27,8 +28,9 @@ pages = [
 	"API" => "api.md",
 	"Examples" => [
 	  "Wealth distribution" => "wealth_distribution.md",
-	  "Forest fire" => "forest_fire.md",
-	#   "Game of life" => "game.md"
+		"Forest fire" => "forest_fire.md",
+		"Rule 22" => "rule22_1D_CA.md",
+	  "Game of life" => "game_of_life_2D_CA.md",
 		],
 	# "Comparison against Mesa" => "mesa.md"
     ],

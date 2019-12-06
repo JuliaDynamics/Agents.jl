@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/../Agents/examples/wealth_distribution.jl"
+EditURL = "<unknown>/../examples/wealth_distribution.jl"
 ```
 
 # Wealth distribution model
@@ -69,6 +69,7 @@ M = 2000
 agent_properties = [:wealth]
 model = wealth_model(numagents=M)
 data = step!(model, agent_step!, N, agent_properties)
+data[end-20:end, :]
 ```
 
 What we mostly care about is the distribution of wealth,
@@ -139,6 +140,7 @@ init_wealth = 4
 model = wealth_model_2D(;wealth = init_wealth)
 agent_properties = [:wealth]
 data = step!(model, agent_step!, 10, agent_properties, when = [1, 5, 10], step0=false)
+data[end-20:end, :]
 ```
 
 Okay, now we want to get the 2D spatial wealth distribution of the model.
@@ -165,6 +167,8 @@ W10 = wealth_distr(data, model2D, 10)
 ```
 
 What we see is that wealth gets more and more localized.
+
+---
 
 *This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

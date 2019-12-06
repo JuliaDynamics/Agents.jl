@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/../Agents/examples/forest_fire.jl"
+EditURL = "<unknown>/../examples/forest_fire.jl"
 ```
 
 # Forest fire model
@@ -108,7 +108,7 @@ step!(forest, dummystep, forest_step!, 10)
 forest
 ```
 
-Now we can do some data collection as well
+Now we can do some data collection as well using an aggregate function `percentage`:
 
 ```@example forest_fire
 forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
@@ -118,10 +118,38 @@ agent_properties = Dict(:status => [percentage])
 data = step!(forest, dummystep, forest_step!, 10, agent_properties)
 ```
 
+Or we can just collect raw data without aggregation:
+
+```@example forest_fire
+forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
+agent_properties = [:status, :pos]
+
+data = step!(forest, dummystep, forest_step!, 10, agent_properties);
+nothing #hide
+```
+
+And plot the green and burning trees:
+
+```@example forest_fire
+using AgentsPlots
+```
+
+At time 1
+
+```@example forest_fire
+p = plot2D(data, :status, t=1, cc=Dict(true=>"green", false=>"red"), nodesize=8)
+```
+
+At time 2
+
+```@example forest_fire
+p = plot2D(data, :status, t=2, cc=Dict(true=>"green", false=>"red"), nodesize=8)
+```
+
 Or we can run parallel/batch simulations
 ```julia
 agent_properties = [:status, :pos]
-data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when, replicates=10);
+data = step!(forest, dummystep, forest_step!, 10, agent_properties, replicates=10)
 ```
 
 Remember that it is possible to explore a `DataFrame` visually and interactively
@@ -130,6 +158,8 @@ through `DataVoyager`, by doing
 using DataVoyager
 Voyager(data)
 ```
+
+---
 
 *This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 
