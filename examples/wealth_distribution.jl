@@ -113,7 +113,7 @@ using Random
 Random.seed!(5)
 init_wealth = 4
 model = wealth_model_2D(;wealth = init_wealth)
-agent_properties = [:wealth]
+agent_properties = [:wealth, :pos]
 data = step!(model, agent_step!, 10, agent_properties, when = [1, 5, 10], step0=false)
 data[end-20:end, :]
 
@@ -122,19 +122,26 @@ data[end-20:end, :]
 function wealth_distr(data, model, n)
     W = zeros(Int, size(model.space))
     for row in eachrow(filter(r -> r.step == n, data)) # iterate over rows at a specific step
-        W[id2agent(row.id, model).pos...] += row.wealth
+        W[row.pos...] = row.wealth
     end
     return W
 end
 
 W1 = wealth_distr(data, model2D, 1)
-
-#
-
 W5 = wealth_distr(data, model2D, 5)
+W10 = wealth_distr(data, model2D, 10)
+
+# 
+
+using Plots
+heatmap(W1)
 
 #
 
-W10 = wealth_distr(data, model2D, 10)
+heatmap(W5)
+
+#
+
+heatmap(W10)
 
 # What we see is that wealth gets more and more localized.
