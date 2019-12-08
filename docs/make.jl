@@ -4,6 +4,7 @@ Pkg.activate(@__DIR__)
 using Documenter, Agents, DataFrames, Random, Statistics
 using Literate
 using UnicodePlots
+using Plots
 using AgentsPlots
 
 # %% Literate convertion
