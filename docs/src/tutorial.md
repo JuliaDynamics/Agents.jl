@@ -235,18 +235,17 @@ In the `Examples` pages there are more realistic examples with meaningful data p
 We can use the `plot2D` function to plot the distribution of agents on a 2D grid at every generation (Fig. 1):
 
 ```julia
-# Use the plot2D function from AgentsPlots.jl to plot distribution of agents at every step.
+# Use the plot2D function from AgentsPlots.jl to plot distribution of agents at any step.
 using AgentsPlots
 
 for i in 1:2
-  plot2D(data, :group, savename="step_$i", nodesize=10)
+  p = plot2D(data, :group, t=i, nodesize=10)
 end
 ```
 
 The first argument of the `plot2D` is the output data. The second argument is the
 column name in `data` that has the categories of each agent, which is `:group` in
-this case. `savename` is the name of the plot file and nodesize determines the size of cells
-in the plot.
+this case. `nodesize` determines the size of cells in the plot.
 
 Custom plots can be easily made with [`DataVoyager`](https://github.com/queryverse/DataVoyager.jl) because the outputs of simulations are always as a `DataFrame` object.
 
@@ -316,7 +315,7 @@ We can combine all replicates with an aggregating function, such as mean, using
 the `aggregate` function from the `DataFrames` package:
 
 ```@example schelling
-using DataFrames: Not
+using DataFrames: Not, select!
 using Statistics: mean
 data_mean = Agents.aggregate(data, [:step, :min_to_be_happy, :numagents],  mean);
 select!(data_mean, Not(:replicate_mean))

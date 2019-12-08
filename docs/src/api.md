@@ -57,3 +57,13 @@ vertex2coord
 ```@docs
 parallel_replicates
 ```
+
+## Plotting
+Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need to install both `AgentsPlots`, as well as a plotting backend (we use GR) to use the following functions.
+
+```@docs
+plot2D
+plot_CA1D
+plot_CA2D
+plot_CA2Dgif
+```
