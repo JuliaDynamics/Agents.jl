@@ -6,6 +6,7 @@ using Literate
 using UnicodePlots
 using Plots
 using AgentsPlots
+ get(ENV, "CI", nothing) == "true" && (ENV["GKSwstype"] = "100")
 
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
