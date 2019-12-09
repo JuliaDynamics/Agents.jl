@@ -1,4 +1,4 @@
-# # Two-dimensional cellular automata 
+# # Two-dimensional cellular automata
 # Agents.jl provides a module (CA2D) to create and plot 2D cellular automata.
 
 using Agents
@@ -6,8 +6,8 @@ using AgentsPlots
 using Agents.CA2D
 
 # ## 1. Define the rule
-# Rules of Conway's game of life: DSR (Death, Survival, Reproduction). 
-# Cells die if the number of their living neighbors are <D, 
+# Rules of Conway's game of life: DSR (Death, Survival, Reproduction).
+# Cells die if the number of their living neighbors are <D,
 # survive if the number of their living neighbors are <=S,
 # come to life if their living neighbors are as many as R.
 rules = (2,3,3)
@@ -23,7 +23,10 @@ for i in 1:nv(model)
   end
 end
 
-# ## 3. Run the model and collect data and create an `Animation` object. `plot_CA2Dgif` is a function from `AgentsPlots` that creates the animation.
+# ## 3. Animate the model
+
+# Animations of 2D Cellular Automata are done through the following syntax:
+# (`plot_CA2Dgif` is a function from `AgentsPlots` that creates the animation)
 
 runs = 10
 anim = CA2D.ca_run(model, runs, plot_CA2Dgif);

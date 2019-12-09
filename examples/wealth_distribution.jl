@@ -131,17 +131,17 @@ W1 = wealth_distr(data, model2D, 1)
 W5 = wealth_distr(data, model2D, 5)
 W10 = wealth_distr(data, model2D, 10)
 
-# 
+#
 
 using Plots
-heatmap(W1)
+Plots.heatmap(W1)
 
 #
 
-heatmap(W5)
+Plots.heatmap(W5)
 
 #
 
-heatmap(W10)
+Plots.heatmap(W10)
 
 # What we see is that wealth gets more and more localized.
