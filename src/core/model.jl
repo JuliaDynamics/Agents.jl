@@ -113,10 +113,16 @@ end
 """
     partial_activation(p)
 At each step, activate only `p` percentage of randomly chosen agents.
+
+If you want the activation probability `p` to be a parameter of your model, simply
+define `model.properties` so that it is possible to access
+`model.properties[:activation_probability]`. This number will be used instead of `p`.
 """
 function partial_activation(p::Real)
-    function partial(model)
-        ids = collect(keys(model))
-        return randsubseq(1:agentnum, p)
+    function partial(model::ABM{A, S, F, P}) where {A, S, F, P}
+        ids = collect(keys(model.agents))
+        ap = P == nothing ? p : get(model.properties, :activation_probability, p)
+        return randsubseq(1:agentnum, ap)
     end
+    return partial
 end
