@@ -1,5 +1,5 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
-random_activation, as_added, partial_activation, random_agent
+random_activation, by_id, partial_activation, random_agent
 
 abstract type AbstractSpace end
 
@@ -59,7 +59,7 @@ This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
-        scheduler::F = as_added, properties::P = nothing
+        scheduler::F = by_id, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
@@ -92,13 +92,15 @@ Return the number of agents in the `model`.
 nagents(model::ABM) = length(model.agents)
 
 """
-    as_added(model::ABM)
-Activate agents at each step in the same order as they have been added to the model.
+    by_id(model::ABM)
+Activate agents at each step according to their id.
 """
-function as_added(model::ABM)
+function by_id(model::ABM)
   agent_ids = sort(collect(keys(model.agents)))
   return agent_ids
 end
+
+@deprecate as_added by_id
 
 """
     random_activation(model::ABM)

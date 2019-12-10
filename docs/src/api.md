@@ -40,7 +40,7 @@ nodes
 
 ## Schedulers
 ```@docs
-as_added
+by_id
 random_activation
 partial_activation
 ```
