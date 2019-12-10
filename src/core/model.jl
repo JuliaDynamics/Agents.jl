@@ -1,5 +1,6 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
-random_activation, by_id, partial_activation, random_agent
+random_activation, by_id, fastest, partial_activation, random_agent,
+property_activation
 
 abstract type AbstractSpace end
 
@@ -91,6 +92,18 @@ Return the number of agents in the `model`.
 """
 nagents(model::ABM) = length(model.agents)
 
+
+####################################
+# Schedulers
+####################################
+"""
+    fastest
+Activate all agents once per step in the order dictated by the agent's container, which
+is arbitrary (the keys sequence of a dictionary).
+This is the fastest possible way to activate all agents once per step.
+"""
+fastest(model) = keys(model)
+
 """
     by_id
 Activate agents at each step according to their id.
@@ -128,9 +141,21 @@ function partial_activation(p::Real)
 end
 
 """
-    fastest
-Activate all agents once per step in the order dictated by the agent's container, which
-is arbitrary (the keys sequence of a dictionary).
-This is the fastest possible way to activate all agents once per step.
+    property_activation(property)
+At each step, activate the agents in an order dictated by their `property`,
+with agents with greater `property` acting first. `property` is a `Symbol`, which
+just dictates which field the agents to compare.
+
+If you want the activation `property` to be a parameter of your model, simply
+define `model.properties` so that it is possible to access
+`model.properties[:activation_property]`, which will be used instead of `property`.
 """
-fastest(model) = keys(model)
+function property_activation(p::Symbol)
+    function by_property(model::ABM{A, S, F, P}) where {A, S, F, P}
+        property = P == Nothing ? p : get(model.properties, :activation_property, p)
+        ids = collect(keys(model.agents))
+        properties = [getproperty(model.agents[id], property) for id in ids]
+        s = sortperm(properties)
+        return ids[s]
+    end
+end

@@ -56,3 +56,19 @@ for i in 1:N; add_agent!(model); end
 a = model.scheduler(model)
 @test length(a) < N
 @test a[1] == 74 # reproducibility test
+
+# by property
+mutable struct Agent2 <: AbstractAgent
+  id::Int
+  w::Float64
+end
+model = ABM(Agent2; scheduler = property_activation(:w))
+for i in 1:N; add_agent!(model, rand()/rand()); end
+
+Random.seed!(12)
+a = model.scheduler(model)
+
+ids = collect(keys(model.agents))
+properties = [model.agents[id].w for id in ids]
+
+@test ids[sortperm(properties)] == a
