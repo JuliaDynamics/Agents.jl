@@ -58,11 +58,11 @@ a = model.scheduler(model)
 @test a[1] == 74 # reproducibility test
 
 # by property
-mutable struct Agent2 <: AbstractAgent
+mutable struct Agentw <: AbstractAgent
   id::Int
   w::Float64
 end
-model = ABM(Agent2; scheduler = property_activation(:w))
+model = ABM(Agentw; scheduler = property_activation(:w))
 for i in 1:N; add_agent!(model, rand()/rand()); end
 
 Random.seed!(12)
