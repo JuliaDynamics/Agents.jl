@@ -59,7 +59,7 @@ This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
-        scheduler::F = dict_keys, properties::P = nothing
+        scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
@@ -128,8 +128,9 @@ function partial_activation(p::Real)
 end
 
 """
-    dict_keys
-Activate all agents once in the order dictated by the agent's container, which
-is arbitrary (and random). This is the fastest possible way to activate all agents.
+    fastest
+Activate all agents once per step in the order dictated by the agent's container, which
+is arbitrary (the keys sequence of a dictionary).
+This is the fastest possible way to activate all agents once per step.
 """
-dict_keys(model) = keys(model)
+fastest(model) = keys(model)

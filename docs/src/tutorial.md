@@ -124,7 +124,7 @@ properties = Dict(:min_to_be_happy => 3)
 schelling = ABM(SchellingAgent, space; properties = properties)
 ```
 
-Here we used the default scheduler.
+Here we used the default scheduler (which is also the fastest one).
 
 ### Creating the ABM through a function
 
