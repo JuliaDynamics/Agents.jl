@@ -39,6 +39,9 @@ nodes
 ```
 
 ## Schedulers
+The schedulers of Agents.jl have a very simple interface. All schedulers are functions,
+that take as an input the ABM and return an iterator over agent IDs.
+Notice that this iterator can be a "true" iterator or can be just a standard vector of IDs.
 ```@docs
 by_id
 random_activation

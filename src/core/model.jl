@@ -92,7 +92,7 @@ Return the number of agents in the `model`.
 nagents(model::ABM) = length(model.agents)
 
 """
-    by_id(model::ABM)
+    by_id
 Activate agents at each step according to their id.
 """
 function by_id(model::ABM)
@@ -103,7 +103,7 @@ end
 @deprecate as_added by_id
 
 """
-    random_activation(model::ABM)
+    random_activation
 Activate agents once per step in a random order.
 """
 function random_activation(model::ABM)
@@ -111,9 +111,8 @@ function random_activation(model::ABM)
 end
 
 """
-    partial_activation(model::ABM)
-At each step, activate only `activation_prob` number of randomly chosen of individuals
-with a `activation_prob` probability.
+    partial_activation
+At each step, activate only `activation_prob` percentage of randomly chosen agents.
 `activation_prob` must be a field in the model and between 0 and 1.
 """
 function partial_activation(model::ABM)
