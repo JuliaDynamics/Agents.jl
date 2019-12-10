@@ -59,7 +59,7 @@ This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
-        scheduler::F = by_id, properties::P = nothing
+        scheduler::F = dict_keys, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
@@ -121,8 +121,15 @@ define `model.properties` so that it is possible to access
 function partial_activation(p::Real)
     function partial(model::ABM{A, S, F, P}) where {A, S, F, P}
         ids = collect(keys(model.agents))
-        ap = P == nothing ? p : get(model.properties, :activation_probability, p)
-        return randsubseq(1:agentnum, ap)
+        ap = P == Nothing ? p : get(model.properties, :activation_probability, p)
+        return randsubseq(ids, ap)
     end
     return partial
 end
+
+"""
+    dict_keys
+Activate all agents once in the order dictated by the agent's container, which
+is arbitrary (and random). This is the fastest possible way to activate all agents.
+"""
+dict_keys(model) = keys(model)
