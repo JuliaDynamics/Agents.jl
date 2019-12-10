@@ -111,11 +111,12 @@ function random_activation(model::ABM)
 end
 
 """
-    partial_activation
-At each step, activate only `activation_prob` percentage of randomly chosen agents.
-`activation_prob` must be a field in the model and between 0 and 1.
+    partial_activation(p)
+At each step, activate only `p` percentage of randomly chosen agents.
 """
-function partial_activation(model::ABM)
-  agentnum = nagents(model)
-  return randsubseq(1:agentnum, model.activation_prob)
+function partial_activation(p::Real)
+    function partial(model)
+        ids = collect(keys(model))
+        return randsubseq(1:agentnum, p)
+    end
 end
