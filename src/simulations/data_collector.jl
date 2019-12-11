@@ -86,20 +86,20 @@ function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
 end
 
 """
-    data_collector(model::ABM, field_aggregator::Dict, step::Integer [, df::DataFrame]) where T<: Integer
+    data_collector(model::ABM, field_aggregator::Dict, step::Integer [, df::DataFrame])
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::ABM, field_aggregator::Dict, step::Integer) where T<: Integer
+function data_collector(model::ABM, field_aggregator::Dict, step::Integer)
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   df = DataFrame(dict)
   return df
 end
 
-function data_collector(model::ABM, field_aggregator::Dict, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, field_aggregator::Dict, step::Integer, df::DataFrame)
   d, colnames = data_collecter_aggregate(model, field_aggregator, step=step)
   dict = Dict(Symbol(colnames[i]) => d[i] for i in 1:length(d))
   push!(df, dict)
@@ -107,24 +107,46 @@ function data_collector(model::ABM, field_aggregator::Dict, step::Integer, df::D
 end
 
 """
-    data_collector(model::ABM, properties::Array{Symbol}, step::Integer [, df::DataFrame]) where T<:Integer
+    data_collector(model::ABM, properties::Array{Symbol}, step::Integer [, df::DataFrame])
 
 Used in the `step!` function.
 
 Returns a DataFrame of collected data. If `df` is supplied, appends to collected data to it.
 """
-function data_collector(model::ABM, properties::Array{Symbol}, step::Integer) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, step::Integer)
   df = data_collecter_raw(model, properties, step=step)
   return df
 end
 
-function data_collector(model::ABM, properties::Array{Symbol}, step::Integer, df::DataFrame) where T<:Integer
+function data_collector(model::ABM, properties::Array{Symbol}, step::Integer, df::DataFrame)
   d = data_collecter_raw(model, properties, step=step)
   df = vcat(df, d) #join(df, d, on=:id, kind=:outer)
   return df
 end
 
-function _step(model, agent_step!, model_step!, properties, when, n, step0)
+function _step!(model, agent_step!, model_step!, properties, when, n::F, step0, df) where F<:Function
+  ss = 1
+  while !n(model)
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      df = data_collector(model, properties, ss, df)
+    end
+    ss += 1
+  end
+  df
+end
+
+function _step!(model, agent_step!, model_step!, properties, when, n::Int, step0, df)
+  for ss in 1:n
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      df = data_collector(model, properties, ss, df)
+    end
+  end
+  df
+end
+
+function _step!(model, agent_step!, model_step!, properties, when, n, step0)
   if step0
     df = data_collector(model, properties, 0)
   else
@@ -133,35 +155,17 @@ function _step(model, agent_step!, model_step!, properties, when, n, step0)
     coltypes = [eltype(df[!, i]) for i in colnames]
     df = DataFrame(coltypes, colnames)
   end
-  if typeof(n) <: Integer
-    for ss in 1:n
-      step!(model, agent_step!, model_step!, 1)
-      # collect data
-      if ss in when
-        df = data_collector(model, properties, ss, df)
-      end
-    end
-  else
-    ss = 1
-    while !n(model)
-      step!(model, agent_step!, model_step!, 1)
-      # collect data
-      if ss in when
-        df = data_collector(model, properties, ss, df)
-      end
-      ss += 1
-    end
-  end
+  df = _step!(model, agent_step!, model_step!, properties, when, n, step0, df)
   return df
 end
 
 function series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
 
-  dataall = _step(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
+  dataall = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
   dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
 
   for rep in 2:replicates
-    data = _step(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
+    data = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
     data[!, :replicate] = [rep for i in 1:size(data, 1)]
 
     dataall = vcat(dataall, data)

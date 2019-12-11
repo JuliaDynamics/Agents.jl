@@ -7,7 +7,7 @@ Update agents `n` steps. Agents will be updated as specified by the `model.sched
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
-`n` can be a function instead of a number of step. If so, the model runs as long as `n`
+`n` can be a function instead of a number of steps. If so, the model runs as long as `n(model)`
 returns `false`. It should accept a single argument: model object.
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
@@ -55,7 +55,7 @@ dummystep(agent, model) = nothing
 
 step!(model::ABM, agent_step!, n) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
+function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
   for i in 1:n
     activation_order = model.scheduler(model)
     for index in activation_order
@@ -65,7 +65,7 @@ function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   end
 end
 
-function step!(model::ABM, agent_step!, model_step!, n::F) where F <: Function
+function step!(model::ABM, agent_step!::F, model_step!::G, n::H) where {F<:Function, G<:Function, H<:Function}
   while !n(model)
     step!(model, agent_step!, model_step!, 1)
   end
@@ -88,7 +88,7 @@ function step!(model::ABM, agent_step!, model_step!, n, properties; when::Abstra
     return dataall
   end
 
-  df = _step(model, agent_step!, model_step!, properties, when, n, step0)
+  df = _step!(model, agent_step!, model_step!, properties, when, n, step0)
 
   return df
 end
