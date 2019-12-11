@@ -1,14 +1,16 @@
 export step!, dummystep
 
 """
-    step!(model, agent_step! [, model_step!], n::Int = 1)
+    step!(model, agent_step! [, model_step!], n::Integer = 1)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
-`n` can be a function instead of a number of steps. If so, the model runs as long as `n(model)`
-returns `false`. It should accept a single argument: model object.
+    step!(model, agent_step! [, model_step!], n::Function)
+
+`n` can be also be a function that takes as an input the `model` and returns
+`true/false`. Then `step!` runs the model until `n(model)` returns `true`. 
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
