@@ -3,6 +3,7 @@ module Agents
 using Distributed
 using LightGraphs
 using DataFrames
+using Dictionaries
 using Random
 import Base.Iterators.product
 import Base.iterate

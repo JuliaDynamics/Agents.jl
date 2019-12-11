@@ -32,7 +32,7 @@ end
 
 SpaceType=Union{Nothing, AbstractSpace}
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
-    agents::Dict{Int,A}
+    agents::HashDictionary{Int,A}
     space::S
     scheduler::F
     properties::P
@@ -62,7 +62,7 @@ function AgentBasedModel(
         ::Type{A}, space::S = nothing;
         scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
-    agents = Dict{Int, A}()
+    agents = HashDictionary{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
@@ -84,7 +84,7 @@ end
     random_agent(model)
 Return a random agent from the model.
 """
-random_agent(model) = model.agents[rand(keys(model.agents))]
+random_agent(model) = model.agents[rand(collect(keys(model.agents)))]
 
 """
     nagents(model::ABM)

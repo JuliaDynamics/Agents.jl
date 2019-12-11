@@ -88,7 +88,7 @@ end
 
 function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
   push!(model.space.agent_positions[pos], agent.id)
-  model.agents[agent.id] = agent
+  set!(model.agents, agent.id, agent)
   # update agent position
   if typeof(agent.pos) <: Integer
     agent.pos = pos
@@ -154,7 +154,7 @@ This function also works for models without a spatial structure.
 function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
-  model.agents[id] = A(id, properties...)
+  set!(model.agents,id, A(id, properties...))
   return model.agents[id]
 end
 
@@ -162,7 +162,7 @@ function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
-  model.agents[id] = A(id, cnode, properties...)
+  set!(model.agents, id, A(id, cnode, properties...))
   return model.agents[id]
 end
 
