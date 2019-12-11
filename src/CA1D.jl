@@ -17,7 +17,7 @@ function build_model(;rules::Dict, ncols::Integer=101)
   nv=(ncols,1)
   space = Space(nv)
   properties = Dict(:rules => rules)
-  model = ABM(Cell, space; properties = properties, scheduler=as_added)
+  model = ABM(Cell, space; properties = properties, scheduler=by_id)
   for n in 1:ncols
     add_agent!(Cell(n, (n,1), "0"), (n,1), model)
   end

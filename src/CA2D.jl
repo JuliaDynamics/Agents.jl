@@ -16,7 +16,7 @@ Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Intege
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   space = Space(dims, moore=Moore)
   properties = Dict(:rules => rules, :Moore=>Moore)
-  model = ABM(Cell, space; properties = properties, scheduler=as_added)
+  model = ABM(Cell, space; properties = properties, scheduler=by_id)
   nnodes = dims[1]*dims[2]
   for n in 1:nnodes
     add_agent!(Cell(n, vertex2coord(n, dims), "0"), (n,1), model)
