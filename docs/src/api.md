@@ -42,6 +42,7 @@ nodes
 The schedulers of Agents.jl have a very simple interface. All schedulers are functions,
 that take as an input the ABM and return an iterator over agent IDs.
 Notice that this iterator can be a "true" iterator or can be just a standard vector of IDs.
+You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
 ```@docs
 fastest
 by_id

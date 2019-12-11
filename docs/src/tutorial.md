@@ -121,10 +121,16 @@ We also want to include a property `min_to_be_happy` in our model, and so we hav
 
 ```@example schelling
 properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; properties = properties)
+schelling = ABM(SchellingAgent, space;
+    scheduler = fastest, properties = properties)
 ```
 
-Here we used the default scheduler (which is also the fastest one).
+Here we used the default scheduler (which is also the fastest one) to create the model. We could instead try to activate the agents according to their property `:group`, so that all agents of group 1 act first. We would then use the scheduler [`property_activation`](@ref) like so:
+```@example schelling
+schelling2 = ABM(SchellingAgent, space;
+    properties = properties, scheduler = partial_activation(:group))
+```
+Notice that `partial_activation` accepts an argument and returns a function, which is why we didn't just give `partial_activation` to `scheduler`.
 
 ### Creating the ABM through a function
 

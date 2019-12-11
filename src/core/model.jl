@@ -98,9 +98,9 @@ nagents(model::ABM) = length(model.agents)
 ####################################
 """
     fastest
-Activate all agents once per step in the order dictated by the agent's container, which
-is arbitrary (the keys sequence of a dictionary).
-This is the fastest possible way to activate all agents once per step.
+Activate all agents once per step in the order dictated by the agent's container,
+which is arbitrary (the keys sequence of a dictionary).
+This is the fastest way to activate all agents once per step.
 """
 fastest(model) = keys(model)
 
@@ -118,6 +118,7 @@ end
 """
     random_activation
 Activate agents once per step in a random order.
+Different random ordering is used at each different step.
 """
 function random_activation(model::ABM)
   order = shuffle(collect(keys(model.agents)))
@@ -126,16 +127,11 @@ end
 """
     partial_activation(p)
 At each step, activate only `p` percentage of randomly chosen agents.
-
-If you want the activation probability `p` to be a parameter of your model, simply
-define `model.properties` so that it is possible to access
-`model.properties[:activation_probability]`. This number will be used instead of `p`.
 """
 function partial_activation(p::Real)
     function partial(model::ABM{A, S, F, P}) where {A, S, F, P}
         ids = collect(keys(model.agents))
-        ap = P == Nothing ? p : get(model.properties, :activation_probability, p)
-        return randsubseq(ids, ap)
+        return randsubseq(ids, p)
     end
     return partial
 end
@@ -145,16 +141,11 @@ end
 At each step, activate the agents in an order dictated by their `property`,
 with agents with greater `property` acting first. `property` is a `Symbol`, which
 just dictates which field the agents to compare.
-
-If you want the activation `property` to be a parameter of your model, simply
-define `model.properties` so that it is possible to access
-`model.properties[:activation_property]`, which will be used instead of `property`.
 """
 function property_activation(p::Symbol)
     function by_property(model::ABM{A, S, F, P}) where {A, S, F, P}
-        property = P == Nothing ? p : get(model.properties, :activation_property, p)
         ids = collect(keys(model.agents))
-        properties = [getproperty(model.agents[id], property) for id in ids]
+        properties = [getproperty(model.agents[id], p) for id in ids]
         s = sortperm(properties)
         return ids[s]
     end
