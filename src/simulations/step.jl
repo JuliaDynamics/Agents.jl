@@ -1,11 +1,16 @@
 export step!, dummystep
 
 """
-    step!(model, agent_step! [, model_step!], n::Int = 1)
+    step!(model, agent_step! [, model_step!], n::Integer = 1)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
+
+    step!(model, agent_step! [, model_step!], n::Function)
+
+`n` can be also be a function that takes as an input the `model` and returns
+`true/false`. Then `step!` runs the model until `n(model)` returns `true`. 
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
@@ -50,9 +55,9 @@ function step! end
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
+function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
   for i in 1:n
     activation_order = model.scheduler(model)
     for index in activation_order
@@ -62,13 +67,19 @@ function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   end
 end
 
+function step!(model::ABM, agent_step!::F, model_step!::G, n::H) where {F<:Function, G<:Function, H<:Function}
+  while !n(model)
+    step!(model, agent_step!, model_step!, 1)
+  end
+end
+
 #######################################################################################
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
+step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
+function step!(model::ABM, agent_step!, model_step!, n, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
   if replicates > 0
     if parallel
@@ -79,7 +90,7 @@ function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::A
     return dataall
   end
 
-  df = _step(model, agent_step!, model_step!, properties, when, n, step0)
+  df = _step!(model, agent_step!, model_step!, properties, when, n, step0)
 
   return df
 end

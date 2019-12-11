@@ -38,6 +38,15 @@ Random.seed!(223)
   data = step!(forest, dummystep, forest_step!, 10, agent_properties, when=when,
   step0=false);
   @test size(data) == (666, 3)
+
+  forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2);
+  agent_properties = [:status]
+  n(forest::ABM) = sum(i.status for i in values(forest.agents)) <= 200
+  when = 1:10
+  data = step!(forest, dummystep, forest_step!, n, agent_properties, when=when);
+  @test n(forest) == true
+  maxstep = maximum(data.step)
+  @test sum(data[data.step .== (maxstep-1), :status]) > 200
 end
 
 @testset "paramscan" begin
