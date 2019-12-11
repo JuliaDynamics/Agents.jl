@@ -73,9 +73,11 @@ In addition, by providing keywords to `step!`, it is also possible to collect an
 Agents.step!
 ```
 
----
+Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection:
 
-Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection, see below.
+```@docs
+Agents.paramscan
+```
 
 ## Example: Schelling's segregation model
 
@@ -288,11 +290,8 @@ data = step!(model, agent_step!, 2, properties,
 ### Scanning parameter ranges
 
 We often are interested in the effect of different parameters on the behavior of an
-agent-based model. `Agents.jl` provides a function `paramscan` to automatically explore
-the effect of different parameter values:
-```@docs
-paramscan
-```
+agent-based model. `Agents.jl` provides the function [`paramscan`](@ref) to automatically explore
+the effect of different parameter values.
 
 We have already defined our model initialization function as `initialize`.
 We now also define a processing function, that returns the percentage of
