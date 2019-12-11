@@ -1,5 +1,6 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
-random_activation, as_added, partial_activation, random_agent
+random_activation, by_id, fastest, partial_activation, random_agent,
+property_activation
 
 abstract type AbstractSpace end
 
@@ -59,7 +60,7 @@ This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
-        scheduler::F = as_added, properties::P = nothing
+        scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
@@ -91,30 +92,61 @@ Return the number of agents in the `model`.
 """
 nagents(model::ABM) = length(model.agents)
 
+
+####################################
+# Schedulers
+####################################
 """
-    as_added(model::ABM)
-Activate agents at each step in the same order as they have been added to the model.
+    fastest
+Activate all agents once per step in the order dictated by the agent's container,
+which is arbitrary (the keys sequence of a dictionary).
+This is the fastest way to activate all agents once per step.
 """
-function as_added(model::ABM)
+fastest(model) = keys(model)
+
+"""
+    by_id
+Activate agents at each step according to their id.
+"""
+function by_id(model::ABM)
   agent_ids = sort(collect(keys(model.agents)))
   return agent_ids
 end
 
+@deprecate as_added by_id
+
 """
-    random_activation(model::ABM)
+    random_activation
 Activate agents once per step in a random order.
+Different random ordering is used at each different step.
 """
 function random_activation(model::ABM)
   order = shuffle(collect(keys(model.agents)))
 end
 
 """
-    partial_activation(model::ABM)
-At each step, activate only `activation_prob` number of randomly chosen of individuals
-with a `activation_prob` probability.
-`activation_prob` must be a field in the model and between 0 and 1.
+    partial_activation(p)
+At each step, activate only `p` percentage of randomly chosen agents.
 """
-function partial_activation(model::ABM)
-  agentnum = nagents(model)
-  return randsubseq(1:agentnum, model.activation_prob)
+function partial_activation(p::Real)
+    function partial(model::ABM{A, S, F, P}) where {A, S, F, P}
+        ids = collect(keys(model.agents))
+        return randsubseq(ids, p)
+    end
+    return partial
+end
+
+"""
+    property_activation(property)
+At each step, activate the agents in an order dictated by their `property`,
+with agents with greater `property` acting first. `property` is a `Symbol`, which
+just dictates which field the agents to compare.
+"""
+function property_activation(p::Symbol)
+    function by_property(model::ABM{A, S, F, P}) where {A, S, F, P}
+        ids = collect(keys(model.agents))
+        properties = [getproperty(model.agents[id], p) for id in ids]
+        s = sortperm(properties)
+        return ids[s]
+    end
 end
