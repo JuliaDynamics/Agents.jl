@@ -9,16 +9,19 @@
 
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM). It provides a structure and components for quickly implementing agent-based models, run them in batch, collect data, and visualize them. To that end, it provides the following functionalities:
 
+* Simple, concise and extendable API for running ABMs.
 * Default grids to run the simulations, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods.
+* Several different default schedulers.
 * Running the simulations in parallel on multiple cores.
 * Automatic data collection in a `DataFrame` at desired intervals.
-* Exploring the simulation results interactively in [Data Voyager 2](https://github.com/vega/voyager).
 * Batch running and batch data collection.
 * Visualizing agent distributions on grids.
 
 Julia is a language that is especially suitable for ABMs, because a) [it runs fast](https://julialang.org/benchmarks/), b) it is easy to express your ideas in and quick to write, and c) it has rich and easy-to-use packages for data analysis.
 
-Agents.jl is lightweight and modular. It has a short learning curve, and allows one to extend its capabilities and express complicated modeling scenarios. Agents.jl is inspired by [Mesa](https://github.com/projectmesa/mesa) framework for Python.
+Agents.jl is lightweight and modular.
+It has a short learning curve, and allows one to extend its capabilities and express complicated modeling scenarios.
+Agents.jl was initially inspired by the [Mesa](https://github.com/projectmesa/mesa) framework for Python, but is up to 13 times faster than Mesa while using much less lines of code, as we demonstrate in our [documentation](https://juliadynamics.github.io/Agents.jl/dev/mesa/).
 
 
 ## Installation
