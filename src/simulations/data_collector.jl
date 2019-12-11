@@ -133,11 +133,23 @@ function _step(model, agent_step!, model_step!, properties, when, n, step0)
     coltypes = [eltype(df[!, i]) for i in colnames]
     df = DataFrame(coltypes, colnames)
   end
-  for ss in 1:n
-    step!(model, agent_step!, model_step!)
-    # collect data
-    if ss in when
-      df = data_collector(model, properties, ss, df)
+  if typeof(n) <: Integer
+    for ss in 1:n
+      step!(model, agent_step!, model_step!, 1)
+      # collect data
+      if ss in when
+        df = data_collector(model, properties, ss, df)
+      end
+    end
+  else
+    ss = 1
+    while !n(model)
+      step!(model, agent_step!, model_step!, 1)
+      # collect data
+      if ss in when
+        df = data_collector(model, properties, ss, df)
+      end
+      ss += 1
     end
   end
   return df

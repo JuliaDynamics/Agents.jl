@@ -7,6 +7,9 @@ Update agents `n` steps. Agents will be updated as specified by the `model.sched
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
+`n` can be a function instead of a number of step. If so, the model runs as long as `n`
+returns `false`. It should accept a single argument: model object.
+
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
 This version of `step!`, with the `properties` argument and extra keywords,
@@ -50,7 +53,7 @@ function step! end
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n) = step!(model, agent_step!, dummystep, n)
 
 function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   for i in 1:n
@@ -62,13 +65,19 @@ function step!(model::ABM, agent_step!, model_step!, n::Int = 1)
   end
 end
 
+function step!(model::ABM, agent_step!, model_step!, n::F) where F <: Function
+  while !n(model)
+    step!(model, agent_step!, model_step!, 1)
+  end
+end
+
 #######################################################################################
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n::Int, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
+step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
 
-function step!(model::ABM, agent_step!, model_step!, n::Int, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
+function step!(model::ABM, agent_step!, model_step!, n, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
   if replicates > 0
     if parallel
