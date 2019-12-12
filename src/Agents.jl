@@ -7,6 +7,8 @@ using Random
 import Base.Iterators.product
 import Base.iterate
 import Base.length
+import StatsBase.sample
+import StatsBase.Weights
 
 include("core/model.jl")
 include("core/space.jl")
