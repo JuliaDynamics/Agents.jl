@@ -86,7 +86,7 @@ end
   for i in 1:20; add_agent!(model, rand()/rand()); end
   allweights = [i.weight for i in values(model.agents)]
   mean_weights = sum(allweights)/length(allweights)
-  sample!(model, :weight, n=12)
+  sample!(model, 12, :weight)
   @test Agents.nagents(model) == 12
   allweights = [i.weight for i in values(model.agents)]
   mean_weights_new = sum(allweights)/length(allweights)
@@ -101,7 +101,7 @@ end
   for i in 1:20; add_agent!(SampleAgent2(i, i, rand()/rand()), model2); end
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights = sum(allweights)/length(allweights)
-  sample!(model2, :weight, n=12)
+  sample!(model2, 12, :weight)
   @test Agents.nagents(model2) == 12
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights_new = sum(allweights)/length(allweights)

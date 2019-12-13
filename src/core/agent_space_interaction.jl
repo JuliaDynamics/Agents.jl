@@ -192,42 +192,46 @@ end
 ####################################
 
 """
-        sample!(model::ABM [, weight]; kwargs...)
+        sample!(model::ABM, n [, weight]; kwargs...)
 
 Replace agents of the `model` with a random sample of the current agents with
 size `n`. Optionally, choose an agent property `weight`(Symbol) to weight the sampling.
 
 # Keywords
 
-* `n`: the number of new agents.
 * `replace=true` whether sampling is performed with replacement.
 * `rng`::AbstractRNG=Random.GLOBAL_RNG: Optionally, specify a random number generator.
 """
-function sample!(model::ABM, weight=nothing; n::Int, replace=true, ordered=false, rng::AbstractRNG=Random.GLOBAL_RNG)
+function sample!(model::ABM, n::Int, weight=nothing; replace=true,
+    rng::AbstractRNG=Random.GLOBAL_RNG)
+
     if weight != nothing
         weights = Weights([getproperty(i, weight) for i in values(model.agents)])
-        newids = sample(rng, collect(keys(model.agents)), weights, n, replace=replace, ordered=ordered)
+        newids = sample(rng, collect(keys(model.agents)), weights, n, replace=replace)
     else
-        newids = sample(rng, collect(keys(model.agents)), n, replace=replace, ordered=ordered)
+        newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
     end
 
     newagents = [deepcopy(model.agents[i]) for i in newids]
 
-    for k in keys(model.agents)
-        delete!(model.agents, k)
-    end
-
     fnames = fieldnames(Agents.agenttype(model))
     haspos = in(:pos, fnames)
+
     if haspos
-        for (index, ag) in enumerate(newagents)
-            ag.id = index
-            add_agent!(ag, ag.pos, model)
-        end
+      for v in values(model.agents)
+        kill_agent!(v, model)
+      end
+      for (index, ag) in enumerate(newagents)
+        ag.id = index
+        add_agent!(ag, ag.pos, model)
+      end
     else
-        for (index, ag) in enumerate(newagents)
-            ag.id = index
-            model.agents[index] = ag
-        end
+      for k in keys(model.agents)
+        delete!(model.agents, k)
+      end
+      for (index, ag) in enumerate(newagents)
+        ag.id = index
+        model.agents[index] = ag
+      end
     end
 end
