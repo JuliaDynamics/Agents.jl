@@ -30,10 +30,11 @@ pages = [
 	"Tutorial" => "tutorial.md",
 	"API" => "api.md",
 	"Examples" => [
-	    "Wealth distribution" => "examples/wealth_distribution.md",
+		"Wealth distribution" => "examples/wealth_distribution.md",
 		"Forest fire" => "examples/forest_fire.md",
 		"Game of life" => "examples/game_of_life_2D_CA.md",
 		"Rule 22" => "examples/rule22_1D_CA.md",
+		"Wright-Fisher model of evolution" => "examples/wright-fisher.md",
 		],
 	"Comparison against Mesa (Python)" => "mesa.md"
     ],

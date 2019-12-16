@@ -6,7 +6,7 @@ move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 
 Remove an agent from model, and from the space if the model has a space.
 """
-function kill_agent!(agent::AbstractAgent, model::ABM)
+function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:AbstractSpace}
   if typeof(agent.pos) <: Tuple
     agentnode = coord2vertex(agent.pos, model)
   else
@@ -20,7 +20,7 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
 end
 
 function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
-  delete!(model, agent.id)
+  delete!(model.agents, agent.id)
 end
 
 """
@@ -105,8 +105,12 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
 end
 
 function add_agent!(agent::AbstractAgent, model::ABM)
-  nodenumber = rand(1:nv(model.space))
-  add_agent!(agent, nodenumber, model)
+  if :pos ∈ fieldnames(typeof(agent))
+    nodenumber = rand(1:nv(model.space))
+    add_agent!(agent, nodenumber, model)
+  else
+    model.agents[agent.id] = agent
+  end
   return agent
 end
 
