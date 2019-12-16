@@ -1,4 +1,4 @@
-using Agents, Test
+using Agents, Test, Random
 
 mutable struct Agent1 <: AbstractAgent
   id::Int
@@ -26,26 +26,23 @@ N = 1000
 mutable struct Agent0 <: AbstractAgent
   id::Int
 end
-# fastest
-model = ABM(Agent0)
-for i in 1:N; add_agent!(model); end
-@test sort!(collect(keys(model.agents))) == 1:N
 
 # by_id
 model = ABM(Agent0; scheduler = by_id)
 for i in 1:N; add_agent!(model); end
-
 @test sort!(collect(keys(model.agents))) == 1:N
-
 @test model.scheduler(model) == 1:N
 
-using Random
+# fastest
 Random.seed!(12)
+model = ABM(Agent0; scheduler = fastest)
+for i in 1:N; add_agent!(model); end
+@test sort!(collect(model.scheduler(model))) == 1:N
 
 # random
+Random.seed!(12)
 model = ABM(Agent0; scheduler = random_activation)
 for i in 1:N; add_agent!(model); end
-
 @test model.scheduler(model)[1:3] == [913, 522, 637] # reproducibility test
 
 # partial

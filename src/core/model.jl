@@ -102,7 +102,7 @@ Activate all agents once per step in the order dictated by the agent's container
 which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-fastest(model) = keys(model)
+fastest(model) = keys(model.agents)
 
 """
     by_id
