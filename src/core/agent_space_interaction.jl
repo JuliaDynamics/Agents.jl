@@ -112,7 +112,8 @@ end
 
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM)
-Add the agent to the `model` at the agent's own position (if the agent has a position).
+Add the agent to the `model` at the agent's own position if the agent has a position,
+or to a random position otherwise.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
   if :pos ∈ fieldnames(typeof(agent))
