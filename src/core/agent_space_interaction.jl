@@ -1,4 +1,4 @@
-export move_agent!, add_agent!, add_agent_single!,
+export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
 move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 
 """
@@ -76,7 +76,7 @@ end
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
-Adds the agent to the `pos` in the space and to the list of agents.
+Add the agent to the `pos` in the space and to the list of agents.
 If `pos` is not given, the agent is added to a random position.
 The agent's position is always updated to match `pos`.
 """
@@ -104,6 +104,18 @@ function add_agent!(agent::AbstractAgent, model::ABM)
   nodenumber = rand(1:nv(model.space))
   add_agent!(agent, nodenumber, model)
   return agent
+end
+
+"""
+    add_agent_pos!(agent::AbstractAgent, model::ABM)
+Add the agent to the `model` at the agent's own position (if the agent has a position).
+"""
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
+  if :pos ∈ fieldnames(typeof(agent))
+    return add_agent!(agent, agent.pos, model)
+  else
+    return add_agent!(agent, model)
+  end
 end
 
 """

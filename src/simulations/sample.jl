@@ -1,5 +1,15 @@
-export sample!
+export sample!, genocide
 using StatsBase: sample, Weights
+
+"""
+    genocide!(model::ABM)
+Kill all the agents of the model.
+"""
+function genocide!(model::ABM)
+    for (i, a) in model.agents
+        delete!(model.agents, i)
+    end
+end
 
 """
     sample!(model::ABM, n [, weight]; kwargs...)
@@ -25,27 +35,11 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     else
         newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
     end
-
     newagents = [deepcopy(model.agents[i]) for i in newids]
-
-    fnames = fieldnames(Agents.agenttype(model))
-    haspos = in(:pos, fnames)
-
-    if haspos
-      for v in values(model.agents)
-        kill_agent!(v, model)
-      end
-      for (index, ag) in enumerate(newagents)
-        ag.id = index
-        add_agent!(ag, ag.pos, model)
-      end
-    else
-      for k in keys(model.agents)
-        delete!(model.agents, k)
-      end
-      for (index, ag) in enumerate(newagents)
-        ag.id = index
-        model.agents[index] = ag
-      end
+    genocide!(model)
+    for (id, a) in enumerate(newagents) # add new agents while adjusting id
+        a.id = id
+        add_agent_pos!(a, model)
     end
+    return model
 end
