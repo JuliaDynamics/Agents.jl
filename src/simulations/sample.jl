@@ -9,6 +9,7 @@ function genocide!(model::ABM)
     for (i, a) in model.agents
         delete!(model.agents, i)
     end
+    return model
 end
 
 """
