@@ -1,4 +1,4 @@
-export sample!, genocide
+export sample!, genocide!
 using StatsBase: sample, Weights
 
 """
@@ -26,6 +26,21 @@ this agent will be chosen in the new sampling.
 * `replace = true` : whether sampling is performed with replacement, i.e. all agents can
   be chosen more than once.
 * `rng = GLOBAL_RNG` : a random number generator to perform the sampling with.
+
+# Example
+
+```jl
+using Agents
+mutable struct Agent <: AbstractAgent
+    id::Int
+    fitness::Float64
+end
+m = ABM(Agent)
+for i in 1:100
+    add_agent!(m, i, rand()/rand())
+end
+```
+
 """
 function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     rng::AbstractRNG=Random.GLOBAL_RNG)
