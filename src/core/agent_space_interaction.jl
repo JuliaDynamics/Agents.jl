@@ -1,5 +1,5 @@
 export move_agent!, add_agent!, add_agent_single!,
-move_agent_single!, kill_agent!, coord2vertex, vertex2coord, sample!
+move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
@@ -184,54 +184,4 @@ function add_agent_single!(model::ABM, properties...)
     add_agent!(agent, random_node, model)
     return agent
   end
-end
-
-
-####################################
-### sample
-####################################
-
-"""
-        sample!(model::ABM, n [, weight]; kwargs...)
-
-Replace agents of the `model` with a random sample of the current agents with
-size `n`. Optionally, choose an agent property `weight`(Symbol) to weight the sampling.
-
-# Keywords
-
-* `replace=true` whether sampling is performed with replacement.
-* `rng`::AbstractRNG=Random.GLOBAL_RNG: Optionally, specify a random number generator.
-"""
-function sample!(model::ABM, n::Int, weight=nothing; replace=true,
-    rng::AbstractRNG=Random.GLOBAL_RNG)
-
-    if weight != nothing
-        weights = Weights([getproperty(i, weight) for i in values(model.agents)])
-        newids = sample(rng, collect(keys(model.agents)), weights, n, replace=replace)
-    else
-        newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
-    end
-
-    newagents = [deepcopy(model.agents[i]) for i in newids]
-
-    fnames = fieldnames(Agents.agenttype(model))
-    haspos = in(:pos, fnames)
-
-    if haspos
-      for v in values(model.agents)
-        kill_agent!(v, model)
-      end
-      for (index, ag) in enumerate(newagents)
-        ag.id = index
-        add_agent!(ag, ag.pos, model)
-      end
-    else
-      for k in keys(model.agents)
-        delete!(model.agents, k)
-      end
-      for (index, ag) in enumerate(newagents)
-        ag.id = index
-        model.agents[index] = ag
-      end
-    end
 end
