@@ -4,7 +4,7 @@ move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
 
-Remove an agent from the list of agents and from the space.
+Remove an agent from model, and from the space if the model has a space.
 """
 function kill_agent!(agent::AbstractAgent, model::ABM)
   if typeof(agent.pos) <: Tuple
@@ -16,7 +16,11 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
   delete!(model.agents, agent.id)
-  return
+  return model
+end
+
+function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
+  delete!(model, agent.id)
 end
 
 """
