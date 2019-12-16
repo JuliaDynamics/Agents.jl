@@ -7,7 +7,7 @@ Kill all the agents of the model.
 """
 function genocide!(model::ABM)
     for (i, a) in model.agents
-        delete!(model.agents, i)
+        kill_agent!(a, model)
     end
     return model
 end
