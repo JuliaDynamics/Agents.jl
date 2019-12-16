@@ -135,7 +135,22 @@ end
 """
     add_agent!(node, model::ABM, properties...)
 Add a new agent in the given `node`, by constructing the agent type of
-the `model` and propagating all extra `properties` to the constructor.
+the `model` and propagating all *extra* `properties` to the constructor.
+
+Notice that this function takes care of setting the agent's id and position and thus
+`properties...` is propagated to other fields the agent has.
+
+## Example
+```julia
+using Agents
+mutable struct Agent <: AbstractAgent
+    id::Int
+    w::Float64
+end
+m = ABM(Agent) # model without spatial structure
+add_agent!(m, 1, rand()) # incorrect
+add_agent!(m, rand()) # correct: weight becomes rand()
+```
 """
 function add_agent!(node, model::ABM, properties...)
     id = biggest_id(model) + 1
