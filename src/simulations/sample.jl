@@ -26,6 +26,8 @@ this agent will be chosen in the new sampling.
 * `replace = true` : whether sampling is performed with replacement, i.e. all agents can
   be chosen more than once.
 * `rng = GLOBAL_RNG` : a random number generator to perform the sampling with.
+
+See the Wright-Fisher example in the documentation for an application of `sample!`.
 """
 function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     rng::AbstractRNG=Random.GLOBAL_RNG)

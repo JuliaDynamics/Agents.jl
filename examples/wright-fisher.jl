@@ -1,59 +1,68 @@
 # # Wright-Fisher model of evolution
 
-# This is one of the simplest models of population genetics.
-# We implement a simple case of the model with a single locus in a haploid 
-# population of constant size.
+# This is one of the simplest models of population genetics that demonstrates the
+# use of [`sample!`](@ref).
+# We implement a simple case of the model where we study haploids (cells with a single set
+# of chromosomes) while for simplicity focusing only on one locus (a specific gene).
+# In this example we will be dealing with a population of constant size.
 
 # ## A neutral model
 
-# * Imagine a population of 100 haploid individuals.
-# * At each generation, 100 offsprings replace the parents.
+# * Imagine a population of `n` haploid individuals.
+# * At each generation, `n` offsprings replace the parents.
 # * Each offspring chooses a parent at random and inherits its genetic material.
 
 
 using Agents
+n = 100
 
 # Let's define an agent. The genetic value of an agent is a number (`trait` field).
-mutable struct Agent <: AbstractAgent
+mutable struct Haploid <: AbstractAgent
     id::Int
     trait::Float64
 end
 
-m = ABM(Agent)
+# And make a model without any spatial structure:
+m = ABM(Haploid)
 
-# Start 100 random individuals.
-for i in 1:100
-    add_agent!(m, rand()/rand())
+# Create `n` random individuals:
+for i in 1:n
+    add_agent!(m, rand())
 end
 
-# To create a new generation, we can use the `sample!` function. It chooses 100
+# To create a new generation, we can use the `sample!` function. It chooses
 # random individuals with replacement from the current individuals and updates
-# the model.
+# the model. For example:
 sample!(m, nagents(m))
 
 # The model can be run for many generations and we can collect the average trait
-# value of the population.
+# value of the population. To do this we will use a model-step function (see [`step!`](@ref))
+# that utilizes [`sample!`](@ref):
 
-# First, put the `sample!` in a step function that accepts a single argument:
-# model object `m`.
+modelstep_neutral!(m) = sample!(m, nagents(m))
 
-modelstep_neutral!(m::ABM) = sample!(m, nagents(m))
-
-# We can now run the model and collect data:
-using StatsBase: mean
+# We can now run the model and collect data. We use `dummystep` for the agent-step
+# function (as the agents perform no actions).
+using Statistics: mean
 
 data = step!(m, dummystep, modelstep_neutral!, 20, Dict(:trait => [mean]))
+
+# As expected, the average value of the "trait" remains around 0.5.
 
 # ## A model with selection
 
 # We can sample individuals according to their trait values, supposing that their
 # fitness is correlated with their trait values.
 
-m = ABM(Agent)
+m = ABM(Haploid)
 for i in 1:100
-    add_agent!(m, rand()/rand())
+    add_agent!(m, rand())
 end
 
 modelstep_selection!(m::ABM) = sample!(m, nagents(m), :trait)
 
 data = step!(m, dummystep, modelstep_selection!, 20, Dict(:trait => [mean]))
+
+# Here we see that as time progresses the trait comes closer and closer to 1,
+# which is expected as agents with higher traits have higher probability of being
+# sampled for the next "generation".
