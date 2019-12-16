@@ -73,18 +73,14 @@ In addition, by providing keywords to `step!`, it is also possible to collect an
 Agents.step!
 ```
 
-Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection:
-
-```@docs
-Agents.paramscan
-```
+Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
 
 ## Example: Schelling's segregation model
 
 We now demonstrate Agents.jl's architecture and features through building the following definition of Schelling's segregation model:
 
 * Agents belong to one of two groups (0 or 1).
-* The agents leave in a two-dimensional Moore grid (8 neighbors per node).
+* The agents live in a two-dimensional Moore grid (8 neighbors per node).
 * If an agent is in the same group with at least three neighbors, then it is happy.
 * If an agent is unhappy, it keeps moving to new locations until it is happy.
 

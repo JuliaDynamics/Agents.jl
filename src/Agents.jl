@@ -14,6 +14,7 @@ include("core/agent_space_interaction.jl")
 include("simulations/data_collector.jl")
 include("simulations/step.jl")
 include("simulations/parallel.jl")
+include("simulations/sample.jl")
 include("CA1D.jl")
 include("CA2D.jl")
 

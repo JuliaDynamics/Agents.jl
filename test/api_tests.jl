@@ -69,3 +69,40 @@ ids = collect(keys(model.agents))
 properties = [model.agents[id].w for id in ids]
 
 @test ids[sortperm(properties)] == a
+
+mutable struct SampleAgent1 <: AbstractAgent
+  id
+  weight
+end
+mutable struct SampleAgent2 <: AbstractAgent
+  id
+  pos
+  weight
+end
+
+@testset "sample!" begin
+  model = ABM(SampleAgent1)
+  for i in 1:20; add_agent!(model, rand()/rand()); end
+  allweights = [i.weight for i in values(model.agents)]
+  mean_weights = sum(allweights)/length(allweights)
+  sample!(model, 12, :weight)
+  @test Agents.nagents(model) == 12
+  allweights = [i.weight for i in values(model.agents)]
+  mean_weights_new = sum(allweights)/length(allweights)
+  @test mean_weights_new > mean_weights
+
+  model.agents[1].weight = 2
+  model.agents[2].weight = 3
+  @test model.agents[1].weight == 2
+  @test model.agents[2].weight == 3
+
+  model2 = ABM(SampleAgent2, Space((10, 10)))
+  for i in 1:20; add_agent!(SampleAgent2(i, i, rand()/rand()), model2); end
+  allweights = [i.weight for i in values(model2.agents)]
+  mean_weights = sum(allweights)/length(allweights)
+  sample!(model2, 12, :weight)
+  @test Agents.nagents(model2) == 12
+  allweights = [i.weight for i in values(model2.agents)]
+  mean_weights_new = sum(allweights)/length(allweights)
+  @test mean_weights_new > mean_weights  
+end

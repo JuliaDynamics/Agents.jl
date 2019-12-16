@@ -7,13 +7,14 @@ using Literate
 using UnicodePlots
 using Plots
 using AgentsPlots
- get(ENV, "CI", nothing) == "true" && (ENV["GKSwstype"] = "100")
+const CI = get(ENV, "CI", nothing) == "true"
+CI && (ENV["GKSwstype"] = "100")
 
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 for file in ("forest_fire.jl", "wealth_distribution.jl",
-			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl")
+			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl", "wright-fisher.jl")
 	Literate.markdown(joinpath(indir, file), outdir)
 end
 
@@ -23,23 +24,24 @@ sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris and contributors.",
 doctest = false,
 format = Documenter.HTML(
-    prettyurls = get(ENV, "CI", nothing) == "true",
+    prettyurls = CI,
     ),
 pages = [
     "Introduction" => "index.md",
 	"Tutorial" => "tutorial.md",
 	"API" => "api.md",
 	"Examples" => [
-	    "Wealth distribution" => "examples/wealth_distribution.md",
+		"Wealth distribution" => "examples/wealth_distribution.md",
 		"Forest fire" => "examples/forest_fire.md",
 		"Game of life" => "examples/game_of_life_2D_CA.md",
 		"Rule 22" => "examples/rule22_1D_CA.md",
+		"Wright-Fisher model of evolution" => "examples/wright-fisher.md",
 		],
 	"Comparison against Mesa (Python)" => "mesa.md"
     ],
 )
 
-if get(ENV, "CI", nothing) == "true"
+if CI
     deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
                target = "build")
 end

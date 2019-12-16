@@ -28,10 +28,20 @@ random_agent
 ## Model-Agent interaction
 ```@docs
 add_agent!
+add_agent_pos!
 add_agent_single!
 move_agent!
 move_agent_single!
 kill_agent!
+genocide
+```
+
+## Simulations
+The central simulation function is [`step!`](@ref), which is mentioned in our [Tutorial](@ref).
+But there are other functions that are related to simulations listed here.
+```@docs
+paramscan
+sample!
 ```
 
 ## Iteration

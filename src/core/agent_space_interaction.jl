@@ -1,12 +1,12 @@
-export move_agent!, add_agent!, add_agent_single!,
+export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
 move_agent_single!, kill_agent!, coord2vertex, vertex2coord
 
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
 
-Remove an agent from the list of agents and from the space.
+Remove an agent from model, and from the space if the model has a space.
 """
-function kill_agent!(agent::AbstractAgent, model::ABM)
+function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:AbstractSpace}
   if typeof(agent.pos) <: Tuple
     agentnode = coord2vertex(agent.pos, model)
   else
@@ -16,7 +16,11 @@ function kill_agent!(agent::AbstractAgent, model::ABM)
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
   delete!(model.agents, agent.id)
-  return
+  return model
+end
+
+function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
+  delete!(model.agents, agent.id)
 end
 
 """
@@ -76,7 +80,7 @@ end
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
-Adds the agent to the `pos` in the space and to the list of agents.
+Add the agent to the `pos` in the space and to the list of agents.
 If `pos` is not given, the agent is added to a random position.
 The agent's position is always updated to match `pos`.
 """
@@ -101,9 +105,26 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
 end
 
 function add_agent!(agent::AbstractAgent, model::ABM)
-  nodenumber = rand(1:nv(model.space))
-  add_agent!(agent, nodenumber, model)
+  if :pos ∈ fieldnames(typeof(agent))
+    nodenumber = rand(1:nv(model.space))
+    add_agent!(agent, nodenumber, model)
+  else
+    model.agents[agent.id] = agent
+  end
   return agent
+end
+
+"""
+    add_agent_pos!(agent::AbstractAgent, model::ABM)
+Add the agent to the `model` at the agent's own position if the agent has a position,
+or to a random position otherwise.
+"""
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
+  if :pos ∈ fieldnames(typeof(agent))
+    return add_agent!(agent, agent.pos, model)
+  else
+    return add_agent!(agent, model)
+  end
 end
 
 """

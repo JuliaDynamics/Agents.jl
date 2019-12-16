@@ -122,7 +122,7 @@ data[end-20:end, :]
 function wealth_distr(data, model, n)
     W = zeros(Int, size(model.space))
     for row in eachrow(filter(r -> r.step == n, data)) # iterate over rows at a specific step
-        W[row.pos...] = row.wealth
+        W[row.pos...] += row.wealth
     end
     return W
 end
