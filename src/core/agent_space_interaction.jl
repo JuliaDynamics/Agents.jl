@@ -148,7 +148,7 @@ mutable struct Agent <: AbstractAgent
     w::Float64
 end
 m = ABM(Agent) # model without spatial structure
-add_agent!(m, 1, rand()) # incorrect
+add_agent!(m, 1, rand()) # incorrect: id is set internally
 add_agent!(m, rand()) # correct: weight becomes rand()
 ```
 """
