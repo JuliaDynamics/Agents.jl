@@ -13,6 +13,18 @@ function genocide!(model::ABM)
 end
 
 """
+    genocide!(model::ABM, n::Int)
+Kill the agents of the model whose IDs are larger than n.
+"""
+function genocide!(model::ABM, n::Int)
+    for (k, v) in model.agents
+        if k > n
+            kill_agent!(v, model)
+        end
+    end
+end
+
+"""
     sample!(model::ABM, n [, weight]; kwargs...)
 
 Replace the agents of the `model` with a random sample of the current agents with
@@ -41,27 +53,29 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
 
     # newagents = [deepcopy(model.agents[i]) for i in newids]
     # genocide!(model)
-    agentfields = fieldnames(Agents.agenttype(model))
     agentsnum = nagents(model)
     for (index, id) in enumerate(newids) # add new agents while adjusting id
         model.agents[index] = deepcopy(model.agents[id])
-        if :pos in agentfields
-            model.space
-        end
-        model.agents[index].id = id
-        if index > agentsnum  # add agents to the space too
-            a = deepcopy(model.agents[id])
-            a.id = index
-            add_agent_pos!(a, model)
-        end
+        model.agents[index].id = index
     end
     # kill extra agents
-    if n< agentsnum
+    genocide!(model, n)
+    # Clean space
+    clean_space!(model)
+
+    return model
+end
+
+"""
+Remove all IDs from space and add agent ids again.
+"""
+function clean_space!(model::ABM)
+    if model.space != nothing
+        for node in 1:nv(model)
+            model.space.agent_positions[node] = Int[]
+        end
         for (k, v) in model.agents
-            if k > n
-                kill_agent!(k, model)
-            end
+            push!(model.space.agent_positions[pos_vertex(v.pos, model)], v.id)
         end
     end
-    return model
 end

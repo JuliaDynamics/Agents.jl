@@ -1,6 +1,6 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
 random_activation, by_id, fastest, partial_activation, random_agent,
-property_activation
+property_activation, pos_vertex
 
 abstract type AbstractSpace end
 
@@ -27,6 +27,14 @@ function correct_pos_type(n, model)
         return coord2vertex(n, model)
     elseif typeof(model.space) <: GridSpace
         return vertex2coord(n, model)
+    end
+end
+
+function pos_vertex(n, model)
+    if typeof(model.space) <: GraphSpace
+        return n
+    elseif typeof(model.space) <: GridSpace
+        return coord2vertex(n, model)
     end
 end
 
