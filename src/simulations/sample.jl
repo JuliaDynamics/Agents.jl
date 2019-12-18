@@ -51,8 +51,6 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
         newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
     end
 
-    # newagents = [deepcopy(model.agents[i]) for i in newids]
-    # genocide!(model)
     agentsnum = nagents(model)
     for (index, id) in enumerate(newids) # add new agents while adjusting id
         model.agents[index] = deepcopy(model.agents[id])
