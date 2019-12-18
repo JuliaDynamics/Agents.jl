@@ -199,6 +199,7 @@ function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
   model.agents[id] = A(id, cnode, properties...)
+  push!(model.space.agent_positions[n], id)
   return model.agents[id]
 end
 
