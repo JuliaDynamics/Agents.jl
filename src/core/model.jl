@@ -31,9 +31,9 @@ function correct_pos_type(n, model)
 end
 
 function pos_vertex(n, model)
-    if typeof(model.space) <: GraphSpace
+    if typeof(n) <: Integer
         return n
-    elseif typeof(model.space) <: GridSpace
+    elseif typeof(n) <: Tuple
         return coord2vertex(n, model)
     end
 end
