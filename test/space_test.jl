@@ -134,8 +134,12 @@ end
   model2 = ABM(Agent2, Space((3,3)))
   add_agent!(1, model2, 3)
   @test model2.agents[1].pos == (1,1)
+  @test 1 in model2.space.agent_positions[1]
   add_agent!((2,1), model2, 2)
   @test model2.agents[2].pos == (2,1)
+  @test 2 in model2.space.agent_positions[2]
+  ag = add_agent!(model2, 12)
+  @test ag.id in model2.space.agent_positions[coord2vertex(ag.pos, model2)]
 
   
   @test agent.id in get_node_contents(agent, model)
