@@ -40,7 +40,6 @@ function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
 end
 
 function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
-  push!(model.space.agent_positions[pos], agent.id)
   # remove agent from old position
   if typeof(agent.pos) <: Tuple
     oldnode = coord2vertex(agent.pos, model)
@@ -50,6 +49,7 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
     splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
     agent.pos = pos
   end
+  push!(model.space.agent_positions[pos], agent.id)
   return agent
 end
 
