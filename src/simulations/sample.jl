@@ -38,11 +38,30 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     else
         newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
     end
-    newagents = [deepcopy(model.agents[i]) for i in newids]
-    genocide!(model)
-    for (id, a) in enumerate(newagents) # add new agents while adjusting id
-        a.id = id
-        add_agent_pos!(a, model)
+
+    # newagents = [deepcopy(model.agents[i]) for i in newids]
+    # genocide!(model)
+    agentfields = fieldnames(Agents.agenttype(model))
+    agentsnum = nagents(model)
+    for (index, id) in enumerate(newids) # add new agents while adjusting id
+        model.agents[index] = deepcopy(model.agents[id])
+        if :pos in agentfields
+            model.space
+        end
+        model.agents[index].id = id
+        if index > agentsnum  # add agents to the space too
+            a = deepcopy(model.agents[id])
+            a.id = index
+            add_agent_pos!(a, model)
+        end
+    end
+    # kill extra agents
+    if n< agentsnum
+        for (k, v) in model.agents
+            if k > n
+                kill_agent!(k, model)
+            end
+        end
     end
     return model
 end
