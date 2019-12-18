@@ -59,7 +59,9 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
         model.agents[index].id = index
     end
     # kill extra agents
-    genocide!(model, n)
+    if n > nagents(model)
+        genocide!(model, n)
+    end
     # Clean space
     clean_space!(model)
 
