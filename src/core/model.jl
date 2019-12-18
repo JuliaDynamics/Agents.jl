@@ -1,6 +1,6 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
 random_activation, by_id, fastest, partial_activation, random_agent,
-property_activation
+property_activation, pos_vertex
 
 abstract type AbstractSpace end
 

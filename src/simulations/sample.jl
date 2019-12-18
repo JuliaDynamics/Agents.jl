@@ -13,6 +13,18 @@ function genocide!(model::ABM)
 end
 
 """
+    genocide!(model::ABM, n::Int)
+Kill the agents of the model whose IDs are larger than n.
+"""
+function genocide!(model::ABM, n::Int)
+    for (k, v) in model.agents
+        if k > n
+            kill_agent!(v, model)
+        end
+    end
+end
+
+"""
     sample!(model::ABM, n [, weight]; kwargs...)
 
 Replace the agents of the `model` with a random sample of the current agents with
@@ -38,11 +50,31 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     else
         newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
     end
-    newagents = [deepcopy(model.agents[i]) for i in newids]
-    genocide!(model)
-    for (id, a) in enumerate(newagents) # add new agents while adjusting id
-        a.id = id
-        add_agent_pos!(a, model)
+
+    for (index, id) in enumerate(newids) # add new agents while adjusting id
+        model.agents[index] = deepcopy(model.agents[id])
+        model.agents[index].id = index
     end
+    # kill extra agents
+    if n < nagents(model)
+        genocide!(model, n)
+    end
+    # Clean space
+    clean_space!(model)
+
     return model
+end
+
+"""
+Remove all IDs from space and add agent ids again.
+"""
+function clean_space!(model::ABM)
+    if model.space != nothing
+        for node in 1:nv(model)
+            model.space.agent_positions[node] = Int[]
+        end
+        for (k, v) in model.agents
+            push!(model.space.agent_positions[coord2vertex(v.pos, model)], v.id)
+        end
+    end
 end

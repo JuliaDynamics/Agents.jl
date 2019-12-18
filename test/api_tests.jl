@@ -96,6 +96,9 @@ end
   @test model.agents[1].weight == 2
   @test model.agents[2].weight == 3
 
+  sample!(model, 40, :weight)
+  @test Agents.nagents(model) == 40
+
   model2 = ABM(SampleAgent2, Space((10, 10)))
   for i in 1:20; add_agent!(SampleAgent2(i, i, rand()/rand()), model2); end
   allweights = [i.weight for i in values(model2.agents)]
@@ -104,5 +107,8 @@ end
   @test Agents.nagents(model2) == 12
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights_new = sum(allweights)/length(allweights)
-  @test mean_weights_new > mean_weights  
+  @test mean_weights_new > mean_weights
+
+  sample!(model2, 40, :weight)
+  @test Agents.nagents(model2) == 40
 end
