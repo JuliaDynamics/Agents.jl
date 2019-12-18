@@ -30,14 +30,6 @@ function correct_pos_type(n, model)
     end
 end
 
-function pos_vertex(n, model)
-    if typeof(n) <: Integer
-        return n
-    elseif typeof(n) <: Tuple
-        return coord2vertex(n, model)
-    end
-end
-
 SpaceType=Union{Nothing, AbstractSpace}
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     agents::Dict{Int,A}

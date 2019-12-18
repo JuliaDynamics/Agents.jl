@@ -254,6 +254,7 @@ end
 
 coord2vertex(coord::Tuple{Integer}, dims) = coord[1]
 coord2vertex(coord::Integer, args...) = coord
+coord2vertex(coord::Integer, m::ABM) = coord
 
 """
     vertex2coord(vertex::Integer, model_or_space) → coords
