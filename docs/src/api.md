@@ -33,7 +33,7 @@ add_agent_single!
 move_agent!
 move_agent_single!
 kill_agent!
-genocide
+genocide!
 ```
 
 ## Simulations
