@@ -29,7 +29,6 @@ format = Documenter.HTML(
 pages = [
     "Introduction" => "index.md",
 	"Tutorial" => "tutorial.md",
-	"API" => "api.md",
 	"Examples" => [
 		"Schelling's segregation model" => "examples/schelling.md",
 		"Wealth distribution" => "examples/wealth_distribution.md",
@@ -38,6 +37,7 @@ pages = [
 		"Rule 22" => "examples/rule22_1D_CA.md",
 		"Wright-Fisher model of evolution" => "examples/wright-fisher.md",
 		],
+	"API" => "api.md",
 	"Comparison against Mesa (Python)" => "mesa.md"
     ],
 )
