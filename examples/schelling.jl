@@ -179,8 +179,10 @@ data = step!(model, agent_step!, 5, properties, when=when)
 
 # We can use the `plot2D` function to plot the distribution of agents on a
 # 2D grid at every generation, via the `AgentsPLots` package
-
+using AgentsPlots
 p = plot2D(data, :group, t=1, nodesize=10)
+
+#
 
 p = plot2D(data, :group, t=2, nodesize=10)
 
