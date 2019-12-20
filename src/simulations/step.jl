@@ -10,7 +10,7 @@ agent has acted.
     step!(model, agent_step! [, model_step!], n::Function)
 
 `n` can be also be a function that takes as an input the `model` and returns
-`true/false`. Then `step!` runs the model until `n(model)` returns `true`. 
+`true/false`. Then `step!` runs the model until `n(model)` returns `true`.
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
@@ -55,7 +55,7 @@ function step! end
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-step!(model::ABM, agent_step!, n) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
 
 function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
   for i in 1:n
