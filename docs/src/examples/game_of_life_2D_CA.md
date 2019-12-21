@@ -12,13 +12,14 @@ using Agents.CA2D
 ```
 
 ## 1. Define the rule
-Rules of Conway's game of life: DSR (Death, Survival, Reproduction).
+Rules of Conway's game of life: DSRO (Death, Survival, Reproduction, Overpopulation).
 Cells die if the number of their living neighbors are <D,
 survive if the number of their living neighbors are <=S,
-come to life if their living neighbors are as many as R.
+come to life if their living neighbors are as many as R,
+die if if their living neighbors are >O.
 
 ```@example game_of_life_2D_CA
-rules = (2,3,3)
+rules = (2,3,3,3)
 ```
 
 ## 2. Build the model
