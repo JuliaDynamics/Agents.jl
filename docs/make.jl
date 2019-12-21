@@ -15,7 +15,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 for file in ("schelling.jl", "forest_fire.jl", "wealth_distribution.jl",
 			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl", "wright-fisher.jl")
-	Literate.markdown(joinpath(indir, file), outdir)
+	Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
 # %%

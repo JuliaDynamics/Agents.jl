@@ -207,6 +207,7 @@ p = plot2D(data, :group, t=2, nodesize=10)
 
 model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
 data = step!(model, agent_step!, 5, properties, when=when, replicates=3)
+data[end-10:end, :]
 
 # It is possible to run the replicates in parallel.
 # For that, we should start julia with `julia -p n` where is the number
