@@ -1,9 +1,3 @@
-import Pkg
-
-Pkg.activate("./Pudley")
-Pkg.instantiate()
-Pkg.precompile()
-
 # # HK (Hegselmann and Krause) opinion dynamics model
 
 # This is an implementation of a simple version of the Hegselman and Krause
