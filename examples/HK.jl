@@ -30,7 +30,6 @@
 # The Agent type has two fields so that we can implement the synchronous update.
 using Agents
 using Distributions: mean 
-using DataVoyager
 
 
 mutable struct HKAgent{T <: AbstractFloat} <: AbstractAgent
