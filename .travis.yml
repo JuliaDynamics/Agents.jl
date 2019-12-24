@@ -24,7 +24,7 @@ notifications:
 
 jobs:
   include:
-    - stage: "Tests"
+    - stage: "Coverage"
       julia: 1.3
       os: linux
       script:
