@@ -3,7 +3,6 @@ Pkg.activate(@__DIR__)
 cd(@__DIR__)
 
 using Documenter, Agents, DataFrames, Random, Statistics
-using Distributions # for the HK opinion example
 using Literate
 using UnicodePlots
 using Plots
@@ -50,3 +49,6 @@ if CI
     deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
                target = "build")
 end
+
+
+println("done")
