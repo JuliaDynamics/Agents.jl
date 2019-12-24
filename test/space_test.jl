@@ -154,14 +154,9 @@ end
   @test !in(1, Agents.agent_positions(model)[agent_pos])
 end
 
-mutable struct MyAgent <: AbstractAgent
-  id::Int
-  pos::Tuple{Int,Int}
-end
-
 @testset "nodes" begin
   space = Space((3,3))
-  model = ABM(MyAgent, space)
+  model = ABM(Agent1, space)
   for node in nodes(model)
     if rand() > 0.7
       add_agent!(node, model)

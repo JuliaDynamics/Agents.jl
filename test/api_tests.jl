@@ -1,9 +1,5 @@
 using Agents, Test, Random
 
-mutable struct Agent1 <: AbstractAgent
-  id::Int
-  pos::Tuple{Int,Int}
-end
 model1 = ABM(Agent1, Space((3,3)))
 
 agent = add_agent!((1,1), model1)
@@ -23,9 +19,6 @@ pos2 = model1.space.agent_positions[coord2vertex((2,2), model1)]
 
 # %% Scheduler tests
 N = 1000
-mutable struct Agent0 <: AbstractAgent
-  id::Int
-end
 
 # by_id
 model = ABM(Agent0; scheduler = by_id)

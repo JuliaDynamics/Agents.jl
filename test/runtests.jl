@@ -1,5 +1,14 @@
 using Test, Agents, Random
 
+mutable struct Agent0 <: AbstractAgent
+  id::Int
+end
+
+mutable struct Agent1 <: AbstractAgent
+  id::Int
+  pos::Tuple{Int,Int}
+end
+
 @testset "all tests" begin
 
 include("api_tests.jl")
