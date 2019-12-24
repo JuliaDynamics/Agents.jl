@@ -154,11 +154,12 @@ end
   @test !in(1, Agents.agent_positions(model)[agent_pos])
 end
 
+mutable struct MyAgent <: AbstractAgent
+  id::Int
+  pos::Tuple{Int,Int}
+end
+
 @testset "nodes" begin
-  mutable struct MyAgent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-  end
   space = Space((3,3))
   model = ABM(MyAgent, space)
   for node in nodes(model)
