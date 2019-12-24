@@ -3,6 +3,7 @@ Pkg.activate(@__DIR__)
 cd(@__DIR__)
 
 using Documenter, Agents, DataFrames, Random, Statistics
+using Distributions # for the HK opinion example
 using Literate
 using UnicodePlots
 using Plots
@@ -20,6 +21,7 @@ for file in ("schelling.jl", "forest_fire.jl", "wealth_distribution.jl",
 end
 
 # %%
+cd(@__DIR__)
 makedocs(modules = [Agents,AgentsPlots],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris and contributors.",

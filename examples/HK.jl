@@ -101,7 +101,6 @@ end
 
 # Finally we run three scenarios, collect the data and plot it.
 using Plots
-unicodeplots()
 
 plotsim(data, ϵ) = plot(data[!, :step], data[!, :new_opinion],
  leg= false, group = data[!, :id], title = "ϵ = $(ϵ)")
