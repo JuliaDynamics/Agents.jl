@@ -52,7 +52,7 @@ function hk_model(;numagents = 100, ϵ = 0.4)
 end
 
 # And some helper functions for the update rule. As there is a filter in
-#the rule we implement it outside the `agent_step!` method. Notice that the filter
+# the rule we implement it outside the `agent_step!` method. Notice that the filter
 # is applied to the  `:old_opinion` field .
 get_old_opinion(agent)::Float64 = agent.old_opinion
 
