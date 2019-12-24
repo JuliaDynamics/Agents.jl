@@ -14,11 +14,13 @@ CI && (ENV["GKSwstype"] = "100")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 for file in ("schelling.jl", "forest_fire.jl", "wealth_distribution.jl",
-			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl", "wright-fisher.jl")
+			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl", "wright-fisher.jl",
+			 "HK.jl")
 	Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
 # %%
+cd(@__DIR__)
 makedocs(modules = [Agents,AgentsPlots],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris and contributors.",
@@ -36,6 +38,7 @@ pages = [
 		"Game of life" => "examples/game_of_life_2D_CA.md",
 		"Rule 22" => "examples/rule22_1D_CA.md",
 		"Wright-Fisher model of evolution" => "examples/wright-fisher.md",
+		"Hegselmann-Krause opinion dynamics" => "examples/HK.md",
 		],
 	"API" => "api.md",
 	"Comparison against Mesa (Python)" => "mesa.md"
@@ -46,3 +49,6 @@ if CI
     deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
                target = "build")
 end
+
+
+println("done")
