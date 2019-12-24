@@ -153,3 +153,22 @@ end
   @test_throws KeyError id2agent(1, model) 
   @test !in(1, Agents.agent_positions(model)[agent_pos])
 end
+
+@testset "nodes" begin
+  mutable struct MyAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int}
+  end
+  space = Space((3,3))
+  model = ABM(MyAgent, space)
+  for node in nodes(model)
+    if rand() > 0.7
+      add_agent!(node, model)
+    end
+  end
+  @test nodes(model) == 1:9
+  @test nodes(model, by=:random) == [8, 9, 1, 7, 6, 5, 3, 2, 4]
+  @test nodes(model, by=:population) == [4, 5, 8, 9, 1, 2, 3, 6, 7]
+  @test length(get_node_contents(4, model)) > length(get_node_contents(7, model))
+  @test_throws ErrorException nodes(model, by=:notreal)
+end
