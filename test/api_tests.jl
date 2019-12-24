@@ -1,4 +1,4 @@
-using Agents, Test, Random
+using Agents, Test, Random, Suppressor
 
 model1 = ABM(Agent1, Space((3,3)))
 
@@ -90,4 +90,22 @@ properties = [model.agents[id].weight for id in ids]
 
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
+end
+
+@testset "show" begin
+  model = ABM(Agent0, nothing)
+  shown = @capture_out show(model)
+  @test shown == "AgentBasedModel with 0 agents of type Agent0\n no space\n scheduler: fastest"
+
+  model = ABM(Agent1, Space((3,3)))
+  add_agent!((1,1), model)
+  shown = @capture_out show(model)
+  @test shown == "AgentBasedModel with 1 agents of type Agent1\n space: GridSpace with 9 nodes and 12 edges\n scheduler: fastest"
+
+  properties = Dict(:foo => 42)
+  model = ABM(Agent1, Space((3,3)); properties=properties, scheduler=random_activation)
+  add_agent!((1,1), model)
+  add_agent!((1,2), model)
+  shown = @capture_out show(model)
+  @test shown == "AgentBasedModel with 2 agents of type Agent1\n space: GridSpace with 9 nodes and 12 edges\n scheduler: random_activation\n properties: Dict(:foo => 42)"
 end
