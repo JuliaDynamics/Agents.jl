@@ -107,5 +107,6 @@ end
   add_agent!((1,1), model)
   add_agent!((1,2), model)
   shown = @capture_out show(model)
-  @test shown == "AgentBasedModel with 2 agents of type Agent1\n space: GridSpace with 9 nodes and 12 edges\n scheduler: random_activation\n properties: Dict(:foo => 42)"
+  # NOTE: Julia 1.0 shows dictionaries without spaces around the =>, hence the ||
+  @test shown == "AgentBasedModel with 2 agents of type Agent1\n space: GridSpace with 9 nodes and 12 edges\n scheduler: random_activation\n properties: Dict(:foo => 42)" || shown == "AgentBasedModel with 2 agents of type Agent1\n space: GridSpace with 9 nodes and 12 edges\n scheduler: random_activation\n properties: Dict(:foo=>42)"
 end
