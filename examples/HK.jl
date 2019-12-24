@@ -74,11 +74,11 @@ end
 # From this implementation we see that to implement synchronous scheduling 
 # we define an Agent type with an `old` and `new` fields for attributes that 
 # are changed through synchronous updating. In the agent_step! we use the `old` field
-# and after updating all the agents `new` field we use the `model_step!``
+# and after updating all the agents `new` field we use the `model_step!`
 # to update the model  for the next iteration.
 
 # Now we can define a method for our simulation run. 
-# The parameter of interest is the ``:new_opinion` field so we assign
+# The parameter of interest is the :new_opinion` field so we assign
 # it to variable agent_properties and pass it to the `step!` method 
 # to be collected in a DataFrame.
 function model_run(; numagents = 100, iterations = 50, ϵ= 0.3)
