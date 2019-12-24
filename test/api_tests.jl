@@ -1,9 +1,5 @@
 using Agents, Test, Random
 
-mutable struct Agent1 <: AbstractAgent
-  id::Int
-  pos::Tuple{Int,Int}
-end
 model1 = ABM(Agent1, Space((3,3)))
 
 agent = add_agent!((1,1), model1)
@@ -23,9 +19,6 @@ pos2 = model1.space.agent_positions[coord2vertex((2,2), model1)]
 
 # %% Scheduler tests
 N = 1000
-mutable struct Agent0 <: AbstractAgent
-  id::Int
-end
 
 # by_id
 model = ABM(Agent0; scheduler = by_id)
@@ -55,33 +48,19 @@ a = model.scheduler(model)
 @test a[1] == 74 # reproducibility test
 
 # by property
-mutable struct Agentw <: AbstractAgent
-  id::Int
-  w::Float64
-end
-model = ABM(Agentw; scheduler = property_activation(:w))
+model = ABM(Agent2; scheduler = property_activation(:weight))
 for i in 1:N; add_agent!(model, rand()/rand()); end
 
 Random.seed!(12)
 a = model.scheduler(model)
 
 ids = collect(keys(model.agents))
-properties = [model.agents[id].w for id in ids]
+properties = [model.agents[id].weight for id in ids]
 
 @test ids[sortperm(properties)] == a
 
-mutable struct SampleAgent1 <: AbstractAgent
-  id
-  weight
-end
-mutable struct SampleAgent2 <: AbstractAgent
-  id
-  pos
-  weight
-end
-
 @testset "sample!" begin
-  model = ABM(SampleAgent1)
+  model = ABM(Agent2)
   for i in 1:20; add_agent!(model, rand()/rand()); end
   allweights = [i.weight for i in values(model.agents)]
   mean_weights = sum(allweights)/length(allweights)
@@ -99,8 +78,8 @@ end
   sample!(model, 40, :weight)
   @test Agents.nagents(model) == 40
 
-  model2 = ABM(SampleAgent2, Space((10, 10)))
-  for i in 1:20; add_agent!(SampleAgent2(i, i, rand()/rand()), model2); end
+  model2 = ABM(Agent5, Space((10, 10)))
+  for i in 1:20; add_agent!(Agent5(i, i, rand()/rand()), model2); end
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights = sum(allweights)/length(allweights)
   sample!(model2, 12, :weight)
