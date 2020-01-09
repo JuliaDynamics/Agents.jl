@@ -76,8 +76,30 @@ The package is in Julia's package list. Install it using this command:
 
 ## Running tests
 
-To run tests, just run the `runtests.jl` file in the `test` folder:
-
-```bash
-$julia runtests.jl
+Press `]` to go into package manager mode and then
 ```
+test Agents
+```
+
+
+## Alterantive package: DynamicGrids.jl
+Agents.jl targets complicated agent based models (ABMs) that are defined on truly arbitrary complex graphs.
+Because of this, the core datastructure of this package is a dictionary that maps unique IDs to Agents, as shown in the [Tutorial](@ref) and specifically in [`AgentBasedModel`](@ref).
+As all agents are unique entities, if one "dies" it is entirely and forever removed from memory.
+Similarly, when a new agent becomes "alive", this literally means that a new agent datastructure is initialized and added to this dictionary.
+
+This design decision allows for arbitrary ABMs and also allows flexible implementation on arbitrary graphs, as well as makes the data collection functionality of Agents.jl powerful and intuitive.
+But this is not necessary for *cellular-automata-like* models, where the grid cell and the "agent" identity are fully equivalent.
+This is the case e.g. in the [Forest fire](@ref) and [Game of life](@ref) examples.
+For such applications the Julia package [DynamicGrids.jl](@ref) can give 1 to 2 orders of magnitude performance gain than Agents.jl, see [DynamicGrids.jl#10](https://github.com/cesaraustralia/DynamicGrids.jl/issues/10) and [Agents.jl#127](https://github.com/JuliaDynamics/Agents.jl/pull/127).
+This happens because in such cases there are numerous optimizations that take advantage of the fact that you don't have to "care" about "agents", resulting in the core datastructure being a standard Julia `Array`.
+
+### How to decide?
+To decide whether you should use Agents.jl or DynamicGrids.jl check the following statements:
+
+* Is my model a cellular-automaton-like?
+* My agents do not move around.
+* A node will always have a single "agent"/property whose value will change over time.
+* The direct output of the simulation (e.g. the `Array` of cell values over time) is enough.
+
+If these statements are true, you should consider DynamicGrids.jl. Otherwise, Agents.jl is probably more suitable.

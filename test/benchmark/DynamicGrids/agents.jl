@@ -53,6 +53,6 @@ function forest_step!(forest)
   end
 end
 
-println("time to initialize model")
+println("time to do a single step!")
 step!(forest, dummystep, forest_step!)
 @time step!(forest, dummystep, forest_step!)
