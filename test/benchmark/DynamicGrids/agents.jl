@@ -54,5 +54,7 @@ function forest_step!(forest)
 end
 
 println("time to do a single step!")
-step!(forest, dummystep, forest_step!)
-@time step!(forest, dummystep, forest_step!)
+step!(forest, dummystep, forest_step!) # compile
+@time for i in 1:50
+           step!(forest, dummystep, forest_step!)
+       end
