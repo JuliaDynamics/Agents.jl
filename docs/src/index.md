@@ -102,4 +102,4 @@ To decide whether you should use Agents.jl or DynamicGrids.jl check the followin
 * A node will always have a single "agent"/property whose value will change over time.
 * The direct output of the simulation (e.g. the `Array` of cell values over time) is enough.
 
-If these statements are true, you should consider DynamicGrids.jl. Otherwise, Agents.jl is probably more suitable.
+If most of these statements are true, you should consider DynamicGrids.jl. Otherwise, Agents.jl is probably more suitable.
