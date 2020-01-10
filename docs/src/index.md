@@ -91,7 +91,7 @@ Similarly, when a new agent becomes "alive", this literally means that a new age
 This design decision allows for arbitrary ABMs and also allows flexible implementation on arbitrary graphs, as well as makes the data collection functionality of Agents.jl powerful and intuitive.
 But this is not necessary for *cellular-automata-like* models, where the grid cell and the "agent" identity are fully equivalent.
 This is the case e.g. in the [Forest fire](@ref) and [Game of life](@ref) examples.
-For such applications the Julia package [DynamicGrids.jl](@ref) can give up to 2 orders of magnitude performance gain than Agents.jl, see [DynamicGrids.jl#10](https://github.com/cesaraustralia/DynamicGrids.jl/issues/10) and [Agents.jl#127](https://github.com/JuliaDynamics/Agents.jl/pull/127), while also allowing advanced visualization.
+For such applications the Julia package [DynamicGrids.jl](@ref) can give up to 2 orders of magnitude performance gain than Agents.jl (see `/test/benchmark/DynamicGrids`), while also allowing advanced visualization.
 This happens because in such cases there are numerous optimizations that take advantage of the fact that you don't have to "care" about "agents".
 
 ### How to decide?
