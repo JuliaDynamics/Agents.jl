@@ -60,5 +60,13 @@ For such applications the Julia package [DynamicGrids.jl](@ref) is more performa
 
 ### How to decide?
 Use DynamicGrids.jl when your model lives on a rectangular grid, while the value of each grid cell does not have an identity (equivalently, the "identity" of each entity in your model is equivalent with its grid cell).
+Also use it for animating cellular automata.
 
-Use Agents.jl when you want to (a) use individual agents whose identity (and other properties) is detached from their location (b) multiple agents can occupy the same location (c) the spatial model of your structure is an arbitrary graph instead of a rectangular grid (d) the agents have multiple values attached to them or (e) you care about stability (Agents.jl has a simpler API, is better documented and is stable).
+Use Agents.jl any of the following apply
+
+1. you use individual agents whose identity (and other properties) is detached from their location
+2. multiple agents can occupy the same location
+3. the spatial model of your structure is an arbitrary graph instead of a rectangular grid
+4. the agents have multiple values attached to them
+5. you want the output of your simulation to be a `DataFrame` for easier further analysis
+6. you care about stability (Agents.jl has a simpler API, is better documented and is stable)
