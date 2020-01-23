@@ -17,7 +17,7 @@
 
 # !!! info "Cellular-automata-like ABMs"
 #     The forest fire model is a cellular automaton.
-#     Have a read at [Alterantive package: DynamicGrids.jl](@ref), which can do
+#     Have a read at [Agents.jl vs DynamicGrids.jl](@ref), which can do
 #     simulations with such systems faster than Agents.jl.
 
 # ## Defining the core structures
