@@ -25,8 +25,6 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 AgentBasedModel
 ```
 
-The model type may not necessarily be a mutable type, it depends on your problem.
-
 ## 2. The space
 
 Under the hood, all spaces are represented by a graph from LightGraphs.jl.
