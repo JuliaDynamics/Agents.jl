@@ -12,7 +12,7 @@ Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modelin
 
 * Simple, concise and extendable API for running ABMs.
 * Default grids to run the simulations, including simple or toroidal 1D grids, simple or toroidal regular rectangular and triangular 2D grids, and simple or toroidal regular cubic 3D grids with von Neumann or Moore neighborhoods.
-* Alows arbitrary graphs as spaces for the ABMs.
+* Allows arbitrary graphs as spaces for the ABMs.
 * Several different default schedulers.
 * Running the simulations in parallel on multiple cores.
 * Automatic data collection in a `DataFrame` at desired intervals.
