@@ -62,8 +62,11 @@ pages = [
 )
 
 if CI
-    deploydocs(repo = "github.com/JuliaDynamics/Agents.jl.git",
-               target = "build")
+    deploydocs(
+        repo = "github.com/JuliaDynamics/Agents.jl.git",
+        target = "build",
+        push_preview = true
+    )
 end
 
 
