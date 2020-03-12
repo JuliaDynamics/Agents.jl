@@ -43,6 +43,9 @@ authors = "Ali R. Vahdati, George Datseris and contributors.",
 doctest = false,
 format = Documenter.HTML(
     prettyurls = CI,
+	assets = [
+		asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
+		],
     ),
 pages = [
     "Introduction" => "index.md",
