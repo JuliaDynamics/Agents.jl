@@ -144,13 +144,7 @@ data_to_collect = Dict(:status => [infected, recovered, length])
 data = step!(model, agent_step!, 300, data_to_collect)
 
 # Reshape data before plotting
-dnames = names(data)
-steps = size(data, 1)
-d = DataFrame(
-	:counts => vcat(data[!, 1], data[!, 2], data[!, 3]),
-	:group => vcat(repeat(["Infected"], steps), repeat(["N"], steps), repeat(["Recovered"], steps)),
-	:step => repeat(data[!, :step], 3)
-)
+d = stack(data, names(data)[1:3], variable_name=:group, value_name=:counts)
 
 p = @vlplot(
 	data = d,
