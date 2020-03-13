@@ -2,35 +2,51 @@
 
 # ## SIR model
 
-# SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population. Here we add one more category of individuals: those who are infected, but do not know it. Transmission rate of infected and diagnosed is lower than infected and undetected.
-# We also allow a fraction of recovered individuals to catch the disease again. The disease does not bring full immunity.
+# SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population.
+# Here we add one more category of individuals: those who are infected, but do not know it.
+# Transmission rate of infected and diagnosed is lower than infected and undetected.
+# We also allow a fraction of recovered individuals to catch the disease again, meaning
+# that recovering the disease does not bring full immunity.
 
-# ### Model parameters
+# We will apply this model to a population living in a graph of connected cities which
+# looks like this:
 
-# * Ns: a list of population sizes per city.
-# * migration_rates: A matrix of migration probability per individual per day from one city to another.
-# * Is: An array for initial number of infected but undetected people per city.
-# * Bu: an array for transmission probabilities β of the infected but undetected per city. Transmission probability is how many susceptiple are infected per day by and infected individual. If social distancing is practiced, this number increases.
-# * Bd: an array for transmission probabilities β of the infected and detected per city. If hospitals are full, this number increases.
+using GraphRecipes, Plots, LightGraphs
+g = barabasi_albert(8, 1; seed = 42)
+weights = [length(neighbors(g, i)) for i in 1:nv(g)]
+p = graphplot(g, node_weights = weights, nodeshape = :circle)
+
+# Here the size of the nodes is simply how many edges they have, but we will take advantage
+# of this to separate big from small cities (the more edges, there more the initial population).
+# In addition, people from smaller cities are more likely to migrate to large cities.
+
+# ## Model parameters
+# The following parameters should be specified by the user
+# * Bu: an array for transmission probabilities β of the infected but undetected per city.
+#   Transmission probability is how many susceptiple are infected per day by and infected individual.
+#   If social distancing is practiced, this number increases.
+# * Bd: an array for transmission probabilities β of the infected and detected per city.
+#   If hospitals are full, this number increases.
 # * infection_period: how many days before a person dies or recovers.
-# * reinfection_probability
 # * time to detect in days: how long before an infected person is detected?
+# * reinfection_probability: The probabiity that a recovered person can get infected again.
+
+# And the following optional parameters are created during model creation
+# * `C=8`: the number of cities.
+# * `Ns=1000*edges_number`: a list of population sizes per city.
+# * `Is = 0.01 .* Ns`: An array for initial number of infected but undetected people per city.
+# * `migration_rates`: A matrix of migration probability per individual per day from one city to another.
 
 # ## Making the model in Agents.jl
 # We start by defining the Agent type and the ABM
 
-#TODO: Replace Tuple{Int,Int} and make arbitrary graph instead
 #TODO: Increase readability of "status" by making it a symbol field
 
-using Agents
-using Random
-using Distributions
-using VegaLite
-using DataFrames
+using Agents, Random, Distributions, DataFrames
 
 mutable struct Agent <: AbstractAgent
     id::Int
-    pos::Tuple{Int, Int}
+    pos::Int
     infected::Int  # number of days since is infected
     status::Int  # 1: S, 2: I, 3:R
 end
@@ -48,7 +64,7 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-    space = Space((ncities, 1))
+    space = Space(barabasi_albert(8, 1; seed = 42))
     properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
     model = ABM(Agent, space; properties=properties)
 
@@ -112,7 +128,7 @@ function transmit!(agent, model)
     end
 end
 
-update!(agent, model) = agent.status && (agent.infected += 1)
+update!(agent, model) = agent.status == 2 && (agent.infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.infected == model.properties[:infection_period]
@@ -156,6 +172,7 @@ data[1:10, :]
 
 # We now plot how quantities evolved in time
 using Plots
+pyplot()
 N = sum(model.properties[:Ns])
 
 x = data.step
