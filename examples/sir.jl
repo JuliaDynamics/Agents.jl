@@ -142,21 +142,27 @@ params = Dict(
     :death_rate => 0.01
 )
 
-model = model_initiation(;params...)
-
+# We define two useful functions for the data collection
 infected(x) = count(i == 2 for i in x)
 recovered(x) = count(i == 3 for i in x)
 
+# %% #src
+# And finally run the model and collect data
+model = model_initiation(;params...)
+
 data_to_collect = Dict(:status => [infected, recovered, length])
-data = step!(model, agent_step!, 300, data_to_collect)
+data = step!(model, agent_step!, 50, data_to_collect)
+data[1:10, :]
 
-# Reshape data before plotting
-d = stack(data, names(data)[1:3], variable_name=:group, value_name=:counts)
+# We now plot how quantities evolved in time
+using Plots
+N = sum(model.properties[:Ns])
 
-p = @vlplot(
-    data = d,
-    mark = :line,
-    x = :step,
-    y = :counts,
-    color = :group
-)
+x = data.step
+p = Plots.plot(x, data[:, Symbol("infected(status)")] / N, label = "infected")
+plot!(p, x, data[:, Symbol("recovered(status)")] / N, label = "recovered")
+dead = (N .- data[:, Symbol("length(status)")] )/N
+plot!(p, x, dead, label = "dead")
+xlabel!(p, "steps")
+ylabel!(p, "fraction")
+p
