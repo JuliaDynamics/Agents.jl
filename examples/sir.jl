@@ -144,8 +144,8 @@ params = Dict(
 
 model = model_initiation(;params...)
 
-infected(x) = length([i for i in x if i == 2])
-recovered(x) = length([i for i in x if i == 3])
+infected(x) = count(i == 2 for i in x)
+recovered(x) = count(i == 3 for i in x)
 
 data_to_collect = Dict(:status => [infected, recovered, length])
 data = step!(model, agent_step!, 300, data_to_collect)
