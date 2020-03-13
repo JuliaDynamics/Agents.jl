@@ -42,7 +42,7 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
 		migration_rates[c, :] ./= migration_rates_sum[c]
 	end
 
-  space = Space((3, 1))
+  space = Space((ncities, 1))
   properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
   model = ABM(Ind, space; properties=properties)
 
