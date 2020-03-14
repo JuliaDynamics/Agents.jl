@@ -15,6 +15,7 @@ find_empty_nodes
 node_neighbors
 pick_empty
 get_node_contents
+get_node_agents
 isempty(::Integer, ::ABM)
 ```
 
