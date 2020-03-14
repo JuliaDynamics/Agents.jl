@@ -13,9 +13,7 @@ CI && (ENV["GKSwstype"] = "100")
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
-for file in ("schelling.jl", "forest_fire.jl", "wealth_distribution.jl",
-			 "rule22_1D_CA.jl", "game_of_life_2D_CA.jl", "wright-fisher.jl",
-			 "HK.jl")
+for file in readdir(indir)
 	Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -52,6 +50,7 @@ pages = [
 	"Tutorial" => "tutorial.md",
 	"Examples" => [
 		"Schelling's segregation model" => "examples/schelling.md",
+		"SIR model for the spread of COVID-19" => "examples/sir.md"
 		"Wealth distribution" => "examples/wealth_distribution.md",
 		"Forest fire" => "examples/forest_fire.md",
 		"Game of life" => "examples/game_of_life_2D_CA.md",
