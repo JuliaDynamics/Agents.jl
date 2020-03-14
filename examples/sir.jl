@@ -50,24 +50,24 @@ end
 function model_initiation(;Ns, migration_rates, β_und, β_det, infection_period = 30,
   reinfection_probability = 0.05, detection_time = 14, death_rate = 0.02,
   Is=[zeros(Int, length(Ns)-1)..., 1], seed = 0)
-  
+
   Random.seed!(seed)
   @assert length(Ns) == length(Is) == length(β_und) == length(β_det) == size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
   @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
-  
+
   C = length(Ns)
   ## normalize migration_rates
   migration_rates_sum = sum(migration_rates, dims=2)
   for c in 1:C
     migration_rates[c, :] ./= migration_rates_sum[c]
   end
-  
+
   properties =
-  @dict(Ns, Is, β_und, β_det, β_det, migration_rates, infection_period,
-  infection_period, reinfection_probability, detection_time, C, death_rate)
+    @dict(Ns, Is, β_und, β_det, β_det, migration_rates, infection_period,
+    infection_period, reinfection_probability, detection_time, C, death_rate)
   space = Space(complete_digraph(C))
   model = ABM(PoorSoul, space; properties=properties)
-  
+
   ## Add initial individuals
   for city in 1:C, n in 1:Ns[city]
     ind = add_agent!(city, model, 0, :S) # Susceptible
@@ -84,21 +84,27 @@ function model_initiation(;Ns, migration_rates, β_und, β_det, infection_period
   return model
 end
 
-"""
-Create random parameters given number of cities.
-Migration rates between cities are proportional to their size with more travel from smaller cities to larger cities than vice versa.
+# We will make a function that starts a model with `C` number of cities,
+# and creates the other parameters automatically by attributing some random
+# values to them. You could directly use the above constructor and specify all
+# `Ns, β`, etc. but the following is convenient for this example
 
-* C: number of cities.
-* max_travel_rate: maximum travel probability per individual per day.
-"""
+# All cities are connected with each other, while it is more probable to travel from a city
+# with small population into a city with large population.
+
+using LinearAlgebra: diagind
+
 function create_params(;C, max_travel_rate, infection_period = 30,
-  reinfection_probability = 0.05, detection_time = 14, death_rate = 0.02,
-  Is=[zeros(Int, length(Ns)-1)..., 1], minN=500, maxN=3000)
-  
-  Ns = rand(minN:maxN, C)
+    reinfection_probability = 0.05, detection_time = 14, death_rate = 0.02,
+    Is=[zeros(Int, C-1)..., 1], seed = 19
+  )
+
+  Random.seed!(seed)
+  Ns = rand(50:5000, C)
   β_und = rand(0.3:0.02:0.6, C)
   β_det = β_und ./ 10
-  
+
+  Random.seed!(seed)
   migration_rates = zeros(C, C);
   for c in 1:C
     for c2 in 1:C
@@ -110,13 +116,12 @@ function create_params(;C, max_travel_rate, infection_period = 30,
   migration_rates[diagind(migration_rates)] .= 1.0
 
   params = @dict(Ns, β_und, β_det, migration_rates, infection_period,
-  reinfection_probability, detection_time, death_rate,
-  Is)
-  
+    reinfection_probability, detection_time, death_rate, Is)
+
   return params
 end
 
-params = create_params(C=30, max_travel_rate=0.01)
+params = create_params(C=8, max_travel_rate=0.01)
 model = model_initiation(;params...)
 
 # Alright, let's plot the cities as a graph to get an idea how the model "looks like",
@@ -124,7 +129,9 @@ model = model_initiation(;params...)
 
 using AgentsPlots
 
-plotabm(model)
+plotargs = (node_size	= 0.2, method = :circular, linealpha = 0.4)
+
+plotabm(model; plotargs...)
 
 # The node size is proportional to the relative population of each city.
 # In principle we could adjust the edge widths to be proportional with the
@@ -139,15 +146,18 @@ for node in 1:nv(g)
   end
 end
 
-edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 100
+edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 250
 
-plotabm(model; edgewidth = edgewidthsf)
+plotargs = merge(plotargs, (edgewidth = edgewidthsf,))
+
+plotabm(model; plotargs...)
 
 # In the following we will be colloring each node according to how large percentage of the
-# population is infected
+# population is infected. So we create a function to give to [`plotabm`](@ref) as
+# second argument
 
 infected_fraction(x) =  cgrad(:inferno)[count(a.status == :I for a in x)/length(x)]
-plotabm(model, infected_fraction; edgewidth = edgewidthsf)
+plotabm(model, infected_fraction; plotargs...)
 
 # Here this shows all nodes as black, since we haven't run the model yet. Let's change that!
 
@@ -179,11 +189,11 @@ function transmit!(agent, model)
   else
     prop[:β_det][agent.pos]
   end
-  
+
   d = Poisson(rate)
   n = rand(d)
   n == 0 && return
-  
+
   for contactID in get_node_contents(agent, model)
     contact = id2agent(contactID, model)
     if contact.status == :S || (contact.status == :R && rand() ≤ prop[:reinfection_probability])
@@ -212,8 +222,8 @@ model = model_initiation(;params...)
 
 anim = @animate for i ∈ 1:30
   step!(model, agent_step!, 1)
-  p1 = plotabm(model, infected_fraction; method = :circular, edgewidth = edgewidthsf)
-  title!(p1, "Step $(i)")
+  p1 = plotabm(model, infected_fraction; plotargs...)
+  title!(p1, "Day $(i)")
 end
 
 gif(anim, "covid_evolution.gif", fps = 5);
@@ -221,6 +231,9 @@ gif(anim, "covid_evolution.gif", fps = 5);
 model
 
 # ![](covid_evolution.gif)
+
+# One can really see "explosive growth" in this animation. Things look quite calm for
+# a while and then suddenly supermarkets have no toilet paper anymore!
 
 # *(important notice: always provide an appropriate `method` keyword when you want
 # to animate ABMs)*
@@ -236,7 +249,7 @@ recovered(x) = count(i == :R for i in x)
 model = model_initiation(;params...)
 
 data_to_collect = Dict(:status => [infected, recovered, length])
-data = step!(model, agent_step!, 50, data_to_collect)
+data = step!(model, agent_step!, 100, data_to_collect)
 data[1:10, :]
 
 # We now plot how quantities evolved in time to show
