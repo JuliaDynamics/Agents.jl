@@ -8,18 +8,6 @@
 # We also allow a fraction of recovered individuals to catch the disease again, meaning
 # that recovering the disease does not bring full immunity.
 
-# We will apply this model to a population living in a graph of connected cities which
-# looks like this:
-
-using GraphRecipes, Plots, LightGraphs
-g = barabasi_albert(8, 1; seed = 42)
-weights = [length(neighbors(g, i)) for i in 1:nv(g)]
-p = graphplot(g, node_weights = weights, nodeshape = :circle)
-
-# Here the size of the nodes is simply how many edges they have, but we will take advantage
-# of this to separate big from small cities (the more edges, there more the initial population).
-# In addition, people from smaller cities are more likely to migrate to large cities.
-
 # ## Model parameters
 # The following parameters should be specified by the user
 # * Bu: an array for transmission probabilities β of the infected but undetected per city.
@@ -64,8 +52,9 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-    space = Space(barabasi_albert(8, 1; seed = 42))
-    properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
+		space = Space(complete_digraph(ncities))
+		
+		properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
     model = ABM(Agent, space; properties=properties)
 
     # Add initial individuals
@@ -157,6 +146,33 @@ params = Dict(
     :reinfection_probability => 0.05,
     :death_rate => 0.01
 )
+
+
+# We will apply this model to a population living in a graph of connected cities which
+# looks like this:
+
+using GraphRecipes, Plots, LightGraphs
+g = complete_digraph(length(params[:Ns]))
+node_weights = params[:Ns]
+
+edgewidthsdict = Dict()
+for node in 1:nv(g)
+	nbs = neighbors(g, node)
+	for nb in nbs
+		edgewidthsdict[(node, nb)] = params[:migration_rates][node, nb]
+	end
+end
+
+edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 100
+
+p = graphplot(g,
+	node_weights = node_weights,
+	edgewidth = edgewidthsf,
+	nodeshape = :circle
+)
+
+# Here the size of the nodes shows population size.
+# Edge thickness shows amount of travel from/to a city.
 
 # We define two useful functions for the data collection
 infected(x) = count(i == 2 for i in x)
