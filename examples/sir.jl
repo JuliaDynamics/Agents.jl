@@ -1,4 +1,4 @@
-# # SIR model for spread of COVID-19
+# # SIR model for the spread of COVID-19
 
 # ## SIR model
 
@@ -9,26 +9,35 @@
 # that recovering the disease does not bring full immunity.
 
 # ## Model parameters
-# The following parameters should be specified by the user
-# * Bu: an array for transmission probabilities β of the infected but undetected per city.
-#   Transmission probability is how many susceptiple are infected per day by and infected individual.
+# Here are the model parameters, some of which have default values.
+# * `Ns`: a vector of population sizes per city. The amoount of cities is just `C=length(Ns)`.
+# * `β_und`: a vector for transmission probabilities β of the infected but undetected per city.
+#   Transmission probability is how many susceptiple are infected per day by an infected individual.
 #   If social distancing is practiced, this number increases.
-# * Bd: an array for transmission probabilities β of the infected and detected per city.
+# * β_det: an array for transmission probabilities β of the infected and detected per city.
 #   If hospitals are full, this number increases.
-# * infection_period: how many days before a person dies or recovers.
-# * time to detect in days: how long before an infected person is detected?
-# * reinfection_probability: The probabiity that a recovered person can get infected again.
-
-# And the following optional parameters are created during model creation
-# * `C=8`: the number of cities.
-# * `Ns=1000*edges_number`: a list of population sizes per city.
-# * `Is = 0.01 .* Ns`: An array for initial number of infected but undetected people per city.
+# * `infection_period = 30`: how many days before a person dies or recovers.
+# * `detection_time = 14`: how many days before an infected person is detected.
+# * `death_rate = 0.02`: the probability that the individual will die after the `infection_period`.
+# * `reinfection_probability = 0.05`: The probabiity that a recovered person can get infected again.
 # * `migration_rates`: A matrix of migration probability per individual per day from one city to another.
+# * `Is = [zeros(C-1)..., 1]`: An array for initial number of infected but undetected people per city.
+#   This starts as only one infected individual in the last city.
+
+# Notice that all `Ns, β, Is` need to have the same length, as they are numbers for each
+# city. We've tried to add values to the infection parameters similar to the ones you would hear
+# on the news about COVID-19.
+
+# Notice this example is mostly for education purposes, not
+# research purposes. In a research scenario one would need more complex agents, with
+# age information, and all infection parameters would not be constants but instead
+# depend on the agent's properties.
 
 # ## Making the model in Agents.jl
-# We start by defining the PoorSoul type and the ABM
+# We start by defining the `PoorSoul` type (representing an agent) and the ABM
 
 using Agents, Random, Distributions, DataFrames
+using DrWatson: @dict
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int
@@ -37,30 +46,33 @@ mutable struct PoorSoul <: AbstractAgent
     status::Symbol  # 1: S, 2: I, 3:R
 end
 
-function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, reinfection_probability, time_to_detect, death_rate, seed=0)
-    Random.seed!(seed)
+function model_initiation(;Ns, migration_rates, β_und, β_det, infection_period = 30,
+	reinfection_probability = 0.05, detection_time = 14, death_rate = 0.02,
+	Is=[zeros(Int, length(Ns)-1)..., 1], seed = 0)
 
-    @assert length(Ns) == length(Is) == length(Bu) == length(Bd) == size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
+    Random.seed!(seed)
+    @assert length(Ns) == length(Is) == length(β_und) == length(β_det) == size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
-    ncities = length(Ns)
+    C = length(Ns)
     ## normalize migration_rates
     migration_rates_sum = sum(migration_rates, dims=2)
-    for c in 1:ncities
+    for c in 1:C
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-		space = Space(complete_digraph(ncities))
-
-		properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
+	properties =
+		@dict(Ns, Is, β_und, β_det, β_det, migration_rates, infection_period,
+		infection_period, reinfection_probability, detection_time, C, death_rate)
+	space = Space(complete_digraph(C))
     model = ABM(PoorSoul, space; properties=properties)
 
     ## Add initial individuals
-    for city in 1:ncities, n in 1:Ns[city]
+    for city in 1:C, n in 1:Ns[city]
         ind = add_agent!(city, model, 0, :S) # Susceptible
     end
     ## add infected individuals
-    for city in 1:ncities
+    for city in 1:C
         inds = get_node_contents(city, model)
         for n in 1:Is[city]
             agent = id2agent(inds[n], model)
@@ -68,11 +80,59 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
             agent.days_infected = 1
         end
     end
-
     return model
 end
 
-# Now we define the functions for stepping
+params = Dict(
+    :Ns => [5000, 2000, 1000],
+	## Transmission rates of the virus are generally a bit higher in more
+	## crowded cities (we assume people have a more "outgoing" lifestyle there)
+    :β_und => [0.7, 0.6, 0.5],
+    :β_det => [0.08, 0.06, 0.04],
+    ## people from smaller cities are more likely to travel to bigger cities.
+    :migration_rates => [1      0.01   0.005;
+	                     0.015  1      0.007;
+						 0.02   0.018  1],
+)
+
+model = model_initiation(;params...)
+
+# Alright, let's plot the cities as a graph to get an idea how the model "looks like",
+# using the function [`plotabm`](@ref).
+
+using AgentsPlots
+
+plotabm(model)
+
+# The node size is proportional to the relative population of each city.
+# In principle we could adjust the edge widths to be proportional with the
+# migration rates, by doing:
+
+g = model.space.graph
+edgewidthsdict = Dict()
+for node in 1:nv(g)
+	nbs = neighbors(g, node)
+	for nb in nbs
+		edgewidthsdict[(node, nb)] = params[:migration_rates][node, nb]
+	end
+end
+
+edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 100
+
+plotabm(model; edgewidth = edgewidthsf)
+
+# In the following we will be colloring each node according to how large percentage of the
+# population is infected, so we define the following functions, which we will also
+# use in data collection.
+
+infected_fraction(x) =  cgrad(:inferno)[count(a.status == :I for a in x)/length(x)]
+plotabm(model, infected_fraction; edgewidth = edgewidthsf)
+
+# Here this shows all nodes as black, since we haven't run the model yet. Let's change that!
+
+# ## SIR Stepping functions
+
+# Now we define the functions for modelling the virus spread in time
 
 function agent_step!(agent, model)
     migrate!(agent, model)
@@ -82,8 +142,8 @@ function agent_step!(agent, model)
 end
 
 function migrate!(agent, model)
-    nodeid = coord2vertex(agent, model)
-    d = DiscreteNonParametric(1:model.properties[:ncities], model.properties[:migration_rates][nodeid, :])
+    nodeid = agent.pos
+    d = DiscreteNonParametric(1:model.properties[:C], model.properties[:migration_rates][nodeid, :])
     m = rand(d)
     if m ≠ nodeid
         move_agent!(agent, m, model)
@@ -93,10 +153,10 @@ end
 function transmit!(agent, model)
     agent.status == :S && return
     prop = model.properties
-    rate = if agent.days_infected < prop[:time_to_detect]
-            prop[:Bu][coord2vertex(agent, model)]
+    rate = if agent.days_infected < prop[:detection_time]
+            prop[:β_und][agent.pos]
         else
-            prop[:Bd][coord2vertex(agent, model)]
+            prop[:β_det][agent.pos]
     end
 
     d = Poisson(rate)
@@ -127,73 +187,50 @@ function recover_or_die!(agent, model)
 end
 
 # ## Example run
-# In the following example we tried to approximate realistic values for the COVID-19 virus.
-
-params = Dict(
-    :Ns => [5000, 2000, 1000],
-    # Let's start from a single infected individual in a smaller city.
-    :Is => [0, 0, 1],
-    :Bu => [0.6, 0.6, 0.6],
-    :Bd => [0.07, 0.07, 0.07],
-    # people from smaller cities are more likely to travel to bigger cities. Migration rates from from row i to column j.
-    :migration_rates => [1     0.01  0.005;
-	                     0.015 1     0.007;
-						 0.02  0.018 1],
-    :infection_period => 30,
-    :time_to_detect => 14,
-    :reinfection_probability => 0.05,
-    :death_rate => 0.01
-)
+# %% #src
+model = model_initiation(;params...)
+# %%
+step!(model, agent_step!, 4)
+plotabm(model, infected_fraction; edgewidth = edgewidthsf)
+#
+step!(model, agent_step!, 4)
+plotabm(model, infected_fraction; edgewidth = edgewidthsf)
+#
+step!(model, agent_step!, 4)
+plotabm(model, infected_fraction; edgewidth = edgewidthsf)
+#
+step!(model, agent_step!, 4)
+plotabm(model, infected_fraction; edgewidth = edgewidthsf)
 
 
-# We will apply this model to a population living in a graph of connected cities which
-# looks like this:
+# ## Exponential growth
 
-using GraphRecipes, Plots, LightGraphs
-g = complete_digraph(length(params[:Ns]))
-node_weights = params[:Ns]
-
-edgewidthsdict = Dict()
-for node in 1:nv(g)
-	nbs = neighbors(g, node)
-	for nb in nbs
-		edgewidthsdict[(node, nb)] = params[:migration_rates][node, nb]
-	end
-end
-
-edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 100
-
-p = graphplot(g,
-	node_weights = node_weights,
-	edgewidth = edgewidthsf,
-	nodeshape = :circle
-)
-
-# Here the size of the nodes shows population size.
-# Edge thickness shows amount of travel from/to a city.
-
-# We define two useful functions for the data collection
+# And finally run the model and collect data. We define  two useful functions for
+# data collection:
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
 
-# %% #src
-# And finally run the model and collect data
+# and then collect data
+
 model = model_initiation(;params...)
 
 data_to_collect = Dict(:status => [infected, recovered, length])
 data = step!(model, agent_step!, 50, data_to_collect)
 data[1:10, :]
 
-# We now plot how quantities evolved in time
-using Plots
-pyplot()
+# We now plot how quantities evolved in time to show
+# the exponential growth of the virus
+
 N = sum(model.properties[:Ns])
 
 x = data.step
-p = Plots.plot(x, data[:, Symbol("infected(status)")] / N, label = "infected")
-plot!(p, x, data[:, Symbol("recovered(status)")] / N, label = "recovered")
-dead = (N .- data[:, Symbol("length(status)")] )/N
+p = Plots.plot(x, log10.(data[:, Symbol("infected(status)")]), label = "infected")
+plot!(p, x, log10.(data[:, Symbol("recovered(status)")]), label = "recovered")
+dead = log10.(N .- data[:, Symbol("length(status)")])
 plot!(p, x, dead, label = "dead")
 xlabel!(p, "steps")
-ylabel!(p, "fraction")
+ylabel!(p, "log( count )")
 p
+
+# The exponential growth is clearly visible since the logarithm of the  number of infected increases
+# linearly, until everyone is infected.
