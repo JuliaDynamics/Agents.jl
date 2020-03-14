@@ -35,7 +35,7 @@
 
 # ## Making the model in Agents.jl
 # We start by defining the `PoorSoul` type (representing an agent) and the ABM
-
+cd(@__DIR__) #src
 using Agents, Random, Distributions, DataFrames
 using DrWatson: @dict
 
@@ -122,8 +122,7 @@ edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 100
 plotabm(model; edgewidth = edgewidthsf)
 
 # In the following we will be colloring each node according to how large percentage of the
-# population is infected, so we define the following functions, which we will also
-# use in data collection.
+# population is infected
 
 infected_fraction(x) =  cgrad(:inferno)[count(a.status == :I for a in x)/length(x)]
 plotabm(model, infected_fraction; edgewidth = edgewidthsf)
@@ -187,31 +186,31 @@ function recover_or_die!(agent, model)
 end
 
 # ## Example run
-# %% #src
 model = model_initiation(;params...)
-# %%
-step!(model, agent_step!, 4)
-plotabm(model, infected_fraction; edgewidth = edgewidthsf)
-#
-step!(model, agent_step!, 4)
-plotabm(model, infected_fraction; edgewidth = edgewidthsf)
-#
-step!(model, agent_step!, 4)
-plotabm(model, infected_fraction; edgewidth = edgewidthsf)
-#
-step!(model, agent_step!, 4)
-plotabm(model, infected_fraction; edgewidth = edgewidthsf)
 
+anim = @animate for i ∈ 1:30
+	step!(model, agent_step!, 1)
+	p1 = plotabm(model, infected_fraction; method = :circular, edgewidth = edgewidthsf)
+	title!(p1, "Step $(i)")
+end
+
+gif(anim, "covid_evolution.gif", fps = 5);
+
+model
+
+# ![](covid_evolution.gif)
+
+# *(important notice: always provide an appropriate `method` keyword when you want
+# to animate ABMs)*
 
 # ## Exponential growth
 
-# And finally run the model and collect data. We define  two useful functions for
+# We now run the model and collect data. We define two useful functions for
 # data collection:
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
 
 # and then collect data
-
 model = model_initiation(;params...)
 
 data_to_collect = Dict(:status => [infected, recovered, length])
@@ -221,8 +220,7 @@ data[1:10, :]
 # We now plot how quantities evolved in time to show
 # the exponential growth of the virus
 
-N = sum(model.properties[:Ns])
-
+N = sum(model.properties[:Ns]) # Total initial population
 x = data.step
 p = Plots.plot(x, log10.(data[:, Symbol("infected(status)")]), label = "infected")
 plot!(p, x, log10.(data[:, Symbol("recovered(status)")]), label = "recovered")
