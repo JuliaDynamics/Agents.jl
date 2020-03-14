@@ -55,8 +55,8 @@ As all agents are unique entities, if one "dies" it is entirely and forever remo
 Similarly, when a new agent becomes "alive", this literally means that a new agent datastructure is initialized and added to this dictionary.
 
 This is not necessary for *cellular-automata-like* models, where the grid cell and the "agent" identity are fully equivalent, and the agents have a single "property".
-This is the case e.g. in the [Forest fire](@ref) and [Game of life](@ref) examples.
-For such applications the Julia package [DynamicGrids.jl](@ref) is more performant than Agents.jl (~2 orders of magnitude), while also allowing advanced visualization.
+This is the case e.g. in the [Forest fire model](@ref).
+For such applications the Julia package DynamicGrids.jl is more performant than Agents.jl.
 
 ### How to decide?
 Use DynamicGrids.jl when your model lives on a rectangular grid, while the value of each grid cell does not have an identity (equivalently, the "identity" of each entity in your model is equivalent with its grid cell).
@@ -69,4 +69,5 @@ Use Agents.jl if any of the following applies:
 3. The spatial model of your structure is an arbitrary graph instead of a rectangular grid
 4. The agents have multiple values attached to them
 5. You want the output of your simulation to be a `DataFrame` for easier further analysis
-6. You care about stability (Agents.jl has a simpler API, is better documented and is stable)
+6. You care about stability
+7. You want something simple to learn and use (Agents.jl has a simpler API and is much better documented)
