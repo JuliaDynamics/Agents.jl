@@ -150,7 +150,7 @@ That is actually straightforward:
 function wealth_distr(data, model, n)
     W = zeros(Int, size(model.space))
     for row in eachrow(filter(r -> r.step == n, data)) # iterate over rows at a specific step
-        W[row.pos...] = row.wealth
+        W[row.pos...] += row.wealth
     end
     return W
 end
@@ -174,6 +174,4 @@ Plots.heatmap(W10)
 ```
 
 What we see is that wealth gets more and more localized.
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

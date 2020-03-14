@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/../../../../../../C:/Users/mvmaciel/Desktop/Agents.jl/examples/HK.jl"
+EditURL = "<unknown>/../examples/HK.jl"
 ```
 
 # HK (Hegselmann and Krause) opinion dynamics model
@@ -74,10 +74,15 @@ function agent_step!(agent, model)
     agent.new_opinion = mean(boundfilter(agent,model))
 end
 
+function updateold(a)
+    a.old_opinion = a.new_opinion
+    return a
+end
+
 function model_step!(model)
     for i in keys(model.agents)
         agent = id2agent(i, model)
-        agent.old_opinion = agent.new_opinion
+        updateold(agent)
     end
 end
 ```

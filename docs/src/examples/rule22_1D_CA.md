@@ -23,19 +23,19 @@ rules = Dict("111"=>"0", "110"=>"0", "101"=>"0", "100"=>"1", "011"=>"0",
 All the cells are by default initially "off"
 
 ```@example rule22_1D_CA
-model = CA1D.build_model(rules=rules, ncols=101)
+model = CA1D.build_model(rules=rules, ncols=21)
 ```
 
 This turns on the middle cell
 
 ```@example rule22_1D_CA
-model.agents[51].status="1"
+model.agents[11].status="1"
 ```
 
 ## 3. Run the model and collect data.
 
 ```@example rule22_1D_CA
-runs = 100
+runs = 20
 data = CA1D.ca_run(model, runs);
 nothing #hide
 ```
@@ -45,6 +45,4 @@ nothing #hide
 ```@example rule22_1D_CA
 p = plot_CA1D(data, nodesize=2)
 ```
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

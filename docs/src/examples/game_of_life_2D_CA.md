@@ -38,7 +38,10 @@ for i in 1:nv(model)
 end
 ```
 
-## 3. Run the model and collect data and create an `Animation` object. `plot_CA2Dgif` is a function from `AgentsPlots` that creates the animation.
+## 3. Animate the model
+
+Animations of 2D Cellular Automata are done through the following syntax:
+(`plot_CA2Dgif` is a function from `AgentsPlots` that creates the animation)
 
 ```@example game_of_life_2D_CA
 runs = 10
@@ -51,6 +54,4 @@ We can now save the animation to a gif.
 ```@example game_of_life_2D_CA
 AgentsPlots.gif(anim, "game_of_life.gif")
 ```
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

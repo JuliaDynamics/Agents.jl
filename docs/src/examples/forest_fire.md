@@ -19,6 +19,11 @@ green.
 This model is an example that does _not_ have an `agent_step!` function. It only
 uses a `model_step!`
 
+!!! info "Cellular-automata-like ABMs"
+    The forest fire model is a cellular automaton.
+    Have a read at [Agents.jl vs DynamicGrids.jl](@ref), which can do
+    simulations with such systems faster than Agents.jl.
+
 ## Defining the core structures
 
 We start by defining the agent type
@@ -158,6 +163,4 @@ through `DataVoyager`, by doing
 using DataVoyager
 Voyager(data)
 ```
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 
