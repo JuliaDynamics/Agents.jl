@@ -28,15 +28,13 @@
 # ## Making the model in Agents.jl
 # We start by defining the PoorSoul type and the ABM
 
-#TODO: Increase readability of "status" by making it a symbol field
-
 using Agents, Random, Distributions, DataFrames
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int
     pos::Int
     days_infected::Int  # number of days since is infected
-    status::Int  # 1: S, 2: I, 3:R
+    status::Symbol  # 1: S, 2: I, 3:R
 end
 
 function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, reinfection_probability, time_to_detect, death_rate, seed=0)
@@ -46,7 +44,7 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     ncities = length(Ns)
-    # normalize migration_rates
+    ## normalize migration_rates
     migration_rates_sum = sum(migration_rates, dims=2)
     for c in 1:ncities
         migration_rates[c, :] ./= migration_rates_sum[c]
@@ -57,16 +55,16 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
 		properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
     model = ABM(PoorSoul, space; properties=properties)
 
-    # Add initial individuals
+    ## Add initial individuals
     for city in 1:ncities, n in 1:Ns[city]
-        ind = add_agent!(city, model, 0, 1)
+        ind = add_agent!(city, model, 0, :S) # Susceptible
     end
-    # add infected individuals
+    ## add infected individuals
     for city in 1:ncities
         inds = get_node_contents(city, model)
         for n in 1:Is[city]
             agent = id2agent(inds[n], model)
-            agent.status = 2
+            agent.status = :I # Infected
             agent.days_infected = 1
         end
     end
@@ -93,7 +91,7 @@ function migrate!(agent, model)
 end
 
 function transmit!(agent, model)
-    agent.status == 1 && return
+    agent.status == :S && return
     prop = model.properties
     rate = if agent.days_infected < prop[:time_to_detect]
             prop[:Bu][coord2vertex(agent, model)]
@@ -107,24 +105,22 @@ function transmit!(agent, model)
 
     for contactID in get_node_contents(agent, model)
         contact = id2agent(contactID, model)
-        if contact.status == 1 || (contact.status == 3 && rand() <= prop[:reinfection_probability])
-            contact.status = 2
+        if contact.status == :S || (contact.status == :R && rand() ≤ prop[:reinfection_probability])
+            contact.status = :I
             n -= 1
-            if n == 0
-                return
-            end
+            n == 0 && return
         end
     end
 end
 
-update!(agent, model) = agent.status == 2 && (agent.days_infected += 1)
+update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.days_infected == model.properties[:infection_period]
-        if rand() <= model.properties[:death_rate]
+    if agent.days_infected ≥ model.properties[:infection_period]
+        if rand() ≤ model.properties[:death_rate]
             kill_agent!(agent, model)
         else
-            agent.status = 3
+            agent.status = :R
             agent.days_infected = 0
         end
     end
@@ -140,7 +136,9 @@ params = Dict(
     :Bu => [0.6, 0.6, 0.6],
     :Bd => [0.07, 0.07, 0.07],
     # people from smaller cities are more likely to travel to bigger cities. Migration rates from from row i to column j.
-    :migration_rates => [1 0.01 0.005;0.015 1 0.007; 0.02 0.018 1],
+    :migration_rates => [1     0.01  0.005;
+	                     0.015 1     0.007;
+						 0.02  0.018 1],
     :infection_period => 30,
     :time_to_detect => 14,
     :reinfection_probability => 0.05,
@@ -175,8 +173,8 @@ p = graphplot(g,
 # Edge thickness shows amount of travel from/to a city.
 
 # We define two useful functions for the data collection
-infected(x) = count(i == 2 for i in x)
-recovered(x) = count(i == 3 for i in x)
+infected(x) = count(i == :I for i in x)
+recovered(x) = count(i == :R for i in x)
 
 # %% #src
 # And finally run the model and collect data
