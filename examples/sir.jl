@@ -26,16 +26,16 @@
 # * `migration_rates`: A matrix of migration probability per individual per day from one city to another.
 
 # ## Making the model in Agents.jl
-# We start by defining the Agent type and the ABM
+# We start by defining the PoorSoul type and the ABM
 
 #TODO: Increase readability of "status" by making it a symbol field
 
 using Agents, Random, Distributions, DataFrames
 
-mutable struct Agent <: AbstractAgent
+mutable struct PoorSoul <: AbstractAgent
     id::Int
     pos::Int
-    infected::Int  # number of days since is infected
+    days_infected::Int  # number of days since is infected
     status::Int  # 1: S, 2: I, 3:R
 end
 
@@ -53,9 +53,9 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
     end
 
 		space = Space(complete_digraph(ncities))
-		
+
 		properties = Dict(:Ns => Ns, :Is => Is, :Bu => Bu, :Bd => Bd, :migration_rates => migration_rates, :infection_period => infection_period, :reinfection_probability => reinfection_probability, :time_to_detect => time_to_detect, :ncities => ncities, :death_rate => death_rate)
-    model = ABM(Agent, space; properties=properties)
+    model = ABM(PoorSoul, space; properties=properties)
 
     # Add initial individuals
     for city in 1:ncities, n in 1:Ns[city]
@@ -67,7 +67,7 @@ function model_initiation(;Ns, migration_rates, Is, Bu, Bd, infection_period, re
         for n in 1:Is[city]
             agent = id2agent(inds[n], model)
             agent.status = 2
-            agent.infected = 1
+            agent.days_infected = 1
         end
     end
 
@@ -95,7 +95,7 @@ end
 function transmit!(agent, model)
     agent.status == 1 && return
     prop = model.properties
-    rate = if agent.infected < prop[:time_to_detect]
+    rate = if agent.days_infected < prop[:time_to_detect]
             prop[:Bu][coord2vertex(agent, model)]
         else
             prop[:Bd][coord2vertex(agent, model)]
@@ -117,15 +117,15 @@ function transmit!(agent, model)
     end
 end
 
-update!(agent, model) = agent.status == 2 && (agent.infected += 1)
+update!(agent, model) = agent.status == 2 && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.infected == model.properties[:infection_period]
+    if agent.days_infected == model.properties[:infection_period]
         if rand() <= model.properties[:death_rate]
             kill_agent!(agent, model)
         else
             agent.status = 3
-            agent.infected = 0
+            agent.days_infected = 0
         end
     end
 end
