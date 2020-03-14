@@ -28,13 +28,12 @@
 # city. We've tried to add values to the infection parameters similar to the ones you would hear
 # on the news about COVID-19.
 
-# Notice this example is mostly for education purposes, not
-# research purposes. In a research scenario one would need more complex agents, with
-# age information, and all infection parameters would not be constants but instead
-# depend on the agent's properties.
+# The good thing with Agent based models is that you could easily extend the model we
+# implement here to also include age as the agent's property.
+# This makes ABMs flexible and suitable for research of virus spreading.
 
 # ## Making the model in Agents.jl
-# We start by defining the `PoorSoul` type (representing an agent) and the ABM
+# We start by defining the `PoorSoul` agent type and the ABM
 cd(@__DIR__) #src
 using Agents, Random, Distributions, DataFrames
 using DrWatson: @dict
@@ -185,7 +184,7 @@ function recover_or_die!(agent, model)
     end
 end
 
-# ## Example run
+# ## Example animation
 model = model_initiation(;params...)
 
 anim = @animate for i ∈ 1:30
