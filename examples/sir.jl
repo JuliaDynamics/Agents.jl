@@ -35,7 +35,7 @@
 # ## Making the model in Agents.jl
 # We start by defining the `PoorSoul` agent type and the ABM
 cd(@__DIR__) #src
-using Agents, Random, Distributions, DataFrames
+using Agents, Random, Distributions, DataFrames, LightGraphs
 using DrWatson: @dict
 
 mutable struct PoorSoul <: AbstractAgent
