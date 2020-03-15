@@ -14,7 +14,7 @@ that recovering the disease does not bring full immunity.
 
 ## Model parameters
 Here are the model parameters, some of which have default values.
-* `Ns`: a vector of population sizes per city. The amoount of cities is just `C=length(Ns)`.
+* `Ns`: a vector of population sizes per city. The amount of cities is just `C=length(Ns)`.
 * `β_und`: a vector for transmission probabilities β of the infected but undetected per city.
   Transmission probability is how many susceptiple are infected per day by an infected individual.
   If social distancing is practiced, this number increases.
