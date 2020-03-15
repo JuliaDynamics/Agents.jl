@@ -60,7 +60,7 @@ function move!(agent, model)
   newx > 1.0 && (newx = newx - 1.0)
   newy < 0.0 && (newy = newy + 1.0)
   newy > 1.0 && (newy = newy - 1.0)
-  agent.pos = Tuple([newx, newy])
+  agent.pos = (newx, newy)
 end
 
 function transmit!(agent, model)
@@ -83,10 +83,7 @@ function transmit!(agent, model)
   end
   # change direction
   firstcontact = id2agent(r[1,:id], model)
-  dir1 = deepcopy(agent.dir)
-  dir2 = deepcopy(firstcontact.dir)
-  agent.dir = dir2
-  firstcontact.dir = dir1
+  agent.dir, firstcontact.dir = firstcontact.dir, agent.dir
 end
 
 update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
