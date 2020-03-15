@@ -235,9 +235,6 @@ model
 # One can really see "explosive growth" in this animation. Things look quite calm for
 # a while and then suddenly supermarkets have no toilet paper anymore!
 
-# *(important notice: always provide an appropriate `method` keyword when you want
-# to animate ABMs)*
-
 # ## Exponential growth
 
 # We now run the model and collect data. We define two useful functions for
