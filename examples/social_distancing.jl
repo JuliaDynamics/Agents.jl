@@ -1,10 +1,18 @@
+# # A model of social distancing for spread of disease.
+
+# This is a model similar to our SIR model of disease spread. But instead of having different cities, we let agents move in one continuous space and transfer the disease if they come into contact with one another. This model is partly inspired by [this article](https://www.washingtonpost.com/graphics/2020/world/corona-simulator/).
+
+# For a detailed description of the basics of the model, see the SIR example.
+
+# We note that Agents.jl does not have an API for modeling continuous space. As we implement it, this page will be updated as well.
+
 using Agents, Random, DataFrames, SQLite, Plots
 using DrWatson: @dict
 
 mutable struct Agent <: AbstractAgent
   id::Int
   pos::Tuple{Float64, Float64}
-  dir::Float64
+  dir::Float64  # direction of movement
   days_infected::Int  # number of days since is infected
   status::Symbol  # 1: S, 2: I, 3:R
 end
@@ -16,6 +24,7 @@ function model_initiation(;infection_period = 30, moveprob = 0.4,
   Random.seed!(seed)
   # movedist = Normal(0, movement)
   # Create a database of agent positions
+  # A database allows fast access to agents within any area.
   db = SQLite.DB()
   stmt = "CREATE TABLE tab (
     x REAL,
