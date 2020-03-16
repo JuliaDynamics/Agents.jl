@@ -9,28 +9,6 @@ import Agents: Space
 import Base.show
 import Agents: add_agent!
 
-# TODO
-function Base.show(io::IO, abm::ContinuousSpace)
-    # s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
-    s = "A ContinuousSpace"
-    print(io, s)
-end
-
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
-  db = model.space.db
-  
-  idq = DBInterface.execute(db, "select max(id) from tab")
-  idv = collect(idq)[1][Symbol("max(id)")]
-  id = ismissing(idv) ? 1 : idv
-
-  agent = A(id, properties...)
-  insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
-  q = DBInterface.prepare(db, insertstmt)
-  p1, p2 = round.(agent.pos, digits=model.space.resolution)
-  DBInterface.execute(q, [p1, p2, agent.id])
-  return agent
-end
-
 mutable struct Agent <: AbstractAgent
   id::Int
   pos::Tuple{Float64, Float64}
@@ -42,6 +20,7 @@ struct ContinuousSpace <: AbstractSpace
   movesize
   resolution
   interaction_radius
+  insertq
 end
 
 "Initializes a database with an empty table."
@@ -50,24 +29,52 @@ function ContinuousSpace(;movesize=0.005, resolution=3, interaction_radius=10.0^
   stmt = "CREATE TABLE tab (
     x REAL,
     y REAL,
-    id INTEGER PRIMARY KEY"
+    id INTEGER PRIMARY KEY)"
   DBInterface.execute(db, stmt)
-  
-  ContinuousSpace(db, movesize, resolution, interaction_radius)
+  insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
+  q = DBInterface.prepare(db, insertstmt)
+  ContinuousSpace(db, movesize, resolution, interaction_radius, q)
 end
 
 Space(;movesize, resolution, interaction_radius=10.0^(-resolution)) = ContinuousSpace(movesize=movesize,resolution=resolution,interaction_radius=interaction_radius)
 
-function fill_db!(model::ABM)
-  agents = values(model.agents)
-  db = space.db
-  insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
-  q = DBInterface.prepare(db, insertstmt)
+"Add many agents to the database"
+function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  db = model.space.db
   for agent in agents
     p1, p2 = round.(agent.pos, digits=model.space.resolution)
-    DBInterface.execute(q, [p1, p2, agent.id])
+    DBInterface.execute(model.space.insertq, [p1, p2, agent.id])
   end
-  DBInterface.execute(db, "CREATE INDEX pos ON tab (x,y,id)")
+end
+
+"""
+Indexing the database can drastically improve retrieving data, but adding new
+data can become slower because after each addition, index needs to be reworked.
+
+Lack of index won't be noticed for small databases. Only use it when you have 
+many agents and not many additions of agents.
+"""
+function index_db!(model)
+  DBInterface.execute(model.space.db, "CREATE INDEX pos ON tab (x,y,id)")
+end
+
+# TODO
+function Base.show(io::IO, abm::ContinuousSpace)
+    # s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    s = "A ContinuousSpace"
+    print(io, s)
+end
+
+function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
+  db = model.space.db
+  
+  idq = DBInterface.execute(db, "select max(id) as maxid from tab") |> DataFrame
+  id = ismissing(idq[1,1]) ? 1 : idq[1,1]+1
+  agent = A(id, properties...)
+  p1, p2 = round.(agent.pos, digits=model.space.resolution)
+  DBInterface.execute(model.space.insertq, [p1, p2, id])
+  model.agents[id] = agent
+  return agent
 end
 
 function model_initiation(;N=100, movesize=0.005, space_resolution=3, seed=0)
@@ -78,11 +85,10 @@ function model_initiation(;N=100, movesize=0.005, space_resolution=3, seed=0)
   ## Add initial individuals
   for ind in 1:N
     pos = Tuple(round.(rand(2), digits=space_resolution))
-    add_agent!(model, pos, rand(0:0.01:2π)) # TODO fix add_agent!
+    add_agent!(model, pos, rand(0:0.01:2π))
   end
  
-  # Fill space.db with agents
-  fill_db!(model)
+  index_db!(model)
 
   return model
 end
