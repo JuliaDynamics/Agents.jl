@@ -29,7 +29,7 @@ struct ContinuousSpace <: AbstractSpace
 end
 
 "Initializes a database with an empty table."
-function ContinuousSpace(;movesize=0.005, resolution=0.001)
+function ContinuousSpace(;movesize=0.005, resolution=3, interaction_radius=10.0^(-resolution))
   db = SQLite.DB()
   stmt = "CREATE TABLE tab (
     x REAL,
@@ -38,11 +38,10 @@ function ContinuousSpace(;movesize=0.005, resolution=0.001)
     PRIMARY KEY (x, y))"
   DBInterface.execute(db, stmt)
   
-  interaction_radius = 10.0^(-resolution)
   ContinuousSpace(db, movesize, resolution, interaction_radius)
 end
 
-Space(;movesize, resolution) = ContinuousSpace(movesize=movesize,resolution=resolution)
+Space(;movesize, resolution, interaction_radius=10.0^(-resolution)) = ContinuousSpace(movesize=movesize,resolution=resolution,interaction_radius=interaction_radius)
 
 function fill_db!(model::ABM)
   agents = values(model.agents)
@@ -50,7 +49,7 @@ function fill_db!(model::ABM)
   insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
   q = DBInterface.prepare(db, insertstmt)
   for agent in agents
-    p1, p2 = round.(agent.pos, digits=space_resolution)
+    p1, p2 = round.(agent.pos, digits=model.space.resolution)
     DBInterface.execute(q, [p1, p2, agent.id])
   end
   DBInterface.execute(db, "CREATE INDEX pos ON tab (x,y,id)")
