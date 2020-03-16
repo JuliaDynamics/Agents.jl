@@ -5,6 +5,15 @@
 
 using Agents, Random, DataFrames, SQLite, Plots
 using DrWatson: @dict
+import Agents: Space
+import Base.show
+
+# TODO
+function Base.show(io::IO, abm::ContinuousSpace)
+    # s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+    s = "A ContinuousSpace"
+    print(io, s)
+end
 
 mutable struct Agent <: AbstractAgent
   id::Int
@@ -12,10 +21,15 @@ mutable struct Agent <: AbstractAgent
   dir::Float64  # direction of movement
 end
 
-function model_initiation(;N=100, movesize=0.005, space_resolution=3, seed=0)
-  Random.seed!(seed)
-  # Create a database of agent positions
-  # A database allows fast access to agents within any area.
+struct ContinuousSpace <: AbstractSpace  
+  db::SQLite.DB
+  movesize
+  space_resolution
+  interaction_radius
+end
+
+"Initializes a database with an empty table."
+function ContinuousSpace(;movesize=0.005, resolution=0.001)
   db = SQLite.DB()
   stmt = "CREATE TABLE tab (
     x REAL,
@@ -23,21 +37,39 @@ function model_initiation(;N=100, movesize=0.005, space_resolution=3, seed=0)
     id INTEGER,
     PRIMARY KEY (x, y))"
   DBInterface.execute(db, stmt)
-
-  interaction_radius = 10.0^(-space_resolution)
-  properties = @dict(movesize, db, space_resolution, interaction_radius)
-  model = ABM(Agent; properties=properties)
   
-  ## Add initial individuals
+  interaction_radius = 10.0^(-resolution)
+  ContinuousSpace(db, movesize, resolution, interaction_radius)
+end
+
+Space(;movesize, resolution) = ContinuousSpace(movesize=movesize,resolution=resolution)
+
+function fill_db!(model::ABM)
+  agents = values(model.agents)
+  db = space.db
   insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
   q = DBInterface.prepare(db, insertstmt)
+  for agent in agents
+    p1, p2 = round.(agent.pos, digits=space_resolution)
+    DBInterface.execute(q, [p1, p2, agent.id])
+  end
+  DBInterface.execute(db, "CREATE INDEX pos ON tab (x,y,id)")
+end
+
+function model_initiation(;N=100, movesize=0.005, space_resolution=3, seed=0)
+  Random.seed!(seed)
+  space = Space(movesize=movesize, resolution=space_resolution)
+  model = ABM(Agent, space);  # TODO fix Base.show
+  
+  ## Add initial individuals
   for ind in 1:N
     pos = Tuple(round.(rand(2), digits=space_resolution))
-    add_agent!(model, pos, rand(0:0.01:2π)) # Susceptible
-    DBInterface.execute(q, [pos[1], pos[2], ind])
+    add_agent!(model, pos, rand(0:0.01:2π)) # TODO fix add_agent!
   end
-  DBInterface.execute(db, "CREATE INDEX pos ON tab (x,y)")
  
+  # Fill space.db with agents
+  fill_db!(model)
+
   return model
 end
 
@@ -47,8 +79,8 @@ function agent_step!(agent, model)
 end
 
 function move!(agent, model)
-  newx = agent.pos[1] + (model.properties[:movesize] * cos(agent.dir))
-  newy = agent.pos[2] + (model.properties[:movesize] * sin(agent.dir))
+  newx = agent.pos[1] + (model.space.movesize * cos(agent.dir))
+  newy = agent.pos[2] + (model.space.movesize * sin(agent.dir))
   newx < 0.0 && (newx = newx + 1.0)
   newx > 1.0 && (newx = newx - 1.0)
   newy < 0.0 && (newy = newy + 1.0)
@@ -57,12 +89,12 @@ function move!(agent, model)
 end
 
 function collide!(agent, model)
-  prop = model.properties
-  db = model.properties[:db]
-  xleft = agent.pos[1] - prop[:interaction_radius]
-  xright = agent.pos[1] + prop[:interaction_radius]
-  yleft = agent.pos[2] - prop[:interaction_radius]
-  yright = agent.pos[2] + prop[:interaction_radius]
+  db = model.space.db
+  interaction_radius = model.space.interaction_radius
+  xleft = agent.pos[1] - interaction_radius
+  xright = agent.pos[1] + interaction_radius
+  yleft = agent.pos[2] - interaction_radius
+  yright = agent.pos[2] + interaction_radius
   searchstmt = "SELECT id FROM tab WHERE x BETWEEN $xleft AND $xright AND y BETWEEN $yleft AND $yright AND id != $(agent.id)"
   r = DBInterface.execute(db, searchstmt) |> DataFrame
   size(r,1) == 0 && return
