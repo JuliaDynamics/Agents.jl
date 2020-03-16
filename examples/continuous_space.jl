@@ -7,12 +7,28 @@ using Agents, Random, DataFrames, SQLite, Plots
 using DrWatson: @dict
 import Agents: Space
 import Base.show
+import Agents: add_agent!
 
 # TODO
 function Base.show(io::IO, abm::ContinuousSpace)
     # s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
     s = "A ContinuousSpace"
     print(io, s)
+end
+
+function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
+  db = model.space.db
+  
+  idq = DBInterface.execute(db, "select max(id) from tab")
+  idv = collect(idq)[1][Symbol("max(id)")]
+  id = ismissing(idv) ? 1 : idv
+
+  agent = A(id, properties...)
+  insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
+  q = DBInterface.prepare(db, insertstmt)
+  p1, p2 = round.(agent.pos, digits=model.space.resolution)
+  DBInterface.execute(q, [p1, p2, agent.id])
+  return agent
 end
 
 mutable struct Agent <: AbstractAgent
@@ -24,7 +40,7 @@ end
 struct ContinuousSpace <: AbstractSpace  
   db::SQLite.DB
   movesize
-  space_resolution
+  resolution
   interaction_radius
 end
 
@@ -34,8 +50,7 @@ function ContinuousSpace(;movesize=0.005, resolution=3, interaction_radius=10.0^
   stmt = "CREATE TABLE tab (
     x REAL,
     y REAL,
-    id INTEGER,
-    PRIMARY KEY (x, y))"
+    id INTEGER PRIMARY KEY"
   DBInterface.execute(db, stmt)
   
   ContinuousSpace(db, movesize, resolution, interaction_radius)
