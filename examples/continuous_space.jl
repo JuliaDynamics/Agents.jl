@@ -42,8 +42,17 @@ function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
   db = model.space.db
   for agent in agents
     p1, p2 = agent.pos
-    DBInterface.execute(model.space.insertq, [p1, p2, agent.id])
+    DBInterface.execute(model.space.insertq, (p1, p2, agent.id))
   end
+end
+
+"Collect IDs from an SQLite.Query where IDs are stored in `colname`"
+function collect_ids(q::SQLite.Query; colname=:id)
+  output = Union{Int, Missing}[]
+  for row in q
+    push!(output, row[colname])
+  end
+  return output
 end
 
 """
@@ -65,8 +74,8 @@ end
 
 function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
   db = model.space.db
-  idq = DBInterface.execute(db, "select max(id) as maxid from tab") |> DataFrame
-  id = ismissing(idq[1,1]) ? 1 : idq[1,1]+1
+  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
+  id = ismissing(ids[1]) ? 1 : ids[1]+1
   agent = A(id, properties...)
   p1, p2 = agent.pos
   DBInterface.execute(model.space.insertq, (p1, p2, id))
@@ -114,10 +123,10 @@ function collide!(agent, model)
   xright = agent.pos[1] + interaction_radius
   yleft = agent.pos[2] - interaction_radius
   yright = agent.pos[2] + interaction_radius
-  r = DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)) |> DataFrame
-  size(r,1) == 0 && return
+  r = collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
+  length(r) == 0 && return
   # change direction
-  firstcontact = id2agent(r[1,:id], model)
+  firstcontact = id2agent(r[1], model)
   agent.vel, firstcontact.vel = (agent.vel[1], firstcontact.vel[2]), (firstcontact.vel[1], agent.vel[2])
 end
 
