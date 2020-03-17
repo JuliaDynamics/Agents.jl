@@ -19,6 +19,7 @@ end
 struct ContinuousSpace <: AbstractSpace  
   db::SQLite.DB
   insertq::SQLite.Stmt
+  searchq::SQLite.Stmt
 end
 
 "Initializes a database with an empty table."
@@ -31,7 +32,9 @@ function ContinuousSpace()
   DBInterface.execute(db, stmt)
   insertstmt = "INSERT INTO tab (x, y, id) VALUES (?, ?, ?)"
   q = DBInterface.prepare(db, insertstmt)
-  ContinuousSpace(db, q)
+  searchq = "SELECT id FROM tab WHERE x BETWEEN ? AND ? AND y BETWEEN ? AND ? AND id != ?"
+  q2 = DBInterface.prepare(db, searchq)
+  ContinuousSpace(db, q, q2)
 end
 
 "Add many agents to the database"
@@ -111,8 +114,7 @@ function collide!(agent, model)
   xright = agent.pos[1] + interaction_radius
   yleft = agent.pos[2] - interaction_radius
   yright = agent.pos[2] + interaction_radius
-  searchstmt = "SELECT id FROM tab WHERE x BETWEEN $xleft AND $xright AND y BETWEEN $yleft AND $yright AND id != $(agent.id)"
-  r = DBInterface.execute(db, searchstmt) |> DataFrame
+  r = DBInterface.execute(model.space.searchq, [xleft, xright, yleft, yright, agent.id]) |> DataFrame
   size(r,1) == 0 && return
   # change direction
   firstcontact = id2agent(r[1,:id], model)
