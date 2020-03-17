@@ -91,3 +91,53 @@ properties = [model.agents[id].weight for id in ids]
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
 end
+
+@testset "genocide!" begin
+  model = ABM(Agent3, Space((10, 10)))
+
+  # Testing genocide!(model::ABM)
+  for i in 1:20
+    agent = Agent3(i, (1,1), rand())
+    add_agent_single!(agent, model)
+  end
+  genocide!(model)
+  @test nagents(model) == 0
+
+  # Testing genocide!(model::ABM, n::Int)
+  for i in 1:20
+    # Explicitly override agents each time we replenish the population,
+    # so we always start the genocide with 20 agents.
+    agent = Agent3(i, (1,1), rand())
+    add_agent_single!(agent, model)
+  end
+  genocide!(model, 10)
+  @test nagents(model) == 10
+
+  # Testing genocide!(model::ABM, f::Function) with an anonymous function
+  for i in 1:20
+    agent = Agent3(i, (1,1), rand())
+    add_agent_single!(agent, model)
+  end
+  @test nagents(model) == 20
+  genocide!(model, a -> a.id > 5)
+  @test nagents(model) == 5
+
+  # Testing genocide!(model::ABM, f::Function) when the function is invalid (i.e. does not return a bool)
+  for i in 1:20
+    agent = Agent3(i, (1,1), i*2)
+    add_agent_single!(agent, model)
+  end
+  @test_throws TypeError genocide!(model, a -> a.id)
+
+  # Testing genocide!(model::ABM, f::Function) with a named function
+  # No need to replenish population since the last test fails
+  function complex_logic(agent::A) where A <: AbstractAgent
+    if first(agent.pos) <= 5 && agent.weight > 25
+      true
+    else
+      false
+    end
+  end
+  genocide!(model, complex_logic)
+  @test nagents(model) == 17
+end

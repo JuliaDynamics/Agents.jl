@@ -25,6 +25,18 @@ function genocide!(model::ABM, n::Int)
 end
 
 """
+    genocide!(model::ABM, f::Function)
+Kill all agents where the function `f(agent)` returns `true`.
+"""
+function genocide!(model::ABM, f::Function)
+    for (k, v) in model.agents
+        if f(v)
+            kill_agent!(v, model)
+        end
+    end
+end
+
+"""
     sample!(model::ABM, n [, weight]; kwargs...)
 
 Replace the agents of the `model` with a random sample of the current agents with
