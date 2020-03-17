@@ -69,7 +69,7 @@ function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpac
   id = ismissing(idq[1,1]) ? 1 : idq[1,1]+1
   agent = A(id, properties...)
   p1, p2 = agent.pos
-  DBInterface.execute(model.space.insertq, [p1, p2, id])
+  DBInterface.execute(model.space.insertq, (p1, p2, id))
   model.agents[id] = agent
   return agent
 end
@@ -83,7 +83,7 @@ function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
   for ind in 1:N
     pos = Tuple(rand(0.0:space_resolution:1.0, 2))
     vel = (speed, rand(0:0.01:2π))
-    dia = space_resolution * 3
+    dia = space_resolution * 10
     add_agent!(model, pos, vel, dia)
   end
  
@@ -114,7 +114,7 @@ function collide!(agent, model)
   xright = agent.pos[1] + interaction_radius
   yleft = agent.pos[2] - interaction_radius
   yright = agent.pos[2] + interaction_radius
-  r = DBInterface.execute(model.space.searchq, [xleft, xright, yleft, yright, agent.id]) |> DataFrame
+  r = DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)) |> DataFrame
   size(r,1) == 0 && return
   # change direction
   firstcontact = id2agent(r[1,:id], model)
@@ -125,7 +125,7 @@ model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
 step!(model, agent_step!, 500)
 
 # ## Example animation
-model = model_initiation(N=100, speed=0.005, space_resolution=0.001)
+model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
 anim = @animate for i ∈ 1:100
   xs = [a.pos[1] for a in values(model.agents)];
   ys = [a.pos[2] for a in values(model.agents)];
