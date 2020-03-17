@@ -26,7 +26,7 @@ end
 
 """
     genocide!(model::ABM, f::Function)
-Kills all agents where the function `f(agent)` returns `true`.
+Kill all agents where the function `f(agent)` returns `true`.
 """
 function genocide!(model::ABM, f::Function)
     for (k, v) in model.agents
