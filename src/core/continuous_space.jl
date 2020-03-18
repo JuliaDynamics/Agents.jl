@@ -13,6 +13,7 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   insertq::SQLite.Stmt
   searchq::SQLite.Stmt
   deleteq::SQLite.Stmt
+  updateq::SQLite.Stmt
 end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
@@ -51,8 +52,8 @@ function Space(D::Int, update_vel! = defvel;
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
-  db, q, q2, q3 = prepare_database(D)
-  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3)
+  db, q, q2, q3, q4 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
 end
 
 function prepare_database(D)
@@ -67,8 +68,11 @@ function prepare_database(D)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
   searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
-  deleteexpr = "DELETE FROM tab WHERE id = ?"
-  q3 = DBInterface.prepare(db, deleteexpr)
+  deleteq = "DELETE FROM tab WHERE id = ?"
+  q3 = DBInterface.prepare(db, deleteq)
+  updateexpr = strip(join("$x = ?," for x in COORDS[1:D]), ',')
+  updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
+  q4 = DBInterface.prepare(db, updateq)
   return db, q, q2, q3
 end
 
@@ -147,6 +151,7 @@ function move_agent!(agent::A, model::ABM{A, S, F, P}) where {A<:AbstractAgent, 
   if model.space.periodic
     agent.pos = mod.(agent.pos, model.space.extend)
   end
+  DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
   return agent.pos
 end
 
