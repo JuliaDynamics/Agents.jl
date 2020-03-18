@@ -88,14 +88,6 @@ end
 #######################################################################################
 # SQLite database functions
 #######################################################################################
-# TODO: is this function used anywhere anymore, since add_agent! does the adding?
-"Add many agents to the database"
-function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
-  db = model.space.db
-  for agent in agents
-    DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  end
-end
 
 "Collect IDs from an SQLite.Query where IDs are stored in `colname`"
 function collect_ids(q::SQLite.Query, colname=:id)
