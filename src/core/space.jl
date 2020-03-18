@@ -372,6 +372,9 @@ Return an agent given its ID.
 """
 id2agent(id::Integer, model::ABM) = model.agents[id]
 
+# TODO: Rename `node_neighbors` to `space_neighbors`, and
+# extend it for continuous space with third argument "radius"
+
 """
     node_neighbors(agent::AbstractAgent, model::ABM)
     node_neighbors(node::Int, model::ABM)
