@@ -73,7 +73,7 @@ function prepare_database(D)
   updateexpr = strip(join("$x = ?," for x in COORDS[1:D]), ',')
   updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
   q4 = DBInterface.prepare(db, updateq)
-  return db, q, q2, q3
+  return db, q, q2, q3, q4
 end
 
 defvel(a, m) = nothing
