@@ -6,7 +6,7 @@ export nv, ne
 #######################################################################################
 # Basic space definition
 #######################################################################################
-abstract type DiscreteSpace end
+abstract type DiscreteSpace <: AbstractSpace end
 
 LightGraphs.nv(space::DiscreteSpace) = LightGraphs.nv(space.graph)
 LightGraphs.ne(space::DiscreteSpace) = LightGraphs.ne(space.graph)
