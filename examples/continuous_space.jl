@@ -23,7 +23,7 @@ function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
     pos = Tuple(rand(0.0:space_resolution:1.0, 2))
     vel = sincos(2π*rand()) .* speed
     dia = space_resolution * 10
-    add_agent!(model, pos, vel, dia)
+    add_agent!(pos, model, vel, dia)
   end
 
   Agents.index!(model)

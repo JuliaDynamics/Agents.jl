@@ -115,7 +115,6 @@ end
 #######################################################################################
 # Extention of Agents.jl API for continuous space
 #######################################################################################
-# TODO: This should also have a version with random position
 # TODO: improve the doc string of add_agent! to somehow reflect that it works
 # universaly for any space
 function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
@@ -125,7 +124,24 @@ function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
   # the column "id" of the database? There _has_ to be a way for it.
   ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
   id = ismissing(ids[1]) ? 1 : ids[1]+1
-  agent = A(id, properties...)
+  pos = Tuple(rand(model.space.D))
+  agent = A(id, pos, properties...)
+  DBInterface.execute(model.space.insertq, (agent.pos..., id))
+  model.agents[id] = agent
+  return agent
+end
+
+"""
+Add a new agent in the given position `pos`, by constructing the agent type of the
+model and propagating all extra properties to the constructor.
+
+Notice that this function takes care of setting the agent's id and position   
+and thus properties... is propagated to other fields the agent has.
+"""
+function add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) where {A}
+  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
+  id = ismissing(ids[1]) ? 1 : ids[1]+1
+  agent = A(id, pos, properties...)
   DBInterface.execute(model.space.insertq, (agent.pos..., id))
   model.agents[id] = agent
   return agent
