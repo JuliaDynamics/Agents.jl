@@ -5,11 +5,6 @@
 
 using Agents, Random, DataFrames, SQLite, Plots
 using DrWatson: @dict
-import Agents: Space
-import Base.show
-import Agents: add_agent!
-
-const COORDS = collect(Iterators.flatten(('x':'z', 'a':'w')))
 
 mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   id::Int
@@ -18,102 +13,9 @@ mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   diameter::F
 end
 
-struct ContinuousSpace{E} <: AbstractSpace
-  D::Int
-  periodic::Bool
-  extend::E
-  db::SQLite.DB
-  insertq::SQLite.Stmt
-  searchq::SQLite.Stmt
-end
-
-"""
-    Space(D::Int [, vel!]; periodic::Bool = false, extend = nothing)
-Create a *continuous* space of dimensionality `D`.
-In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
-where `F <: AbstractFloat`.
-In addition, the agent type must have a third field `vel::NTuple{D, F}` representing
-the agent's velocity.
-
-The optional argument `vel` is a **function**, `vel!(agent, model)` that updates
-the agent's velocities **before** the agent has been moved, see [`move_agent!`](@ref).
-By default no update is done this way (you can of course change the agents velocities
-during the agent interaction, the `vel!` functionality targets arbitrary forces).
-
-# TODO: talk about periodicity
-
-## Notes
-You can imagine the evolution algorithm as an Euler scheme with `dt = 1` (here the step).
-"""
-function Space(D::Int = 2, vel = nothing; periodic = false, extend = nothing)
-  # TODO: actually implement periodicity
-  db = SQLite.DB()
-  dimexpression = join("$x REAL, " for x in COORDS[1:D])
-  stmt = "CREATE TABLE tab ("*dimexpression*"id INTEGER PRIMARY KEY)"
-  DBInterface.execute(db, stmt)
-  insertedxpression = join("$x, " for x in COORDS[1:D])
-  qmarks = join("?, " for _ in 1:D)
-  insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
-  q = DBInterface.prepare(db, insertstmt)
-  searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
-  q2 = DBInterface.prepare(db, searchq)
-  ContinuousSpace(D, periodic, extend, db, q, q2)
-end
-
-"Add many agents to the database"
-function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
-  db = model.space.db
-  for agent in agents
-    DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  end
-end
-
-"Collect IDs from an SQLite.Query where IDs are stored in `colname`"
-function collect_ids(q::SQLite.Query; colname=:id)
-  output = Union{Int, Missing}[]
-  for row in q
-    push!(output, row[colname])
-  end
-  return output
-end
-
-"""
-Indexing the database can drastically improve retrieving data, but adding new
-data can become slower because after each addition, index needs to be reworked.
-
-Lack of index won't be noticed for small databases. Only use it when you have
-many agents and not many additions of agents.
-"""
-function index!(model)
-  D = model.space.D
-  expr = join("$x," for x in COORDS[1:D])
-  DBInterface.execute(model.space.db, "CREATE INDEX pos ON tab ($(expr)id)")
-end
-
-# TODO: re-check this at the end.
-function Base.show(io::IO, abm::ContinuousSpace)
-    s = "$(abm.D)-dimensional $(abm.periodic ? "periodic " : "")ContinuousSpace"
-    print(io, s)
-end
-
-# TODO: This should also have a version with random position
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
-  db = model.space.db
-
-  # TODO: This seems ineficient... Is there no way to directly get maximum of
-  # the column "id" of the database? There _has_ to be a way for it.
-  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
-  id = ismissing(ids[1]) ? 1 : ids[1]+1
-  agent = A(id, properties...)
-  DBInterface.execute(model.space.insertq, (agent.pos..., id))
-  model.agents[id] = agent
-  return agent
-end
-
 function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
   Random.seed!(seed)
-  space = ContinuousSpace()
+  space = Space(2)
   model = ABM(Agent, space);  # TODO fix Base.show
 
   ## Add initial individuals
@@ -124,37 +26,25 @@ function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
     add_agent!(model, pos, vel, dia)
   end
 
-  index!(model)
+  Agents.index!(model)
 
   return model
 end
 
 function agent_step!(agent, model)
-  move!(agent)
+  move_agent!(agent, model)
   collide!(agent, model)
-end
-
-# TODO: change move! to instead be an overload of move_agent!
-# and to call `vel!` first on the agent.
-
-function move!(agent)
-  newx = agent.pos[1] + (agent.vel[1] * cos(agent.vel[2]))
-  newy = agent.pos[2] + (agent.vel[1] * sin(agent.vel[2]))
-  newx < 0.0 && (newx = newx + 1.0)
-  newx > 1.0 && (newx = newx - 1.0)
-  newy < 0.0 && (newy = newy + 1.0)
-  newy > 1.0 && (newy = newy - 1.0)
-  agent.pos = (newx, newy)
 end
 
 function collide!(agent, model)
   db = model.space.db
+  # TODO: This should use some function "neighbors" or "within_radius" or so...
   interaction_radius = agent.diameter
   xleft = agent.pos[1] - interaction_radius
   xright = agent.pos[1] + interaction_radius
   yleft = agent.pos[2] - interaction_radius
   yright = agent.pos[2] + interaction_radius
-  r = collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
+  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
   length(r) == 0 && return
   # change direction
   firstcontact = id2agent(r[1], model)
