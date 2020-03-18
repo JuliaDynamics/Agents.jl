@@ -43,8 +43,8 @@ function Space(D::Int, vel = (x, y) -> nothing;
 
   @assert metric ∈ ("cityblock", "euclidean")
   # TODO: actually implement periodicity
-  # TODO: allow extend to be something even without periodicity: agents bounce of walls then
-  # (improve `move_agent!`)
+  # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
+  # (improve to do this `move_agent!`)
 
   db = SQLite.DB()
   dimexpression = join("$x REAL, " for x in COORDS[1:D])
