@@ -3,9 +3,9 @@ using DataFrames, SQLite
 #######################################################################################
 # Continuous space structure
 #######################################################################################
-struct ContinuousSpace{F, E, M} <: AbstractSpace
+struct ContinuousSpace{F, E} <: AbstractSpace
   D::Int
-  vel!::F
+  update_vel!::F
   periodic::Bool
   extend::E
   metric::String
@@ -14,40 +14,47 @@ struct ContinuousSpace{F, E, M} <: AbstractSpace
   searchq::SQLite.Stmt
 end
 
-const COORDS = collect(Iterators.flatten(('x':'z', 'a':'w')))
+const COORDS = 'a':'z' # letters representing coordinates in database
 
 # TODO: name `vel!` is not good, too short. Find something better.
 """
-    Space(D::Int [, vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
 In addition, the agent type must have a third field `vel::NTuple{D, F}` representing
 the agent's velocity.
 
-The optional argument `vel!` is a **function**, `vel!(agent, model)` that updates
+The optional argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
 the agent's velocities **before** the agent has been moved, see [`move_agent!`](@ref).
-By default no update is done this way (you can of course change the agents velocities
-during the agent interaction, the `vel!` functionality targets arbitrary forces).
+You can of course change the agents velocities
+during the agent interaction, the `update_vel!` functionality targets arbitrary forces.
+By default no update is done this way.
 
 ## Keywords
 
 * `periodic = false` : whether continuous space is periodic or not
-* `extend = nothing` : only useful
-
-`periodic` specifies the boundary conditions of the space. If true, when an agent passes through one side of the space, it re-appears on the opposite side with the same velocity. 
+* `extend = nothing` : currently only useful in periodic space. If `periodic = true`
+  `extend` must be a `NTuple{D}`, where each entry is the extent of each dimension
+  (after which periodicity happens. All dimensions start at 0).
 
 ## Notes
 You can imagine the evolution algorithm as an Euler scheme with `dt = 1` (here the step).
 """
-function Space(D::Int, vel = (x, y) -> nothing;
-    periodic = false, extend = nothing, metric = "cityblock")
+function Space(D::Int, update_vel! = defvel;
+  periodic = false, extend = nothing, metric = "cityblock")
 
+  # TODO: implement using different metrics in space_neighbors
   @assert metric ∈ ("cityblock", "euclidean")
-  # TODO: actually implement periodicity
+  periodic && @assert typeof(extend) <: NTuple{D} "`extend` must be ::NTuple{D} for periodic"
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
+  db, q, q2 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2)
+end
+
+function prepare_database(D)
   db = SQLite.DB()
   dimexpression = join("$x REAL, " for x in COORDS[1:D])
   stmt = "CREATE TABLE tab ("*dimexpression*"id INTEGER PRIMARY KEY)"
@@ -59,12 +66,15 @@ function Space(D::Int, vel = (x, y) -> nothing;
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
   searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
-  ContinuousSpace(D, vel, periodic, extend, metric, db, q, q2)
+  return db, q, q2
 end
+
+defvel(a, m) = nothing
 
 # TODO: re-check this at the end.
 function Base.show(io::IO, abm::ContinuousSpace)
     s = "$(abm.D)-dimensional $(abm.periodic ? "periodic " : "")ContinuousSpace"
+    update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
 end
 
@@ -122,7 +132,6 @@ function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
   return agent
 end
 
-# TODO: change move this to arbitrary dimensions
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace})
 In the case of continuous space, `move_agent!` propagates the agent forwards one step
@@ -130,13 +139,10 @@ according to its velocity, _after_ updating the agent's velocity
 (see [`Space`](@ref)).
 """
 function move_agent!(agent::A, model::ABM{A, S, F, P}) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
-  model.space.vel!(agent, model)
+  model.space.update_vel!(agent, model)
   agent.pos = agent.pos .+ agent.vel # explicitly vel is multipled by 1, the dt
-  # TODO: here enforcing periodic b.c. should happen properly for arbitrary D
-  newx, newy = agent.pos
-  newx < 0.0 && (newx = newx + 1.0)
-  newx > 1.0 && (newx = newx - 1.0)
-  newy < 0.0 && (newy = newy + 1.0)
-  newy > 1.0 && (newy = newy - 1.0)
-  agent.pos = (newx, newy)
+  if model.space.periodic
+    agent.pos = mod.(agent.pos, model.space.extend)
+  end
+  return agent.pos
 end
