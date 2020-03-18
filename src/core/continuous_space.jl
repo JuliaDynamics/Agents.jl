@@ -1,5 +1,3 @@
-export kill_agents!
-
 using DataFrames, SQLite
 
 #######################################################################################
@@ -158,7 +156,7 @@ function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:Contin
   return model
 end
 
-function kill_agents!(agentIDs::AbstractArray{Int}, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+function genocide!(agentIDs::AbstractArray{Int}, model::ABM{A, S}) where {A, S<:ContinuousSpace}
   DBInterface.execute(model.space.db,
   "DELETE FROM tab WHERE id IN $(Tuple(agentIDs))")
   for id in agentIDs
@@ -167,7 +165,7 @@ function kill_agents!(agentIDs::AbstractArray{Int}, model::ABM{A, S}) where {A, 
   return model
 end
 
-function kill_agents!(agents::AbstractArray, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+function genocide!(agents::AbstractArray, model::ABM{A, S}) where {A, S<:ContinuousSpace}
   DBInterface.execute(model.space.db,
   "DELETE FROM tab WHERE id IN $(Tuple([a.id for a in agents]))"
   )
@@ -175,4 +173,11 @@ function kill_agents!(agents::AbstractArray, model::ABM{A, S}) where {A, S<:Cont
     delete!(model.agents, agent.id)
   end
   return model
+end
+
+function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.db, "DELETE FROM tab")
+  for agent in model.agents
+    delete!(model.agents, agent.id)
+  end
 end
