@@ -1,4 +1,4 @@
-export Space, vertex2coords, coords2vertex, AbstractSpace,
+export Space, vertex2coords, coords2vertex,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, node_neighbors, nodes, get_node_agents
 export nv, ne
@@ -6,8 +6,10 @@ export nv, ne
 #######################################################################################
 # Basic space definition
 #######################################################################################
-LightGraphs.nv(space::AbstractSpace) = LightGraphs.nv(space.graph)
-LightGraphs.ne(space::AbstractSpace) = LightGraphs.ne(space.graph)
+abstract type DiscreteSpace end
+
+LightGraphs.nv(space::DiscreteSpace) = LightGraphs.nv(space.graph)
+LightGraphs.ne(space::DiscreteSpace) = LightGraphs.ne(space.graph)
 
 """
     nv(model::ABM)
@@ -21,23 +23,23 @@ Return the number of edges in the `model` space.
 """
 LightGraphs.ne(abm::ABM) = LightGraphs.ne(abm.space.graph)
 
-struct GraphSpace{G} <: AbstractSpace
+struct GraphSpace{G} <: DiscreteSpace
   graph::G
   agent_positions::Vector{Vector{Int}}
 end
-struct GridSpace{G, D, I<:Integer} <: AbstractSpace
+struct GridSpace{G, D, I<:Integer} <: DiscreteSpace
   graph::G # Graph
   agent_positions::Vector{Vector{Int}}
   dimensions::NTuple{D, I}
 end
-function Base.show(io::IO, abm::AbstractSpace)
+function Base.show(io::IO, abm::DiscreteSpace)
     s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
     print(io, s)
 end
 
 Space(m::ABM) = m.space
 agent_positions(m::ABM) = m.space.agent_positions
-agent_positions(m::AbstractSpace) = m.agent_positions
+agent_positions(m::DiscreteSpace) = m.agent_positions
 Base.size(s::GridSpace) = s.dimensions
 
 """
@@ -48,9 +50,9 @@ Base.isempty(node::Integer, model::ABM) =
 length(model.space.agent_positions[node]) == 0
 
 """
-    Space(graph::AbstractGraph) -> GraphSpace
+    Space(graph::AbstractGraph) → GraphSpace
 Create a `GraphSpace` instance that is underlined by an arbitrary graph.
-In this case, your agent positions (field `pos`) should be of type `Integer`.
+In this case, your agent positions (field `pos`) must be of type `Integer`.
 """
 function Space(graph::G) where {G<:AbstractGraph}
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
@@ -58,10 +60,10 @@ function Space(graph::G) where {G<:AbstractGraph}
 end
 
 """
-    Space(dims::NTuple; periodic = false, moore = false) -> GridSpace
+    Space(dims::NTuple; periodic = false, moore = false) → GridSpace
 Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
-In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
+In this case, your agent positions (field `pos`) must be of type `NTuple{Int}`.
 
 The two keyword arguments denote if the grid should be periodic on its ends,
 and if the connections should be of type Moore or not (in the Moore case

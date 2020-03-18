@@ -1,6 +1,12 @@
+#=
+This file establishes the agent-space interaction API.
+=#
 export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
-move_agent_single!, kill_agent!, coord2vertex, vertex2coord
+move_agent_single!, kill_agent!, coord2vertex, vertex2coord, genocide!
 
+#######################################################################################
+# Killing agents
+#######################################################################################
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
 
@@ -23,16 +29,44 @@ function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
   delete!(model.agents, agent.id)
 end
 
-"""
-    move_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
-Add `agentID` to the new position `pos` (either tuple or integer) in the model
+"""
+    genocide!(model::ABM)
+Kill all the agents of the model.
+"""
+genocide!(model::ABM) = for (i, a) in model.agents; kill_agent!(a, model); end
+
+"""
+    genocide!(model::ABM, n::Int)
+Kill the agents of the model whose IDs are larger than n.
+"""
+function genocide!(model::ABM, n::Int)
+    for (k, v) in model.agents
+        k > n && kill_agent!(v, model)
+    end
+end
+
+"""
+    genocide!(model::ABM, f::Function)
+Kill all agents where the function `f(agent)` returns `true`.
+"""
+function genocide!(model::ABM, f::Function)
+    for (k, v) in model.agents
+        f(v) && kill_agent!(v, model)
+    end
+end
+
+#######################################################################################
+# Moving agents
+#######################################################################################
+"""
+    move_agent!(agent::A [, pos], model::ABM{A, <: DiscreteSpace}) → agent
+
+Add `agentID` to the new position `pos` in the model
 and remove it from the old position
 (also update the agent to have the new position).
-
-If `pos` is a tuple, it represents the coordinates of the grid node.
-If `pos` is an integer, it represents the node number in the graph.
-If `pos` is not given, the agent is moved to a random position on the grid.
+`pos` must be the appropriate position type depending on the [`Space`](@ref) type,
+e.g. `Int` for `GraphSpace`, `NTuple{<:AbstractFloat}}` for `ContinuousSpace`, etc.
 """
 function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
   nodenumber = coord2vertex(pos, model)
@@ -60,12 +94,11 @@ function move_agent!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    move_agent_single!(agent::AbstractAgent, model::ABM)
+    move_agent_single!(agent::AbstractAgent, model::ABM) → agent
 
-Move agent to a random nodes on the grid while respecting a maximum of one agent
+Move agent to a random node while respecting a maximum of one agent
 per node. If there are no empty nodes, the agent wont move.
-
-Return the agent's new position.
+Only valid for non-continuous spaces.
 """
 function move_agent_single!(agent::AbstractAgent, model::ABM)
   # TODO: this inefficient
@@ -77,6 +110,9 @@ function move_agent_single!(agent::AbstractAgent, model::ABM)
   return agent
 end
 
+#######################################################################################
+# Adding agents
+#######################################################################################
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 
