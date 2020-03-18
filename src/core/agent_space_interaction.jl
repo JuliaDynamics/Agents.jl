@@ -150,10 +150,13 @@ function add_agent!(agent::AbstractAgent, model::ABM)
   return agent
 end
 
+# TODO: the source code here can be massively simplified, by defining _first_
+# add_agent_pos!, and have all other functions modify the agent's position and
+# lastly call `add_agent_pos!`. This is done for continuous space and leads to super
+# clean source code.
 """
-    add_agent_pos!(agent::AbstractAgent, model::ABM)
-Add the agent to the `model` at the agent's own position if the agent has a position,
-or to a random position otherwise.
+    add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
+Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
   if :pos ∈ fieldnames(typeof(agent))
@@ -164,14 +167,12 @@ function add_agent_pos!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    add_agent_single!(agent::AbstractAgent, model::ABM) → agent
+    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
 
 Add agent to a random node in the space while respecting a maximum one agent per node.
 This function does not do anything if there are no empty nodes.
-
-Return the new agent.
 """
-function add_agent_single!(agent::AbstractAgent, model::ABM)
+function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
   msa = model.space.agent_positions
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
