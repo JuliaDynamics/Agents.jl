@@ -161,21 +161,20 @@ function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:Contin
   return model
 end
 
-function genocide!(agentIDs::AbstractArray{Int}, model::ABM{A, S}) where {A, S<:ContinuousSpace}
-  DBInterface.execute(model.space.db,
-  "DELETE FROM tab WHERE id IN $(Tuple(agentIDs))")
-  for id in agentIDs
-    delete!(model.agents, id)
+function genocide!(model::ABM{A, S}, n::Int) where {A, S<:ContinuousSpace}
+  ids = strip(join("$id," for id in keys(model.agents) if id > n), ',')
+  DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
+  for id in keys(model.agents)
+    id > n && (delete!(model.agents, id))
   end
   return model
 end
 
-function genocide!(agents::AbstractArray, model::ABM{A, S}) where {A, S<:ContinuousSpace}
-  DBInterface.execute(model.space.db,
-  "DELETE FROM tab WHERE id IN $(Tuple([a.id for a in agents]))"
-  )
-  for agent in agents
-    delete!(model.agents, agent.id)
+function genocide!(model::ABM{A, S}, f::Function) where {A, S<:ContinuousSpace}
+  ids = strip(join("$(agent.id)," for agent in values(model.agents) if f(agent)), ',')
+  DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
+  for agent in values(model.agents)
+    f(agent) && (delete!(model.agents, agent.id))
   end
   return model
 end
