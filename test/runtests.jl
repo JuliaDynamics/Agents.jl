@@ -1,4 +1,4 @@
-using Test, Agents, Random
+using Test, Agents, Random, SQLite, DataFrames
 
 mutable struct Agent0 <: AbstractAgent
   id::Int
@@ -32,6 +32,13 @@ mutable struct Agent5 <: AbstractAgent
   weight::Float64
 end
 
+mutable struct Agent6 <: AbstractAgent
+  id::Int
+  pos::NTuple{2, Float64}
+  vel::NTuple{2, Float64}
+  diameter::Float64
+end
+
 @testset "all tests" begin
 
 include("api_tests.jl")
@@ -39,5 +46,6 @@ include("space_test.jl")
 include("interaction_tests.jl")
 include("data_collector_test.jl")
 include("CA_test.jl")
+include("continuousSpace_tests.jl")
 
 end
