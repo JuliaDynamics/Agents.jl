@@ -71,7 +71,7 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     if abm.space == nothing
         s*= "\n no space"
     else
-        s*= "\n space: $(nameof(typeof(abm.space))) with $(nv(abm)) nodes and $(ne(abm)) edges"
+        s*= "\n space: $(sprint(show, abm.space))"
     end
     s*= "\n scheduler: $(nameof(abm.scheduler))"
     print(io, s)
