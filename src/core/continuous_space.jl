@@ -1,3 +1,5 @@
+export kill_agents!
+
 using DataFrames, SQLite
 
 #######################################################################################
@@ -12,6 +14,7 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   db::SQLite.DB
   insertq::SQLite.Stmt
   searchq::SQLite.Stmt
+  deleteq::SQLite.Stmt
 end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
@@ -50,8 +53,8 @@ function Space(D::Int, update_vel! = defvel;
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
-  db, q, q2 = prepare_database(D)
-  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2)
+  db, q, q2, q3 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3)
 end
 
 function prepare_database(D)
@@ -66,7 +69,9 @@ function prepare_database(D)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
   searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
-  return db, q, q2
+  deleteexpr = "DELETE FROM tab WHERE id = ?"
+  q3 = DBInterface.prepare(db, deleteexpr)
+  return db, q, q2, q3
 end
 
 defvel(a, m) = nothing
@@ -145,4 +150,29 @@ function move_agent!(agent::A, model::ABM{A, S, F, P}) where {A<:AbstractAgent, 
     agent.pos = mod.(agent.pos, model.space.extend)
   end
   return agent.pos
+end
+
+function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.deleteq, (agent.id,))
+  delete!(model.agents, agent.id)
+  return model
+end
+
+function kill_agents!(agentIDs::AbstractArray{Int}, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.db,
+  "DELETE FROM tab WHERE id IN $(Tuple(agentIDs))")
+  for id in agentIDs
+    delete!(model.agents, id)
+  end
+  return model
+end
+
+function kill_agents!(agents::AbstractArray, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.db,
+  "DELETE FROM tab WHERE id IN $(Tuple([a.id for a in agents]))"
+  )
+  for agent in agents
+    delete!(model.agents, agent.id)
+  end
+  return model
 end

@@ -3,7 +3,7 @@
 # This is a proof of concept for continuous space.
 # The final api can use ideas in this example.
 
-using Agents, Random, DataFrames, SQLite, Plots
+using Agents, Random, SQLite, Plots
 using DrWatson: @dict
 
 mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
