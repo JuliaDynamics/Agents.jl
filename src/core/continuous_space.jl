@@ -12,11 +12,12 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   db::SQLite.DB
   insertq::SQLite.Stmt
   searchq::SQLite.Stmt
+  deleteq::SQLite.Stmt
+  updateq::SQLite.Stmt
 end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
 
-# TODO: name `vel!` is not good, too short. Find something better.
 """
     Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
@@ -38,8 +39,6 @@ By default no update is done this way.
   `extend` must be a `NTuple{D}`, where each entry is the extent of each dimension
   (after which periodicity happens. All dimensions start at 0).
 
-## Notes
-You can imagine the evolution algorithm as an Euler scheme with `dt = 1` (here the step).
 """
 function Space(D::Int, update_vel! = defvel;
   periodic = false, extend = nothing, metric = "cityblock")
@@ -50,8 +49,8 @@ function Space(D::Int, update_vel! = defvel;
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
-  db, q, q2 = prepare_database(D)
-  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2)
+  db, q, q2, q3, q4 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
 end
 
 function prepare_database(D)
@@ -66,7 +65,12 @@ function prepare_database(D)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
   searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
-  return db, q, q2
+  deleteq = "DELETE FROM tab WHERE id = ?"
+  q3 = DBInterface.prepare(db, deleteq)
+  updateexpr = strip(join("$x = ?," for x in COORDS[1:D]), ',')
+  updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
+  q4 = DBInterface.prepare(db, updateq)
+  return db, q, q2, q3, q4
 end
 
 defvel(a, m) = nothing
@@ -81,14 +85,6 @@ end
 #######################################################################################
 # SQLite database functions
 #######################################################################################
-# TODO: is this function used anywhere anymore, since add_agent! does the adding?
-"Add many agents to the database"
-function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
-  db = model.space.db
-  for agent in agents
-    DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  end
-end
 
 "Collect IDs from an SQLite.Query where IDs are stored in `colname`"
 function collect_ids(q::SQLite.Query, colname=:id)
@@ -116,33 +112,86 @@ end
 #######################################################################################
 # Extention of Agents.jl API for continuous space
 #######################################################################################
-# TODO: This should also have a version with random position
-# TODO: improve the doc string of add_agent! to somehow reflect that it works
-# universaly for any space
+# TODO: the add_agent! source needs a bit reworking. There is a lot of code
+# duplication, that can be taken care of by a function that converts
+# any given location to appropriate Agent field. So that it doesn't matter
+# of user gives in a node, a Tuple{Int, Int}, a Tuple{real...} we can re-use
+# the same code.
+# TODO: the continuous space add_agent! is inconsistent with the existing
+# API for add_agent!. This should _not_ be the case, the same APi
+# should be re-used for both!
 function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
   db = model.space.db
-
-  # TODO: This seems ineficient... Is there no way to directly get maximum of
-  # the column "id" of the database? There _has_ to be a way for it.
   ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
   id = ismissing(ids[1]) ? 1 : ids[1]+1
-  agent = A(id, properties...)
+  pos = Tuple(rand(model.space.D))
+  agent = A(id, pos, properties...)
   DBInterface.execute(model.space.insertq, (agent.pos..., id))
   model.agents[id] = agent
   return agent
 end
 
 """
-    move_agent!(agent::A, model::ABM{A, ContinuousSpace})
-In the case of continuous space, `move_agent!` propagates the agent forwards one step
-according to its velocity, _after_ updating the agent's velocity
-(see [`Space`](@ref)).
+    add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) 
+Add a new agent in the given position `pos`, by constructing the agent type of the
+model and propagating all extra properties to the constructor.
+
+Notice that this function takes care of setting the agent's id and position
+and thus properties... is propagated to other fields the agent has.
 """
-function move_agent!(agent::A, model::ABM{A, S, F, P}) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
+function add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) where {A}
+  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
+  id = ismissing(ids[1]) ? 1 : ids[1]+1
+  agent = A(id, pos, properties...)
+  DBInterface.execute(model.space.insertq, (agent.pos..., id))
+  model.agents[id] = agent
+  return agent
+end
+
+"""
+    move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
+In the case of continuous space, `move_agent!` propagates the agent forwards one step
+according to its velocity, _after_ updating the agent's velocity (see [`Space`](@ref)).
+
+The evolution algorithm is therefore a trivial Euler scheme with `dt` the step size.
+"""
+function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
   model.space.update_vel!(agent, model)
-  agent.pos = agent.pos .+ agent.vel # explicitly vel is multipled by 1, the dt
+  agent.pos = agent.pos .+ dt .* agent.vel
   if model.space.periodic
     agent.pos = mod.(agent.pos, model.space.extend)
   end
+  DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
   return agent.pos
+end
+
+function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.deleteq, (agent.id,))
+  delete!(model.agents, agent.id)
+  return model
+end
+
+function genocide!(model::ABM{A, S}, n::Int) where {A, S<:ContinuousSpace}
+  ids = strip(join("$id," for id in keys(model.agents) if id > n), ',')
+  DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
+  for id in keys(model.agents)
+    id > n && (delete!(model.agents, id))
+  end
+  return model
+end
+
+function genocide!(model::ABM{A, S}, f::Function) where {A, S<:ContinuousSpace}
+  ids = strip(join("$(agent.id)," for agent in values(model.agents) if f(agent)), ',')
+  DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
+  for agent in values(model.agents)
+    f(agent) && (delete!(model.agents, agent.id))
+  end
+  return model
+end
+
+function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
+  DBInterface.execute(model.space.db, "DELETE FROM tab")
+  for agent in model.agents
+    delete!(model.agents, agent.id)
+  end
 end
