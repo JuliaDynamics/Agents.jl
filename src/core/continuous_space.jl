@@ -33,7 +33,8 @@ during the agent interaction, the `vel!` functionality targets arbitrary forces)
 
 * `periodic = false` : whether continuous space is periodic or not
 * `extend = nothing` : only useful
-# TODO: talk about periodicity
+
+`periodic` specifies the boundary conditions of the space. If true, when an agent passes through one side of the space, it re-appears on the opposite side with the same velocity. 
 
 ## Notes
 You can imagine the evolution algorithm as an Euler scheme with `dt = 1` (here the step).
