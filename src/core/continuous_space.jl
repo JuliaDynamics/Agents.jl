@@ -3,11 +3,12 @@ using DataFrames, SQLite
 #######################################################################################
 # Continuous space structure
 #######################################################################################
-struct ContinuousSpace{F, E} <: AbstractSpace
+struct ContinuousSpace{F, E, M} <: AbstractSpace
   D::Int
   vel!::F
   periodic::Bool
   extend::E
+  metric::String
   db::SQLite.DB
   insertq::SQLite.Stmt
   searchq::SQLite.Stmt
@@ -16,7 +17,7 @@ end
 const COORDS = collect(Iterators.flatten(('x':'z', 'a':'w')))
 
 """
-    Space(D::Int [, vel!]; periodic::Bool = false, extend = nothing)
+    Space(D::Int [, vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a *continuous* space of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -28,13 +29,23 @@ the agent's velocities **before** the agent has been moved, see [`move_agent!`](
 By default no update is done this way (you can of course change the agents velocities
 during the agent interaction, the `vel!` functionality targets arbitrary forces).
 
+## Keywords
+
+* `periodic = false` : whether continuous space is periodic or not
+* `extend = nothing` : only useful
 # TODO: talk about periodicity
 
 ## Notes
 You can imagine the evolution algorithm as an Euler scheme with `dt = 1` (here the step).
 """
-function Space(D::Int, vel = (x, y) -> nothing; periodic = false, extend = nothing)
+function Space(D::Int, vel = (x, y) -> nothing;
+    periodic = false, extend = nothing, metric = "cityblock")
+
+  @assert metric ∈ ("cityblock", "euclidean")
   # TODO: actually implement periodicity
+  # TODO: allow extend to be something even without periodicity: agents bounce of walls then
+  # (improve `move_agent!`)
+
   db = SQLite.DB()
   dimexpression = join("$x REAL, " for x in COORDS[1:D])
   stmt = "CREATE TABLE tab ("*dimexpression*"id INTEGER PRIMARY KEY)"
@@ -46,7 +57,7 @@ function Space(D::Int, vel = (x, y) -> nothing; periodic = false, extend = nothi
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
   searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
-  ContinuousSpace(D, vel, periodic, extend, db, q, q2)
+  ContinuousSpace(D, vel, periodic, extend, metric, db, q, q2)
 end
 
 # TODO: re-check this at the end.
