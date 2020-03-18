@@ -2,23 +2,6 @@
 
 The core API is defined by [`AgentBasedModel`](@ref), [`Space`](@ref), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial](@ref) page. The functionality described here builds on top of the core API.
 
-## Model and space information
-```@docs
-nv(::ABM)
-ne(::ABM)
-has_empty_nodes
-find_empty_nodes
-```
-
-## Content from a node
-```@docs
-node_neighbors
-pick_empty
-get_node_contents
-get_node_agents
-isempty(::Integer, ::ABM)
-```
-
 ## Agent information and retrieval
 ```@docs
 nagents
@@ -26,7 +9,11 @@ id2agent
 random_agent
 ```
 
+
 ## Model-Agent interaction
+The following API is mostly universal across all types of [`Space`](@ref).
+Only some specific methods are exclusive to a specific type of space, but we think
+this is clear from the documentation strings (if not, please open an issue!).
 ```@docs
 add_agent!
 add_agent_pos!
@@ -37,18 +24,32 @@ kill_agent!
 genocide!
 ```
 
+## Discrete space exclusives
+```@docs
+nv(::ABM)
+ne(::ABM)
+has_empty_nodes
+find_empty_nodes
+node_neighbors
+pick_empty
+get_node_contents
+get_node_agents
+isempty(::Integer, ::ABM)
+NodeIterator
+nodes
+coord2vertex
+vertex2coord
+```
+
+## Continuous space exclusives
+Coming soon...
+
 ## Simulations
 The central simulation function is [`step!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
 ```@docs
 paramscan
 sample!
-```
-
-## Iteration
-```@docs
-NodeIterator
-nodes
 ```
 
 ## Schedulers
@@ -62,13 +63,6 @@ by_id
 random_activation
 partial_activation
 property_activation
-```
-
-## Utilities
-
-```@docs
-coord2vertex
-vertex2coord
 ```
 
 ## Parallelization
