@@ -49,7 +49,7 @@ length(model.space.agent_positions[node]) == 0
 
 """
     Space(graph::AbstractGraph) -> GraphSpace
-Create a space instance that is underlined by an arbitrary graph.
+Create a `GraphSpace` instance that is underlined by an arbitrary graph.
 In this case, your agent positions (field `pos`) should be of type `Integer`.
 """
 function Space(graph::G) where {G<:AbstractGraph}
@@ -59,7 +59,7 @@ end
 
 """
     Space(dims::NTuple; periodic = false, moore = false) -> GridSpace
-Create a space instance that represents a grid of dimensionality `length(dims)`,
+Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{Int}`.
 

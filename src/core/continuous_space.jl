@@ -16,15 +16,16 @@ end
 
 const COORDS = collect(Iterators.flatten(('x':'z', 'a':'w')))
 
+# TODO: name `vel!` is not good, too short. Find something better.
 """
     Space(D::Int [, vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
-Create a *continuous* space of dimensionality `D`.
+Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
 In addition, the agent type must have a third field `vel::NTuple{D, F}` representing
 the agent's velocity.
 
-The optional argument `vel` is a **function**, `vel!(agent, model)` that updates
+The optional argument `vel!` is a **function**, `vel!(agent, model)` that updates
 the agent's velocities **before** the agent has been moved, see [`move_agent!`](@ref).
 By default no update is done this way (you can of course change the agents velocities
 during the agent interaction, the `vel!` functionality targets arbitrary forces).
@@ -70,6 +71,7 @@ end
 #######################################################################################
 # SQLite database functions
 #######################################################################################
+# TODO: is this function used anywhere anymore, since add_agent! does the adding?
 "Add many agents to the database"
 function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
   db = model.space.db
@@ -79,7 +81,7 @@ function fill_db!(agents, model::ABM{A, S}) where {A, S<:ContinuousSpace}
 end
 
 "Collect IDs from an SQLite.Query where IDs are stored in `colname`"
-function collect_ids(q::SQLite.Query; colname=:id)
+function collect_ids(q::SQLite.Query, colname=:id)
   output = Union{Int, Missing}[]
   for row in q
     push!(output, row[colname])
@@ -105,7 +107,9 @@ end
 # Extention of Agents.jl API for continuous space
 #######################################################################################
 # TODO: This should also have a version with random position
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:ContinuousSpace}
+# TODO: improve the doc string of add_agent! to somehow reflect that it works
+# universaly for any space
+function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
   db = model.space.db
 
   # TODO: This seems ineficient... Is there no way to directly get maximum of
@@ -123,7 +127,7 @@ end
     move_agent!(agent::A, model::ABM{A, ContinuousSpace})
 In the case of continuous space, `move_agent!` propagates the agent forwards one step
 according to its velocity, _after_ updating the agent's velocity
-(see [`Space(D::Int)`](@ref)).
+(see [`Space`](@ref)).
 """
 function move_agent!(agent::A, model::ABM{A, S, F, P}) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
   model.space.vel!(agent, model)
