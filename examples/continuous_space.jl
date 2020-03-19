@@ -11,6 +11,7 @@ mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   pos::NTuple{D, F}
   vel::NTuple{D, F}
   diameter::F
+  moved::Bool
 end
 
 function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
@@ -23,7 +24,9 @@ function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
     pos = Tuple(rand(0.0:space_resolution:1.0, 2))
     vel = sincos(2π*rand()) .* speed
     dia = space_resolution * 10
-    add_agent!(pos, model, vel, dia)
+    agent = Agent(ind, pos, vel, dia, false)
+    add_agent!(agent, model)
+    # add_agent!(pos, model, vel, dia, false)
   end
 
   Agents.index!(model)
@@ -37,6 +40,7 @@ function agent_step!(agent, model)
 end
 
 function collide!(agent, model)
+  agent.moved && return
   db = model.space.db
   # TODO: This should become some function "neighbors" or "within_radius" or so...
   # TODO: This should be come dimension-generic
@@ -50,12 +54,24 @@ function collide!(agent, model)
   r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
   length(r) == 0 && return
   # change direction
-  firstcontact = id2agent(r[1], model)
-  agent.vel, firstcontact.vel = (agent.vel[1], firstcontact.vel[2]), (firstcontact.vel[1], agent.vel[2])
+  for contactid in r
+    contact = id2agent(r[contactid], model)
+    if contact.moved == false
+      agent.vel, contact.vel = (agent.vel[1], contact.vel[2]), (contact.vel[1], agent.vel[2])
+      contact.moved=true
+    end
+  end
+  agent.moved=true
+end
+
+function model_step!(model)
+  for agent in model.agents
+    agent.moved=false
+  end
 end
 
 model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
-step!(model, agent_step!, 500)
+step!(model, agent_step!, model_step!, 500)
 
 # ## Example animation
 model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
