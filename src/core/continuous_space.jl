@@ -119,7 +119,7 @@ end
 # Extention of Agents.jl Model-Space interaction API
 #######################################################################################
 # central, low level function that is always called by all others!
-function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A}
+function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
   DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
   model.agents[agent.id] = agent
   return agent
@@ -132,27 +132,27 @@ function biggest_id(model::ABM{A, <: ContinuousSpace}) where {A}
 end
 
 function randompos(space::ContinuousSpace)
-  pos = Tuple(rand(model.space.D))
-  !isnothing(model.space.extend) && (pos .*= model.space.extend)
+  pos = Tuple(rand(space.D))
+  !isnothing(space.extend) && (pos = pos .* space.extend)
   return pos
 end
 
-function add_agent!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A}
+function add_agent!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
   agent.pos = randompos(model.space)
   add_agent_pos!(agent, model)
 end
 
-function add_agent!(agent::A, pos, model::ABM{A, <: ContinuousSpace}) where {A}
+function add_agent!(agent::A, pos, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
   agent.pos = pos
   add_agent_pos!(agent, model)
 end
 
 # versions that create the agents
-function add_agent!(model::ABM{A, <: ContinuousSpace}, args...) where {A}
+function add_agent!(model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
   add_agent!(randompos(model.space), model, args...)
 end
 
-function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A}
+function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
   id = biggest_id(model) + 1
   agent = A(id, pos, args...)
   DBInterface.execute(model.space.insertq, (agent.pos..., id))
