@@ -57,13 +57,10 @@
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model1)
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
-  @test dbrow[1, :a] == 0.5
-  @test dbrow[1, :b] == 0.5
 
   # agents within some range are found correctly (once this is implemented)
   agent = Agent6(3, (0.501,0.491), vel, dia)
-  add_agent!(agent, model1)
+  add_agent_pos!(agent, model1)
   r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.49, 0.51, agent.id)))
   @test r[1] == 2
   r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.51, 0.52, agent.id)))

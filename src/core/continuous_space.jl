@@ -138,7 +138,7 @@ function randompos(space::ContinuousSpace)
 end
 
 function add_agent!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
-  # agent.pos = randompos(model.space) # Why not use the agent's position?
+  agent.pos = randompos(model.space)
   add_agent_pos!(agent, model)
 end
 
