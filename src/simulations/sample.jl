@@ -1,40 +1,5 @@
-export sample!, genocide!
+export sample!
 using StatsBase: sample, Weights
-
-"""
-    genocide!(model::ABM)
-Kill all the agents of the model.
-"""
-function genocide!(model::ABM)
-    for (i, a) in model.agents
-        kill_agent!(a, model)
-    end
-    return model
-end
-
-"""
-    genocide!(model::ABM, n::Int)
-Kill the agents of the model whose IDs are larger than n.
-"""
-function genocide!(model::ABM, n::Int)
-    for (k, v) in model.agents
-        if k > n
-            kill_agent!(v, model)
-        end
-    end
-end
-
-"""
-    genocide!(model::ABM, f::Function)
-Kill all agents where the function `f(agent)` returns `true`.
-"""
-function genocide!(model::ABM, f::Function)
-    for (k, v) in model.agents
-        if f(v)
-            kill_agent!(v, model)
-        end
-    end
-end
 
 """
     sample!(model::ABM, n [, weight]; kwargs...)

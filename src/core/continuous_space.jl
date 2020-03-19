@@ -18,6 +18,10 @@ end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
 
+# TODO: `Space` became overly complicated and there is no reason to use the same
+# name for all spaces anymore. Instead, we should properly use `GraphSpace`,
+# `GridSpace`, `ContinuousSpace`. A depwarning should be added to `Space`.
+
 """
     Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
@@ -78,14 +82,13 @@ defvel(a, m) = nothing
 # TODO: re-check this at the end.
 function Base.show(io::IO, abm::ContinuousSpace)
     s = "$(abm.D)-dimensional $(abm.periodic ? "periodic " : "")ContinuousSpace"
-    update_vel! ≠ defvel && (s *= " with velocity updates")
+    abm.update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
 end
 
 #######################################################################################
 # SQLite database functions
 #######################################################################################
-
 "Collect IDs from an SQLite.Query where IDs are stored in `colname`"
 function collect_ids(q::SQLite.Query, colname=:id)
   output = Union{Int, Missing}[]
@@ -97,8 +100,11 @@ end
 
 # TODO: index! needs a better name
 """
-Indexing the database can drastically improve retrieving data, but adding new
-data can become slower because after each addition, index needs to be reworked.
+    index!(model)
+Index the database underlying the `ContinuousSpace` of the model.
+
+This can drastically improve performance for retrieving data, but adding new
+data can become slower because after each addition, index needs to be called again.
 
 Lack of index won't be noticed for small databases. Only use it when you have
 many agents and not many additions of agents.
@@ -110,39 +116,45 @@ function index!(model)
 end
 
 #######################################################################################
-# Extention of Agents.jl API for continuous space
+# Extention of Agents.jl Model-Space interaction API
 #######################################################################################
-# TODO: the add_agent! source needs a bit reworking. There is a lot of code
-# duplication, that can be taken care of by a function that converts
-# any given location to appropriate Agent field. So that it doesn't matter
-# of user gives in a node, a Tuple{Int, Int}, a Tuple{real...} we can re-use
-# the same code.
-# TODO: the continuous space add_agent! is inconsistent with the existing
-# API for add_agent!. This should _not_ be the case, the same APi
-# should be re-used for both!
-function add_agent!(model::ABM{A, <:ContinuousSpace}, properties...) where {A}
-  db = model.space.db
-  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
-  id = ismissing(ids[1]) ? 1 : ids[1]+1
-  pos = Tuple(rand(model.space.D))
-  agent = A(id, pos, properties...)
-  DBInterface.execute(model.space.insertq, (agent.pos..., id))
-  model.agents[id] = agent
+# central, low level function that is always called by all others!
+function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
+  DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
+  model.agents[agent.id] = agent
   return agent
 end
 
-"""
-    add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) 
-Add a new agent in the given position `pos`, by constructing the agent type of the
-model and propagating all extra properties to the constructor.
+function biggest_id(model::ABM{A, <: ContinuousSpace}) where {A}
+  db = model.space.db
+  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
+  id = ismissing(ids[1]) ? 0 : ids[1]
+end
 
-Notice that this function takes care of setting the agent's id and position
-and thus properties... is propagated to other fields the agent has.
-"""
-function add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) where {A}
-  ids = collect_ids(DBInterface.execute(model.space.db, "select max(id) as id from tab"))
-  id = ismissing(ids[1]) ? 1 : ids[1]+1
-  agent = A(id, pos, properties...)
+function randompos(space::ContinuousSpace)
+  pos = Tuple(rand(space.D))
+  !isnothing(space.extend) && (pos = pos .* space.extend)
+  return pos
+end
+
+function add_agent!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
+  agent.pos = randompos(model.space)
+  add_agent_pos!(agent, model)
+end
+
+function add_agent!(agent::A, pos, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
+  agent.pos = pos
+  add_agent_pos!(agent, model)
+end
+
+# versions that create the agents
+function add_agent!(model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
+  add_agent!(randompos(model.space), model, args...)
+end
+
+function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
+  id = biggest_id(model) + 1
+  agent = A(id, pos, args...)
   DBInterface.execute(model.space.insertq, (agent.pos..., id))
   model.agents[id] = agent
   return agent
@@ -150,10 +162,12 @@ end
 
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
-In the case of continuous space, `move_agent!` propagates the agent forwards one step
-according to its velocity, _after_ updating the agent's velocity (see [`Space`](@ref)).
+Propagate the agent forwards one step according to its velocity,
+_after_ updating the agent's velocity (see [`Space`](@ref)).
 
-The evolution algorithm is therefore a trivial Euler scheme with `dt` the step size.
+For this continuous space version of `move_agent!`, the "evolution algorithm"
+is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
+as `agent.pos += agent.vel * dt`.
 """
 function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
   model.space.update_vel!(agent, model)
