@@ -134,7 +134,7 @@ end
 
 function randompos(space::ContinuousSpace)
   pos = Tuple(rand(space.D))
-  !isnothing(space.extend) && (pos = pos .* space.extend)
+  space.extend ≠ nothing && (pos = pos .* space.extend)
   return pos
 end
 
