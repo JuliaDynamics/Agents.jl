@@ -43,4 +43,11 @@
   kill_agent!(model1.agents[1], model1)
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
   @test size(dbrow) == (0,0)
+
+  agent = Agent6(2, pos, vel, dia)
+  add_agent!(agent, model1)
+  @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
+  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
+  @test dbrow[1, :a] == 0.5
+  @test dbrow[1, :b] == 0.5
 end
