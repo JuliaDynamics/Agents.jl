@@ -415,7 +415,11 @@ Return all nodes that are neighbors to the given `node`, which can be an `Int` f
 [`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
 
 Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
+
+    node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+Same as above, but uses `agent.pos` as `node`.
 """
+node_neighbors(agent::AbstractAgent, model::ABM) = node_neighbors(agent.pos, model)
 function node_neighbors(node_number::Integer, model::ABM)
   nn = neighbors(model.space.graph, node_number)
   return nn

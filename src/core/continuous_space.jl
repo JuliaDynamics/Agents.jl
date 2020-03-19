@@ -67,7 +67,7 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
@@ -217,7 +217,7 @@ function space_neighbors(pos::Tuple, model, r::Real)
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchq, (res..., agent.id)))
+  collect_ids(DBInterface.execute(model.space.searchq, res))
 end
 
 @generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
