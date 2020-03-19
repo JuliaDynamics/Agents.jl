@@ -300,7 +300,7 @@ vertex2coord(v::Tuple, model::ABM) = v
 """
     find_empty_nodes(model::ABM)
 
-Returns the IDs of empty nodes on the model space.
+Returns the indices of empty nodes on the model space.
 """
 function find_empty_nodes(model::ABM)
   ap = agent_positions(model)
@@ -311,7 +311,7 @@ end
 """
     pick_empty(model)
 
-Return the ID of a random empty node or `0` if there are no empty nodes.
+Return a random empty node or `0` if there are no empty nodes.
 """
 function pick_empty(model)
   empty_nodes = find_empty_nodes(model)
@@ -397,12 +397,16 @@ See also [`neighbors`](@ref).
 Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
 `agent` from the neighbors.
 """
-space_neighbors(agent::AbstractAgent, model, args...) =
-space_neighbors(agent.pos, model, args...)
+function space_neighbors(agent::A, model::ABM{A}, args...) where {A <: AbstractAgent}
+  all = space_neighbors(agent.pos, model, args...)
+  d = findfirst(isequal(agent.id), all)
+  d ≠ nothing && deleteat!(all, d)
+  return all
+end
 
 function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...) where {A}
-  nn = node_neighbors(pos, model)
-  convert all nn to agent ids
+  nn = node_neighbors(pos, model, args...)
+  vcat(agent_positions(model)[n] for n in nn)
 end
 
 """

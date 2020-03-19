@@ -209,3 +209,7 @@ function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
     delete!(model.agents, agent.id)
   end
 end
+
+function space_neighbors(pos::Tuple, model, r::Real)
+  # TODO: Do it!
+end

@@ -7,6 +7,7 @@ The core API is defined by [`AgentBasedModel`](@ref), [`Space`](@ref), [`Abstrac
 nagents
 id2agent
 random_agent
+space_neighbors
 ```
 
 
@@ -26,11 +27,11 @@ genocide!
 
 ## Discrete space exclusives
 ```@docs
+node_neighbors
 nv(::ABM)
 ne(::ABM)
 has_empty_nodes
 find_empty_nodes
-node_neighbors
 pick_empty
 get_node_contents
 get_node_agents
