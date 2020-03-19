@@ -32,20 +32,19 @@
 
   # add_agent! with no existing agent (the agent is created)
   pos = (0.5, 0.5)
-  vel = sincos(2π*rand()) .* 0.05
+  vel = (0.2, 0.1)
   dia = 0.01
   add_agent!(pos, model1, vel, dia)
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [1]
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
   @test dbrow[1, :a] == 0.5
   @test dbrow[1, :b] == 0.5
-  
+
   # move_agent! without provided update_vel! function
   move_agent!(model1.agents[1], model1)
-  @test model1.agents[1].pos[1] != 0.5
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
-  @test dbrow[1, :a] != 0.5
-  @test dbrow[1, :b] != 0.5
+  @test dbrow[1, :a] == 0.7
+  @test dbrow[1, :b] == 0.6
   @test dbrow[1, :a] == model1.agents[1].pos[1]
   @test dbrow[1, :b] == model1.agents[1].pos[2]
 
@@ -62,8 +61,9 @@
   agent2 = model1.agents[2]
   agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
   add_agent_pos!(agent3, model1)
-  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (agent2.pos[1]-0.01, agent2.pos[1] + 0.01, agent2.pos[2] - 0.01, agent2.pos[2] + 0.01, agent2.id)))
-  @test r[1] == 3
-  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (agent2.pos[1]-0.05, agent2.pos[1] - 0.04, agent2.pos[2] - 0.05, agent2.pos[2] - 0.04, agent2.id)))
+  n_ids = space_neighbors(agent2, model, agent2.dia)
+  @test length(n_ids) == 1
+  @test n_ids[1] == 3
+  n_ids = space_neighbors(agent2, model, agent2.dia/10)
   @test length(r) == 0
 end

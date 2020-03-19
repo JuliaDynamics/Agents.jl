@@ -7,7 +7,7 @@ Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynami
 To get started, please read the [Tutorial](@ref) page.
 
 !!! info "Latest news"
-    Welcome to Agents.jl 3.0! In this major release we have full support for agent based models on _continuous_ space. We also simplified some interfaces, see the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for a full list of changes.
+    Welcome to Agents.jl 3.0! In this major release we have full support for agent based models on [`ContinuousSpace`](@ref)! We also simplified some interfaces, see the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for a full list of changes.
 
     There are also two new examples about the spread of COVID-19 using ABMs!
 

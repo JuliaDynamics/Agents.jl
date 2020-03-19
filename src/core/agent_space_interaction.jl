@@ -134,11 +134,11 @@ end
 """
     add_agent!(agent::AbstractAgent [, position], model::ABM) → agent
 
-Add the agent to the `position` in the space and to the list of agents.
-If `position` is not given, the agent is added to a random position.
-The agent's position is always updated to match `position`, and therefore for `add_agent!`
+Add the `agent` to the `position` in the space and to the list of agents.
+If `position` is not given, the `agent` is added to a random position.
+The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
 the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
-the agent's position.
+the `agent`'s position.
 """
 function add_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
   # node number from x, y, z coordinates
@@ -181,7 +181,7 @@ Notice that this function takes care of setting the agent's id and position and 
 
     add_agent!(model::ABM, properties...)
 Similar with `add_agent!(position, model, properties...)`, but adds the
-created agent to a random node.
+created agent to a random position.
 This function also works for models without a spatial structure.
 
 ## Example
