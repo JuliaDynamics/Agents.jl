@@ -2,6 +2,14 @@ export Space, vertex2coords, coords2vertex, node_neighbors,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
+export GraphSpace, GridSpace
+
+# Deprecation
+Space(args...; kwargs...) = error(
+"""
+Space is not used anymore. Use the appropriate space objects relevant to your model:
+GraphSpace, GridSpace, ContinuousSpace or just nothing
+""")
 
 #######################################################################################
 # Basic space definition
@@ -37,7 +45,6 @@ function Base.show(io::IO, abm::DiscreteSpace)
     print(io, s)
 end
 
-Space(m::ABM) = m.space
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::DiscreteSpace) = m.agent_positions
 Base.size(s::GridSpace) = s.dimensions
@@ -50,11 +57,11 @@ Base.isempty(node::Integer, model::ABM) =
 length(model.space.agent_positions[node]) == 0
 
 """
-    Space(graph::AbstractGraph) → GraphSpace
-Create a `GraphSpace` instance that is underlined by an arbitrary graph.
+    GraphSpace(graph::AbstractGraph)
+Create a `GraphSpace` instance that is underlined by an arbitrary graph from LightGraphs.jl.
 In this case, your agent positions (field `pos`) must be of type `Integer`.
 """
-function Space(graph::G) where {G<:AbstractGraph}
+function GraphSpace(graph::G) where {G<:AbstractGraph}
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GraphSpace{G}(graph, agent_positions)
 end
@@ -63,6 +70,7 @@ end
     Space(dims::NTuple; periodic = false, moore = false) → GridSpace
 Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
+Such grids are typically used in cellular-automata-like models.
 In this case, your agent positions (field `pos`) must be of type `NTuple{Int}`.
 
 The two keyword arguments denote if the grid should be periodic on its ends,
@@ -70,7 +78,7 @@ and if the connections should be of type Moore or not (in the Moore case
 the diagonal connections are also valid. E.g. for a 2D grid, each node has
 8 neighbors).
 """
-function Space(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
+function GridSpace(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
   graph = _grid(dims..., periodic, moore)
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
