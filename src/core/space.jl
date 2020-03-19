@@ -1,4 +1,4 @@
-export Space, vertex2coords, coords2vertex,
+export Space, vertex2coords, coords2vertex, node_neighbors,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne

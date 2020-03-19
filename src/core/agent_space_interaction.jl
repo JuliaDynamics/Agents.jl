@@ -140,13 +140,13 @@ The `agent`'s position is always updated to match `position`, and therefore for 
 the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
 the `agent`'s position.
 """
-function add_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
+function add_agent!(agent::A, pos::Tuple, model::ABM{A, <: DiscreteSpace}) where {A}
   # node number from x, y, z coordinates
   nodenumber = coord2vertex(pos, model)
   add_agent!(agent, nodenumber, model)
 end
 
-function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
+function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) where {A}
   push!(model.space.agent_positions[pos], agent.id)
   model.agents[agent.id] = agent
   # update agent position
@@ -160,7 +160,7 @@ function add_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
   return agent
 end
 
-function add_agent!(agent::AbstractAgent, model::ABM)
+function add_agent!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
   if :pos ∈ fieldnames(typeof(agent))
     nodenumber = rand(1:nv(model.space))
     add_agent!(agent, nodenumber, model)
@@ -210,7 +210,7 @@ function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
   return model.agents[id]
 end
 
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
+function add_agent!(model::ABM{A, S}, properties...) where {A, S<:DiscreteSpace}
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
@@ -219,12 +219,8 @@ function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
   return model.agents[id]
 end
 
-function biggest_id(model)
-    if isempty(model.agents)
-        return 0
-    else
-        return maximum(keys(model.agents))
-    end
+function biggest_id(model) where {A}
+    isempty(model.agents) ? 0 : maximum(keys(model.agents))
 end
 
 
@@ -251,10 +247,9 @@ end
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
-function add_agent_single!(model::ABM, properties...)
+function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...) where {A}
   msa = model.space.agent_positions
   id = biggest_id(model) + 1
-  A = agenttype(model)
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
     random_node = rand(empty_cells)

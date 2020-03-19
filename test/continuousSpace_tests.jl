@@ -1,4 +1,3 @@
-
 @testset "Continuous space" begin
 
   # Basic model initialization
