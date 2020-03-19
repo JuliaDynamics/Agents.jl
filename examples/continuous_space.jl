@@ -14,17 +14,16 @@ mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   moved::Bool
 end
 
-function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
+function model_initiation(;N=100, speed=0.005, diameter=0.01, seed=0)
   Random.seed!(seed)
   space = Space(2; periodic = true, extend = (1, 1))
   model = ABM(Agent, space);
 
   ## Add initial individuals
   for ind in 1:N
-    pos = Tuple(rand(0.0:space_resolution:1.0, 2))
+    pos = Tuple(rand(2))
     vel = sincos(2π*rand()) .* speed
-    dia = space_resolution * 10
-    add_agent!(pos, model, vel, dia, false)
+    add_agent!(pos, model, vel, diameter, false)
   end
 
   Agents.index!(model)
@@ -68,11 +67,11 @@ function model_step!(model)
   end
 end
 
-model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
+model = model_initiation(N=100, speed=0.005, diameter=0.01)
 step!(model, agent_step!, model_step!, 500)
 
 # ## Example animation
-model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
+model = model_initiation(N=200, speed=0.005, diameter=0.01);
 anim = @animate for i ∈ 1:100
   xs = [a.pos[1] for a in values(model.agents)];
   ys = [a.pos[2] for a in values(model.agents)];
