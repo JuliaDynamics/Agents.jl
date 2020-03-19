@@ -220,4 +220,10 @@ function space_neighbors(pos::Tuple, model, r::Real)
   collect_ids(DBInterface.execute(model.space.searchq, (res..., agent.id)))
 end
 
-interlace(a, b) = ntuple(i -> iseven(i) ? b[(1 + i) >>1] : a[(1 + i) >> 1], length(a) + length(b))
+@generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
+  a = [[:(left[$i]), :(right[$i])] for i=1:D]
+  b = vcat(a...)
+  quote
+    tuple($(b...))
+  end
+end
