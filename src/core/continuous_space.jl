@@ -140,7 +140,7 @@ Notice that this function takes care of setting the agent's id and position
 and thus properties... is propagated to other fields the agent has.
 """
 function add_agent!(pos, model::ABM{A, <:ContinuousSpace}, properties...) where {A}
-  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
+  ids = collect_ids(DBInterface.execute(model.space.db, "select max(id) as id from tab"))
   id = ismissing(ids[1]) ? 1 : ids[1]+1
   agent = A(id, pos, properties...)
   DBInterface.execute(model.space.insertq, (agent.pos..., id))
