@@ -21,6 +21,11 @@
   @test space8.D == 3
 
   model1 = ABM(Agent6, space1)
+  model2 = ABM(Agent6, space2)
+  model3 = ABM(Agent6, space3)
+  model4 = ABM(Agent6, space4)
+  model5 = ABM(Agent6, space5)
+  model6 = ABM(Agent6, space6)
 
   @test nagents(model1) == 0
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == []
@@ -57,8 +62,10 @@
   @test dbrow[1, :b] == 0.5
 
   # agents within some range are found correctly (once this is implemented)
-  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (0.49, 0.51, 0.49, 0.51, agent.id)))
+  agent = Agent6(3, (0.501,0.491), vel, dia)
+  add_agent!(agent, model1)
+  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.49, 0.51, agent.id)))
   @test r[1] == 2
-  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (0.49, 0.51, 0.51, 0.52, agent.id)))
+  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.51, 0.52, agent.id)))
   @test length(r) == 0
 end
