@@ -33,10 +33,12 @@
   @test dbrow[1, :b] == 0.5
   
   move_agent!(model1.agents[1], model1)
-  @test agents[1].pos[1] != 0.5
+  @test model1.agents[1].pos[1] != 0.5
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
   @test dbrow[1, :a] != 0.5
   @test dbrow[1, :b] != 0.5
+  @test dbrow[1, :a] == model1.agents[1].pos[1]
+  @test dbrow[1, :b] == model1.agents[1].pos[2]
 
   kill_agent!(model1.agents[1], model1)
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
