@@ -59,10 +59,11 @@
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
 
   # agents within some range are found correctly (once this is implemented)
-  agent = Agent6(3, (0.501,0.491), vel, dia)
-  add_agent_pos!(agent, model1)
-  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.49, 0.51, agent.id)))
-  @test r[1] == 2
-  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (0.49, 0.51, 0.51, 0.52, agent.id)))
+  agent2 = model1.agents[2]
+  agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
+  add_agent_pos!(agent3, model1)
+  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (agent2.pos[1]-0.01, agent2.pos[1] + 0.01, agent2.pos[2] - 0.01, agent2.pos[2] + 0.01, agent2.id)))
+  @test r[1] == 3
+  r = Agents.collect_ids(DBInterface.execute(model1.space.searchq, (agent2.pos[1]-0.05, agent2.pos[1] - 0.04, agent2.pos[2] - 0.05, agent2.pos[2] - 0.04, agent2.id)))
   @test length(r) == 0
 end
