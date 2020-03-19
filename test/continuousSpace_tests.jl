@@ -1,14 +1,14 @@
 @testset "Continuous space" begin
 
   # Basic model initialization
-  space1 = Space(2; periodic = true, extend = (1, 1))
-  space2 = Space(2; periodic = false, extend = (1, 1))
-  space3 = Space(2; periodic = true, extend = (2, 1))
-  space4 = Space(2; periodic = true, extend = (1, 2))
-  space5 = Space(2; periodic = true, extend = (2, 2))
-  space6 = Space(1; periodic = true, extend = (1,))
-  space7 = Space(3; periodic = true, extend = (1,1,1))
-  space8 = Space(3; periodic = false, extend = (1,1,1))
+  space1 = ContinuousSpace(2; periodic = true, extend = (1, 1))
+  space2 = ContinuousSpace(2; periodic = false, extend = (1, 1))
+  space3 = ContinuousSpace(2; periodic = true, extend = (2, 1))
+  space4 = ContinuousSpace(2; periodic = true, extend = (1, 2))
+  space5 = ContinuousSpace(2; periodic = true, extend = (2, 2))
+  space6 = ContinuousSpace(1; periodic = true, extend = (1,))
+  space7 = ContinuousSpace(3; periodic = true, extend = (1,1,1))
+  space8 = ContinuousSpace(3; periodic = false, extend = (1,1,1))
 
   @test space1.D == 2
   @test space2.D == 2

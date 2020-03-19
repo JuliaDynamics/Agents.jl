@@ -15,7 +15,7 @@ end
 
 function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
   Random.seed!(seed)
-  space = Space(2; periodic = true, extend = (1, 1))
+  space = ContinuousSpace(2; periodic = true, extend = (1, 1))
   model = ABM(Agent, space);
 
   ## Add initial individuals
