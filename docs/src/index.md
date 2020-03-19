@@ -25,7 +25,7 @@ To get started, please read the [Tutorial](@ref) page.
 
 The package is in Julia's package list. Install it using this command:
 
-```julia
+```
 ]add Agents
 ```
 
@@ -49,27 +49,3 @@ An agent-based (or individual-based) model is a computational simulation of auto
 Agent-based models are increasingly recognized as the approach for studying complex systems [[3](https://link.springer.com/chapter/10.1007/3-7908-1721-X_7),[4](http://www.doi.org/10.1162/106454602753694765),[5](http://www.nature.com/articles/460685a),[6](http://www.doi.org/10.1016/j.jaa.2016.01.009)]. Complex systems cannot be fully understood using the traditional mathematical tools that aggregate the behavior of elements in a system. The behavior of a complex system depends on the behavior and interaction of its elements (agents). Small changes in the input to complex systems or the behavior of its agents can lead to large changes in system's outcome. That is to say a complex system's behavior is nonlinear, and that it is not the sum of the behavior of its elements. Use of ABMs have become feasible after the availability of computers and has been growing since, especially in modeling biological and economical systems, and has extended to social studies and archaeology.
 
 An ABM consists of autonomous agents that behave given a set of rules. A classic example of an ABM is [Schelling's segregation model](https://www.tandfonline.com/doi/abs/10.1080/0022250X.1971.9989794), which we implement as an example here. This model also uses a regular grid and defines agents as the cells of the grid. Agents can be from different social groups. Agents are happy/unhappy based on the fraction of their neighbors that belong to the same group as they are. If they are unhappy, they keep moving to new locations until they are happy. Schelling's model shows that even small preferences of agents to have neighbors belonging to the same group (e.g. preferring that at least 30% of neighbors to be in the same group) could lead to total segregation of neighborhoods. This is another example of an emergent phenomenon from simple interactions of agents.
-
-## Agents.jl vs DynamicGrids.jl
-Agents.jl targets complicated ABMs that are defined on arbitrary complex graphs.
-Because of this, the core datastructure of this package is a dictionary that maps unique IDs to Agents, as shown in the [Tutorial](@ref) and specifically in [`AgentBasedModel`](@ref).
-As all agents are unique entities, if one "dies" it is entirely and forever removed from memory.
-Similarly, when a new agent becomes "alive", this literally means that a new agent datastructure is initialized and added to this dictionary.
-
-This is not necessary for *cellular-automata-like* models, where the grid cell and the "agent" identity are fully equivalent, and the agents have a single "property".
-This is the case e.g. in the [Forest fire model](@ref).
-For such applications the Julia package DynamicGrids.jl is more performant than Agents.jl.
-
-### How to decide?
-Use DynamicGrids.jl when your model lives on a rectangular grid, while the value of each grid cell does not have an identity (equivalently, the "identity" of each entity in your model is equivalent with its grid cell).
-Also use it for animating cellular automata.
-
-Use Agents.jl if any of the following applies:
-
-1. You use individual agents whose identity (and other properties) is detached from their location
-2. Multiple agents can occupy the same location
-3. The spatial model of your structure is an arbitrary graph instead of a rectangular grid
-4. The agents have multiple values attached to them
-5. You want the output of your simulation to be a `DataFrame` for easier further analysis
-6. You care about stability
-7. You want something simple to learn and use (Agents.jl has a simpler API and is much better documented)
