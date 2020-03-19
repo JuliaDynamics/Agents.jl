@@ -7,7 +7,7 @@ Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynami
 To get started, please read the [Tutorial](@ref) page.
 
 !!! info "Latest news"
-    We now have an example about the spread of COVID-19, and a way to plot any agent based model using [`plotabm`](@ref)!
+    You are currently reading the _development_ version of the documentation, which is being prepared for Agents.jl 3.0. In this major release we have full support for agent based models on [`ContinuousSpace`](@ref), but have not yet finished development. See the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for a full list of changes.
 
 An agent-based (or individual-based) model is a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules [[1](http://doi.org/10.1016/j.ecolmodel.2006.04.023)]. ABM has gained wide usage in a variety of research disciplines. One reason for its popularity is that it allows relaxing many simplifying assumptions usually made by mathematical models. Relaxing such assumptions of a "perfect world" can change a model's behavior [[2](http://doi.org/10.1038/460685a)]. ABM is specifically an important tool for studying complex systems where a system's behavior cannot be predicted and has to be explored (see the "Why we need ABM" section for detailed examples).
 

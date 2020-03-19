@@ -1,4 +1,5 @@
 using DataFrames, SQLite
+export ContinuousSpace, index!
 
 #######################################################################################
 # Continuous space structure
@@ -67,7 +68,7 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
@@ -133,7 +134,7 @@ end
 
 function randompos(space::ContinuousSpace)
   pos = Tuple(rand(space.D))
-  !isnothing(space.extend) && (pos = pos .* space.extend)
+  space.extend ≠ nothing && (pos = pos .* space.extend)
   return pos
 end
 
@@ -207,5 +208,23 @@ function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
   DBInterface.execute(model.space.db, "DELETE FROM tab")
   for agent in model.agents
     delete!(model.agents, agent.id)
+  end
+end
+
+# TODO: at the moment this function doesn't check the metric and uses only cityblock
+# we can easily adjust to arbitrary metric by doing a final check
+# filter!(...) where the filtering function checks distances w.r.t. `r`.
+function space_neighbors(pos::Tuple, model, r::Real)
+  left = pos .- r
+  right = pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, res))
+end
+
+@generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
+  a = [[:(left[$i]), :(right[$i])] for i=1:D]
+  b = vcat(a...)
+  quote
+    tuple($(b...))
   end
 end

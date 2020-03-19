@@ -1,6 +1,6 @@
-export Space, vertex2coords, coords2vertex,
+export Space, vertex2coords, coords2vertex, node_neighbors,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, node_neighbors, nodes, get_node_agents
+id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
 
 #######################################################################################
@@ -300,7 +300,7 @@ vertex2coord(v::Tuple, model::ABM) = v
 """
     find_empty_nodes(model::ABM)
 
-Returns the IDs of empty nodes on the model space.
+Returns the indices of empty nodes on the model space.
 """
 function find_empty_nodes(model::ABM)
   ap = agent_positions(model)
@@ -311,7 +311,7 @@ end
 """
     pick_empty(model)
 
-Return the ID of a random empty node or `0` if there are no empty nodes.
+Return a random empty node or `0` if there are no empty nodes.
 """
 function pick_empty(model)
   empty_nodes = find_empty_nodes(model)
@@ -374,27 +374,52 @@ Return an agent given its ID.
 """
 id2agent(id::Integer, model::ABM) = model.agents[id]
 
-# TODO: Rename `node_neighbors` to `space_neighbors`, and
-# extend it for continuous space with third argument "radius"
-
 """
-    node_neighbors(agent::AbstractAgent, model::ABM)
-    node_neighbors(node::Int, model::ABM)
+    space_neighbors(position, model::ABM [, r]) → ids
 
-Return neighboring node coordinates/numbers of the node on which the agent resides.
+Return the ids of the agents neighboring the given `position` (which must match type
+with the spatial structure of the `model`). If `r` is given, it is the radius to search
+for agents.
 
-If the model's space is `GraphSpace`, then the function will return node numbers.
-If space is `GridSpace` then the neighbors are returned as coordinates (tuples).
+For `DiscreteSpace`s `r` must be integer and defines higher degree neighbors.
+For example, for `r=2` include first and second degree neighbors,
+that is, neighbors and neighbors of neighbors.
+
+For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
+(based on the space's metric).
+
+See also [`neighbors`](@ref).
+
+`r` defaults to 1 for `DiscreteSpace` but is mandatory for `ContinuousSpace`.
+
+    space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
+
+Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
+`agent` from the neighbors.
 """
-function node_neighbors(agent::AbstractAgent, model::ABM)
-  if typeof(model.space) <: GraphSpace
-    @assert agent.pos isa Integer
-  elseif typeof(model.space) <: GridSpace
-    @assert agent.pos isa Tuple
-  end
-  node_neighbors(agent.pos, model)
+function space_neighbors(agent::A, model::ABM{A}, args...) where {A <: AbstractAgent}
+  all = space_neighbors(agent.pos, model, args...)
+  d = findfirst(isequal(agent.id), all)
+  d ≠ nothing && deleteat!(all, d)
+  return all
 end
 
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...) where {A}
+  nn = node_neighbors(pos, model, args...)
+  vcat(agent_positions(model)[n] for n in nn)
+end
+
+"""
+    node_neighbors(node, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+Return all nodes that are neighbors to the given `node`, which can be an `Int` for
+[`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
+
+Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
+
+    node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+Same as above, but uses `agent.pos` as `node`.
+"""
+node_neighbors(agent::AbstractAgent, model::ABM) = node_neighbors(agent.pos, model)
 function node_neighbors(node_number::Integer, model::ABM)
   nn = neighbors(model.space.graph, node_number)
   return nn
@@ -407,16 +432,6 @@ function node_neighbors(node_coord::Tuple, model::ABM)
   return nc
 end
 
-"""
-    node_neighbors(node_number::Integer, model::ABM, radius::Integer)
-
-Returns a list of neighboring nodes to the node `node_number` within the `radius`.
-`radius` defines higher degree neighbors. For example, neighbors with a radius=2
-include first and second degree neighbors, that is, neighbors and neighbors
-of neighbors.
-
-Notice that `node_neighbors` *excludes* the node that is given.
-"""
 function node_neighbors(node_number::Integer, model::ABM, radius::Integer)
   neighbor_nodes = Set(node_neighbors(node_number, model))
   included_nodes = Set()
