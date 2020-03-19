@@ -1,4 +1,5 @@
 using DataFrames, SQLite
+export ContinuousSpace, index!
 
 #######################################################################################
 # Continuous space structure
