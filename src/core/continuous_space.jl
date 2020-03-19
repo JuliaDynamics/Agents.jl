@@ -98,10 +98,13 @@ function collect_ids(q::SQLite.Query, colname=:id)
   return output
 end
 
-# TODO: index! needs a better name, and consider whether this should be part of public API
+# TODO: index! needs a better name
 """
-Indexing the database can drastically improve retrieving data, but adding new
-data can become slower because after each addition, index needs to be reworked.
+    index!(model)
+Index the database underlying the `ContinuousSpace` of the model.
+
+This can drastically improve performance for retrieving data, but adding new
+data can become slower because after each addition, index needs to be called again.
 
 Lack of index won't be noticed for small databases. Only use it when you have
 many agents and not many additions of agents.
@@ -118,7 +121,7 @@ end
 # central, low level function that is always called by all others!
 function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A}
   DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  model.agents[id] = agent
+  model.agents[agent.id] = agent
   return agent
 end
 

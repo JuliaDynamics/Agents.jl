@@ -42,8 +42,9 @@ vertex2coord
 ```
 
 ## Continuous space exclusives
-Coming soon...
-
+```@docs
+index!
+```
 ## Simulations
 The central simulation function is [`step!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
