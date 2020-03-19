@@ -1,5 +1,7 @@
 
 @testset "Continuous space" begin
+
+  # Basic model initialization
   space1 = Space(2; periodic = true, extend = (1, 1))
   space2 = Space(2; periodic = false, extend = (1, 1))
   space3 = Space(2; periodic = true, extend = (2, 1))
@@ -23,6 +25,7 @@
   @test nagents(model1) == 0
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == []
 
+  # add_agent! with no existing agent (the agent is created)
   pos = (0.5, 0.5)
   vel = sincos(2π*rand()) .* 0.05
   dia = 0.01
@@ -32,6 +35,7 @@
   @test dbrow[1, :a] == 0.5
   @test dbrow[1, :b] == 0.5
   
+  # move_agent! without provided update_vel! function
   move_agent!(model1.agents[1], model1)
   @test model1.agents[1].pos[1] != 0.5
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
@@ -44,10 +48,17 @@
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
   @test size(dbrow) == (0,0)
 
+  # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model1)
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
   @test dbrow[1, :a] == 0.5
   @test dbrow[1, :b] == 0.5
+
+  # agents within some range are found correctly (once this is implemented)
+  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (0.49, 0.51, 0.49, 0.51, agent.id)))
+  @test r[1] == 2
+  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (0.49, 0.51, 0.51, 0.52, agent.id)))
+  @test length(r) == 0
 end
