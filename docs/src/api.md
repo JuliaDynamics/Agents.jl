@@ -4,10 +4,10 @@ The core API is defined by [`AgentBasedModel`](@ref), [`Space`](@ref), [`Abstrac
 
 ## Agent information and retrieval
 ```@docs
-nagents
+space_neighbors
 id2agent
 random_agent
-space_neighbors
+nagents
 ```
 
 

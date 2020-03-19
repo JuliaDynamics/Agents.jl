@@ -210,6 +210,14 @@ function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
   end
 end
 
+# TODO: at the moment this function doesn't check the metric and uses only cityblock
+# we can easily adjust to arbitrary metric by doing a final check
+# filter!(...) where the filtering function checks distances w.r.t. `r`.
 function space_neighbors(pos::Tuple, model, r::Real)
-  # TODO: Do it!
+  left = pos .- r
+  right = pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, (res..., agent.id)))
 end
+
+interlace(a, b) = ntuple(i -> iseven(i) ? b[(1 + i) >>1] : a[(1 + i) >> 1], length(a) + length(b))

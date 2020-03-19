@@ -375,14 +375,14 @@ Return an agent given its ID.
 id2agent(id::Integer, model::ABM) = model.agents[id]
 
 """
-    space_neighbors(pos, model::ABM [, r]) → ids
+    space_neighbors(position, model::ABM [, r]) → ids
 
-Return the ids of the agents neighboring the given `pos` (which must match type
+Return the ids of the agents neighboring the given `position` (which must match type
 with the spatial structure of the `model`). If `r` is given, it is the radius to search
 for agents.
 
 For `DiscreteSpace`s `r` must be integer and defines higher degree neighbors.
-For example, neighbors within `r=2` include first and second degree neighbors,
+For example, for `r=2` include first and second degree neighbors,
 that is, neighbors and neighbors of neighbors.
 
 For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
