@@ -62,8 +62,8 @@ end
 """
     move_agent!(agent::A [, pos], model::ABM{A, <: DiscreteSpace}) → agent
 
-Add `agentID` to the new position `pos` in the model
-and remove it from the old position
+Add `agentID` to the new position `pos` (or a random one if `pos` is not given)
+in the model and remove it from the old position
 (also update the agent to have the new position).
 `pos` must be the appropriate position type depending on the [`Space`](@ref) type,
 e.g. `Int` for `GraphSpace`, `NTuple{<:AbstractFloat}}` for `ContinuousSpace`, etc.
