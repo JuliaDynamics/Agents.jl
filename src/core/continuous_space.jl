@@ -45,7 +45,7 @@ By default no update is done this way.
   (after which periodicity happens. All dimensions start at 0).
 
 """
-function Space(D::Int, update_vel! = defvel;
+function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = false, extend = nothing, metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors

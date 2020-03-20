@@ -1,6 +1,6 @@
 using Agents, Test, Random
 
-model1 = ABM(Agent1, Space((3,3)))
+model1 = ABM(Agent1, GridSpace((3,3)))
 
 agent = add_agent!((1,1), model1)
 @test agent.pos == (1, 1)
@@ -78,7 +78,7 @@ properties = [model.agents[id].weight for id in ids]
   sample!(model, 40, :weight)
   @test Agents.nagents(model) == 40
 
-  model2 = ABM(Agent5, Space((10, 10)))
+  model2 = ABM(Agent5, GridSpace((10, 10)))
   for i in 1:20; add_agent!(Agent5(i, i, rand()/rand()), model2); end
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights = sum(allweights)/length(allweights)
@@ -93,7 +93,7 @@ properties = [model.agents[id].weight for id in ids]
 end
 
 @testset "genocide!" begin
-  model = ABM(Agent3, Space((10, 10)))
+  model = ABM(Agent3, GridSpace((10, 10)))
 
   # Testing genocide!(model::ABM)
   for i in 1:20

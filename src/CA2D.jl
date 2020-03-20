@@ -14,7 +14,7 @@ end
 Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Integer}`. The numbers are DSR (Death, Survival, Reproduction). Cells die if the number of their living neighbors are <D, survive if the number of their living neighbors are <=S, come to life if their living neighbors are as many as R. `dims` is the x and y size a grid. `Moore` specifies whether cells should connect to their diagonal neighbors.
 """
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
-  space = Space(dims, moore=Moore)
+  space = GridSpace(dims, moore=Moore)
   properties = Dict(:rules => rules, :Moore=>Moore)
   model = ABM(Cell, space; properties = properties, scheduler=by_id)
   nnodes = dims[1]*dims[2]
