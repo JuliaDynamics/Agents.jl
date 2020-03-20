@@ -6,8 +6,8 @@ abstract type AbstractSpace end
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** at least the `id` field, and if there is a
-space structure the `pos` field, (fields are expected in this order)
+Your agent type **must have** at least the `id` field, and if there is a `GridSpace`/`GraphSpace` 
+structure the `pos` field, (fields are expected in this order)
 ```julia
 mutable struct MyAgent{P} <: AbstractAgent
     id::Int
@@ -16,6 +16,8 @@ end
 ```
 Only for grid spaces, `pos` can be an `NTuple`. For arbitrary graph spaces
 it must always be an integer (the graph node number).
+
+If there is a `ContinuousSpace` structure, agents should have fields `vel`, for velocity, and `diameter` too. `vel` is a tuple with the first entry specifying speed of movement and second entry the direction in radians. `diameter` specifies size of the agent.
 
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
