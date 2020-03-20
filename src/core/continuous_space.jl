@@ -19,12 +19,8 @@ end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
 
-# TODO: `Space` became overly complicated and there is no reason to use the same
-# name for all spaces anymore. Instead, we should properly use `GraphSpace`,
-# `GridSpace`, `ContinuousSpace`. A depwarning should be added to `Space`.
-
 """
-    Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -45,7 +41,7 @@ By default no update is done this way.
   (after which periodicity happens. All dimensions start at 0).
 
 """
-function Space(D::Int, update_vel! = defvel;
+function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = false, extend = nothing, metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors
@@ -57,6 +53,8 @@ function Space(D::Int, update_vel! = defvel;
   db, q, q2, q3, q4 = prepare_database(D)
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
 end
+
+@deprecate Space(D::Int, update_vel!::Function) ContinuousSpace(D::Int, update_vel!::Function)
 
 function prepare_database(D)
   db = SQLite.DB()

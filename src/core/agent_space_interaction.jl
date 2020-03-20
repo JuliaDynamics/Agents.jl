@@ -66,7 +66,7 @@ Add `agentID` to the new position `pos` in the model
 and remove it from the old position
 (also update the agent to have the new position).
 `pos` must be the appropriate position type depending on the [`Space`](@ref) type,
-e.g. `Int` for `GraphSpace`, `NTuple{<:AbstractFloat}}` for `ContinuousSpace`, etc.
+e.g. `Int` for `GraphSpace`, `NTuple{Int}` for `GridSpace`, `NTuple{<:AbstractFloat}` for `ContinuousSpace`, etc.
 """
 function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
   nodenumber = coord2vertex(pos, model)

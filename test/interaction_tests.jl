@@ -9,7 +9,7 @@ end
 function forest_initiation(;f, d, p, griddims, seed)
   Random.seed!(seed)
 
-  space = Space(griddims, moore = true)
+  space = GridSpace(griddims, moore = true)
 
   properties = Dict(:f => f, :d => d, :p => p)
   forest = ABM(Tree, space; properties=properties, scheduler=random_activation)
@@ -85,13 +85,13 @@ end
   @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
   @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
 
-  model1 = ABM(Agent1, Space((3,3)))
+  model1 = ABM(Agent1, GridSpace((3,3)))
   add_agent!(1, model1)
   @test model1.agents[1].pos == (1, 1)
   add_agent!((2,1), model1)
   @test model1.agents[2].pos == (2, 1)
 
-  model2 = ABM(Agent4, Space((3,3)))
+  model2 = ABM(Agent4, GridSpace((3,3)))
   add_agent!(1, model2, 3)
   @test model2.agents[1].pos == (1,1)
   @test 1 in model2.space.agent_positions[1]

@@ -1,15 +1,28 @@
 using Random
 Random.seed!(209)
 
+@testset "Deprecated spaces" begin
+  # GraphSpace
+  @test_deprecated (@test_throws TypeError Space(Agents.Graph(1)))
+  # GridSpace
+  @test_deprecated (@test_throws TypeError Space((5,1)))
+  # ContinuousSpace
+  @test_deprecated Space(5, (a,m)->nothing)
+end
+
+@testset "graphs" begin
+  @test GraphSpace(Agents.Graph(1)).graph == Agents.Graph(1) #TODO: poor test
+end
+
 @testset "0D grids" begin
-  @test Space((1,)).graph == Agents.Graph(1)
+  @test GridSpace((1,)).graph == Agents.Graph(1)
 end
 
 @testset "1D grids" begin
-  a = Space((5,1))
+  a = GridSpace((5,1))
   ae = collect(Agents.LightGraphs.edges(a.graph))
 
-  b = Space((5,1), periodic=true)
+  b = GridSpace((5,1), periodic=true)
   be = collect(Agents.LightGraphs.edges(b.graph))
 
   @test ae == [Agents.LightGraphs.Edge(1,2),Agents.LightGraphs.Edge(2,3), Agents.LightGraphs.Edge(3,4), Agents.LightGraphs.Edge(4,5)]
@@ -17,10 +30,10 @@ end
 end
 
 @testset "2D grids" begin
-  @test Space((2,1)).graph == Agents.Graph(2,1)
+  @test GridSpace((2,1)).graph == Agents.Graph(2,1)
 
-  a = Space((2,3))
-  b = Space((2,3), periodic=true) # 2D grid
+  a = GridSpace((2,3))
+  b = GridSpace((2,3), periodic=true) # 2D grid
 
   @test a.dimensions == (2,3)
   @test b.dimensions == (2,3)
@@ -40,28 +53,28 @@ end
 end
 
 @testset "2D Moore" begin
-  a = Space((3, 3), moore=true)
+  a = GridSpace((3, 3), moore=true)
   @test Agents.nv(a) == 9
   @test Agents.ne(a) == 20
 
-  a = Space((3, 4), moore=true)
+  a = GridSpace((3, 4), moore=true)
   @test Agents.nv(a) == 12
   @test Agents.ne(a) == 29
 
-  b = Space((3, 2), moore=true, periodic=true)
+  b = GridSpace((3, 2), moore=true, periodic=true)
   @test Agents.nv(b) == 6
   @test Agents.ne(b) == 15
 
-  b = Space((3, 3), moore=true, periodic=true)
+  b = GridSpace((3, 3), moore=true, periodic=true)
   @test Agents.nv(b) == 9
   @test Agents.ne(b) == 36
 end
 
 @testset "3D grid" begin
-  g1 = Space((2,3,2))
-  g2 = Space((2,3,3))
-  g3 = Space((2,3,2), periodic=true)
-  g4 = Space((2,3,3), periodic=true)
+  g1 = GridSpace((2,3,2))
+  g2 = GridSpace((2,3,3))
+  g3 = GridSpace((2,3,2), periodic=true)
+  g4 = GridSpace((2,3,3), periodic=true)
   @test Agents.ne(g1) == 20
   @test Agents.ne(g2) == 33
   @test Agents.ne(g3) == 24
@@ -93,7 +106,7 @@ end
 end
 
 @testset "nodes" begin
-  space = Space((3,3))
+  space = GridSpace((3,3))
   model = ABM(Agent1, space)
   for node in nodes(model)
     if rand() > 0.7

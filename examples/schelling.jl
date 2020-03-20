@@ -25,7 +25,7 @@ mutable struct SchellingAgent <: AbstractAgent
 end
 
 # Notice that the position of this Agent type is a `Tuple{Int,Int}` because
-# we will use a grid `Space`.
+# we will use a `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
@@ -35,7 +35,7 @@ end
 
 # For this example, we will be using a Moore 2D grid, e.g.
 
-space = Space((10,10), moore = true)
+space = GridSpace((10,10), moore = true)
 
 # ## Creating an ABM
 
