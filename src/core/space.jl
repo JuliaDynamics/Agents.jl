@@ -59,7 +59,7 @@ length(model.space.agent_positions[node]) == 0
 """
     GraphSpace(graph::AbstractGraph)
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from LightGraphs.jl.
-In this case, your agent positions (field `pos`) must be of type `Integer`.
+In this case, your agent type must have a `pos` field that is of type `Int`.
 """
 function GraphSpace(graph::G) where {G<:AbstractGraph}
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
@@ -71,7 +71,7 @@ end
 Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 Such grids are typically used in cellular-automata-like models.
-In this case, your agent positions (field `pos`) must be of type `NTuple{Int}`.
+In this case, your agent type must have a `pos` field that is of type `NTuple{Int}`.
 
 The two keyword arguments denote if the grid should be periodic on its ends,
 and if the connections should be of type Moore or not (in the Moore case
