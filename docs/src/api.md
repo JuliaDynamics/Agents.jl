@@ -1,6 +1,6 @@
 # API
 
-The core API is defined by [`AgentBasedModel`](@ref), [`Space`](@ref), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial](@ref) page. The functionality described here builds on top of the core API.
+The core API is defined by [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial](@ref) page. The functionality described here builds on top of the core API.
 
 ## Agent information and retrieval
 ```@docs
@@ -12,7 +12,7 @@ nagents
 
 
 ## Model-Agent interaction
-The following API is mostly universal across all types of [`Space`](@ref).
+The following API is mostly universal across all types of [Space](@ref Space).
 Only some specific methods are exclusive to a specific type of space, but we think
 this is clear from the documentation strings (if not, please open an issue!).
 ```@docs

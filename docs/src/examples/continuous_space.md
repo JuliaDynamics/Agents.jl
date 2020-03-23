@@ -1,8 +1,13 @@
-# # A simple continuous space model
+```@meta
+EditURL = "<unknown>/../examples/continuous_space.jl"
+```
 
-# This is a proof of concept for continuous space.
-# The final api can use ideas in this example.
+# A simple continuous space model
 
+This is a proof of concept for continuous space.
+The final api can use ideas in this example.
+
+```@example continuous_space
 using Agents, Random, SQLite, Plots
 using DrWatson: @dict
 
@@ -18,7 +23,7 @@ function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
   space = ContinuousSpace(2; periodic = true, extend = (1, 1))
   model = ABM(Agent, space);
 
-  ## Add initial individuals
+  # Add initial individuals
   for ind in 1:N
     pos = Tuple(rand(0.0:space_resolution:1.0, 2))
     vel = sincos(2π*rand()) .* speed
@@ -56,8 +61,11 @@ end
 
 model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
 step!(model, agent_step!, 500)
+```
 
-# ## Example animation
+## Example animation
+
+```@example continuous_space
 model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
 anim = @animate for i ∈ 1:100
   xs = [a.pos[1] for a in values(model.agents)];
@@ -67,5 +75,8 @@ anim = @animate for i ∈ 1:100
   step!(model, agent_step!, 1)
 end
 gif(anim, "movement.gif", fps = 8);
+nothing #hide
+```
 
-# ![](social_distancing.gif)
+![](social_distancing.gif)
+

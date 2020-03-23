@@ -1,6 +1,16 @@
 using Random
 Random.seed!(209)
 
+@testset "Deprecated spaces" begin
+  # GraphSpace
+  @test_deprecated (@test_throws TypeError Space(Agents.Graph(1)))
+  # GridSpace
+  @test_deprecated (@test_throws TypeError Space((5,1)))
+  # ContinuousSpace
+  @test_deprecated Space(5, (a,m)->nothing)
+end
+
+
 @testset "0D grids" begin
   @test GridSpace((1,)).graph == Agents.Graph(1)
 end

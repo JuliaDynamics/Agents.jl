@@ -7,7 +7,7 @@ Agents.jl structures simulations in three components: a _model_ component that k
 For building any Agent-Based-Model (ABM), users have to define at least the following four quantities:
 
 1. An [`AgentBasedModel`](@ref) instance.
-1. A space instance.  
+1. A space instance.
 1. A subtype of [`AbstractAgent`](@ref) for the agents.
 1. A stepping function that controls how the agents and the model evolve.
 
@@ -25,7 +25,7 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 AgentBasedModel
 ```
 
-## 2. The space
+## [2. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
 
 The discrete possibilities are

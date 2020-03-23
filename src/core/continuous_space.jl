@@ -19,12 +19,8 @@ end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
 
-# TODO: `Space` became overly complicated and there is no reason to use the same
-# name for all spaces anymore. Instead, we should properly use `GraphSpace`,
-# `GridSpace`, `ContinuousSpace`. A depwarning should be added to `Space`.
-
 """
-    Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -57,6 +53,9 @@ function ContinuousSpace(D::Int, update_vel! = defvel;
   db, q, q2, q3, q4 = prepare_database(D)
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
 end
+
+# Deprecate Space constructor
+@deprecate Space(D::Int, update_vel!::Function) ContinuousSpace(D::Int, update_vel!::Function)
 
 function prepare_database(D)
   db = SQLite.DB()
@@ -164,7 +163,7 @@ end
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
 Propagate the agent forwards one step according to its velocity,
-_after_ updating the agent's velocity (see [`Space`](@ref)).
+_after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
@@ -214,6 +213,10 @@ end
 # TODO: at the moment this function doesn't check the metric and uses only cityblock
 # we can easily adjust to arbitrary metric by doing a final check
 # filter!(...) where the filtering function checks distances w.r.t. `r`.
+"""
+    space_neighbors(pos::Tuple, model::ABM, r::Real)
+Return neighbours of a particular position `pos`, within radius `r` for any `SpaceType`.
+"""
 function space_neighbors(pos::Tuple, model, r::Real)
   left = pos .- r
   right = pos .+ r

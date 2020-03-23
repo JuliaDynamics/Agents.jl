@@ -17,7 +17,7 @@ mutable struct HaploidS <: AbstractAgent
     trait::Float64
 end
 function sampleModelInitializeS(;n = 100, dims=(2,3))
-  sampleModel = ABM(HaploidS, Space(dims))
+  sampleModel = ABM(HaploidS, GridSpace(dims))
   for i in 1:n
       add_agent!(sampleModel, rand())
   end
