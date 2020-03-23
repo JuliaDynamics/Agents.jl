@@ -1,7 +1,7 @@
 ### Interactions are tested with the forest fire model
-mutable struct Tree{T<:Integer} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
+mutable struct Tree <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
   status::Bool  # true is green and false is burning
 end
 

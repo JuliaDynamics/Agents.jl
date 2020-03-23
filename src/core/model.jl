@@ -105,6 +105,7 @@ Checks for mutability and existance and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
+    isconcretetype(A) || throw(ArgumentError("Agent struct must be a concrete type"))
     isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("Agent struct must have an `id` field"))
     if space != nothing
