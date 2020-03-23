@@ -1,4 +1,5 @@
 using DataFrames, SQLite
+export ContinuousSpace, index!
 
 #######################################################################################
 # Continuous space structure
@@ -18,12 +19,8 @@ end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
 
-# TODO: `Space` became overly complicated and there is no reason to use the same
-# name for all spaces anymore. Instead, we should properly use `GraphSpace`,
-# `GridSpace`, `ContinuousSpace`. A depwarning should be added to `Space`.
-
 """
-    Space(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -44,7 +41,7 @@ By default no update is done this way.
   (after which periodicity happens. All dimensions start at 0).
 
 """
-function Space(D::Int, update_vel! = defvel;
+function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = false, extend = nothing, metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors
@@ -57,6 +54,9 @@ function Space(D::Int, update_vel! = defvel;
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
 end
 
+# Deprecate Space constructor
+@deprecate Space(D::Int, update_vel!::Function) ContinuousSpace(D::Int, update_vel!::Function)
+
 function prepare_database(D)
   db = SQLite.DB()
   dimexpression = join("$x REAL, " for x in COORDS[1:D])
@@ -67,7 +67,7 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
@@ -133,7 +133,7 @@ end
 
 function randompos(space::ContinuousSpace)
   pos = Tuple(rand(space.D))
-  !isnothing(space.extend) && (pos = pos .* space.extend)
+  space.extend ≠ nothing && (pos = pos .* space.extend)
   return pos
 end
 
@@ -163,7 +163,7 @@ end
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
 Propagate the agent forwards one step according to its velocity,
-_after_ updating the agent's velocity (see [`Space`](@ref)).
+_after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
@@ -207,5 +207,27 @@ function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
   DBInterface.execute(model.space.db, "DELETE FROM tab")
   for agent in model.agents
     delete!(model.agents, agent.id)
+  end
+end
+
+# TODO: at the moment this function doesn't check the metric and uses only cityblock
+# we can easily adjust to arbitrary metric by doing a final check
+# filter!(...) where the filtering function checks distances w.r.t. `r`.
+"""
+    space_neighbors(pos::Tuple, model::ABM, r::Real)
+Return neighbours of a particular position `pos`, within radius `r` for any `SpaceType`.
+"""
+function space_neighbors(pos::Tuple, model, r::Real)
+  left = pos .- r
+  right = pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, res))
+end
+
+@generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
+  a = [[:(left[$i]), :(right[$i])] for i=1:D]
+  b = vcat(a...)
+  quote
+    tuple($(b...))
   end
 end

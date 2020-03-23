@@ -6,19 +6,34 @@ abstract type AbstractSpace end
 
 """
 All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** at least the `id` field, and if there is a
-space structure the `pos` field, (fields are expected in this order)
-```julia
-mutable struct MyAgent{P} <: AbstractAgent
-    id::Int
-    pos::P
-end
-```
-Only for grid spaces, `pos` can be an `NTuple`. For arbitrary graph spaces
-it must always be an integer (the graph node number).
+Your agent type **must have** the `id` field as first field.
+Depending on the space structure there might be a `pos` field of appropriate type
+and a `vel` field of appropriate type.
 
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
+
+## Examples
+Imagine agents who have extra properties `weight, happy`. For a [`GraphSpace`](@ref)
+we would define them like
+```julia
+mutable struct ExampleAgent <: AbstractAgent
+    id::Int
+    pos::Int
+    weight::Float64
+    happy::Bool
+end
+```
+while for e.g. a [`ContinuousSpace`](@ref) we would use
+```julia
+mutable struct ExampleAgent{D} <: AbstractAgent
+    id::Int
+    pos::NTuple{D, Float64}
+    vel::NTuple{D, Float64}
+    weight::Float64
+    happy::Bool
+end
+```
 """
 abstract type AbstractAgent end
 
@@ -44,7 +59,7 @@ spacetype(::ABM{A, S}) where {A, S} = S
 """
     AgentBasedModel(agent_type [, space]; scheduler, properties)
 Create an agent based model from the given agent type,
-and the `space` (from [`Space`](@ref)).
+and the `space` (from [Space](@ref Space)).
 `ABM` is equivalent with `AgentBasedModel`.
 The agents are stored in a dictionary `model.agents`, where the keys are the
 agent IDs, while the values are the agents themselves.

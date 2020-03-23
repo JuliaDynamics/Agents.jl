@@ -25,7 +25,7 @@ mutable struct SchellingAgent <: AbstractAgent
 end
 
 # Notice that the position of this Agent type is a `Tuple{Int,Int}` because
-# we will use a grid `Space`.
+# we will use a `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
@@ -35,7 +35,7 @@ end
 
 # For this example, we will be using a Moore 2D grid, e.g.
 
-space = Space((10,10), moore = true)
+space = GridSpace((10,10), moore = true)
 
 # ## Creating an ABM
 
@@ -68,7 +68,7 @@ schelling2 = ABM(SchellingAgent, space; properties = properties,
 # it will be of further use in [`paramscan`](@ref) below.
 
 function initialize(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
-    space = Space(griddims, moore = true)
+    space = GridSpace(griddims, moore = true)
     properties = Dict(:min_to_be_happy => 3)
     model = ABM(SchellingAgent, space; properties=properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents

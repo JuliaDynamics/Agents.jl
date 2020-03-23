@@ -16,7 +16,7 @@ end
 
 function model_initiation(;N=100, speed=0.005, diameter=0.01, seed=0)
   Random.seed!(seed)
-  space = Space(2; periodic = true, extend = (1, 1))
+  space = ContinuousSpace(2; periodic = true, extend = (1, 1))
   model = ABM(Agent, space);
 
   ## Add initial individuals
@@ -39,10 +39,10 @@ end
 function collide!(agent, model)
   agent.moved && return
   db = model.space.db
-  # TODO: This should become some function "neighbors" or "within_radius" or so...
-  # TODO: This should be come dimension-generic
-  # TODO: This should use the `metric` field of space, and do further filtering on
-  # the found neighbors
+  #TODO: This should become some function "neighbors" or "within_radius" or so...
+  #TODO: This should be come dimension-generic
+  #TODO: This should use the `metric` field of space, and do further filtering on
+  #the found neighbors
   interaction_radius = agent.diameter
   xleft = agent.pos[1] - interaction_radius
   xright = agent.pos[1] + interaction_radius

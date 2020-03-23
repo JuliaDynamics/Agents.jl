@@ -2,7 +2,7 @@ using Pkg
 Pkg.activate(@__DIR__)
 cd(@__DIR__)
 
-using Documenter, Agents, DataFrames, Random, Statistics
+using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using Literate
 using UnicodePlots
 using Plots
@@ -13,8 +13,11 @@ CI && (ENV["GKSwstype"] = "100")
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
+mkpath(outdir)
 for file in readdir(indir)
-	Literate.markdown(joinpath(indir, file), outdir; credit = false)
+    # This example is not yet ready
+    file == "continuous_space.jl" && continue
+    Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
 # %%
@@ -41,25 +44,25 @@ authors = "Ali R. Vahdati, George Datseris and contributors.",
 doctest = false,
 format = Documenter.HTML(
     prettyurls = CI,
-	assets = [
-		asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
-		],
+    assets = [
+        asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
+    ],
     ),
 pages = [
     "Introduction" => "index.md",
-	"Tutorial" => "tutorial.md",
-	"Examples" => [
-		"Schelling's segregation model" => "examples/schelling.md",
-		"SIR model for the spread of COVID-19" => "examples/sir.md",
-		"Wealth distribution" => "examples/wealth_distribution.md",
-		"Forest fire" => "examples/forest_fire.md",
-		"Game of life" => "examples/game_of_life_2D_CA.md",
-		"Rule 22" => "examples/rule22_1D_CA.md",
-		"Wright-Fisher model of evolution" => "examples/wright-fisher.md",
-		"Hegselmann-Krause opinion dynamics" => "examples/HK.md",
-		],
-	"API" => "api.md",
-	"Comparison against Mesa (Python)" => "mesa.md"
+    "Tutorial" => "tutorial.md",
+    "Examples" => [
+        "Schelling's segregation model" => "examples/schelling.md",
+        "SIR model for the spread of COVID-19" => "examples/sir.md",
+        "Wealth distribution" => "examples/wealth_distribution.md",
+        "Forest fire" => "examples/forest_fire.md",
+        "Game of life" => "examples/game_of_life_2D_CA.md",
+        "Rule 22" => "examples/rule22_1D_CA.md",
+        "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
+        "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
+        ],
+    "API" => "api.md",
+    "Comparison against Mesa (Python)" => "mesa.md"
     ],
 )
 

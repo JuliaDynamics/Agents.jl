@@ -1,7 +1,8 @@
-export Space, vertex2coords, coords2vertex,
+export vertex2coords, coords2vertex, node_neighbors,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, node_neighbors, nodes, get_node_agents
+id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
+export GraphSpace, GridSpace
 
 #######################################################################################
 # Basic space definition
@@ -37,7 +38,6 @@ function Base.show(io::IO, abm::DiscreteSpace)
     print(io, s)
 end
 
-Space(m::ABM) = m.space
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::DiscreteSpace) = m.agent_positions
 Base.size(s::GridSpace) = s.dimensions
@@ -50,31 +50,36 @@ Base.isempty(node::Integer, model::ABM) =
 length(model.space.agent_positions[node]) == 0
 
 """
-    Space(graph::AbstractGraph) → GraphSpace
-Create a `GraphSpace` instance that is underlined by an arbitrary graph.
-In this case, your agent positions (field `pos`) must be of type `Integer`.
+    GraphSpace(graph::AbstractGraph)
+Create a `GraphSpace` instance that is underlined by an arbitrary graph from LightGraphs.jl.
+In this case, your agent type must have a `pos` field that is of type `Int`.
 """
-function Space(graph::G) where {G<:AbstractGraph}
+function GraphSpace(graph::G) where {G<:AbstractGraph}
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GraphSpace{G}(graph, agent_positions)
 end
 
 """
-    Space(dims::NTuple; periodic = false, moore = false) → GridSpace
+    GridSpace(dims::NTuple; periodic = false, moore = false) → GridSpace
 Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
-In this case, your agent positions (field `pos`) must be of type `NTuple{Int}`.
+Such grids are typically used in cellular-automata-like models.
+In this case, your agent type must have a `pos` field that is of type `NTuple{Int}`.
 
 The two keyword arguments denote if the grid should be periodic on its ends,
 and if the connections should be of type Moore or not (in the Moore case
 the diagonal connections are also valid. E.g. for a 2D grid, each node has
 8 neighbors).
 """
-function Space(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
+function GridSpace(dims::NTuple{D, I}; periodic = false, moore = false) where {D, I}
   graph = _grid(dims..., periodic, moore)
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
 end
+
+# Deprecation
+@deprecate Space(graph::G) where {G<:AbstractGraph} GraphSpace(graph::G) where {G<:AbstractGraph}
+@deprecate Space(dims::NTuple{D, I}) where {D, I} GridSpace(dims::NTuple{D, I}) where {D, I}
 
 # 1d grid
 function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
@@ -300,7 +305,7 @@ vertex2coord(v::Tuple, model::ABM) = v
 """
     find_empty_nodes(model::ABM)
 
-Returns the IDs of empty nodes on the model space.
+Returns the indices of empty nodes on the model space.
 """
 function find_empty_nodes(model::ABM)
   ap = agent_positions(model)
@@ -311,7 +316,7 @@ end
 """
     pick_empty(model)
 
-Return the ID of a random empty node or `0` if there are no empty nodes.
+Return a random empty node or `0` if there are no empty nodes.
 """
 function pick_empty(model)
   empty_nodes = find_empty_nodes(model)
@@ -374,27 +379,52 @@ Return an agent given its ID.
 """
 id2agent(id::Integer, model::ABM) = model.agents[id]
 
-# TODO: Rename `node_neighbors` to `space_neighbors`, and
-# extend it for continuous space with third argument "radius"
-
 """
-    node_neighbors(agent::AbstractAgent, model::ABM)
-    node_neighbors(node::Int, model::ABM)
+    space_neighbors(position, model::ABM [, r]) → ids
 
-Return neighboring node coordinates/numbers of the node on which the agent resides.
+Return the ids of the agents neighboring the given `position` (which must match type
+with the spatial structure of the `model`). If `r` is given, it is the radius to search
+for agents.
 
-If the model's space is `GraphSpace`, then the function will return node numbers.
-If space is `GridSpace` then the neighbors are returned as coordinates (tuples).
+For `DiscreteSpace`s `r` must be integer and defines higher degree neighbors.
+For example, for `r=2` include first and second degree neighbors,
+that is, neighbors and neighbors of neighbors.
+
+For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
+(based on the space's metric).
+
+See also [`node_neighbors`](@ref).
+
+`r` defaults to 1 for `DiscreteSpace` but is mandatory for `ContinuousSpace`.
+
+    space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
+
+Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
+`agent` from the neighbors.
 """
-function node_neighbors(agent::AbstractAgent, model::ABM)
-  if typeof(model.space) <: GraphSpace
-    @assert agent.pos isa Integer
-  elseif typeof(model.space) <: GridSpace
-    @assert agent.pos isa Tuple
-  end
-  node_neighbors(agent.pos, model)
+function space_neighbors(agent::A, model::ABM{A}, args...) where {A <: AbstractAgent}
+  all = space_neighbors(agent.pos, model, args...)
+  d = findfirst(isequal(agent.id), all)
+  d ≠ nothing && deleteat!(all, d)
+  return all
 end
 
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...) where {A}
+  nn = node_neighbors(pos, model, args...)
+  vcat(agent_positions(model)[n] for n in nn)
+end
+
+"""
+    node_neighbors(node, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+Return all nodes that are neighbors to the given `node`, which can be an `Int` for
+[`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
+
+Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
+
+    node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+Same as above, but uses `agent.pos` as `node`.
+"""
+node_neighbors(agent::AbstractAgent, model::ABM) = node_neighbors(agent.pos, model)
 function node_neighbors(node_number::Integer, model::ABM)
   nn = neighbors(model.space.graph, node_number)
   return nn
@@ -407,16 +437,6 @@ function node_neighbors(node_coord::Tuple, model::ABM)
   return nc
 end
 
-"""
-    node_neighbors(node_number::Integer, model::ABM, radius::Integer)
-
-Returns a list of neighboring nodes to the node `node_number` within the `radius`.
-`radius` defines higher degree neighbors. For example, neighbors with a radius=2
-include first and second degree neighbors, that is, neighbors and neighbors
-of neighbors.
-
-Notice that `node_neighbors` *excludes* the node that is given.
-"""
 function node_neighbors(node_number::Integer, model::ABM, radius::Integer)
   neighbor_nodes = Set(node_neighbors(node_number, model))
   included_nodes = Set()
