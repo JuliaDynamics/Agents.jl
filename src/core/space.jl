@@ -393,7 +393,7 @@ that is, neighbors and neighbors of neighbors.
 For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
 (based on the space's metric).
 
-See also [`neighbors`](@ref).
+See also [`node_neighbors`](@ref).
 
 `r` defaults to 1 for `DiscreteSpace` but is mandatory for `ContinuousSpace`.
 
