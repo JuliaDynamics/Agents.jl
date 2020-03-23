@@ -106,9 +106,9 @@ Checks for mutability and existance and correct types for fields depending on `S
 function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
     isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
-    any(isequal(:id), fieldnames(A)) || throw(ArgumentError("Agent struct must have an `id` field"))
+    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("Agent struct must have an `id` field"))
     if space != nothing
-        any(isequal(:pos), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `pos` field when using a space"))
+        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Agent struct must have a `pos` field when using a space"))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
@@ -120,11 +120,11 @@ function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceT
             # `vel` field in A must be checked alongside `pos`
             any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace"))
             vel_type = fieldtype(A, :vel)
-            if !(pos_type <: NTuple{D, Float64} where {D}) && !(vel_type <: NTuple{D, Float64} where {D})
+            if !(pos_type <: NTuple{D, <:AbstractFloat} where {D}) && !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
-            elseif !(pos_type <: NTuple{D, Float64} where {D})
+            elseif !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
-            elseif !(vel_type <: NTuple{D, Float64} where {D})
+            elseif !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
                 throw(ArgumentError("`vel` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
             end
         end
