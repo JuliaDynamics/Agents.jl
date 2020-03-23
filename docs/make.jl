@@ -13,7 +13,10 @@ CI && (ENV["GKSwstype"] = "100")
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
+mkpath(outdir)
 for file in readdir(indir)
+    # This example is not yet ready
+    file == "continuous_space.jl" && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
