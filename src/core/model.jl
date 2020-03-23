@@ -78,30 +78,7 @@ function AgentBasedModel(
         ::Type{A}, space::S = nothing;
         scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
-    # Check A for required properties & fields
-    isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
-    any(isequal(:id), fieldnames(A)) || throw(ArgumentError("Agent struct must have an `id` field"))
-    if space != nothing
-        any(isequal(:pos), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `pos` field when using a space"))
-        # Check `pos` field in A has the correct type
-        pos_type = fieldtype(A, :pos)
-        space_type = typeof(space)
-        if space_type <: GraphSpace && !(pos_type <: Integer)
-            throw(ArgumentError("`pos` field in Agent struct must be of type Int when using GraphSpace."))
-        elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Int} when using GridSpace."))
-        elseif space_type <: ContinuousSpace
-            any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace"))
-            vel_type = fieldtype(A, :vel)
-            if !(pos_type <: NTuple{D, Float64} where {D}) && !(vel_type <: NTuple{D, Float64} where {D})
-                throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
-            elseif !(pos_type <: NTuple{D, Float64} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
-            elseif !(vel_type <: NTuple{D, Float64} where {D})
-                throw(ArgumentError("`vel` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
-            end
-        end
-    end
+    agent_validator(A, space)
 
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
@@ -118,6 +95,39 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     print(io, s)
     if abm.properties ≠ nothing
         print(io, "\n properties: ", abm.properties)
+    end
+end
+
+"""
+    agent_validator(agent, space)
+Validate the user supplied agent (subtype of `AbstractAgent`).
+Checks for mutability and existance and correct types for fields depending on `SpaceType`.
+"""
+function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
+    # Check A for required properties & fields
+    isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
+    any(isequal(:id), fieldnames(A)) || throw(ArgumentError("Agent struct must have an `id` field"))
+    if space != nothing
+        any(isequal(:pos), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `pos` field when using a space"))
+        # Check `pos` field in A has the correct type
+        pos_type = fieldtype(A, :pos)
+        space_type = typeof(space)
+        if space_type <: GraphSpace && !(pos_type <: Integer)
+            throw(ArgumentError("`pos` field in Agent struct must be of type Int when using GraphSpace."))
+        elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
+            throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Int} when using GridSpace."))
+        elseif space_type <: ContinuousSpace
+            # `vel` field in A must be checked alongside `pos`
+            any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace"))
+            vel_type = fieldtype(A, :vel)
+            if !(pos_type <: NTuple{D, Float64} where {D}) && !(vel_type <: NTuple{D, Float64} where {D})
+                throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+            elseif !(pos_type <: NTuple{D, Float64} where {D})
+                throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+            elseif !(vel_type <: NTuple{D, Float64} where {D})
+                throw(ArgumentError("`vel` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+            end
+        end
     end
 end
 
