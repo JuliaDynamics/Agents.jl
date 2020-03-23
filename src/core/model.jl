@@ -59,7 +59,7 @@ spacetype(::ABM{A, S}) where {A, S} = S
 """
     AgentBasedModel(agent_type [, space]; scheduler, properties)
 Create an agent based model from the given agent type,
-and the `space` (from [`Space`](@ref)).
+and the `space` (from [Space](@ref Space)).
 `ABM` is equivalent with `AgentBasedModel`.
 The agents are stored in a dictionary `model.agents`, where the keys are the
 agent IDs, while the values are the agents themselves.

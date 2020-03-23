@@ -38,10 +38,10 @@ end
 
 function collide!(agent, model)
   db = model.space.db
-  # TODO: This should become some function "neighbors" or "within_radius" or so...
-  # TODO: This should be come dimension-generic
-  # TODO: This should use the `metric` field of space, and do further filtering on
-  # the found neighbors
+  #TODO: This should become some function "neighbors" or "within_radius" or so...
+  #TODO: This should be come dimension-generic
+  #TODO: This should use the `metric` field of space, and do further filtering on
+  #the found neighbors
   interaction_radius = agent.diameter
   xleft = agent.pos[1] - interaction_radius
   xright = agent.pos[1] + interaction_radius
@@ -49,7 +49,7 @@ function collide!(agent, model)
   yright = agent.pos[2] + interaction_radius
   r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
   length(r) == 0 && return
-  # change direction
+  #change direction
   firstcontact = id2agent(r[1], model)
   agent.vel, firstcontact.vel = (agent.vel[1], firstcontact.vel[2]), (firstcontact.vel[1], agent.vel[2])
 end

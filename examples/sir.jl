@@ -10,16 +10,16 @@
 
 # ## Model parameters
 # Here are the model parameters, some of which have default values.
-# * `Ns`: a vector of population sizes per city. The amoount of cities is just `C=length(Ns)`.
+# * `Ns`: a vector of population sizes per city. The amount of cities is just `C=length(Ns)`.
 # * `β_und`: a vector for transmission probabilities β of the infected but undetected per city.
-#   Transmission probability is how many susceptiple are infected per day by an infected individual.
+#   Transmission probability is how many susceptible are infected per day by an infected individual.
 #   If social distancing is practiced, this number increases.
 # * `β_det`: an array for transmission probabilities β of the infected and detected per city.
 #   If hospitals are full, this number increases.
 # * `infection_period = 30`: how many days before a person dies or recovers.
 # * `detection_time = 14`: how many days before an infected person is detected.
 # * `death_rate = 0.02`: the probability that the individual will die after the `infection_period`.
-# * `reinfection_probability = 0.05`: The probabiity that a recovered person can get infected again.
+# * `reinfection_probability = 0.05`: The probability that a recovered person can get infected again.
 # * `migration_rates`: A matrix of migration probability per individual per day from one city to another.
 # * `Is = [zeros(C-1)..., 1]`: An array for initial number of infected but undetected people per city.
 #   This starts as only one infected individual in the last city.

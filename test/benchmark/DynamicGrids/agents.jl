@@ -7,7 +7,7 @@ mutable struct Tree <: AbstractAgent
 end
 
 function model_initiation(; f, p, griddims)
-    space = Space(griddims, moore = true)
+    space = GridSpace(griddims, moore = true)
     properties = Dict(:f => f, :p => p)
     forest = AgentBasedModel(Tree, space; properties=properties)
     for node in nodes(forest)

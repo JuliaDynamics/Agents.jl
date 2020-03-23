@@ -1,15 +1,8 @@
-export Space, vertex2coords, coords2vertex, node_neighbors,
+export vertex2coords, coords2vertex, node_neighbors,
 find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
 export GraphSpace, GridSpace
-
-# Deprecation
-Space(args...; kwargs...) = error(
-"""
-Space is not used anymore. Use the appropriate space objects relevant to your model:
-GraphSpace, GridSpace, ContinuousSpace or just nothing
-""")
 
 #######################################################################################
 # Basic space definition
@@ -67,7 +60,7 @@ function GraphSpace(graph::G) where {G<:AbstractGraph}
 end
 
 """
-    Space(dims::NTuple; periodic = false, moore = false) → GridSpace
+    GridSpace(dims::NTuple; periodic = false, moore = false) → GridSpace
 Create a `GridSpace` instance that represents a grid of dimensionality `length(dims)`,
 with each dimension having the size of the corresponding entry of `dims`.
 Such grids are typically used in cellular-automata-like models.
@@ -83,6 +76,10 @@ function GridSpace(dims::NTuple{D, I}; periodic = false, moore = false) where {D
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
 end
+
+# Deprecation
+@deprecate Space(graph::G) where {G<:AbstractGraph} GraphSpace(graph::G) where {G<:AbstractGraph}
+@deprecate Space(dims::NTuple{D, I}) where {D, I} GridSpace(dims::NTuple{D, I}) where {D, I}
 
 # 1d grid
 function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
@@ -396,7 +393,7 @@ that is, neighbors and neighbors of neighbors.
 For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
 (based on the space's metric).
 
-See also [`neighbors`](@ref).
+See also [`node_neighbors`](@ref).
 
 `r` defaults to 1 for `DiscreteSpace` but is mandatory for `ContinuousSpace`.
 

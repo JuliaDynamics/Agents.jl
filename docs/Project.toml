@@ -10,6 +10,7 @@ LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [compat]
