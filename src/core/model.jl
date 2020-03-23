@@ -109,7 +109,7 @@ function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceT
     isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id`"))
     if space != nothing
-        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Agent struct must have a `pos` field when using a space"))
+        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct be `pos` when using a space"))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
