@@ -1,10 +1,6 @@
 # # A simple continuous space model
 
-# This is a proof of concept for continuous space.
-# The final api can use ideas in this example.
-
-using Agents, Random, SQLite, Plots
-using DrWatson: @dict
+using Agents, Random, Plots
 
 mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   id::Int
@@ -27,7 +23,6 @@ function model_initiation(;N=100, speed=0.005, diameter=0.01, seed=0)
   end
 
   Agents.index!(model)
-
   return model
 end
 
@@ -38,17 +33,7 @@ end
 
 function collide!(agent, model)
   agent.moved && return
-  db = model.space.db
-  #TODO: This should become some function "neighbors" or "within_radius" or so...
-  #TODO: This should be come dimension-generic
-  #TODO: This should use the `metric` field of space, and do further filtering on
-  #the found neighbors
-  interaction_radius = agent.diameter
-  xleft = agent.pos[1] - interaction_radius
-  xright = agent.pos[1] + interaction_radius
-  yleft = agent.pos[2] - interaction_radius
-  yright = agent.pos[2] + interaction_radius
-  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
+  r = space_neighbors(agent.pos, model, agent.diameter)
   length(r) == 0 && return
   # change direction
   for contactid in 1:length(r)
