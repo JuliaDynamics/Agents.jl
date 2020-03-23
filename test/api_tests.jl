@@ -1,5 +1,37 @@
 using Agents, Test, Random
 
+@testset "Model construction" begin
+    mutable struct BadAgent <: AbstractAgent
+        useless::Int
+        pos::Int
+    end
+    struct ImmutableAgent <: AbstractAgent
+        id::Int
+    end
+    mutable struct DiscreteVelocity <: AbstractAgent
+        id::Int
+        pos::NTuple{2, Float64}
+        vel::NTuple{2, Int}
+        diameter::Float64
+    end
+    # Cannot use ImmutableAgent since it cannot be edited
+    @test_throws ArgumentError ABM(ImmutableAgent)
+    # Cannot use BadAgent since it has no `id` field
+    @test_throws ArgumentError ABM(BadAgent)
+    # Cannot use BadAgent in a grid space context since `pos` has an invalid type
+    @test_throws ArgumentError ABM(BadAgent, GridSpace((1,1)))
+    # Cannot use Agent0 in a grid space context since it has no `pos` field
+    @test_throws ArgumentError ABM(Agent0, GridSpace((1,1)))
+    # Cannot use Agent3 in a graph space context since `pos` has an invalid type
+    @test_throws ArgumentError ABM(Agent3, GraphSpace(Agents.Graph(1)))
+    # Cannot use Agent3 in a continuous space context since `pos` has an invalid type
+    @test_throws ArgumentError ABM(Agent3, ContinuousSpace(2))
+    # Cannot use Agent4 in a continuous space context since it has no `vel` field
+    @test_throws ArgumentError ABM(Agent4, ContinuousSpace(2))
+    # Cannot use DiscreteVelocity in a continuous space context since `vel` has an invalid type
+    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace(2))
+end
+
 model1 = ABM(Agent1, GridSpace((3,3)))
 
 agent = add_agent!((1,1), model1)
@@ -78,8 +110,8 @@ properties = [model.agents[id].weight for id in ids]
   sample!(model, 40, :weight)
   @test Agents.nagents(model) == 40
 
-  model2 = ABM(Agent5, GridSpace((10, 10)))
-  for i in 1:20; add_agent!(Agent5(i, i, rand()/rand()), model2); end
+  model2 = ABM(Agent3, GridSpace((10, 10)))
+  for i in 1:20; add_agent_single!(Agent3(i, (1,1), rand()/rand()), model2); end
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights = sum(allweights)/length(allweights)
   sample!(model2, 12, :weight)
