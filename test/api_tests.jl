@@ -1,19 +1,20 @@
 using Agents, Test, Random
 
+mutable struct BadAgent <: AbstractAgent
+    useless::Int
+    pos::Int
+end
+struct ImmutableAgent <: AbstractAgent
+    id::Int
+end
+mutable struct DiscreteVelocity <: AbstractAgent
+    id::Int
+    pos::NTuple{2, Float64}
+    vel::NTuple{2, Int}
+    diameter::Float64
+end
+
 @testset "Model construction" begin
-    mutable struct BadAgent <: AbstractAgent
-        useless::Int
-        pos::Int
-    end
-    struct ImmutableAgent <: AbstractAgent
-        id::Int
-    end
-    mutable struct DiscreteVelocity <: AbstractAgent
-        id::Int
-        pos::NTuple{2, Float64}
-        vel::NTuple{2, Int}
-        diameter::Float64
-    end
     # Cannot use ImmutableAgent since it cannot be edited
     @test_throws ArgumentError ABM(ImmutableAgent)
     # Cannot use BadAgent since it has no `id` field
