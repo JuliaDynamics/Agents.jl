@@ -57,12 +57,13 @@ step!(model, agent_step!, model_step!, 500)
 
 # ## Example animation
 model = model_initiation(N=200, speed=0.005, diameter=0.01);
-anim = @animate for i ∈ 1:100
+colors = rand(200)
+@time anim = @animate for i ∈ 1:100
   xs = [a.pos[1] for a in values(model.agents)];
   ys = [a.pos[2] for a in values(model.agents)];
-  p1 = scatter(xs, ys, label="", xlims=[0,1], ylims=[0, 1], xgrid=false, ygrid=false,xaxis=false, yaxis=false)
+  p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1], xgrid=false, ygrid=false,xaxis=false, yaxis=false)
   title!(p1, "Day $(i)")
-  step!(model, agent_step!, 1)
+  step!(model, agent_step!, model_step!, 1)
 end
 gif(anim, "movement.gif", fps = 8);
 
