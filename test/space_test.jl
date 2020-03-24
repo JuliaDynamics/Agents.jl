@@ -79,27 +79,27 @@ end
 end
 
 @testset "grid coord/vertex conversions" begin
-  @test coord2vertex((2,2,1), (3,4,1)) == 5
-  @test coord2vertex((2,2), (3,4)) == 5
-  @test coord2vertex((2,2,1), (3,4,1)) == 5
-  @test coord2vertex((2,2), (3,4)) == 5
-  @test vertex2coord(5, (3,4,1)) == (2,2,1)
-  @test vertex2coord(5, (3,4)) == (2,2)
+  @test Agents.coord2vertex((2,2,1), (3,4,1)) == 5
+  @test Agents.coord2vertex((2,2), (3,4)) == 5
+  @test Agents.coord2vertex((2,2,1), (3,4,1)) == 5
+  @test Agents.coord2vertex((2,2), (3,4)) == 5
+  @test Agents.vertex2coord(5, (3,4,1)) == (2,2,1)
+  @test Agents.vertex2coord(5, (3,4)) == (2,2)
 
-  @test coord2vertex((2,2,1), (2,3,3)) == 4
-  @test coord2vertex((2,2,2), (2,3,3)) == 10
-  @test coord2vertex((2,2,3), (2,3,3)) == 16
-  @test coord2vertex(((1,3,1)), (2,3,3)) == 5
-  @test coord2vertex((1,3,2), (2,3,3)) == 11
-  @test coord2vertex((1,3,3), (2,3,3)) == 17
+  @test Agents.coord2vertex((2,2,1), (2,3,3)) == 4
+  @test Agents.coord2vertex((2,2,2), (2,3,3)) == 10
+  @test Agents.coord2vertex((2,2,3), (2,3,3)) == 16
+  @test Agents.coord2vertex(((1,3,1)), (2,3,3)) == 5
+  @test Agents.coord2vertex((1,3,2), (2,3,3)) == 11
+  @test Agents.coord2vertex((1,3,3), (2,3,3)) == 17
 
-  @test vertex2coord(5, (2,3,3)) == (1,3,1)
-  @test vertex2coord(7, (2,3,3)) == (1,1,2)
-  @test vertex2coord(13, (2,3,3)) == (1,1,3)
-  @test vertex2coord(13, (2,3,3)) == (1,1,3)
-  @test vertex2coord(15, (2,3,3)) == (1,2,3)
-  @test vertex2coord(18, (2,3,3)) == (2,3,3)
-  @test vertex2coord(18, (2,3,3)) == (2,3,3)
+  @test Agents.vertex2coord(5, (2,3,3)) == (1,3,1)
+  @test Agents.vertex2coord(7, (2,3,3)) == (1,1,2)
+  @test Agents.vertex2coord(13, (2,3,3)) == (1,1,3)
+  @test Agents.vertex2coord(13, (2,3,3)) == (1,1,3)
+  @test Agents.vertex2coord(15, (2,3,3)) == (1,2,3)
+  @test Agents.vertex2coord(18, (2,3,3)) == (2,3,3)
+  @test Agents.vertex2coord(18, (2,3,3)) == (2,3,3)
 end
 
 @testset "nodes" begin

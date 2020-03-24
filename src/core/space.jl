@@ -1,5 +1,4 @@
-export vertex2coords, coords2vertex, node_neighbors,
-find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
+export node_neighbors, find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
 export GraphSpace, GridSpace
@@ -361,7 +360,7 @@ Return the ids of agents in the node at `coords`.
 """
 function get_node_contents(coords::Tuple, model)
   node_number = coord2vertex(coords, model)
-  get_node_contents(node_number, model)
+  agent_positions(model)[node_number]
 end
 
 """

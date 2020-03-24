@@ -17,9 +17,12 @@ function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   space = GridSpace(dims, moore=Moore)
   properties = Dict(:rules => rules, :Moore=>Moore)
   model = ABM(Cell, space; properties = properties, scheduler=by_id)
-  nnodes = dims[1]*dims[2]
-  for n in 1:nnodes
-    add_agent!(Cell(n, vertex2coord(n, dims), "0"), (n,1), model)
+  node_idx = 1
+  for y in 1:dims[1]
+    for x in 1:dims[2]
+      add_agent_pos!(Cell(node_idx, (x,y), "0"), model)
+      node_idx += 1
+    end
   end
   return model
 end
@@ -69,14 +72,14 @@ function ca_step!(model)
     coord = agent.pos
     center = agent.status
     before, after = periodic_neighbors(coord, model.space.dimensions)
-    right = model.agents[coord2vertex((after[1], coord[2]), model)].status
-    left = model.agents[coord2vertex((before[1], coord[2]), model)].status
-    top = model.agents[coord2vertex((coord[1], after[2]), model)].status
-    bottom = model.agents[coord2vertex((coord[1], after[2]), model)].status
-    topright = model.agents[coord2vertex((after[1], after[2]), model)].status
-    topleft = model.agents[coord2vertex((before[1], after[2]), model)].status
-    bottomright = model.agents[coord2vertex((after[1], before[2]), model)].status
-    bottomleft = model.agents[coord2vertex((before[1], before[2]), model)].status
+    right = model.agents[Agents.coord2vertex((after[1], coord[2]), model)].status
+    left = model.agents[Agents.coord2vertex((before[1], coord[2]), model)].status
+    top = model.agents[Agents.coord2vertex((coord[1], after[2]), model)].status
+    bottom = model.agents[Agents.coord2vertex((coord[1], after[2]), model)].status
+    topright = model.agents[Agents.coord2vertex((after[1], after[2]), model)].status
+    topleft = model.agents[Agents.coord2vertex((before[1], after[2]), model)].status
+    bottomright = model.agents[Agents.coord2vertex((after[1], before[2]), model)].status
+    bottomleft = model.agents[Agents.coord2vertex((before[1], before[2]), model)].status
 
     if model.properties[:Moore]
       nstatus = [topleft, top, topright, left, right, bottomleft, bottom, bottomright]

@@ -38,8 +38,6 @@ get_node_agents
 isempty(::Integer, ::ABM)
 NodeIterator
 nodes
-coord2vertex
-vertex2coord
 ```
 
 ## Continuous space exclusives
