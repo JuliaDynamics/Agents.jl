@@ -10,7 +10,76 @@
 using Agents, Random, Plots
 using DrWatson: @dict
 
+# Let us first create a simple model were balls move around in a continuous space:
+
+
 mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
+  id::Int
+  pos::NTuple{D, F}
+  vel::NTuple{D, F}
+  diameter::F
+  moved::Bool
+end
+
+function model_initiation(;N=100, speed=0.005, diameter=0.01, seed=0)
+  Random.seed!(seed)
+  space = ContinuousSpace(2; periodic = true, extend = (1, 1))
+  model = ABM(Agent, space);
+
+  ## Add initial individuals
+  for ind in 1:N
+    pos = Tuple(rand(2))
+    vel = sincos(2π*rand()) .* speed
+    add_agent!(pos, model, vel, diameter, false)
+  end
+
+  Agents.index!(model)
+  return model
+end
+
+function agent_step!(agent, model)
+  move_agent!(agent, model)
+  collide!(agent, model)
+end
+
+function collide!(agent, model)
+  agent.moved && return
+  r = space_neighbors(agent.pos, model, agent.diameter)
+  length(r) == 0 && return
+  # change direction
+  for contactid in 1:length(r)
+    contact = id2agent(r[contactid], model)
+    if contact.moved == false
+      agent.vel, contact.vel = (agent.vel[1], contact.vel[2]), (contact.vel[1], agent.vel[2])
+      contact.moved = true
+    end
+  end
+  agent.moved=true
+end
+
+function model_step!(model)
+  for agent in values(model.agents)
+    agent.moved = false
+  end
+end
+
+# ## Example animation
+model = model_initiation(N=200, speed=0.005, diameter=0.01);
+colors = rand(200)
+@time anim = @animate for i ∈ 1:100
+  xs = [a.pos[1] for a in values(model.agents)];
+  ys = [a.pos[2] for a in values(model.agents)];
+  p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1], xgrid=false, ygrid=false,xaxis=false, yaxis=false)
+  title!(p1, "Day $(i)")
+  step!(model, agent_step!, model_step!, 1)
+end
+gif(anim, "movement.gif", fps = 8);
+
+# ![](social_distancing.gif)
+
+# We can now add move functionality to these agents. They can be infected with a disease and transfer the disease to other agents around them.
+
+mutable struct Agent2{D, F<:AbstractFloat} <: AbstractAgent
   id::Int
   pos::NTuple{D, F}
   vel::NTuple{D, F}
@@ -28,7 +97,7 @@ function model_initiation(;infection_period = 30, moveprob = 0.4,
   properties = @dict(β_und, β_det, infection_period, reinfection_probability,
   detection_time, death_rate, transmission_radius, moveprob)
   space = ContinuousSpace(2; periodic = true, extend = (1, 1))
-  model = ABM(Agent, space, properties=properties)
+  model = ABM(Agent2, space, properties=properties)
 
   ## Add initial individuals
   for ind in 1:N
@@ -96,12 +165,7 @@ function model_step!(model)
   end
 end
 
-model = model_initiation(moveprob = 0.9)
-step!(model, agent_step!, model_step!, 500)
-
-# ## Example animation
-
-# Lets observe disease spread with different movement probabilities of agents
+# Lets observe disease spread with different amounts of agent movements. First, agents move with a probability of 0.9.
 
 model = model_initiation(N=400,moveprob = 0.9, initial_infected=30);
 colordict = Dict(:I=>"red", :S=>"black", :R=>"green")
@@ -117,6 +181,8 @@ gif(anim, "social_distancing0.9.gif", fps = 8);
 
 # ![](social_distancing0.9.gif)
 
+# And now reduce the movement probability to 0.5.
+
 model = model_initiation(N=400,moveprob = 0.5, initial_infected=30);
 anim = @animate for i ∈ 1:200
   xs = [a.pos[1] for a in values(model.agents)];
@@ -129,3 +195,5 @@ end
 gif(anim, "social_distancing0.5.gif", fps = 8);
 
 # ![](social_distancing0.5.gif)
+
+# The number of infected clearly reduces.
