@@ -42,7 +42,8 @@ To apply a function to the list of agents, use `:agent` as a dictionary key.
 To apply a function to the model object, use `:model` as a dictionary key.
 
 ### Keywords
-* `when=1:n` : at which steps `n` to perform the data collection and processing.
+* `when=true` : at which steps `n` to perform the data collection and processing.
+  `true` means at all steps, otherwise you can specify steps explicitly like `1:5:1000`.
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
 * `step0`: Whether to collect data at step zero, before running the model. Defaults to true.
@@ -77,9 +78,9 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
+step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when=true, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
 
-function step!(model::ABM, agent_step!, model_step!, n, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
+function step!(model::ABM, agent_step!, model_step!, n, properties; when=true, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
 
   if replicates > 0
     if parallel

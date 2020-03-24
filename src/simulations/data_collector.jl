@@ -124,11 +124,14 @@ function data_collector(model::ABM, properties::Array{Symbol}, step::Integer, df
   return df
 end
 
+collect(s, when::AbstractVector{Int}) = s ∈ when
+collect(s, when::Bool) = when
+
 function _step!(model, agent_step!, model_step!, properties, when, n::F, step0, df) where F<:Function
   ss = 1
   while !n(model)
     step!(model, agent_step!, model_step!, 1)
-    if ss in when
+    if collect(ss, when)
       df = data_collector(model, properties, ss, df)
     end
     ss += 1
@@ -139,7 +142,7 @@ end
 function _step!(model, agent_step!, model_step!, properties, when, n::Int, step0, df)
   for ss in 1:n
     step!(model, agent_step!, model_step!, 1)
-    if ss in when
+    if collect(ss, when)
       df = data_collector(model, properties, ss, df)
     end
   end
