@@ -1,9 +1,17 @@
 # # HK (Hegselmann and Krause) opinion dynamics model
 
-# This is an implementation of a simple version of the
-# [Hegselmann and Krause (2002)](http://jasss.soc.surrey.ac.uk/5/3/2.html) model,
-# which also features synchronous updating of Agent properties.
+# In this example we showcase how to do synchronous updating of Agent properties
+# (also know as [Synchronous update schedule](http://jmckalex.org/compass/syn-and-asynch-expl.html)).
+# In a Synchronous update schedule changes made to an agent are not seen by
+# other agents until the next clock tick — that is,
+# all agents update simultaneously ([Wilensky 2015, p.286](https://mitpress.mit.edu/books/introduction-agent-based-modeling)).
+# We also showand how to terminate the system evolution on demand according to a boolean
+# function (here when some convergence is satisfied).
 
+# ## Model overview
+
+# This is an implementation of a simple version of the
+# [Hegselmann and Krause (2002)](http://jasss.soc.surrey.ac.uk/5/3/2.html) model.
 # It is a model of opinion formation with the question: which
 # parameters' values lead to consensus, polarization or fragmentation?
 # It models interacting **groups** of agents (as opposed to interacting pairs, typical in
@@ -11,12 +19,6 @@
 # the opinion of a source of influence, the source can no longer influence the
 # agent’s opinion. There is then a "bound of confidence". The model shows that the
 # systemic configuration is heavily dependent on this parameter's value.
-
-# We implement it as an example of how to implement a [Synchronous update schedule](http://jmckalex.org/compass/syn-and-asynch-expl.html) .
-# In a Synchronous update schedule changes made to an agent are not seen by
-# other agents until the next clock tick — that is,
-# all agents update simultaneously ([Wilensky 2015, p.286](https://mitpress.mit.edu/books/introduction-agent-based-modeling)).
-
 
 # The model has the following components:
 
@@ -33,10 +35,10 @@
 using Agents
 using Statistics: mean
 
-mutable struct HKAgent{T <: AbstractFloat} <: AbstractAgent
+mutable struct HKAgent <: AbstractAgent
     id::Int
-    old_opinion::T
-    new_opinion::T
+    old_opinion::Float64
+    new_opinion::Float64
 end
 
 function hk_model(;numagents = 100, ϵ = 0.4)
@@ -81,36 +83,52 @@ end
 # are changed through synchronous updating. In `agent_step!` we use the `old` field
 # and after updating all the agents `new` field we use the `model_step!`
 # to update the model  for the next iteration.
+
 # ## Running the model
-# Now we can define a method for our simulation run.
 # The parameter of interest is the `:new_opinion` field so we assign
 # it to variable `agent_properties` and pass it to the `step!` method
 # to be collected in a DataFrame.
-function model_run(; numagents = 100, iterations = 50, ϵ= 0.05)
+
+# In addition, we don't want this model to run for a specified amount of steps,
+# but only until all agents have converged to an opinion. From the documentation of
+# [`step!`](@ref) one can see instead of specifying the amount of steps we can specify
+# function instead.
+function terminate(model)
+    agents = values(model.agents)
+    if any(!isapprox(a.old_opinion, a.new_opinion) for a in agents)
+        return false
+    else
+        return true
+    end
+end
+
+function model_run(; numagents = 100, ϵ= 0.05)
     model = hk_model(numagents = numagents, ϵ = ϵ)
-    when = 0:5:iterations
+    when = 0:5:10000
     agent_properties = [:new_opinion]
     data = step!(
             model,
             agent_step!,
             model_step!,
-            iterations,
+            terminate,
             agent_properties,
             when = when
             )
     return(data)
 end
 
-data = model_run(numagents = 10, iterations = 20)
-data[end-19:end, :]
+data = model_run(numagents = 10)
+# data[end-19:end, :]
 
 # Finally we run three scenarios, collect the data and plot it.
 using Plots
+pyplot()
+desktop!()
 
 plotsim(data, ϵ) = plot(
                         data[!, :step],
                         data[!, :new_opinion],
-                        leg= false, 
+                        leg= false,
                         group = data[!, :id],
                         title = "epsilon = $(ϵ)"
                         )
@@ -122,4 +140,3 @@ plt001,plt015,plt03 = map(
                           )
 
 plot(plt001, plt015, plt03, layout = (3,1))
-
