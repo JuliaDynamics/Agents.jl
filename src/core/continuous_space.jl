@@ -76,8 +76,8 @@ function prepare_database(D)
   updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
   q4 = DBInterface.prepare(db, updateq)
   searchexpr2 = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq2 = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
-  q5 = DBInterface.prepare(db, searchq)
+  searchq2 = "SELECT id FROM tab WHERE $(searchexpr2)"[1:end-4]
+  q5 = DBInterface.prepare(db, searchq2)
   return db, q, q2, q3, q4, q5
 end
 
