@@ -39,15 +39,7 @@ mutable struct Agent6 <: AbstractAgent
   weight::Float64
 end
 
-mutable struct Agent7 <: AbstractAgent
-  id::Int
-  pos::NTuple{2, Float64}
-  vel::NTuple{2, Float64}
-  weight::Float64
-  moved::Bool
-end
-
-@testset "all tests" begin
+@testset "Agents.jl Tests" begin
 
 include("api_tests.jl")
 include("space_test.jl")

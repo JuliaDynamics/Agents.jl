@@ -259,7 +259,7 @@ space's metric.
 Valid only in continuous space.
 """
 function nearest_neighbor(agent, model, r)
-  n = space_neighbors(agent.pos, model, r)
+  n = space_neighbors(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
@@ -285,6 +285,7 @@ If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a m
 to weight the two agents for the collision. By default no weighting happens.
 """
 function elastic_collision!(a, b, f = nothing)
+  #TODO: Improve this function to not do anything if the ydon't face each other
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
   m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
   v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
