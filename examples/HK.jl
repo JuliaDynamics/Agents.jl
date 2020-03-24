@@ -22,9 +22,8 @@
 
 # The model has the following components:
 
-# - A set of n Agents with opinions xᵢ in the range [0,1] as attribute;
-# - A bound ϵ in also in the range [0,1] (actually, the range of interesting results is
-#   approximately (0, 0.3]);
+# - A set of n Agents with opinions xᵢ in the range [0,1] as attribute
+# - A parameter ϵ called "bound" in (0, 0.3]
 # - The update rule: at each step every agent adopts the mean of the opinions which are within
 #   the confidence bound ( |xᵢ - xⱼ| ≤ ϵ).
 
@@ -39,17 +38,25 @@ mutable struct HKAgent <: AbstractAgent
     id::Int
     old_opinion::Float64
     new_opinion::Float64
+    previous_opinon::Float64
 end
 
-function hk_model(;numagents = 100, ϵ = 0.4)
+# There is a reason the agent has three fields that are "the same".
+# The `old_opinion` is used for synchronous agent update.
+# The `previous_opinion` is the opinion of the agent in the _previous_ step,
+# and is use to terminate model evolution when convergence is reached.
+
+function hk_model(;numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest,
                 properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
         o = rand()
-        add_agent!(model, o, o)
+        add_agent!(model, o, o, 0.0)
     end
     return model
 end
+
+hk_model()
 
 # And some helper functions for the update rule. As there is a filter in
 # the rule we implement it outside the `agent_step!` method. Notice that the filter
@@ -61,20 +68,19 @@ function boundfilter(agent,model)
      get_old_opinion.(values(model.agents)))
 end
 
-# Now we implement the `agent_step!` and `model_step!` methods.
+# Now we implement the `agent_step!`
 function agent_step!(agent, model)
+    # @show a.previous_opinon
+    # @show a.old_opinion
+    agent.previous_opinon = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent,model))
 end
 
-function updateold(a)
-    a.old_opinion = a.new_opinion
-    return a
-end
-
+# and `model_step!`
 function model_step!(model)
     for i in keys(model.agents)
-        agent = id2agent(i, model)
-        updateold(agent)
+        a = id2agent(i, model)
+        a.old_opinion = a.new_opinion
     end
 end
 
@@ -91,20 +97,20 @@ end
 
 # In addition, we don't want this model to run for a specified amount of steps,
 # but only until all agents have converged to an opinion. From the documentation of
-# [`step!`](@ref) one can see instead of specifying the amount of steps we can specify
-# function instead.
-function terminate(model)
+# [`step!`](@ref) one can see that instead of specifying the amount of steps we can specify
+# a function instead.
+function terminate(model, s)
     agents = values(model.agents)
-    if any(!isapprox(a.old_opinion, a.new_opinion) for a in agents)
+    if any(!isapprox(a.previous_opinon, a.new_opinion) for a in agents)
         return false
     else
         return true
     end
+    s > 1000 && error("Run too long, something wrong!")
 end
 
 function model_run(; numagents = 100, ϵ= 0.05)
     model = hk_model(numagents = numagents, ϵ = ϵ)
-    when = 0:5:10000
     agent_properties = [:new_opinion]
     data = step!(
             model,
@@ -112,31 +118,28 @@ function model_run(; numagents = 100, ϵ= 0.05)
             model_step!,
             terminate,
             agent_properties,
-            when = when
             )
     return(data)
 end
 
-data = model_run(numagents = 10)
-# data[end-19:end, :]
+data = model_run(numagents = 100)
+data[end-19:end, :]
 
 # Finally we run three scenarios, collect the data and plot it.
 using Plots
-pyplot()
-desktop!()
 
 plotsim(data, ϵ) = plot(
-                        data[!, :step],
-                        data[!, :new_opinion],
-                        leg= false,
-                        group = data[!, :id],
-                        title = "epsilon = $(ϵ)"
-                        )
+    data[!, :step],
+    data[!, :new_opinion],
+    leg= false,
+    group = data[!, :id],
+    title = "epsilon = $(ϵ)"
+)
 
 plt001,plt015,plt03 = map(
-                          e -> (model_run(ϵ= e), e) |>
-                          t -> plotsim(t[1], t[2]),
-                          [0.05, 0.15, 0.3]
-                          )
+    e -> (model_run(ϵ= e), e) |>
+    t -> plotsim(t[1], t[2]),
+    [0.05, 0.15, 0.3]
+)
 
 plot(plt001, plt015, plt03, layout = (3,1))
