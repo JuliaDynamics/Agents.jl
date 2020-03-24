@@ -50,11 +50,12 @@ initvels = [id2agent(i, model).vel for i in 1:100]
 
 step!(model, agent_step!, model_step!, 100)
 
-for id in 1:100
-  @show id
-  @test initvels[id] ≠ id2agent(id, model).vel
-end
+x = count(initvels[id] ≠ id2agent(id, model).vel for id in 1:100)
+@test x > 10 # test that at least 10 agents have collided
 
 K1, p1 = kinetic(model)
+@test K1 ≈ K0
+@test p1[1] ≈ p0[1]
+@test p1[2] ≈ p0[2]
 
-# @test
+end
