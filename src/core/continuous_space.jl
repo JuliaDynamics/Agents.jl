@@ -67,7 +67,7 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
@@ -215,13 +215,24 @@ end
 # filter!(...) where the filtering function checks distances w.r.t. `r`.
 """
     space_neighbors(pos::Tuple, model::ABM, r::Real)
-Return neighbours of a particular position `pos`, within radius `r` for any `SpaceType`.
+Return IDs of all agents within radius `r` from a particular position `pos` for any `SpaceType`.
 """
 function space_neighbors(pos::Tuple, model, r::Real)
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchq, res))
+  collect_ids(DBInterface.execute(model.space.searchq, (res...,-1)))
+end
+
+"""
+    space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
+Return neighbours of a particular agent, within radius `r` for any `SpaceType`.
+"""
+function space_neighbors(agent::AbstractAgent, model, r::Real)
+  left = agent.pos .- r
+  right = agent.pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, (res...,agent.id)))
 end
 
 @generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
