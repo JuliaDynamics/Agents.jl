@@ -250,7 +250,7 @@ end
 #######################################################################################
 # Continuous space exclusive
 #######################################################################################
-export nearest_neighbor, elastic_collision!
+export nearest_neighbor, elastic_collision!, interacting_pairs
 
 """
     nearest_neighbor(agent, model, r) → nearest
@@ -297,4 +297,42 @@ function elastic_collision!(a, b, f = nothing)
   a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, x1 .- x2) / n ) .* (x1 .- x2)
   b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, x2 .- x1) / n) .* (x2 .- x1)
   return
+end
+
+"""
+    interacting_pairs(model, r)
+Return an iterator that yields pairs of agents `(a1, a2)` that are closest
+neighbors to each other, within some interaction radius `r`.
+
+This function is usefully combined with `model_step!`, when one wants to perform
+some pairwise interaction across all pairs of closest agents once
+(and does not want to trigger the event twice, both with `a1` and with `a2`, which
+is unavoidable when using `agent_step!`).
+
+Internally uses [`nearest_neighbor`](@ref).
+"""
+function interacting_pairs(model, r)
+  pairs = Tuple{Int, Int}[]
+  #TODO: This can be optimized further I assume
+  for id in keys(model.agents)
+    # Skip already checked agents
+    any(isequal(id), p[2] for p in pairs) && continue
+    a1 = id2agent(id, model)
+    a2 = nearest_neighbor(a1, model, r)
+    a2 ≠ nothing && push!(pairs, (id, a2.id))
+  end
+  return PairIterator(pairs, model.agents)
+end
+
+struct PairIterator{A}
+  pairs::Vector{Tuple{Int, Int}}
+  agents::Dict{Int, A}
+end
+
+Base.length(iter::PairIterator) = length(iter.pairs)
+function Base.iterate(iter::PairIterator, i = 1)
+  i > length(iter) && return nothing
+  p = iter.pairs[i]
+  id1, id2 = p
+  return (iter.agents[id1], iter.agents[id2]), i+1
 end
