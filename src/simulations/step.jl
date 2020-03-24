@@ -59,7 +59,8 @@ function step! end
 #######################################################################################
 dummystep(args...) = nothing
 
-step!(model::ABM, agent_step!, n::Union{Integer, Function} = 1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Union{Integer, Function} = 1) =
+step!(model, agent_step!, dummystep, n)
 
 function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
   for i in 1:n
@@ -87,18 +88,16 @@ step!(model::ABM, agent_step!, n, properties; kwargs...) =
 step!(model, agent_step!, dummystep, n, properties; kwargs...)
 
 function step!(model::ABM, agent_step!, model_step!, n, properties;
-  when=true, replicates::Int=0, parallel::Bool=false, step0::Bool=true, Nmax=Inf)
+  parallel::Bool=false, kwargs...)
 
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties; kwargs...)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
+      dataall = series_replicates(model, agent_step!, model_step!, n, properties; kwargs...)
     end
     return dataall
   end
-
   df = _step!(model, agent_step!, model_step!, properties, when, n, step0)
-
   return df
 end

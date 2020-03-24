@@ -101,14 +101,13 @@ end
 # but only until all agents have converged to an opinion. From the documentation of
 # [`step!`](@ref) one can see that instead of specifying the amount of steps we can specify
 # a function instead.
-function terminate(model, s)
+function terminate(model)
     agents = values(model.agents)
     if any(!isapprox(a.previous_opinon, a.new_opinion) for a in agents)
         return false
     else
         return true
     end
-    s > 1000 && error("Run too long, something wrong!")
 end
 
 function model_run(; numagents = 100, ϵ= 0.05)

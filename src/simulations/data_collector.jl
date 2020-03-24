@@ -129,12 +129,13 @@ add_data(s, when::Bool) = when
 
 function _step!(model, agent_step!, model_step!, properties, when, n::F, step0, df) where F<:Function
   ss = 1
-  while !n(model, ss)
+  while !n(model)
     step!(model, agent_step!, model_step!, 1)
     if add_data(ss, when)
       df = data_collector(model, properties, ss, df)
     end
     ss += 1
+    ss > Nmax && return df
   end
   df
 end
@@ -162,13 +163,14 @@ function _step!(model, agent_step!, model_step!, properties, when, n, step0)
   return df
 end
 
-function series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
+function series_replicates(model, agent_step!, model_step!, n, properties;
+    when = true, replicates = 0, step0 = true, Nmax = Inf)
 
-  dataall = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
+  dataall = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0, Nmax)
   dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
 
   for rep in 2:replicates
-    data = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0)
+    data = _step!(deepcopy(model), agent_step!, model_step!, properties, when, n, step0, Nmax)
     data[!, :replicate] = [rep for i in 1:size(data, 1)]
 
     dataall = vcat(dataall, data)
@@ -189,10 +191,10 @@ contains many parameters and thus is scanned. All other entries of
 
 `initialize` is a function that creates an ABM. It should accept keyword arguments.
 
-### Keywords
-All the following keywords are propagated into [`step!`](@ref):
-`agent_step!, properties, n, when = 1:n, model_step! = dummystep`,
-`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
+## Keywords
+All of the following keywords are propagated into [`step!`](@ref):
+`agent_step!, properties, n, when, model_step!, step0, parallel, replicates, Nmax`.
+Notice that `agent_step!, properties, n` are mandatory.
 
 The following keywords modify the `paramscan` function:
 
@@ -203,13 +205,14 @@ included in the output `DataFrame`.
 """
 function paramscan(parameters::Dict, initialize;
   agent_step!, properties, n,
-  when = 1:n,
-  model_step! = dummystep,
-  include_constants::Bool = false,
-  replicates::Int = 0,
-  step0::Bool = true,
   progress::Bool = true,
-  parallel::Bool = false
+  include_constants::Bool = false,
+  model_step! = dummystep,
+  kwargs...
+  # parallel::Bool = false
+  # when = 1:n,
+  # replicates::Int = 0,
+  # step0::Bool = true,
   )
 
   params = dict_list(parameters)
@@ -225,11 +228,10 @@ function paramscan(parameters::Dict, initialize;
   counter = 0
   for d in combs
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0, parallel=parallel)
+    data = step!(model, agent_step!, model_step!, n, properties, kwargs...)
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
     if progress
-      # show progress
       counter += 1
       print("\u1b[1G")
       percent = round(counter*100/ncombs, digits=2)
