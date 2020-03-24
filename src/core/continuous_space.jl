@@ -15,6 +15,7 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   searchq::SQLite.Stmt
   deleteq::SQLite.Stmt
   updateq::SQLite.Stmt
+  searchqNoId::SQLite.Stmt
 end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
@@ -50,8 +51,8 @@ function ContinuousSpace(D::Int, update_vel! = defvel;
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
-  db, q, q2, q3, q4 = prepare_database(D)
-  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
+  db, q, q2, q3, q4, q5 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
 
 # Deprecate Space constructor
@@ -67,14 +68,17 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
   updateexpr = strip(join("$x = ?," for x in COORDS[1:D]), ',')
   updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
   q4 = DBInterface.prepare(db, updateq)
-  return db, q, q2, q3, q4
+  searchexpr2 = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
+  searchq2 = "SELECT id FROM tab WHERE $(searchexpr2)"[1:end-4]
+  q5 = DBInterface.prepare(db, searchq2)
+  return db, q, q2, q3, q4, q5
 end
 
 defvel(a, m) = nothing
@@ -215,13 +219,24 @@ end
 # filter!(...) where the filtering function checks distances w.r.t. `r`.
 """
     space_neighbors(pos::Tuple, model::ABM, r::Real)
-Return neighbours of a particular position `pos`, within radius `r` for any `SpaceType`.
+Return IDs of all agents within radius `r` from a particular position `pos` for any space.
 """
 function space_neighbors(pos::Tuple, model, r::Real)
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchq, res))
+  collect_ids(DBInterface.execute(model.space.searchqNoId, res))
+end
+
+"""
+    space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
+Return neighbours of a particular agent, within radius `r` for any space.
+"""
+function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
+  left = agent.pos .- r
+  right = agent.pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, (res...,agent.id)))
 end
 
 @generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
