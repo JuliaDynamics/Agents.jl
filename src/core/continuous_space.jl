@@ -280,7 +280,8 @@ Resolve a (hypothetical) elastic collision between the two agents `a, b`.
 They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
 This function works only for two dimensions.
-Notice that collision only happens if both disks face each other.
+Notice that collision only happens if both disks face each other, to avoid
+collision-after-collision.
 
 If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
 to weight the two agents for the collision. By default no weighting happens.
@@ -290,7 +291,7 @@ function elastic_collision!(a, b, f = nothing)
   v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
   # Check if disks face each other
   r1 = x1 .- x2; r2 = x2 .- x1
-  !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return
+  !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
   # They don't so do elastic collision according to
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
   m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
@@ -299,10 +300,10 @@ function elastic_collision!(a, b, f = nothing)
   dx = a.pos .- b.pos
   dv = a.vel .- b.vel
   n = norm(dx)^2
-  n == 0 && return # do nothing if they are at the same position
-  a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, x1 .- x2) / n ) .* (x1 .- x2)
-  b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, x2 .- x1) / n) .* (x2 .- x1)
-  return
+  n == 0 && return false # do nothing if they are at the same position
+  a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, r1) / n ) .* (r1)
+  b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, r2) / n ) .* (r2)
+  return true
 end
 
 """
