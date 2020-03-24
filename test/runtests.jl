@@ -47,6 +47,6 @@ include("interaction_tests.jl")
 include("data_collector_test.jl")
 include("CA_test.jl")
 include("continuousSpace_tests.jl")
-include("collision_tests.jl")
+include("collisions_tests.jl")
 
 end
