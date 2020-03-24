@@ -250,6 +250,8 @@ end
 #######################################################################################
 # Continuous space exclusive
 #######################################################################################
+export nearest_neighbor, elastic_collision!
+
 """
     nearest_neighbor(agent, model, r) → nearest
 Return the agent that has the closest distance to given `agent`, according to the
@@ -260,9 +262,13 @@ function nearest_neighbor(agent, model, r)
   n = space_neighbors(agent.pos, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
-  for i in n
-    dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos))) for i in n]
-  _, j = findmin(d)
+  for i in 1:length(n)
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos)))
+    _, j = findmin(d)
+    if dnew < d
+      d, j = dnew, i
+    end
+  end
   return id2agent(n[j], model)
 end
 
@@ -282,7 +288,7 @@ function elastic_collision!(a, b, f = nothing)
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
   m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
   v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
-  size(v1) != 2 && error("This function works only for two dimensions.")
+  length(v1) != 2 && error("This function works only for two dimensions.")
   ken = norm(v1)^2 + norm(v2)^2
   dx = a.pos .- b.pos
   dv = a.vel .- b.vel

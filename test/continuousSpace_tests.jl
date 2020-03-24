@@ -60,13 +60,13 @@
   agent2 = model1.agents[2]
   agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
   add_agent_pos!(agent3, model1)
-  n_ids = space_neighbors(agent2, model1, agent2.diameter)
+  n_ids = space_neighbors(agent2, model1, agent2.weight)
   @test length(n_ids) == 1
   @test n_ids[1] == 3
-  n_ids = space_neighbors(agent2, model1, agent2.diameter/10)
+  n_ids = space_neighbors(agent2, model1, agent2.weight/10)
   @test length(n_ids) == 0
 
   # test that it finds both
-  n_ids = space_neighbors(agent2.pos, model1, agent2.diameter)
+  n_ids = space_neighbors(agent2.pos, model1, agent2.weight)
   @test sort!(n_ids) == [2, 3]
 end
