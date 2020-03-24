@@ -3,7 +3,7 @@ export step!, dummystep
 """
     step!(model, agent_step! [, model_step!], n::Integer = 1)
 
-Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
+Run the model for `n` steps. Agents will be updated as specified by the `model.scheduler`.
 If given the optional function `model_step!`, it is triggered _after_ every scheduled
 agent has acted.
 
@@ -46,6 +46,8 @@ To apply a function to the model object, use `:model` as a dictionary key.
 ### Keywords
 * `when=true` : at which steps `n` to perform the data collection and processing.
   `true` means at all steps, otherwise you can specify steps explicitly like `1:5:1000`.
+* `Nmax=Inf` : if the step number becomes `> Nmax`, evolution is terminated (only used
+  in the case `n::Function`).
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
 * `step0`: Whether to collect data at step zero, before running the model. Defaults to true.
@@ -55,8 +57,7 @@ function step! end
 #######################################################################################
 # basic stepping
 #######################################################################################
-dummystep(model) = nothing
-dummystep(agent, model) = nothing
+dummystep(args...) = nothing
 
 step!(model::ABM, agent_step!, n::Union{Integer, Function} = 1) = step!(model, agent_step!, dummystep, n)
 
@@ -82,9 +83,11 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when=true, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
+step!(model::ABM, agent_step!, n, properties; kwargs...) =
+step!(model, agent_step!, dummystep, n, properties; kwargs...)
 
-function step!(model::ABM, agent_step!, model_step!, n, properties; when=true, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
+function step!(model::ABM, agent_step!, model_step!, n, properties;
+  when=true, replicates::Int=0, parallel::Bool=false, step0::Bool=true, Nmax=Inf)
 
   if replicates > 0
     if parallel
