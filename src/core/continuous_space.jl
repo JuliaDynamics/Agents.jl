@@ -246,3 +246,55 @@ end
     tuple($(b...))
   end
 end
+
+#######################################################################################
+# Continuous space exclusive
+#######################################################################################
+export nearest_neighbor, elastic_collision!
+
+"""
+    nearest_neighbor(agent, model, r) → nearest
+Return the agent that has the closest distance to given `agent`, according to the
+space's metric.
+Valid only in continuous space.
+"""
+function nearest_neighbor(agent, model, r)
+  n = space_neighbors(agent.pos, model, r)
+  length(n) == 0 && return nothing
+  d, j = Inf, 0
+  for i in 1:length(n)
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos)))
+    _, j = findmin(d)
+    if dnew < d
+      d, j = dnew, i
+    end
+  end
+  return id2agent(n[j], model)
+end
+
+using LinearAlgebra
+
+"""
+    elastic_collision!(a, b, f = nothing)
+Resolve a (hypothetical) elastic collision between the two agents `a, b`.
+They are assumed to be circles of equal size touching tangentially.
+Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
+This function works only for two dimensions.
+
+If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
+to weight the two agents for the collision. By default no weighting happens.
+"""
+function elastic_collision!(a, b, f = nothing)
+  # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
+  length(v1) != 2 && error("This function works only for two dimensions.")
+  ken = norm(v1)^2 + norm(v2)^2
+  dx = a.pos .- b.pos
+  dv = a.vel .- b.vel
+  n = norm(dx)^2
+  n == 0 && return # do nothing if they are at the same position
+  a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, x1 .- x2) / n ) .* (x1 .- x2)
+  b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, x2 .- x1) / n) .* (x2 .- x1)
+  return
+end
