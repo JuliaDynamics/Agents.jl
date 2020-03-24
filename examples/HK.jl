@@ -1,12 +1,12 @@
 # # HK (Hegselmann and Krause) opinion dynamics model
 
-# In this example we showcase how to do synchronous updating of Agent properties
-# (also know as [Synchronous update schedule](http://jmckalex.org/compass/syn-and-asynch-expl.html)).
-# In a Synchronous update schedule changes made to an agent are not seen by
-# other agents until the next clock tick — that is,
-# all agents update simultaneously ([Wilensky 2015, p.286](https://mitpress.mit.edu/books/introduction-agent-based-modeling)).
-# We also showand how to terminate the system evolution on demand according to a boolean
-# function (here when some convergence is satisfied).
+# This example showcases
+# * How to do synchronous updating of Agent properties
+#   (also know as [Synchronous update schedule](http://jmckalex.org/compass/syn-and-asynch-expl.html)).
+#   In a Synchronous update schedule changes made to an agent are not seen by
+#   other agents until the next step, see also [Wilensky 2015, p.286](https://mitpress.mit.edu/books/introduction-agent-based-modeling)).
+# * How to terminate the system evolution on demand according to a boolean function.
+# * How to terminate the system evolution according to what happened on the _previous_ step.
 
 # ## Model overview
 
@@ -42,9 +42,11 @@ mutable struct HKAgent <: AbstractAgent
 end
 
 # There is a reason the agent has three fields that are "the same".
-# The `old_opinion` is used for synchronous agent update.
+# The `old_opinion` is used for synchronous agent update, since we require access
+# to a property's value at the start of the step and the end of the step.
 # The `previous_opinion` is the opinion of the agent in the _previous_ step,
-# and is use to terminate model evolution when convergence is reached.
+# since for the model termination we require access to a property's value
+# at the end of the previous step, and the end of the current step.
 
 function hk_model(;numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest,
