@@ -9,8 +9,10 @@ agent has acted.
 
     step!(model, agent_step! [, model_step!], n::Function)
 
-`n` can be also be a function that takes as an input the `model` and returns
-`true/false`. Then `step!` runs the model until `n(model)` returns `true`.
+`n` can be also be a function that takes as an input the `model` and current step number `s`
+and returns `true/false`. Then `step!` runs the model until `n(model, s)` returns `true`.
+Having the `s` number as an argument is useful to add a fail-safe to your function
+(in case you don't want to let your model run *too* long).
 
     step!(model, agent_step! [, model_step!], n, properties; kwargs...)
 
@@ -56,7 +58,7 @@ function step! end
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Union{Integer, Function} = 1) = step!(model, agent_step!, dummystep, n)
 
 function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
   for i in 1:n
@@ -69,8 +71,10 @@ function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<
 end
 
 function step!(model::ABM, agent_step!::F, model_step!::G, n::H) where {F<:Function, G<:Function, H<:Function}
-  while !n(model)
+  s = 1
+  while !n(model, s)
     step!(model, agent_step!, model_step!, 1)
+    s+=1
   end
 end
 
