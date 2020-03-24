@@ -370,7 +370,6 @@ instead of just the list of IDs.
 """
 get_node_agents(x, model) = [id2agent(id, model) for id in get_node_contents(x, model)]
 
-
 """
     id2agent(id::Integer, model)
 

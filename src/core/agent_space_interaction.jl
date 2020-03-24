@@ -65,21 +65,26 @@ in the model and remove it from the old position
 """
 function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
   nodenumber = coord2vertex(pos, model)
-  _move_agent!(agent, nodenumber, model)
+  move_agent!(agent, nodenumber, model)
 end
 
-function _move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
+function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
   # remove agent from old position
-  oldnode = coord2vertex(agent.pos, model)
-  splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
-  agent.pos = vertex2coord(pos, model)  # update agent position
+  if typeof(agent.pos) <: Tuple
+    oldnode = coord2vertex(agent.pos, model)
+    splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
+    agent.pos = vertex2coord(pos, model)  # update agent position
+  else
+    splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
+    agent.pos = pos
+  end
   push!(model.space.agent_positions[pos], agent.id)
   return agent
 end
 
 function move_agent!(agent::AbstractAgent, model::ABM)
   nodenumber = rand(1:nv(model.space))
-  _move_agent!(agent, nodenumber, model)
+  move_agent!(agent, nodenumber, model)
   return agent
 end
 

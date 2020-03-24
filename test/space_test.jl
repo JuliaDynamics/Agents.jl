@@ -1,4 +1,3 @@
-using Random
 Random.seed!(209)
 
 @testset "Deprecated spaces" begin
