@@ -228,7 +228,7 @@ end
     space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
 Return neighbours of a particular agent, within radius `r` for any `SpaceType`.
 """
-function space_neighbors(agent::AbstractAgent, model, r::Real)
+function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
   left = agent.pos .- r
   right = agent.pos .+ r
   res = interlace(left, right)
