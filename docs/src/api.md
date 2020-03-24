@@ -8,6 +8,7 @@ space_neighbors
 id2agent
 random_agent
 nagents
+allagents
 ```
 
 
@@ -44,6 +45,8 @@ vertex2coord
 
 ## Continuous space exclusives
 ```@docs
+nearest_neighbor
+elastic_collision!
 index!
 ```
 ## Simulations

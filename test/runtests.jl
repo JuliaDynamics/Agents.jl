@@ -36,7 +36,7 @@ mutable struct Agent6 <: AbstractAgent
   id::Int
   pos::NTuple{2, Float64}
   vel::NTuple{2, Float64}
-  diameter::Float64
+  weight::Float64
 end
 
 @testset "all tests" begin
