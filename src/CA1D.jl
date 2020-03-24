@@ -2,10 +2,10 @@
 module CA1D
 using Agents
 
-mutable struct Cell{T<:Integer, Y<:AbstractString} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::Y
+mutable struct Cell <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  status::String
 end
 
 """
