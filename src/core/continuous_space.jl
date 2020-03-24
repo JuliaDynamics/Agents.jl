@@ -277,18 +277,23 @@ using LinearAlgebra
 """
     elastic_collision!(a, b, f = nothing)
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
-They are assumed to be circles of equal size touching tangentially.
+They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
 This function works only for two dimensions.
+Notice that collision only happens if both disks face each other.
 
 If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
 to weight the two agents for the collision. By default no weighting happens.
 """
 function elastic_collision!(a, b, f = nothing)
-  #TODO: Improve this function to not do anything if the ydon't face each other
+  #TODO: Improve this function to not do anything if they don't face each other
+  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
+  # Check if disks face each other
+  r1 = x1 .- x2; r2 = x2 .- x1
+  !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return
+  # They don't so do elastic collision according to
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
   m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
-  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
   length(v1) != 2 && error("This function works only for two dimensions.")
   ken = norm(v1)^2 + norm(v2)^2
   dx = a.pos .- b.pos

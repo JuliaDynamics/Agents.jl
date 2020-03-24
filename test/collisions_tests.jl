@@ -54,18 +54,18 @@ K1, p1 = kinetic(model)
 @test p1[2] ≈ p0[2]
 
 
-# using Plots
-# pyplot()
-# model = model_initiation()
-# colors = rand(nagents(model))
-# anim = @animate for i ∈ 1:200
-#   xs = [a.pos[1] for a in values(model.agents)];
-#   ys = [a.pos[2] for a in values(model.agents)];
-#   p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1])
-#   title!(p1, "step $(i)")
-#   step!(model, agent_step!, model_step!, 1)
-#   println("step $i")
-# end
-# gif(anim, "movement.gif", fps = 120);
+using Plots
+pyplot()
+model = model_initiation()
+colors = rand(nagents(model))
+anim = @animate for i ∈ 1:200
+  xs = [a.pos[1] for a in values(model.agents)];
+  ys = [a.pos[2] for a in values(model.agents)];
+  p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1])
+  title!(p1, "step $(i)")
+  step!(model, agent_step!, model_step!, 1)
+  println("step $i")
+end
+gif(anim, "movement.gif", fps = 30);
 
 end

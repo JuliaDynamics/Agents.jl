@@ -6,6 +6,7 @@
 * Reworked the public API of `GridSpace` to be simpler: position must be `NTuple{Int}`. As a result `vertex2coord` and stuff no longer exported, since they are obsolete.
 * New convenience function `allagents`
 * New continuous space functions `nearest_neighbor` and `elastic_collision!`
+* New iterator `interacting_pairs`
 
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
