@@ -1,33 +1,28 @@
 # # A simple continuous space model
 
-# This is a proof of concept for continuous space.
-# The final api can use ideas in this example.
-
-using Agents, Random, SQLite, Plots
-using DrWatson: @dict
+using Agents, Random, Plots
 
 mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
   id::Int
   pos::NTuple{D, F}
   vel::NTuple{D, F}
   diameter::F
+  moved::Bool
 end
 
-function model_initiation(;N=100, speed=0.005, space_resolution=0.001, seed=0)
+function model_initiation(;N=100, speed=0.005, diameter=0.01, seed=0)
   Random.seed!(seed)
   space = ContinuousSpace(2; periodic = true, extend = (1, 1))
   model = ABM(Agent, space);
 
   ## Add initial individuals
   for ind in 1:N
-    pos = Tuple(rand(0.0:space_resolution:1.0, 2))
+    pos = Tuple(rand(2))
     vel = sincos(2π*rand()) .* speed
-    dia = space_resolution * 10
-    add_agent!(pos, model, vel, dia)
+    add_agent!(pos, model, vel, diameter, false)
   end
 
   Agents.index!(model)
-
   return model
 end
 
@@ -37,34 +32,38 @@ function agent_step!(agent, model)
 end
 
 function collide!(agent, model)
-  db = model.space.db
-  #TODO: This should become some function "neighbors" or "within_radius" or so...
-  #TODO: This should be come dimension-generic
-  #TODO: This should use the `metric` field of space, and do further filtering on
-  #the found neighbors
-  interaction_radius = agent.diameter
-  xleft = agent.pos[1] - interaction_radius
-  xright = agent.pos[1] + interaction_radius
-  yleft = agent.pos[2] - interaction_radius
-  yright = agent.pos[2] + interaction_radius
-  r = Agents.collect_ids(DBInterface.execute(model.space.searchq, (xleft, xright, yleft, yright, agent.id)))
+  agent.moved && return
+  r = space_neighbors(agent.pos, model, agent.diameter)
   length(r) == 0 && return
-  #change direction
-  firstcontact = id2agent(r[1], model)
-  agent.vel, firstcontact.vel = (agent.vel[1], firstcontact.vel[2]), (firstcontact.vel[1], agent.vel[2])
+  # change direction
+  for contactid in 1:length(r)
+    contact = id2agent(r[contactid], model)
+    if contact.moved == false
+      agent.vel, contact.vel = (agent.vel[1], contact.vel[2]), (contact.vel[1], agent.vel[2])
+      contact.moved = true
+    end
+  end
+  agent.moved=true
 end
 
-model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
-step!(model, agent_step!, 500)
+function model_step!(model)
+  for agent in values(model.agents)
+    agent.moved = false
+  end
+end
+
+model = model_initiation(N=100, speed=0.005, diameter=0.01)
+step!(model, agent_step!, model_step!, 500)
 
 # ## Example animation
-model = model_initiation(N=100, speed=0.005, space_resolution=0.001);
-anim = @animate for i ∈ 1:100
+model = model_initiation(N=200, speed=0.005, diameter=0.01);
+colors = rand(200)
+@time anim = @animate for i ∈ 1:100
   xs = [a.pos[1] for a in values(model.agents)];
   ys = [a.pos[2] for a in values(model.agents)];
-  p1 = scatter(xs, ys, label="", xlims=[0,1], ylims=[0, 1], xgrid=false, ygrid=false,xaxis=false, yaxis=false)
+  p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1], xgrid=false, ygrid=false,xaxis=false, yaxis=false)
   title!(p1, "Day $(i)")
-  step!(model, agent_step!, 1)
+  step!(model, agent_step!, model_step!, 1)
 end
 gif(anim, "movement.gif", fps = 8);
 
