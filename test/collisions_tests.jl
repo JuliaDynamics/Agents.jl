@@ -1,6 +1,7 @@
 @testset "collisions" begin
 
 speed = 0.002
+dt = 1.0
 diameter = 0.015
 function model_initiation()
   Random.seed!(12345)
@@ -10,20 +11,28 @@ function model_initiation()
   ## Add initial individuals
   for ind in 1:100
     pos = Tuple(rand(2))
-    vel = sincos(2π*rand()) .* speed
-    add_agent!(pos, model, vel, diameter)
+    # these agents have infinite mass and 0 velocity. They are fixed.
+    if ind > 50
+      vel = sincos(2π*rand()) .* speed
+      mass = 1.33
+    else
+      vel = (0.0, 0.0)
+      mass = Inf
+    end
+
+    add_agent!(pos, model, vel, mass)
   end
   return model
 end
 
-agent_step!(agent, model) =  move_agent!(agent, model)
+agent_step!(agent, model) =  move_agent!(agent, model, dt)
 
 function model_step!(model)
   ipairs = interacting_pairs(model, diameter)
   for (a1, a2) in ipairs
-    e = elastic_collision!(a1, a2)
+    e = elastic_collision!(a1, a2, :weight)
     if e
-      model.properties[:c] += 2
+      model.properties[:c] += 1
     end
   end
 end
@@ -49,18 +58,20 @@ ipairs = interacting_pairs(model, diameter)
 @test length(ipairs) ≠ 0
 
 step!(model, agent_step!, model_step!, 10)
-x = count(!isapprox(initvels[id][1], id2agent(id, model).vel[1]) for id in 1:100)
-# x can never be odd here, because only pairs of agents can change their velocities
-@test iseven(x)
-# x should be the same as the amount of collisions that happened.
-# If not, some agent changes velocity outside of collision (which should not happen
-# in this model)
-@test x == model.properties[:c] # test that at least 10 agents have collided
+x = count(any(initvels[id] .≠ id2agent(id, model).vel) for id in 1:100)
 
+y = count(!any(initvels[id] .≈ id2agent(id, model).vel) for id in 1:50)
+@test y == 0
+
+
+# x should be at least the amount of collisions happened
+@test x > 0
+@test model.properties[:c] > 0
 K1, p1 = kinetic(model)
 @test K1 ≈ K0
-@test p1[1] ≈ p0[1]
-@test p1[2] ≈ p0[2]
+# The following test is valid for non-infinite masses only
+# @test p1[1] ≈ p0[1]
+# @test p1[2] ≈ p0[2]
 
 
 # using Plots
@@ -72,7 +83,7 @@ K1, p1 = kinetic(model)
 #   ys = [a.pos[2] for a in values(model.agents)];
 #   p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1], colorbar_title = "Agent ID")
 #   title!(p1, "step $(i)")
-#   step!(model, agent_step!, model_step!, 1)
+#   step!(model, agent_step!, model_step!, round(Int, 1/dt))
 #   println("step $i")
 # end
 # gif(anim, "movement.gif", fps = 45);

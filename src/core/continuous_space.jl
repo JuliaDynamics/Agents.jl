@@ -285,24 +285,41 @@ collision-after-collision.
 
 If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
 to weight the two agents for the collision. By default no weighting happens.
+
+One of the two agents can have infinite "mass", and then acts as an immovable object
+that specularly reflects the other agent. In this case of course momentum is not
+conserved, but kinetic energy is still conserved.
 """
 function elastic_collision!(a, b, f = nothing)
-  #TODO: Improve this function to not do anything if they don't face each other
-  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
-  # Check if disks face each other
-  r1 = x1 .- x2; r2 = x2 .- x1
-  !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
-  # They don't so do elastic collision according to
+  # Do elastic collision according to
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
   length(v1) != 2 && error("This function works only for two dimensions.")
+  r1 = x1 .- x2; r2 = x2 .- x1
+  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  # mass weights
+  m1 == m2 == Inf && return false
+  if m1 == Inf
+    dot(r1, v2) ≤ 0 && return false
+    v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 0.0, 2.0
+  elseif m2 == Inf
+    dot(r2, v1) ≤ 0 && return false
+    v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 2.0, 0.0
+  else
+    # Check if disks face each other, to avoid double collisions
+    !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+    f1 = (2m2/(m1+m2))
+    f2 = (2m1/(m1+m2))
+  end
   ken = norm(v1)^2 + norm(v2)^2
   dx = a.pos .- b.pos
   dv = a.vel .- b.vel
   n = norm(dx)^2
   n == 0 && return false # do nothing if they are at the same position
-  a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, r1) / n ) .* (r1)
-  b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, r2) / n ) .* (r2)
+  a.vel = v1 .- f1 .* ( dot(v1 .- v2, r1) / n ) .* (r1)
+  b.vel = v2 .- f2 .* ( dot(v2 .- v1, r2) / n ) .* (r2)
   return true
 end
 
