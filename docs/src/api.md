@@ -45,6 +45,7 @@ vertex2coord
 
 ## Continuous space exclusives
 ```@docs
+interacting_pairs
 nearest_neighbor
 elastic_collision!
 index!

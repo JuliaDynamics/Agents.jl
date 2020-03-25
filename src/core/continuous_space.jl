@@ -250,7 +250,7 @@ end
 #######################################################################################
 # Continuous space exclusive
 #######################################################################################
-export nearest_neighbor, elastic_collision!
+export nearest_neighbor, elastic_collision!, interacting_pairs
 
 """
     nearest_neighbor(agent, model, r) → nearest
@@ -259,7 +259,7 @@ space's metric.
 Valid only in continuous space.
 """
 function nearest_neighbor(agent, model, r)
-  n = space_neighbors(agent.pos, model, r)
+  n = space_neighbors(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
@@ -277,24 +277,86 @@ using LinearAlgebra
 """
     elastic_collision!(a, b, f = nothing)
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
-They are assumed to be circles of equal size touching tangentially.
+They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
 This function works only for two dimensions.
+Notice that collision only happens if both disks face each other, to avoid
+collision-after-collision.
 
 If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
 to weight the two agents for the collision. By default no weighting happens.
+
+One of the two agents can have infinite "mass", and then acts as an immovable object
+that specularly reflects the other agent. In this case of course momentum is not
+conserved, but kinetic energy is still conserved.
 """
 function elastic_collision!(a, b, f = nothing)
+  # Do elastic collision according to
   # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
   v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
   length(v1) != 2 && error("This function works only for two dimensions.")
+  r1 = x1 .- x2; r2 = x2 .- x1
+  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  # mass weights
+  m1 == m2 == Inf && return false
+  if m1 == Inf
+    dot(r1, v2) ≤ 0 && return false
+    v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 0.0, 2.0
+  elseif m2 == Inf
+    dot(r2, v1) ≤ 0 && return false
+    v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 2.0, 0.0
+  else
+    # Check if disks face each other, to avoid double collisions
+    !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+    f1 = (2m2/(m1+m2))
+    f2 = (2m1/(m1+m2))
+  end
   ken = norm(v1)^2 + norm(v2)^2
   dx = a.pos .- b.pos
   dv = a.vel .- b.vel
   n = norm(dx)^2
-  n == 0 && return # do nothing if they are at the same position
-  a.vel = v1 .- (2m2/(m1+m2)) .* ( dot(v1 .- v2, x1 .- x2) / n ) .* (x1 .- x2)
-  b.vel = v2 .- (2m1/(m1+m2)) .* ( dot(v2 .- v1, x2 .- x1) / n) .* (x2 .- x1)
-  return
+  n == 0 && return false # do nothing if they are at the same position
+  a.vel = v1 .- f1 .* ( dot(v1 .- v2, r1) / n ) .* (r1)
+  b.vel = v2 .- f2 .* ( dot(v2 .- v1, r2) / n ) .* (r2)
+  return true
+end
+
+"""
+    interacting_pairs(model, r)
+Return an iterator that yields pairs of agents `(a1, a2)` that are closest
+neighbors to each other, within some interaction radius `r`.
+
+This function is usefully combined with `model_step!`, when one wants to perform
+some pairwise interaction across all pairs of closest agents once
+(and does not want to trigger the event twice, both with `a1` and with `a2`, which
+is unavoidable when using `agent_step!`).
+
+Internally uses [`nearest_neighbor`](@ref).
+"""
+function interacting_pairs(model, r)
+  pairs = Tuple{Int, Int}[]
+  #TODO: This can be optimized further I assume
+  for id in keys(model.agents)
+    # Skip already checked agents
+    any(isequal(id), p[2] for p in pairs) && continue
+    a1 = id2agent(id, model)
+    a2 = nearest_neighbor(a1, model, r)
+    a2 ≠ nothing && push!(pairs, (id, a2.id))
+  end
+  return PairIterator(pairs, model.agents)
+end
+
+struct PairIterator{A}
+  pairs::Vector{Tuple{Int, Int}}
+  agents::Dict{Int, A}
+end
+
+Base.length(iter::PairIterator) = length(iter.pairs)
+function Base.iterate(iter::PairIterator, i = 1)
+  i > length(iter) && return nothing
+  p = iter.pairs[i]
+  id1, id2 = p
+  return (iter.agents[id1], iter.agents[id2]), i+1
 end
