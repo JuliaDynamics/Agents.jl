@@ -13,7 +13,7 @@ mutable struct DiscreteVelocity <: AbstractAgent
     vel::NTuple{2, Int}
     diameter::Float64
 end
-mutable struct ParametricAgent{T} <: AbstractAgent where {T <:Integer}
+mutable struct ParametricAgent{T <: Integer} <: AbstractAgent
     id::T
     pos::NTuple{2, T}
     weight::T
