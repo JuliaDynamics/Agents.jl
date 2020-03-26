@@ -105,9 +105,9 @@ function AgentBasedModel(
         agent::A, space::S = nothing;
         scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
-    agent_validator(A, space)
+    agent_validator(typeof(agent), space)
 
-    agents = Dict{Int, A}()
+    agents = Dict{Int, typeof(agent)}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
