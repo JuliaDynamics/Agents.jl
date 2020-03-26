@@ -15,6 +15,7 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   searchq::SQLite.Stmt
   deleteq::SQLite.Stmt
   updateq::SQLite.Stmt
+  searchqNoId::SQLite.Stmt
 end
 
 const COORDS = 'a':'z' # letters representing coordinates in database
@@ -50,8 +51,8 @@ function ContinuousSpace(D::Int, update_vel! = defvel;
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
-  db, q, q2, q3, q4 = prepare_database(D)
-  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4)
+  db, q, q2, q3, q4, q5 = prepare_database(D)
+  ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
 
 # Deprecate Space constructor
@@ -67,14 +68,17 @@ function prepare_database(D)
   insertstmt = "INSERT INTO tab ($(insertedxpression)id) VALUES ($(qmarks)?)"
   q = DBInterface.prepare(db, insertstmt)
   searchexpr = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
-  searchq = "SELECT id FROM tab WHERE $(searchexpr)"[1:end-4]
+  searchq = "SELECT id FROM tab WHERE $(searchexpr)id != ?"
   q2 = DBInterface.prepare(db, searchq)
   deleteq = "DELETE FROM tab WHERE id = ?"
   q3 = DBInterface.prepare(db, deleteq)
   updateexpr = strip(join("$x = ?," for x in COORDS[1:D]), ',')
   updateq = "UPDATE tab SET $updateexpr WHERE id = ?"
   q4 = DBInterface.prepare(db, updateq)
-  return db, q, q2, q3, q4
+  searchexpr2 = join("$x BETWEEN ? AND ? AND " for x in COORDS[1:D])
+  searchq2 = "SELECT id FROM tab WHERE $(searchexpr2)"[1:end-4]
+  q5 = DBInterface.prepare(db, searchq2)
+  return db, q, q2, q3, q4, q5
 end
 
 defvel(a, m) = nothing
@@ -215,13 +219,24 @@ end
 # filter!(...) where the filtering function checks distances w.r.t. `r`.
 """
     space_neighbors(pos::Tuple, model::ABM, r::Real)
-Return neighbours of a particular position `pos`, within radius `r` for any `SpaceType`.
+Return IDs of all agents within radius `r` from a particular position `pos` for any space.
 """
 function space_neighbors(pos::Tuple, model, r::Real)
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchq, res))
+  collect_ids(DBInterface.execute(model.space.searchqNoId, res))
+end
+
+"""
+    space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
+Return neighbours of a particular agent, within radius `r` for any space.
+"""
+function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
+  left = agent.pos .- r
+  right = agent.pos .+ r
+  res = interlace(left, right)
+  collect_ids(DBInterface.execute(model.space.searchq, (res...,agent.id)))
 end
 
 @generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
@@ -230,4 +245,118 @@ end
   quote
     tuple($(b...))
   end
+end
+
+#######################################################################################
+# Continuous space exclusive
+#######################################################################################
+export nearest_neighbor, elastic_collision!, interacting_pairs
+
+"""
+    nearest_neighbor(agent, model, r) → nearest
+Return the agent that has the closest distance to given `agent`, according to the
+space's metric.
+Valid only in continuous space.
+"""
+function nearest_neighbor(agent, model, r)
+  n = space_neighbors(agent, model, r)
+  length(n) == 0 && return nothing
+  d, j = Inf, 0
+  for i in 1:length(n)
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos)))
+    _, j = findmin(d)
+    if dnew < d
+      d, j = dnew, i
+    end
+  end
+  return id2agent(n[j], model)
+end
+
+using LinearAlgebra
+
+"""
+    elastic_collision!(a, b, f = nothing)
+Resolve a (hypothetical) elastic collision between the two agents `a, b`.
+They are assumed to be disks of equal size touching tangentially.
+Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
+This function works only for two dimensions.
+Notice that collision only happens if both disks face each other, to avoid
+collision-after-collision.
+
+If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
+to weight the two agents for the collision. By default no weighting happens.
+
+One of the two agents can have infinite "mass", and then acts as an immovable object
+that specularly reflects the other agent. In this case of course momentum is not
+conserved, but kinetic energy is still conserved.
+"""
+function elastic_collision!(a, b, f = nothing)
+  # Do elastic collision according to
+  # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
+  length(v1) != 2 && error("This function works only for two dimensions.")
+  r1 = x1 .- x2; r2 = x2 .- x1
+  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  # mass weights
+  m1 == m2 == Inf && return false
+  if m1 == Inf
+    dot(r1, v2) ≤ 0 && return false
+    v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 0.0, 2.0
+  elseif m2 == Inf
+    dot(r2, v1) ≤ 0 && return false
+    v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 2.0, 0.0
+  else
+    # Check if disks face each other, to avoid double collisions
+    !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+    f1 = (2m2/(m1+m2))
+    f2 = (2m1/(m1+m2))
+  end
+  ken = norm(v1)^2 + norm(v2)^2
+  dx = a.pos .- b.pos
+  dv = a.vel .- b.vel
+  n = norm(dx)^2
+  n == 0 && return false # do nothing if they are at the same position
+  a.vel = v1 .- f1 .* ( dot(v1 .- v2, r1) / n ) .* (r1)
+  b.vel = v2 .- f2 .* ( dot(v2 .- v1, r2) / n ) .* (r2)
+  return true
+end
+
+"""
+    interacting_pairs(model, r)
+Return an iterator that yields pairs of agents `(a1, a2)` that are closest
+neighbors to each other, within some interaction radius `r`.
+
+This function is usefully combined with `model_step!`, when one wants to perform
+some pairwise interaction across all pairs of closest agents once
+(and does not want to trigger the event twice, both with `a1` and with `a2`, which
+is unavoidable when using `agent_step!`).
+
+Internally uses [`nearest_neighbor`](@ref).
+"""
+function interacting_pairs(model, r)
+  pairs = Tuple{Int, Int}[]
+  #TODO: This can be optimized further I assume
+  for id in keys(model.agents)
+    # Skip already checked agents
+    any(isequal(id), p[2] for p in pairs) && continue
+    a1 = id2agent(id, model)
+    a2 = nearest_neighbor(a1, model, r)
+    a2 ≠ nothing && push!(pairs, (id, a2.id))
+  end
+  return PairIterator(pairs, model.agents)
+end
+
+struct PairIterator{A}
+  pairs::Vector{Tuple{Int, Int}}
+  agents::Dict{Int, A}
+end
+
+Base.length(iter::PairIterator) = length(iter.pairs)
+function Base.iterate(iter::PairIterator, i = 1)
+  i > length(iter) && return nothing
+  p = iter.pairs[i]
+  id1, id2 = p
+  return (iter.agents[id1], iter.agents[id2]), i+1
 end

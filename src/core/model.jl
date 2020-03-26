@@ -1,6 +1,6 @@
 export nagents, AbstractAgent, ABM, AgentBasedModel,
 random_activation, by_id, fastest, partial_activation, random_agent,
-property_activation, pos_vertex
+property_activation, allagents
 
 abstract type AbstractSpace end
 
@@ -144,6 +144,11 @@ Return the number of agents in the `model`.
 """
 nagents(model::ABM) = length(model.agents)
 
+"""
+    allagents(model)
+Return an iterator over all agents of the model.
+"""
+allagents(model) = values(model.agents)
 
 ####################################
 # Schedulers
