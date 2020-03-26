@@ -20,7 +20,7 @@
 # they have a `pos` and `vel` fields, both of which are tuples of float numbers.
 
 using Agents, Random, AgentsPlots, Plots
-
+cd(@__DIR__) #src
 mutable struct Agent <: AbstractAgent
     id::Int
     pos::NTuple{2, Float64}
