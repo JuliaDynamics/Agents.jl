@@ -2,11 +2,11 @@
 
 using Agents, Random, Plots
 
-mutable struct Agent{D, F<:AbstractFloat} <: AbstractAgent
+mutable struct Agent <: AbstractAgent
   id::Int
-  pos::NTuple{D, F}
-  vel::NTuple{D, F}
-  diameter::F
+  pos::NTuple{2, Float64}
+  vel::NTuple{2, Float64}
+  diameter::Float64
   moved::Bool
 end
 
