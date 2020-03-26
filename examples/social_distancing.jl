@@ -36,7 +36,7 @@ function ball_model(; speed = 0.002)
     space2d = ContinuousSpace(2; periodic = true, extend = (1, 1))
     model = ABM(Agent, space2d, properties = Dict(:dt => 1.0));
 
-    # And add some agents to the model
+    ## And add some agents to the model
     Random.seed!(42)
     for ind in 1:500
         pos = Tuple(rand(2))
@@ -99,7 +99,7 @@ gif(anim, "socialdist2.gif", fps = 45);
 
 # Alright, this works great so far!
 
-# !!! warn "Agents.jl is not a billiards simulator!"
+# !!! warning "Agents.jl is not a billiards simulator!"
 #     Please understand that Agents.jl does not accurately simulate billiard systems.
 #     This is the job of Julia packages [HardSphereDynamics.jl](https://github.com/JuliaDynamics/HardSphereDynamics.jl)
 #     or [DynamicalBilliards.jl](https://juliadynamics.github.io/DynamicalBilliards.jl/dev/).
@@ -190,8 +190,8 @@ function sir_initiation(;
         mass = isisolated ? Inf : 1.0
         vel = isisolated ? (0.0, 0.0) : sincos(2π*rand()) .* speed
 
-        # very high transmission probability
-        # we are modelling close encounters after all
+        ## very high transmission probability
+        ## we are modelling close encounters after all
         β = (βmax-βmin)*rand() + βmin
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
