@@ -303,9 +303,9 @@ data1[end-10:end, :]
 
 # Now, we can plot the number of infected versus time
 
-p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β1")
-plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, βmin=$β1")
-plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β2")
+p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, beta=$β1")
+plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, beta=$β1")
+plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, beta=$β2")
 yaxis!(p, "Infected")
 p
 
@@ -342,7 +342,7 @@ sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated 
 
 data4 = step!(sir_model4, sir_agent_step!, sir_model_step!, 2000, propert)
 
-plot!(p, data4[:, Symbol("infected(status)")], label = "r=$r4, βmin=$β1, isol=0.8%")
+plot!(p, data4[:, Symbol("infected(status)")], label = "r=$r4, social distancing")
 p
 
 # Here you can see the characteristic "flatten the curve" phrase you hear all over the
