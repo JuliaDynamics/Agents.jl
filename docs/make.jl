@@ -10,6 +10,10 @@ using AgentsPlots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
+println("Agents status:")
+Pkg.status("Agents")
+
+println("AgentsPlots status:")
 Pkg.status("AgentsPlots")
 
 # %% Literate convertion
