@@ -33,10 +33,10 @@
 using Agents
 using Statistics: mean
 
-mutable struct HKAgent{T <: AbstractFloat} <: AbstractAgent
+mutable struct HKAgent <: AbstractAgent
     id::Int
-    old_opinion::T
-    new_opinion::T
+    old_opinion::Float64
+    new_opinion::Float64
 end
 
 function hk_model(;numagents = 100, ϵ = 0.4)

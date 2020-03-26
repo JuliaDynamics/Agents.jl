@@ -26,10 +26,10 @@ end
 ```
 while for e.g. a [`ContinuousSpace`](@ref) we would use
 ```julia
-mutable struct ExampleAgent{D} <: AbstractAgent
+mutable struct ExampleAgent <: AbstractAgent
     id::Int
-    pos::NTuple{D, Float64}
-    vel::NTuple{D, Float64}
+    pos::NTuple{2, Float64}
+    vel::NTuple{2, Float64}
     weight::Float64
     happy::Bool
 end
