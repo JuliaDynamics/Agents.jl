@@ -14,7 +14,7 @@ version = "2.4.0"
 
 [[AgentsPlots]]
 deps = ["Agents", "GraphRecipes", "LightGraphs", "Plots"]
-git-tree-sha1 = "4561cd0180f0e6eb8ae9bf6dea93267f4fa25557"
+git-tree-sha1 = "cb05c9c964275a5cd1ced30fcae1e2667562739b"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaDynamics/AgentsPlots.jl.git"
 uuid = "7820620d-95fb-4739-93b3-b0a14dd83f9a"
