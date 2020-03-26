@@ -13,12 +13,11 @@ mutable struct DiscreteVelocity <: AbstractAgent
     vel::NTuple{2, Int}
     diameter::Float64
 end
-mutable struct AmbiguousAgent <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Int}
-    # The following types are abstract
-    weight::Real
-    info::AbstractString
+mutable struct ParametricAgent{T} <: AbstractAgent where {T <:Integer}
+    id::T
+    pos::NTuple{2, T}
+    weight::T
+    info::String
 end
 
 @testset "Model construction" begin
@@ -52,10 +51,13 @@ end
     @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace(2))
     agent = DiscreteVelocity(1, (1,1), (2,3), 2.4)
     @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
-    # Cannot use AmbiguousAgent since it is not a concrete type
-    @test_throws ArgumentError ABM(AmbiguousAgent, GridSpace((1,1)))
-    agent = AmbiguousAgent(1, (1,1), 4.9, "Info")
-    @test_throws ArgumentError ABM(agent, GridSpace((1,1)))
+    # Cannot use ParametricAgent since it is not a concrete type
+    @test_throws ArgumentError ABM(ParametricAgent, GridSpace((1,1)))
+    # ParametricAgent{Int} is the correct way to use such an agent
+    @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1,1)))) <: AbstractAgent
+    #Type inferance using an instance can help users here
+    agent = ParametricAgent(1, (1,1), 5, "Info")
+    @test Agents.agenttype(ABM(agent, GridSpace((1,1)))) <: AbstractAgent
 end
 
 model1 = ABM(Agent1, GridSpace((3,3)))

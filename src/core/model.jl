@@ -85,7 +85,7 @@ function AgentBasedModel(
 end
 
 """
-    AgentBasedModel(agent [, space]; scheduler, properties)
+    AgentBasedModel(agent_instance [, space]; scheduler, properties)
 Similar to the constructor above, but created via an instance of your agent.
 
 ```julia
@@ -97,7 +97,7 @@ agent = YourAgent(1, (1,1))
 model = AgentBasedModel(agent, GridSpace((10,10))
 ```
 
-Note that the specific values you use when creating `agent` are not important and wont be used here.
+Note that the specific values you use when creating `agent_instance` are not important and wont be used here.
 This process just helps Agents.jl do some performance checks for you, if you're not that familiar with
 Julia's type system.
 """
@@ -107,7 +107,7 @@ function AgentBasedModel(
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agent_validator(typeof(agent), space)
 
-    agents = Dict{Int, typeof(agent)}()
+    agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
@@ -132,39 +132,30 @@ Checks for mutability and existence and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
-    if VERSION < v"1.1"
-        isconcrete = true
-        for f in 1:fieldcount(A)
-            if !isconcretetype(fieldtype(A, f))
-                isconcrete = false
-                break
-            end
-        end
-    else
-        iscontrete = all(isconcretetype, fieldtypes(A))
-    end
-    isconcrete || throw(ArgumentError("Agent struct must be a concrete type. If your agent is parametrically typed, this probably happened because you gave `Agent` instead of `Agent{T}` to this function. You can also create and instance of your agent and pass it to this function."))
+    isconcretetype(A) || throw(ArgumentError("Agent struct must be a concrete type. If your agent is parametrically typed, this probably happened because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function."))
     isbitstype(A) && throw(ArgumentError("Agent struct must be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."))
-    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Integer`)."))
+    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     if space != nothing
-        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct be `pos` when using a space (it should be of type `NTuple{Integer}`)."))
+        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
         if space_type <: GraphSpace && !(pos_type <: Integer)
-            throw(ArgumentError("`pos` field in Agent struct must be of type `Integer` when using GraphSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Integer}` when using GridSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace
-            # `vel` field in A must be checked alongside `pos`
-            any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace (it should be of type `NTuple{AbstractFloat}`)."))
-            vel_type = fieldtype(A, :vel)
-            if !(pos_type <: NTuple{D, <:AbstractFloat} where {D}) && !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
-            elseif !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
-            elseif !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`vel` field in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
+            if any(isequal(:vel), fieldnames(A))
+                # `vel` field in A must be checked alongside `pos`
+                vel_type = fieldtype(A, :vel)
+                if !(pos_type <: NTuple{D, <:AbstractFloat} where {D}) && !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
+                    throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+                elseif !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
+                    throw(ArgumentError("`vel` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+                end
+            end
+            if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
+                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
         end
     end
