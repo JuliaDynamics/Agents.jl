@@ -132,7 +132,18 @@ Checks for mutability and existence and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
-    all(isconcretetype, fieldtypes(A)) || throw(ArgumentError("Agent struct must be a concrete type. If your agent is parametrically typed, this probably happened because you gave `Agent` instead of `Agent{T}` to this function. You can also create and instance of your agent and pass it to this function."))
+    if VERSION < v"1.1"
+        isconcrete = true
+        for f in 1:fieldcount(A)
+            if !isconcretetype(fieldtype(A, f))
+                isconcrete = false
+                break
+            end
+        end
+    else
+        iscontrete = all(isconcretetype, fieldtypes(A))
+    end
+    isconcrete || throw(ArgumentError("Agent struct must be a concrete type. If your agent is parametrically typed, this probably happened because you gave `Agent` instead of `Agent{T}` to this function. You can also create and instance of your agent and pass it to this function."))
     isbitstype(A) && throw(ArgumentError("Agent struct must be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."))
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Integer`)."))
     if space != nothing
