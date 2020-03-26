@@ -21,7 +21,7 @@ end
 const COORDS = 'a':'z' # letters representing coordinates in database
 
 """
-    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = true, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -36,13 +36,13 @@ By default no update is done this way.
 
 ## Keywords
 
-* `periodic = false` : whether continuous space is periodic or not
+* `periodic = true` : whether continuous space is periodic or not
 * `extend::NTuple{D} = ones` : Extend of space. The `d` dimension starts at 0
   and ends at `extend[d]`. If `periodic = true`, this is also when
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
-  periodic = false, extend = ntuple(one, D), metric = "cityblock")
+  periodic = true, extend = ntuple(one, D), metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors
   @assert metric ∈ ("cityblock", "euclidean")

@@ -61,7 +61,7 @@ agent_step!(agent, model) =  move_agent!(agent, model, model.properties[:dt])
 # Cool, let's see now how this model evolves.
 
 anim = @animate for i ∈ 1:1000
-    p1 = plotabm(model)
+    p1 = plotabm(model, as = 4)
     title!(p1, "step $(i)")
     step!(model, agent_step!, 1)
 end
@@ -204,8 +204,8 @@ end
 # correspond to one day (since the parameters we used in the previous graph SIR example
 # were given in days).
 
-# To visualize this model, we will use different colors for the infected, recovered
-# and susceptible, leveraging [`plotabm`](@ref).
+# To visualize this model, we will use black color for the susceptiblue, red for
+# the infected infected and green for the recovered, leveraging [`plotabm`](@ref).
 
 sir_model = sir_initiation()
 
@@ -276,6 +276,7 @@ anim = @animate for i ∈ 1:1000
 end
 gif(anim, "socialdist4.gif", fps = 45);
 
+# ![](socialdist4.gif)
 
 # ## Exponential spread
 # Alright, we can all agree that these animations are cool, but let's do some actual
@@ -302,11 +303,11 @@ data1[end-10:end, :]
 
 # Now, we can plot the number of infected versus time
 
-p1 = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β1")
-plot!(data2[:, Symbol("infected(status)")], label = "r=$r2, βmin=$β1")
-plot!(data3[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β2")
-yaxis!(p1, "Infected")
-p1
+p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β1")
+plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, βmin=$β1")
+plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, βmin=$β2")
+yaxis!(p, "Infected")
+p
 
 # The exponential growth is quite clear in all cases.
 
@@ -341,9 +342,8 @@ sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated 
 
 data4 = step!(sir_model4, sir_agent_step!, sir_model_step!, 2000, propert)
 
-plot!(data4[:, Symbol("infected(status)")], label = "r=$r4, βmin=$β1, isol=0.8%")
-yaxis!(p1, "Infected")
-p1
+plot!(p, data4[:, Symbol("infected(status)")], label = "r=$r4, βmin=$β1, isol=0.8%")
+p
 
 # Here you can see the characteristic "flatten the curve" phrase you hear all over the
 # news.
