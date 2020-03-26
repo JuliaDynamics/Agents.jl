@@ -42,7 +42,7 @@ By default no update is done this way.
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
-  periodic = true, extend = ntuple(one, D), metric = "cityblock")
+  periodic = true, extend = Tuple(1.0 for i in 1:D), metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors
   @assert metric ∈ ("cityblock", "euclidean")

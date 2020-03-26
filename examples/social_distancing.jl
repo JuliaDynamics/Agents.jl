@@ -128,7 +128,7 @@ end
 # let's animate this again
 
 anim = @animate for i ∈ 1:1000
-    p1 = plotabm(model3)
+    p1 = plotabm(model3, as = 4)
     title!(p1, "step $(i)")
     step!(model3, agent_step!, model_step!, 1)
 end
@@ -178,7 +178,7 @@ function sir_initiation(;
         infection_period, reinfection_probability,
         detection_time, death_rate, interaction_radius, dt,
     )
-    space = ContinuousSpace(2; periodic = true)
+    space = ContinuousSpace(2)
     model = ABM(PoorSoul, space, properties=properties)
 
     ## Add initial individuals
