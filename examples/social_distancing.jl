@@ -76,7 +76,7 @@ gif(anim, "socialdist1.gif", fps = 45);
 # We will model the agents as balls that collide with each other.
 # To this end, we will use two functions from the continuous space API:
 # 1. [`interacting_pairs`](@ref)
-# 1. [`elastic_collision`](@ref)
+# 1. [`elastic_collision!`](@ref)
 
 # We want all agents to interact in one go, and we want to avoid double interactions
 # (as instructed by [`interacting_pairs`](@ref)), so we define a model step
@@ -114,7 +114,7 @@ gif(anim, "socialdist2.gif", fps = 45);
 # ## Immovable agents
 # For the following social distancing example, it will become crucial that some
 # agents don't move, and can't be moved (i.e. they stay "isolated"). This is
-# very easy to do with the [`elastic_collision!`] function, we only have to make
+# very easy to do with the [`elastic_collision!`](@ref) function, we only have to make
 # some agents have infinite mass
 
 model3 = ball_model()

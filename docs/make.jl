@@ -2,6 +2,7 @@ using Pkg
 Pkg.activate(@__DIR__)
 cd(@__DIR__)
 Pkg.update()
+Pkg.develop("Agents")
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using Literate
 using UnicodePlots
