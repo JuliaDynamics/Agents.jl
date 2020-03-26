@@ -303,9 +303,9 @@ data1[end-10:end, :]
 
 # Now, we can plot the number of infected versus time
 
-p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, beta=$β1")
-plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, beta=$β1")
-plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, beta=$β2")
+p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, β=$β1")
+plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, β=$β1")
+plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, β=$β2")
 yaxis!(p, "Infected")
 p
 

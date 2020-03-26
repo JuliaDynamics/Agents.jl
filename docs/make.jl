@@ -10,6 +10,7 @@ using AgentsPlots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
+ENV["GKS_ENCODING"]="utf-8"
 println("Agents status:")
 Pkg.status("Agents")
 
