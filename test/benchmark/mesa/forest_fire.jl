@@ -4,10 +4,10 @@
 using Agents
 using Random
 
-mutable struct Tree{T<:Integer} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::T  # 1: green, 2: burning, 3: burned
+mutable struct Tree <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  status::Int  # 1: green, 2: burning, 3: burned
 end
 
 # we can put the model initiation in a function

@@ -8,7 +8,7 @@ version = "0.3.2"
 
 [[Agents]]
 deps = ["DataFrames", "Distributed", "LightGraphs", "LinearAlgebra", "Random", "SQLite", "StatsBase", "Test"]
-git-tree-sha1 = "19b10c9ae64d47a5112cede56af2256724579a2d"
+git-tree-sha1 = "b790a13ebe3bd479ce6e5f338a665e790f58437a"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaDynamics/Agents.jl.git"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
