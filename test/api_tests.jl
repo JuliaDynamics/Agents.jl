@@ -13,24 +13,49 @@ mutable struct DiscreteVelocity <: AbstractAgent
     vel::NTuple{2, Int}
     diameter::Float64
 end
+mutable struct AmbiguousAgent <: AbstractAgent
+    id::Int
+    pos::NTuple{2, Int}
+    # The following types are abstract
+    weight::Real
+    info::AbstractString
+end
 
 @testset "Model construction" begin
     # Cannot use ImmutableAgent since it cannot be edited
     @test_throws ArgumentError ABM(ImmutableAgent)
+    agent = ImmutableAgent(1)
+    @test_throws ArgumentError ABM(agent)
     # Cannot use BadAgent since it has no `id` field
     @test_throws ArgumentError ABM(BadAgent)
+    agent = BadAgent(1,1)
+    @test_throws ArgumentError ABM(agent)
     # Cannot use BadAgent in a grid space context since `pos` has an invalid type
     @test_throws ArgumentError ABM(BadAgent, GridSpace((1,1)))
+    @test_throws ArgumentError ABM(agent, GridSpace((1,1)))
     # Cannot use Agent0 in a grid space context since it has no `pos` field
     @test_throws ArgumentError ABM(Agent0, GridSpace((1,1)))
+    agent = Agent0(1)
+    @test_throws ArgumentError ABM(agent, GridSpace((1,1)))
     # Cannot use Agent3 in a graph space context since `pos` has an invalid type
     @test_throws ArgumentError ABM(Agent3, GraphSpace(Agents.Graph(1)))
+    agent = Agent3(1, (1,1), 5.3)
+    @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)))
     # Cannot use Agent3 in a continuous space context since `pos` has an invalid type
     @test_throws ArgumentError ABM(Agent3, ContinuousSpace(2))
+    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
     # Cannot use Agent4 in a continuous space context since it has no `vel` field
     @test_throws ArgumentError ABM(Agent4, ContinuousSpace(2))
+    agent = Agent4(1, (1,1), 5)
+    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
     # Cannot use DiscreteVelocity in a continuous space context since `vel` has an invalid type
     @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace(2))
+    agent = DiscreteVelocity(1, (1,1), (2,3), 2.4)
+    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
+    # Cannot use AmbiguousAgent since it is not a concrete type
+    @test_throws ArgumentError ABM(AmbiguousAgent, GridSpace((1,1)))
+    agent = AmbiguousAgent(1, (1,1), 4.9, "Info")
+    @test_throws ArgumentError ABM(agent, GridSpace((1,1)))
 end
 
 model1 = ABM(Agent1, GridSpace((3,3)))

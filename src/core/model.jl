@@ -66,8 +66,8 @@ agent IDs, while the values are the agents themselves.
 It is recommended however to use [`id2agent`](@ref) to get an agent.
 
 `space` can be omitted, in which it will equal to `nothing`.
-This means that all agents are virtualy in one node and have no spatial structure.
-If space is omitted, some functions that fascilitate agent-space interactions will not work.
+This means that all agents are virtually in one node and have no spatial structure.
+If space is omitted, some functions that facilitate agent-space interactions will not work.
 
 Optionally provide a `scheduler` that creates the order with which agents
 are activated in the model, and `properties`
@@ -76,6 +76,33 @@ This is accessed as `model.properties` for later use.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
+        scheduler::F = fastest, properties::P = nothing
+        ) where {A<:AbstractAgent, S<:SpaceType, F, P}
+    agent_validator(A, space)
+
+    agents = Dict{Int, A}()
+    return ABM{A, S, F, P}(agents, space, scheduler, properties)
+end
+
+"""
+    AgentBasedModel(agent [, space]; scheduler, properties)
+Similar to the constructor above, but created via an instance of your agent.
+
+```julia
+mutable struct YourAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+end
+agent = YourAgent(1, (1,1))
+model = AgentBasedModel(agent, GridSpace((10,10))
+```
+
+Note that the specific values you use when creating `agent` are not important and wont be used here.
+This process just helps Agents.jl do some performance checks for you, if you're not that familiar with
+Julia's type system.
+"""
+function AgentBasedModel(
+        agent::A, space::S = nothing;
         scheduler::F = fastest, properties::P = nothing
         ) where {A<:AbstractAgent, S<:SpaceType, F, P}
     agent_validator(A, space)
@@ -101,32 +128,32 @@ end
 """
     agent_validator(agent, space)
 Validate the user supplied agent (subtype of `AbstractAgent`).
-Checks for mutability and existance and correct types for fields depending on `SpaceType`.
+Checks for mutability and existence and correct types for fields depending on `SpaceType`.
 """
 function agent_validator(::Type{A}, space::S) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
-    isconcretetype(A) || throw(ArgumentError("Agent struct must be a concrete type"))
-    isbitstype(A) && throw(ArgumentError("Agent struct must be mutable"))
-    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id`"))
+    all(isconcretetype, fieldtypes(A)) || throw(ArgumentError("Agent struct must be a concrete type. If your agent is parametrically typed, this probably happened because you gave `Agent` instead of `Agent{T}` to this function. You can also create and instance of your agent and pass it to this function."))
+    isbitstype(A) && throw(ArgumentError("Agent struct must be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."))
+    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Integer`)."))
     if space != nothing
-        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct be `pos` when using a space"))
+        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct be `pos` when using a space (it should be of type `NTuple{Integer}`)."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
         if space_type <: GraphSpace && !(pos_type <: Integer)
-            throw(ArgumentError("`pos` field in Agent struct must be of type Int when using GraphSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `Integer` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Int} when using GridSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Integer}` when using GridSpace."))
         elseif space_type <: ContinuousSpace
             # `vel` field in A must be checked alongside `pos`
-            any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace"))
+            any(isequal(:vel), fieldnames(A)) || throw(ArgumentError("Agent struct must have a `vel` field when using ContinuousSpace (it should be of type `NTuple{AbstractFloat}`)."))
             vel_type = fieldtype(A, :vel)
             if !(pos_type <: NTuple{D, <:AbstractFloat} where {D}) && !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+                throw(ArgumentError("`pos` and `vel` fields in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
             elseif !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
             elseif !(vel_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`vel` field in Agent struct must be of type NTuple{Float64} when using ContinuousSpace."))
+                throw(ArgumentError("`vel` field in Agent struct must be of type `NTuple{AbstractFloat}` when using ContinuousSpace."))
             end
         end
     end
