@@ -7,7 +7,7 @@ Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynami
 To get started, please read the [Tutorial](@ref) page.
 
 !!! info "Latest news"
-    You are currently reading the _development_ version of the documentation, which is being prepared for Agents.jl 3.0. In this major release we have full support for agent based models on [`ContinuousSpace`](@ref), but have not yet finished development. See the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for a full list of changes.
+    You are currently reading the _development_ version of the documentation, which is being prepared for Agents.jl 3.0. In this major release we have full support for agent based models on [`ContinuousSpace`](@ref), but have not yet finished development. See the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for a full list of changes. This documentation only makes sense if you use `master` version for `Agents` and `AgentsPlots`.
 
 ## Features
 
