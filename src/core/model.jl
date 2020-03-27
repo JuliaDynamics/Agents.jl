@@ -52,43 +52,29 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     scheduler::F
     properties::P
 end
-const ABM = AgentBasedModel
 agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
 
 """
-    AgentBasedModel(agent_type [, space]; scheduler, properties, warn)
-Create an agent based model from the given agent type,
-and the `space` (from [Space](@ref Space)).
-`ABM` is equivalent with `AgentBasedModel`.
+    AgentBasedModel(AgentType [, space]; scheduler, properties, warn)
+Create an agent based model from the given agent type
+and the `space`.
+You can provide an agent _instance_ instead of type, and the type will be
+deduced. `ABM` is equivalent with `AgentBasedModel`.
 The agents are stored in a dictionary `model.agents`, where the keys are the
 agent IDs, while the values are the agents themselves.
 It is recommended however to use [`id2agent`](@ref) to get an agent.
 
-`space` can be omitted, in which it will equal to `nothing`.
-This means that all agents are virtually in one node and have no spatial structure.
+`space` can be omitted, which means that all agents are virtually in one node
+and have no spatial structure.
 If space is omitted, some functions that facilitate agent-space interactions will not work.
 
-Optionally provide a `scheduler` that creates the order with which agents
+Optionally provide a `scheduler` that decides the order with which agents
 are activated in the model, and `properties`
 for additional model-level properties.
 This is accessed as `model.properties` for later use.
 
-There are a number of checks done against `agent_type`. If you wish to ignore these warnings
-set `warn = false`. Note that doing this has the potential of dramatically decreasing the performance
-of your model. An appropriate time to use this flag is when creating a mixed ABM with multiple agents:
-
-```julia
-mutable struct Tree <: AbstractAgent
-...
-end
-
-mutable struct Woodcutter <: AbstractAgent
-...
-end
-
-model = ABM(Union{Tree, Woodcutter}, GridSpace((10,10); warn=false)
-```
+Type tests for `AgentType` are done, use `warn=false` to silence them.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
@@ -99,24 +85,8 @@ function AgentBasedModel(
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
+const ABM = AgentBasedModel
 
-"""
-    AgentBasedModel(agent_instance [, space]; scheduler, properties)
-Similar to the constructor above, but created via an instance of your agent.
-
-```julia
-mutable struct YourAgent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int, Int}
-end
-agent = YourAgent(1, (1,1))
-model = AgentBasedModel(agent, GridSpace((10,10))
-```
-
-Note that the specific values you use when creating `agent_instance` are not important and wont be used here.
-This process just helps Agents.jl do some performance checks for you, if you're not that familiar with
-Julia's type system.
-"""
 function AgentBasedModel(
         agent::A, space::S = nothing;
         scheduler::F = fastest, properties::P = nothing, warn = true
@@ -149,7 +119,7 @@ Checks for mutability and existence and correct types for fields depending on `S
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
     if warn
-        isconcretetype(A) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function."
+        isconcretetype(A) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning."
         isbitstype(A) && @warn "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
