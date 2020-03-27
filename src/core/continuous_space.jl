@@ -21,7 +21,7 @@ end
 const COORDS = 'a':'z' # letters representing coordinates in database
 
 """
-    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = false, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = true, extend = nothing, metric = "cityblock")
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
@@ -36,18 +36,17 @@ By default no update is done this way.
 
 ## Keywords
 
-* `periodic = false` : whether continuous space is periodic or not
-* `extend = nothing` : currently only useful in periodic space. If `periodic = true`
-  `extend` must be a `NTuple{D}`, where each entry is the extent of each dimension
-  (after which periodicity happens. All dimensions start at 0).
-
+* `periodic = true` : whether continuous space is periodic or not
+* `extend::NTuple{D} = ones` : Extend of space. The `d` dimension starts at 0
+  and ends at `extend[d]`. If `periodic = true`, this is also when
+  periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
-  periodic = false, extend = nothing, metric = "cityblock")
+  periodic = true, extend = Tuple(1.0 for i in 1:D), metric = "cityblock")
 
   # TODO: implement using different metrics in space_neighbors
   @assert metric ∈ ("cityblock", "euclidean")
-  periodic && @assert typeof(extend) <: NTuple{D} "`extend` must be ::NTuple{D} for periodic"
+
   # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
   # (improve to do this `move_agent!`)
 
@@ -300,10 +299,12 @@ function elastic_collision!(a, b, f = nothing)
   # mass weights
   m1 == m2 == Inf && return false
   if m1 == Inf
+    @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
     dot(r1, v2) ≤ 0 && return false
     v1 = ntuple(x -> zero(eltype(v1)), length(v1))
     f1, f2 = 0.0, 2.0
   elseif m2 == Inf
+    @assert v2 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
     dot(r2, v1) ≤ 0 && return false
     v2 = ntuple(x -> zero(eltype(v1)), length(v1))
     f1, f2 = 2.0, 0.0

@@ -1,6 +1,7 @@
 using Pkg
 Pkg.activate(@__DIR__)
 cd(@__DIR__)
+Pkg.update()
 
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using Literate
@@ -10,13 +11,18 @@ using AgentsPlots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
+ENV["GKS_ENCODING"]="utf-8"
+println("Agents status:")
+Pkg.status("Agents")
+
+println("AgentsPlots status:")
+Pkg.status("AgentsPlots")
+
 # %% Literate convertion
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
 for file in readdir(indir)
-    # This example is not yet ready
-    file == "continuous_space.jl" && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -54,6 +60,7 @@ pages = [
     "Examples" => [
         "Schelling's segregation model" => "examples/schelling.md",
         "SIR model for the spread of COVID-19" => "examples/sir.md",
+        "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
         "Wealth distribution" => "examples/wealth_distribution.md",
         "Forest fire" => "examples/forest_fire.md",
         "Game of life" => "examples/game_of_life_2D_CA.md",
