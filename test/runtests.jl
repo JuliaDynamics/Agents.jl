@@ -1,4 +1,4 @@
-using Test, Agents, Random, SQLite, DataFrames
+using Test, Agents, Random, LightGraphs, SQLite, DataFrames
 
 mutable struct Agent0 <: AbstractAgent
   id::Int

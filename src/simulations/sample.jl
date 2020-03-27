@@ -51,7 +51,7 @@ function clean_space!(model::ABM)
             model.space.agent_positions[node] = Int[]
         end
         for (k, v) in model.agents
-            push!(model.space.agent_positions[coord2vertex(v.pos, model)], v.id)
+            push!(get_node_contents(v,model), v.id)
         end
     end
 end

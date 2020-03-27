@@ -1,5 +1,3 @@
-using Agents, Test, Random
-
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
@@ -78,16 +76,15 @@ model1 = ABM(Agent1, GridSpace((3,3)))
 agent = add_agent!((1,1), model1)
 @test agent.pos == (1, 1)
 @test agent.id == 1
-pos1 = model1.space.agent_positions[coord2vertex((1,1), model1)]
+pos1 = get_node_contents((1,1), model1)
 @test length(pos1) == 1
 @test pos1[1] == 1
 
 move_agent!(agent, (2,2), model1)
-
 @test agent.pos == (2,2)
-pos1 = model1.space.agent_positions[coord2vertex((1,1), model1)]
+pos1 = get_node_contents((1,1), model1)
 @test length(pos1) == 0
-pos2 = model1.space.agent_positions[coord2vertex((2,2), model1)]
+pos2 = get_node_contents((2,2), model1)
 @test pos2[1] == 1
 
 # %% Scheduler tests
@@ -163,6 +160,76 @@ properties = [model.agents[id].weight for id in ids]
 
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
+end
+
+@testset "move_agent!" begin
+  # GraphSpace
+  model = ABM(Agent5, GraphSpace(path_graph(6)))
+  agent = add_agent!(model, 5.3)
+  init_pos = agent.pos
+  # Checking specific indexing
+  move_agent!(agent, rand([i for i in 1:6 if i != init_pos]), model)
+  new_pos = agent.pos
+  @test new_pos != init_pos
+  # Checking a random move
+  move_agent!(agent, model)
+  @test agent.pos != new_pos
+
+  # GridSpace
+  model = ABM(Agent1, GridSpace((5,5)))
+  agent = add_agent!((2,4), model)
+  move_agent!(agent, (1,3), model)
+  @test agent.pos == (1,3)
+  move_agent!(agent, model)
+  @test agent.pos != (1,3)
+  model = ABM(Agent1, GridSpace((2,1)))
+  agent = add_agent!((1,1), model)
+  move_agent_single!(agent, model)
+  @test agent.pos == (2,1)
+  agent2 = add_agent!((1,1), model)
+  move_agent_single!(agent2, model)
+  # Agent shouldn't move since the grid is saturated
+  @test agent2.pos == (1,1)
+
+  # ContinuousSpace
+  model = ABM(Agent6, ContinuousSpace(2))
+  agent = add_agent!((0.0,0.0), model, (1.0,0.0), 1.0)
+  move_agent!(agent, model)
+  @test agent.pos == (1.0,0.0)
+end
+
+@testset "kill_agent!" begin
+  # No Space
+  model = ABM(Agent0)
+  add_agent!(model)
+  agent = add_agent!(model)
+  @test nagents(model) == 2
+  kill_agent!(agent, model)
+  @test nagents(model) == 1
+  # GraphSpace
+  model = ABM(Agent5, GraphSpace(path_graph(6)))
+  add_agent!(model, 5.3)
+  add_agent!(model, 2.7)
+  @test nagents(model) == 2
+  kill_agent!(model.agents[1], model)
+  @test nagents(model) == 1
+  # GridSpace
+  model = ABM(Agent1, GridSpace((5,5)))
+  add_agent!((1,3), model)
+  add_agent!((1,3), model)
+  add_agent!((5,2), model)
+  @test nagents(model) == 3
+  for agent in get_node_agents((1,3), model)
+    kill_agent!(agent, model)
+  end
+  @test nagents(model) == 1
+  # ContinuousSpace
+  model = ABM(Agent6, ContinuousSpace(2))
+  add_agent!((0.7,0.1), model, (15,20), 5.0)
+  add_agent!((0.2,0.9), model, (8,35), 1.7)
+  @test nagents(model) == 2
+  kill_agent!(id2agent(1,model), model)
+  @test nagents(model) == 1
 end
 
 @testset "genocide!" begin

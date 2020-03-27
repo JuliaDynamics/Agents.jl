@@ -72,18 +72,13 @@ end
   @test agent.pos == (3,4)
   @test agent.id in model.space.agent_positions[63]
 
-  agent = model.agents[2]
-  move_agent!(agent, 83, model)  # pos (3,5)
-  @test agent.pos == (3,5)
-  @test agent.id in model.space.agent_positions[83]
-
   new_pos = move_agent!(agent, model)
-  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
+  @test agent.id in get_node_contents(new_pos, model)
 
   add_agent!(agent, (2,9), model)
   @test agent.pos == (2,9)
-  @test agent.id in model.space.agent_positions[coord2vertex((2,9), model)]
-  @test agent.id in model.space.agent_positions[coord2vertex(new_pos, model)]
+  @test agent.id in get_node_contents((2,9), model)
+  @test agent.id in get_node_contents(new_pos, model)
 
   model1 = ABM(Agent1, GridSpace((3,3)))
   add_agent!(1, model1)
@@ -99,8 +94,7 @@ end
   @test model2.agents[2].pos == (2,1)
   @test 2 in model2.space.agent_positions[2]
   ag = add_agent!(model2, 12)
-  @test ag.id in model2.space.agent_positions[coord2vertex(ag.pos, model2)]
-
+  @test ag.id in get_node_contents(ag, model2)
 
   @test agent.id in get_node_contents(agent, model)
 
@@ -108,8 +102,7 @@ end
   @test id2agent(ii.id, model) == model.agents[ii.id]
 
   agent = model.agents[1]
-  agent_pos = coord2vertex(agent.pos, model)
   kill_agent!(agent, model)
   @test_throws KeyError id2agent(1, model)
-  @test !in(1, Agents.agent_positions(model)[agent_pos])
+  @test !in(1, get_node_contents(agent, model))
 end

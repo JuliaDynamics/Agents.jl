@@ -2,7 +2,7 @@
 This file establishes the agent-space interaction API.
 =#
 export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
-move_agent_single!, kill_agent!, coord2vertex, vertex2coord, genocide!
+move_agent_single!, kill_agent!, genocide!
 
 #######################################################################################
 # Killing agents
@@ -13,11 +13,7 @@ move_agent_single!, kill_agent!, coord2vertex, vertex2coord, genocide!
 Remove an agent from model, and from the space if the model has a space.
 """
 function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:AbstractSpace}
-  if typeof(agent.pos) <: Tuple
-    agentnode = coord2vertex(agent.pos, model)
-  else
-    agentnode = agent.pos
-  end
+  agentnode = coord2vertex(agent.pos, model)
    # remove from the space
   splice!(agent_positions(model)[agentnode],
           findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
@@ -149,13 +145,7 @@ function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) whe
   push!(model.space.agent_positions[pos], agent.id)
   model.agents[agent.id] = agent
   # update agent position
-  if typeof(agent.pos) <: Integer
-    agent.pos = pos
-  elseif typeof(agent.pos) <: Tuple
-    agent.pos = vertex2coord(pos, model)
-  else
-    error("Unknown type of agent.pos.")
-  end
+  agent.pos = vertex2coord(pos, model)
   return agent
 end
 
