@@ -60,7 +60,7 @@ agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
 
 """
-    AgentBasedModel(AgentType [, space]; scheduler, properties, warn)
+    AgentBasedModel(AgentType [, space]; scheduler, properties) → model
 Create an agent based model from the given agent type
 and the `space`.
 You can provide an agent _instance_ instead of type, and the type will be
@@ -72,16 +72,18 @@ to agents. Use `model[id]` to get the agent with the given `id`.
 [`ContinuousSpace`](@ref).
 If it is ommited then all agents are virtually in one node and have no spatial structure.
 
-`properties = nothing` is additional model-level properties (typically a dictionary).
+`properties = nothing` is additional model-level properties (typically a dictionary),
+which becomes a field of the model.
 If `properties` is a dictionary with key type `Symbol`, then the syntax
-`model.property_name` is short hand for `model.properties[:property_name]`
-(obviously this syntax returns model properties for `agents, space, scheduler, properties`).
+`model.name` is short hand for `model.properties[:name]`
+(obviously this syntax can't be used for `agents, space, scheduler, properties`,
+which are the fields of `AgentBasedModel`).
 
 `scheduler = fastest` decides the order with which agents are activated
 (see e.g. [`by_id`](@ref) and the scheduler API).
 
 Type tests for `AgentType` are done, and by default
-warnings are thrown when appropriate. Use `warn=false` to supress that.
+warnings are thrown when appropriate. Use keyword `warn=false` to supress that.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
