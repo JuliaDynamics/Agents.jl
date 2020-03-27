@@ -148,8 +148,10 @@ Checks for mutability and existence and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
-    (isconcretetype(A) && warn) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function."
-    (isbitstype(A) && warn) && @warn "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
+    if warn
+        isconcretetype(A) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function."
+        isbitstype(A) && @warn "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
+    end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space != nothing
@@ -165,7 +167,7 @@ function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgen
             if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
-            if any(isequal(:vel), fieldnames(A)) && !(fieldtype(A, :vel) <: NTuple{D, <:AbstractFloat} where {D}) && warn
+            if warn && any(isequal(:vel), fieldnames(A)) && !(fieldtype(A, :vel) <: NTuple{D, <:AbstractFloat} where {D})
                 @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
             end
         end
