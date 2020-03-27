@@ -60,7 +60,7 @@ end
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
-    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
+    @test_logs (:warn, "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1,1)); warn=false)) <: AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
