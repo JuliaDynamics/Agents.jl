@@ -23,9 +23,8 @@ end
 
 @testset "Model construction" begin
     # Shouldn't use ImmutableAgent since it cannot be edited
-    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(ImmutableAgent)
     agent = ImmutableAgent(1)
-    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(agent)
+    @test_logs (:warn, "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn=false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
