@@ -104,8 +104,8 @@ gif(anim, "socialdist2.gif", fps = 45);
 #     This is the job of Julia packages [HardSphereDynamics.jl](https://github.com/JuliaDynamics/HardSphereDynamics.jl)
 #     or [DynamicalBilliards.jl](https://juliadynamics.github.io/DynamicalBilliards.jl/dev/).
 #     In Agents.jl we only provide an approximating function `elastic_collision!`. The
-#     accuracy of this simulation increases as the time resolution `dt` decreases, and **only**
-#     in the limit `dt → 0` we reach the accuracy of proper billiard packages.
+#     accuracy of this simulation increases as the time resolution `dt` decreases,
+#     but even in the limit `dt → 0` we still don't reach the accuracy of proper billiard packages.
 #
 #     Also notice that the plotted size of the circles representing agents is not
 #     deduced from the `interaction_radius` (as it should).
