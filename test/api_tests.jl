@@ -4,6 +4,9 @@ mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
 end
+mutable struct BadAgentId <: AbstractAgent
+    id::Float64
+end
 struct ImmutableAgent <: AbstractAgent
     id::Int
 end
@@ -21,10 +24,10 @@ mutable struct ParametricAgent{T <: Integer} <: AbstractAgent
 end
 
 @testset "Model construction" begin
-    # Cannot use ImmutableAgent since it cannot be edited
-    @test_throws ArgumentError ABM(ImmutableAgent)
+    # Shouldn't use ImmutableAgent since it cannot be edited
+    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(ImmutableAgent)
     agent = ImmutableAgent(1)
-    @test_throws ArgumentError ABM(agent)
+    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(agent)
     # Cannot use BadAgent since it has no `id` field
     @test_throws ArgumentError ABM(BadAgent)
     agent = BadAgent(1,1)
@@ -32,6 +35,10 @@ end
     # Cannot use BadAgent in a grid space context since `pos` has an invalid type
     @test_throws ArgumentError ABM(BadAgent, GridSpace((1,1)))
     @test_throws ArgumentError ABM(agent, GridSpace((1,1)))
+    # Cannot use BadAgentId since `id` has an invalid type
+    @test_throws ArgumentError ABM(BadAgentId)
+    agent = BadAgentId(1.0)
+    @test_throws ArgumentError ABM(agent)
     # Cannot use Agent0 in a grid space context since it has no `pos` field
     @test_throws ArgumentError ABM(Agent0, GridSpace((1,1)))
     agent = Agent0(1)
@@ -47,12 +54,12 @@ end
     @test_throws ArgumentError ABM(Agent4, ContinuousSpace(2))
     agent = Agent4(1, (1,1), 5)
     @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
-    # Cannot use DiscreteVelocity in a continuous space context since `vel` has an invalid type
-    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace(2))
+    # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
+    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(DiscreteVelocity, ContinuousSpace(2))
     agent = DiscreteVelocity(1, (1,1), (2,3), 2.4)
-    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
-    # Cannot use ParametricAgent since it is not a concrete type
-    @test_throws ArgumentError ABM(ParametricAgent, GridSpace((1,1)))
+    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(agent, ContinuousSpace(2))
+    # Shouldn't use ParametricAgent since it is not a concrete type
+    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
     # ParametricAgent{Int} is the correct way to use such an agent
     @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1,1)))) <: AbstractAgent
     #Type inferance using an instance can help users here
