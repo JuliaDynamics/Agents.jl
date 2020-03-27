@@ -34,6 +34,8 @@ mutable struct ExampleAgent <: AbstractAgent
     happy::Bool
 end
 ```
+where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in continuous
+space.
 """
 abstract type AbstractAgent end
 
@@ -109,7 +111,7 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     end
 end
 
-Base.getindex(m::ABM, id::Integer) = model.agents[id]
+Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 
 function Base.getproperty(m::ABM, s::Symbol)

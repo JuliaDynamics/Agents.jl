@@ -281,3 +281,21 @@ end
   genocide!(model, complex_logic)
   @test nagents(model) == 17
 end
+
+# %% accessing model
+@testset "Accessing model" begin
+    model = ABM(Agent0; properties = Dict(:a => 2, :b => "test"))
+    # add 5 aents
+    for i in 1:5
+        add_agent!(model)
+    end
+    @test model.scheduler == fastest
+    @test typeof(model.agents) <: Dict
+    @test model.space == nothing
+    @test model.properties == Dict(:a => 2, :b => "test")
+    a = model[1]
+    @test a isa Agent0
+    @test a.id == 1
+    @test model.a == 2
+    @test model.b == "test"
+end
