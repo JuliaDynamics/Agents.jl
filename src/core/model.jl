@@ -46,12 +46,14 @@ function correct_pos_type(n, model)
 end
 
 SpaceType=Union{Nothing, AbstractSpace}
+
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
     properties::P
 end
+const ABM = AgentBasedModel
 agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
 
@@ -68,12 +70,16 @@ to agents. Use `model[id]` to get the agent with the given `id`.
 [`ContinuousSpace`](@ref).
 If it is ommited then all agents are virtually in one node and have no spatial structure.
 
-## Keywords
-* `scheduler = fastest` decides the order with which agents are activated
-  (see e.g. [`by_id`](@ref) and the scheduler API).
-* `properties = nothing` is additional model-level properties (typically a dictionary).
-* `warn = true` Type tests for `AgentType` are done, and by default
-  warnings are thrown when appropriate.
+`properties = nothing` is additional model-level properties (typically a dictionary).
+If `properties` is a dictionary with key type `Symbol`, then the syntax
+`model.property_name` is short hand for `model.properties[:property_name]`
+(obviously this syntax returns model properties for `agents, space, scheduler, properties`).
+
+`scheduler = fastest` decides the order with which agents are activated
+(see e.g. [`by_id`](@ref) and the scheduler API).
+
+Type tests for `AgentType` are done, and by default
+warnings are thrown when appropriate. Use `warn=false` to supress that.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
@@ -84,7 +90,6 @@ function AgentBasedModel(
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
-const ABM = AgentBasedModel
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
     return ABM(typeof(agent), args...; kwargs...)
@@ -105,6 +110,16 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
 end
 
 Base.getindex(m::ABM, id::Integer) = model.agents[id]
+
+
+function Base.getproperty(m::ABM, s::Symbol)
+    if s ∈ (:agents, :space, :scheduler, :properties)
+        return Base.getfield(m, s)
+    else
+        return Base.getindex(m.properties, s)
+    end
+end
+
 
 """
     agent_validator(agent, space)
