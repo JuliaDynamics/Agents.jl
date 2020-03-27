@@ -119,7 +119,7 @@ gif(anim, "socialdist2.gif", fps = 45);
 
 model3 = ball_model()
 
-for id in 1:40
+for id in 1:400
     agent = id2agent(id, model3)
     agent.mass = Inf
     agent.vel = (0.0, 0.0)
@@ -303,9 +303,9 @@ data1[end-10:end, :]
 
 # Now, we can plot the number of infected versus time
 
-p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, β=$β1")
-plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, β=$β1")
-plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, β=$β2")
+p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, beta=$β1")
+plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, beta=$β1")
+plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, beta=$β2")
 yaxis!(p, "Infected")
 p
 
@@ -329,6 +329,8 @@ anim = @animate for i ∈ 1:1000
     step!(sir_model, sir_agent_step!, sir_model_step!, 1)
 end
 gif(anim, "socialdist5.gif", fps = 45);
+
+# ![](socialdist5.gif)
 
 # Here we let some 20% of the population *not* being isolated, probably teenagers still partying,
 # or anti-vaxxers / flat-earthers that don't believe in science.
