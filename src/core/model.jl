@@ -61,20 +61,19 @@ Create an agent based model from the given agent type
 and the `space`.
 You can provide an agent _instance_ instead of type, and the type will be
 deduced. `ABM` is equivalent with `AgentBasedModel`.
-The agents are stored in a dictionary `model.agents`, where the keys are the
-agent IDs, while the values are the agents themselves.
-It is recommended however to use [`id2agent`](@ref) to get an agent.
+The agents are stored in a dictionary `model.agents` that maps unique ids (integers)
+to agents. Use `model[id]` to get the agent with the given `id`.
 
-`space` can be omitted, which means that all agents are virtually in one node
-and have no spatial structure.
-If space is omitted, some functions that facilitate agent-space interactions will not work.
+`space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
+[`ContinuousSpace`](@ref).
+If it is ommited then all agents are virtually in one node and have no spatial structure.
 
-Optionally provide a `scheduler` that decides the order with which agents
-are activated in the model, and `properties`
-for additional model-level properties.
-This is accessed as `model.properties` for later use.
-
-Type tests for `AgentType` are done, use `warn=false` to silence them.
+## Keywords
+* `scheduler = fastest` decides the order with which agents are activated
+  (see e.g. [`by_id`](@ref) and the scheduler API).
+* `properties = nothing` is additional model-level properties (typically a dictionary).
+* `warn = true` Type tests for `AgentType` are done, and by default
+  warnings are thrown when appropriate.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
@@ -111,6 +110,8 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     end
 end
 
+Base.getindex(m::ABM, id::Integer) = model.agents[id]
+
 """
     agent_validator(agent, space)
 Validate the user supplied agent (subtype of `AbstractAgent`).
@@ -119,7 +120,7 @@ Checks for mutability and existence and correct types for fields depending on `S
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
     if warn
-        isconcretetype(A) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning."
+        isconcretetype(A) || @warn "Given AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
         isbitstype(A) && @warn "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))

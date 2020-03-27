@@ -262,13 +262,13 @@ function nearest_neighbor(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
-    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos)))
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
     _, j = findmin(d)
     if dnew < d
       d, j = dnew, i
     end
   end
-  return id2agent(n[j], model)
+  return model[n[j]]
 end
 
 using LinearAlgebra
@@ -342,7 +342,7 @@ function interacting_pairs(model, r)
   for id in keys(model.agents)
     # Skip already checked agents
     any(isequal(id), p[2] for p in pairs) && continue
-    a1 = id2agent(id, model)
+    a1 = model[id]
     a2 = nearest_neighbor(a1, model, r)
     a2 ≠ nothing && push!(pairs, (id, a2.id))
   end
