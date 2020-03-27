@@ -76,7 +76,7 @@ function model_initiation(;Ns, migration_rates, β_und, β_det, infection_period
   for city in 1:C
     inds = get_node_contents(city, model)
     for n in 1:Is[city]
-      agent = id2agent(inds[n], model)
+      agent = model[inds[n]]
       agent.status = :I # Infected
       agent.days_infected = 1
     end
@@ -195,7 +195,7 @@ function transmit!(agent, model)
   n == 0 && return
 
   for contactID in get_node_contents(agent, model)
-    contact = id2agent(contactID, model)
+    contact = model[contactID]
     if contact.status == :S || (contact.status == :R && rand() ≤ prop[:reinfection_probability])
       contact.status = :I
       n -= 1

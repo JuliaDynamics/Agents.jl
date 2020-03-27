@@ -24,7 +24,7 @@ function model_initiation(;d, griddims, seed)
     pp = rand()
     if pp <= forest.properties[:d]
       # Set all trees in the first column on fire.
-      if id2agent(node, model).pos[1] == 1
+      if model[node].pos[1] == 1
         tree = Tree(node, (1,1), 2)
       else
         tree = Tree(node, (1,1), 1)

@@ -228,7 +228,7 @@ end
   add_agent!((0.7,0.1), model, (15,20), 5.0)
   add_agent!((0.2,0.9), model, (8,35), 1.7)
   @test nagents(model) == 2
-  kill_agent!(id2agent(1,model), model)
+  kill_agent!(model[1], model)
   @test nagents(model) == 1
 end
 

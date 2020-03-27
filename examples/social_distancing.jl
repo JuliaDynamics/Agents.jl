@@ -120,7 +120,7 @@ gif(anim, "socialdist2.gif", fps = 45);
 model3 = ball_model()
 
 for id in 1:400
-    agent = id2agent(id, model3)
+    agent = model3[id]
     agent.mass = Inf
     agent.vel = (0.0, 0.0)
 end

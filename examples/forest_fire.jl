@@ -61,7 +61,7 @@ function forest_step!(forest)
     if length(nc) == 0
         rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
     else
-      tree = id2agent(nc[1], forest) # by definition only 1 agent per node
+      tree = forest[nc[1]] # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
