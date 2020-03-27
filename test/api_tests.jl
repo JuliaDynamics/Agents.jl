@@ -61,7 +61,7 @@ end
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
-    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
+    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1,1)); warn=false)) <: AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
@@ -192,7 +192,7 @@ end
   @test agent2.pos == (1,1)
 
   # ContinuousSpace
-  model = ABM(Agent6, ContinuousSpace(2))
+  model = ABM(Agent6, ContinuousSpace(2; extend = (2,2)))
   agent = add_agent!((0.0,0.0), model, (1.0,0.0), 1.0)
   move_agent!(agent, model)
   @test agent.pos == (1.0,0.0)

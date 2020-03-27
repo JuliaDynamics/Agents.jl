@@ -52,8 +52,8 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     scheduler::F
     properties::P
 end
-agenttype(::ABM{A}) where {A} = A
-spacetype(::ABM{A, S}) where {A, S} = S
+agenttype(::AgentBasedModel{A}) where {A} = A
+spacetype(::AgentBasedModel{A, S}) where {A, S} = S
 
 """
     AgentBasedModel(AgentType [, space]; scheduler, properties, warn)
