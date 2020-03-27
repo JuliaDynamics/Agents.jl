@@ -7,6 +7,9 @@
 * New convenience function `allagents`
 * New continuous space functions `nearest_neighbor` and `elastic_collision!`
 * New iterator `interacting_pairs`
+- `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
+- `AgentBasedModel` checks the construction of your agent and will return errors when it is malformed (no `id` or `pos` when required, incorrect types). Warnings when possible problems may occur (immutable agents, types which are not concrete, `vel` not of the correct type when using `ContinuousSpace`).
+- Warnings produced by `AgentBasedModel` may be suppressed via the boolean flag `warn`.
 
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
