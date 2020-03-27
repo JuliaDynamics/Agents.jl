@@ -91,7 +91,7 @@ end
 
 function agent_step!(agent, model)
     agent.mood == true && return # do nothing if already happy
-    minhappy = model.properties[:min_to_be_happy]
+    minhappy = model.min_to_be_happy
     neighbor_cells = node_neighbors(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group

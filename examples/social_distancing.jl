@@ -55,7 +55,7 @@ model = ball_model()
 
 # The agent step function for now is trivial. It is just [`move_agent!`](@ref) in
 # continuous space
-agent_step!(agent, model) =  move_agent!(agent, model, model.properties[:dt])
+agent_step!(agent, model) =  move_agent!(agent, model, model.dt)
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
@@ -232,9 +232,9 @@ function transmit!(a1, a2, rp)
 end
 
 function sir_model_step!(model)
-    r = model.properties[:interaction_radius]
+    r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r)
-        transmit!(a1, a2, model.properties[:reinfection_probability])
+        transmit!(a1, a2, model.reinfection_probability)
         elastic_collision!(a1, a2, :mass)
     end
 end
@@ -247,7 +247,7 @@ end
 # agent has been infected, and whether they have to die or not.
 
 function sir_agent_step!(agent, model)
-    move_agent!(agent, model, model.properties[:dt])
+    move_agent!(agent, model, model.dt)
     update!(agent)
     recover_or_die!(agent, model)
 end
@@ -255,8 +255,8 @@ end
 update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.properties[:infection_period]
-        if rand() ≤ model.properties[:death_rate]
+    if agent.days_infected ≥ model.infection_period
+        if rand() ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R

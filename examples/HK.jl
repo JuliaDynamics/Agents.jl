@@ -55,7 +55,7 @@ end
 get_old_opinion(agent)::Float64 = agent.old_opinion
 
 function boundfilter(agent,model)
-    filter(j->abs(get_old_opinion(agent) - j) < model.properties[:ϵ],
+    filter(j->abs(get_old_opinion(agent) - j) < model.ϵ,
      get_old_opinion.(values(model.agents)))
 end
 

@@ -174,7 +174,7 @@ end
 
 function migrate!(agent, model)
   nodeid = agent.pos
-  d = DiscreteNonParametric(1:model.properties[:C], model.properties[:migration_rates][nodeid, :])
+  d = DiscreteNonParametric(1:model.C, model.migration_rates[nodeid, :])
   m = rand(d)
   if m ≠ nodeid
     move_agent!(agent, m, model)
@@ -183,11 +183,10 @@ end
 
 function transmit!(agent, model)
   agent.status == :S && return
-  prop = model.properties
-  rate = if agent.days_infected < prop[:detection_time]
-    prop[:β_und][agent.pos]
+  rate = if agent.days_infected < model.detection_time
+    model.β_und[agent.pos]
   else
-    prop[:β_det][agent.pos]
+    model.β_det[agent.pos]
   end
 
   d = Poisson(rate)
@@ -196,7 +195,7 @@ function transmit!(agent, model)
 
   for contactID in get_node_contents(agent, model)
     contact = model[contactID]
-    if contact.status == :S || (contact.status == :R && rand() ≤ prop[:reinfection_probability])
+    if contact.status == :S || (contact.status == :R && rand() ≤ model.reinfection_probability)
       contact.status = :I
       n -= 1
       n == 0 && return
@@ -207,8 +206,8 @@ end
 update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-  if agent.days_infected ≥ model.properties[:infection_period]
-    if rand() ≤ model.properties[:death_rate]
+  if agent.days_infected ≥ model.infection_period
+    if rand() ≤ model.death_rate
       kill_agent!(agent, model)
     else
       agent.status = :R
@@ -252,7 +251,7 @@ data[1:10, :]
 # We now plot how quantities evolved in time to show
 # the exponential growth of the virus
 
-N = sum(model.properties[:Ns]) # Total initial population
+N = sum(model.Ns) # Total initial population
 x = data.step
 p = Plots.plot(x, log10.(data[:, Symbol("infected(status)")]), label = "infected")
 plot!(p, x, log10.(data[:, Symbol("recovered(status)")]), label = "recovered")
