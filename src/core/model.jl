@@ -86,14 +86,8 @@ function AgentBasedModel(
 end
 const ABM = AgentBasedModel
 
-function AgentBasedModel(
-        agent::A, space::S = nothing;
-        scheduler::F = fastest, properties::P = nothing, warn = true
-        ) where {A<:AbstractAgent, S<:SpaceType, F, P}
-    agent_validator(typeof(agent), space, warn)
-
-    agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties)
+function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
+    return ABM(typeof(agent), args...; kwargs...)
 end
 
 function Base.show(io::IO, abm::ABM{A}) where {A}
