@@ -1,3 +1,4 @@
+using Agents, Test, Random, LightGraphs
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
@@ -20,6 +21,7 @@ mutable struct ParametricAgent{T <: Integer} <: AbstractAgent
     weight::T
     info::String
 end
+
 
 @testset "Model construction" begin
     # Shouldn't use ImmutableAgent since it cannot be edited
@@ -61,7 +63,7 @@ end
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
-    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
+    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1,1)); warn=false)) <: AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
@@ -162,6 +164,20 @@ properties = [model.agents[id].weight for id in ids]
   @test Agents.nagents(model2) == 40
 end
 
+@testset "add_agent!" begin
+  properties = Dict(:x1=>1)
+  space = GraphSpace(complete_digraph(10))
+  model = ABM(Agent7, space; properties=properties)
+  attributes = (f1=true,f2=1)
+  add_agent!(1, model, attributes...)
+  attributes = (f2=1,f1=true)
+  add_agent!(1, model; attributes...)
+  @test model.agents[1].id != model.agents[2].id
+  @test model.agents[1].pos == model.agents[2].pos
+  @test model.agents[1].f1 == model.agents[2].f1
+  @test model.agents[1].f2 == model.agents[2].f2
+end
+
 @testset "move_agent!" begin
   # GraphSpace
   model = ABM(Agent5, GraphSpace(path_graph(6)))
@@ -193,9 +209,9 @@ end
 
   # ContinuousSpace
   model = ABM(Agent6, ContinuousSpace(2))
-  agent = add_agent!((0.0,0.0), model, (1.0,0.0), 1.0)
+  agent = add_agent!((0.0,0.0), model, (0.5,0.0), 1.0)
   move_agent!(agent, model)
-  @test agent.pos == (1.0,0.0)
+  @test agent.pos == (0.5,0.0)
 end
 
 @testset "kill_agent!" begin
