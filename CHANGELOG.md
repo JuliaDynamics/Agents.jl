@@ -10,8 +10,8 @@
 - `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
 - `AgentBasedModel` checks the construction of your agent and will return errors when it is malformed (no `id` or `pos` when required, incorrect types). Warnings when possible problems may occur (immutable agents, types which are not concrete, `vel` not of the correct type when using `ContinuousSpace`).
 - Warnings produced by `AgentBasedModel` may be suppressed via the boolean flag `warn`.
-#v2.5
-* add keyword argument support for `add_agent!`
+* Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
+
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
 * Added a scheduler public API.
