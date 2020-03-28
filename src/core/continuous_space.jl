@@ -124,14 +124,8 @@ end
 # central, low level function that is always called by all others!
 function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
   DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  model.agents[agent.id] = agent
+  model[agent.id] = agent
   return agent
-end
-
-function biggest_id(model::ABM{A, <: ContinuousSpace}) where {A}
-  db = model.space.db
-  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
-  id = ismissing(ids[1]) ? 0 : ids[1]
 end
 
 function randompos(space::ContinuousSpace)

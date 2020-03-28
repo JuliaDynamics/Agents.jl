@@ -208,9 +208,7 @@ function add_agent!(model::ABM{A, S}, properties...) where {A, S<:DiscreteSpace}
   return model.agents[id]
 end
 
-function biggest_id(model) where {A}
-    isempty(model.agents) ? 0 : maximum(keys(model.agents))
-end
+biggest_id(model::ABM) = isempty(model.agents) ? 0 : maximum(keys(model.agents))
 
 
 """
