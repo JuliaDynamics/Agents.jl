@@ -36,10 +36,10 @@ function data_collecter_aggregate(model::ABM, field_aggregator::Dict; step=1)
       temparray = values(model.agents)
     elseif fn == :model
       temparray = model
-    elseif typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
-      temparray = [mean(getproperty(model.agents[i], fn)) for i in agent_ids]
+    elseif typeof(getproperty(model[rand_agent_id], fn)) <: AbstractArray
+      temparray = [mean(getproperty(model[i], fn)) for i in agent_ids]
     else
-      temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
+      temparray = [getproperty(model[i], fn) for i in agent_ids]
     end
     for agg in aggs
       output[counter] = agg(temparray)
@@ -59,27 +59,22 @@ If  an agent field returns an array, the mean of those arrays will be recorded.
 """
 function data_collecter_raw(model::ABM, properties::Array{Symbol}; step=1)
   dd = DataFrame()
-  agent_ids = keys(model.agents)
-  counter = 2
+  agent_ids = sort(collect(keys(model.agents)))
   rand_agent_id = 0
   for aa in agent_ids
     rand_agent_id = aa
     break
   end
+
   agentslen = nagents(model)
+  dd[!, :id] = agent_ids
   for fn in properties
     if typeof(getproperty(model.agents[rand_agent_id], fn)) <: AbstractArray
       temparray = [mean(getproperty(model.agents[i], fn)) for i in agent_ids]
     else
       temparray = [getproperty(model.agents[i], fn) for i in agent_ids]
     end
-    begin
-      dd[!, :id] = sort(collect(keys(model.agents)))
-    end
-    fieldname = fn
-    begin
-      dd[!, fieldname] = temparray
-    end
+    dd[!, fn] = temparray
   end
   dd[!, :step] = [step for i in 1:size(dd, 1)]
   return dd
