@@ -161,32 +161,32 @@ end
 
 
 """
-    add_agent!(node, model::ABM, properties...; kwargs...)
-Add a new agent in the given `node`, by constructing the agent type of
-the `model` and propagating all *extra* positional arguments in `properties` and
-optional keyword arguemts in `kwargs` to the constructor.
+    add_agent!([pos,] model::ABM, args...; kwargs...)
+Create and add a new agent to the model by constructing an agent of the
+type of the `model`. Propagate all *extra* positional arguments and
+keyword arguemts to the agent constructor.
 
-Notice that this function takes care of setting the agent's id and position and thus
-`properties...` and `kwargs...` are propagated to other fields the agent has.
+Notice that this function takes care of setting the agent's id *and* position and thus
+`args...` and `kwargs...` are propagated to other fields the agent has.
 
-    add_agent!(model::ABM, properties...)
-Similar with `add_agent!(position, model, properties...)`, but adds the
-created agent to a random position.
-This function also works for models without a spatial structure.
+Optionally provide a position to add the agent to as first argument.
 
 ## Example
 ```julia
 using Agents
 mutable struct Agent <: AbstractAgent
     id::Int
+    pos::Int
     w::Float64
     k::Bool
 end
-Agent(id; w, k) = Agent(id, w, k)
-m = ABM(Agent) # model without spatial structure
-add_agent!(m, 1, rand(), true) # incorrect: id is set internally
-add_agent!(m, rand(), true) # correct: weight becomes rand()
-add_agent!(m; w = rand(), k =true) # correct: weight becomes rand()
+Agent(id; w, k) = Agent(id, w, k) # keyword constructor
+model = ABM(Agent, GraphSpace(complete_digraph(5)))
+
+add_agent!(model, 1, 0.5, true) # incorrect: id is set internally
+add_agent!(model, 0.5, true) # correct: weight becomes 0.5
+add_agent!(5, model, 0.5, true) # add at node 5
+add_agent!(model; w = 0.5, k =true) # use keywords: weight becomes 0.5
 ```
 """
 function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
@@ -196,13 +196,6 @@ function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs
     add_agent!(agent, cnode, model)
 end
 
-
-"""
-    add_agent!(model::ABM, properties...; kwargs...)
-Similar with `add_agent!(node, model, properties...; kwargs...)`, but adds the
-created agent to a random node.
-This function also works for models without a spatial structure.
-"""
 function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
