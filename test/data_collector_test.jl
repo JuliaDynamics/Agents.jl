@@ -86,7 +86,7 @@ end
   @test size(data) == (((n+1)*6)*replicates, 6)  # the first 6 is the number of combinations of changing params
 end
 
-@testeset "issue 179 (only ids sorted, not properties)" begin
+@testset "issue 179 (only ids sorted, not properties)" begin
   model = ABM(Agent2)
   for i in 1:5
     add_agent!(model, i*0.2)
