@@ -128,7 +128,11 @@ end
   space = Space(complete_digraph(10))
   model = AgentBasedModel(Agent2, space; properties=properties)
   attributes = (f1=true,f2=1)
-  @test add_agent!(1, model, attributes...)
+  add_agent!(1, model, attributes...)
   attributes = (f2=1,f1=true)
-  @test add_agent!(1, model; attributes...)
+  add_agent!(1, model; attributes...)
+  @test model.agents[1].id != model.agents[2].id
+  @test model.agents[1].pos == model.agents[2].pos
+  @test model.agents[1].f1 == model.agents[2].f1
+  @test model.agents[1].f2 == model.agents[2].f2
 end
