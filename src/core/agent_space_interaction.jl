@@ -173,11 +173,11 @@ add_agent!(m, 1, rand()) # incorrect: id is set internally
 add_agent!(m, rand()) # correct: weight becomes rand()
 ```
 """
-function add_agent!(node, model::ABM, properties...)
+function add_agent!(node, model::ABM, properties...; kwargs...)
     id = biggest_id(model) + 1
     A = agenttype(model)
     cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...)
+    agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, cnode, model)
 end
 
@@ -187,18 +187,18 @@ Similar with `add_agent!(node, model, properties...)`, but adds the
 created agent to a random node.
 This function also works for models without a spatial structure.
 """
-function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
+function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
-  model.agents[id] = A(id, properties...)
+  model.agents[id] = A(id, properties...; kwargs...)
   return model.agents[id]
 end
 
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:AbstractSpace}
+function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:AbstractSpace}
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
-  model.agents[id] = A(id, cnode, properties...)
+  model.agents[id] = A(id, cnode, properties...; kwargs...)
   push!(model.space.agent_positions[n], id)
   return model.agents[id]
 end
@@ -209,7 +209,7 @@ end
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
-function add_agent_single!(model::ABM, properties...)
+function add_agent_single!(model::ABM, properties...; kwargs...)
   msa = model.space.agent_positions
   id = biggest_id(model) + 1
   A = agenttype(model)
@@ -217,7 +217,7 @@ function add_agent_single!(model::ABM, properties...)
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...)
+    agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, random_node, model)
     return agent
   end
