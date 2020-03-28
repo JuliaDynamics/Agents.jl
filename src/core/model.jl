@@ -52,6 +52,7 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     scheduler::F
     properties::P
 end
+const ABM = AgentBasedModel
 agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
 
@@ -85,7 +86,6 @@ function AgentBasedModel(
     agents = Dict{Int, A}()
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
-const ABM = AgentBasedModel
 
 function AgentBasedModel(
         agent::A, space::S = nothing;
