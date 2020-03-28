@@ -188,7 +188,7 @@ add_agent!(m, rand(), true) # correct: weight becomes rand()
 add_agent!(m; w = rand(), k =true) # correct: weight becomes rand()
 ```
 """
-function add_agent!(node, model::ABM, properties...; kwargs...)
+function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
     id = biggest_id(model) + 1
     cnode = correct_pos_type(node, model)
     agent = A(id, cnode, properties...; kwargs...)
@@ -246,8 +246,7 @@ end
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
-function add_agent_single!(model::ABM, properties...; kwargs...)
-
+function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
   msa = model.space.agent_positions
   id = biggest_id(model) + 1
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]

@@ -63,7 +63,7 @@ end
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
-    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
+    #@test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1,1)); warn=false)) <: AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
@@ -72,8 +72,6 @@ end
     agent = ParametricAgent(1, (1,1), 5, "Info")
     @test Agents.agenttype(ABM(agent, GridSpace((1,1)))) <: AbstractAgent
 end
-
-model1 = ABM(Agent1, Space((3,3)))
 
 model1 = ABM(Agent1, GridSpace((3,3)))
 
@@ -168,8 +166,8 @@ end
 
 @testset "add_agent!" begin
   properties = Dict(:x1=>1)
-  space = Space(complete_digraph(10))
-  model = AgentBasedModel(Agent7, space; properties=properties)
+  space = GraphSpace(complete_digraph(10))
+  model = ABM(Agent7, space; properties=properties)
   attributes = (f1=true,f2=1)
   add_agent!(1, model, attributes...)
   attributes = (f2=1,f1=true)
@@ -180,7 +178,7 @@ end
   @test model.agents[1].f2 == model.agents[2].f2
 end
 
- @testset "move_agent!" begin
+@testset "move_agent!" begin
   # GraphSpace
   model = ABM(Agent5, GraphSpace(path_graph(6)))
   agent = add_agent!(model, 5.3)
