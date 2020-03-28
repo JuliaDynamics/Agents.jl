@@ -1,3 +1,4 @@
+using Agents, Test, Random, LightGraphs
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
@@ -20,6 +21,7 @@ mutable struct ParametricAgent{T <: Integer} <: AbstractAgent
     weight::T
     info::String
 end
+
 
 @testset "Model construction" begin
     # Shouldn't use ImmutableAgent since it cannot be edited
@@ -159,6 +161,20 @@ properties = [model.agents[id].weight for id in ids]
 
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
+end
+
+@testset "add_agent!" begin
+  properties = Dict(:x1=>1)
+  space = GraphSpace(complete_digraph(10))
+  model = ABM(Agent7, space; properties=properties)
+  attributes = (f1=true,f2=1)
+  add_agent!(1, model, attributes...)
+  attributes = (f2=1,f1=true)
+  add_agent!(1, model; attributes...)
+  @test model.agents[1].id != model.agents[2].id
+  @test model.agents[1].pos == model.agents[2].pos
+  @test model.agents[1].f1 == model.agents[2].f1
+  @test model.agents[1].f2 == model.agents[2].f2
 end
 
 @testset "move_agent!" begin

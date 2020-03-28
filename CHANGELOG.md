@@ -16,6 +16,7 @@
 * Reworked the public API of `GridSpace` to be simpler: position must be `NTuple{Int}`. As a result `vertex2coord` and stuff no longer exported, since they are obsolete.
 - `AgentBasedModel` checks the construction of your agent and will return errors when it is malformed (no `id` or `pos` when required, incorrect types). Warnings when possible problems may occur (immutable agents, types which are not concrete, `vel` not of the correct type when using `ContinuousSpace`).
 - `id2agent` is deprecated in favor of `getindex(model, id) == model[id]`
+* Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
 
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.

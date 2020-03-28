@@ -145,7 +145,7 @@ function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) whe
   push!(model.space.agent_positions[pos], agent.id)
   model[agent.id] = agent
   # update agent position
-  agent.pos = vertex2coord(pos, model)
+  agent.pos = correct_pos_type(pos, model)
   return agent
 end
 
@@ -161,45 +161,49 @@ end
 
 
 """
-    add_agent!([position, ] model::ABM, properties...)
-Add a new agent at the given `position`, by constructing the agent type of
-the `model` and propagating all *extra* `properties` to the agent constructor.
+    add_agent!([pos,] model::ABM, args...; kwargs...)
+Create and add a new agent to the model by constructing an agent of the
+type of the `model`. Propagate all *extra* positional arguments and
+keyword arguemts to the agent constructor.
 
-Notice that this function takes care of setting the agent's id and position and thus
-`properties...` is propagated to other fields the agent has.
+Notice that this function takes care of setting the agent's id *and* position and thus
+`args...` and `kwargs...` are propagated to other fields the agent has.
 
-    add_agent!(model::ABM, properties...)
-Similar with `add_agent!(position, model, properties...)`, but adds the
-created agent to a random position.
-This function also works for models without a spatial structure.
+Optionally provide a position to add the agent to as first argument.
 
 ## Example
 ```julia
 using Agents
 mutable struct Agent <: AbstractAgent
     id::Int
+    pos::Int
     w::Float64
+    k::Bool
 end
-m = ABM(Agent) # model without spatial structure
-add_agent!(m, 1, rand()) # incorrect: id is set internally
-add_agent!(m, rand()) # correct: weight becomes rand()
+Agent(id; w, k) = Agent(id, w, k) # keyword constructor
+model = ABM(Agent, GraphSpace(complete_digraph(5)))
+
+add_agent!(model, 1, 0.5, true) # incorrect: id is set internally
+add_agent!(model, 0.5, true) # correct: weight becomes 0.5
+add_agent!(5, model, 0.5, true) # add at node 5
+add_agent!(model; w = 0.5, k =true) # use keywords: weight becomes 0.5
 ```
 """
-function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...) where A
+function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
     id = biggest_id(model) + 1
     cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...)
+    agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, cnode, model)
 end
 
-function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
+function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
   model[id] = A(id, properties...)
   return model[id]
 end
 
-function add_agent!(model::ABM{A, S}, properties...) where {A, S<:DiscreteSpace}
+function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:AbstractSpace}
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
@@ -230,18 +234,18 @@ function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
 end
 
 """
-    add_agent_single!(model::ABM, properties...)
+    add_agent_single!(model::ABM, properties...; kwargs...)
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
-function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...) where {A}
+function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
   msa = model.space.agent_positions
   id = biggest_id(model) + 1
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...)
+    agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, random_node, model)
     return agent
   end
