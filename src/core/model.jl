@@ -61,23 +61,24 @@ spacetype(::ABM{A, S}) where {A, S} = S
 
 """
     AgentBasedModel(AgentType [, space]; scheduler, properties) → model
-Create an agent based model from the given agent type
-and the `space`.
-You can provide an agent _instance_ instead of type, and the type will be
-deduced. `ABM` is equivalent with `AgentBasedModel`.
-The agents are stored in a dictionary `model.agents` that maps unique ids (integers)
+Create an agent based model from the given agent type and `space`.
+You can provide an agent _instance_ instead of type, and the type will be deduced.
+ `ABM` is equivalent with `AgentBasedModel`.
+ 
+The agents are stored in a dictionary that maps unique ids (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
 [`ContinuousSpace`](@ref).
 If it is ommited then all agents are virtually in one node and have no spatial structure.
 
-`properties = nothing` is additional model-level properties (typically a dictionary),
-which becomes a field of the model.
-If `properties` is a dictionary with key type `Symbol`, then the syntax
-`model.name` is short hand for `model.properties[:name]`
-(obviously this syntax can't be used for `agents, space, scheduler, properties`,
-which are the fields of `AgentBasedModel`).
+`properties = nothing` is additional model-level properties (typically a dictionary)
+that can be accessed as `model.properties`. However, if `properties` is a dictionary with
+key type `Symbol`, or of it is a struct, then the syntax
+`model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
+for structs).
+This syntax can't be used for `name` being `agents, space, scheduler, properties`,
+which are the fields of `AgentBasedModel`.
 
 `scheduler = fastest` decides the order with which agents are activated
 (see e.g. [`by_id`](@ref) and the scheduler API).
