@@ -85,3 +85,15 @@ end
        model_step! = forest_step!, replicates=replicates)
   @test size(data) == (((n+1)*6)*replicates, 6)  # the first 6 is the number of combinations of changing params
 end
+
+@testeset "issue 179 (only ids sorted, not properties)" begin
+  model = ABM(Agent2)
+  for i in 1:5
+    add_agent!(model, i*0.2)
+  end
+  agent_properties = [:weight]
+  data = step!(model, dummystep, 1, agent_properties)
+  @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
+  @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
+  @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
+end
