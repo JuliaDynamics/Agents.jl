@@ -1,28 +1,5 @@
-export sample!, genocide!
+export sample!
 using StatsBase: sample, Weights
-
-"""
-    genocide!(model::ABM)
-Kill all the agents of the model.
-"""
-function genocide!(model::ABM)
-    for (i, a) in model.agents
-        kill_agent!(a, model)
-    end
-    return model
-end
-
-"""
-    genocide!(model::ABM, n::Int)
-Kill the agents of the model whose IDs are larger than n.
-"""
-function genocide!(model::ABM, n::Int)
-    for (k, v) in model.agents
-        if k > n
-            kill_agent!(v, model)
-        end
-    end
-end
 
 """
     sample!(model::ABM, n [, weight]; kwargs...)
@@ -74,7 +51,7 @@ function clean_space!(model::ABM)
             model.space.agent_positions[node] = Int[]
         end
         for (k, v) in model.agents
-            push!(model.space.agent_positions[coord2vertex(v.pos, model)], v.id)
+            push!(get_node_contents(v,model), v.id)
         end
     end
 end

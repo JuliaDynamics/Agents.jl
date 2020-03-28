@@ -1,31 +1,21 @@
 # API
 
-The core API is defined by [`AgentBasedModel`](@ref), [`Space`](@ref), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial page](@ref). The functionality described here builds on top of the core API.
-
-## Model and space information
-```@docs
-nv(::ABM)
-ne(::ABM)
-has_empty_nodes
-find_empty_nodes
-```
-
-## Content from a node
-```@docs
-node_neighbors
-pick_empty
-get_node_contents
-isempty(::Integer, ::ABM)
-```
+The core API is defined by [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial](@ref) page. The functionality described here builds on top of the core API.
 
 ## Agent information and retrieval
 ```@docs
-nagents
+space_neighbors
 id2agent
 random_agent
+nagents
+allagents
 ```
 
+
 ## Model-Agent interaction
+The following API is mostly universal across all types of [Space](@ref Space).
+Only some specific methods are exclusive to a specific type of space, but we think
+this is clear from the documentation strings (if not, please open an issue!).
 ```@docs
 add_agent!
 add_agent_pos!
@@ -36,18 +26,34 @@ kill_agent!
 genocide!
 ```
 
+## Discrete space exclusives
+```@docs
+node_neighbors
+nv(::ABM)
+ne(::ABM)
+has_empty_nodes
+find_empty_nodes
+pick_empty
+get_node_contents
+get_node_agents
+isempty(::Integer, ::ABM)
+NodeIterator
+nodes
+```
+
+## Continuous space exclusives
+```@docs
+interacting_pairs
+nearest_neighbor
+elastic_collision!
+index!
+```
 ## Simulations
 The central simulation function is [`step!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
 ```@docs
 paramscan
 sample!
-```
-
-## Iteration
-```@docs
-NodeIterator
-nodes
 ```
 
 ## Schedulers
@@ -63,13 +69,6 @@ partial_activation
 property_activation
 ```
 
-## Utilities
-
-```@docs
-coord2vertex
-vertex2coord
-```
-
 ## Parallelization
 
 ```@docs
@@ -80,6 +79,7 @@ parallel_replicates
 Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need to install both `AgentsPlots`, as well as a plotting backend (we use GR) to use the following functions.
 
 ```@docs
+plotabm
 plot2D
 plot_CA1D
 plot_CA2D

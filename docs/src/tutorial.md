@@ -7,7 +7,7 @@ Agents.jl structures simulations in three components: a _model_ component that k
 For building any Agent-Based-Model (ABM), users have to define at least the following four quantities:
 
 1. An [`AgentBasedModel`](@ref) instance.
-1. A [`Space`](@ref) instance.  
+1. A space instance.
 1. A subtype of [`AbstractAgent`](@ref) for the agents.
 1. A stepping function that controls how the agents and the model evolve.
 
@@ -25,17 +25,19 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 AgentBasedModel
 ```
 
-The model type may not necessarily be a mutable type, it depends on your problem.
+## [2. The space](@id Space)
+Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
 
-## 2. The space
-
-Under the hood, all spaces are represented by a graph from LightGraphs.jl.
-However, if your space is a regular grid then there is some additional functionality that allows converting graph nodes to coordinates on the multidimensional grid.
-
-Regardless, in every case you initialize your space by calling `Space`:
+The discrete possibilities are
 
 ```@docs
-Space
+GraphSpace
+GridSpace
+```
+
+and the continuous version is
+```@docs
+ContinuousSpace
 ```
 
 ## 3. The agent

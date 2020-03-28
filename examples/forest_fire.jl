@@ -34,7 +34,7 @@ end
 # We then make a setup function that initializes the model
 function model_initiation(; f, d, p, griddims, seed = 111)
     Random.seed!(seed)
-    space = Space(griddims, moore = true)
+    space = GridSpace(griddims, moore = true)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties=properties)
 

@@ -80,7 +80,7 @@ mutable struct WealthInSpace <: AbstractAgent
 end
 
 function wealth_model_2D(;dims = (25,25), wealth = 1, M = 1000)
-  space = Space(dims, periodic = true)
+  space = GridSpace(dims, periodic = true)
   model = ABM(WealthInSpace, space; scheduler = random_activation)
   for i in 1:M # add agents in random nodes
       add_agent!(model, wealth)
