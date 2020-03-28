@@ -152,9 +152,7 @@ end
 function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
   id = biggest_id(model) + 1
   agent = A(id, pos, args...)
-  DBInterface.execute(model.space.insertq, (agent.pos..., id))
-  model.agents[id] = agent
-  return agent
+  add_agent_pos!(agent, model)
 end
 
 """

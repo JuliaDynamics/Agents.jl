@@ -15,6 +15,12 @@
     @test model.a == 2
     @test model.b == "test"
 
+
+    newa = Agent0(6)
+    model[6] = newa
+    @test model[6] == newa
+    @test_throws ArgumentError model[7] = newa
+
     prop2 = Agent2(1, 0.5)
     model2 = ABM(Agent0; properties = prop2)
     @test model2.weight == 0.5

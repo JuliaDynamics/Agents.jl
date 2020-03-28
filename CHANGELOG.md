@@ -7,7 +7,7 @@
 * New convenience function `allagents`
 * New continuous space functions `nearest_neighbor` and `elastic_collision!`
 * New iterator `interacting_pairs`
-* Agents can be accessed from the model directly. `model[id]` is equivalent with `model.agents[id]` and replaces `id2agent`.
+* Agents can be accessed from the model directly. `model[id]` is equivalent with `model.agents[id]` and replaces `id2agent`. `model[id] = agent` also works.
 * If `model.properties` is a dictionary with key type Symbol, then the
   convenience syntax `model.prop` returns `model.properties[:prop]`.
 

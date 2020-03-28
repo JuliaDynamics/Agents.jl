@@ -143,7 +143,7 @@ end
 
 function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) where {A}
   push!(model.space.agent_positions[pos], agent.id)
-  model.agents[agent.id] = agent
+  model[agent.id] = agent
   # update agent position
   agent.pos = vertex2coord(pos, model)
   return agent
@@ -154,7 +154,7 @@ function add_agent!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
     nodenumber = rand(1:nv(model.space))
     add_agent!(agent, nodenumber, model)
   else
-    model.agents[agent.id] = agent
+    model[agent.id] = agent
   end
   return agent
 end
@@ -195,17 +195,17 @@ end
 function add_agent!(model::ABM{A, Nothing}, properties...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
-  model.agents[id] = A(id, properties...)
-  return model.agents[id]
+  model[id] = A(id, properties...)
+  return model[id]
 end
 
 function add_agent!(model::ABM{A, S}, properties...) where {A, S<:DiscreteSpace}
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
-  model.agents[id] = A(id, cnode, properties...)
+  model[id] = A(id, cnode, properties...)
   push!(model.space.agent_positions[n], id)
-  return model.agents[id]
+  return model[id]
 end
 
 biggest_id(model::ABM) = isempty(model.agents) ? 0 : maximum(keys(model.agents))

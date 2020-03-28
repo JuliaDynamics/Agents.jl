@@ -64,7 +64,7 @@ spacetype(::ABM{A, S}) where {A, S} = S
 Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
  `ABM` is equivalent with `AgentBasedModel`.
- 
+
 The agents are stored in a dictionary that maps unique ids (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
@@ -112,6 +112,12 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     if abm.properties ≠ nothing
         print(io, "\n properties: ", abm.properties)
     end
+end
+
+Base.getindex(m::ABM, id::Integer) = m.agents[id]
+function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
+    a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
+    m.agents[id] = a
 end
 
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
