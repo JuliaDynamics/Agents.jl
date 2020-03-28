@@ -41,7 +41,7 @@ function model_initiation(; f, d, p, griddims, seed = 111)
     ## create and add trees to each node with probability d,
     ## which determines the density of the forest
     for node in nodes(forest)
-        if rand() ≤ forest.properties[:d]
+        if rand() ≤ forest.d
             add_agent!(node, forest, true)
         end
     end
@@ -59,13 +59,13 @@ function forest_step!(forest)
     nc = get_node_contents(node, forest)
     ## the cell is empty, maybe a tree grows here
     if length(nc) == 0
-        rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
+        rand() ≤ forest.p && add_agent!(node, forest, true)
     else
-      tree = id2agent(nc[1], forest) # by definition only 1 agent per node
+      tree = forest[nc[1]] # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
-        if rand() ≤ forest.properties[:f]  # the tree ignites spntaneously
+        if rand() ≤ forest.f  # the tree ignites spntaneously
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
           for cell in node_neighbors(node, forest)

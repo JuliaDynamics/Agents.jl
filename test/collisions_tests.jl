@@ -47,8 +47,8 @@ function kinetic(model)
 end
 
 model = model_initiation()
-initvels = [id2agent(i, model).vel for i in 1:100]
-x = count(!isapprox(initvels[id][1], id2agent(id, model).vel[1]) for id in 1:100)
+initvels = [model[i].vel for i in 1:100]
+x = count(!isapprox(initvels[id][1], model[id].vel[1]) for id in 1:100)
 @test x == 0
 
 K0, p0 = kinetic(model)
@@ -58,9 +58,9 @@ ipairs = interacting_pairs(model, diameter)
 @test length(ipairs) ≠ 0
 
 step!(model, agent_step!, model_step!, 10)
-x = count(any(initvels[id] .≠ id2agent(id, model).vel) for id in 1:100)
+x = count(any(initvels[id] .≠ model[id].vel) for id in 1:100)
 
-y = count(!any(initvels[id] .≈ id2agent(id, model).vel) for id in 1:50)
+y = count(!any(initvels[id] .≈ model[id].vel) for id in 1:50)
 @test y == 0
 
 

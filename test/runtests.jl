@@ -52,6 +52,7 @@ Agent7(id, pos; f1, f2) = Agent7(id, pos, f1, f2)
 @testset "Agents.jl Tests" begin
 
 include("api_tests.jl")
+include("model_access.jl")
 include("space_test.jl")
 include("interaction_tests.jl")
 include("data_collector_test.jl")

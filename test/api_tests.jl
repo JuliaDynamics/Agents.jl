@@ -25,9 +25,8 @@ end
 
 @testset "Model construction" begin
     # Shouldn't use ImmutableAgent since it cannot be edited
-    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(ImmutableAgent)
     agent = ImmutableAgent(1)
-    @test_logs (:warn, "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(agent)
+    @test_logs (:warn, "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.") ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn=false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
@@ -63,7 +62,7 @@ end
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
-    @test_logs (:warn, "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
+    @test_logs (:warn, "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1,1)); warn=false)) <: AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
@@ -244,7 +243,7 @@ end
   add_agent!((0.7,0.1), model, (15,20), 5.0)
   add_agent!((0.2,0.9), model, (8,35), 1.7)
   @test nagents(model) == 2
-  kill_agent!(id2agent(1,model), model)
+  kill_agent!(model[1], model)
   @test nagents(model) == 1
 end
 

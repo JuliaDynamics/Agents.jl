@@ -368,14 +368,17 @@ end
 Same as `get_node_contents(x, model)` but directly returns the list of agents
 instead of just the list of IDs.
 """
-get_node_agents(x, model) = [id2agent(id, model) for id in get_node_contents(x, model)]
+get_node_agents(x, model) = [model[id] for id in get_node_contents(x, model)]
 
 """
     id2agent(id::Integer, model)
 
 Return an agent given its ID.
 """
-id2agent(id::Integer, model::ABM) = model.agents[id]
+function id2agent(id::Integer, model::ABM)
+  @warn "`id2agent(id, model)` is deprecated. Use `model[id]` instead!"
+  model[id]
+end
 
 """
     space_neighbors(position, model::ABM [, r]) → ids

@@ -100,9 +100,9 @@ function agent_step_2d!(agent, model)
     neighboring_nodes = node_neighbors(agent_node, model)
     push!(neighboring_nodes, agent_node) # also consider current node
     rnode = rand(neighboring_nodes) # the node that we will exchange with
-    available_agents = get_node_contents(rnode, model)
-    if length(available_agents) > 0
-        random_neighbor_agent = id2agent(rand(available_agents), model)
+    available_ids = get_node_contents(rnode, model)
+    if length(available_ids) > 0
+        random_neighbor_agent = model[rand(available_ids)]
         agent.wealth -= 1
         random_neighbor_agent.wealth += 1
     end

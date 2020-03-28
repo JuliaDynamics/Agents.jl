@@ -124,14 +124,8 @@ end
 # central, low level function that is always called by all others!
 function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
   DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  model.agents[agent.id] = agent
+  model[agent.id] = agent
   return agent
-end
-
-function biggest_id(model::ABM{A, <: ContinuousSpace}) where {A}
-  db = model.space.db
-  ids = collect_ids(DBInterface.execute(db, "select max(id) as id from tab"))
-  id = ismissing(ids[1]) ? 0 : ids[1]
 end
 
 function randompos(space::ContinuousSpace)
@@ -158,9 +152,7 @@ end
 function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
   id = biggest_id(model) + 1
   agent = A(id, pos, args...)
-  DBInterface.execute(model.space.insertq, (agent.pos..., id))
-  model.agents[id] = agent
-  return agent
+  add_agent_pos!(agent, model)
 end
 
 """
@@ -262,13 +254,13 @@ function nearest_neighbor(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
-    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- id2agent(n[i], model).pos)))
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
     _, j = findmin(d)
     if dnew < d
       d, j = dnew, i
     end
   end
-  return id2agent(n[j], model)
+  return model[n[j]]
 end
 
 using LinearAlgebra
@@ -342,7 +334,7 @@ function interacting_pairs(model, r)
   for id in keys(model.agents)
     # Skip already checked agents
     any(isequal(id), p[2] for p in pairs) && continue
-    a1 = id2agent(id, model)
+    a1 = model[id]
     a2 = nearest_neighbor(a1, model, r)
     a2 ≠ nothing && push!(pairs, (id, a2.id))
   end

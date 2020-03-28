@@ -34,6 +34,8 @@ mutable struct ExampleAgent <: AbstractAgent
     happy::Bool
 end
 ```
+where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in continuous
+space.
 """
 abstract type AbstractAgent end
 
@@ -46,6 +48,7 @@ function correct_pos_type(n, model)
 end
 
 SpaceType=Union{Nothing, AbstractSpace}
+
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     agents::Dict{Int,A}
     space::S
@@ -57,25 +60,31 @@ agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
 
 """
-    AgentBasedModel(AgentType [, space]; scheduler, properties, warn)
-Create an agent based model from the given agent type
-and the `space`.
-You can provide an agent _instance_ instead of type, and the type will be
-deduced. `ABM` is equivalent with `AgentBasedModel`.
-The agents are stored in a dictionary `model.agents`, where the keys are the
-agent IDs, while the values are the agents themselves.
-It is recommended however to use [`id2agent`](@ref) to get an agent.
+    AgentBasedModel(AgentType [, space]; scheduler, properties) → model
+Create an agent based model from the given agent type and `space`.
+You can provide an agent _instance_ instead of type, and the type will be deduced.
+ `ABM` is equivalent with `AgentBasedModel`.
 
-`space` can be omitted, which means that all agents are virtually in one node
-and have no spatial structure.
-If space is omitted, some functions that facilitate agent-space interactions will not work.
+The agents are stored in a dictionary that maps unique ids (integers)
+to agents. Use `model[id]` to get the agent with the given `id`.
 
-Optionally provide a `scheduler` that decides the order with which agents
-are activated in the model, and `properties`
-for additional model-level properties.
-This is accessed as `model.properties` for later use.
+`space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
+[`ContinuousSpace`](@ref).
+If it is ommited then all agents are virtually in one node and have no spatial structure.
 
-Type tests for `AgentType` are done, use `warn=false` to silence them.
+`properties = nothing` is additional model-level properties (typically a dictionary)
+that can be accessed as `model.properties`. However, if `properties` is a dictionary with
+key type `Symbol`, or of it is a struct, then the syntax
+`model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
+for structs).
+This syntax can't be used for `name` being `agents, space, scheduler, properties`,
+which are the fields of `AgentBasedModel`.
+
+`scheduler = fastest` decides the order with which agents are activated
+(see e.g. [`by_id`](@ref) and the scheduler API).
+
+Type tests for `AgentType` are done, and by default
+warnings are thrown when appropriate. Use keyword `warn=false` to supress that.
 """
 function AgentBasedModel(
         ::Type{A}, space::S = nothing;
@@ -87,14 +96,8 @@ function AgentBasedModel(
     return ABM{A, S, F, P}(agents, space, scheduler, properties)
 end
 
-function AgentBasedModel(
-        agent::A, space::S = nothing;
-        scheduler::F = fastest, properties::P = nothing, warn = true
-        ) where {A<:AbstractAgent, S<:SpaceType, F, P}
-    agent_validator(typeof(agent), space, warn)
-
-    agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties)
+function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
+    return ABM(typeof(agent), args...; kwargs...)
 end
 
 function Base.show(io::IO, abm::ABM{A}) where {A}
@@ -111,6 +114,32 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     end
 end
 
+Base.getindex(m::ABM, id::Integer) = m.agents[id]
+function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
+    a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
+    m.agents[id] = a
+end
+
+Base.getindex(m::ABM, id::Integer) = m.agents[id]
+
+
+function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
+    if s === :agents
+        return getfield(m, :agents)
+    elseif s === :space
+        return getfield(m, :space)
+    elseif s === :scheduler
+        return getfield(m, :scheduler)
+    elseif s === :properties
+        return getfield(m, :properties)
+    elseif P <: Dict
+        return getindex(getfield(m, :properties), s)
+    else # properties is assumed to be a struct
+        return getproperty(getfield(m, :properties), s)
+    end
+end
+
+
 """
     agent_validator(agent, space)
 Validate the user supplied agent (subtype of `AbstractAgent`).
@@ -119,8 +148,8 @@ Checks for mutability and existence and correct types for fields depending on `S
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
     if warn
-        isconcretetype(A) || @warn "Agent struct should be a concrete type. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types, you can silence this warning."
-        isbitstype(A) && @warn "Agent struct should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
+        isconcretetype(A) || @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
+        isbitstype(A) && @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))

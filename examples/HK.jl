@@ -55,7 +55,7 @@ end
 get_old_opinion(agent)::Float64 = agent.old_opinion
 
 function boundfilter(agent,model)
-    filter(j->abs(get_old_opinion(agent) - j) < model.properties[:ϵ],
+    filter(j->abs(get_old_opinion(agent) - j) < model.ϵ,
      get_old_opinion.(values(model.agents)))
 end
 
@@ -71,7 +71,7 @@ end
 
 function model_step!(model)
     for i in keys(model.agents)
-        agent = id2agent(i, model)
+        agent = model[i]
         updateold(agent)
     end
 end
@@ -110,7 +110,7 @@ using Plots
 plotsim(data, ϵ) = plot(
                         data[!, :step],
                         data[!, :new_opinion],
-                        leg= false, 
+                        leg= false,
                         group = data[!, :id],
                         title = "epsilon = $(ϵ)"
                         )
@@ -122,4 +122,3 @@ plt001,plt015,plt03 = map(
                           )
 
 plot(plt001, plt015, plt03, layout = (3,1))
-

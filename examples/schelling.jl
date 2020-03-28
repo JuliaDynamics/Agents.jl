@@ -43,8 +43,7 @@ space = GridSpace((10,10), moore = true)
 # We also want to include a property `min_to_be_happy` in our model, and so we have:
 
 properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space;
-                scheduler = fastest, properties = properties)
+schelling = ABM(SchellingAgent, space; properties = properties)
 
 
 # Here we used the default scheduler (which is also the fastest one) to create
@@ -91,7 +90,7 @@ end
 
 function agent_step!(agent, model)
     agent.mood == true && return # do nothing if already happy
-    minhappy = model.properties[:min_to_be_happy]
+    minhappy = model.min_to_be_happy
     neighbor_cells = node_neighbors(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
@@ -104,7 +103,7 @@ function agent_step!(agent, model)
         agent_id = node_contents[1]
         ## ...and increment count_neighbors_same_group if the neighbor's group is
         ## the same.
-        neighbor_agent_group = model.agents[agent_id].group
+        neighbor_agent_group = model[agent_id].group
         if neighbor_agent_group == agent.group
             count_neighbors_same_group += 1
         end
