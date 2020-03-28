@@ -145,7 +145,7 @@ function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) whe
   push!(model.space.agent_positions[pos], agent.id)
   model.agents[agent.id] = agent
   # update agent position
-  agent.pos = vertex2coord(pos, model)
+  agent.pos = correct_pos_type(pos, model)
   return agent
 end
 
@@ -163,7 +163,8 @@ end
 """
     add_agent!(node, model::ABM, properties...; kwargs...)
 Add a new agent in the given `node`, by constructing the agent type of
-the `model` and propagating all *extra* positional arguments in `properties` and optional keyword arguemts in `kwargs` to the constructor.
+the `model` and propagating all *extra* positional arguments in `properties` and
+optional keyword arguemts in `kwargs` to the constructor.
 
 Notice that this function takes care of setting the agent's id and position and thus
 `properties...` and `kwargs...` are propagated to other fields the agent has.

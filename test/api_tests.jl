@@ -209,9 +209,9 @@ end
 
   # ContinuousSpace
   model = ABM(Agent6, ContinuousSpace(2))
-  agent = add_agent!((0.0,0.0), model, (1.0,0.0), 1.0)
+  agent = add_agent!((0.0,0.0), model, (0.5,0.0), 1.0)
   move_agent!(agent, model)
-  @test agent.pos == (1.0,0.0)
+  @test agent.pos == (0.5,0.0)
 end
 
 @testset "kill_agent!" begin
