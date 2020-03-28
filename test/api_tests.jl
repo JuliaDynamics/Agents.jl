@@ -73,15 +73,6 @@ end
     @test Agents.agenttype(ABM(agent, GridSpace((1,1)))) <: AbstractAgent
 end
 
-mutable struct Agent2 <: AbstractAgent
-  id::Int
-  pos::Int
-  f1::Bool
-  f2::Int
-end
-
-Agent2(id, pos; f1, f2) = Agent2(id, pos, f1, f2)
-
 model1 = ABM(Agent1, Space((3,3)))
 
 model1 = ABM(Agent1, GridSpace((3,3)))
@@ -178,7 +169,7 @@ end
 @testset "add_agent!" begin
   properties = Dict(:x1=>1)
   space = Space(complete_digraph(10))
-  model = AgentBasedModel(Agent2, space; properties=properties)
+  model = AgentBasedModel(Agent7, space; properties=properties)
   attributes = (f1=true,f2=1)
   add_agent!(1, model, attributes...)
   attributes = (f2=1,f1=true)
