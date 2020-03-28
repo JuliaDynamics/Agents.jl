@@ -1,4 +1,4 @@
-using Agents, Test, Random
+using Agents, Test, Random, LightGraphs
 
 mutable struct Agent1 <: AbstractAgent
   id::Int
