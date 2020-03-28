@@ -116,11 +116,19 @@ end
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 
-function Base.getproperty(m::ABM, s::Symbol)
-    if s ∈ (:agents, :space, :scheduler, :properties)
-        return Base.getfield(m, s)
-    else
-        return Base.getindex(m.properties, s)
+function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
+    if s === :agents
+        return getfield(m, :agents)
+    elseif s === :space
+        return getfield(m, :space)
+    elseif s === :scheduler
+        return getfield(m, :scheduler)
+    elseif s === :properties
+        return getfield(m, :properties)
+    elseif P <: Dict
+        return getindex(getfield(m, :properties), s)
+    else # properties is assumed to be a struct
+        return getproperty(getfield(m, :properties), s)
     end
 end
 
