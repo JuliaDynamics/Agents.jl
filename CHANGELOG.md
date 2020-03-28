@@ -1,3 +1,5 @@
+#v2.5
+* add keyword argument support for `add_agent!`
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
 * Added a scheduler public API.

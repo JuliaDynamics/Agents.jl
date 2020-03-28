@@ -154,12 +154,12 @@ function biggest_id(model)
 end
 
 """
-    add_agent!(node, model::ABM, properties...)
+    add_agent!(node, model::ABM, properties...; kwargs...)
 Add a new agent in the given `node`, by constructing the agent type of
-the `model` and propagating all *extra* `properties` to the constructor.
+the `model` and propagating all *extra* positional arguments in `properties` and optional keyword arguemts in `kwargs` to the constructor.
 
 Notice that this function takes care of setting the agent's id and position and thus
-`properties...` is propagated to other fields the agent has.
+`properties...` and `kwargs...` are propagated to other fields the agent has.
 
 ## Example
 ```julia
@@ -167,10 +167,13 @@ using Agents
 mutable struct Agent <: AbstractAgent
     id::Int
     w::Float64
+    k::Bool
 end
+Agent(id; w, k) = Agent(id, w, k)
 m = ABM(Agent) # model without spatial structure
-add_agent!(m, 1, rand()) # incorrect: id is set internally
-add_agent!(m, rand()) # correct: weight becomes rand()
+add_agent!(m, 1, rand(), true) # incorrect: id is set internally
+add_agent!(m, rand(), true) # correct: weight becomes rand()
+add_agent!(m; w = rand(), k =true) # correct: weight becomes rand()
 ```
 """
 function add_agent!(node, model::ABM, properties...; kwargs...)
@@ -182,8 +185,8 @@ function add_agent!(node, model::ABM, properties...; kwargs...)
 end
 
 """
-    add_agent!(model::ABM, properties...)
-Similar with `add_agent!(node, model, properties...)`, but adds the
+    add_agent!(model::ABM, properties...; kwargs...)
+Similar with `add_agent!(node, model, properties...; kwargs...)`, but adds the
 created agent to a random node.
 This function also works for models without a spatial structure.
 """
@@ -205,7 +208,7 @@ end
 
 
 """
-    add_agent_single!(model::ABM, properties...)
+    add_agent_single!(model::ABM, properties...; kwargs...)
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
