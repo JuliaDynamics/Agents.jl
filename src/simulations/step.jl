@@ -62,7 +62,7 @@ dummystep(model) = nothing
 """
     dummystep(agent, model)
 
-Ignore the agent dynamics on this `step!`. Use in-place of `agent_step!`.
+Ignore the agent dynamics on this `step!`. Use instead of `agent_step!`.
 """
 dummystep(agent, model) = nothing
 
