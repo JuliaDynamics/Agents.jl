@@ -52,7 +52,18 @@ function step! end
 #######################################################################################
 # basic stepping
 #######################################################################################
+
+"""
+    dummystep(model)
+
+Ignore the model dynamics on this `step!`. Use in-place of `model_step!`.
+"""
 dummystep(model) = nothing
+"""
+    dummystep(agent, model)
+
+Ignore the agent dynamics on this `step!`. Use in-place of `agent_step!`.
+"""
 dummystep(agent, model) = nothing
 
 step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)

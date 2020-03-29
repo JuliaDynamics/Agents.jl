@@ -376,7 +376,7 @@ get_node_agents(x, model) = [model[id] for id in get_node_contents(x, model)]
 Return an agent given its ID.
 """
 function id2agent(id::Integer, model::ABM)
-  @warn "`id2agent(id, model)` is deprecated. Use `model[id]` instead!"
+    @warn "`id2agent(id, model)` is deprecated. Use `model[id]` or `getindex(model, id)` instead!"
   model[id]
 end
 

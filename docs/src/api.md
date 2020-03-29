@@ -5,12 +5,15 @@ The core API is defined by [`AgentBasedModel`](@ref), [Space](@ref Space), [`Abs
 ## Agent information and retrieval
 ```@docs
 space_neighbors
-id2agent
 random_agent
 nagents
 allagents
 ```
-
+In addition to these functions, a number of standard Julia methods have been implemented for `AgentBasedModel`.
+```@docs
+getindex
+getproperty
+```
 
 ## Model-Agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).
@@ -54,6 +57,7 @@ But there are other functions that are related to simulations listed here.
 ```@docs
 paramscan
 sample!
+dummystep
 ```
 
 ## Schedulers

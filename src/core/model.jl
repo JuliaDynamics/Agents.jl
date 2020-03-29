@@ -114,15 +114,36 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     end
 end
 
+"""
+    getindex(model::ABM, id::Integer)
+
+Return an agent given its ID.
+"""
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
+
+"""
+    setindex!(model::ABM, agent::AbstractAgent, id::Int)
+
+Add an `agent` to the `model` at a given index: `id`. Note this method will return an error if the `id` requested is not equal to `agent.id`.
+"""
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
 end
 
-Base.getindex(m::ABM, id::Integer) = m.agents[id]
+"""
+    getproperty(model::ABM, prop::Symbol)
 
+Return a property from the current `model`. Possibilities are
+- `:agents`, list of all agents present
+- `:space`, current space information
+- `:scheduler`, which sheduler is being used
+- `:properties`, dictionary of all model properties
+- Any symbol that exists within the model properties dictionary
 
+Alternatively, all of these values can be returned using the `model.x` syntax.
+For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`, retrieving these values can be obtained via `model.properties` as well as the `getproperty()` method. Equivalently, we can use `getproperty(model, :weight)` and `model.weight`.
+"""
 function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
     if s === :agents
         return getfield(m, :agents)
