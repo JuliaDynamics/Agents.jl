@@ -56,7 +56,7 @@ function step! end
 """
     dummystep(model)
 
-Ignore the model dynamics on this `step!`. Use in-place of `model_step!`.
+Ignore the model dynamics on this `step!`. Use instead of `model_step!`.
 """
 dummystep(model) = nothing
 """
