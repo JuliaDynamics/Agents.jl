@@ -141,7 +141,7 @@ end
 
 function Base.setproperty!(m::ABM{A, S, F, P}, s::Symbol, x) where {A, S, F, P}
     properties = getfield(m, :properties)
-    if haskey(properties, s)
+    if properties != nothing && haskey(properties, s)
         properties[s] = x
     else
         throw(ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor."))
