@@ -70,7 +70,7 @@ After the basic types and functions are defined, we can run the model using the 
 In addition, by providing keywords to `step!`, it is also possible to collect and process data while the model evolves.
 
 ```@docs
-Agents.step!
+step!
 ```
 
 Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.

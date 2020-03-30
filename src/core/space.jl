@@ -1,5 +1,5 @@
 export node_neighbors, find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-id2agent, NodeIterator, space_neighbors, nodes, get_node_agents
+NodeIterator, space_neighbors, nodes, get_node_agents
 export nv, ne
 export GraphSpace, GridSpace
 
@@ -370,15 +370,7 @@ instead of just the list of IDs.
 """
 get_node_agents(x, model) = [model[id] for id in get_node_contents(x, model)]
 
-"""
-    id2agent(id::Integer, model)
-
-Return an agent given its ID.
-"""
-function id2agent(id::Integer, model::ABM)
-  @warn "`id2agent(id, model)` is deprecated. Use `model[id]` instead!"
-  model[id]
-end
+@deprecate id2agent(id::Integer, model::ABM) model[id]
 
 """
     space_neighbors(position, model::ABM [, r]) → ids

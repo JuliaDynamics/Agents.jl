@@ -1,4 +1,3 @@
-using Agents, Test, Random, LightGraphs
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
