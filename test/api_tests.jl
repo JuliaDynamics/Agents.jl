@@ -130,6 +130,16 @@ properties = [model.agents[id].weight for id in ids]
 
 @test ids[sortperm(properties)] == a
 
+
+# %% get/set testing
+model = ABM(Agent1, GridSpace((10,10)); properties=Dict(:number => 1, :nested => BadAgent(1,1)))
+add_agent!(model)
+add_agent!(model)
+@test (model.number += 1) == 2
+@test (model.nested.pos = 5) == 5
+@test_throws ErrorException (model.space = ContinuousSpace(2))
+
+
 @testset "sample!" begin
   model = ABM(Agent2)
   for i in 1:20; add_agent!(model, rand()/rand()); end
