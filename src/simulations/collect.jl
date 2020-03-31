@@ -1,7 +1,7 @@
 """
 Collects agent properties (fields of the agent object) into a dataframe.
 """
-function collect_agent_data(model::ABM, properties::Array{Symbol}; step=0)
+function collect_agent_data(model::ABM, properties::Array{Symbol}, step)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
@@ -15,8 +15,8 @@ end
 Collects agent properties (fields of the agent object) into a dataframe
 and appends them to the supplied `df`.
 """
-function collect_agent_data!(df::DataFrame, model::ABM, properties::Array{Symbol}; step::Integer)
-  d = collect_agent_data(model, properties, step=step)
+function collect_agent_data!(df::DataFrame, model::ABM, properties::Array{Symbol}, step::Integer)
+  d = collect_agent_data(model, properties, step)
   df = vcat(df, d)
   return df
 end
@@ -25,7 +25,7 @@ end
 Collects model properties from functions provided in `properties`.
 # TODO: decide the shape of model data. what if the output for each function has a different length?
 """
-function collect_model_data(model::ABM, properties::AbstractArray; step=0)
+function collect_model_data(model::ABM, properties::AbstractArray, step)
   dd = DataFrame()
   for fn in properties
     r = fn(model)
@@ -87,7 +87,7 @@ function _step!(model, agent_step!, model_step!, n::F, properties,; when) where 
   while !n(model)
     step!(model, agent_step!, model_step!, 1)
     if ss in when
-      df = collect_agent_data!(df, model, properties, step = ss) 
+      df = collect_agent_data!(df, model, properties, ss) 
     end
     ss += 1
   end
@@ -99,7 +99,7 @@ function _step!(model, agent_step!, model_step!, n::Int, properties; when)
   for ss in 1:n
     step!(model, agent_step!, model_step!, 1)
     if ss in when
-      df = collect_agent_data!(df, model, properties, step = ss)
+      df = collect_agent_data!(df, model, properties, ss)
     end
   end
   return df
