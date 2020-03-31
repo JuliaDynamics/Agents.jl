@@ -3,3 +3,4 @@ docs/src/examples
 paper/__latexindent_temp\.tex
 *.scss
 *.css
+Manifest.toml
