@@ -1,49 +1,36 @@
+## Basic data collection functions
+
 get_data(a, s::Symbol) = getproperty(a, s)
 get_data(a, f::Function) = f(a)
 
 """
+    collect_agent_data(model::ABM, properties::AbstractArray, step::Int)
+
 Collect agent properties into a dataframe. `properties` can have symbols (agent fields) or functions that take an agent as input.
 """
-function collect_agent_data(model::ABM, properties::AbstractArray, step)
+function collect_agent_data(model::ABM, properties::AbstractArray, step::Int)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
     dd[!, fn] = get_data.(values(model.agents), fn)
   end
-  dd[!, :step] = repeat([step], size(dd, 1))
+  dd[!, :step] = fill(step, size(dd, 1))
   return dd
 end
 
 """
-Collect agent properties (fields of the agent object) into a dataframe
-and appends them to the supplied `df`.
-"""
-function collect_agent_data!(df::DataFrame, model::ABM, properties::Array{Symbol}, step::Integer)
-  d = collect_agent_data(model, properties, step)
-  df = vcat(df, d)
-  return df
-end
+    collect_model_data(model::ABM, properties::AbstractArray, step::Int)
 
-"""
 Collect model properties from functions or symbols provided in `properties`.
 """
-function collect_model_data(model::ABM, properties::AbstractArray, step)
+function collect_model_data(model::ABM, properties::AbstractArray, step::Int)
   dd = DataFrame()
   for fn in properties
     r =  get_data(model, fn)
     dd[!, Symbol(fn)] = [r]
   end
-  dd[!, :step] = repeat([step], size(dd, 1))
+  dd[!, :step] = fill(step, size(dd, 1))
   return dd
-end
-
-"""
-Collect model properties and appends them to the supplied `df`.
-"""
-function collect_model_data!(df::DataFrame, model::ABM, properties::Array{Symbol}, step::Integer)
-  d = collect_model_data(model, properties, step)
-  df = vcat(df, d)
-  return df
 end
 
 """
@@ -86,67 +73,81 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   return final_df
 end
 
-# TODO collect model data too
-function _step!(model, agent_step!, model_step!, n::F, properties; when) where F<:Function
-  df = DataFrame()
+## step functions
+###################
+
+"used in _step!"
+function _step_agent_collect!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
+  if isnothing(aggregation_dict)
+    dft = collect_agent_data(model, agent_properties, step)
+    df = vcat(df, dft)
+  else
+    dfall = collect_agent_data(model, agent_properties, step)
+    dfa = aggregate_data(dfall, aggregation_dict)
+    df = vcat(df, dfa)
+  end
+  return df
+end
+
+"used in _step!"
+function _step_model_collect!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
+  if isnothing(aggregation_dict)
+    dft = collect_model_data(model, model_properties, step)
+    df = vcat(df, dft)
+  else
+    dfall = collect_model_data(model, model_properties, step)
+    dfa = aggregate_data(dfall, aggregation_dict)
+    df = vcat(df, dfa)
+  end
+  return df
+end
+
+function _step!(model, agent_step!, model_step!, n::F, when; model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing) where F<:Function
+  df_agent = DataFrame()
+  df_model = DataFrame()
   ss = 0
   while !n(model)
     step!(model, agent_step!, model_step!, 1)
     if ss in when
-      df = collect_agent_data!(df, model, properties, ss)
+      if !isnothing(model_properties)
+        df_model = _step_model_collect!(df_model, model, model_properties,  aggregation_dict, ss)
+      end
+      if !isnothing(agent_properties)
+        df_agent = _step_agent_collect!(df_agent, model, agent_properties,  aggregation_dict, ss)
+      end
     end
     ss += 1
   end
-  return df
+  return df_agent, df_model
 end
 
-function _step!(model, agent_step!, model_step!, n::F, properties, aggregation_dict; when) where F<:Function
-  df = DataFrame()
-  ss = 0
-  while !n(model)
-    step!(model, agent_step!, model_step!, 1)
-    if ss in when
-      dfall = collect_agent_data(model, properties, ss)
-      dfa = aggregate_data(dfall, aggregation_dict)
-      df = vcat(df, dfa)
-    end
-    ss += 1
-  end
-  return df
-end
-
-function _step!(model, agent_step!, model_step!, n::Int, properties; when)
-  df = DataFrame()
+function _step!(model, agent_step!, model_step!, n::Int, when;
+  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing)
+  df_agent = DataFrame()
+  df_model = DataFrame()
   for ss in 1:n
     step!(model, agent_step!, model_step!, 1)
     if ss in when
-      df = collect_agent_data!(df, model, properties, ss)
+      if !isnothing(model_properties)
+        df_model = _step_model_collect!(df_model, model, model_properties,  aggregation_dict, ss)
+      end
+      if !isnothing(agent_properties)
+        df_agent = _step_agent_collect!(df_agent, model, agent_properties,  aggregation_dict, ss)
+      end
     end
   end
-  return df
-end
-
-function _step!(model, agent_step!, model_step!, n::Int, properties, aggregation_dict; when)
-  df = DataFrame()
-  for ss in 1:n
-    step!(model, agent_step!, model_step!, 1)
-    if ss in when
-      dfall = collect_agent_data(model, properties, ss)
-      dfa = aggregate_data(dfall, aggregation_dict)
-      df = vcat(df, dfa)
-    end
-  end
-  return df
+  return df_agent, df_model
 end
 
 "Run replicates of the same simulation"
-function series_replicates(model, agent_step!, model_step!, n, properties; when, replicates)
+function series_replicates(model, agent_step!, model_step!, n, when; 
+  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
-  dataall = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when)
+  dataall = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
 
   for rep in 2:replicates
-    data = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when)
+    data = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
     data[!, :replicate] = [rep for i in 1:size(data, 1)]
 
     dataall = vcat(dataall, data)
@@ -157,9 +158,9 @@ end
 """
 A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
 """
-function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, properties;
-  when, dummyvar)
-  data = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when);
+function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
+   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
+  data = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   return data
 end
 
@@ -168,11 +169,11 @@ end
 
 Runs `replicates` number of simulations in parallel and returns a `DataFrame`.
 """
-function parallel_replicates(model::ABM, agent_step!, model_step!, n, properties;
-  when, replicates)
+function parallel_replicates(model::ABM, agent_step!, model_step!, n, when;
+  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
-  all_data = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n,
-  properties, when=when, dummyvar=j), 1:replicates)
+  all_data = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n, when;
+   model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_positions, dummyvar=j), 1:replicates)
 
   dd = DataFrame()
   for (rep, d) in enumerate(all_data)
@@ -231,7 +232,7 @@ function paramscan(parameters::Dict, initialize;
   counter = 0
   for d in combs
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, parallel=parallel)  # TODO after the above TODO's are finished
+    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, parallel=parallel)  # TODO
     addparams!(data, d, changing_params)
     alldata = vcat(data, alldata)
     if progress
