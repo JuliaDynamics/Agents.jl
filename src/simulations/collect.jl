@@ -1,18 +1,21 @@
+get_data(a, s::Symbol) = getproperty(a, s)
+get_data(a, f::Function) = f(a)
+
 """
-Collects agent properties (fields of the agent object) into a dataframe.
+Collect agent properties into a dataframe. `properties` can have symbols (agent fields) or functions that take an agent as input.
 """
-function collect_agent_data(model::ABM, properties::Array{Symbol}, step)
+function collect_agent_data(model::ABM, properties::AbstractArray, step)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
-    dd[!, fn] = getproperty.(values(model.agents), fn)
+    dd[!, fn] = get_data.(values(model.agents), fn)
   end
   dd[!, :step] = repeat([step], size(dd, 1))
   return dd
 end
 
 """
-Collects agent properties (fields of the agent object) into a dataframe
+Collect agent properties (fields of the agent object) into a dataframe
 and appends them to the supplied `df`.
 """
 function collect_agent_data!(df::DataFrame, model::ABM, properties::Array{Symbol}, step::Integer)
@@ -22,21 +25,25 @@ function collect_agent_data!(df::DataFrame, model::ABM, properties::Array{Symbol
 end
 
 """
-Collects model properties from functions provided in `properties`.
-# TODO: decide the shape of model data. what if the output for each function has a different length?
+Collect model properties from functions or symbols provided in `properties`.
 """
 function collect_model_data(model::ABM, properties::AbstractArray, step)
   dd = DataFrame()
   for fn in properties
-    r = fn(model)
-    if typeof(r) <: AbstractArray
-      dd[!, Symbol(fn)] = r
-    else 
-      dd[!, Symbol(fn)] = [r]
-    end
+    r =  get_data(model, fn)
+    dd[!, Symbol(fn)] = [r]
   end
   dd[!, :step] = repeat([step], size(dd, 1))
   return dd
+end
+
+"""
+Collect model properties and appends them to the supplied `df`.
+"""
+function collect_model_data!(df::DataFrame, model::ABM, properties::Array{Symbol}, step::Integer)
+  d = collect_model_data(model, properties, step)
+  df = vcat(df, d)
+  return df
 end
 
 """
@@ -80,14 +87,28 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
 end
 
 # TODO collect model data too
-# TODO aggregate data if provided
-function _step!(model, agent_step!, model_step!, n::F, properties,; when) where F<:Function
+function _step!(model, agent_step!, model_step!, n::F, properties; when) where F<:Function
   df = DataFrame()
   ss = 0
   while !n(model)
     step!(model, agent_step!, model_step!, 1)
     if ss in when
-      df = collect_agent_data!(df, model, properties, ss) 
+      df = collect_agent_data!(df, model, properties, ss)
+    end
+    ss += 1
+  end
+  return df
+end
+
+function _step!(model, agent_step!, model_step!, n::F, properties, aggregation_dict; when) where F<:Function
+  df = DataFrame()
+  ss = 0
+  while !n(model)
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      dfall = collect_agent_data(model, properties, ss)
+      dfa = aggregate_data(dfall, aggregation_dict)
+      df = vcat(df, dfa)
     end
     ss += 1
   end
@@ -100,6 +121,19 @@ function _step!(model, agent_step!, model_step!, n::Int, properties; when)
     step!(model, agent_step!, model_step!, 1)
     if ss in when
       df = collect_agent_data!(df, model, properties, ss)
+    end
+  end
+  return df
+end
+
+function _step!(model, agent_step!, model_step!, n::Int, properties, aggregation_dict; when)
+  df = DataFrame()
+  for ss in 1:n
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      dfall = collect_agent_data(model, properties, ss)
+      dfa = aggregate_data(dfall, aggregation_dict)
+      df = vcat(df, dfa)
     end
   end
   return df
