@@ -1,7 +1,7 @@
 """
 Collects agent properties (fields of the agent object) into a dataframe.
 """
-function collect_agent_data(model::ABM, properties::Array{Symbol}; step=1)
+function collect_agent_data(model::ABM, properties::Array{Symbol}; step=0)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
@@ -23,13 +23,14 @@ end
 
 """
 Collects model properties from functions provided in `properties`.
+# TODO: decide the shape of model data. what if the output for each function has a different length?
 """
-function collect_model_data(model::ABM, properties::AbstractArray; step=1)
+function collect_model_data(model::ABM, properties::AbstractArray; step=0)
   dd = DataFrame()
   for fn in properties
     r = fn(model)
     if typeof(r) <: AbstractArray
-      d[!, Symbol(fn)] = r
+      dd[!, Symbol(fn)] = r
     else 
       dd[!, Symbol(fn)] = [r]
     end
@@ -38,7 +39,6 @@ function collect_model_data(model::ABM, properties::AbstractArray; step=1)
   return dd
 end
 
-# TODO: decide on the shape of model data. what if the output for each function has a different length?
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   
@@ -53,19 +53,19 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   v1 = aggregation_dict[all_keys[1]]
   final_df = by(df, :step,  all_keys[1] => v1[1])
   for v2 in v1[2:end]
-    dd = by(df, :step,  k => v2)
+    dd = by(df, :step,  all_keys[1] => v2)
     final_df = join(final_df, dd, on=:step)
   end
   for k in all_keys[2:end]
     v = aggregation_dict[k]
     for v2 in v
       dd = by(df, :step,  k => v2)
-      final_df = join(final_df, all_df[di], on=:step)
+      final_df = join(final_df, dd, on=:step)
     end
   end
 
   # rename columns
-  colnames = Array{Symbol}(undef, length(final_df, 2)) 
+  colnames = Array{Symbol}(undef, size(final_df, 2)) 
   colnames[1] = :step
   counter = 2
   for (k,v) in aggregation_dict
@@ -77,4 +77,170 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   rename!(final_df, colnames)
 
   return final_df
+end
+
+# TODO collect model data too
+# TODO aggregate data if provided
+function _step!(model, agent_step!, model_step!, n::F, properties,; when) where F<:Function
+  df = DataFrame()
+  ss = 0
+  while !n(model)
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      df = collect_agent_data!(df, model, properties, step = ss) 
+    end
+    ss += 1
+  end
+  return df
+end
+
+function _step!(model, agent_step!, model_step!, n::Int, properties; when)
+  df = DataFrame()
+  for ss in 1:n
+    step!(model, agent_step!, model_step!, 1)
+    if ss in when
+      df = collect_agent_data!(df, model, properties, step = ss)
+    end
+  end
+  return df
+end
+
+"Run replicates of the same simulation"
+function series_replicates(model, agent_step!, model_step!, n, properties; when, replicates)
+
+  dataall = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when)
+  dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
+
+  for rep in 2:replicates
+    data = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when)
+    data[!, :replicate] = [rep for i in 1:size(data, 1)]
+
+    dataall = vcat(dataall, data)
+  end
+  return dataall
+end
+
+"""
+A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
+"""
+function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, properties;
+  when, dummyvar)
+  data = _step!(deepcopy(model), agent_step!, model_step!, n, properties, when=when);
+  return data
+end
+
+"""
+    parallel_replicates(agent_step!, model::ABM, n, agent_properties::Array{Symbol}, when::AbstractArray{Integer}, replicates::Integer)
+
+Runs `replicates` number of simulations in parallel and returns a `DataFrame`.
+"""
+function parallel_replicates(model::ABM, agent_step!, model_step!, n, properties;
+  when, replicates)
+
+  all_data = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n,
+  properties, when=when, dummyvar=j), 1:replicates)
+
+  dd = DataFrame()
+  for (rep, d) in enumerate(all_data)
+    d[!, :replicate] = [rep for i in 1:size(d, 1)]
+    dd = vcat(dd, d)
+  end
+
+  return dd
+end
+
+
+"""
+    paramscan(parameters, initialize; kwargs...)
+
+Run the model with all the parameter value combinations given in `parameters`,
+while initializing the model with `initialize`.
+This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
+internally. This means that every entry of `parameters` that is a `Vector`,
+contains many parameters and thus is scanned. All other entries of
+`parameters` that are not `Vector`s are not expanded in the scan.
+
+`initialize` is a function that creates an ABM. It should accept keyword arguments.
+
+### Keywords
+All the following keywords are propagated into [`step!`](@ref):
+`agent_step!, properties, n, when = 1:n, model_step! = dummystep`,
+`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
+
+The following keywords modify the `paramscan` function:
+
+`include_constants::Bool=false` determines whether constant parameters should be
+included in the output `DataFrame`.
+
+`progress::Bool = true` whether to show the progress of simulations.
+"""
+function paramscan(parameters::Dict, initialize;
+  agent_step!, properties, n,
+  when = 1:n,
+  model_step! = dummystep,
+  include_constants::Bool = false,
+  replicates::Int = 0,
+  progress::Bool = true,
+  parallel::Bool = false
+  )
+
+  params = dict_list(parameters)
+  if include_constants
+    changing_params = keys(parameters)
+  else
+    changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
+  end
+
+  alldata = DataFrame()
+  combs = dict_list(parameters)
+  ncombs = length(combs)
+  counter = 0
+  for d in combs
+    model = initialize(; d...)
+    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, parallel=parallel)  # TODO after the above TODO's are finished
+    addparams!(data, d, changing_params)
+    alldata = vcat(data, alldata)
+    if progress
+      # show progress
+      counter += 1
+      print("\u1b[1G")
+      percent = round(counter*100/ncombs, digits=2)
+      print("Progress: $percent%")
+      print("\u1b[K")
+    end
+  end
+  println()
+  return alldata
+end
+
+"""
+Adds new columns for each parameter in `changing_params`.
+"""
+function addparams!(df::AbstractDataFrame, params::Dict, changing_params)
+  nrows = size(df, 1)
+  for c in changing_params
+    df[!, c] = [params[c] for i in 1:nrows]
+  end
+end
+
+# This function is taken from DrWatson:
+function dict_list(c::Dict)
+    iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
+    non_iterables = setdiff(keys(c), iterable_fields)
+
+    iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
+    non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
+
+    vec(
+        map(Iterators.product(values(iterable_dict)...)) do vals
+            dd = Dict(keys(iterable_dict) .=> vals)
+            if isempty(non_iterable_dict)
+                dd
+            elseif isempty(iterable_dict)
+                non_iterable_dict
+            else
+                merge(non_iterable_dict, dd)
+            end
+        end
+    )
 end
