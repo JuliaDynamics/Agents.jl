@@ -44,13 +44,16 @@ Aggregation occurs per step.
 """
 function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   all_keys = collect(keys(aggregation_dict))
-  v1 = aggregation_dict[all_keys[1]]
-  final_df = by(df, :step,  all_keys[1] => v1[1])
+  dfnames = names(df)
+  available_keys = [k for k in all_keys if in(k, dfnames)]
+  length(available_keys) == 0 && return
+  v1 = aggregation_dict[available_keys[1]]
+  final_df = by(df, :step,  available_keys[1] => v1[1])
   for v2 in v1[2:end]
-    dd = by(df, :step,  all_keys[1] => v2)
+    dd = by(df, :step,  available_keys[1] => v2)
     final_df = join(final_df, dd, on=:step)
   end
-  for k in all_keys[2:end]
+  for k in available_keys[2:end]
     v = aggregation_dict[k]
     for v2 in v
       dd = by(df, :step,  k => v2)
@@ -62,7 +65,8 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   colnames = Array{Symbol}(undef, size(final_df, 2)) 
   colnames[1] = :step
   counter = 2
-  for (k,v) in aggregation_dict
+  for k in available_keys
+    v = aggregation_dict[k]
     for vv in v
       colnames[counter] = Symbol(join([vv,"(", string(k), ")"], ""))
       counter += 1
