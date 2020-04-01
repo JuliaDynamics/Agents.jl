@@ -1,9 +1,69 @@
 ###################################################
-# core data collection functions
+# Definition of the data collection API
 ###################################################
 get_data(a, s::Symbol) = getproperty(a, s)
 get_data(a, f::Function) = f(a)
 
+add_data(s, model, when::AbstractVector) = s ∈ when
+add_data(s, model, when::Bool) = when
+add_data(s, model, when) = when(model, s)
+
+"""
+    run!(model, agent_step! [, model_step!], n; kwargs...) → agent_df, model_df
+
+Run the model (step it with the input arguments propagated into `step!`) and collect
+data specified by the keywords, explained one by one below. Return the data as
+two `DataFrame`s, one for agent-level data and one for model-level data.
+
+## Data-deciding keywords
+`agent_properties::Vector` decides the agent data. If an entry is a `name::Symbol`,
+then the data for this entry is agent's field with that `name`. If an entry is a `f::Function`,
+then the data for this entry is just `f(a)` for each agent `a`.
+
+`model_properties::Vector` works exactly like `agent_properties` but for model level data.
+
+`aggregation_dict` is a dictionary. #TODO: Describe what this is.
+
+# TODO: Well, how do you use aggregation on entries of `agent_properties` that are
+**functions**? Maybe it is better to make `aggregation_dict` keys to be integers,
+that are the entries of `agent_properties`, instead of `symbols` that are only limited
+to agent fields and not functions.
+
+### Other keywords
+* `collect0=true`: Whether to collect data at step zero, before running the model.
+* `when=true` : at which steps `s` to perform the data collection and processing.
+  A lot of flexibility is offered based on the type of `when`. If `when::Vector`,
+  then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
+  returns `true`. By default data are collected in every step.
+* `replicates=0` : Run `replicates` replicates of the simulation.
+* `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
+"""
+function run! end
+
+run!(model::ABM, agent_step!, n; kwargs...) =
+run!(model::ABM, agent_step!, dummystep, n; kwargs...) =
+
+function run!(model::ABM, agent_step!, model_step!, n;
+    collect0::Bool=true, when=1:n, agent_properties=nothing, model_properties=nothing,
+    aggregation_dict=nothing, replicates::Int=0, parallel::Bool=false
+  )
+
+  if replicates > 0
+    if parallel
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+    else
+      dataall = series_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+    end
+    return dataall
+  else
+    df = run!(model, agent_step!, model_step!, n; collect0=collect0, when=when, agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict)
+    return df
+  end
+end
+
+###################################################
+# core data collection functions per step
+###################################################
 """
     collect_agent_data(model::ABM, properties::Vector, step = 0) → df
 
@@ -84,7 +144,7 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   return final_df
 end
 
-"used in run!"
+"used in _run!"
 function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
   dft = collect_agent_data(model, agent_properties, step)
   if isnothing(aggregation_dict)
@@ -96,7 +156,7 @@ function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggre
   return df
 end
 
-"used in run!"
+"used in _run!"
 function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
   dft = collect_model_data(model, model_properties, step)
   if isnothing(aggregation_dict)
@@ -109,14 +169,14 @@ function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggre
 end
 
 ###################################################
-# stepping functions (loops)
+# Core data collection loop
 ###################################################
 
-add_data(s, model, when::AbstractVector) = s ∈ when
-add_data(s, model, when::Bool) = when
-add_data(s, model, when) = when(model, s)
-
-function run!(
+"""
+  _run!(args...)
+Core function that loops over stepping a model and collecting data at each step.
+"""
+function _run!(
     model, agent_step!, model_step!, n;
     collect0 = true, when = true,
     model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing,
@@ -144,15 +204,18 @@ function run!(
   return df_agent, df_model
 end
 
+###################################################
+# Parallel / replicates
+###################################################
 "Run replicates of the same simulation"
 function series_replicates(model, agent_step!, model_step!, n, when;
   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
-  dataall = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  dataall = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
 
   for rep in 2:replicates
-    data = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+    data = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
     data[!, :replicate] = [rep for i in 1:size(data, 1)]
 
     dataall = vcat(dataall, data)
@@ -165,7 +228,7 @@ A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` fu
 """
 function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
-  data = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  data = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   return data
 end
 
@@ -189,6 +252,9 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, when;
   return dd
 end
 
+###################################################
+# Parameter scanning
+###################################################
 """
     paramscan(parameters, initialize; kwargs...)
 
