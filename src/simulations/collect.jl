@@ -81,64 +81,48 @@ end
 ###################
 
 "used in _step!"
-function _step_agent_collect!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
+function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
+  dft = collect_agent_data(model, agent_properties, step)
   if isnothing(aggregation_dict)
-    dft = collect_agent_data(model, agent_properties, step)
     df = vcat(df, dft)
   else
-    dfall = collect_agent_data(model, agent_properties, step)
-    dfa = aggregate_data(dfall, aggregation_dict)
+    dfa = aggregate_data(dft, aggregation_dict)
     df = vcat(df, dfa)
   end
   return df
 end
 
 "used in _step!"
-function _step_model_collect!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
+function collect_model_data!!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
+  dft = collect_model_data(model, model_properties, step)
   if isnothing(aggregation_dict)
-    dft = collect_model_data(model, model_properties, step)
     df = vcat(df, dft)
   else
-    dfall = collect_model_data(model, model_properties, step)
-    dfa = aggregate_data(dfall, aggregation_dict)
+    dfa = aggregate_data(dft, aggregation_dict)
     df = vcat(df, dfa)
   end
   return df
 end
 
-function _step!(model, agent_step!, model_step!, n::F, when; model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing) where F<:Function
+until(ss, n::Int, model) = ss in 1:n
+until(ss, n::AbstractVector{Int}, model) = ss in n
+until(ss, n::Function, model) = !n(model)
+
+function _step!(model, agent_step!, model_step!, n, when; model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing)
   df_agent = DataFrame()
   df_model = DataFrame()
   ss = 0
-  while !n(model)
+  while until(ss, n, model)
     step!(model, agent_step!, model_step!, 1)
     if ss in when
       if !isnothing(model_properties)
-        df_model = _step_model_collect!(df_model, model, model_properties,  aggregation_dict, ss)
+        df_model = collect_model_data!!(df_model, model, model_properties,  aggregation_dict, ss)
       end
       if !isnothing(agent_properties)
-        df_agent = _step_agent_collect!(df_agent, model, agent_properties,  aggregation_dict, ss)
+        df_agent = collect_agent_data!(df_agent, model, agent_properties,  aggregation_dict, ss)
       end
     end
     ss += 1
-  end
-  return df_agent, df_model
-end
-
-function _step!(model, agent_step!, model_step!, n::Int, when;
-  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing)
-  df_agent = DataFrame()
-  df_model = DataFrame()
-  for ss in 1:n
-    step!(model, agent_step!, model_step!, 1)
-    if ss in when
-      if !isnothing(model_properties)
-        df_model = _step_model_collect!(df_model, model, model_properties,  aggregation_dict, ss)
-      end
-      if !isnothing(agent_properties)
-        df_agent = _step_agent_collect!(df_agent, model, agent_properties,  aggregation_dict, ss)
-      end
-    end
   end
   return df_agent, df_model
 end
@@ -187,7 +171,6 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, when;
 
   return dd
 end
-
 
 """
     paramscan(parameters, initialize; kwargs...)
