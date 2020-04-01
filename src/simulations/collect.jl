@@ -4,6 +4,7 @@
 get_data(a, s::Symbol) = getproperty(a, s)
 get_data(a, f::Function) = f(a)
 
+# TODO: `add_data` is a misleading name, we need a better one.
 add_data(s, model, when::AbstractVector) = s ∈ when
 add_data(s, model, when::Bool) = when
 add_data(s, model, when) = when(model, s)
@@ -22,12 +23,21 @@ then the data for this entry is just `f(a)` for each agent `a`.
 
 `model_properties::Vector` works exactly like `agent_properties` but for model level data.
 
-`aggregation_dict` is a dictionary. #TODO: Describe what this is.
+`aggregation_dict` decides whether the agent data should be aggregated over agents.
+
+#TODO: Describe what `aggregation_dict` is.
 
 # TODO: Well, how do you use aggregation on entries of `agent_properties` that are
 **functions**? Maybe it is better to make `aggregation_dict` keys to be integers,
 that are the entries of `agent_properties`, instead of `symbols` that are only limited
 to agent fields and not functions.
+
+# TODO: isn't it simpler to make `aggregation_dict` a VECTOR just like
+`agent_properties`, so that `i`th entry of `agent_properties` is aggregated
+with the function `aggregation_dict[i]` ?
+
+Notice that by default all of the above keywords are `nothing`, i.e. nothing is
+collected/aggregated.
 
 ### Other keywords
 * `collect0=true`: Whether to collect data at step zero, before running the model.
