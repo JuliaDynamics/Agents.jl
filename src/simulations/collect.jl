@@ -104,7 +104,7 @@ end
 ## step function
 ###################
 
-until(ss, n::Int, model) = ss in 1:n
+until(ss, n::Int, model) = ss in 0:n
 until(ss, n::AbstractVector{Int}, model) = ss in n
 until(ss, n::Function, model) = !n(model)
 
