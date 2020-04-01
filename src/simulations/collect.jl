@@ -1,14 +1,17 @@
-## Basic data collection functions
-
+###################################################
+# core data collection functions
+###################################################
 get_data(a, s::Symbol) = getproperty(a, s)
 get_data(a, f::Function) = f(a)
 
 """
-    collect_agent_data(model::ABM, properties::AbstractArray, step::Int)
+    collect_agent_data(model::ABM, properties::Vector, step = 0) → df
 
-Collect agent properties into a dataframe. `properties` can have symbols (agent fields) or functions that take an agent as input.
+Collect agent properties into a dataframe. `properties` can have symbols (fields) or
+functions that take an agent as input and output a value. `step` is given only
+so that the function adds the correct number in the `step` column.
 """
-function collect_agent_data(model::ABM, properties::AbstractArray, step::Int)
+function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
@@ -19,9 +22,9 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int)
 end
 
 """
-    collect_model_data(model::ABM, properties::AbstractArray, step::Int)
+    collect_model_data(model::ABM, properties::Vector, step = 0) → df
 
-Collect model properties from functions or symbols provided in `properties`.
+Same as [`collect_agent_data`](@ref) but for model data instead.
 """
 function collect_model_data(model::ABM, properties::AbstractArray, step::Int)
   dd = DataFrame()
@@ -35,7 +38,7 @@ end
 
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
-  
+
 Aggregate `df` columns  with some function(s) specified in `aggregation_dict`.
 Each key in `aggregation_dict` is a column name (Symbol), and each value is
 an array of function to aggregate that column.
@@ -62,7 +65,7 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   end
 
   # rename columns
-  colnames = Array{Symbol}(undef, size(final_df, 2)) 
+  colnames = Array{Symbol}(undef, size(final_df, 2))
   colnames[1] = :step
   counter = 2
   for k in available_keys
@@ -101,20 +104,28 @@ function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggre
   return df
 end
 
-## step function
-###################
+###################################################
+# stepping functions (loops)
+###################################################
 
-until(ss, n::Int, model) = ss in 0:n
-until(ss, n::AbstractVector{Int}, model) = ss in n
+until(ss, n::Int, model) = ss in 0:n-1
 until(ss, n::Function, model) = !n(model)
+add_data(s, when::AbstractVector) = s ∈ when
+add_data(s, when::Bool) = when
+add_data(s, when) = when(s)
 
-function _step!(model, agent_step!, model_step!, n, when; model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing)
+function _step!(
+    model, agent_step!, model_step!, n, when = true;
+    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing
+  )
   df_agent = DataFrame()
   df_model = DataFrame()
   ss = 0
+  # TODO: Where is the collection at step 0? Shouldn't we initiallize df_agent
+  # and df_model with collect_agent_data (without !)?
   while until(ss, n, model)
     step!(model, agent_step!, model_step!, 1)
-    if ss in when
+    if add_data(ss, when)
       if !isnothing(model_properties)
         df_model = collect_model_data!(df_model, model, model_properties,  aggregation_dict, ss)
       end
@@ -128,7 +139,7 @@ function _step!(model, agent_step!, model_step!, n, when; model_properties=nothi
 end
 
 "Run replicates of the same simulation"
-function series_replicates(model, agent_step!, model_step!, n, when; 
+function series_replicates(model, agent_step!, model_step!, n, when;
   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
   dataall = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
