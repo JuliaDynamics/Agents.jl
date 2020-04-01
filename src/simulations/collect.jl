@@ -112,9 +112,9 @@ end
 # stepping functions (loops)
 ###################################################
 
-add_data(s, when::AbstractVector) = s ∈ when
-add_data(s, when::Bool) = when
-add_data(s, when) = when(s)
+add_data(s, model, when::AbstractVector) = s ∈ when
+add_data(s, model, when::Bool) = when
+add_data(s, model, when) = when(model, s)
 
 function run!(
     model, agent_step!, model_step!, n;
@@ -132,10 +132,10 @@ function run!(
     df_model = DataFrame()
   end
 
-  s = 1
+  s = 0
   while until(s, n, model)
     step!(model, agent_step!, model_step!, 1)
-    if add_data(s, when)
+    if add_data(s, model, when)
       df_model = collect_model_data!(df_model, model, model_properties, aggregation_dict, s)
       df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
     end

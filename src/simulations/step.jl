@@ -69,11 +69,11 @@ Ignore the agent dynamics on this `step!`. Use instead of `agent_step!`.
 dummystep(agent, model) = nothing
 
 until(ss, n::Int, model) = ss < n
-until(ss, n::Function, model) = !n(model)
+until(ss, n, model) = !n(model)
 
 step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!, model_step!, n) where {F<:Function, G<:Function}
+function step!(model::ABM, agent_step!, model_step!, n)
   s = 0
   while until(s, n, model)
     activation_order = model.scheduler(model)
