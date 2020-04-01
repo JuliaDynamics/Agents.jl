@@ -112,8 +112,6 @@ end
 # stepping functions (loops)
 ###################################################
 
-until(ss, n::Int, model) = ss in 0:n-1
-until(ss, n::Function, model) = !n(model)
 add_data(s, when::AbstractVector) = s ∈ when
 add_data(s, when::Bool) = when
 add_data(s, when) = when(s)
@@ -134,14 +132,14 @@ function run!(
     df_model = DataFrame()
   end
 
-  ss = 1
-  while until(ss, n, model)
+  s = 1
+  while until(s, n, model)
     step!(model, agent_step!, model_step!, 1)
-    if add_data(ss, when)
-      df_model = collect_model_data!(df_model, model, model_properties,  aggregation_dict, ss)
-      df_agent = collect_agent_data!(df_agent, model, agent_properties,  aggregation_dict, ss)
+    if add_data(s, when)
+      df_model = collect_model_data!(df_model, model, model_properties, aggregation_dict, s)
+      df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
     end
-    ss += 1
+    s += 1
   end
   return df_agent, df_model
 end

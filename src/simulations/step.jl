@@ -55,7 +55,6 @@ function step! end
 #######################################################################################
 # basic stepping
 #######################################################################################
-
 """
     dummystep(model)
 
@@ -69,21 +68,20 @@ Ignore the agent dynamics on this `step!`. Use instead of `agent_step!`.
 """
 dummystep(agent, model) = nothing
 
+until(ss, n::Int, model) = ss < n
+until(ss, n::Function, model) = !n(model)
+
 step!(model::ABM, agent_step!, n::Int = 1) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<:Function, G<:Function}
-  for i in 1:n
+function step!(model::ABM, agent_step!, model_step!, n) where {F<:Function, G<:Function}
+  s = 0
+  while until(s, n, model)
     activation_order = model.scheduler(model)
     for index in activation_order
       agent_step!(model.agents[index], model)
     end
     model_step!(model)
-  end
-end
-
-function step!(model::ABM, agent_step!::F, model_step!::G, n::H) where {F<:Function, G<:Function, H<:Function}
-  while !n(model)
-    step!(model, agent_step!, model_step!, 1)
+    s += 1
   end
 end
 
