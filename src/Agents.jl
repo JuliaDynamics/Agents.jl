@@ -15,10 +15,8 @@ include("core/agent_space_interaction.jl")
 include("core/continuous_space.jl")
 
 # Stepping and data collection functionality
-include("simulations/data_collector.jl")
-include("simulations/collect.jl")
 include("simulations/step.jl")
-include("simulations/parallel.jl")
+include("simulations/collect.jl")
 include("simulations/sample.jl")
 
 # Auxilary

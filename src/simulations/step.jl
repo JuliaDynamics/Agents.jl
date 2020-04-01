@@ -12,40 +12,43 @@ agent has acted.
 `n` can be also be a function that takes as an input the `model` and returns
 `true/false`. Then `step!` runs the model until `n(model)` returns `true`.
 
-    step!(model, agent_step! [, model_step!], n, properties; kwargs...)
+    step!(model, agent_step! [, model_step!], n, agent_properties [, model_properties];
+            aggregation_dict, kwargs...)
 
-This version of `step!`, with the `properties` argument and extra keywords,
+This version of `step!`, with the `*_properties` arguments and extra keywords,
 performs data collection/processing while running the model.
 
-`properties` dictates which agent fields should be collected as data.
+`agent_properties` dictates which agent fields should be collected as data.
 It can be either an array, in which case, the specified fields of all agents will be
 saved.
 Or it can be a dictionary, in which case it should map agent fields (`Symbol`) to functions.
 
-If `properties` is an array, each row of the output `DataFrame` corresponds to a
+If `agent_properties` is an array, each row of the output `DataFrame` corresponds to a
 single agent and each column is a requested field value.
 
-If `properties` is a dictionary, each row of the output `DataFrame` corresponds to
-all agents and each column is the a function applied to a field. The functions in a
-dictionary `properties` are applied to the collected fields, that is, the keys of
-`properties`.
-For example, if your agents have a field called `wealth`,
-and you want to calculate mean and median population wealth at steps defined
-by `when`, your `properties` dict will be `Dict(:wealth => [mean, median])`.
+If `agent_properties` is a dictionary, each row of the output `DataFrame` corresponds to
+all agents and each column is the result of a function applied to a specific field.
+The functions in an `agent_properties` are applied to the collected fields, that is,
+the keys of `agent_properties`.
+For example, if your agents have a field called `wealth`, and you want to calculate the
+mean and median wealth of all agents at steps defined by `when`, your `agent_properties`
+dictionary will be `Dict(:wealth => [mean, median])`.
 
 If an agent field returns an array instead of a single number, the mean of that
 array will be calculated before the functions are applied to them.
 
-Collected data always also include the initial status of the model at step 0.
+The same functionality exists for `model` using `model_properties`.
 
-To apply a function to the list of agents, use `:agent` as a dictionary key.
-To apply a function to the model object, use `:model` as a dictionary key.
+`aggregation_dict`: TODO. May actually be separated aspects of the above discussion ####
+
+By default, collected data includes the initial status of the model at step 0.
 
 ### Keywords
+* `collect0`: Whether to collect data at step zero, before running the model. Defaults to true.
 * `when=1:n` : at which steps `n` to perform the data collection and processing.
+* `when=f(model)` : data collection will occur when the function returns `true`.
 * `replicates` : Optional. Run `replicates` replicates of the simulation. Defaults to 0.
 * `parallel` : Optional. Only when `replicates`>0. Run replicate simulations in parallel. Defaults to `false`.
-* `step0`: Whether to collect data at step zero, before running the model. Defaults to true.
 """
 function step! end
 
@@ -88,20 +91,20 @@ end
 # data collection
 #######################################################################################
 
-step!(model::ABM, agent_step!, n, properties; parallel::Bool=false, when::AbstractArray{Int}=1:n, replicates::Int=0, step0::Bool=true) = step!(model, agent_step!, dummystep, n, properties, when=when, replicates=replicates, parallel=parallel, step0=step0)
+step!(model::ABM, agent_step!, n, agent_properties; collect0::Bool=true, when=1:n, parallel::Bool=false, replicates::Int=0) = step!(model, agent_step!, dummystep, n; collect0=collect0, when=when, agent_properties=agent_properties, replicates=replicates, parallel=parallel)
 
-function step!(model::ABM, agent_step!, model_step!, n, properties; when::AbstractArray{Int}=1:n, replicates::Int=0, parallel::Bool=false, step0::Bool=true)
+function step!(model::ABM, agent_step!, model_step!, n; collect0::Bool=true, when=1:n, agent_properties=nothing, model_properties=nothing, aggregation_dict=nothing, replicates::Int=0, parallel::Bool=false)
 
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, step0=step0)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, properties, when, n, replicates, step0)
+      dataall = series_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
     end
     return dataall
   end
 
-  df = _step!(model, agent_step!, model_step!, properties, when, n, step0)
+  df = run!(model, agent_step!, model_step!, n; collect0=collect0, when=when, agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict)
 
   return df
 end

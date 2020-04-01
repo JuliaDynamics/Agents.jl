@@ -21,6 +21,8 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0
   return dd
 end
 
+collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+
 """
     collect_model_data(model::ABM, properties::Vector, step = 0) → df
 
@@ -35,6 +37,8 @@ function collect_model_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
 end
+
+collect_model_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
@@ -80,7 +84,7 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   return final_df
 end
 
-"used in _step!"
+"used in run!"
 function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
   dft = collect_agent_data(model, agent_properties, step)
   if isnothing(aggregation_dict)
@@ -92,7 +96,7 @@ function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggre
   return df
 end
 
-"used in _step!"
+"used in run!"
 function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
   dft = collect_model_data(model, model_properties, step)
   if isnothing(aggregation_dict)
@@ -114,35 +118,28 @@ add_data(s, when::AbstractVector) = s ∈ when
 add_data(s, when::Bool) = when
 add_data(s, when) = when(s)
 
-function _step!(
+function run!(
     model, agent_step!, model_step!, n;
     collect0 = true, when = true,
     model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing,
   )
+
   if collect0
     df_model = collect_model_data(model, model_properties)
     df_agent = collect_agent_data(model, agent_properties)
-    # TODO: I don't know why we keep creating this if clause. Just define a method
-    # of collect_agent_data! where `aggregation_dict` is ::Nothing. This method
-    # just returns the input `df_agent`...?
-    if !isnothing(agent_properties)
-      df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, ss)
-    end
+    collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, 0)
+    collect_model_data!(df_model, model, model_properties, aggregation_dict, 0)
   else
     df_agent = DataFrame()
     df_model = DataFrame()
   end
-  
-  ss = 0
+
+  ss = 1
   while until(ss, n, model)
     step!(model, agent_step!, model_step!, 1)
     if add_data(ss, when)
-      if !isnothing(model_properties)
-        df_model = collect_model_data!(df_model, model, model_properties,  aggregation_dict, ss)
-      end
-      if !isnothing(agent_properties)
-        df_agent = collect_agent_data!(df_agent, model, agent_properties,  aggregation_dict, ss)
-      end
+      df_model = collect_model_data!(df_model, model, model_properties,  aggregation_dict, ss)
+      df_agent = collect_agent_data!(df_agent, model, agent_properties,  aggregation_dict, ss)
     end
     ss += 1
   end
@@ -153,11 +150,11 @@ end
 function series_replicates(model, agent_step!, model_step!, n, when;
   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
-  dataall = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  dataall = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
 
   for rep in 2:replicates
-    data = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+    data = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
     data[!, :replicate] = [rep for i in 1:size(data, 1)]
 
     dataall = vcat(dataall, data)
@@ -170,7 +167,7 @@ A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` fu
 """
 function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
-  data = _step!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  data = run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
   return data
 end
 
