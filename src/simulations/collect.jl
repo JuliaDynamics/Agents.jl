@@ -26,7 +26,7 @@ end
 
 Same as [`collect_agent_data`](@ref) but for model data instead.
 """
-function collect_model_data(model::ABM, properties::AbstractArray, step::Int)
+function collect_model_data(model::ABM, properties::AbstractArray, step::Int = 0)
   dd = DataFrame()
   for fn in properties
     r =  get_data(model, fn)
@@ -115,14 +115,25 @@ add_data(s, when::Bool) = when
 add_data(s, when) = when(s)
 
 function _step!(
-    model, agent_step!, model_step!, n, when = true;
-    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing
+    model, agent_step!, model_step!, n;
+    collect0 = true, when = true,
+    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing,
   )
-  df_agent = DataFrame()
-  df_model = DataFrame()
+  if collect0
+    df_model = collect_model_data(model, model_properties)
+    df_agent = collect_agent_data(model, agent_properties)
+    # TODO: I don't know why we keep creating this if clause. Just define a method
+    # of collect_agent_data! where `aggregation_dict` is ::Nothing. This method
+    # just returns the input `df_agent`...?
+    if !isnothing(agent_properties)
+      df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, ss)
+    end
+  else
+    df_agent = DataFrame()
+    df_model = DataFrame()
+  end
+  
   ss = 0
-  # TODO: Where is the collection at step 0? Shouldn't we initiallize df_agent
-  # and df_model with collect_agent_data (without !)?
   while until(ss, n, model)
     step!(model, agent_step!, model_step!, 1)
     if add_data(ss, when)
