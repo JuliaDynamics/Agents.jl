@@ -77,9 +77,6 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   return final_df
 end
 
-## step functions
-###################
-
 "used in _step!"
 function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
   dft = collect_agent_data(model, agent_properties, step)
@@ -93,7 +90,7 @@ function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggre
 end
 
 "used in _step!"
-function collect_model_data!!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
+function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
   dft = collect_model_data(model, model_properties, step)
   if isnothing(aggregation_dict)
     df = vcat(df, dft)
@@ -103,6 +100,9 @@ function collect_model_data!!(df::DataFrame, model::ABM, model_properties,  aggr
   end
   return df
 end
+
+## step function
+###################
 
 until(ss, n::Int, model) = ss in 1:n
 until(ss, n::AbstractVector{Int}, model) = ss in n
@@ -116,7 +116,7 @@ function _step!(model, agent_step!, model_step!, n, when; model_properties=nothi
     step!(model, agent_step!, model_step!, 1)
     if ss in when
       if !isnothing(model_properties)
-        df_model = collect_model_data!!(df_model, model, model_properties,  aggregation_dict, ss)
+        df_model = collect_model_data!(df_model, model, model_properties,  aggregation_dict, ss)
       end
       if !isnothing(agent_properties)
         df_agent = collect_agent_data!(df_agent, model, agent_properties,  aggregation_dict, ss)
