@@ -154,7 +154,7 @@ end
 "used in _run!"
 function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
   dft = collect_agent_data(model, agent_properties, step)
-  if isnothing(aggregation_dict)
+  if aggregation_dict == nothing
     df = vcat(df, dft)
   else
     dfa = aggregate_data(dft, aggregation_dict)
