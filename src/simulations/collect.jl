@@ -23,7 +23,10 @@ then the data for this entry is just `f(a)` for each agent `a`.
 
 `model_properties::Vector` works exactly like `agent_properties` but for model level data.
 
-`aggregation_dict` decides whether the agent data should be aggregated over agents. Each key in `aggregation_dict` is a column name (Symbol), and each value is an array of functions to aggregate that column. Note that these function names should not be the same as agent fields that are collected.
+`aggregation_dict` decides whether the agent data should be aggregated over
+agents. Each key in `aggregation_dict` is a column name (Symbol), and each
+value is an array of functions to aggregate that column. Note that these
+function names should not be the same as agent fields that are collected.
 
 Notice that by default all of the above keywords are `nothing`, i.e. nothing is
 collected/aggregated.
