@@ -194,20 +194,27 @@ end
 ###################################################
 # Parallel / replicates
 ###################################################
+function replicateCol!(df, rep)
+  df[!, :replicate] = [rep for i in 1:size(df, 1)]
+end
+
 "Run replicates of the same simulation"
 function series_replicates(model, agent_step!, model_step!, n, when;
   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
-  dataall = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-  dataall[!, :replicate] = [1 for i in 1:size(dataall, 1)]
+  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  replicateCol!(df_agent, 1)
+  replicateCol!(df_model, 1)
 
   for rep in 2:replicates
-    data = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-    data[!, :replicate] = [rep for i in 1:size(data, 1)]
+    df_agentTemp, df_modelTemp = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+    replicateCol!(df_agentTemp, rep)
+    replicateCol!(df_modelTemp, rep)
 
-    dataall = vcat(dataall, data)
+    df_agent = vcat(df_agent, df_agentTemp)
+    df_model = vcat(df_model, df_modelTemp)
   end
-  return dataall
+  return df_agent, df_model
 end
 
 """
@@ -215,8 +222,8 @@ A function to be used in `pmap` in `parallel_replicates`. It runs the `_run!` fu
 """
 function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
-  data = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-  return data
+  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
+  return (df_agent, df_model)
 end
 
 """
@@ -228,15 +235,19 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, when;
   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
 
   all_data = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n, when;
-   model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_positions, dummyvar=j), 1:replicates)
+   model_properties=model_properties, aggregation_dict=aggregation_dict,
+   agent_properties=agent_positions, dummyvar=j), 1:replicates)
 
-  dd = DataFrame()
+  df_agent = DataFrame()
+  df_model = DataFrame()
   for (rep, d) in enumerate(all_data)
-    d[!, :replicate] = [rep for i in 1:size(d, 1)]
-    dd = vcat(dd, d)
+    replicateCol!(d[1], rep)
+    replicateCol!(d[2], rep)
+    df_agent = vcat(df_agent, d[1])
+    df_model = vcat(df_model, d[2])
   end
 
-  return dd
+  return df_agent, df_model
 end
 
 ###################################################
@@ -267,8 +278,11 @@ included in the output `DataFrame`.
 `progress::Bool = true` whether to show the progress of simulations.
 """
 function paramscan(parameters::Dict, initialize;
-  agent_step!, properties, n,
+  agent_step!, n,
   when = 1:n,
+  agent_properties=nothing,
+  model_properties=nothing,
+  aggregation_dict=nothing,
   model_step! = dummystep,
   include_constants::Bool = false,
   replicates::Int = 0,
@@ -283,15 +297,19 @@ function paramscan(parameters::Dict, initialize;
     changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
   end
 
-  alldata = DataFrame()
+  df_agent, df_model = DataFrame(), DataFrame()
   combs = dict_list(parameters)
   ncombs = length(combs)
   counter = 0
   for d in combs
     model = initialize(; d...)
-    data = step!(model, agent_step!, model_step!, n, properties, when=when, replicates=replicates, parallel=parallel)  # TODO
-    addparams!(data, d, changing_params)
-    alldata = vcat(data, alldata)
+    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n;
+    when=when, agent_properties=agent_properties, model_properties=model_properties,
+    aggregation_dict=aggregation_dict, replicates=replicates, parallel=parallel)
+    addparams!(df_agent, d, changing_params)  # TODO not all params are for agent/model df
+    addparams!(df_model, d, changing_params)
+    df_agent = vcat(df_agent, df_agentTemp)
+    df_model = vcat(df_model, df_modelTemp)
     if progress
       # show progress
       counter += 1
@@ -302,7 +320,7 @@ function paramscan(parameters::Dict, initialize;
     end
   end
   println()
-  return alldata
+  return df_agent, df_model
 end
 
 """
@@ -317,22 +335,22 @@ end
 
 # This function is taken from DrWatson:
 function dict_list(c::Dict)
-    iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
-    non_iterables = setdiff(keys(c), iterable_fields)
+  iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
+  non_iterables = setdiff(keys(c), iterable_fields)
 
-    iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
-    non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
+  iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
+  non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
 
-    vec(
-        map(Iterators.product(values(iterable_dict)...)) do vals
-            dd = Dict(keys(iterable_dict) .=> vals)
-            if isempty(non_iterable_dict)
-                dd
-            elseif isempty(iterable_dict)
-                non_iterable_dict
-            else
-                merge(non_iterable_dict, dd)
-            end
-        end
-    )
+  vec(
+    map(Iterators.product(values(iterable_dict)...)) do vals
+      dd = Dict(keys(iterable_dict) .=> vals)
+      if isempty(non_iterable_dict)
+        dd
+      elseif isempty(iterable_dict)
+        non_iterable_dict
+      else
+        merge(non_iterable_dict, dd)
+      end
+    end
+  )
 end
