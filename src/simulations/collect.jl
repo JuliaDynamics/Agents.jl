@@ -48,24 +48,18 @@ run!(model::ABM, agent_step!, n; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...) =
 
 function run!(model::ABM, agent_step!, model_step!, n;
-  when=1:n, agent_properties=nothing, model_properties=nothing,
-  aggregation_dict=nothing, replicates::Int=0, parallel::Bool=false
-  )
+  replicates::Int=0, parallel::Bool=false, kwargs...)
 
-  if replicates > 0
+  r = replicates
+  if r > 0
     if parallel
-      # TODO: Use keyword propagation and reduce duplication of all these keyword arguments
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, when;
-      agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, n, when;
-      agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+      dataall = series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
     end
     return dataall
   else
-    df = run!(model, agent_step!, model_step!, n;
-    when=when, agent_properties=agent_properties,
-    model_properties=model_properties, aggregation_dict=aggregation_dict)
+    df = run!(model, agent_step!, model_step!, n; kwargs...)
     return df
   end
 end
@@ -139,8 +133,6 @@ x_position(agent) = first(agent.pos)
 data = collect_agent_data(model, Dict(x_position => [mean]), 1)
 ```
 """
-collect_agent_data(model::ABM, properties::Dict, step::Int=0) =
-
 collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
 """
@@ -221,7 +213,7 @@ end
 ###################################################
 
 """
-  _run!(args...)
+  _run!(model, agent_step!, model_step!, n; kwargs...)
 Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(
@@ -249,22 +241,21 @@ end
 ###################################################
 # Parallel / replicates
 ###################################################
-function replicateCol!(df, rep)
+function replicate_col!(df, rep)
   df[!, :replicate] = [rep for i in 1:size(df, 1)]
 end
 
 "Run replicates of the same simulation"
-function series_replicates(model, agent_step!, model_step!, n, when;
-  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
+function series_replicates(model, agent_step!, model_step!, n, replicates; kwargs...)
 
-  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-  replicateCol!(df_agent, 1)
-  replicateCol!(df_model, 1)
+  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
+  replicate_col!(df_agent, 1)
+  replicate_col!(df_model, 1)
 
   for rep in 2:replicates
-    df_agentTemp, df_modelTemp = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-    replicateCol!(df_agentTemp, rep)
-    replicateCol!(df_modelTemp, rep)
+    df_agentTemp, df_modelTemp = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
+    replicate_col!(df_agentTemp, rep)
+    replicate_col!(df_modelTemp, rep)
 
     df_agent = vcat(df_agent, df_agentTemp)
     df_model = vcat(df_model, df_modelTemp)
@@ -272,32 +263,17 @@ function series_replicates(model, agent_step!, model_step!, n, when;
   return df_agent, df_model
 end
 
-"""
-A function to be used in `pmap` in `parallel_replicates`. It runs the `_run!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
-"""
-function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
-   model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
-  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n, when, model_properties=model_properties, aggregation_dict=aggregation_dict, agent_properties=agent_properties)
-  return (df_agent, df_model)
-end
+"Run replicates of the same simulation in parallel"
+function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates; kwargs...)
 
-"""
-    parallel_replicates(agent_step!, model::ABM, n, agent_properties::Array{Symbol}, when::AbstractArray{Integer}, replicates::Integer)
-
-Runs `replicates` number of simulations in parallel and returns a `DataFrame`.
-"""
-function parallel_replicates(model::ABM, agent_step!, model_step!, n, when;
-  model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, replicates=1)
-
-  all_data = pmap(j-> parallel_step_dummy!(model, agent_step!, model_step!, n, when;
-   model_properties=model_properties, aggregation_dict=aggregation_dict,
-   agent_properties=agent_positions, dummyvar=j), 1:replicates)
+  all_data = pmap(j -> _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...),
+                  1:replicates)
 
   df_agent = DataFrame()
   df_model = DataFrame()
   for (rep, d) in enumerate(all_data)
-    replicateCol!(d[1], rep)
-    replicateCol!(d[2], rep)
+    replicate_col!(d[1], rep)
+    replicate_col!(d[2], rep)
     df_agent = vcat(df_agent, d[1])
     df_model = vcat(df_model, d[2])
   end
@@ -333,16 +309,10 @@ included in the output `DataFrame`.
 `progress::Bool = true` whether to show the progress of simulations.
 """
 function paramscan(parameters::Dict, initialize;
-  agent_step!, n,
-  when = 1:n,
-  agent_properties=nothing,
-  model_properties=nothing,
-  aggregation_dict=nothing,
-  model_step! = dummystep,
-  include_constants::Bool = false,
-  replicates::Int = 0,
+  agent_step!, n,  model_step! = dummystep,
   progress::Bool = true,
-  parallel::Bool = false
+  include_constants::Bool = false,
+  kwargs...
   )
 
   params = dict_list(parameters)
@@ -358,10 +328,9 @@ function paramscan(parameters::Dict, initialize;
   counter = 0
   for d in combs
     model = initialize(; d...)
-    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n;
-    when=when, agent_properties=agent_properties, model_properties=model_properties,
-    aggregation_dict=aggregation_dict, replicates=replicates, parallel=parallel)
-    addparams!(df_agent, d, changing_params)  # TODO not all params are for agent/model df
+    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
+    # TODO not all params are for agent/model df
+    addparams!(df_agent, d, changing_params)
     addparams!(df_model, d, changing_params)
     df_agent = vcat(df_agent, df_agentTemp)
     df_model = vcat(df_model, df_modelTemp)
