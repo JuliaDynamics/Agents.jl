@@ -80,8 +80,7 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
-    colname = typeof(fn) <: Function ? Symbol(fn) : fn
-    dd[!, colname] = get_data.(values(model.agents), fn)
+    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
   end
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
@@ -98,8 +97,7 @@ function collect_model_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd = DataFrame()
   for fn in properties
     r =  get_data(model, fn)
-    colname = typeof(fn) <: Function ? Symbol(fn) : fn
-    dd[!, colname] = [r]
+    dd[!, Symbol(fn)] = [r]
   end
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
@@ -184,7 +182,7 @@ function _run!(
   while until(s, n, model)
     if add_data(s, model, when)
       dfm = collect_model_data(model, model_properties, s)
-      df_model = df = vcat(df_model, dfm)
+      df_model = vcat(df_model, dfm)
       df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
     end
     step!(model, agent_step!, model_step!, 1)
