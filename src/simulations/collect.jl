@@ -23,24 +23,12 @@ then the data for this entry is just `f(a)` for each agent `a`.
 
 `model_properties::Vector` works exactly like `agent_properties` but for model level data.
 
-`aggregation_dict` decides whether the agent data should be aggregated over agents.
-
-#TODO: Describe what `aggregation_dict` is.
-
-# TODO: Well, how do you use aggregation on entries of `agent_properties` that are
-**functions**? Maybe it is better to make `aggregation_dict` keys to be integers,
-that are the entries of `agent_properties`, instead of `symbols` that are only limited
-to agent fields and not functions.
-
-# TODO: isn't it simpler to make `aggregation_dict` a VECTOR just like
-`agent_properties`, so that `i`th entry of `agent_properties` is aggregated
-with the function `aggregation_dict[i]` ?
+`aggregation_dict` decides whether the agent data should be aggregated over agents. Each key in `aggregation_dict` is a column name (Symbol), and each value is an array of functions to aggregate that column. Note that these function names should not be the same as agent fields that are collected.
 
 Notice that by default all of the above keywords are `nothing`, i.e. nothing is
 collected/aggregated.
 
 ### Other keywords
-* `collect0=true`: Whether to collect data at step zero, before running the model.
 * `when=true` : at which steps `s` to perform the data collection and processing.
   A lot of flexibility is offered based on the type of `when`. If `when::Vector`,
   then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
@@ -54,19 +42,23 @@ run!(model::ABM, agent_step!, n; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...) =
 
 function run!(model::ABM, agent_step!, model_step!, n;
-    collect0::Bool=true, when=1:n, agent_properties=nothing, model_properties=nothing,
-    aggregation_dict=nothing, replicates::Int=0, parallel::Bool=false
+  when=1:n, agent_properties=nothing, model_properties=nothing,
+  aggregation_dict=nothing, replicates::Int=0, parallel::Bool=false
   )
 
   if replicates > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+      dataall = parallel_replicates(model, agent_step!, model_step!, n, when;
+      agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, n, when; agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
+      dataall = series_replicates(model, agent_step!, model_step!, n, when;
+      agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
     end
     return dataall
   else
-    df = run!(model, agent_step!, model_step!, n; collect0=collect0, when=when, agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict)
+    df = run!(model, agent_step!, model_step!, n;
+    when=when, agent_properties=agent_properties,
+    model_properties=model_properties, aggregation_dict=aggregation_dict)
     return df
   end
 end
@@ -85,7 +77,8 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
-    dd[!, fn] = get_data.(values(model.agents), fn)
+    colname = typeof(fn) <: Function ? Symbol(fn) : fn
+    dd[!, colname] = get_data.(values(model.agents), fn)
   end
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
@@ -102,7 +95,8 @@ function collect_model_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd = DataFrame()
   for fn in properties
     r =  get_data(model, fn)
-    dd[!, Symbol(fn)] = [r]
+    colname = typeof(fn) <: Function ? Symbol(fn) : fn
+    dd[!, colname] = [r]
   end
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
@@ -166,18 +160,6 @@ function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggre
   return df
 end
 
-"used in _run!"
-function collect_model_data!(df::DataFrame, model::ABM, model_properties,  aggregation_dict, step::Int)
-  dft = collect_model_data(model, model_properties, step)
-  if isnothing(aggregation_dict)
-    df = vcat(df, dft)
-  else
-    dfa = aggregate_data(dft, aggregation_dict)
-    df = vcat(df, dfa)
-  end
-  return df
-end
-
 ###################################################
 # Core data collection loop
 ###################################################
@@ -192,23 +174,17 @@ function _run!(
     model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing,
   )
 
-  if collect0
-    df_model = collect_model_data(model, model_properties)
-    df_agent = collect_agent_data(model, agent_properties)
-    collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, 0)
-    collect_model_data!(df_model, model, model_properties, aggregation_dict, 0)
-  else
-    df_agent = DataFrame()
-    df_model = DataFrame()
-  end
+  df_agent = DataFrame()
+  df_model = DataFrame()
 
   s = 0
   while until(s, n, model)
-    step!(model, agent_step!, model_step!, 1)
     if add_data(s, model, when)
-      df_model = collect_model_data!(df_model, model, model_properties, aggregation_dict, s)
+      dfm = collect_model_data(model, model_properties, s)
+      df_model = df = vcat(df_model, dfm)
       df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
     end
+    step!(model, agent_step!, model_step!, 1)
     s += 1
   end
   return df_agent, df_model
@@ -234,7 +210,7 @@ function series_replicates(model, agent_step!, model_step!, n, when;
 end
 
 """
-A function to be used in `pmap` in `parallel_replicates`. It runs the `step!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
+A function to be used in `pmap` in `parallel_replicates`. It runs the `_run!` function, but has a `dummyvar` parameter that does nothing, but is required for the `pmap` function.
 """
 function parallel_step_dummy!(model::ABM, agent_step!, model_step!, n, when;
    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing, dummyvar=0)
