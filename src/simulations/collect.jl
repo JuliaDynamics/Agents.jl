@@ -16,19 +16,23 @@ data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
 
 ## Data-deciding keywords
-`agent_properties::Vector` decides the agent data. If an entry is a `name::Symbol`,
-then the data for this entry is agent's field with that `name`. If an entry is a `f::Function`,
-then the data for this entry is just `f(a)` for each agent `a`.
+* `agent_properties::Vector` decides the agent data. If an entry is a `Symbol`, e.g. `:weight`,
+  then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
+  `f`, then the data for this entry is just `f(a)` for each agent `a`.
+  The resulting dataframe colums are named with the input symbol (here `:weight, :f`).
 
-`model_properties::Vector` works exactly like `agent_properties` but for model level data.
+* `model_properties::Vector` works exactly like `agent_properties` but for model level data.
 
-`aggregation_dict` decides whether the agent data should be aggregated over
-agents. Each key in `aggregation_dict` is a column name (Symbol), and each
-value is an array of functions to aggregate that column. Note that these
-function names should not be the same as agent fields that are collected.
+# TODO: add dict example
+* `aggregation_dict` decides whether the agent data should be aggregated over
+  agents. Each key in `aggregation_dict` is a column name (`Symbol`), and each
+  value is an array of functions to aggregate that column. You can't use aggregation
+  with function name that coincides with field name (`:weight` vs `weight(a)`).
+  You must provide `agent_properties` for aggregation, because it is impossible
+  to know whether the symbol `:weight` comes from the agent field `weight` or the
+  function `weight`.
 
-Notice that by default all of the above keywords are `nothing`, i.e. nothing is
-collected/aggregated.
+By default all of the above keywords are `nothing`, i.e. nothing is collected/aggregated.
 
 ### Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
@@ -50,6 +54,7 @@ function run!(model::ABM, agent_step!, model_step!, n;
 
   if replicates > 0
     if parallel
+      # TODO: Use keyword propagation and reduce duplication of all these keyword arguments
       dataall = parallel_replicates(model, agent_step!, model_step!, n, when;
       agent_properties=agent_properties, model_properties=model_properties, aggregation_dict=aggregation_dict, replicates=replicates)
     else
