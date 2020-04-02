@@ -9,8 +9,9 @@ agent has acted.
 
     step!(model, agent_step! [, model_step!], n::Function)
 
-`n` can be also be a function that takes as an input the `model` and returns
-`true/false`. Then `step!` runs the model until `n(model)` returns `true`.
+`n` can be also be a function.
+Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
+current amount of steps taken (starting from 0).
 """
 function step! end
 
@@ -28,7 +29,7 @@ Ignore the agent dynamics on this `step!`. Use instead of `agent_step!`.
 dummystep(agent, model) = nothing
 
 until(ss, n::Int, model) = ss < n
-until(ss, n, model) = !n(model)
+until(ss, n, model) = !n(model, ss)
 
 step!(model::ABM, agent_step!, n = 1) = step!(model, agent_step!, dummystep, n)
 

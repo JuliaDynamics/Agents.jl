@@ -52,7 +52,7 @@ end
 
 function hk_model(;numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest,
-                properties = Dict(:ϵ => ϵ, :c => 0))
+                properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
         o = rand()
         add_agent!(model, o, o, -1)
@@ -83,7 +83,6 @@ function model_step!(model)
     for a in allagents(model)
         a.old_opinion = a.new_opinion
     end
-    model.c += 1
 end
 
 # From this implementation we see that to implement synchronous scheduling
@@ -101,7 +100,7 @@ end
 # only until all agents have converged to an opinion. From the documentation of
 # [`step!`](@ref) one can see that instead of specifying the amount of steps we can specify
 # a function instead.
-function terminate(model)
+function terminate(model, s)
     if any(!isapprox(a.previous_opinon, a.new_opinion; rtol = 1e-12)
             for a in allagents(model))
         return false
@@ -111,7 +110,7 @@ function terminate(model)
 end
 
 step!(model, agent_step!, model_step!, terminate)
-model.c
+model[1]
 
 # Alright, let's wrap everything in a function and do some data collection using [`run!`](@ref).
 # %% #src
@@ -135,7 +134,7 @@ data[end-19:end, :]
 
 # Finally we run three scenarios, collect the data and plot it.
 # %% #src
-using Plots
+using Plots, Random
 
 plotsim(data, ϵ) = plot(
     data[!, :step],
@@ -144,6 +143,8 @@ plotsim(data, ϵ) = plot(
     group = data[!, :id],
     title = "epsilon = $(ϵ)"
 )
+
+Random.seed!(42)
 
 plt001,plt015,plt03 = map(
     e -> (model_run(ϵ= e), e) |>
