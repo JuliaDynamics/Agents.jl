@@ -46,7 +46,7 @@ By default all of the above keywords are `nothing`, i.e. nothing is collected/ag
 function run! end
 
 run!(model::ABM, agent_step!, n; kwargs...) =
-run!(model::ABM, agent_step!, dummystep, n; kwargs...) =
+run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
 function run!(model::ABM, agent_step!, model_step!, n;
   replicates::Int=0, parallel::Bool=false, kwargs...)

@@ -129,7 +129,7 @@ end
 # agents to random empty nodes on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.
 
-# ## Running the model
+# ## Steping the model
 
 # Let's initialize the model with 370 agents on a 20 by 20 grid.
 
@@ -143,7 +143,7 @@ step!(model, agent_step!, 3)  # run the model 3 steps.
 
 # ## Running the model and collecting data
 
-# We can use the same [`step!`](@ref) function with more arguments to run
+# We can use the [`run!`](@ref) function with keywords to run the model for
 # multiple steps and collect values of our desired fields from every agent
 # and put these data in a `DataFrame` object.
 
@@ -153,23 +153,18 @@ model = initialize()
 # for the agent fields that we want to collect as data
 properties = [:pos, :mood, :group]
 
-# And specify at which steps data should be collected.
-n = 5  # number of time steps to run the simulation
-when = 1:n  # At which steps to collect data
+data, _ = run!(model, agent_step!, 5; agent_properties = properties)
 
-# Use the `step!` function to run the model and collect data into a DataFrame.
-data = step!(model, agent_step!, n, properties, when=when)
 data[1:10, :] # print only a few rows
 
 
-# With the above `properties` vector, we collected all agents data.
+# With the above `properties` vector, we collected all agent's data.
 # We can instead only collected aggregated data.
 # For example, let's only get the number of happy individuals:
 
-model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
+model = initialize();
 properties = Dict(:mood => [sum])
-n = 5; when = 1:n
-data = step!(model, agent_step!, 5, properties, when=when)
+data = step!(model, agent_step!, 5; aggregation_dict=properties)
 
 # The other `Examples` pages are more realistic examples with a bit more meaningful
  # data processing steps.
