@@ -1,4 +1,5 @@
 using Test, Agents, Random, LightGraphs, SQLite, DataFrames
+using StatsBase: mean
 
 mutable struct Agent0 <: AbstractAgent
   id::Int
@@ -55,8 +56,9 @@ include("api_tests.jl")
 include("model_access.jl")
 include("space_test.jl")
 include("interaction_tests.jl")
-include("data_collector_test.jl")
-include("CA_test.jl")
+include("collect_tests.jl")
+#include("data_collector_test.jl")
+include("CA_test.jl") #Currently failing due to changes in step!
 include("continuousSpace_tests.jl")
 include("collisions_tests.jl")
 

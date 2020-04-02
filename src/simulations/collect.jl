@@ -79,6 +79,22 @@ end
 Collect agent properties into a dataframe. `properties` can have symbols (fields) or
 functions that take an agent as input and output a value. `step` is given only
 so that the function adds the correct number in the `step` column.
+
+## Example
+
+A `model` has 10 agents, each with a `wealth::Float64` field. Agents are scattered
+on a `GridSpace((10,10))`. To obtain the current wealth of all agents, and their
+x-position on the grid:
+
+```julia
+x_position(agent) = first(agent.pos)
+data = collect_agent_data(model, [:wealth, x_position], 1)
+```
+
+Notice we used a `Symbol` to directly obtain the `wealth` value for each agent, and
+a function call to find the x-position.
+
+To obtain the average wealth from this data, one can use `mean(data[!, :wealth)`.
 """
 function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0)
   dd = DataFrame()
@@ -89,6 +105,41 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0
   dd[!, :step] = fill(step, size(dd, 1))
   return dd
 end
+
+"""
+    collect_agent_data(model::ABM, properties::Dict, step = 0) → df
+
+Collect aggregate properties pertaining to all agents into a dataframe.
+This option is useful if aggregate data is the only information that's needed
+to be recovered from the agents in the model. If data from individual agents
+is required along-side aggregate results, it is better to use the `properties::Vector`
+form of this method, then post process the result.
+
+`properties` should take one of two forms.
+- `Dict{Symbol,Array{Function,1}}`: where the key `Symbol` relates to an existing
+agent field
+- `Dict{Function,Array{Function,1}}`: where the key is a function that obtains the value
+which is to be aggregated. The name of the function will be the name associated with the
+resultant column in the DataFrame.
+
+`step` is given only so that the function adds the correct number in the `step` column.
+
+## Example
+
+A `model` has 10 agents, each with a `wealth::Float64` field. Agents are scattered
+on a `GridSpace((10,10))`. To obtain the average wealth of all agents:
+
+```julia
+data = collect_agent_data(model, Dict(:wealth => [mean]), 1)
+```
+
+To find the average x-position of the agents on the grid:
+```julia
+x_position(agent) = first(agent.pos)
+data = collect_agent_data(model, Dict(x_position => [mean]), 1)
+```
+"""
+collect_agent_data(model::ABM, properties::Dict, step::Int=0) =
 
 collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
