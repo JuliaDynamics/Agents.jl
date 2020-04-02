@@ -1,3 +1,4 @@
+export run!
 ###################################################
 # Definition of the data collection API
 ###################################################
@@ -59,7 +60,7 @@ function run!(model::ABM, agent_step!, model_step!, n;
     end
     return dataall
   else
-    df = run!(model, agent_step!, model_step!, n; kwargs...)
+    df = _run!(model, agent_step!, model_step!, n; kwargs...)
     return df
   end
 end
