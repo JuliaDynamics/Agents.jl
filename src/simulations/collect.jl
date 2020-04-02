@@ -4,10 +4,9 @@
 get_data(a, s::Symbol) = getproperty(a, s)
 get_data(a, f::Function) = f(a)
 
-# TODO: `add_data` is a misleading name, we need a better one.
-add_data(s, model, when::AbstractVector) = s ∈ when
-add_data(s, model, when::Bool) = when
-add_data(s, model, when) = when(model, s)
+should_we_collect(s, model, when::AbstractVector) = s ∈ when
+should_we_collect(s, model, when::Bool) = when
+should_we_collect(s, model, when) = when(model, s)
 
 """
     run!(model, agent_step! [, model_step!], n; kwargs...) → agent_df, model_df
@@ -180,7 +179,7 @@ function _run!(
 
   s = 0
   while until(s, n, model)
-    if add_data(s, model, when)
+    if should_we_collect(s, model, when)
       dfm = collect_model_data(model, model_properties, s)
       df_model = vcat(df_model, dfm)
       df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
