@@ -149,25 +149,33 @@ step!(model, agent_step!, 3)  # run the model 3 steps.
 
 model = initialize()
 
-# We define an array of [`Symbols`](https://docs.julialang.org/en/v1/base/base/#Core.Symbol)
+# We define vector of `Symbols`
 # for the agent fields that we want to collect as data
 properties = [:pos, :mood, :group]
 
 data, _ = run!(model, agent_step!, 5; agent_properties = properties)
-
 data[1:10, :] # print only a few rows
 
+# We could also use functions in `properties`, for example we can define
+xaxis(agent) = agent.pos[1]
+model = initialize()
+properties = [xaxis, :mood, :group]
+data, _ = run!(model, agent_step!, 5; agent_properties = properties)
+data
 
 # With the above `properties` vector, we collected all agent's data.
-# We can instead only collected aggregated data.
-# For example, let's only get the number of happy individuals:
+# We can instead collect aggregated data for the agents.
+# For example, let's only get the number of happy individuals, and the
+# maximum of the "xaxis" (not very interesting, but anyway!)
 
 model = initialize();
-properties = Dict(:mood => [sum])
-data = step!(model, agent_step!, 5; aggregation_dict=properties)
+properties = [(:mood, sum), (xaxis, maximum)]
+data, _ = run!(model, agent_step!, 5; agent_properties=properties)
+data
 
-# The other `Examples` pages are more realistic examples with a bit more meaningful
- # data processing steps.
+# The other `Examples` pages are more realistic examples with a much more meaningful
+# collected data. Don't forget to use the function [`aggname`](@ref) to access the
+# columns of the resulting dataframe by name.
 
 # ## Visualizing the data
 

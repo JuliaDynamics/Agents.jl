@@ -139,7 +139,7 @@ end
 function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to "*
     "initialize data collection"))
-    headers = Vector{Symbol}(undef, 1+length(ks))
+    headers = Vector{Symbol}(undef, 1+length(properties))
     types = Vector{Vector}(undef, 1+length(properties))
     alla = allagents(model)
 
@@ -197,56 +197,6 @@ end
 
 collect_model_data!(df, model, properties::Nothing, step::Int=0) = df
 
-###################################################
-# OLD DATA COLLECTION FUNCTIONS
-###################################################
-# TODO: DELETE THESE
-"""
-    aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
-
-Aggregate `df` columns with some function(s) specified in `aggregation_dict`.
-Each key in `aggregation_dict` can be a `Symbol`, which is converted to a column name, and
-each value is an array of function to aggregate that column.
-Additionally, the key can be a function that obtains the value which is to be aggregated.
-The name of the function will be the name associated with the resultant column in the
-DataFrame.
-
-Aggregation occurs per step.
-"""
-function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
-  all_keys = collect(keys(aggregation_dict))
-  dfnames = names(df)
-  available_keys = [k for k in all_keys if in(Symbol(k), dfnames)]
-  length(available_keys) == 0 && return
-  v1 = aggregation_dict[available_keys[1]]
-  final_df = by(df, :step, Symbol(available_keys[1]) => v1[1])
-  for v2 in v1[2:end]
-    dd = by(df, :step, Symbol(available_keys[1]) => v2)
-    final_df = join(final_df, dd, on=:step)
-  end
-  for k in available_keys[2:end]
-    v = aggregation_dict[k]
-    for v2 in v
-      dd = by(df, :step,  Symbol(k) => v2)
-      final_df = join(final_df, dd, on=:step)
-    end
-  end
-
-  # rename columns
-  colnames = Array{Symbol}(undef, size(final_df, 2))
-  colnames[1] = :step
-  counter = 2
-  for k in available_keys
-    v = aggregation_dict[k]
-    for vv in v
-      colnames[counter] = Symbol(join([vv,"(", string(k), ")"], ""))
-      counter += 1
-    end
-  end
-  rename!(final_df, colnames)
-
-  return final_df
-end
 
 ###################################################
 # Parallel / replicates
