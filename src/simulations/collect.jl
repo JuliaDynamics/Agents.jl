@@ -1,4 +1,6 @@
-export run!, collect_agent_data!, collect_model_data!
+export run!, collect_agent_data!, collect_model_data!,
+       init_agent_dataframe, init_model_dataframe
+
 ###################################################
 # Definition of the data collection API
 ###################################################
@@ -66,41 +68,34 @@ function run!(model::ABM, agent_step!, model_step!, n;
 end
 
 ###################################################
-# core data collection functions per step
+# Core data collection loop
 ###################################################
 """
-    collect_agent_data(model::ABM, properties::Vector, step = 0) → df
-
-Collect agent properties into a dataframe. `properties` can have symbols (fields) or
-functions that take an agent as input and output a value. `step` is given only
-so that the function adds the correct number in the `step` column.
-
-## Example
-
-A `model` has 10 agents, each with a `wealth::Float64` field. Agents are scattered
-on a `GridSpace((10,10))`. To obtain the current wealth of all agents, and their
-x-position on the grid:
-
-```julia
-x_position(agent) = first(agent.pos)
-data = collect_agent_data(model, [:wealth, x_position], 1)
-```
-
-Notice we used a `Symbol` to directly obtain the `wealth` value for each agent, and
-a function call to find the x-position.
-
-To obtain the average wealth from this data, one can use `mean(data[!, :wealth)`.
+  _run!(model, agent_step!, model_step!, n; kwargs...)
+Core function that loops over stepping a model and collecting data at each step.
 """
-function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0)
-  dd = DataFrame()
-  dd[!, :id] = collect(keys(model.agents))
-  for fn in properties
-    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
+function _run!(model, agent_step!, model_step!, n;
+               when = true, model_properties=nothing, agent_properties=nothing)
+
+  df_agent = init_agent_dataframe(model, agent_properties)
+  df_model = init_model_dataframe(model, model_properties)
+
+  s = 0
+  while until(s, n, model)
+    if should_we_collect(s, model, when)
+      collect_agent_data!(df_agent, model, agent_properties, s)
+      collect_model_data!(df_model, model, model_properties, s)
+    end
+    step!(model, agent_step!, model_step!, 1)
+    s += 1
   end
-  dd[!, :step] = fill(step, size(dd, 1))
-  return dd
+  return df_agent, df_model
 end
 
+###################################################
+# core data collection functions per step
+###################################################
+# TODO: Add (minimal) docstrings into all exported functions (4 of them)
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     headers = Array{Symbol,1}(undef, 2+length(properties))
     headers[1] = :id
@@ -143,45 +138,6 @@ function init_model_dataframe(model::ABM, properties::AbstractArray)
 end
 
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
-"""
-    collect_agent_data(model::ABM, properties::Dict, step = 0) → df
-
-Collect aggregate properties pertaining to all agents into a dataframe.
-This option is useful if aggregate data is the only information that's needed
-to be recovered from the agents in the model. If data from individual agents
-is required along-side aggregate results, it is better to use the `properties::Vector`
-form of this method, then post process the result.
-
-`properties` should take one of two forms.
-- `Dict{Symbol,Array{Function,1}}`: where the key `Symbol` relates to an existing
-agent field
-- `Dict{Function,Array{Function,1}}`: where the key is a function that obtains the value
-which is to be aggregated. The name of the function will be the name associated with the
-resultant column in the DataFrame.
-
-`step` is given only so that the function adds the correct number in the `step` column.
-
-## Example
-
-A `model` has 10 agents, each with a `wealth::Float64` field. Agents are scattered
-on a `GridSpace((10,10))`. To obtain the average wealth of all agents:
-
-```julia
-data = collect_agent_data(model, Dict(:wealth => [mean]), 1)
-```
-
-To find the average x-position of the agents on the grid:
-```julia
-x_position(agent) = first(agent.pos)
-data = collect_agent_data(model, Dict(x_position => [mean]), 1)
-```
-"""
-function collect_agent_data(model::ABM, properties::Dict, step::Int = 0)
-  dft = collect_agent_data(model, collect(keys(properties)), step)
-  aggregate_data(dft, properties)
-end
-
-collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
 function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
   dd = collect_agent_data(model, properties, step)
@@ -191,6 +147,22 @@ end
 #TODO: implement aggergation properly
 collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Dict, step::Int=0) = DataFrame()
 collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+
+
+###################################################
+# OLD DATA COLLECTION FUNCTIONS
+###################################################
+# TODO: DELETE THESE
+
+function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0)
+  dd = DataFrame()
+  dd[!, :id] = collect(keys(model.agents))
+  for fn in properties
+    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
+  end
+  dd[!, :step] = fill(step, size(dd, 1))
+  return dd
+end
 
 """
     collect_model_data(model::ABM, properties::Vector, step = 0) → df
@@ -260,32 +232,6 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   rename!(final_df, colnames)
 
   return final_df
-end
-
-###################################################
-# Core data collection loop
-###################################################
-
-"""
-  _run!(model, agent_step!, model_step!, n; kwargs...)
-Core function that loops over stepping a model and collecting data at each step.
-"""
-function _run!(model, agent_step!, model_step!, n;
-               when = true, model_properties=nothing, agent_properties=nothing)
-
-  df_agent = init_agent_dataframe(model, agent_properties)
-  df_model = init_model_dataframe(model, model_properties)
-
-  s = 0
-  while until(s, n, model)
-    if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, agent_properties, s)
-      collect_model_data!(df_model, model, model_properties, s)
-    end
-    step!(model, agent_step!, model_step!, 1)
-    s += 1
-  end
-  return df_agent, df_model
 end
 
 ###################################################
