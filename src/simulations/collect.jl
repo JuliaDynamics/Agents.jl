@@ -97,12 +97,12 @@ end
 ###################################################
 # TODO: Add (minimal) docstrings into all exported functions (4 of them)
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
-    headers = Array{Symbol,1}(undef, 2+length(properties))
+    headers = Vector{Symbol}(undef, 2+length(properties))
     headers[1] = :id
-    headers[2:end-1] .= [Symbol(k) for k in properties]
+    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
     headers[end] = :step
 
-    types = Array{Array,1}(undef, 2+length(properties))
+    types = Vector{Vector}(undef, 2+length(properties))
     types[1] = Int[]
     types[end] = Int[]
     for (i,k) in enumerate(properties)
@@ -122,11 +122,11 @@ init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
 init_agent_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
 function init_model_dataframe(model::ABM, properties::AbstractArray)
-    headers = Array{Symbol,1}(undef, 1+length(properties))
-    headers[1:end-1] .= [Symbol(k) for k in properties]
+    headers = Vector{Symbol}(undef, 2+length(properties))
+    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
     headers[end] = :step
 
-    types = Array{Array,1}(undef, 1+length(properties))
+    types = Vector{Vector}(undef, 1+length(properties))
     types[end] = Int[]
     for (i,k) in enumerate(properties)
         #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
@@ -139,8 +139,16 @@ end
 
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
+# TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME.
+# This is also pretty easy to do, it is shown here:
+# https://juliadata.github.io/DataFrames.jl/stable/man/getting_started/#Constructing-Row-by-Row-1
 function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
-  dd = collect_agent_data(model, properties, step)
+  dd = DataFrame()
+  dd[!, :id] = collect(keys(model.agents))
+  for fn in properties
+    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
+  end
+  dd[!, :step] = fill(step, size(dd, 1))
   append!(df, dd)
 end
 
@@ -148,45 +156,23 @@ end
 collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Dict, step::Int=0) = DataFrame()
 collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
-
-###################################################
-# OLD DATA COLLECTION FUNCTIONS
-###################################################
-# TODO: DELETE THESE
-
-function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0)
-  dd = DataFrame()
-  dd[!, :id] = collect(keys(model.agents))
-  for fn in properties
-    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
-  end
-  dd[!, :step] = fill(step, size(dd, 1))
-  return dd
-end
-
-"""
-    collect_model_data(model::ABM, properties::Vector, step = 0) → df
-
-Same as [`collect_agent_data`](@ref) but for model data instead.
-"""
-function collect_model_data(model::ABM, properties::AbstractArray, step::Int = 0)
+# TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME for model
+function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
   dd = DataFrame()
   for fn in properties
     r =  get_data(model, fn)
     dd[!, Symbol(fn)] = [r]
   end
   dd[!, :step] = fill(step, size(dd, 1))
-  return dd
-end
-
-collect_model_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
-
-function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
-  dd = collect_model_data(model, properties, step)
   append!(df, dd)
 end
 
 collect_model_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+
+###################################################
+# OLD DATA COLLECTION FUNCTIONS
+###################################################
+# TODO: DELETE THESE
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
 
