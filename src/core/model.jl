@@ -206,7 +206,7 @@ end
     random_agent(model)
 Return a random agent from the model.
 """
-random_agent(model) = model.agents[rand(keys(model.agents))]
+random_agent(model) = model[rand(keys(model.agents))]
 
 """
     nagents(model::ABM)

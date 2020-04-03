@@ -96,7 +96,13 @@ end
 # core data collection functions per step
 ###################################################
 # TODO: Add (minimal) docstrings into all exported functions (4 of them)
+init_agent_dataframe(model, properties::Nothing) = DataFrame()
+collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
+
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
+    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to "*
+    "initialize data collection"))
+
     headers = Vector{Symbol}(undef, 2+length(properties))
     headers[1] = :id
     for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
@@ -105,26 +111,16 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     types = Vector{Vector}(undef, 2+length(properties))
     types[1] = Int[]
     types[end] = Int[]
-    for (i,k) in enumerate(properties)
-        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
-        #TODO: we need at least one agent in the model to confirm the resultant type.
-        #      this should probably be checked before this time.
+    a = random_agent(model)
+    for (i, k) in enumerate(properties)
         #NOTE: if we enforce `x_pos(agent)::Int = ...`, then Base.return_types could be invoked
         #without having to worry about getting an instance of the function.
-        types[i+1] = typeof(k) <: Symbol ? fieldtype(Agents.agenttype(model), k)[] :
-                                           typeof(k(values(model.agents[1])))[]
+        types[i+1] = typeof(get_data(a, k))[]
     end
     DataFrame(types, headers)
 end
 
-#TODO: implement
-init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
-init_agent_dataframe(model::ABM, properties::Nothing) = DataFrame()
-
-# TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME.
-# This is also pretty easy to do, it is shown here:
-# https://juliadata.github.io/DataFrames.jl/stable/man/getting_started/#Constructing-Row-by-Row-1
-function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
+function collect_agent_data!(df, model, properties::AbstractArray, step::Int=0)
   dd = DataFrame()
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
@@ -134,10 +130,16 @@ function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Abst
   append!(df, dd)
 end
 
-#TODO: implement aggergation properly
-collect_agent_data!(df, model, properties::Dict, step::Int=0) = df
-collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
+# Aggregating version
+init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
 
+
+# TODO: Implement in-place version that DOES NOT CREATE A DATAFRAME
+# for this method:
+function collect_agent_data!(df, model, properties::Dict, step::Int=0)
+
+  return df
+end
 
 function init_model_dataframe(model::ABM, properties::AbstractArray)
     headers = Vector{Symbol}(undef, 1+length(properties))
