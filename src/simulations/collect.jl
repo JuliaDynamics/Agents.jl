@@ -1,4 +1,4 @@
-export run!
+export run!, collect_agent_data, collect_model_data
 ###################################################
 # Definition of the data collection API
 ###################################################
@@ -213,11 +213,8 @@ end
   _run!(model, agent_step!, model_step!, n; kwargs...)
 Core function that loops over stepping a model and collecting data at each step.
 """
-function _run!(
-    model, agent_step!, model_step!, n;
-    collect0 = true, when = true,
-    model_properties=nothing, agent_properties=nothing,
-  )
+function _run!(model, agent_step!, model_step!, n;
+               when = true, model_properties=nothing, agent_properties=nothing)
 
   df_agent = DataFrame()
   df_model = DataFrame()
