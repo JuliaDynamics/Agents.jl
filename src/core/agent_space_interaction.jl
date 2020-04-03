@@ -216,7 +216,7 @@ biggest_id(model::ABM) = isempty(model.agents) ? 0 : maximum(keys(model.agents))
 
 
 """
-    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}, verbose = true) → agent
+    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
 
 Add agent to a random node in the space while respecting a maximum one agent per node.
 This function throws a warning if no empty nodes remain.
@@ -228,25 +228,18 @@ function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
     random_node = rand(empty_cells)
     add_agent!(agent, random_node, model)
   else
-    "No empty nodes found for `add_agent_single!`."
+    @warn "No empty nodes found for `add_agent_single!`."
   end
   return agent
 end
 
 """
-    add_agent_single!(model::ABM, properties...; kwargs...)
+    add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...)
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
 function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
-  msa = model.space.agent_positions
   id = biggest_id(model) + 1
-  empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
-  if length(empty_cells) > 0
-    random_node = rand(empty_cells)
-    cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...; kwargs...)
-    add_agent!(agent, random_node, model)
-    return agent
-  end
+  agent = A(id, 1, properties...; kwargs...)
+  add_agent_single!(agent, model)
 end
