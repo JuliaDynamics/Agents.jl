@@ -134,6 +134,11 @@ x_position(agent) = first(agent.pos)
 data = collect_agent_data(model, Dict(x_position => [mean]), 1)
 ```
 """
+function collect_agent_data(model::ABM, properties::Dict, step::Int = 0)
+  dft = collect_agent_data(model, collect(keys(properties)), step)
+  aggregate_data(dft, properties)
+end
+
 collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
 """
@@ -156,27 +161,30 @@ collect_model_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
 
-Aggregate `df` columns  with some function(s) specified in `aggregation_dict`.
-Each key in `aggregation_dict` is a column name (Symbol), and each value is
-an array of function to aggregate that column.
+Aggregate `df` columns with some function(s) specified in `aggregation_dict`.
+Each key in `aggregation_dict` can be a `Symbol`, which is converted to a column name, and
+each value is an array of function to aggregate that column.
+Additionally, the key can be a function that obtains the value which is to be aggregated.
+The name of the function will be the name associated with the resultant column in the
+DataFrame.
 
 Aggregation occurs per step.
 """
 function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   all_keys = collect(keys(aggregation_dict))
   dfnames = names(df)
-  available_keys = [k for k in all_keys if in(k, dfnames)]
+  available_keys = [k for k in all_keys if in(Symbol(k), dfnames)]
   length(available_keys) == 0 && return
   v1 = aggregation_dict[available_keys[1]]
-  final_df = by(df, :step,  available_keys[1] => v1[1])
+  final_df = by(df, :step, Symbol(available_keys[1]) => v1[1])
   for v2 in v1[2:end]
-    dd = by(df, :step,  available_keys[1] => v2)
+    dd = by(df, :step, Symbol(available_keys[1]) => v2)
     final_df = join(final_df, dd, on=:step)
   end
   for k in available_keys[2:end]
     v = aggregation_dict[k]
     for v2 in v
-      dd = by(df, :step,  k => v2)
+      dd = by(df, :step,  Symbol(k) => v2)
       final_df = join(final_df, dd, on=:step)
     end
   end
@@ -197,18 +205,6 @@ function aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
   return final_df
 end
 
-"used in _run!"
-function collect_agent_data!(df::DataFrame, model::ABM, agent_properties,  aggregation_dict, step::Int)
-  dft = collect_agent_data(model, agent_properties, step)
-  if aggregation_dict == nothing
-    df = vcat(df, dft)
-  else
-    dfa = aggregate_data(dft, aggregation_dict)
-    df = vcat(df, dfa)
-  end
-  return df
-end
-
 ###################################################
 # Core data collection loop
 ###################################################
@@ -220,7 +216,7 @@ Core function that loops over stepping a model and collecting data at each step.
 function _run!(
     model, agent_step!, model_step!, n;
     collect0 = true, when = true,
-    model_properties=nothing, aggregation_dict=nothing, agent_properties=nothing,
+    model_properties=nothing, agent_properties=nothing,
   )
 
   df_agent = DataFrame()
@@ -231,7 +227,8 @@ function _run!(
     if should_we_collect(s, model, when)
       dfm = collect_model_data(model, model_properties, s)
       df_model = vcat(df_model, dfm)
-      df_agent = collect_agent_data!(df_agent, model, agent_properties, aggregation_dict, s)
+      dfa = collect_agent_data(model, agent_properties, s)
+      df_agent = vcat(df_agent, dfa)
     end
     step!(model, agent_step!, model_step!, 1)
     s += 1
