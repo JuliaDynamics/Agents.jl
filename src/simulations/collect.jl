@@ -29,7 +29,9 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   is the "key" (any entry like the ones mentioned above, e.g. `:weight, f`). The second
   entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
   Continuing from the above example, we would have
-  `agent_properties = [(:weight, mean), (f, maximum)]`.
+  `agent_properties = [(:weight, mean), (f, maximum)]`. The resulting data name colums
+  use the function [`aggname`](@ref), and create something like `mean(weight)` or
+  `maximum(f)`.
 
 * `model_properties::Vector` works exactly like `agent_properties` but for model level data.
   For the model, no aggregation is possible (nothing to aggregate over).
@@ -118,15 +120,15 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     for (i, k) in enumerate(properties)
         #NOTE: if we enforce `x_pos(agent)::Int = ...`, then Base.return_types could be invoked
         #without having to worry about getting an instance of the function.
-        types[i+1] = typeof(get_data(a, k))[]
+        types[i+2] = typeof(get_data(a, k))[]
     end
     DataFrame(types, headers)
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0)
   dd = DataFrame()
-  dd[!, :step] = fill(step, size(dd, 1))
   dd[!, :id] = collect(keys(model.agents))
+  dd[!, :step] = fill(step, size(dd, 1))
   for fn in properties
     dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
   end
