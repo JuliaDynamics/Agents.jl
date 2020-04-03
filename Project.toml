@@ -1,10 +1,9 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
-authors = ["Ali Vahdati", "George Datseris"]
+authors = ["Ali Vahdati", "George Datseris", "Tim Dubois"]
 version = "3.0.0"
 
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
@@ -22,6 +21,7 @@ julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 
 [targets]
-test = ["Test"]
+test = ["Test", "BenchmarkTools"]
