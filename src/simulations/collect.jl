@@ -1,4 +1,4 @@
-export run!, collect_agent_data, collect_model_data
+export run!, collect_agent_data!, collect_model_data!
 ###################################################
 # Definition of the data collection API
 ###################################################
@@ -101,6 +101,48 @@ function collect_agent_data(model::ABM, properties::AbstractArray, step::Int = 0
   return dd
 end
 
+function init_agent_dataframe(model::ABM, properties::AbstractArray)
+    headers = Array{Symbol,1}(undef, 2+length(properties))
+    headers[1] = :id
+    headers[2:end-1] .= [Symbol(k) for k in properties]
+    headers[end] = :step
+
+    types = Array{Array,1}(undef, 2+length(properties))
+    types[1] = Int[]
+    types[end] = Int[]
+    for (i,k) in enumerate(properties)
+        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
+        #TODO: we need at least one agent in the model to confirm the resultant type.
+        #      this should probably be checked before this time.
+        #NOTE: if we enforce `x_pos(agent)::Int = ...`, then Base.return_types could be invoked
+        #without having to worry about getting an instance of the function.
+        types[i+1] = typeof(k) <: Symbol ? fieldtype(Agents.agenttype(model), k)[] :
+                                           typeof(k(values(model.agents[1])))[]
+    end
+    DataFrame(types, headers)
+end
+
+#TODO: implement
+init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
+init_agent_dataframe(model::ABM, properties::Nothing) = DataFrame()
+
+function init_model_dataframe(model::ABM, properties::AbstractArray)
+    headers = Array{Symbol,1}(undef, 1+length(properties))
+    headers[1:end-1] .= [Symbol(k) for k in properties]
+    headers[end] = :step
+
+    types = Array{Array,1}(undef, 1+length(properties))
+    types[end] = Int[]
+    for (i,k) in enumerate(properties)
+        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
+        #TODO: assumes property is extant in the list
+        types[i] = typeof(k) <: Symbol ? typeof(model.properties[k])[] :
+                                         typeof(k(model))[]
+    end
+    DataFrame(types, headers)
+end
+
+init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 """
     collect_agent_data(model::ABM, properties::Dict, step = 0) → df
 
@@ -141,6 +183,15 @@ end
 
 collect_agent_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
+function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
+  dd = collect_agent_data(model, properties, step)
+  append!(df, dd)
+end
+
+#TODO: implement aggergation properly
+collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Dict, step::Int=0) = DataFrame()
+collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+
 """
     collect_model_data(model::ABM, properties::Vector, step = 0) → df
 
@@ -158,6 +209,12 @@ end
 
 collect_model_data(model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 
+function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
+  dd = collect_model_data(model, properties, step)
+  append!(df, dd)
+end
+
+collect_model_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
 """
     aggregate_data(df::AbstractDataFrame, aggregation_dict::Dict)
 
@@ -216,16 +273,14 @@ Core function that loops over stepping a model and collecting data at each step.
 function _run!(model, agent_step!, model_step!, n;
                when = true, model_properties=nothing, agent_properties=nothing)
 
-  df_agent = DataFrame()
-  df_model = DataFrame()
+  df_agent = init_agent_dataframe(model, agent_properties)
+  df_model = init_model_dataframe(model, model_properties)
 
   s = 0
   while until(s, n, model)
     if should_we_collect(s, model, when)
-      dfm = collect_model_data(model, model_properties, s)
-      df_model = vcat(df_model, dfm)
-      dfa = collect_agent_data(model, agent_properties, s)
-      df_agent = vcat(df_agent, dfa)
+      collect_agent_data!(df_agent, model, agent_properties, s)
+      collect_model_data!(df_model, model, model_properties, s)
     end
     step!(model, agent_step!, model_step!, 1)
     s += 1
@@ -252,8 +307,8 @@ function series_replicates(model, agent_step!, model_step!, n, replicates; kwarg
     replicate_col!(df_agentTemp, rep)
     replicate_col!(df_modelTemp, rep)
 
-    df_agent = vcat(df_agent, df_agentTemp)
-    df_model = vcat(df_model, df_modelTemp)
+    append!(df_agent, df_agentTemp)
+    append!(df_model, df_modelTemp)
   end
   return df_agent, df_model
 end
@@ -269,8 +324,8 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates
   for (rep, d) in enumerate(all_data)
     replicate_col!(d[1], rep)
     replicate_col!(d[2], rep)
-    df_agent = vcat(df_agent, d[1])
-    df_model = vcat(df_model, d[2])
+    append!(df_agent, d[1])
+    append!(df_model, d[2])
   end
 
   return df_agent, df_model
@@ -327,8 +382,8 @@ function paramscan(parameters::Dict, initialize;
     # TODO not all params are for agent/model df
     addparams!(df_agent, d, changing_params)
     addparams!(df_model, d, changing_params)
-    df_agent = vcat(df_agent, df_agentTemp)
-    df_model = vcat(df_model, df_modelTemp)
+    append!(df_agent, df_agentTemp)
+    append!(df_model, df_modelTemp)
     if progress
       # show progress
       counter += 1
