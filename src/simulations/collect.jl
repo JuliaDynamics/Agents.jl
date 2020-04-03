@@ -121,24 +121,6 @@ end
 init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
 init_agent_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
-function init_model_dataframe(model::ABM, properties::AbstractArray)
-    headers = Vector{Symbol}(undef, 2+length(properties))
-    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
-    headers[end] = :step
-
-    types = Vector{Vector}(undef, 1+length(properties))
-    types[end] = Int[]
-    for (i,k) in enumerate(properties)
-        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
-        #TODO: assumes property is extant in the list
-        types[i] = typeof(k) <: Symbol ? typeof(model.properties[k])[] :
-                                         typeof(k(model))[]
-    end
-    DataFrame(types, headers)
-end
-
-init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
-
 # TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME.
 # This is also pretty easy to do, it is shown here:
 # https://juliadata.github.io/DataFrames.jl/stable/man/getting_started/#Constructing-Row-by-Row-1
@@ -156,15 +138,30 @@ end
 collect_agent_data!(df, model, properties::Dict, step::Int=0) = df
 collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
 
-# TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME for model
-function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
-  dd = DataFrame()
+
+function init_model_dataframe(model::ABM, properties::AbstractArray)
+    headers = Vector{Symbol}(undef, 1+length(properties))
+    headers[1] = :step
+    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
+
+    types = Vector{Vector}(undef, 1+length(properties))
+    types[1] = Int[]
+    for (i,k) in enumerate(properties)
+        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
+        #TODO: assumes property is extant in the list
+        types[i+1] = typeof(k) <: Symbol ? typeof(model.properties[k])[] :
+                                           typeof(k(model))[]
+    end
+    DataFrame(types, headers)
+end
+
+init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
+
+function collect_model_data!(df, model, properties::AbstractArray, step::Int=0)
+  push!(df[!, :step], step)
   for fn in properties
-    r =  get_data(model, fn)
-    dd[!, Symbol(fn)] = [r]
+    push!(df[!, Symbol(fn)], get_data(model, fn))
   end
-  dd[!, :step] = fill(step, size(dd, 1))
-  append!(df, dd)
 end
 
 collect_model_data!(df, model, properties::Nothing, step::Int=0) = df
