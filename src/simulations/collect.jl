@@ -1,5 +1,5 @@
 export run!, collect_agent_data!, collect_model_data!,
-       init_agent_dataframe, init_model_dataframe
+       init_agent_dataframe, init_model_dataframe, aggname
 
 ###################################################
 # Definition of the data collection API
@@ -24,18 +24,17 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
   The resulting dataframe colums are named with the input symbol (here `:weight, :f`).
 
+* `agent_properties::Vector{<:Tuple}`: if `agent_properties` is a vector of 2-tuples instead,
+  data aggregation is done over the agent properties. For each 2-tuple, the first entry
+  is the "key" (any entry like the ones mentioned above, e.g. `:weight, f`). The second
+  entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
+  Continuing from the above example, we would have
+  `agent_properties = [(:weight, mean), (f, maximum)]`.
+
 * `model_properties::Vector` works exactly like `agent_properties` but for model level data.
+  For the model, no aggregation is possible (nothing to aggregate over).
 
-# TODO: add dict example
-* `aggregation_dict` decides whether the agent data should be aggregated over
-  agents. Each key in `aggregation_dict` is a column name (`Symbol`), and each
-  value is an array of functions to aggregate that column. You can't use aggregation
-  with function name that coincides with field name (`:weight` vs `weight(a)`).
-  You must provide `agent_properties` for aggregation, because it is impossible
-  to know whether the symbol `:weight` comes from the agent field `weight` or the
-  function `weight`.
-
-By default all of the above keywords are `nothing`, i.e. nothing is collected/aggregated.
+By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 
 ### Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
@@ -120,28 +119,52 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     DataFrame(types, headers)
 end
 
-function collect_agent_data!(df, model, properties::AbstractArray, step::Int=0)
+function collect_agent_data!(df, model, properties::Vector, step::Int=0)
   dd = DataFrame()
+  dd[!, :step] = fill(step, size(dd, 1))
   dd[!, :id] = collect(keys(model.agents))
   for fn in properties
     dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
   end
-  dd[!, :step] = fill(step, size(dd, 1))
   append!(df, dd)
 end
 
 # Aggregating version
-init_agent_dataframe(model::ABM, properties::Dict) = DataFrame()
+function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
+    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to "*
+    "initialize data collection"))
+    headers = Vector{Symbol}(undef, 1+length(ks))
+    types = Vector{Vector}(undef, 1+length(properties))
+    alla = allagents(model)
 
+    headers[1] = :step
+    types[1] = Int[]
 
-# TODO: Implement in-place version that DOES NOT CREATE A DATAFRAME
-# for this method:
-function collect_agent_data!(df, model, properties::Dict, step::Int=0)
-
-  return df
+    for (i, (k, agg)) in enumerate(properties)
+        headers[i+1] = aggname(k, agg)
+        # This line assumes that `agg` can work with iterators directly
+        types[i+1] = typeof( agg( get_data(a, k) for a in alla ) )[]
+    end
+    DataFrame(types, headers)
 end
 
-function init_model_dataframe(model::ABM, properties::AbstractArray)
+"""
+    aggname(k, agg) → name
+Return the name of the column of the aggregated data with key `k` and aggregating
+function `agg`.
+"""
+aggname(k, agg) = Symbol(join([string(agg),"(", string(k), ")"], ""))
+
+function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
+    alla = allagents(model)
+    push!(df[!, 1], step)
+    for (i, (k, agg)) in enumerate(properties)
+        push!(df[!, i+1], agg(get_data(a, k) for a in alla))
+    end
+end
+
+# Model data
+function init_model_dataframe(model::ABM, properties::Vector)
     headers = Vector{Symbol}(undef, 1+length(properties))
     headers[1] = :step
     for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
@@ -159,7 +182,7 @@ end
 
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
-function collect_model_data!(df, model, properties::AbstractArray, step::Int=0)
+function collect_model_data!(df, model, properties::Vector, step::Int=0)
   push!(df[!, :step], step)
   for fn in properties
     push!(df[!, Symbol(fn)], get_data(model, fn))
