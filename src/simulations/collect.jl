@@ -104,13 +104,13 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     "initialize data collection"))
 
     headers = Vector{Symbol}(undef, 2+length(properties))
-    headers[1] = :id
-    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
-    headers[end] = :step
+    headers[1] = :step
+    headers[2] = :id
+    for i in 1:length(properties); headers[i+2] = Symbol(properties[i]); end
 
     types = Vector{Vector}(undef, 2+length(properties))
     types[1] = Int[]
-    types[end] = Int[]
+    types[2] = Int[]
     a = random_agent(model)
     for (i, k) in enumerate(properties)
         #NOTE: if we enforce `x_pos(agent)::Int = ...`, then Base.return_types could be invoked
