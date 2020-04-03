@@ -31,7 +31,7 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   Continuing from the above example, we would have
   `agent_properties = [(:weight, mean), (f, maximum)]`. The resulting data name colums
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
-  `maximum(f)`.
+  `maximum(f)`. This name doesn't play well with anonymous functions!
 
 * `model_properties::Vector` works exactly like `agent_properties` but for model level data.
   For the model, no aggregation is possible (nothing to aggregate over).
@@ -100,8 +100,17 @@ end
 ###################################################
 # core data collection functions per step
 ###################################################
-# TODO: Add (minimal) docstrings into all exported functions (4 of them)
+"""
+    init_agent_dataframe(model, properties) → agent_df
+Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
+"""
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
+
+"""
+    collect_agent_data!(df, model, properties, step = 0)
+Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
+of `properties`). `step` is given because the step number information is not known.
+"""
 collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
 
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
@@ -170,6 +179,10 @@ function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0
 end
 
 # Model data
+"""
+    init_model_dataframe(model, properties) → model_df
+Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
+"""
 function init_model_dataframe(model::ABM, properties::Vector)
     headers = Vector{Symbol}(undef, 1+length(properties))
     headers[1] = :step
@@ -188,6 +201,10 @@ end
 
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
+"""
+    collect_model_data!(df, model, properties, step = 0)
+Same as [`collect_agent_data!`](@ref) but for model data instead.
+"""
 function collect_model_data!(df, model, properties::Vector, step::Int=0)
   push!(df[!, :step], step)
   for fn in properties

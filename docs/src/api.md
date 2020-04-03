@@ -59,8 +59,8 @@ But there are other functions that are related to simulations listed here.
 ```@docs
 paramscan
 init_agent_dataframe
-init_model_dataframe
 collect_agent_data!
+init_model_dataframe
 collect_model_data!
 ```
 
