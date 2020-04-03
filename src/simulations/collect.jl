@@ -153,8 +153,8 @@ function collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Abst
 end
 
 #TODO: implement aggergation properly
-collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Dict, step::Int=0) = DataFrame()
-collect_agent_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+collect_agent_data!(df, model, properties::Dict, step::Int=0) = df
+collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
 
 # TODO: Implement in-place versions that DO NOT CREATE A DATAFRAME for model
 function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::AbstractArray, step::Int=0)
@@ -167,7 +167,7 @@ function collect_model_data!(df::AbstractDataFrame, model::ABM, properties::Abst
   append!(df, dd)
 end
 
-collect_model_data!(df::AbstractDataFrame, model::ABM, properties::Nothing, step::Int=0) = DataFrame()
+collect_model_data!(df, model, properties::Nothing, step::Int=0) = df
 
 ###################################################
 # OLD DATA COLLECTION FUNCTIONS
