@@ -41,6 +41,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   A lot of flexibility is offered based on the type of `when`. If `when::Vector`,
   then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
   returns `true`. By default data are collected in every step.
+* `when_model = when` : same as `when` but for model data.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
 """
@@ -74,21 +75,24 @@ end
 Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(model, agent_step!, model_step!, n;
-               when = true, model_properties=nothing, agent_properties=nothing)
+               when = true, when_model = when,
+               model_properties=nothing, agent_properties=nothing)
 
-  df_agent = init_agent_dataframe(model, agent_properties)
-  df_model = init_model_dataframe(model, model_properties)
+    df_agent = init_agent_dataframe(model, agent_properties)
+    df_model = init_model_dataframe(model, model_properties)
 
-  s = 0
-  while until(s, n, model)
-    if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, agent_properties, s)
-      collect_model_data!(df_model, model, model_properties, s)
+    s = 0
+    while until(s, n, model)
+        if should_we_collect(s, model, when)
+            collect_agent_data!(df_agent, model, agent_properties, s)
+        end
+        if should_we_collect(s, model, when_model)
+            collect_model_data!(df_model, model, model_properties, s)
+        end
+        step!(model, agent_step!, model_step!, 1)
+        s += 1
     end
-    step!(model, agent_step!, model_step!, 1)
-    s += 1
-  end
-  return df_agent, df_model
+    return df_agent, df_model
 end
 
 ###################################################
