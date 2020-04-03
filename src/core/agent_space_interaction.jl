@@ -199,7 +199,7 @@ end
 function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
   @assert model.space == nothing
   id = biggest_id(model) + 1
-  model[id] = A(id, properties...)
+  model[id] = A(id, properties...; kwargs...)
   return model[id]
 end
 
@@ -207,7 +207,7 @@ function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:Abs
   id = biggest_id(model) + 1
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
-  model[id] = A(id, cnode, properties...)
+  model[id] = A(id, cnode, properties...; kwargs...)
   push!(model.space.agent_positions[n], id)
   return model[id]
 end
