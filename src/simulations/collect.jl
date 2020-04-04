@@ -166,8 +166,8 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
         headers[i+1] = aggname(k, agg)
         # This line assumes that `agg` can work with iterators directly
         current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
-        isconcretetype(current_type) || warn("Type is not concrete when using $(agg)"*
-        "on property $(k). Consider narrowning the type signature of $(agg).")
+        isconcretetype(current_type) || warn("Type is not concrete when using function $(agg) "*
+        "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
         types[i+1] = current_type[]
     end
     DataFrame(types, headers)
