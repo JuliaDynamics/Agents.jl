@@ -127,22 +127,24 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     types[2] = Int[]
     a = random_agent(model)
     for (i, k) in enumerate(properties)
-        #NOTE: if we enforce `x_pos(agent)::Int = ...`, then Base.return_types could be invoked
-        #without having to worry about getting an instance of the function.
-        types[i+2] = typeof(get_data(a, k))[]
+        current_type = typeof(get_data(a, k))
+        isconcretetype(current_type) || warn("Type is not concrete when using $(k)"*
+        "on agents. Consider narrowning the type signature of $(k).")
+        types[i+2] = current_type[]
     end
     DataFrame(types, headers)
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0)
-  dd = DataFrame()
-  dd[!, :id] = collect(keys(model.agents))
-  dd[!, :step] = fill(step, size(dd, 1))
-  for fn in properties
-    dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
-  end
-  append!(df, dd)
-  return df
+    alla = allagents(model)
+    dd = DataFrame()
+    dd[!, :id] = collect(keys(model.agents))
+    dd[!, :step] = fill(step, size(dd, 1))
+    for fn in properties
+        dd[!, Symbol(fn)] = collect(get_data(a, fn) for a in alla)
+    end
+    append!(df, dd)
+    return df
 end
 
 # Aggregating version
@@ -159,7 +161,10 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     for (i, (k, agg)) in enumerate(properties)
         headers[i+1] = aggname(k, agg)
         # This line assumes that `agg` can work with iterators directly
-        types[i+1] = typeof( agg( get_data(a, k) for a in alla ) )[]
+        current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
+        isconcretetype(current_type) || warn("Type is not concrete when using $(agg)"*
+        "on property $(k). Consider narrowning the type signature of $(agg).")
+        types[i+1] = current_type[]
     end
     DataFrame(types, headers)
 end
@@ -193,10 +198,15 @@ function init_model_dataframe(model::ABM, properties::Vector)
     types = Vector{Vector}(undef, 1+length(properties))
     types[1] = Int[]
     for (i,k) in enumerate(properties)
-        #TODO: if/else assumes Symbol or function. Don't think we've checked that anywhere yet
-        #TODO: assumes property is extant in the list
-        types[i+1] = typeof(k) <: Symbol ? typeof(model.properties[k])[] :
-                                           typeof(k(model))[]
+        types[i+1] =
+            if typeof(k) <: Symbol
+                typeof(model.properties[k])[]
+            else
+                current_type = typeof(k(model))
+                isconcretetype(current_type) || warn("Type is not concrete when using $(k)"*
+                "on the model. Considering narrowing the type signature of $(k).")
+                current_type[]
+            end
     end
     DataFrame(types, headers)
 end

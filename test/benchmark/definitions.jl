@@ -1,6 +1,7 @@
 using Agents
 using BenchmarkTools
 using Random
+using StatsBase: mean
 
 mutable struct Agent1 <: AbstractAgent
   id::Int
