@@ -27,12 +27,17 @@ end
 model = initialize()
 
 @testset "Aggregate Collections" begin
-    df = Agents.collect_agent_data(model, [:weight], 1)
+    props = [:weight]
+    df = init_agent_dataframe(model, props)
+    collect_agent_data!(df, model, props, 1)
     # Expecting weight values of all three agents. ID and step included.
     @test size(df) == (3,3)
-    @test names(df) == [:id, :weight, :step]
+    @test names(df) == [:step, :id, :weight]
     @test mean(df[!, :weight]) ≈ 0.3917615139
-    df = Agents.collect_agent_data(model, Dict(:weight => [mean]), 1)
+
+    props = [(:weight, mean)]
+    df = init_agent_dataframe(model, props)
+    collect_agent_data!(df, model, props, 1)
     # Activate aggregation. Weight column is expected to be one value for this step,
     # renamed mean(weight). ID is meaningless and will therefore be dropped.
     @test size(df) == (1,2)
@@ -41,15 +46,18 @@ model = initialize()
 
     # Add a function as a property
     x_position(agent) = first(agent.pos)
-    df = Agents.collect_agent_data(model, [:weight, x_position], 1)
+    props = [:weight, x_position]
+    df = init_agent_dataframe(model, props)
+    collect_agent_data!(df, model, props, 1)
     @test size(df) == (3,4)
-    @test names(df) == [:id, :weight, :x_position, :step]
+    @test names(df) == [:step, :id, :weight, :x_position]
     @test mean(df[!, :x_position]) ≈ 4.3333333
-    df = Agents.collect_agent_data(model, Dict(:weight => [mean], x_position => [mean]), 1)
+
+    props = [(:weight, mean), (x_position, mean)]
+    df = init_agent_dataframe(model, props)
+    collect_agent_data!(df, model, props, 1)
     @test size(df) == (1,3)
-    # Order of the table is not guaranteed with this call, so we check all names are extant
-    @test all(name -> name in [:step, Symbol("mean(x_position)"), Symbol("mean(weight)")],
-              names(df))
+    @test names(df) == [:step, Symbol("mean(weight)"), Symbol("mean(x_position)")]
     @test df[1, Symbol("mean(x_position)")] ≈ 4.3333333
 end
 
@@ -57,17 +65,18 @@ end
     # Extract data from the model every year for five years.
     # Requirements include the average `weight` for all agents and the current flag
     # within the model.
+    # TODO: use the latest API, in particular when_model
     each_year(model, step) = step%365 == 0
     agent_data, model_data = run!(model, agent_step!, model_step!, 365*5;
                                   when=each_year, model_properties = [:flag, :year],
-                                  agent_properties = Dict(:weight => [mean]))
+                                  agent_properties = [(:weight, mean)])
 
-    @test_broken size(agent_data) == (5,2)
-    @test_broken names(agent_data) == [:step, Symbol("mean(weight)")]
-    @test_broken maximum(agent_data[!, :step]) == 1460
+    @test size(agent_data) == (5,2)
+    @test names(agent_data) == [:step, Symbol("mean(weight)")]
+    @test maximum(agent_data[!, :step]) == 1460
 
     @test size(model_data) == (5,3)
-    @test names(model_data) == [:flag, :year, :step]
+    @test names(model_data) == [:step, :flag, :year]
     @test maximum(model_data[!, :step]) == 1460
 end
 
@@ -77,24 +86,24 @@ end
     # Note in this example daily data are labelled with a daily `step`,
     # and yearly data with a yearly `step`.
     model = initialize()
-    #TODO: Initiailisation checks
-    daily_model_data = DataFrame()
-    daily_agent_aggregate = DataFrame()
-    yearly_agent_data = DataFrame()
+    model_props = [:flag, :year]
+    agent_agg = [(:weight, mean)]
+    agent_props = [:weight]
+    daily_model_data = init_model_dataframe(model, model_props)
+    daily_agent_aggregate = init_agent_dataframe(model, agent_agg)
+    yearly_agent_data = init_agent_dataframe(model, agent_props)
 
     for year in 1:5
         for day in 1:365
             step!(model, agent_step!, model_step!, 1)
-            collect_model_data!(daily_model_data, model, [:flag, :year], day*year)
-            #TODO: updated once implemented
-            append!(daily_agent_aggregate,
-                    Agents.collect_agent_data(model, Dict(:weight => [mean]), day*year))
+            collect_model_data!(daily_model_data, model, model_props, day*year)
+            collect_agent_data!(daily_agent_aggregate, model, agent_agg, day*year)
         end
-        collect_agent_data!(yearly_agent_data, model, [:weight], year)
+        collect_agent_data!(yearly_agent_data, model, agent_props, year)
     end
 
     @test size(daily_model_data) == (1825,3)
-    @test names(daily_model_data) == [:flag, :year, :step]
+    @test names(daily_model_data) == [:step, :flag, :year]
     @test maximum(daily_model_data[!, :step]) == 1825
 
     @test size(daily_agent_aggregate) == (1825,2)
@@ -102,7 +111,7 @@ end
     @test maximum(daily_agent_aggregate[!, :step]) == 1825
 
     @test size(yearly_agent_data) == (15,3)
-    @test names(yearly_agent_data) == [:id, :weight, :step]
+    @test names(yearly_agent_data) == [:step, :id, :weight]
     @test maximum(yearly_agent_data[!, :step]) == 5
 end
 
