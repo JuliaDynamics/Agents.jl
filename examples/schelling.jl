@@ -136,10 +136,10 @@ end
 model = initialize()
 
 # We can run the model for one step
-step!(model, agent_step!)     # run the model one step
+step!(model, agent_step!)
 
 # Or for three steps
-step!(model, agent_step!, 3)  # run the model 3 steps.
+step!(model, agent_step!, 3)
 
 # ## Running the model and collecting data
 
@@ -157,19 +157,19 @@ data, _ = run!(model, agent_step!, 5; agent_properties = properties)
 data[1:10, :] # print only a few rows
 
 # We could also use functions in `properties`, for example we can define
-xaxis(agent) = agent.pos[1]
+x(agent) = agent.pos[1]
 model = initialize()
-properties = [xaxis, :mood, :group]
+properties = [x, :mood, :group]
 data, _ = run!(model, agent_step!, 5; agent_properties = properties)
 data
 
 # With the above `properties` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
 # For example, let's only get the number of happy individuals, and the
-# maximum of the "xaxis" (not very interesting, but anyway!)
+# maximum of the "x" (not very interesting, but anyway!)
 
 model = initialize();
-properties = [(:mood, sum), (xaxis, maximum)]
+properties = [(:mood, sum), (x, maximum)]
 data, _ = run!(model, agent_step!, 5; agent_properties=properties)
 data
 
