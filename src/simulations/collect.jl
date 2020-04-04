@@ -142,6 +142,7 @@ function collect_agent_data!(df, model, properties::Vector, step::Int=0)
     dd[!, Symbol(fn)] = get_data.(values(model.agents), fn)
   end
   append!(df, dd)
+  return df
 end
 
 # Aggregating version
@@ -176,6 +177,7 @@ function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0
     for (i, (k, agg)) in enumerate(properties)
         push!(df[!, i+1], agg(get_data(a, k) for a in alla))
     end
+    return df
 end
 
 # Model data
@@ -210,6 +212,7 @@ function collect_model_data!(df, model, properties::Vector, step::Int=0)
   for fn in properties
     push!(df[!, Symbol(fn)], get_data(model, fn))
   end
+  return df
 end
 
 collect_model_data!(df, model, properties::Nothing, step::Int=0) = df
