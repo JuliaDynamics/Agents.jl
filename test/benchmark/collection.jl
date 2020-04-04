@@ -4,14 +4,12 @@ using Random
 
 mutable struct Agent3 <: AbstractAgent
   id::Int
-  pos::Tuple{Int,Int}
   weight::Float64
 end
 
 function initialize()
     Random.seed!(267)
-    model = ABM(Agent3, GridSpace((10,10));
-                properties = Dict(:year => 0, :tick => 0, :flag => false))
+    model = ABM(Agent3; properties = Dict(:year => 0, :tick => 0, :flag => false))
     for a in 1:1000
         add_agent!(model, rand())
     end
@@ -34,11 +32,13 @@ function model_step!(model)
     end
 end
 
-a = @benchmark run!(model, agent_step!, model_step!, 365*10;
-                    model_properties = [:flag, :year], agent_properties = Dict(:weight => [mean])) setup=(model = initialize())
+a = @benchmark run!(
+    model, agent_step!, model_step!, 365*10;
+    model_properties = [:flag, :year], agent_properties = [(:weight, mean)]
+    ) setup=(model = initialize())
 display(a)
 # Initial
-# BenchmarkTools.Trial: 
+# BenchmarkTools.Trial:
 #  memory estimate:  607.65 MiB
 #  allocs estimate:  5481299
 #  --------------
@@ -48,10 +48,10 @@ display(a)
 #  maximum time:     1.024 s (3.04% GC)
 #  --------------
 #  samples:          5
-#  evals/sample:     1% 
+#  evals/sample:     1%
 #
 # Swapping to append!
-# BenchmarkTools.Trial: 
+# BenchmarkTools.Trial:
 #  memory estimate:  356.15 MiB
 #  allocs estimate:  4741603
 #  --------------
@@ -64,7 +64,7 @@ display(a)
 #  evals/sample:     1
 #
 #  With initialisation
-#BenchmarkTools.Trial: 
+#BenchmarkTools.Trial:
 #  memory estimate:  15.33 MiB
 #  allocs estimate:  181639
 #  --------------
@@ -74,7 +74,7 @@ display(a)
 #  maximum time:     232.810 ms (0.00% GC)
 #  --------------
 #  samples:          23
-#  evals/sample:     1BenchmarkTools.Trial: 
+#  evals/sample:     1BenchmarkTools.Trial:
 #  memory estimate:  49.36 KiB
 #  allocs estimate:  1032
 #  --------------
