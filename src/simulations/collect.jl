@@ -82,6 +82,10 @@ function _run!(model, agent_step!, model_step!, n;
 
     df_agent = init_agent_dataframe(model, agent_properties)
     df_model = init_model_dataframe(model, model_properties)
+    if n isa Integer
+        if when == true; for c in eachcol(df_agent); sizehint!(c, n); end; end
+        if when_model == true; for c in eachcol(df_model); sizehint!(c, n); end; end
+    end
 
     s = 0
     while until(s, n, model)
@@ -180,9 +184,14 @@ function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0
     alla = allagents(model)
     push!(df[!, 1], step)
     for (i, (k, agg)) in enumerate(properties)
-        push!(df[!, i+1], agg(get_data(a, k) for a in alla))
+        _add_col_data!(df[!, i+1], agg, k, alla)
     end
     return df
+end
+# Function barrier
+function _add_col_data!(col::AbstractVector{T}, agg, k, alla) where {T}
+    res::T = agg(get_data(a, k) for a in alla)
+    push!(col, res)
 end
 
 # Model data
