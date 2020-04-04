@@ -38,6 +38,7 @@ function step!(model::ABM, agent_step!, model_step!, n)
   while until(s, n, model)
     activation_order = model.scheduler(model)
     for index in activation_order
+      haskey(model.agents, index) || continue
       agent_step!(model.agents[index], model)
     end
     model_step!(model)
