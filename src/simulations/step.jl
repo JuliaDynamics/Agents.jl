@@ -72,6 +72,7 @@ function step!(model::ABM, agent_step!::F, model_step!::G, n::Int = 1) where {F<
   for i in 1:n
     activation_order = model.scheduler(model)
     for index in activation_order
+      haskey(model.agents, index) || continue
       agent_step!(model.agents[index], model)
     end
     model_step!(model)
