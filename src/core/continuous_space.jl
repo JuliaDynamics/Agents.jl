@@ -150,7 +150,7 @@ function add_agent!(model::ABM{A, <: ContinuousSpace}, args...) where {A<:Abstra
 end
 
 function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
-  id = biggest_id(model) + 1
+  id = next_id(model)
   agent = A(id, pos, args...)
   add_agent_pos!(agent, model)
 end
