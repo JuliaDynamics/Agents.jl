@@ -2,7 +2,7 @@
 This file establishes the agent-space interaction API.
 =#
 export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
-move_agent_single!, kill_agent!, genocide!
+move_agent_single!, kill_agent!, genocide!, nextid
 
 #######################################################################################
 # Killing agents
@@ -190,7 +190,7 @@ add_agent!(model; w = 0.5, k =true) # use keywords: weight becomes 0.5
 ```
 """
 function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
-    id = biggest_id(model) + 1
+    id = nextid(model)
     cnode = correct_pos_type(node, model)
     agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, cnode, model)
@@ -198,13 +198,13 @@ end
 
 function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
   @assert model.space == nothing
-  id = biggest_id(model) + 1
+  id = nextid(model)
   model[id] = A(id, properties...; kwargs...)
   return model[id]
 end
 
 function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:AbstractSpace}
-  id = biggest_id(model) + 1
+  id = nextid(model)
   n = rand(1:nv(model))
   cnode = correct_pos_type(n, model)
   model[id] = A(id, cnode, properties...; kwargs...)
@@ -212,8 +212,11 @@ function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:Abs
   return model[id]
 end
 
-biggest_id(model::ABM) = isempty(model.agents) ? 0 : maximum(keys(model.agents))
-
+"""
+    nextid(model::ABM) → id
+Return a valid `id` for creating a new agent with it.
+"""
+nextid(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
 
 """
     add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}, verbose = true) → agent
@@ -240,7 +243,7 @@ into a node with no other agents (does nothing if no such node exists).
 """
 function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
   msa = model.space.agent_positions
-  id = biggest_id(model) + 1
+  id = nextid(model)
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
     random_node = rand(empty_cells)

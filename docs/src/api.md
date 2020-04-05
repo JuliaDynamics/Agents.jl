@@ -8,6 +8,7 @@ space_neighbors
 random_agent
 nagents
 allagents
+nextid
 ```
 In addition to these functions, a number of standard Julia methods have been implemented for `AgentBasedModel`.
 ```@docs
