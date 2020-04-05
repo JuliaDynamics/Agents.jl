@@ -213,19 +213,8 @@ function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:Abs
 end
 
 """
-Returns the next largest agent id.
-## Example
-```julia
-using Agents
-
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::Int
-end
-
-model = ABM(Agent, GraphSpace(complete_digraph(5)))
-id = nextid(model) # returns 1
-```
+    nextid(model::ABM) → id
+Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
 

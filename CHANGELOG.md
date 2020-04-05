@@ -11,7 +11,7 @@
 * If `model.properties` is a dictionary with key type Symbol, then the
   convenience syntax `model.prop` returns `model.properties[:prop]`.
 * Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
-* Change biggest_id to nextid and export it
+* New function `nextid`
 
 ## Breaking Changes
 * Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
