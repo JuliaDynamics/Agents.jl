@@ -24,6 +24,8 @@ function model_step!(model)
     end
 end
 
+x_position(agent) = first(agent.pos)
+
 model = initialize()
 
 @testset "Aggregate Collections" begin
@@ -45,7 +47,6 @@ model = initialize()
     @test df[1, Symbol("mean(weight)")] ≈ 0.3917615139
 
     # Add a function as a property
-    x_position(agent) = first(agent.pos)
     props = [:weight, x_position]
     df = init_agent_dataframe(model, props)
     collect_agent_data!(df, model, props, 1)

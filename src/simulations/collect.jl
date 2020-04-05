@@ -178,7 +178,13 @@ end
 Return the name of the column of the aggregated data with key `k` and aggregating
 function `agg`.
 """
-aggname(k, agg) = Symbol(join([string(agg),"(", string(k), ")"], ""))
+function aggname(k, agg)
+    @static if VERSION >= v"1.1"
+        Symbol(join([string(agg),"(", string(k), ")"], ""))
+    else
+        Symbol(join([split(string(agg), ".")[end],"(", string(k), ")"], ""))
+    end
+end
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
     alla = allagents(model)
