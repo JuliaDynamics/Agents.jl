@@ -11,8 +11,9 @@ for n in n_types
     t = run_simulation(n_steps, 50; n_types=n)
     push!(times, t)
 end
+
 pyplot()
 plot(n_types, times, grid=false, xaxis="Number of types", yaxis="Time (seconds)",
-    leg=false, ylims=(0,2.5))
+    leg=false, ylims=(0,3.0))
 
 savefig("results.png")
