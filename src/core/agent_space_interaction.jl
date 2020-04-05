@@ -212,12 +212,7 @@ function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:Abs
   return model[id]
 end
 
-<<<<<<< HEAD
 next_id(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
-=======
-next_id(model::ABM) = isempty(model.agents) ? 0 : maximum(keys(model.agents)) + 1
->>>>>>> 9d7148294d9501fc04bf772155eebe3d31dbf546
-
 
 """
     add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}, verbose = true) → agent
