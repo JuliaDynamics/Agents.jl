@@ -18,10 +18,10 @@
 using Agents
 
 mutable struct SchellingAgent <: AbstractAgent
-  id::Int # The identifier number of the agent
-  pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
-  mood::Bool # whether the agent is happy in its node. (true = happy)
-  group::Int # The group of the agent,  determines mood as it interacts with neighbors
+    id::Int # The identifier number of the agent
+    pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
+    mood::Bool # whether the agent is happy in its node. (true = happy)
+    group::Int # The group of the agent,  determines mood as it interacts with neighbors
 end
 
 # Notice that the position of this Agent type is a `Tuple{Int,Int}` because
@@ -35,7 +35,7 @@ end
 
 # For this example, we will be using a Moore 2D grid, e.g.
 
-space = GridSpace((10,10), moore = true)
+space = GridSpace((10, 10), moore = true)
 
 # ## Creating an ABM
 
@@ -48,10 +48,15 @@ schelling = ABM(SchellingAgent, space; properties = properties)
 
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
-# property `:group`, so that all agents of group 1 act first. We would then use the scheduler [`property_activation`](@ref) like so:
+# property `:group`, so that all agents of group 1 act first.
+# We would then use the scheduler [`property_activation`](@ref) like so:
 
-schelling2 = ABM(SchellingAgent, space; properties = properties,
-                 scheduler = property_activation(:group))
+schelling2 = ABM(
+    SchellingAgent,
+    space;
+    properties = properties,
+    scheduler = property_activation(:group),
+)
 
 # Notice that `partial_activation` accepts an argument and returns a function,
 # which is why we didn't just give `partial_activation` to `scheduler`.
@@ -66,14 +71,15 @@ schelling2 = ABM(SchellingAgent, space; properties = properties,
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
-function initialize(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
+function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
-    properties = Dict(:min_to_be_happy => 3)
-    model = ABM(SchellingAgent, space; properties=properties, scheduler = random_activation)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
+    model =
+        ABM(SchellingAgent, space; properties = properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1,1), false, n < numagents/2 ? 1 : 2)
+    for n = 1:numagents
+        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
     return model
@@ -129,13 +135,13 @@ end
 # agents to random empty nodes on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.
 
-# ## Steping the model
+# ## Stepping the model
 
 # Let's initialize the model with 370 agents on a 20 by 20 grid.
 
 model = initialize()
 
-# We can run the model for one step
+# We can advance the model one step
 step!(model, agent_step!)
 
 # Or for three steps
@@ -170,7 +176,7 @@ data
 
 model = initialize();
 properties = [(:mood, sum), (x, maximum)]
-data, _ = run!(model, agent_step!, 5; agent_properties=properties)
+data, _ = run!(model, agent_step!, 5; agent_properties = properties)
 data
 
 # The other `Examples` pages are more realistic examples with a much more meaningful
@@ -183,12 +189,12 @@ data
 # 2D grid at every generation, via the `AgentsPLots` package
 using AgentsPlots
 properties = [:pos, :mood, :group]
-data = step!(model, agent_step!, 10, properties)
-p = plot2D(data, :group, t=1, nodesize=10)
+data, _ = run!(model, agent_step!, 10; agent_properties = properties)
+p = plot2D(data, :group, t = 1, nodesize = 10)
 
 # Notice that to see this plot we need the "raw" data, not the aggregated data
 
-p = plot2D(data, :group, t=2, nodesize=10)
+p = plot2D(data, :group, t = 2, nodesize = 10)
 
 # The first argument of the `plot2D` is the output data. The second argument is the
 # column name in `data` that has the categories of each agent, which is `:group` in
@@ -205,11 +211,11 @@ p = plot2D(data, :group, t=2, nodesize=10)
 # ## Replicates and parallel computing
 
 # We can run replicates of a simulation and collect all of them in a single `DataFrame`.
-# To that end, we only need to specify `replicates` the `step!` function:
+# To that end, we only need to specify `replicates` in the `run!` function:
 
-model = initialize(numagents=370, griddims=(20,20), min_to_be_happy=3);
-data = step!(model, agent_step!, 5, properties, when=when, replicates=3)
-data[end-10:end, :]
+model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
+data, _ = run!(model, agent_step!, 5; agent_properties = properties, replicates = 3)
+data
 
 # It is possible to run the replicates in parallel.
 # For that, we should start julia with `julia -p n` where is the number
@@ -229,11 +235,11 @@ data[end-10:end, :]
 # @everywhere mutable struct SchellingAgent ...
 # ```
 
-# Then we can tell the `step!` function to run replicates in parallel:
+# Then we can tell the `run!` function to run replicates in parallel:
 
 # ```julia
-# data = step!(model, agent_step!, 2, properties,
-#              when=when, replicates=5, parallel=true)
+# data, _ = run!(model, agent_step!, 2, agent_properties=properties,
+#                replicates=5, parallel=true)
 # ```
 
 # ## Scanning parameter ranges
@@ -246,31 +252,45 @@ data[end-10:end, :]
 # We now also define a processing function, that returns the percentage of
 # happy agents:
 
-happyperc(moods) = count(x -> x == true, moods)/length(moods)
+happyperc(moods) = count(x -> x == true, moods) / length(moods)
 
-properties= Dict(:mood=>[happyperc])
-parameters = Dict(:min_to_be_happy=>collect(2:5), :numagents=>[200,300], :griddims=>(20,20))
+agent_properties = [(:mood, happyperc)]
+parameters =
+    Dict(:min_to_be_happy => collect(2:5), :numagents => [200, 300], :griddims => (20, 20))
 
-data = paramscan(parameters, initialize;
-       properties=properties, n = 3, agent_step! = agent_step!)
+data, _ = paramscan(
+    parameters,
+    initialize;
+    agent_properties = agent_properties,
+    n = 3,
+    agent_step! = agent_step!,
+)
+data
 
 # `paramscan` also allows running replicates per parameter setting:
 
-data = paramscan(parameters, initialize; properties=properties, n = 3,
-                 agent_step! = agent_step!, replicates=3)
+data, _ = paramscan(
+    parameters,
+    initialize;
+    agent_properties = agent_properties,
+    n = 3,
+    agent_step! = agent_step!,
+    replicates = 3,
+)
 
-data[end-10:end, :]
+data[(end - 10):end, :]
 
 # We can combine all replicates with an aggregating function, such as mean, using
 # the `aggregate` function from the `DataFrames` package:
 
-using DataFrames: Not, select!
+using DataFrames: aggregate, Not, select!
 using Statistics: mean
-data_mean = Agents.aggregate(data, [:step, :min_to_be_happy, :numagents],  mean);
+data_mean = aggregate(data, [:step, :min_to_be_happy, :numagents], mean)
 select!(data_mean, Not(:replicate_mean))
 
 # Note that the second argument takes the column names on which to split the data,
 # i.e., it denotes which columns should not be aggregated. It should include
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
-# So in principle wha we are doing here is simply averaging our result across the replicates.
+# So in principle what we are doing here is simply averaging our result across the replicates.
+

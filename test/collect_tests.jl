@@ -124,6 +124,72 @@ end
     @test maximum(yearly_agent_data[!, :step]) == 5
 end
 
+n = 10
+parameters = Dict(
+    :f => [0.05, 0.07],
+    :d => [0.6, 0.7, 0.8],
+    :p => 0.01,
+    :griddims => (20, 20),
+    :seed => 2,
+)
+@testset "Parameter Scan" begin
+    agent_properties = [(:status, length), (:status, count)]
+    data, _ = paramscan(
+        parameters,
+        forest_initiation;
+        n = n,
+        agent_step! = dummystep,
+        model_step! = forest_step!,
+        agent_properties = agent_properties,
+        progress = false,
+    )
+    # 6 is the number of combinations of changing params
+    @test size(data) == (n * 6, 5)
+    data, _ = paramscan(
+        parameters,
+        forest_initiation;
+        n = n,
+        agent_step! = dummystep,
+        model_step! = forest_step!,
+        include_constants = true,
+        agent_properties = agent_properties,
+        progress = false,
+    )
+    # 6 is the number of combinations of changing params,
+    # 8 is 5+3, where 3 is the number of constant parameters
+    @test size(data) == (n * 6, 8)
+
+    agent_properties = [:status]
+    data, _ = paramscan(
+        parameters,
+        forest_initiation;
+        n = n,
+        agent_step! = dummystep,
+        model_step! = forest_step!,
+        agent_properties = agent_properties,
+        progress = false,
+    )
+    @test unique(data.step) == 0:9
+    @test unique(data.f) == [0.05, 0.07]
+    @test unique(data.d) == [0.6, 0.7, 0.8]
+end
+
+@testset "Parameter Scan with replicates" begin
+    agent_properties = [(:status, length), (:status, count)]
+    data, _ = paramscan(
+        parameters,
+        forest_initiation;
+        n = n,
+        agent_step! = dummystep,
+        model_step! = forest_step!,
+        replicates = 3,
+        agent_properties = agent_properties,
+        progress = false,
+    )
+    # the first 6 is the number of combinations of changing params
+    @test size(data) == ((n * 6) * 3, 6)
+end
+
 @testset "Issue 179 fix" begin
     # only ids sorted, not properties
     model = ABM(Agent2)

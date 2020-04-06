@@ -1,5 +1,6 @@
 export run!, collect_agent_data!, collect_model_data!,
-       init_agent_dataframe, init_model_dataframe, aggname
+       init_agent_dataframe, init_model_dataframe, aggname,
+       paramscan
 
 ###################################################
 # Definition of the data collection API
@@ -22,14 +23,14 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
 * `agent_properties::Vector` decides the agent data. If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
-  The resulting dataframe colums are named with the input symbol (here `:weight, :f`).
+  The resulting dataframe columns are named with the input symbol (here `:weight, :f`).
 
 * `agent_properties::Vector{<:Tuple}`: if `agent_properties` is a vector of 2-tuples instead,
   data aggregation is done over the agent properties. For each 2-tuple, the first entry
   is the "key" (any entry like the ones mentioned above, e.g. `:weight, f`). The second
   entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
   Continuing from the above example, we would have
-  `agent_properties = [(:weight, mean), (f, maximum)]`. The resulting data name colums
+  `agent_properties = [(:weight, mean), (f, maximum)]`. The resulting data name columns
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
   `maximum(f)`. This name doesn't play well with anonymous functions!
 
@@ -292,19 +293,25 @@ end
 """
     paramscan(parameters, initialize; kwargs...)
 
-Run the model with all the parameter value combinations given in `parameters`,
+Run the model with all the parameter value combinations given in `parameters`
 while initializing the model with `initialize`.
 This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
 internally. This means that every entry of `parameters` that is a `Vector`,
 contains many parameters and thus is scanned. All other entries of
 `parameters` that are not `Vector`s are not expanded in the scan.
+Keys of `parameters` should be of type `Symbol`.
 
-`initialize` is a function that creates an ABM. It should accept keyword arguments.
+`initialize` is a function that creates an ABM. It should accept keyword arguments,
+of which all values in `parameters` should be a subset. This means `parameters`
+can take both model and agent constructor properties.
 
 ### Keywords
-All the following keywords are propagated into [`step!`](@ref):
-`agent_step!, properties, n, when = 1:n, model_step! = dummystep`,
+All the following keywords are propagated into [`run!`](@ref).
+Defaults are also listed for convenience:
+`agent_step! = dummystep, n = 1, when = 1:n, model_step! = dummystep`,
 `step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
+Keyword arguments such as `agent_properties` and `model_properties` are
+also propagated.
 
 The following keywords modify the `paramscan` function:
 
@@ -313,30 +320,28 @@ included in the output `DataFrame`.
 
 `progress::Bool = true` whether to show the progress of simulations.
 """
-function paramscan(parameters::Dict, initialize;
-  agent_step!, n,  model_step! = dummystep,
-  progress::Bool = true,
-  include_constants::Bool = false,
-  kwargs...
-  )
+function paramscan(parameters::Dict{Symbol,}, initialize;
+  n = 1, agent_step! = dummystep,  model_step! = dummystep,
+  progress::Bool = true, include_constants::Bool = false,
+  kwargs...)
 
-  params = dict_list(parameters)
   if include_constants
-    changing_params = keys(parameters)
+    changing_params = collect(keys(parameters))
   else
     changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
   end
 
-  df_agent, df_model = DataFrame(), DataFrame()
   combs = dict_list(parameters)
   ncombs = length(combs)
   counter = 0
-  for d in combs
+  d, rest = Iterators.peel(combs)
+  model = initialize(; d...)
+  df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
+  addparams!(df_agent, df_model, d, changing_params)
+  for d in rest
     model = initialize(; d...)
     df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
-    # TODO not all params are for agent/model df
-    addparams!(df_agent, d, changing_params)
-    addparams!(df_model, d, changing_params)
+    addparams!(df_agentTemp, df_modelTemp, d, changing_params)
     append!(df_agent, df_agentTemp)
     append!(df_model, df_modelTemp)
     if progress
@@ -348,18 +353,26 @@ function paramscan(parameters::Dict, initialize;
       print("\u1b[K")
     end
   end
-  println()
+  progress && println()
   return df_agent, df_model
 end
 
 """
 Adds new columns for each parameter in `changing_params`.
 """
-function addparams!(df::AbstractDataFrame, params::Dict, changing_params)
-  nrows = size(df, 1)
-  for c in changing_params
-    df[!, c] = [params[c] for i in 1:nrows]
-  end
+function addparams!(df_agent::AbstractDataFrame, df_model::AbstractDataFrame, params::Dict{Symbol,}, changing_params::Vector{Symbol})
+    # There is duplication here, but we cannot guarantee which parameter is unique
+    # to each dataframe since `initialize` is user defined.
+    nrows_agent = size(df_agent, 1)
+    nrows_model = size(df_model, 1)
+    for c in changing_params
+        if !isempty(df_model)
+            df_model[!, c] = [params[c] for i in 1:nrows_model]
+        end
+        if !isempty(df_agent)
+            df_agent[!, c] = [params[c] for i in 1:nrows_agent]
+        end
+    end
 end
 
 # This function is taken from DrWatson:
