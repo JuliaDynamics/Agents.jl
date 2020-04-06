@@ -25,6 +25,8 @@ function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
   delete!(model.agents, agent.id)
 end
 
+kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
+
 
 """
     genocide!(model::ABM)
