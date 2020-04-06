@@ -48,7 +48,7 @@ function model_initiation(; f, d, p, griddims, seed = 111)
     return forest
 end
 
-forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2)
+forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2);
 
 # ## Defining the step!
 # Because of the way the forest fire model is defined, we only need a
@@ -123,7 +123,14 @@ p = plot2D(data, :status, t = 2, cc = Dict(true => "green", false => "red"), nod
 # Or we can run parallel/batch simulations
 # ```julia
 # agent_properties = [:status, :pos]
-# data, _ = run!(forest, dummystep, forest_step!, 10; agent_properties = agent_properties, replicates = 10)
+# data, _ = run!(
+#     forest,
+#     dummystep,
+#     forest_step!,
+#     10;
+#     agent_properties = agent_properties,
+#     replicates = 10,
+# )
 # ```
 
 # Remember that it is possible to explore a `DataFrame` visually and interactively

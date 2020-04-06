@@ -128,7 +128,7 @@ end
 
 W1 = wealth_distr(data, model2D, 1)
 W5 = wealth_distr(data, model2D, 5)
-W10 = wealth_distr(data, model2D, 9)
+W10 = wealth_distr(data, model2D, 9);
 
 #
 

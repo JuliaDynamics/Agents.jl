@@ -13,7 +13,7 @@
 # * Each offspring chooses a parent at random and inherits its genetic material.
 
 using Agents
-n = 100
+n = 100;
 
 # Let's define an agent. The genetic value of an agent is a number (`trait` field).
 mutable struct Haploid <: AbstractAgent
@@ -32,13 +32,13 @@ end
 # To create a new generation, we can use the `sample!` function. It chooses
 # random individuals with replacement from the current individuals and updates
 # the model. For example:
-sample!(m, nagents(m))
+sample!(m, nagents(m));
 
 # The model can be run for many generations and we can collect the average trait
 # value of the population. To do this we will use a model-step function (see [`step!`](@ref))
 # that utilizes [`sample!`](@ref):
 
-modelstep_neutral!(m) = sample!(m, nagents(m))
+modelstep_neutral!(m) = sample!(m, nagents(m));
 
 # We can now run the model and collect data. We use `dummystep` for the agent-step
 # function (as the agents perform no actions).

@@ -17,14 +17,14 @@ rules = Dict(
     "010" => "1",
     "001" => "1",
     "000" => "0",
-)
+);
 
 # ## 2. Build the model
 # All the cells are by default initially "off"
 model = CA1D.build_model(rules = rules, ncols = 21)
 
 # This turns on the middle cell
-model.agents[11].status = "1"
+model.agents[11].status = "1";
 
 # ## 3. Run the model and collect data.
 runs = 20

@@ -26,7 +26,7 @@ With these, Agents.jl's tools manage the rest of the path to producing and proce
 AgentBasedModel
 ```
 
-## 2. The space
+## [2. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
 
 The discrete possibilities are

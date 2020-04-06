@@ -176,6 +176,7 @@ end
 
 """
     aggname(k, agg) → name
+
 Return the name of the column of the aggregated data with key `k` and aggregating
 function `agg`.
 """
