@@ -140,10 +140,10 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0)
-    alla = allagents(model)
+    alla = sort(collect(values(model.agents)), by=a->a.id)
     dd = DataFrame()
-    dd[!, :id] = collect(keys(model.agents))
-    dd[!, :step] = fill(step, size(dd, 1))
+    dd[!, :step] = fill(step, length(alla))
+    dd[!, :id] = map(a->a.id, alla)
     for fn in properties
         dd[!, Symbol(fn)] = collect(get_data(a, fn) for a in alla)
     end
