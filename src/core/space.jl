@@ -340,9 +340,10 @@ function has_empty_nodes(model)
 end
 
 """
-    get_node_contents(n::Integer, model)
+    get_node_contents(node, model)
 
-Return the ids of agents in the node `n` of the model.
+Return the ids of agents in the `node` of the model's space (which
+is an integer for `GraphSpace` and a tuple for `GridSpace`).
 """
 get_node_contents(n::Integer, model) = agent_positions(model)[n]
 
@@ -353,11 +354,6 @@ Return all agents' ids in the same node as the `agent` (including the agent's ow
 """
 get_node_contents(agent::AbstractAgent, model) = get_node_contents(agent.pos, model)
 
-"""
-    get_node_contents(coords::Tuple, model)
-
-Return the ids of agents in the node at `coords`.
-"""
 function get_node_contents(coords::Tuple, model)
   node_number = coord2vertex(coords, model)
   agent_positions(model)[node_number]

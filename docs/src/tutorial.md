@@ -2,14 +2,15 @@
 
 Agents.jl is composed of components for building models, building and managing space structures, collecting data, running batch simulations, and data visualization.
 
-Agents.jl structures simulations in three components: a _model_ component that keeps all model-level variables and data, an _agent_ component that keeps all agent-level variables and data, and a _space_ component that represents the space where the agents live.
-
-For building any Agent-Based-Model (ABM), users have to define at least the following four quantities:
+Agents.jl structures simulations in three components:
 
 1. An [`AgentBasedModel`](@ref) instance.
 1. A space instance.
 1. A subtype of [`AbstractAgent`](@ref) for the agents.
-1. A stepping function that controls how the agents and the model evolve.
+
+To run simulations and collect data, the following are also necessary
+4. Stepping functions that controls how the agents and the model evolve.
+5. Specifying which data should be collected from the agents and/or the model.
 
 With these, Agents.jl's tools manage the rest of the path to producing and processing data, as well as visualizations (Fig. 1).
 
@@ -52,7 +53,7 @@ e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
 
 For more functions visit the [API](@ref) page.
 
-## 4. The stepping function
+## 4. Evolving the model
 
 Any ABM model should have at least one and at most two step functions.
 An _agent step function_ is always required.
@@ -64,16 +65,23 @@ An agent step function should only accept two arguments: first, an agent object,
 The model step function should accept only one argument, that is the model object.
 To use only a model step function, users can use the built-in `dummystep` as the agent step function.
 
-## 5. Running the model & collecting data
-
-After the basic types and functions are defined, we can run the model using the built-in `step!` function. This will update the agents and the model as defined by the agent and model stepping functions.
-In addition, by providing keywords to `step!`, it is also possible to collect and process data while the model evolves.
-
+After you have defined these two functions, you evolve your model with `step!`:
 ```@docs
 step!
+dummystep
 ```
 
-Notice that besides `step!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
+## 5. Collecting data
+Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
+
+```@docs
+run!
+```
+
+The [`run!`](@ref) function has been designed for maximum flexibility: nearly all scenarios of data collection are possible whether you need agent data, model data, aggregating model data, or arbitrary combinations.
+
+This means that [`run!`](@ref) has not been designed for maximum performance (or minimum memory allocation). However, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as needed, and to the data structure that they need, in case a `DataFrame` already allocates too much memory.
+
 
 ## An educative example
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref). There the visualization aspect is also discussed.

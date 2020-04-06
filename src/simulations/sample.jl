@@ -29,7 +29,7 @@ function sample!(model::ABM, n::Int, weight=nothing; replace=true,
     end
 
     for (index, id) in enumerate(newids) # add new agents while adjusting id
-        model.agents[index] = deepcopy(model.agents[id])
+        model.agents[index] = deepcopy(model[id])
         model.agents[index].id = index
     end
     # kill extra agents
@@ -45,13 +45,19 @@ end
 """
 Remove all IDs from space and add agent ids again.
 """
-function clean_space!(model::ABM)
+function clean_space!(model::ABM{A, <: DiscreteSpace}) where {A}
     if model.space != nothing
         for node in 1:nv(model)
             model.space.agent_positions[node] = Int[]
         end
         for (k, v) in model.agents
-            push!(get_node_contents(v,model), v.id)
+            push!(get_node_contents(v, model), v.id)
         end
     end
+end
+
+clean_space!(model::ABM{A, Nothing}) where {A} = nothing
+
+function clean_space!(model::ABM{A, <: ContinuousSpace}) where {A}
+    error("sample! for continuous space has not been implemented yet.")
 end
