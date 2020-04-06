@@ -141,7 +141,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0)
-    alla = sort(collect(values(model.agents)), by=a->a.id)
+    alla = sort!(collect(values(model.agents)), by=a->a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a->a.id, alla)
