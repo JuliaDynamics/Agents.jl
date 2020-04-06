@@ -78,7 +78,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
         ABM(SchellingAgent, space; properties = properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
-    for n = 1:numagents
+    for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
@@ -167,7 +167,7 @@ x(agent) = agent.pos[1]
 model = initialize()
 properties = [x, :mood, :group]
 data, _ = run!(model, agent_step!, 5; agent_properties = properties)
-data
+data[1:10, :]
 
 # With the above `properties` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
@@ -215,7 +215,7 @@ p = plot2D(data, :group, t = 2, nodesize = 10)
 
 model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
 data, _ = run!(model, agent_step!, 5; agent_properties = properties, replicates = 3)
-data
+data[(end - 10):end, :]
 
 # It is possible to run the replicates in parallel.
 # For that, we should start julia with `julia -p n` where is the number
@@ -293,4 +293,5 @@ select!(data_mean, Not(:replicate_mean))
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
+
 

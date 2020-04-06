@@ -102,8 +102,8 @@ end
     daily_agent_aggregate = init_agent_dataframe(model, agent_agg)
     yearly_agent_data = init_agent_dataframe(model, agent_props)
 
-    for year = 1:5
-        for day = 1:365
+    for year in 1:5
+        for day in 1:365
             step!(model, agent_step!, model_step!, 1)
             collect_model_data!(daily_model_data, model, model_props, day * year)
             collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)

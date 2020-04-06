@@ -3,7 +3,7 @@
 # This is one of the simplest models of population genetics that demonstrates the
 # use of [`sample!`](@ref).
 # We implement a simple case of the model where we study haploids (cells with a single set
-# of chromosomes) while for simplicity focusing only on one locus (a specific gene).
+# of chromosomes) while for simplicity, focus only on one locus (a specific gene).
 # In this example we will be dealing with a population of constant size.
 
 # ## A neutral model
@@ -11,7 +11,6 @@
 # * Imagine a population of `n` haploid individuals.
 # * At each generation, `n` offsprings replace the parents.
 # * Each offspring chooses a parent at random and inherits its genetic material.
-
 
 using Agents
 n = 100
@@ -45,7 +44,8 @@ modelstep_neutral!(m) = sample!(m, nagents(m))
 # function (as the agents perform no actions).
 using Statistics: mean
 
-data = step!(m, dummystep, modelstep_neutral!, 20, Dict(:trait => [mean]))
+data, _ = run!(m, dummystep, modelstep_neutral!, 20; agent_properties = [(:trait,mean)])
+data
 
 # As expected, the average value of the "trait" remains around 0.5.
 
@@ -61,8 +61,10 @@ end
 
 modelstep_selection!(m::ABM) = sample!(m, nagents(m), :trait)
 
-data = step!(m, dummystep, modelstep_selection!, 20, Dict(:trait => [mean]))
+data, _ = run!(m, dummystep, modelstep_selection!, 20; agent_properties = [(:trait, mean)])
+data
 
-# Here we see that as time progresses the trait comes closer and closer to 1,
-# which is expected as agents with higher traits have higher probability of being
+# Here we see that as time progresses, the trait becomes closer and closer to 1,
+# which is expected - since agents with higher traits have higher probability of being
 # sampled for the next "generation".
+

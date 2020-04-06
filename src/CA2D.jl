@@ -119,7 +119,7 @@ function ca_run(model::ABM, runs::Integer, plot_CA2Dgif::T; nodesize=2) where T<
   data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
   anim = plot_CA2Dgif(data, nodesize=nodesize)
   for r in 1:runs
-    data = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
+    data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
     anim = plot_CA2Dgif(data, anim=anim, nodesize=nodesize)
   end
   return anim
