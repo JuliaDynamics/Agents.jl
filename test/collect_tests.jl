@@ -30,6 +30,18 @@ end
 x_position(agent) = first(agent.pos)
 model = initialize()
 
+@testset "DataFrame init" begin
+    props = [:weight]
+    @test sprint(show, "text/csv", describe(init_agent_dataframe(model, props), :eltype)) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
+    props = [:year]
+    @test sprint(show, "text/csv", describe(init_model_dataframe(model, props), :eltype)) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
+end
+
+@testset "aggname" begin
+    @test aggname(:weight, mean) == Symbol("mean(weight)")
+    @test aggname(x_position, length) == Symbol("length(x_position)")
+end
+
 @testset "Aggregate Collections" begin
     props = [:weight]
     df = init_agent_dataframe(model, props)
@@ -65,24 +77,24 @@ model = initialize()
 end
 
 @testset "High-level API for Collections" begin
-    # Extract data from the model every year for five years.
-    # Requirements include the average `weight` for all agents and the current flag
-    # within the model.
-    # TODO: use the latest API, in particular when_model
+    # Extract data from the model every year for five years,
+    # with the average `weight` of all agents every six months.
     each_year(model, step) = step % 365 == 0
+    six_months(model, step) = step % 182 == 0
     agent_data, model_data = run!(
         model,
         agent_step!,
         model_step!,
         365 * 5;
-        when = each_year,
+        when_model = each_year,
+        when = six_months,
         model_properties = [:flag, :year],
         agent_properties = [(:weight, mean)],
     )
 
-    @test size(agent_data) == (5, 2)
+    @test size(agent_data) == (11, 2)
     @test names(agent_data) == [:step, Symbol("mean(weight)")]
-    @test maximum(agent_data[!, :step]) == 1460
+    @test maximum(agent_data[!, :step]) == 1820
 
     @test size(model_data) == (5, 3)
     @test names(model_data) == [:step, :flag, :year]

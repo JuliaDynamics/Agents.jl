@@ -8,7 +8,7 @@
   model.agents[51].status="1"
   runs = 10
   data, _ = CA1D.ca_run(model, runs);
-  @test_broken size(data) == (ncols * (runs + 1), 4)
+  @test size(data) == (ncols * (runs - 1), 4)
 end
 
 function dummyplot(data; nodesize=2.0, anim=2)

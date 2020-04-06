@@ -17,6 +17,7 @@ include("core/continuous_space.jl")
 # Stepping and data collection functionality
 include("simulations/step.jl")
 include("simulations/collect.jl")
+include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
 # Auxilary

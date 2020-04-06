@@ -56,6 +56,6 @@ function clean_space!(model::ABM{A, <: DiscreteSpace}) where {A}
     end
 end
 
-function clean_space!(model::ABM{A, <: ContinuousSpace})
+function clean_space!(model::ABM{A, <: ContinuousSpace}) where {A}
     error("sample! for continuous space has not been implemented yet.")
 end
