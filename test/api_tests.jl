@@ -168,6 +168,28 @@ add_agent!(model)
 
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
+
+  #Guarantee all starting weights are unique
+  model3 = ABM(Agent2)
+  while true
+    for i in 1:20; add_agent!(model3, rand()/rand()); end
+    allweights = [i.weight for i in values(model3.agents)]
+    allunique(allweights) && break
+  end
+  # Cannot draw 50 samples out of a pool of 20 without replacement
+  @test_throws ErrorException sample!(model3, 50, :weight; replace=false)
+  sample!(model3, 15, :weight; replace=false)
+  allweights = [i.weight for i in values(model3.agents)]
+  @test allunique(allweights)
+  model3 = ABM(Agent2)
+  while true
+    for i in 1:20; add_agent!(model3, rand()/rand()); end
+    allweights = [i.weight for i in values(model3.agents)]
+    allunique(allweights) && break
+  end
+  sample!(model3, 100, :weight; replace=true)
+  allweights = [i.weight for i in values(model3.agents)]
+  @test !allunique(allweights)
 end
 
 @testset "add_agent!" begin
