@@ -104,8 +104,4 @@ Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need t
 
 ```@docs
 plotabm
-plot2D
-plot_CA1D
-plot_CA2D
-plot_CA2Dgif
 ```
