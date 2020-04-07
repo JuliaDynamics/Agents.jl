@@ -21,6 +21,8 @@ See the Wright-Fisher example in the documentation for an application of `sample
 function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
   rng::AbstractRNG=Random.GLOBAL_RNG) where{A, S}
   
+  nagents(model) > 0 || return
+
   org_ids = collect(keys(model.agents))
   if weight != nothing
     weights = Weights([getproperty(a, weight) for a in values(model.agents)])
