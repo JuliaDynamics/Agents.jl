@@ -197,6 +197,7 @@ plotabm(model; ac = groupcolor, am = groupmarker)
 
 # The function [`plotabm`](@ref) can be used to make your own animations
 cd(@__DIR__) #src
+using Plots # for @animate
 model = initialize();
 anim = @animate for i in 1:10
     step!(model, agent_step!, 1)

@@ -113,6 +113,7 @@ plotabm(forest; ac = treecolor, ms = 5, msw=0)
 # or animate it
 cd(@__DIR__) #src
 forest = model_initiation(f = 0.005)
+using Plots # for @animate
 anim = @animate for i in 1:20
     step!(forest, dummystep, forest_step!, 1)
     p1 = plotabm(forest; ac = treecolor, ms = 5, msw=0)
