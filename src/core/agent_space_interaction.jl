@@ -152,12 +152,12 @@ function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) whe
 end
 
 function add_agent!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
-  if :pos ∈ fieldnames(typeof(agent))
-    nodenumber = rand(1:nv(model.space))
-    add_agent!(agent, nodenumber, model)
-  else
-    model[agent.id] = agent
-  end
+  nodenumber = rand(1:nv(model.space))
+  add_agent!(agent, nodenumber, model)
+end
+
+function add_agent!(agent::A, model::ABM{A, <: Nothing}) where {A}
+  model[agent.id] = agent
   return agent
 end
 
