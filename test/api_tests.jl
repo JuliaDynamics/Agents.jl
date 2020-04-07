@@ -149,17 +149,15 @@ add_agent!(model)
   allweights = [i.weight for i in values(model.agents)]
   mean_weights_new = sum(allweights)/length(allweights)
   @test mean_weights_new > mean_weights
-
-  model.agents[1].weight = 2
-  model.agents[2].weight = 3
-  @test model.agents[1].weight == 2
-  @test model.agents[2].weight == 3
-
   sample!(model, 40, :weight)
   @test Agents.nagents(model) == 40
+  allweights = [i.weight for i in values(model.agents)]
+  mean_weights_new = sum(allweights)/length(allweights)
+  @test mean_weights_new > mean_weights
 
   model2 = ABM(Agent3, GridSpace((10, 10)))
   for i in 1:20; add_agent_single!(Agent3(i, (1,1), rand()/rand()), model2); end
+  @test sample!(model2, 10, :weight) == nothing
   allweights = [i.weight for i in values(model2.agents)]
   mean_weights = sum(allweights)/length(allweights)
   sample!(model2, 12, :weight)
@@ -170,6 +168,28 @@ add_agent!(model)
 
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
+
+  #Guarantee all starting weights are unique
+  model3 = ABM(Agent2)
+  while true
+    for i in 1:20; add_agent!(model3, rand()/rand()); end
+    allweights = [i.weight for i in values(model3.agents)]
+    allunique(allweights) && break
+  end
+  # Cannot draw 50 samples out of a pool of 20 without replacement
+  @test_throws ErrorException sample!(model3, 50, :weight; replace=false)
+  sample!(model3, 15, :weight; replace=false)
+  allweights = [i.weight for i in values(model3.agents)]
+  @test allunique(allweights)
+  model3 = ABM(Agent2)
+  while true
+    for i in 1:20; add_agent!(model3, rand()/rand()); end
+    allweights = [i.weight for i in values(model3.agents)]
+    allunique(allweights) && break
+  end
+  sample!(model3, 100, :weight; replace=true)
+  allweights = [i.weight for i in values(model3.agents)]
+  @test !allunique(allweights)
 end
 
 @testset "add_agent!" begin

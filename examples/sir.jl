@@ -196,7 +196,7 @@ plotabm(model; plotargs...)
 # second argument
 
 infected_fraction(x) = cgrad(:inferno)[count(a.status == :I for a in x) / length(x)]
-plotabm(model, infected_fraction; plotargs...)
+plotabm(model; ac = infected_fraction, plotargs...)
 
 # Here this shows all nodes as black, since we haven't run the model yet. Let's change that!
 
@@ -261,13 +261,11 @@ model = model_initiation(; params...)
 
 anim = @animate for i in 1:30
     step!(model, agent_step!, 1)
-    p1 = plotabm(model, infected_fraction; plotargs...)
+    p1 = plotabm(model; ac = infected_fraction, plotargs...)
     title!(p1, "Day $(i)")
 end
 
 gif(anim, "covid_evolution.gif", fps = 5);
-
-model
 
 # ![](covid_evolution.gif)
 
@@ -303,4 +301,3 @@ p
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases
 # linearly, until everyone is infected.
-
