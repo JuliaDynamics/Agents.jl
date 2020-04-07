@@ -25,6 +25,8 @@ function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
   delete!(model.agents, agent.id)
 end
 
+kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
+
 
 """
     genocide!(model::ABM)
@@ -219,7 +221,7 @@ Return a valid `id` for creating a new agent with it.
 nextid(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
 
 """
-    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}, verbose = true) → agent
+    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
 
 Add agent to a random node in the space while respecting a maximum one agent per node.
 This function throws a warning if no empty nodes remain.
@@ -231,13 +233,13 @@ function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
     random_node = rand(empty_cells)
     add_agent!(agent, random_node, model)
   else
-    "No empty nodes found for `add_agent_single!`."
+    @warn "No empty nodes found for `add_agent_single!`."
   end
   return agent
 end
 
 """
-    add_agent_single!(model::ABM, properties...; kwargs...)
+    add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...)
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """

@@ -28,6 +28,7 @@ move_agent!
 move_agent_single!
 kill_agent!
 genocide!
+sample!
 ```
 
 ## Discrete space exclusives
@@ -52,14 +53,38 @@ nearest_neighbor
 elastic_collision!
 index!
 ```
-## Simulations
-The central simulation function is [`step!`](@ref), which is mentioned in our [Tutorial](@ref).
+
+## Data collection
+The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
 ```@docs
+init_agent_dataframe
+collect_agent_data!
+init_model_dataframe
+collect_model_data!
+aggname
 paramscan
-sample!
-dummystep
 ```
+
+For example, the core loop of `run!` is just
+```julia
+df_agent = init_agent_dataframe(model, agent_properties)
+df_model = init_model_dataframe(model, model_properties)
+
+s = 0
+while until(s, n, model)
+  if should_we_collect(s, model, when)
+      collect_agent_data!(df_agent, model, agent_properties, s)
+  end
+  if should_we_collect(s, model, when_model)
+      collect_model_data!(df_model, model, model_properties, s)
+  end
+  step!(model, agent_step!, model_step!, 1)
+  s += 1
+end
+return df_agent, df_model
+```
+(here `until` and `should_we_collect` are internal functions)
 
 ## Schedulers
 The schedulers of Agents.jl have a very simple interface. All schedulers are functions,
@@ -72,12 +97,6 @@ by_id
 random_activation
 partial_activation
 property_activation
-```
-
-## Parallelization
-
-```@docs
-parallel_replicates
 ```
 
 ## Plotting

@@ -8,19 +8,28 @@ using AgentsPlots
 # ## 1. Define the rule
 # Here is Wolfram's rule 22
 
-rules = Dict("111"=>"0", "110"=>"0", "101"=>"0", "100"=>"1", "011"=>"0",
-            "010"=>"1", "001"=>"1", "000"=>"0")
+rules = Dict(
+    "111" => "0",
+    "110" => "0",
+    "101" => "0",
+    "100" => "1",
+    "011" => "0",
+    "010" => "1",
+    "001" => "1",
+    "000" => "0",
+);
 
 # ## 2. Build the model
 # All the cells are by default initially "off"
-model = CA1D.build_model(rules=rules, ncols=21)
+model = CA1D.build_model(rules = rules, ncols = 21)
 
 # This turns on the middle cell
-model.agents[11].status="1"
+model.agents[11].status = "1";
 
 # ## 3. Run the model and collect data.
 runs = 20
-data = CA1D.ca_run(model, runs);
+data, _ = CA1D.ca_run(model, runs);
 
 # ## 4. Visualize the data
-p = plot_CA1D(data, nodesize=2)
+p = plot_CA1D(data, nodesize = 2)
+

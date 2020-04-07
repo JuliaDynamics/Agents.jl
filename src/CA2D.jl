@@ -116,10 +116,10 @@ end
 Runs a 2D cellular automaton.
 """
 function ca_run(model::ABM, runs::Integer, plot_CA2Dgif::T; nodesize=2) where T<: Function
-  data = step!(model, dummystep, ca_step!, 0, [:pos, :status], step0=true)
+  data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
   anim = plot_CA2Dgif(data, nodesize=nodesize)
   for r in 1:runs
-    data = step!(model, dummystep, ca_step!, 1, [:pos, :status], step0=false)
+    data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
     anim = plot_CA2Dgif(data, anim=anim, nodesize=nodesize)
   end
   return anim
