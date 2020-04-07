@@ -7,7 +7,8 @@ using StatsBase: sample, Weights
 Replace the agents of the `model` with a random sample of the current agents with
 size `n`.
 
-Optionally, choose an agent property `weight` (Symbol) to weight the sampling.
+Optionally, provide a `weight`: Symbol (agent field) or function (input agent
+out put number) to weight the sampling.
 This means that the higher the `weight` of the agent, the higher the probability that
 this agent will be chosen in the new sampling.
 
@@ -25,7 +26,7 @@ function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
 
   org_ids = collect(keys(model.agents))
   if weight != nothing
-    weights = Weights([getproperty(a, weight) for a in values(model.agents)])
+    weights = Weights([get_data(a, weight) for a in values(model.agents)])
     newids = sample(rng, org_ids, weights, n, replace=replace)
   else
     newids = sample(rng, org_ids, n, replace=replace)
