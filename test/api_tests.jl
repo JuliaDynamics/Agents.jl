@@ -149,14 +149,11 @@ add_agent!(model)
   allweights = [i.weight for i in values(model.agents)]
   mean_weights_new = sum(allweights)/length(allweights)
   @test mean_weights_new > mean_weights
-
-  model.agents[1].weight = 2
-  model.agents[2].weight = 3
-  @test model.agents[1].weight == 2
-  @test model.agents[2].weight == 3
-
   sample!(model, 40, :weight)
   @test Agents.nagents(model) == 40
+  allweights = [i.weight for i in values(model.agents)]
+  mean_weights_new = sum(allweights)/length(allweights)
+  @test mean_weights_new > mean_weights
 
   model2 = ABM(Agent3, GridSpace((10, 10)))
   for i in 1:20; add_agent_single!(Agent3(i, (1,1), rand()/rand()), model2); end
