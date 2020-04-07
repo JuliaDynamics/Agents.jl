@@ -7,57 +7,43 @@ using StatsBase: sample, Weights
 Replace the agents of the `model` with a random sample of the current agents with
 size `n`.
 
-Optionally, choose an agent property `weight` (Symbol) to weight the sampling.
+Optionally, provide a `weight`: Symbol (agent field) or function (input agent
+out put number) to weight the sampling.
 This means that the higher the `weight` of the agent, the higher the probability that
 this agent will be chosen in the new sampling.
 
 # Keywords
 * `replace = true` : whether sampling is performed with replacement, i.e. all agents can
-  be chosen more than once.
+be chosen more than once.
 * `rng = GLOBAL_RNG` : a random number generator to perform the sampling with.
 
 See the Wright-Fisher example in the documentation for an application of `sample!`.
 """
-function sample!(model::ABM, n::Int, weight=nothing; replace=true,
-    rng::AbstractRNG=Random.GLOBAL_RNG)
+function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
+  rng::AbstractRNG=Random.GLOBAL_RNG) where{A, S}
 
-    if weight != nothing
-        weights = Weights([getproperty(a, weight) for a in values(model.agents)])
-        newids = sample(rng, collect(keys(model.agents)), weights, n, replace=replace)
+  nagents(model) > 0 || return
+
+  org_ids = collect(keys(model.agents))
+  if weight != nothing
+    weights = Weights([get_data(a, weight) for a in values(model.agents)])
+    newids = sample(rng, org_ids, weights, n, replace=replace)
+  else
+    newids = sample(rng, org_ids, n, replace=replace)
+  end
+
+  n = nextid(model)
+  for id in org_ids
+    if !in(id, newids)
+      kill_agent!(model.agents[id], model)
     else
-        newids = sample(rng, collect(keys(model.agents)), n, replace=replace)
+      noccurances = count(x->x==id, newids)
+      for t in 2:noccurances
+        newagent = deepcopy(model.agents[id])
+        newagent.id = n
+        add_agent_pos!(newagent, model)
+        n += 1
+      end
     end
-
-    for (index, id) in enumerate(newids) # add new agents while adjusting id
-        model.agents[index] = deepcopy(model[id])
-        model.agents[index].id = index
-    end
-    # kill extra agents
-    if n < nagents(model)
-        genocide!(model, n)
-    end
-    # Clean space
-    clean_space!(model)
-
-    return model
-end
-
-"""
-Remove all IDs from space and add agent ids again.
-"""
-function clean_space!(model::ABM{A, <: DiscreteSpace}) where {A}
-    if model.space != nothing
-        for node in 1:nv(model)
-            model.space.agent_positions[node] = Int[]
-        end
-        for (k, v) in model.agents
-            push!(get_node_contents(v, model), v.id)
-        end
-    end
-end
-
-clean_space!(model::ABM{A, Nothing}) where {A} = nothing
-
-function clean_space!(model::ABM{A, <: ContinuousSpace}) where {A}
-    error("sample! for continuous space has not been implemented yet.")
+  end
 end
