@@ -32,7 +32,7 @@ end
 # All other model parameters go into the `AgentBasedModel`
 
 # We then make a setup function that initializes the model
-function model_initiation(; f, d, p, griddims, seed = 111)
+function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims=(100,100), seed = 111)
     Random.seed!(seed)
     space = GridSpace(griddims, moore = true)
     properties = Dict(:f => f, :d => d, :p => p)
@@ -96,46 +96,29 @@ forest
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
-forest = model_initiation(f = 0.05, d = 0.8, p = 0.01, griddims = (20, 20), seed = 2)
+forest = model_initiation(griddims = (20, 20), seed = 2)
 percentage(x) = count(x) / nv(forest)
 agent_properties = [(:status, percentage)]
 
 data, _ = run!(forest, dummystep, forest_step!, 10; agent_properties = agent_properties)
 data
 
-# Or we can just collect raw data without aggregation:
-
-forest = model_initiation(f = 0.05, d = 0.8, p = 0.01, griddims = (20, 20), seed = 2)
-agent_properties = [:status, :pos]
-
-data, _ = run!(forest, dummystep, forest_step!, 10; agent_properties = agent_properties)
-data[(end - 10):end, :]
-
-# And plot the green and burning trees:
-
+# Now let's plot the model using green and red color for alive/burning
 using AgentsPlots
-# At time 1
-p = plot2D(data, :status, t = 1, cc = Dict(true => "green", false => "red"), nodesize = 8)
-# At time 2
-p = plot2D(data, :status, t = 2, cc = Dict(true => "green", false => "red"), nodesize = 8)
+forest = model_initiation()
+step!(forest, dummystep, forest_step!, 1)
+treecolor(a) = a[1].status == 1 ? :green : :red
+plotabm(forest; ac = treecolor, ms = 5, msw=0)
 
+# or animate it
+cd(@__DIR__) #src
+forest = model_initiation(f = 0.005)
+anim = @animate for i in 1:20
+    step!(forest, dummystep, forest_step!, 1)
+    p1 = plotabm(forest; ac = treecolor, ms = 5, msw=0)
+    title!(p1, "step $(i)")
+end
 
-# Or we can run parallel/batch simulations
-# ```julia
-# agent_properties = [:status, :pos]
-# data, _ = run!(
-#     forest,
-#     dummystep,
-#     forest_step!,
-#     10;
-#     agent_properties = agent_properties,
-#     replicates = 10,
-# )
-# ```
+gif(anim, "forest.gif", fps = 2);
 
-# Remember that it is possible to explore a `DataFrame` visually and interactively
-# through `DataVoyager`, by doing
-# ```julia
-# using DataVoyager
-# Voyager(data)
-# ```
+# ![](forest.gif)
