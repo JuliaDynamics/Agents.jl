@@ -185,28 +185,29 @@ data
 
 # ## Visualizing the data
 
-# We can use the `plot2D` function to plot the distribution of agents on a
-# 2D grid at every generation, via the `AgentsPLots` package
+# We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
+# 2D grid at every generation, via the `AgentsPLots` package. Let's color the
+# two groups orange and blue and make one a square and the other a circle
 using AgentsPlots
-properties = [:pos, :mood, :group]
-data, _ = run!(model, agent_step!, 10; agent_properties = properties)
-p = plot2D(data, :group, t = 1, nodesize = 10)
+groupcolor(a) = a[1].group == 1 ? :blue : :orange
+groupmarker(a) = a[1].group == 1 ? :circle : :square
+plotabm(model; ac = groupcolor, am = groupmarker)
 
-# Notice that to see this plot we need the "raw" data, not the aggregated data
+# ## Animating the evolution
 
-p = plot2D(data, :group, t = 2, nodesize = 10)
+# The function [`plotabm`](@ref) can be used to make your own animations
+cd(@__DIR__) #src
+model = initialize();
+anim = @animate for i in 1:10
+    step!(model, agent_step!, 1)
+    p1 = plotabm(model; ac = groupcolor, am = groupmarker)
+    title!(p1, "step $(i)")
+end
 
-# The first argument of the `plot2D` is the output data. The second argument is the
-# column name in `data` that has the categories of each agent, which is `:group` in
-# this case. `nodesize` determines the size of cells in the plot.
+gif(anim, "schelling.gif", fps = 2);
 
-# Custom plots can be easily made with [`DataVoyager`](https://github.com/queryverse/DataVoyager.jl)
-# because the outputs of simulations are always as a `DataFrame` object.
+# ![](schelling.gif)
 
-# ```julia
-# using DataVoyager
-# v = Voyager(data)
-# ```
 
 # ## Replicates and parallel computing
 
@@ -293,5 +294,3 @@ select!(data_mean, Not(:replicate_mean))
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
-
-
