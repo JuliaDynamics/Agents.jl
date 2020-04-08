@@ -21,35 +21,31 @@ end
 const COORDS = 'a':'z' # letters representing coordinates in database
 
 """
-    ContinuousSpace(D::Int [, update_vel!]; periodic::Bool = true, extend = nothing, metric = "cityblock")
+    ContinuousSpace(D::Int [, update_vel!]; kwargs...)
 Create a `ContinuousSpace` of dimensionality `D`.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
-In addition, the agent type must have a third field `vel::NTuple{D, F}` representing
-the agent's velocity.
+In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
+the agent's velocity to use [`move_agent!`](@ref).
 
 The optional argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
-the agent's velocities **before** the agent has been moved, see [`move_agent!`](@ref).
-You can of course change the agents velocities
+the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
+You can of course change the agents' velocities
 during the agent interaction, the `update_vel!` functionality targets arbitrary forces.
 By default no update is done this way.
 
 ## Keywords
-
 * `periodic = true` : whether continuous space is periodic or not
 * `extend::NTuple{D} = ones` : Extend of space. The `d` dimension starts at 0
   and ends at `extend[d]`. If `periodic = true`, this is also when
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
+* `metric = "cityblock"` : metric that configures distances for finding nearest neighbors
+  in the space. The other option is `"euclidean"` but cityblock is faster (due to internals).
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = true, extend = Tuple(1.0 for i in 1:D), metric = "cityblock")
 
-  # TODO: implement using different metrics in space_neighbors
   @assert metric ∈ ("cityblock", "euclidean")
-
-  # TODO: allow extend to be useful even without periodicity: agents bounce of walls then
-  # (improve to do this `move_agent!`)
-
   db, q, q2, q3, q4, q5 = prepare_database(D)
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
@@ -82,7 +78,6 @@ end
 
 defvel(a, m) = nothing
 
-# TODO: re-check this at the end.
 function Base.show(io::IO, abm::ContinuousSpace)
     s = "$(abm.D)-dimensional $(abm.periodic ? "periodic " : "")ContinuousSpace"
     abm.update_vel! ≠ defvel && (s *= " with velocity updates")
@@ -101,12 +96,11 @@ function collect_ids(q::SQLite.Query, colname=:id)
   return output
 end
 
-# TODO: index! needs a better name
 """
     index!(model)
 Index the database underlying the `ContinuousSpace` of the model.
 
-This can drastically improve performance for retrieving data, but adding new
+This can drastically improve performance for finding neighboring agents, but adding new
 data can become slower because after each addition, index needs to be called again.
 
 Lack of index won't be noticed for small databases. Only use it when you have
@@ -119,7 +113,7 @@ function index!(model)
 end
 
 #######################################################################################
-# Extention of Agents.jl Model-Space interaction API
+# add, move and kill
 #######################################################################################
 # central, low level function that is always called by all others!
 function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
@@ -205,9 +199,9 @@ function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
   end
 end
 
-# TODO: at the moment this function doesn't check the metric and uses only cityblock
-# we can easily adjust to arbitrary metric by doing a final check
-# filter!(...) where the filtering function checks distances w.r.t. `r`.
+#######################################################################################
+# neighboring agents
+#######################################################################################
 """
     space_neighbors(pos::Tuple, model::ABM, r::Real)
 Return IDs of all agents within radius `r` from a particular position `pos` for any space.
@@ -216,12 +210,18 @@ function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) 
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchqNoId, res))
+  ids = collect_ids(DBInterface.execute(model.space.searchqNoId, res))
+  if model.space.metric == "cityblock"
+    return ids
+  elseif model.space.metric == "euclidean"
+    return filter!(i -> sqrt(sum(abs2.(model[i].pos .- pos))) ≤ r, ids)
+  end
 end
 
 """
     space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
-Return neighbours of a particular agent, within radius `r` for any space.
+Return neighbours of a particular agent (excluding given `agent`)
+within radius `r` for any space (type of radius depends on space).
 """
 function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
   left = agent.pos .- r
@@ -246,15 +246,19 @@ export nearest_neighbor, elastic_collision!, interacting_pairs
 """
     nearest_neighbor(agent, model, r) → nearest
 Return the agent that has the closest distance to given `agent`, according to the
-space's metric.
-Valid only in continuous space.
+space's metric. Valid only in continuous space.
+Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent, model, r)
   n = space_neighbors(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
-    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
+    if model.space.metric == "euclidean"
+      @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
+    elseif model.space.metric == "cityblock"
+      @inbounds dnew = sum(abs.(agent.pos .- model[n[i]].pos))
+    end
     _, j = findmin(d)
     if dnew < d
       d, j = dnew, i
