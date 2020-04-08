@@ -212,7 +212,7 @@ end
     space_neighbors(pos::Tuple, model::ABM, r::Real)
 Return IDs of all agents within radius `r` from a particular position `pos` for any space.
 """
-function space_neighbors(pos::Tuple, model, r::Real)
+function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
