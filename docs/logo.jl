@@ -1,9 +1,10 @@
 cd(@__DIR__)
 
-using Agents, Random, Plots, AgentsPlots
+using Agents, Random, Plots, AgentsPlots, FreeTypeAbstraction
 using DrWatson: @dict
 using StatsBase: sample
-# using FreeTypeAbstraction
+using Plots.PlotMeasures
+
 "#765db4" # JuliaDynamics color
 # %% Input
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
@@ -18,14 +19,19 @@ INITINFECT = 30
 SPEED = 0.002
 
 # %% Run the script
-logo_dims = (900,300)
+logo_dims = (900, 300)
 x, y = logo_dims
 font = FTFont(joinpath(@__DIR__, fontname))
 m = transpose(zeros(UInt8, logo_dims...))
 
 renderstring!(
-    m, "Agents.jl", font, 150, round(Int, y/2) + 50, round(Int, x/2),
-    halign = :hcenter
+    m,
+    "Agents.jl",
+    font,
+    150,
+    round(Int, y / 2) + 50,
+    round(Int, x / 2),
+    halign = :hcenter,
 
 )
 
@@ -86,7 +92,10 @@ end
 # Sample agents inside text
 points = sample(findall(p -> p > 0.0, m), NAGENTS)
 # Convert those into points that make sense within our continuous space (image coords must be y-inverted)
-positions = map(p->(last(p.I)/first(logo_dims), (last(logo_dims)-first(p.I))/last(logo_dims)),points)
+positions = map(
+    p -> (last(p.I) / first(logo_dims), (last(logo_dims) - first(p.I)) / last(logo_dims)),
+    points,
+)
 
 function sir_initiation(;
     infection_period = PERIOD * steps_per_day,
@@ -96,7 +105,7 @@ function sir_initiation(;
     dt = 1.0,
     speed = SPEED,
     death_rate = 0.044, # from website of WHO
-    N = 1000, #Probably need to override
+    N = 1000,
     initial_infected = INITINFECT,
     seed = SEED,
     βmin = BETA,
@@ -144,11 +153,19 @@ function sir_initiation(;
     return model
 end
 
-sir = sir_initiation(;N=200, init_static=positions)
+sir = sir_initiation(; N = 200, init_static = positions)
 
 anim = @animate for i in 1:1300
     p1 = plotabm(sir; ac = sir_colors, as = 3)
-    plot!(p1; size = logo_dims)
+    plot!(
+        p1;
+        size = logo_dims,
+        right_margin = -2mm,
+        top_margin = -2mm,
+        bottom_margin = -5mm,
+        left_margin = -11.5mm,
+    )
     step!(sir, sir_agent_step!, sir_model_step!, 1)
 end
 gif(anim, "agents.gif", fps = 45)
+
