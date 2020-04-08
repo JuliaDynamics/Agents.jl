@@ -391,7 +391,7 @@ See also [`node_neighbors`](@ref).
 Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
 `agent` from the neighbors.
 """
-function space_neighbors(agent::A, model::ABM{A}, args...) where {A <: AbstractAgent}
+function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...) where {A}
   all = space_neighbors(agent.pos, model, args...)
   d = findfirst(isequal(agent.id), all)
   d ≠ nothing && deleteat!(all, d)
@@ -399,8 +399,10 @@ function space_neighbors(agent::A, model::ABM{A}, args...) where {A <: AbstractA
 end
 
 function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...) where {A}
-  nn = node_neighbors(pos, model, args...)
-  vcat(agent_positions(model)[n] for n in nn)
+  node = coord2vertex(pos, model)
+  nn = node_neighbors(node, model, args...)
+  # We include the current node in the search since we are searching over space
+  vcat(agent_positions(model)[node], agent_positions(model)[nn]...)
 end
 
 """
@@ -413,20 +415,20 @@ Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
     node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
 Same as above, but uses `agent.pos` as `node`.
 """
-node_neighbors(agent::AbstractAgent, model::ABM) = node_neighbors(agent.pos, model)
-function node_neighbors(node_number::Integer, model::ABM)
+node_neighbors(agent::AbstractAgent, model::ABM{A, <: DiscreteSpace}, args...) where {A} = node_neighbors(agent.pos, model, args...)
+function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace} where {A})
   nn = neighbors(model.space.graph, node_number)
   return nn
 end
 
-function node_neighbors(node_coord::Tuple, model::ABM)
+function node_neighbors(node_coord::Tuple, model::ABM{A, <: DiscreteSpace}) where {A}
   node_number = coord2vertex(node_coord, model)
   nn = neighbors(model.space.graph, node_number)
   nc = [vertex2coord(i, model) for i in nn]
   return nc
 end
 
-function node_neighbors(node_number::Integer, model::ABM, radius::Integer)
+function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}, radius::Integer) where {A}
   neighbor_nodes = Set(node_neighbors(node_number, model))
   included_nodes = Set()
   for rad in 2:radius
