@@ -56,7 +56,7 @@
   add_agent!(agent, model1)
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
 
-  # agents within some range are found correctly (once this is implemented)
+  # agents within some range are found correctly
   agent2 = model1.agents[2]
   agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
   add_agent_pos!(agent3, model1)
