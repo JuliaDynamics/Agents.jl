@@ -1,9 +1,9 @@
 # v3.0
 ## Additions
-- `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
-* Added `ContinuousSpace` as a space option!!!
-* new function `space_neighbors`, which works for any space. It always and consistently returns the **IDs** of neighbors irrespectively
-  of the spatial structure.
+* Added `ContinuousSpace` as a space option.
+* Universal plotting function `plotabm` that works for models with any kind of space.
+* new function `space_neighbors`, which works for any space. It always and consistently returns the **IDs** of neighbors irrespectively of the spatial structure.
+* `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
 * New convenience function `allagents`
 * New continuous space functions `nearest_neighbor` and `elastic_collision!`
 * New iterator `interacting_pairs`
@@ -12,13 +12,14 @@
   convenience syntax `model.prop` returns `model.properties[:prop]`.
 * Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
 * New function `nextid`
+* Cool new logo
 
 ## Breaking Changes
 * Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
 * Reworked the public API of `GridSpace` to be simpler: position must be `NTuple{Int}`. As a result `vertex2coord` and stuff no longer exported, since they are obsolete.
 - `AgentBasedModel` checks the construction of your agent and will return errors when it is malformed (no `id` or `pos` when required, incorrect types). Warnings when possible problems may occur (immutable agents, types which are not concrete, `vel` not of the correct type when using `ContinuousSpace`).
 - `id2agent` is deprecated in favor of `getindex(model, id) == model[id]`
-
+* Function `plot2D` doesn't exist any more in favor of `plotabm`.
 
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
