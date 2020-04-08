@@ -1,6 +1,6 @@
 # Agents.jl: agent-based modeling framework in Julia
 
-![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents_logo.gif?raw=true)
+![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents3_logo.gif?raw=true)
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/dev)
