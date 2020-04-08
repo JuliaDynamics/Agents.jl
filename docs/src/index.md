@@ -1,6 +1,4 @@
-# Agents.jl Documentation
-
-![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents_logo.gif?raw=true)
+![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents3_logo.gif?raw=true)
 
 Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).

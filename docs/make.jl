@@ -4,10 +4,9 @@ cd(@__DIR__)
 Pkg.update()
 
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
-using Literate
-using UnicodePlots
-using Plots
 using AgentsPlots
+using Literate
+using Plots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
@@ -22,7 +21,9 @@ Pkg.status("AgentsPlots")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
+toskip = ("game_of_life_2D_CA.jl", "rule22_1D_CA.jl")
 for file in readdir(indir)
+    file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
