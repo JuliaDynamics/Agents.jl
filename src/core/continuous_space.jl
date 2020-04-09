@@ -264,7 +264,7 @@ function nearest_neighbor(agent, model, r)
       d, j = dnew, i
     end
   end
-  return model[n[j]]
+  return @inbounds model[n[j]]
 end
 
 using LinearAlgebra
