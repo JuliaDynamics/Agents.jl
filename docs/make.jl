@@ -4,10 +4,9 @@ cd(@__DIR__)
 Pkg.update()
 
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
-using Literate
-using UnicodePlots
-using Plots
 using AgentsPlots
+using Literate
+using Plots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
@@ -22,7 +21,9 @@ Pkg.status("AgentsPlots")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
+toskip = ("game_of_life_2D_CA.jl", "rule22_1D_CA.jl")
 for file in readdir(indir)
+    file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -63,8 +64,8 @@ pages = [
         "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
         "Wealth distribution" => "examples/wealth_distribution.md",
         "Forest fire" => "examples/forest_fire.md",
-        "Game of life" => "examples/game_of_life_2D_CA.md",
-        "Rule 22" => "examples/rule22_1D_CA.md",
+        # "Game of life" => "examples/game_of_life_2D_CA.md",
+        # "Rule 22" => "examples/rule22_1D_CA.md",
         "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
         ],
