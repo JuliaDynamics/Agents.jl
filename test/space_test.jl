@@ -150,6 +150,10 @@ end
     @test node_neighbors(3, undirected) == [2, 4]
     @test node_neighbors(1, undirected) == [2]
     @test node_neighbors(5, undirected) == [4]
+    @test node_neighbors(3, undirected; neighbor_type = :out) ==
+    node_neighbors(3, undirected; neighbor_type = :in) ==
+    node_neighbors(3, undirected; neighbor_type = :all) ==
+    node_neighbors(3, undirected; neighbor_type = :default)
     add_agent!(1, undirected, rand())
     add_agent!(2, undirected, rand())
     add_agent!(3, undirected, rand())
@@ -162,11 +166,20 @@ end
     @test node_neighbors(3, directed) == [4]
     @test node_neighbors(1, directed) == [2]
     @test node_neighbors(5, directed) == []
+    @test node_neighbors(3, directed; neighbor_type = :default) ==
+          node_neighbors(3, directed)
+    @test node_neighbors(3, directed; neighbor_type = :in) == [2]
+    @test node_neighbors(3, directed; neighbor_type = :out) == [4]
+    @test sort!(node_neighbors(3, directed; neighbor_type = :all)) == [2, 4]
     add_agent!(1, directed, rand())
     add_agent!(2, directed, rand())
     add_agent!(3, directed, rand())
     @test sort!(space_neighbors(2, directed)) == [2, 3]
+    @test sort!(space_neighbors(2, directed; neighbor_type=:in)) == [1, 2]
+    @test sort!(space_neighbors(2, directed; neighbor_type=:all)) == [1, 2, 3]
     @test space_neighbors(directed[2], directed) == [3]
+    @test space_neighbors(directed[2], directed; neighbor_type=:in) == [1]
+    @test sort!(space_neighbors(directed[2], directed; neighbor_type=:all)) == [1, 3]
 
     gridspace = ABM(Agent3, GridSpace((3, 3)))
     @test node_neighbors((2, 2), gridspace) == [(2, 1), (1, 2), (3, 2), (2, 3)]
@@ -190,4 +203,5 @@ end
     move_agent!(b, continuousspace)
     @test space_neighbors(a, continuousspace, 0.1) == []
 end
+
 

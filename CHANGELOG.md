@@ -13,6 +13,7 @@
 * Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
 * New function `nextid`
 * Cool new logo
+* `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs
 
 ## Breaking Changes
 * Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
