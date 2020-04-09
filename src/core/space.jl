@@ -390,17 +390,20 @@ See also [`node_neighbors`](@ref).
 
 Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
 `agent` from the neighbors.
+
+The [`node_neighbors`](@ref) keyword `neighbor_type` can also be used here to restrict
+the spatial search on directed graphs.
 """
-function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...) where {A}
-  all = space_neighbors(agent.pos, model, args...)
+function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A}
+  all = space_neighbors(agent.pos, model, args...; kwargs...)
   d = findfirst(isequal(agent.id), all)
   d ≠ nothing && deleteat!(all, d)
   return all
 end
 
-function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...) where {A}
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A}
   node = coord2vertex(pos, model)
-  nn = node_neighbors(node, model, args...)
+  nn = node_neighbors(node, model, args...; kwargs...)
   # We include the current node in the search since we are searching over space
   vcat(agent_positions(model)[node], agent_positions(model)[nn]...)
 end
@@ -414,28 +417,52 @@ Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
 
     node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
 Same as above, but uses `agent.pos` as `node`.
+
+Keyword argument `neighbor_type=:default` can be used to select differing neighbors
+depending on the underlying graph type.
+- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
+to `:out`.
+Using any of the following options on an undirected graph is the equivalent to `:default`.
+- `:all` returns both `:in` and `:out` neighbors.
+- `:in` returns incoming vertex neighbors.
+- `:out` returns outgoing vertex neighbors.
 """
-node_neighbors(agent::AbstractAgent, model::ABM{A, <: DiscreteSpace}, args...) where {A} = node_neighbors(agent.pos, model, args...)
-function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace} where {A})
-  nn = neighbors(model.space.graph, node_number)
-  return nn
+node_neighbors(
+    agent::AbstractAgent,
+    model::ABM{A,<:DiscreteSpace},
+    args...;
+    kwargs...,
+) where {A} = node_neighbors(agent.pos, model, args...; kwargs...)
+function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; neighbor_type::Symbol=:default) where {A}
+    @assert neighbor_type ∈ (:default, :all, :in, :out)
+    neighborfn =
+        if neighbor_type == :default
+            neighbors
+        elseif neighbor_type == :in
+            inneighbors
+        elseif neighbor_type == :out
+            outneighbors
+        else
+            all_neighbors
+        end
+    neighborfn(model.space.graph, node_number)
 end
 
-function node_neighbors(node_coord::Tuple, model::ABM{A, <: DiscreteSpace}) where {A}
+function node_neighbors(node_coord::Tuple, model::ABM{A, <: DiscreteSpace}; kwargs...) where {A}
   node_number = coord2vertex(node_coord, model)
-  nn = neighbors(model.space.graph, node_number)
+  nn = node_neighbors(node_number, model; kwargs...)
   nc = [vertex2coord(i, model) for i in nn]
   return nc
 end
 
-function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}, radius::Integer) where {A}
-  neighbor_nodes = Set(node_neighbors(node_number, model))
+function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}, radius::Integer; kwargs...) where {A}
+  neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
   included_nodes = Set()
   for rad in 2:radius
     templist = Vector{Int}()
     for nn in neighbor_nodes
       if !in(nn, included_nodes)
-        newns = node_neighbors(nn, model)
+        newns = node_neighbors(nn, model; kwargs...)
         for newn in newns
           push!(templist, newn)
         end

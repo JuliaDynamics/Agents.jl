@@ -69,4 +69,16 @@
   # test that it finds both
   n_ids = space_neighbors(agent2.pos, model1, agent2.weight)
   @test sort!(n_ids) == [2, 3]
+
+  # test various metrics
+  c = ABM(Agent6, ContinuousSpace(2; extend = (2.0, 2.0), metric = :cityblock))
+  e = ABM(Agent6, ContinuousSpace(2; extend = (2.0, 2.0), metric = :euclidean))
+  r = sqrt(2) - 0.2
+  for (i, φ) in enumerate(range(0; stop = 2π, length = 10))
+    a = Agent6(i, (1, 1) .+ r .* sincos(φ), (0.0, 0.0), 0.0)
+    add_agent_pos!(a, c)
+    add_agent_pos!(a, e)
+  end
+  @test length(space_neighbors((1, 1), c, r)) == 10
+  @test 4 < length(space_neighbors((1, 1), e, r)) < 10
 end
