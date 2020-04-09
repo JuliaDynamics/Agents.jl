@@ -9,7 +9,7 @@ struct ContinuousSpace{F, E} <: AbstractSpace
   update_vel!::F
   periodic::Bool
   extend::E
-  metric::String
+  metric::Symbol
   db::SQLite.DB
   insertq::SQLite.Stmt
   searchq::SQLite.Stmt
@@ -39,13 +39,13 @@ By default no update is done this way.
 * `extend::NTuple{D} = ones` : Extend of space. The `d` dimension starts at 0
   and ends at `extend[d]`. If `periodic = true`, this is also when
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
-* `metric = "cityblock"` : metric that configures distances for finding nearest neighbors
-  in the space. The other option is `"euclidean"` but cityblock is faster (due to internals).
+* `metric = :cityblock` : metric that configures distances for finding nearest neighbors
+  in the space. The other option is `:euclidean` but cityblock is faster (due to internals).
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
-  periodic = true, extend = Tuple(1.0 for i in 1:D), metric = "cityblock")
+  periodic = true, extend = Tuple(1.0 for i in 1:D), metric = :cityblock)
 
-  @assert metric ∈ ("cityblock", "euclidean")
+  @assert metric ∈ (:cityblock, :euclidean)
   db, q, q2, q3, q4, q5 = prepare_database(D)
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
@@ -211,9 +211,9 @@ function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) 
   right = pos .+ r
   res = interlace(left, right)
   ids = collect_ids(DBInterface.execute(model.space.searchqNoId, res))
-  if model.space.metric == "cityblock"
+  if model.space.metric == :cityblock
     return ids
-  elseif model.space.metric == "euclidean"
+  elseif model.space.metric == :euclidean
     return filter!(i -> sqrt(sum(abs2.(model[i].pos .- pos))) ≤ r, ids)
   end
 end
@@ -254,9 +254,9 @@ function nearest_neighbor(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 0
   for i in 1:length(n)
-    if model.space.metric == "euclidean"
+    if model.space.metric == :euclidean
       @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
-    elseif model.space.metric == "cityblock"
+    elseif model.space.metric == :cityblock
       @inbounds dnew = sum(abs.(agent.pos .- model[n[i]].pos))
     end
     _, j = findmin(d)
