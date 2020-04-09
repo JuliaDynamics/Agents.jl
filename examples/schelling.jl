@@ -159,14 +159,14 @@ model = initialize()
 # for the agent fields that we want to collect as data
 properties = [:pos, :mood, :group]
 
-data, _ = run!(model, agent_step!, 5; acollect = properties)
+data, _ = run!(model, agent_step!, 5; adata = properties)
 data[1:10, :] # print only a few rows
 
 # We could also use functions in `properties`, for example we can define
 x(agent) = agent.pos[1]
 model = initialize()
 properties = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; acollect = properties)
+data, _ = run!(model, agent_step!, 5; adata = properties)
 data[1:10, :]
 
 # With the above `properties` vector, we collected all agent's data.
@@ -176,7 +176,7 @@ data[1:10, :]
 
 model = initialize();
 properties = [(:mood, sum), (x, maximum)]
-data, _ = run!(model, agent_step!, 5; acollect = properties)
+data, _ = run!(model, agent_step!, 5; adata = properties)
 data
 
 # The other `Examples` pages are more realistic examples with a much more meaningful
@@ -216,7 +216,7 @@ gif(anim, "schelling.gif", fps = 2);
 # To that end, we only need to specify `replicates` in the `run!` function:
 
 model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
-data, _ = run!(model, agent_step!, 5; acollect = properties, replicates = 3)
+data, _ = run!(model, agent_step!, 5; adata = properties, replicates = 3)
 data[(end - 10):end, :]
 
 # It is possible to run the replicates in parallel.
@@ -240,7 +240,7 @@ data[(end - 10):end, :]
 # Then we can tell the `run!` function to run replicates in parallel:
 
 # ```julia
-# data, _ = run!(model, agent_step!, 2, acollect=properties,
+# data, _ = run!(model, agent_step!, 2, adata=properties,
 #                replicates=5, parallel=true)
 # ```
 
@@ -256,14 +256,14 @@ data[(end - 10):end, :]
 
 happyperc(moods) = count(x -> x == true, moods) / length(moods)
 
-acollect = [(:mood, happyperc)]
+adata = [(:mood, happyperc)]
 parameters =
     Dict(:min_to_be_happy => collect(2:5), :numagents => [200, 300], :griddims => (20, 20))
 
 data, _ = paramscan(
     parameters,
     initialize;
-    acollect = acollect,
+    adata = adata,
     n = 3,
     agent_step! = agent_step!,
 )
@@ -274,7 +274,7 @@ data
 data, _ = paramscan(
     parameters,
     initialize;
-    acollect = acollect,
+    adata = adata,
     n = 3,
     agent_step! = agent_step!,
     replicates = 3,

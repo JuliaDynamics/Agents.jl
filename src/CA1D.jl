@@ -56,7 +56,7 @@ end
 Runs a 1D cellular automaton.
 """
 function ca_run(model::ABM, runs::Integer)
-  data = run!(model, dummystep, ca_step!, runs; acollect=[:pos, :status], when=1:runs)
+  data = run!(model, dummystep, ca_step!, runs; adata=[:pos, :status], when=1:runs)
 end
 
 end  # module

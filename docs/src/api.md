@@ -68,16 +68,16 @@ paramscan
 
 For example, the core loop of `run!` is just
 ```julia
-df_agent = init_agent_dataframe(model, acollect)
-df_model = init_model_dataframe(model, mcollect)
+df_agent = init_agent_dataframe(model, adata)
+df_model = init_model_dataframe(model, mdata)
 
 s = 0
 while until(s, n, model)
   if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, acollect, s)
+      collect_agent_data!(df_agent, model, adata, s)
   end
   if should_we_collect(s, model, when_model)
-      collect_model_data!(df_model, model, mcollect, s)
+      collect_model_data!(df_model, model, mdata, s)
   end
   step!(model, agent_step!, model_step!, 1)
   s += 1

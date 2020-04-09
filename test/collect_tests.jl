@@ -88,8 +88,8 @@ end
         365 * 5;
         when_model = each_year,
         when = six_months,
-        mcollect = [:flag, :year],
-        acollect = [(:weight, mean)],
+        mdata = [:flag, :year],
+        adata = [(:weight, mean)],
     )
 
     @test size(agent_data) == (11, 2)
@@ -145,14 +145,14 @@ parameters = Dict(
     :seed => 2,
 )
 @testset "Parameter Scan" begin
-    acollect = [(:status, length), (:status, count)]
+    adata = [(:status, length), (:status, count)]
     data, _ = paramscan(
         parameters,
         forest_initiation;
         n = n,
         agent_step! = dummystep,
         model_step! = forest_step!,
-        acollect = acollect,
+        adata = adata,
         progress = false,
     )
     # 6 is the number of combinations of changing params
@@ -164,21 +164,21 @@ parameters = Dict(
         agent_step! = dummystep,
         model_step! = forest_step!,
         include_constants = true,
-        acollect = acollect,
+        adata = adata,
         progress = false,
     )
     # 6 is the number of combinations of changing params,
     # 8 is 5+3, where 3 is the number of constant parameters
     @test size(data) == (n * 6, 8)
 
-    acollect = [:status]
+    adata = [:status]
     data, _ = paramscan(
         parameters,
         forest_initiation;
         n = n,
         agent_step! = dummystep,
         model_step! = forest_step!,
-        acollect = acollect,
+        adata = adata,
         progress = false,
     )
     @test unique(data.step) == 0:9
@@ -187,7 +187,7 @@ parameters = Dict(
 end
 
 @testset "Parameter Scan with replicates" begin
-    acollect = [(:status, length), (:status, count)]
+    adata = [(:status, length), (:status, count)]
     data, _ = paramscan(
         parameters,
         forest_initiation;
@@ -195,7 +195,7 @@ end
         agent_step! = dummystep,
         model_step! = forest_step!,
         replicates = 3,
-        acollect = acollect,
+        adata = adata,
         progress = false,
     )
     # the first 6 is the number of combinations of changing params
@@ -208,7 +208,7 @@ end
     for i = 1:5
         add_agent!(model, i * 0.2)
     end
-    data, _ = run!(model, dummystep, 2; acollect = [:weight])
+    data, _ = run!(model, dummystep, 2; adata = [:weight])
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
