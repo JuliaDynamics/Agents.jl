@@ -20,7 +20,7 @@ All the following keywords are propagated into [`run!`](@ref).
 Defaults are also listed for convenience:
 `agent_step! = dummystep, n = 1, when = 1:n, model_step! = dummystep`,
 `step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
-Keyword arguments such as `agent_properties` and `model_properties` are
+Keyword arguments such as `acollect` and `mcollect` are
 also propagated.
 
 The following keywords modify the `paramscan` function:

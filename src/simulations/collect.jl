@@ -19,21 +19,21 @@ data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
 
 ## Data-deciding keywords
-* `agent_properties::Vector` decides the agent data. If an entry is a `Symbol`, e.g. `:weight`,
+* `acollect::Vector` decides the agent data. If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
   The resulting dataframe columns are named with the input symbol (here `:weight, :f`).
 
-* `agent_properties::Vector{<:Tuple}`: if `agent_properties` is a vector of 2-tuples instead,
+* `acollect::Vector{<:Tuple}`: if `acollect` is a vector of 2-tuples instead,
   data aggregation is done over the agent properties. For each 2-tuple, the first entry
   is the "key" (any entry like the ones mentioned above, e.g. `:weight, f`). The second
   entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
   Continuing from the above example, we would have
-  `agent_properties = [(:weight, mean), (f, maximum)]`. The resulting data name columns
+  `acollect = [(:weight, mean), (f, maximum)]`. The resulting data name columns
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
   `maximum(f)`. This name doesn't play well with anonymous functions!
 
-* `model_properties::Vector` works exactly like `agent_properties` but for model level data.
+* `mcollect::Vector` works exactly like `acollect` but for model level data.
   For the model, no aggregation is possible (nothing to aggregate over).
 
 By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
@@ -78,10 +78,10 @@ Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
-               model_properties=nothing, agent_properties=nothing)
+               mcollect=nothing, acollect=nothing)
 
-    df_agent = init_agent_dataframe(model, agent_properties)
-    df_model = init_model_dataframe(model, model_properties)
+    df_agent = init_agent_dataframe(model, acollect)
+    df_model = init_model_dataframe(model, mcollect)
     if n isa Integer
         if when == true; for c in eachcol(df_agent); sizehint!(c, n); end; end
         if when_model == true; for c in eachcol(df_model); sizehint!(c, n); end; end
@@ -90,10 +90,10 @@ function _run!(model, agent_step!, model_step!, n;
     s = 0
     while until(s, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, agent_properties, s)
+            collect_agent_data!(df_agent, model, acollect, s)
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, model_properties, s)
+            collect_model_data!(df_model, model, mcollect, s)
         end
         step!(model, agent_step!, model_step!, 1)
         s += 1

@@ -24,7 +24,7 @@ when = 1:nsteps
 
 aggregators = Dict(:model => [counter])
 size_range = 100:100:1000
-agent_properties = [:model]
+acollect = [:model]
 results = Float64[]
 for width in size_range
   b = @benchmarkable data=step!(forest, tree_step!, nsteps,

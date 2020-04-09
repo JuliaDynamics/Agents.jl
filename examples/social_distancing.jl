@@ -295,7 +295,7 @@ gif(anim, "socialdist4.gif", fps = 45);
 
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
-agent_properties = [(:status, infected), (:status, recovered)]
+acollect = [(:status, infected), (:status, recovered)]
 
 # Let's do the following runs, with different parameters probabilities
 r1, r2 = 0.04, 0.33
@@ -309,21 +309,21 @@ data1, _ = run!(
     sir_agent_step!,
     sir_model_step!,
     2000;
-    agent_properties = agent_properties,
+    acollect = acollect,
 )
 data2, _ = run!(
     sir_model2,
     sir_agent_step!,
     sir_model_step!,
     2000;
-    agent_properties = agent_properties,
+    acollect = acollect,
 )
 data3, _ = run!(
     sir_model3,
     sir_agent_step!,
     sir_model_step!,
     2000;
-    agent_properties = agent_properties,
+    acollect = acollect,
 )
 
 data1[(end - 10):end, :]
@@ -374,7 +374,7 @@ data4, _ = run!(
     sir_agent_step!,
     sir_model_step!,
     2000;
-    agent_properties = agent_properties,
+    acollect = acollect,
 )
 
 plot!(p, data4[:, Symbol("infected(status)")], label = "r=$r4, social distancing")
