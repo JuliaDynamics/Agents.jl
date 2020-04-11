@@ -202,10 +202,6 @@ end
 #######################################################################################
 # neighboring agents
 #######################################################################################
-"""
-    space_neighbors(pos::Tuple, model::ABM, r::Real)
-Return IDs of all agents within radius `r` from a particular position `pos` for any space.
-"""
 function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
   left = pos .- r
   right = pos .+ r
@@ -218,11 +214,6 @@ function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) 
   end
 end
 
-"""
-    space_neighbors(agent::AbstractAgent, model::ABM, r::Real)
-Return neighbours of a particular agent (excluding given `agent`)
-within radius `r` for any space (type of radius depends on space).
-"""
 function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
   left = agent.pos .- r
   right = agent.pos .+ r
