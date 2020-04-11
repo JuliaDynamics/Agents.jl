@@ -89,8 +89,8 @@ end
 #######################################################################################
 "Collect IDs from an SQLite.Query where IDs are stored in `colname`"
 function collect_ids(q::SQLite.Query, colname=:id)
-  output = Union{Int, Missing}[]
-  for row in q
+  output = Vector{Int}(undef, 0)
+  for row in skipmissing(q)
     push!(output, row[colname])
   end
   return output
