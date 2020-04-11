@@ -10,11 +10,6 @@ nagents
 allagents
 nextid
 ```
-In addition to these functions, a number of standard Julia methods have been implemented for `AgentBasedModel`.
-```@docs
-getindex
-getproperty
-```
 
 ## Model-Agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).

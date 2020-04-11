@@ -18,13 +18,13 @@ function step! end
 """
     dummystep(model)
 
-Ignore the model dynamics on this `step!`. Use instead of `model_step!`.
+Ignore the model dynamics. Use instead of `model_step!`.
 """
 dummystep(model) = nothing
 """
     dummystep(agent, model)
 
-Ignore the agent dynamics on this `step!`. Use instead of `agent_step!`.
+Ignore the agent dynamics. Use instead of `agent_step!`.
 """
 dummystep(agent, model) = nothing
 

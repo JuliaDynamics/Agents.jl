@@ -369,11 +369,10 @@ get_node_agents(x, model) = [model[id] for id in get_node_contents(x, model)]
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
 """
-    space_neighbors(position, model::ABM [, r]) → ids
+    space_neighbors(position, model::ABM, r) → ids
 
 Return the ids of the agents neighboring the given `position` (which must match type
-with the spatial structure of the `model`). If `r` is given, it is the radius to search
-for agents.
+with the spatial structure of the `model`). `r` is the radius to search for agents.
 
 For `DiscreteSpace`s `r` must be integer and defines higher degree neighbors.
 For example, for `r=2` include first and second degree neighbors,
@@ -382,17 +381,13 @@ that is, neighbors and neighbors of neighbors.
 For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
 (based on the space's metric).
 
-See also [`node_neighbors`](@ref).
-
-`r` defaults to 1 for `DiscreteSpace` but is mandatory for `ContinuousSpace`.
+The [`node_neighbors`](@ref) keyword `neighbor_type` can also be used here to restrict
+the spatial search on directed graphs.
 
     space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
 
 Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
 `agent` from the neighbors.
-
-The [`node_neighbors`](@ref) keyword `neighbor_type` can also be used here to restrict
-the spatial search on directed graphs.
 """
 function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
@@ -409,13 +404,11 @@ function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs..
 end
 
 """
-    node_neighbors(node, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+    node_neighbors(node, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
 Return all nodes that are neighbors to the given `node`, which can be an `Int` for
 [`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
 
-Optional argument `r` is the radius, similar with [`space_neighbors`](@ref).
-
-    node_neighbors(agent, model::ABM{A, <:DiscreteSpace} [, r]) → nodes
+    node_neighbors(agent, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
 Same as above, but uses `agent.pos` as `node`.
 
 Keyword argument `neighbor_type=:default` can be used to select differing neighbors

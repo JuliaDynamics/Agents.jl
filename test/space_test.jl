@@ -202,6 +202,9 @@ end
     move_agent!(a, continuousspace)
     move_agent!(b, continuousspace)
     @test space_neighbors(a, continuousspace, 0.1) == []
+    # Checks for type instability #208
+    @test typeof(space_neighbors(a, continuousspace, 0.1)) <: Vector{Int}
+    @test typeof(space_neighbors((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
 end
 
 

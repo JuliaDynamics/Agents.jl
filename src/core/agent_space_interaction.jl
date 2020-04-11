@@ -249,7 +249,7 @@ function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwarg
   empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
-    cnode = correct_pos_type(node, model)
+    cnode = correct_pos_type(random_node, model)
     agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, random_node, model)
     return agent
