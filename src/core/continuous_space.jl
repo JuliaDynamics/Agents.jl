@@ -139,13 +139,13 @@ function add_agent!(agent::A, pos, model::ABM{A, <: ContinuousSpace}) where {A<:
 end
 
 # versions that create the agents
-function add_agent!(model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
-  add_agent!(randompos(model.space), model, args...)
+function add_agent!(model::ABM{A, <: ContinuousSpace}, args...; kwargs...) where {A<:AbstractAgent}
+  add_agent!(randompos(model.space), model, args...; kwargs...)
 end
 
-function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...) where {A<:AbstractAgent}
+function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...; kwargs...) where {A<:AbstractAgent}
   id = nextid(model)
-  agent = A(id, pos, args...)
+  agent = A(id, pos, args...; kwargs...)
   add_agent_pos!(agent, model)
 end
 

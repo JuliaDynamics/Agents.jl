@@ -206,6 +206,19 @@ end
   @test model.agents[1].f2 == model.agents[2].f2
 end
 
+@testset "add_agent continuous!" begin
+  properties = Dict(:x1=>1)
+  space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
+  model = ABM(Agent8, space2d; properties=properties)
+  attributes = (f1=true,f2=1)
+  add_agent!(model, attributes...)
+  attributes = (f2=1,f1=true)
+  add_agent!(model; attributes...)
+  @test model.agents[1].id != model.agents[2].id
+  @test model.agents[1].f1 == model.agents[2].f1
+  @test model.agents[1].f2 == model.agents[2].f2
+end
+
 @testset "move_agent!" begin
   # GraphSpace
   model = ABM(Agent5, GraphSpace(path_graph(6)))

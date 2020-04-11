@@ -49,6 +49,15 @@ end
 
 Agent7(id, pos; f1, f2) = Agent7(id, pos, f1, f2)
 
+mutable struct Agent8 <: AbstractAgent
+    id::Int
+    pos::NTuple{2,Float64}
+    f1::Bool
+    f2::Int
+end
+
+Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
+
 @testset "Agents.jl Tests" begin
 
     include("api_tests.jl")
@@ -61,4 +70,3 @@ Agent7(id, pos; f1, f2) = Agent7(id, pos, f1, f2)
     include("collisions_tests.jl")
 
 end
-
