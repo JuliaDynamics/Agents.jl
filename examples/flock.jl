@@ -25,9 +25,10 @@ mutable struct Bird <: AbstractAgent
     visual_distance::Float64
 end
 
-# The fields `id` and `pos` are required for every agent. The field `vel` is required for every agent in ContinuousSpace.
-# `speed` defines how far the bird travels in a direction defined by `vel` per `step`.
-# `seperation` defines the minimum distance between a bird must maintain from its neighbors.
+# The fields `id` and `pos` are required for every agent.
+# The field `vel` is required for using [`move_agent!`](@ref) in `ContinuousSpace`.
+# `speed` defines how far the bird travels in the direction defined by `vel` per `step`.
+# `seperation` defines the minimum distance a bird must maintain from its neighbors.
 # `visual_distance` refers to the distance a bird can see and defines a radius of neighboring birds.
 # The contribution of each rule defined above recieves an importance weight: `cohere_factor`
 # is the importance of maintaining the average position of neighbors,
@@ -58,9 +59,11 @@ function agent_step!(bird, model)
     ## Obtain the ids of neibhors within the bird's visual distance
     ids = space_neighbors(bird, model, bird.visual_distance)
     ## Compute velocity based on rules defined above
-    bird.vel = (bird.vel .+ cohere(bird, model, ids) .+ seperate(bird, model, ids)
-        .+ match(bird, model, ids))./2
-    bird.vel = bird.vel./norm(bird.vel)
+    bird.vel = bird.vel .+
+        cohere(bird, model, ids) .+
+        seperate(bird, model, ids) .+
+        match(bird, model, ids))./2
+    bird.vel = bird.vel ./ norm(bird.vel)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
@@ -69,7 +72,7 @@ distance(a1, a2) = sqrt(sum((a1.pos .- a2.pos).^2))
 
 get_heading(a1, a2) = a1.pos .- a2.pos
 
-# cohere computes the average position of neighboring birds, weighted by importance
+# `cohere` computes the average position of neighboring birds, weighted by importance
 function cohere(bird, model, ids)
     N = max(length(ids), 1)
     birds = model.agents
@@ -80,7 +83,7 @@ function cohere(bird, model, ids)
     return coherence./N.*bird.cohere_factor
 end
 
-# seperate repells the bird away from neighboring birds
+# `seperate` repells the bird away from neighboring birds
 function seperate(bird, model, ids)
     seperation_vec = (0.0,0.0)
     N = max(length(ids), 1)
@@ -94,9 +97,9 @@ function seperate(bird, model, ids)
     return seperation_vec./N.*bird.seperate_factor
 end
 
-# match computes the average trajectory of neighboring birds, weighted by importance
+# `match` computes the average trajectory of neighboring birds, weighted by importance
 function match(bird, model, ids)
-    match_vector = (0.0,0.0)
+    match_vector = (0.0, 0.0)
     N = max(length(ids), 1)
     birds = model.agents
     for id in ids
