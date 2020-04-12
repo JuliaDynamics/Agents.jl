@@ -283,7 +283,7 @@ recovered(x) = count(i == :R for i in x)
 model = model_initiation(; params...)
 
 to_collect = [(:status, f) for f in (infected, recovered, length)]
-data, _ = run!(model, agent_step!, 100; agent_properties = to_collect)
+data, _ = run!(model, agent_step!, 100; adata = to_collect)
 data[1:10, :]
 
 # We now plot how quantities evolved in time to show

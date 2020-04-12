@@ -98,9 +98,9 @@ forest
 
 forest = model_initiation(griddims = (20, 20), seed = 2)
 percentage(x) = count(x) / nv(forest)
-agent_properties = [(:status, percentage)]
+adata = [(:status, percentage)]
 
-data, _ = run!(forest, dummystep, forest_step!, 10; agent_properties = agent_properties)
+data, _ = run!(forest, dummystep, forest_step!, 10; adata = adata)
 data
 
 # Now let's plot the model using green and red color for alive/burning

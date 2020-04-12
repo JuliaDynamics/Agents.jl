@@ -92,7 +92,7 @@ end
 
 # ## Running the model
 # The parameter of interest is now `:new_opinion`, so we assign
-# it to variable `agent_properties` and pass it to the `run!` method
+# it to variable `adata` and pass it to the `run!` method
 # to be collected in a DataFrame.
 
 # In addition, we want to run the model only until all agents have converged to an opinion.
@@ -117,13 +117,13 @@ function model_run(; kwargs...)
 
     model = hk_model(; kwargs...)
 
-    agent_properties = [:new_opinion]
+    adata = [:new_opinion]
     agent_data, _ = run!(
         model,
         agent_step!,
         model_step!,
         terminate,
-        agent_properties = agent_properties,
+        adata = adata,
     )
     return agent_data
 end
