@@ -79,8 +79,8 @@ function _run!(model, agent_step!, model_step!, n;
                agent_properties=nothing, model_properties=nothing,
                mdata=model_properties, adata=agent_properties)
 
-    agent_propertes ≠ nothing && @warn "use `adata` instead of `agent_properties`"
-    model_propertes ≠ nothing && @warn "use `mdata` instead of `model_properties`"
+    agent_properties ≠ nothing && @warn "use `adata` instead of `agent_properties`"
+    model_properties ≠ nothing && @warn "use `mdata` instead of `model_properties`"
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
