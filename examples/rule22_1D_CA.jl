@@ -86,7 +86,6 @@ ac(x) = x[1].status == "1" ? :black : :white
 am(x) = :square
 anim = @animate for i in 1:runs
     step!(model, dummystep, ca_step!, 1)
-    # update agent rows
     p1 = plotabm(model; ac=ac, as=as, am=am)
 end
 

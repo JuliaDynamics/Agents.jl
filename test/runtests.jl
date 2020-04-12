@@ -65,7 +65,6 @@ Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
     include("space_test.jl")
     include("interaction_tests.jl")
     include("collect_tests.jl")
-    include("CA_test.jl")
     include("continuousSpace_tests.jl")
     include("collisions_tests.jl")
 
