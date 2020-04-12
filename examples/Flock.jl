@@ -41,7 +41,7 @@ function initialize_model(;n_birds=100, speed=1.0, cohere_factor=.25, separation
     model = ABM(Bird, space2d, scheduler=random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2)*2 .- 1)
-        add_agent!(model; vel, speed, cohere_factor,separation, seperate_factor, match_factor,
+        add_agent!(model, vel, speed, cohere_factor,separation, seperate_factor, match_factor,
          visual_distance)
     end
     index!(model)
