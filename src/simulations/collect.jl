@@ -19,7 +19,7 @@ data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
 
 ## Data-deciding keywords
-* `adata::Vector` decides the agent data. If an entry is a `Symbol`, e.g. `:weight`,
+* `adata::Vector` means "agent data to collect". If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
   The resulting dataframe columns are named with the input symbol (here `:weight, :f`).
@@ -33,7 +33,7 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
   `maximum(f)`. This name doesn't play well with anonymous functions!
 
-* `mdata::Vector` works exactly like `adata` but for model level data.
+* `mdata::Vector` means "model data to collect" and works exactly like `adata`.
   For the model, no aggregation is possible (nothing to aggregate over).
 
 By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
