@@ -12,8 +12,8 @@ println("\n\nmove_agent!")
 a = @benchmark move_agent!(model.agents[1], (3,4), model) setup=(model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(100, 50), seed=2))
 display(a)
 
-println("\n\nid2agent")
-a = @benchmark id2agent(250, model) setup=(model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(100, 50), seed=2))
+println("\n\ngetindex(model)")
+a = @benchmark model[250] setup=(model = model_initiation(f=0.1, d=0.8, p=0.1, griddims=(100, 50), seed=2))
 display(a)
 
 println("\n\nkill_agent!")
@@ -49,4 +49,3 @@ display(a)
 println("\n\nsample! 6 - with space - n == numagents/2")
 a = @benchmark sample!(m, 50) setup=(m = sampleModelInitializeS(n=100))
 display(a)
-

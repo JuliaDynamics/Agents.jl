@@ -3,8 +3,7 @@
 # This model is a simple agent-based economy that is modelled according
 # to the work of [Dragulescu *et al.*](https://arxiv.org/abs/cond-mat/0211175).
 # This work introduces statistical mechanics concepts to study wealth distributions.
-# For this reason what we show here is also referred to as "Boltzmann wealth
-# distribution" model.
+# What we show here is also referred to as "Boltzmann wealth distribution" model.
 
 # This model has a version with and without space.
 # The rules of the space-less game are quite simple:
@@ -12,7 +11,7 @@
 # 2. All agents start with one unit of wealth.
 # 3. At every step an agent gives 1 unit of wealth (if they have it) to some other agent.
 
-# Even though these are some very simple rules, they can still create the basic
+# Even though this rule-set is simple, it can still recreate the basic
 # properties of wealth distributions, e.g. power-laws distributions.
 
 # ## Core structures, space-less
@@ -27,8 +26,8 @@ end
 # there is no space structure to this example.
 # We can also make a very simple [`AgentBasedModel`](@ref) for our model.
 
-function wealth_model(;numagents = 100, initwealth = 1)
-    model = ABM(WealthAgent, scheduler=random_activation)
+function wealth_model(; numagents = 100, initwealth = 1)
+    model = ABM(WealthAgent, scheduler = random_activation)
     for i in 1:numagents
         add_agent!(model, initwealth)
     end
@@ -53,17 +52,17 @@ end
 N = 5
 M = 2000
 agent_properties = [:wealth]
-model = wealth_model(numagents=M)
-data = step!(model, agent_step!, N, agent_properties)
-data[end-20:end, :]
+model = wealth_model(numagents = M)
+data, _ = run!(model, agent_step!, N; agent_properties = agent_properties)
+data[end - 20:end, :]
 
 # What we mostly care about is the distribution of wealth,
 # which we can obtain for example by doing the following query:
 
-wealths = filter(x -> x.step == N, data)[!, :wealth]
+wealths = filter(x -> x.step == N-1, data)[!, :wealth]
 
 # and then we can make a histogram of the result.
-# With a simple visualization we immediatelly see the power-law distribution:
+# With a simple visualization we immediately see the power-law distribution:
 
 using UnicodePlots
 UnicodePlots.histogram(wealths)
@@ -75,24 +74,24 @@ UnicodePlots.histogram(wealths)
 
 mutable struct WealthInSpace <: AbstractAgent
     id::Int
-    pos::NTuple{2, Int}
+    pos::NTuple{2,Int}
     wealth::Int
 end
 
-function wealth_model_2D(;dims = (25,25), wealth = 1, M = 1000)
-  space = Space(dims, periodic = true)
-  model = ABM(WealthInSpace, space; scheduler = random_activation)
-  for i in 1:M # add agents in random nodes
-      add_agent!(model, wealth)
-  end
-  return model
+function wealth_model_2D(; dims = (25, 25), wealth = 1, M = 1000)
+    space = GridSpace(dims, periodic = true)
+    model = ABM(WealthInSpace, space; scheduler = random_activation)
+    for i in 1:M # add agents in random nodes
+        add_agent!(model, wealth)
+    end
+    return model
 end
 
 model2D = wealth_model_2D()
 
 # The agent actions are a just a bit more complicated in this example.
 # Now the agents can only give wealth to agents that exist on the same or
-# neighboring nodes (their "neighbhors").
+# neighboring nodes (their "neighbors").
 
 function agent_step_2d!(agent, model)
     agent.wealth == 0 && return # do nothing
@@ -100,9 +99,9 @@ function agent_step_2d!(agent, model)
     neighboring_nodes = node_neighbors(agent_node, model)
     push!(neighboring_nodes, agent_node) # also consider current node
     rnode = rand(neighboring_nodes) # the node that we will exchange with
-    available_agents = get_node_contents(rnode, model)
-    if length(available_agents) > 0
-        random_neighbor_agent = id2agent(rand(available_agents), model)
+    available_ids = get_node_contents(rnode, model)
+    if length(available_ids) > 0
+        random_neighbor_agent = model[rand(available_ids)]
         agent.wealth -= 1
         random_neighbor_agent.wealth += 1
     end
@@ -112,10 +111,10 @@ end
 using Random
 Random.seed!(5)
 init_wealth = 4
-model = wealth_model_2D(;wealth = init_wealth)
+model = wealth_model_2D(; wealth = init_wealth)
 agent_properties = [:wealth, :pos]
-data = step!(model, agent_step!, 10, agent_properties, when = [1, 5, 10], step0=false)
-data[end-20:end, :]
+data, _ = run!(model, agent_step!, 10; agent_properties = agent_properties, when = [1, 5, 9])
+data[(end - 20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
@@ -129,7 +128,7 @@ end
 
 W1 = wealth_distr(data, model2D, 1)
 W5 = wealth_distr(data, model2D, 5)
-W10 = wealth_distr(data, model2D, 10)
+W10 = wealth_distr(data, model2D, 9);
 
 #
 
@@ -145,3 +144,4 @@ Plots.heatmap(W5)
 Plots.heatmap(W10)
 
 # What we see is that wealth gets more and more localized.
+

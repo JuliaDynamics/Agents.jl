@@ -22,7 +22,7 @@ using Agents, Random
 
 mutable struct Tree <: AbstractAgent
     id::Int
-    pos::Tuple{Int, Int}
+    pos::Tuple{Int,Int}
     status::Bool  # true is green and false is burning
 end
 
@@ -32,23 +32,23 @@ end
 # All other model parameters go into the `AgentBasedModel`
 
 # We then make a setup function that initializes the model
-function model_initiation(; f, d, p, griddims, seed = 111)
+function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims=(100,100), seed = 111)
     Random.seed!(seed)
-    space = Space(griddims, moore = true)
+    space = GridSpace(griddims, moore = true)
     properties = Dict(:f => f, :d => d, :p => p)
-    forest = AgentBasedModel(Tree, space; properties=properties)
+    forest = AgentBasedModel(Tree, space; properties = properties)
 
     ## create and add trees to each node with probability d,
     ## which determines the density of the forest
     for node in nodes(forest)
-        if rand() ≤ forest.properties[:d]
+        if rand() ≤ forest.d
             add_agent!(node, forest, true)
         end
     end
     return forest
 end
 
-forest = model_initiation(f=0.05, d=0.8, p=0.05, griddims=(20, 20), seed=2)
+forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2);
 
 # ## Defining the step!
 # Because of the way the forest fire model is defined, we only need a
@@ -59,13 +59,13 @@ function forest_step!(forest)
     nc = get_node_contents(node, forest)
     ## the cell is empty, maybe a tree grows here
     if length(nc) == 0
-        rand() ≤ forest.properties[:p] && add_agent!(node, forest, true)
+        rand() ≤ forest.p && add_agent!(node, forest, true)
     else
-      tree = id2agent(nc[1], forest) # by definition only 1 agent per node
+      tree = forest[nc[1]] # by definition only 1 agent per node
       if tree.status == false  # if it is has been burning, remove it.
         kill_agent!(tree, forest)
       else
-        if rand() ≤ forest.properties[:f]  # the tree ignites spntaneously
+        if rand() ≤ forest.f  # the tree ignites spontaneously
           tree.status = false
         else  # if any neighbor is on fire, set this tree on fire too
           for cell in node_neighbors(node, forest)
@@ -86,7 +86,7 @@ end
 
 # ## Running the model
 
-step!(forest, dummystep, forest_step!)
+step!(forest, dummystep, forest_step!, 1)
 forest
 
 #
@@ -96,37 +96,30 @@ forest
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
-forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
-percentage(x) = count(x)/nv(forest)
-agent_properties = Dict(:status => [percentage])
+forest = model_initiation(griddims = (20, 20), seed = 2)
+percentage(x) = count(x) / nv(forest)
+agent_properties = [(:status, percentage)]
 
-data = step!(forest, dummystep, forest_step!, 10, agent_properties)
+data, _ = run!(forest, dummystep, forest_step!, 10; agent_properties = agent_properties)
+data
 
-# Or we can just collect raw data without aggregation:
-
-forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2)
-agent_properties = [:status, :pos]
-
-data = step!(forest, dummystep, forest_step!, 10, agent_properties);
-
-# And plot the green and burning trees:
-
+# Now let's plot the model using green and red color for alive/burning
 using AgentsPlots
-# At time 1
-p = plot2D(data, :status, t=1, cc=Dict(true=>"green", false=>"red"), nodesize=8)
-# At time 2
-p = plot2D(data, :status, t=2, cc=Dict(true=>"green", false=>"red"), nodesize=8)
+forest = model_initiation()
+step!(forest, dummystep, forest_step!, 1)
+treecolor(a) = a[1].status == 1 ? :green : :red
+plotabm(forest; ac = treecolor, ms = 5, msw=0)
 
+# or animate it
+cd(@__DIR__) #src
+forest = model_initiation(f = 0.005)
+using Plots # for @animate
+anim = @animate for i in 1:20
+    step!(forest, dummystep, forest_step!, 1)
+    p1 = plotabm(forest; ac = treecolor, ms = 5, msw=0)
+    title!(p1, "step $(i)")
+end
 
-# Or we can run parallel/batch simulations
-# ```julia
-# agent_properties = [:status, :pos]
-# data = step!(forest, dummystep, forest_step!, 10, agent_properties, replicates=10)
-# ```
+gif(anim, "forest.gif", fps = 2);
 
-# Remember that it is possible to explore a `DataFrame` visually and interactively
-# through `DataVoyager`, by doing
-# ```julia
-# using DataVoyager
-# Voyager(data)
-# ```
+# ![](forest.gif)

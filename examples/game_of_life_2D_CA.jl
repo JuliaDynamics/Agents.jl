@@ -10,17 +10,17 @@ using Agents.CA2D
 # Cells die if the number of their living neighbors are <D,
 # survive if the number of their living neighbors are <=S,
 # come to life if their living neighbors are as many as R.
-rules = (2,3,3)
+rules = (2, 3, 3)
 
 # ## 2. Build the model
 # "CA2D.build_model" creates a model where all cells are by default off ("0")
-model = CA2D.build_model(rules=rules, dims=(100, 100), Moore=true)
+model = CA2D.build_model(rules = rules, dims = (100, 100), Moore = true)
 
 # Let's make some random cells on
 for i in 1:nv(model)
-  if rand() < 0.1
-    model.agents[i].status="1"
-  end
+    if rand() < 0.1
+        model.agents[i].status = "1"
+    end
 end
 
 # ## 3. Animate the model
@@ -34,3 +34,4 @@ anim = CA2D.ca_run(model, runs, plot_CA2Dgif);
 # We can now save the animation to a gif.
 
 AgentsPlots.gif(anim, "game_of_life.gif")
+

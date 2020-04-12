@@ -2,10 +2,10 @@
 module CA1D
 using Agents
 
-mutable struct Cell{T<:Integer, Y<:AbstractString} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::Y
+mutable struct Cell <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  status::String
 end
 
 """
@@ -15,7 +15,7 @@ Builds a 1D cellular automaton. `rules` is a dictionary with this format: `Dict(
 """
 function build_model(;rules::Dict, ncols::Integer=101)
   nv=(ncols,1)
-  space = Space(nv)
+  space = GridSpace(nv)
   properties = Dict(:rules => rules)
   model = ABM(Cell, space; properties = properties, scheduler=by_id)
   for n in 1:ncols
@@ -56,7 +56,7 @@ end
 Runs a 1D cellular automaton.
 """
 function ca_run(model::ABM, runs::Integer)
-  data = step!(model, dummystep, ca_step!, runs, [:pos, :status], when=1:runs)
+  data = run!(model, dummystep, ca_step!, runs; agent_properties=[:pos, :status], when=1:runs)
 end
 
 end  # module

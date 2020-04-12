@@ -1,3 +1,27 @@
+# v3.0
+## Additions
+* Added `ContinuousSpace` as a space option. Supports Euclidean and Cityblock metrics.
+* Universal plotting function `plotabm` that works for models with any kind of space.
+* new function `space_neighbors`, which works for any space. It always and consistently returns the **IDs** of neighbors irrespectively of the spatial structure.
+* `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
+* New convenience function `allagents`
+* New continuous space functions `nearest_neighbor` and `elastic_collision!`
+* New iterator `interacting_pairs`
+* Agents can be accessed from the model directly. `model[id]` is equivalent with `model.agents[id]` and replaces `id2agent`.
+* If `model.properties` is a dictionary with key type Symbol, then the
+  convenience syntax `model.prop` returns `model.properties[:prop]`.
+* Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl)
+* New function `nextid`
+* Cool new logo
+* `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs
+
+## Breaking Changes
+* Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
+* Reworked the public API of `GridSpace` to be simpler: position must be `NTuple{Int}`. As a result `vertex2coord` and stuff no longer exported, since they are obsolete.
+- `AgentBasedModel` checks the construction of your agent and will return errors when it is malformed (no `id` or `pos` when required, incorrect types). Warnings when possible problems may occur (immutable agents, types which are not concrete, `vel` not of the correct type when using `ContinuousSpace`).
+- `id2agent` is deprecated in favor of `getindex(model, id) == model[id]`
+* Function `plot2D` doesn't exist any more in favor of `plotabm`.
+
 # v2.1
 * Renamed the old scheduler `as_added` to `by_id`, to reflect reality.
 * Added a scheduler public API.

@@ -2,10 +2,10 @@
 module CA2D
 using Agents
 
-mutable struct Cell{T<:Integer, Y<:AbstractString} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::Y
+mutable struct Cell <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  status::Bool
 end
 
 """
@@ -14,12 +14,15 @@ end
 Builds a 2D cellular automaton. `rules` is of type `Tuple{Integer,Integer,Integer}`. The numbers are DSR (Death, Survival, Reproduction). Cells die if the number of their living neighbors are <D, survive if the number of their living neighbors are <=S, come to life if their living neighbors are as many as R. `dims` is the x and y size a grid. `Moore` specifies whether cells should connect to their diagonal neighbors.
 """
 function build_model(;rules::Tuple, dims=(100,100), Moore=true)
-  space = Space(dims, moore=Moore, periodic=false)
-  properties = Dict(:rules => rules)
+  space = GridSpace(dims, moore=Moore)
+  properties = Dict(:rules => rules, :Moore=>Moore)
   model = ABM(Cell, space; properties = properties, scheduler=by_id)
-  nnodes = dims[1]*dims[2]
-  for n in 1:nnodes
-    add_agent!(Cell(n, vertex2coord(n, dims), "0"), (n,1), model)
+  node_idx = 1
+  for y in 1:dims[1]
+    for x in 1:dims[2]
+      add_agent_pos!(Cell(node_idx, (x,y), false), model)
+      node_idx += 1
+    end
   end
   return model
 end
@@ -60,10 +63,10 @@ end
 Runs a 2D cellular automaton.
 """
 function ca_run(model::ABM, runs::Integer, plot_CA2Dgif::T; nodesize=2) where T<: Function
-  data = step!(model, dummystep, ca_step!, 0, [:pos, :status], step0=true)
+  data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
   anim = plot_CA2Dgif(data, nodesize=nodesize)
   for r in 1:runs
-    data = step!(model, dummystep, ca_step!, 1, [:pos, :status], step0=false)
+    data, _ = run!(model, dummystep, ca_step!, 1; agent_properties=[:pos, :status])
     anim = plot_CA2Dgif(data, anim=anim, nodesize=nodesize)
   end
   return anim

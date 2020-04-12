@@ -10,7 +10,7 @@ end
 
 function instantiate_modelS(;numagents=320, griddims=(20, 20), min_to_be_happy=3)
 
-  space = Space(griddims, moore = true)
+  space = GridSpace(griddims, moore = true)
 
   properties = Dict(:min_to_be_happy => min_to_be_happy)
   schelling = ABM(SchellingAgent, space; properties = properties, scheduler=random_activation)

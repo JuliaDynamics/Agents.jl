@@ -4,17 +4,17 @@
 using Agents
 using Random
 
-mutable struct Tree{T<:Integer} <: AbstractAgent
-  id::T
-  pos::Tuple{T, T}
-  status::T  # 1: green, 2: burning, 3: burned
+mutable struct Tree <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  status::Int  # 1: green, 2: burning, 3: burned
 end
 
 # we can put the model initiation in a function
 function model_initiation(;d, griddims, seed)
   Random.seed!(seed)
 
-  space = Space(griddims, moore = true)
+  space = GridSpace(griddims, moore = true)
 
   properties = Dict(:d => d)
   forest = ABM(Tree, space; properties=properties, scheduler=random_activation)
@@ -24,7 +24,7 @@ function model_initiation(;d, griddims, seed)
     pp = rand()
     if pp <= forest.properties[:d]
       # Set all trees in the first column on fire.
-      if vertex2coord(node, forest)[1] == 1
+      if model[node].pos[1] == 1
         tree = Tree(node, (1,1), 2)
       else
         tree = Tree(node, (1,1), 1)
