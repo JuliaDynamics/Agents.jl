@@ -42,8 +42,8 @@ By default no update is done this way.
 * `metric = :cityblock` : metric that configures distances for finding nearest neighbors
   in the space. The other option is `:euclidean` but cityblock is faster (due to internals).
 
-Note: if your model requires linear algebra operations for which tuples are not supported, a performant solution is to convert
-to convert the tuple to a SVector defined in StaticArrays.jl.
+Note: if your model requires linear algebra operations for which tuples are not supported, a performant solution is
+to convert between Tuple and SVector using StaticArrays.jl as follows: s = SVector((1.0,2.0)) and t = Tuple(s).
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = true, extend = Tuple(1.0 for i in 1:D), metric = :cityblock)
