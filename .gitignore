@@ -4,3 +4,4 @@ paper/__latexindent_temp\.tex
 *.scss
 *.css
 Manifest.toml
+*.pyc
