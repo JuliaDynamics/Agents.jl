@@ -32,14 +32,7 @@ end
 # `match_factor` is the importance of matching the average trajectory of neighboring birds, and `seperate_factor` is the importance of maining the minimum
 # distance from neighboring birds.
 #
-# The following defines a Bird constructor that uses keyword arguments and default values.
-function Bird(id, pos; vel=(0.0,0.0), speed=1.0, cohere_factor=.25, separation=4.0,
-        seperate_factor=.25, match_factor=.01, visual_distance=5.0)
-    return Bird(id, pos, vel, speed, cohere_factor, separation, seperate_factor,
-        match_factor, visual_distance)
-end
 
-#
 # The function `initialize_model` generates birds and returns a model object using default values. Default values
 # can be overwritten by passing keyword arguments.
 function initialize_model(;n_birds=100, speed=1.0, cohere_factor=.25, separation=4.0,
@@ -48,9 +41,8 @@ function initialize_model(;n_birds=100, speed=1.0, cohere_factor=.25, separation
     model = ABM(Bird, space2d, scheduler=random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2)*2 .- 1)
-        add_agent!(model; vel=vel, speed=speed, cohere_factor=cohere_factor,
-        separation=separation, seperate_factor=seperate_factor, match_factor=match_factor,
-         visual_distance=visual_distance)
+        add_agent!(model; vel, speed, cohere_factor,separation, seperate_factor, match_factor,
+         visual_distance)
     end
     index!(model)
     return model
