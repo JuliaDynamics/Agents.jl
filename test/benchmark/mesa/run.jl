@@ -19,7 +19,7 @@ end
 
 height=100
 d=0.6
-nsteps = 10
+nsteps = 100
 when = 1:nsteps
 
 size_range = 100:100:1000
