@@ -26,23 +26,26 @@ mutable struct Bird <: AbstractAgent
 end
 
 # The fields `id` and `pos` are required for every agent. The field `vel` is required for every agent in ContinuousSpace.
-# `speed` defines how quickly the bird travels in a direction defined by `vel`. `seperation` defines the minimum distance between a bird must maintain from its neighbors.
+# `speed` defines how far the bird travels in a direction defined by `vel` per `step`.
+# `seperation` defines the minimum distance between a bird must maintain from its neighbors.
 # `visual_distance` refers to the distance a bird can see and defines a radius of neighboring birds.
-# The contribution of each rule defined above recieves an importance weight: `cohere_factor` is the importance of maintaining the average position of neighbors,
-# `match_factor` is the importance of matching the average trajectory of neighboring birds, and `seperate_factor` is the importance of maining the minimum
+# The contribution of each rule defined above recieves an importance weight: `cohere_factor`
+# is the importance of maintaining the average position of neighbors,
+# `match_factor` is the importance of matching the average trajectory of neighboring birds,
+# and `seperate_factor` is the importance of maining the minimum
 # distance from neighboring birds.
-#
 
-# The function `initialize_model` generates birds and returns a model object using default values. Default values
-# can be overwritten by passing keyword arguments.
+# The function `initialize_model` generates birds and returns a model object using default values.
 function initialize_model(;n_birds=100, speed=1.0, cohere_factor=.25, separation=4.0,
     seperate_factor=.25, match_factor=.01, visual_distance=5.0, dims=(100,100))
     space2d = ContinuousSpace(2; periodic=true, extend=dims)
     model = ABM(Bird, space2d, scheduler=random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2)*2 .- 1)
-        add_agent!(model, vel, speed, cohere_factor,separation, seperate_factor, match_factor,
-         visual_distance)
+        add_agent!(
+            model, vel, speed, cohere_factor,separation, seperate_factor,
+            match_factor,visual_distance
+        )
     end
     index!(model)
     return model
