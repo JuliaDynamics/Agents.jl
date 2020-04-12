@@ -41,6 +41,9 @@ By default no update is done this way.
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
 * `metric = :cityblock` : metric that configures distances for finding nearest neighbors
   in the space. The other option is `:euclidean` but cityblock is faster (due to internals).
+
+Note: if your model requires linear algebra operations for which tuples are not supported, a performant solution is to convert
+to convert the tuple to a SVector defined in StaticArrays.jl.
 """
 function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = true, extend = Tuple(1.0 for i in 1:D), metric = :cityblock)
