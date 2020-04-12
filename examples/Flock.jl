@@ -109,14 +109,29 @@ model = initialize_model()
 step!(model, agent_step!, n_steps)
 
 
-# ## Running the model
+# ## Plotting the birds
+# The great thing about [`plotabm`](@ref) is its flexibility. We can incorporate the
+# direction of the birds when plotting them, by making the "marker" function `am`
+# create a `Shape`: a triangle with same orientation as the bird's velocity.
+# It is as simple as defining the following function:
+function bird_triangle(b::Bird)
+    φ = atan(b.vel[2], b.vel[1])
+    xs = [(i ∈ (0, 3) ? 2 : 1)*cos(i*2π/3 + φ) for i in 0:3]
+    ys = [(i ∈ (0, 3) ? 2 : 1)*sin(i*2π/3 + φ) for i in 0:3]
+    Shape(xs, ys)
+end
+
+# And here is the animation
+# %% #src
 using AgentsPlots, Plots
 Random.seed!(23182)
 cd(@__DIR__) #src
 model = initialize_model()
-anim = @animate for i in 1:100
+anim = @animate for i in 1:1000
     step!(model, agent_step!, 1)
-    p1 = plotabm(model; as = 4)
+    p1 = plotabm(model; am = bird_triangle, as = 10)
     title!(p1, "step $(i)")
 end
-gif(anim, "flock.gif", fps=5)
+gif(anim, "flock.gif", fps=30)
+
+# ![](flock.gif)
