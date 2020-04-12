@@ -14,6 +14,7 @@
 * New function `nextid`
 * Cool new logo
 * `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs
+* Added example of flocking birds
 - Collection of model and agent data simultaneously is now possible using the `mdata` and `adata` keywords (respectively) used in conjunction with the revamped data collection scheme (see below).
 
 ## Breaking Changes
