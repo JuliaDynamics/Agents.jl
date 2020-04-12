@@ -19,16 +19,15 @@ end
 
 height=100
 d=0.6
-nsteps = 100
+nsteps = 10
 when = 1:nsteps
 
-aggregators = Dict(:model => [counter])
 size_range = 100:100:1000
-agent_properties = [:model]
+model_properties = [counter]
 results = Float64[]
 for width in size_range
-  b = @benchmarkable data=step!(forest, tree_step!, nsteps,
-  aggregators, when=when) setup=(forest=model_initiation(d=d,
+  b = @benchmarkable data=run!(forest, tree_step!, nsteps,
+  model_properties=model_properties, when=when) setup=(forest=model_initiation(d=d,
   griddims=($width, height), seed=2))
 
   j = run(b)
@@ -48,4 +47,16 @@ results
 1.364939
 1.5469985
 2.051536
+
+# update 12/4/2020
+ 0.0639249
+ 0.142405601
+ 0.257741999
+ 0.371782101
+ 0.5058402
+ 0.606949
+ 0.7233231
+ 1.056618399
+ 1.2427522
+ 1.5567561
 =#

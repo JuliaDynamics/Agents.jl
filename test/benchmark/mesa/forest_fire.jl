@@ -24,7 +24,7 @@ function model_initiation(;d, griddims, seed)
     pp = rand()
     if pp <= forest.properties[:d]
       # Set all trees in the first column on fire.
-      if model[node].pos[1] == 1
+      if Agents.vertex2coord(node, forest)[1] == 1
         tree = Tree(node, (1,1), 2)
       else
         tree = Tree(node, (1,1), 1)
@@ -35,9 +35,9 @@ function model_initiation(;d, griddims, seed)
   return forest
 end
 
-function tree_step!(Tree, forest)
-  if Tree.status == 2
-    Tree.status = 3
+function tree_step!(tree, forest)
+  if tree.status == 2
+    tree.status = 3
     neighbor_cells = node_neighbors(tree, forest)
     for cell in neighbor_cells
       treeid = get_node_contents(cell, forest)

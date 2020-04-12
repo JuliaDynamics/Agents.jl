@@ -5,30 +5,30 @@ using DataFrames
 
 # Agents.jl benchmark results
 jlresults = [
-0.0623855,
-0.1409112,
-0.2434189,
-0.3797918]#,
-# 0.8206902,
-# 0.7178797,
-# 0.9326405,
-# 1.364939,
-# 1.5469985,
-# 2.051536]
+ 0.0639249,
+ 0.142405601,
+ 0.257741999,
+ 0.371782101]#,
+#  0.5058402,
+#  0.606949,
+#  0.7233231,
+#  1.056618399,
+#  1.2427522,
+#  1.5567561]
 
 # Mesa benchmark results
 pyresults = [
-0.8042,
-1.9173,
-3.1619,
-4.7495
+0.8553307999998196,
+2.0069307999999637,
+3.3087123000000247,
+4.781681599999956
 ]
 
 size_range = ((100:100:1000) .* 100)[1:4]
 
-dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i in 1:4], ["Mesa" for i in 1:4]), nv=vcat(size_range, size_range));
+dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl 3.0" for i in 1:4], ["Mesa 0.8.6" for i in 1:4]), nv=vcat(size_range, size_range));
 
-@vlplot(data=dd,
+p1 = @vlplot(data=dd,
   mark={:line,
     size=4,
     point={filled=false, fill="white", size=60}
@@ -55,10 +55,11 @@ dd = DataFrame(runtime=vcat(jlresults, pyresults), lang=vcat(["Agents.jl" for i 
   height=400,
   width=500,
 )
+save("benchmark01.png", p1)
 
 dd2 = DataFrame(ratio=pyresults./jlresults, nv=size_range);
 
-@vlplot(data=dd2,
+p2=@vlplot(data=dd2,
   mark={:bar},
   x={:nv,
     type="ordinal",
