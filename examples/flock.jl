@@ -55,13 +55,13 @@ end
 # `agent_step!` is the primary function called for each step and computes velocity
 # according to the three rules defined above.
 function agent_step!(bird, model)
-    # Obtain the ids of neibhors within the bird's visual distance
+    ## Obtain the ids of neibhors within the bird's visual distance
     ids = space_neighbors(bird, model, bird.visual_distance)
-    # Compute velocity based on rules defined above
+    ## Compute velocity based on rules defined above
     bird.vel = (bird.vel .+ cohere(bird, model, ids) .+ seperate(bird, model, ids)
         .+ match(bird, model, ids))./2
     bird.vel = bird.vel./norm(bird.vel)
-    # Move bird according to new velocity and speed
+    ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
 
