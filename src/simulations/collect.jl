@@ -1,6 +1,6 @@
 export run!, collect_agent_data!, collect_model_data!,
        init_agent_dataframe, init_model_dataframe, aggname
-       
+
 ###################################################
 # Definition of the data collection API
 ###################################################
@@ -58,14 +58,12 @@ function run!(model::ABM, agent_step!, model_step!, n;
   r = replicates
   if r > 0
     if parallel
-      dataall = parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+      return parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
     else
-      dataall = series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+      return series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
     end
-    return dataall
   else
-    df = _run!(model, agent_step!, model_step!, n; kwargs...)
-    return df
+    return _run!(model, agent_step!, model_step!, n; kwargs...)
   end
 end
 
@@ -78,8 +76,11 @@ Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
-               mdata=nothing, adata=nothing)
+               agent_properties=nothing, model_properties=nothing,
+               mdata=model_properties, adata=agent_properties)
 
+    agent_propertes ≠ nothing && @warn "use `adata` instead of `agent_properties`"
+    model_propertes ≠ nothing && @warn "use `mdata` instead of `model_properties`"
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
