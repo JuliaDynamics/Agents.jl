@@ -68,6 +68,7 @@ pages = [
         # "Rule 22" => "examples/rule22_1D_CA.md",
         "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
+        "Flocking" => "examples/Flock.md"
         ],
     "API" => "api.md",
     "Comparison against Mesa (Python)" => "mesa.md"

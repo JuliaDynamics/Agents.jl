@@ -14,6 +14,7 @@
 * New function `nextid`
 * Cool new logo
 * `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs
+* Added example of flocking birds
 
 ## Breaking Changes
 * Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
