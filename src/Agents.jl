@@ -20,8 +20,4 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
-# Auxilary
-include("CA1D.jl")
-include("CA2D.jl")
-
 end # module

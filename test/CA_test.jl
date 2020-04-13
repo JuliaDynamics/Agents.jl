@@ -16,7 +16,7 @@ end
 
 @testset "Cellular automata 2D" begin
   using Agents.CA2D
-  rules = (2,3,3)
+  rules = (2, 3, 3, 3)
   dims=(10, 10)
   model = CA2D.build_model(rules=rules, dims=dims, Moore=true)
   for i in 1:nv(model)
