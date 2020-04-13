@@ -1,5 +1,6 @@
 # # Flock model
-
+# ![](flock.gif)
+#
 # The flock model illustrates how flocking behavior can emerge when each bird follows three simple rules:
 #
 # * maintain a minimum distance from other birds to avoid collision
@@ -133,11 +134,9 @@ using AgentsPlots, Plots
 Random.seed!(23182)
 cd(@__DIR__) #src
 model = initialize_model()
-anim = @animate for i in 1:1000
-    step!(model, agent_step!, 1)
+anim = @animate for i in 0:100
+    i>0 && step!(model, agent_step!, 1)
     p1 = plotabm(model; am = bird_triangle, as = 10)
     title!(p1, "step $(i)")
 end
 gif(anim, "flock.gif", fps=30)
-
-# ![](flock.gif)

@@ -1,5 +1,9 @@
 # # Conway's game of life
 
+# ![](game_of_life.gif)
+
+# [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
+
 using Agents
 using AgentsPlots
 using Plots
@@ -44,7 +48,7 @@ function build_model(;rules::Tuple, dims=(100,100), Moore=true)
   return model
 end
 
-# Now we define a stepping function for the model to apply the rules to agents. 
+# Now we define a stepping function for the model to apply the rules to agents.
 
 function ca_step!(model)
   new_status = fill(false, nagents(model))
@@ -71,7 +75,7 @@ function nlive_neighbors(ag, model)
       nlive += 1
     end
   end
-  return nlive    
+  return nlive
 end
 
 # now we can instantiate the model:
@@ -89,16 +93,14 @@ end
 
 # We use the `plotabm` function from `AgentsPlots.jl` package for creating an animation.
 
-runs = 100
 as(x) = 3
 ac(x) = x[1].status == true ? :black : :white
 am(x) = :square
-anim = @animate for i in 1:runs
-  step!(model, dummystep, ca_step!, 1)
+anim = @animate for i in 0:100
+  i > 0 && step!(model, dummystep, ca_step!, 1)
   p1 = plotabm(model; ac=ac, as=as, am=am)
 end
 
 # We can now save the animation to a gif.
 
 gif(anim, "game_of_life.gif", fps = 5)
-

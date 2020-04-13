@@ -1,5 +1,7 @@
 # # Schelling's segregation model
 
+# ![](schelling.gif)
+
 # In this introductory example we demonstrate Agents.jl's architecture and
 # features through building
 # the following definition of Schelling's segregation model:
@@ -199,16 +201,13 @@ plotabm(model; ac = groupcolor, am = groupmarker)
 cd(@__DIR__) #src
 using Plots # for @animate
 model = initialize();
-anim = @animate for i in 1:10
-    step!(model, agent_step!, 1)
-    p1 = plotabm(model; ac = groupcolor, am = groupmarker)
+anim = @animate for i in 0:10
+    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = x->4)
     title!(p1, "step $(i)")
+    step!(model, agent_step!, 1)
 end
 
-gif(anim, "schelling.gif", fps = 2);
-
-# ![](schelling.gif)
-
+gif(anim, "schelling.gif", fps = 2)
 
 # ## Replicates and parallel computing
 

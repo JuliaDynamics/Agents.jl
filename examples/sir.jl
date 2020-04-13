@@ -1,5 +1,5 @@
 # # SIR model for the spread of COVID-19
-
+# ![](covid_evolution.gif)
 # ## SIR model
 
 # A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population.
@@ -259,15 +259,13 @@ end
 # ## Example animation
 model = model_initiation(; params...)
 
-anim = @animate for i in 1:30
-    step!(model, agent_step!, 1)
+anim = @animate for i in 0:30
+    i>0 && step!(model, agent_step!, 1)
     p1 = plotabm(model; ac = infected_fraction, plotargs...)
     title!(p1, "Day $(i)")
 end
 
-gif(anim, "covid_evolution.gif", fps = 5);
-
-# ![](covid_evolution.gif)
+gif(anim, "covid_evolution.gif", fps = 5)
 
 # One can really see "explosive growth" in this animation. Things look quite calm for
 # a while and then suddenly supermarkets have no toilet paper anymore!

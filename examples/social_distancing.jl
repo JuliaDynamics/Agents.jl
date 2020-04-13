@@ -1,4 +1,5 @@
 # # Continuous space social distancing for COVID-19
+# ![](socialdist5.gif)
 
 # This is a model similar to our [SIR model for the spread of COVID-19](@ref).
 # But instead of having different cities, we let agents move in one continuous
@@ -60,14 +61,12 @@ agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(model, as = 4)
     title!(p1, "step $(i)")
     step!(model, agent_step!, 1)
 end
-gif(anim, "socialdist1.gif", fps = 45);
-
-# ![](socialdist1.gif)
+gif(anim, "socialdist1.gif", fps = 45)
 
 # As you can see the agents move in a straight line in periodic space.
 # There is no interaction yet. Let's change that.
@@ -93,9 +92,7 @@ anim = @animate for i in 1:100
     title!(p1, "step $(i)")
     step!(model2, agent_step!, model_step!, 1)
 end
-gif(anim, "socialdist2.gif", fps = 45);
-
-# ![](socialdist2.gif)
+gif(anim, "socialdist2.gif", fps = 45)
 
 # Alright, this works great so far!
 
@@ -127,14 +124,12 @@ end
 
 # let's animate this again
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(model3, as = 4)
     title!(p1, "step $(i)")
     step!(model3, agent_step!, model_step!, 1)
 end
-gif(anim, "socialdist3.gif", fps = 45);
-
-# ![](socialdist3.gif)
+gif(anim, "socialdist3.gif", fps = 45)
 
 # ## Adding Virus spread (SIR)
 # We now add more functionality to these agents, according to the SIR model
@@ -278,14 +273,12 @@ end
 
 sir_model = sir_initiation()
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(sir_model; ac = sir_colors, as = 4)
     title!(p1, "step $(i)")
     step!(sir_model, sir_agent_step!, sir_model_step!, 1)
 end
-gif(anim, "socialdist4.gif", fps = 45);
-
-# ![](socialdist4.gif)
+gif(anim, "socialdist4.gif", fps = 45)
 
 # ## Exponential spread
 # Alright, we can all agree that these animations are cool, but let's do some actual
@@ -350,14 +343,12 @@ p
 
 sir_model = sir_initiation(isolated = 0.8)
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 0:1000
     p1 = plotabm(sir_model; ac = sir_colors, as = 4)
     title!(p1, "step $(i)")
     step!(sir_model, sir_agent_step!, sir_model_step!, 1)
 end
-gif(anim, "socialdist5.gif", fps = 45);
-
-# ![](socialdist5.gif)
+gif(anim, "socialdist5.gif", fps = 45)
 
 # Here we let some 20% of the population *not* be isolated, probably teenagers still partying,
 # or anti-vaxers / flat-earthers that don't believe in science.
@@ -382,5 +373,3 @@ p
 
 # Here you can see the characteristic "flattening the curve" phrase you hear all over the
 # news.
-
-
