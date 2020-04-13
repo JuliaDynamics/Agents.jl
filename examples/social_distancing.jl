@@ -1,5 +1,6 @@
 # # Continuous space social distancing for COVID-19
 # ![](socialdist5.gif)
+
 # This is a model similar to our [SIR model for the spread of COVID-19](@ref).
 # But instead of having different cities, we let agents move in one continuous
 # space and transfer the disease if they come into contact with one another.

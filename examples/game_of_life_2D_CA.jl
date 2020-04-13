@@ -2,7 +2,7 @@
 
 # ![](game_of_life.gif)
 
-# https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+# [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
 using Agents
 using AgentsPlots
