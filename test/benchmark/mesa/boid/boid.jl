@@ -41,7 +41,7 @@ function agent_step!(bird, model)
     # Compute velocity based on rules defined above
     bird.vel = (bird.vel .+ cohere(bird, model, ids) .+ seperate(bird, model, ids)
         .+ match(bird, model, ids))./2
-    bird.vel = bird.vel./norm(bird.vel)
+    bird.vel = bird.vel ./ norm(bird.vel)
     # Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
@@ -53,23 +53,20 @@ get_heading(a1, a2) = a1.pos .- a2.pos
 # cohere computes the average position of neighboring birds, weighted by importance
 function cohere(bird, model, ids)
     N = max(length(ids), 1)
-    birds = model.agents
     coherence = (0.0,0.0)
     for id in ids
-        coherence = coherence .+ get_heading(birds[id], bird)
+        coherence = coherence .+ get_heading(model[id], bird)
     end
-    return coherence./N.*bird.cohere_factor
+    return coherence ./ N .* bird.cohere_factor
 end
 
 # seperate repells the bird away from neighboring birds
 function seperate(bird, model, ids)
     seperation_vec = (0.0,0.0)
     N = max(length(ids), 1)
-    birds = model.agents
     for id in ids
-        neighbor = birds[id]
-        if distance(bird, neighbor) < bird.separation
-            seperation_vec = seperation_vec .- get_heading(neighbor, bird)
+        if distance(bird, model[id]) < bird.separation
+            seperation_vec = seperation_vec .- get_heading(model[id], bird)
         end
     end
     return seperation_vec./N.*bird.seperate_factor
@@ -79,10 +76,9 @@ end
 function match(bird, model, ids)
     match_vector = (0.0,0.0)
     N = max(length(ids), 1)
-    birds = model.agents
     for id in ids
-        match_vector = match_vector .+ birds[id].vel
+        match_vector = match_vector .+ model[id].vel
     end
-    return match_vector./N.*bird.match_factor
+    return match_vector ./ N .* bird.match_factor
 end
 

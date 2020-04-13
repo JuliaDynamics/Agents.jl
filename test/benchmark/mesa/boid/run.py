@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath("."))
 from model import BoidFlockers
 import random
 random.seed(2)
-model = BoidFlockers(100, 100, 100, speed=5, vision=5, separation=1)
+model = BoidFlockers(100, 100, 100, speed=1, vision=5, separation=4, cohere=0.25, separate=0.25, match=0.01)
 
 def runthemodel(model):
   for i in range(100):
