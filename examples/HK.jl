@@ -114,22 +114,23 @@ model[1]
 # Alright, let's wrap everything in a function and do some data collection using [`run!`](@ref).
 
 function model_run(; kwargs...)
-
     model = hk_model(; kwargs...)
-
-    adata = [:new_opinion]
-    agent_data, _ = run!(
-        model,
-        agent_step!,
-        model_step!,
-        terminate,
-        adata = adata,
-    )
+    agent_data, _ = run!(model, agent_step!, model_step!, terminate;
+                         adata = [:new_opinion])
     return agent_data
 end
 
 data = model_run(numagents = 100)
 data[(end - 19):end, :]
+
+# Notice that here we didn't speciy when to collect data, so this is done at every step.
+# Instead, we could collect data only at the final step, by re-using the same
+# function for the `when` argument:
+
+model = hk_model()
+agent_data, _ = run!(model, agent_step!, model_step!, terminate;
+                     adata = [:new_opinion], when = terminate)
+agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
 using Plots, Random
@@ -148,4 +149,3 @@ plt001, plt015, plt03 =
     map(e -> (model_run(ϵ = e), e) |> t -> plotsim(t[1], t[2]), [0.05, 0.15, 0.3])
 
 plot(plt001, plt015, plt03, layout = (3, 1))
-

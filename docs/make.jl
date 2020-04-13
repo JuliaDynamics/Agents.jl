@@ -45,6 +45,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 
 # %%
 cd(@__DIR__)
+ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(modules = [Agents,AgentsPlots],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris and contributors.",

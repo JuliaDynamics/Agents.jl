@@ -99,6 +99,12 @@ function _run!(model, agent_step!, model_step!, n;
         step!(model, agent_step!, model_step!, 1)
         s += 1
     end
+    if should_we_collect(s, model, when)
+        collect_agent_data!(df_agent, model, adata, s)
+    end
+    if should_we_collect(s, model, when_model)
+        collect_model_data!(df_model, model, mdata, s)
+    end
     return df_agent, df_model
 end
 
