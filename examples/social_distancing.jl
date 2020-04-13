@@ -60,7 +60,7 @@ agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(model, as = 4)
     title!(p1, "step $(i)")
     step!(model, agent_step!, 1)
@@ -123,7 +123,7 @@ end
 
 # let's animate this again
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(model3, as = 4)
     title!(p1, "step $(i)")
     step!(model3, agent_step!, model_step!, 1)
@@ -272,7 +272,7 @@ end
 
 sir_model = sir_initiation()
 
-anim = @animate for i in 1:1000
+anim = @animate for i in 1:100
     p1 = plotabm(sir_model; ac = sir_colors, as = 4)
     title!(p1, "step $(i)")
     step!(sir_model, sir_agent_step!, sir_model_step!, 1)
