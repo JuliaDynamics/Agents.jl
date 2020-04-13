@@ -43,29 +43,13 @@ end
 # Now we define a stepping function for the model to apply the rules to agents
 # This function creates a model where all cells are "off".
 function ca_step!(model)
-  new_status = Array{Bool}(undef, nagents(model))
+  new_status = fill(false, nagents(model))
   for (agid, ag) in model.agents
-    neighbors_coords = node_neighbors(ag, model)
-    nlive = 0
-    for nc in neighbors_coords
-      nag = model.agents[Agents.coord2vertex(nc, model)]
-      if nag.status == true
-        nlive += 1
-      end
-    end
-
-    if ag.status == true
-      if nlive > model.properties[:rules][4] || nlive < model.properties[:rules][1]
-        new_status[agid] = false
-      else
+    nlive = live_neighbors(ag, model)
+    if ag.status == true && (nlive ≤ model.properties[:rules][4] && nlive ≥ model.properties[:rules][1])
         new_status[agid] = true
-      end
-    else
-      if nlive ≥ model.properties[:rules][3] && nlive ≤ model.properties[:rules][4]
+    elseif  ag.status == false && (nlive ≥ model.properties[:rules][3] && nlive ≤ model.properties[:rules][4])
         new_status[agid] = true
-      else
-        new_status[agid] = false
-      end
     end
   end
 
@@ -74,7 +58,19 @@ function ca_step!(model)
   end
 end
 
-model = build_model(rules = rules, dims = (100, 100), Moore = true)
+function live_neighbors(ag, model)
+  neighbors_coords = node_neighbors(ag, model)
+  nlive = 0
+  for nc in neighbors_coords
+    nag = model.agents[Agents.coord2vertex((nc[2], nc[1]), model)]
+    if nag.status == true
+      nlive += 1
+    end
+  end
+  return nlive    
+end
+
+model = build_model(rules = rules, dims = (50, 50), Moore = true)
 
 # Let's make some random cells on
 for i in 1:nv(model)
@@ -88,7 +84,7 @@ end
 # We use the `plotabm` function from `AgentsPlots.jl` package for creating an animation.
 
 runs = 30
-as(x) = 1.5
+as(x) = 3
 ac(x) = x[1].status == true ? :black : :white
 am(x) = :square
 anim = @animate for i in 1:runs
@@ -98,5 +94,5 @@ end
 
 # We can now save the animation to a gif.
 
-AgentsPlots.gif(anim, "game_of_life.gif")
+gif(anim, "game_of_life.gif", fps = 5)
 
