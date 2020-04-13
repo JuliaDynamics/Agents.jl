@@ -1,5 +1,7 @@
 # # Forest fire model
 
+# ![](forest.gif)
+
 # The forest fire model is defined as a cellular automaton on a grid.
 # A cell can be empty, occupied by a tree, or burning.
 # The model of [Drossel and Schwabl (1992)](https://en.wikipedia.org/wiki/Forest-fire_model)
@@ -114,12 +116,10 @@ plotabm(forest; ac = treecolor, ms = 5, msw=0)
 cd(@__DIR__) #src
 forest = model_initiation(f = 0.005)
 using Plots # for @animate
-anim = @animate for i in 1:20
-    step!(forest, dummystep, forest_step!, 1)
+anim = @animate for i in 0:20
+    i>0 && step!(forest, dummystep, forest_step!, 1)
     p1 = plotabm(forest; ac = treecolor, ms = 5, msw=0)
     title!(p1, "step $(i)")
 end
 
-gif(anim, "forest.gif", fps = 2);
-
-# ![](forest.gif)
+gif(anim, "forest.gif", fps = 2)
