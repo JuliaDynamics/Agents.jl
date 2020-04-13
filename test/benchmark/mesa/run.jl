@@ -23,11 +23,11 @@ nsteps = 100
 when = 1:nsteps
 
 size_range = 100:100:1000
-model_properties = [counter]
+mdata = [counter]
 results = Float64[]
 for width in size_range
   b = @benchmarkable data=run!(forest, tree_step!, nsteps,
-  model_properties=model_properties, when=when) setup=(forest=model_initiation(d=d,
+  mdata=mdata, when=when) setup=(forest=model_initiation(d=d,
   griddims=($width, height), seed=2))
 
   j = run(b)
