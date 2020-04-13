@@ -51,9 +51,9 @@ end
 # Let's do some data collection, running a large model for a lot of time
 N = 5
 M = 2000
-agent_properties = [:wealth]
+adata = [:wealth]
 model = wealth_model(numagents = M)
-data, _ = run!(model, agent_step!, N; agent_properties = agent_properties)
+data, _ = run!(model, agent_step!, N; adata = adata)
 data[end - 20:end, :]
 
 # What we mostly care about is the distribution of wealth,
@@ -112,8 +112,8 @@ using Random
 Random.seed!(5)
 init_wealth = 4
 model = wealth_model_2D(; wealth = init_wealth)
-agent_properties = [:wealth, :pos]
-data, _ = run!(model, agent_step!, 10; agent_properties = agent_properties, when = [1, 5, 9])
+adata = [:wealth, :pos]
+data, _ = run!(model, agent_step!, 10; adata = adata, when = [1, 5, 9])
 data[(end - 20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
