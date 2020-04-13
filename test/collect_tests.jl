@@ -96,9 +96,9 @@ end
     @test names(agent_data) == [:step, Symbol("mean(weight)")]
     @test maximum(agent_data[!, :step]) == 1820
 
-    @test size(model_data) == (5, 3)
+    @test size(model_data) == (6, 3)
     @test names(model_data) == [:step, :flag, :year]
-    @test maximum(model_data[!, :step]) == 1460
+    @test maximum(model_data[!, :step]) == 1825
 end
 
 @testset "Low-level API for Collections" begin
@@ -156,7 +156,7 @@ parameters = Dict(
         progress = false,
     )
     # 6 is the number of combinations of changing params
-    @test size(data) == (n * 6, 5)
+    @test size(data) == ((n+1) * 6, 5)
     data, _ = paramscan(
         parameters,
         forest_initiation;
@@ -169,7 +169,7 @@ parameters = Dict(
     )
     # 6 is the number of combinations of changing params,
     # 8 is 5+3, where 3 is the number of constant parameters
-    @test size(data) == (n * 6, 8)
+    @test size(data) == ((n+1) * 6, 8)
 
     adata = [:status]
     data, _ = paramscan(
@@ -181,7 +181,7 @@ parameters = Dict(
         adata = adata,
         progress = false,
     )
-    @test unique(data.step) == 0:9
+    @test unique(data.step) == 0:10
     @test unique(data.f) == [0.05, 0.07]
     @test unique(data.d) == [0.6, 0.7, 0.8]
 end
@@ -199,7 +199,7 @@ end
         progress = false,
     )
     # the first 6 is the number of combinations of changing params
-    @test size(data) == ((n * 6) * 3, 6)
+    @test size(data) == (((n+1) * 6) * 3, 6)
 end
 
 @testset "Issue 179 fix" begin
@@ -213,4 +213,3 @@ end
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
-
