@@ -68,7 +68,8 @@ pages = [
         "Conway's game of life" => "examples/game_of_life_2D_CA.md",
         "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
-        "Flocking" => "examples/flock.md"
+        "Flocking" => "examples/flock.md",
+        "Daisyworld" => "examples/daisyworld.md"
         ],
     "API" => "api.md",
     "Comparison against Mesa (Python)" => "mesa.md"

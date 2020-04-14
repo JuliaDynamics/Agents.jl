@@ -33,6 +33,10 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
   `maximum(f)`. This name doesn't play well with anonymous functions!
 
+  **Notice:** Aggregating only works if there are agents to be aggregated over.
+  If you remove agents during model run, you should modify the aggregating functions.
+  *E.g.* instead of passing `mean`, pass `mymean(a) = isempty(a) ? 0.0 : mean(a)`.
+
 * `mdata::Vector` means "model data to collect" and works exactly like `adata`.
   For the model, no aggregation is possible (nothing to aggregate over).
 
