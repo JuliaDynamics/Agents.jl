@@ -4,8 +4,8 @@ using Random
 Random.seed!(10)
 
 println("Forest fire model")
-include("../forest_fire_defs.jl")
-a = @benchmark data=step!(forest, dummystep, forest_step!, 100, Dict(:status => [length, count]), when=1:100) setup=(forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2))
+include("forestFire_defs.jl")
+a = @benchmark data=run!(forest, dummystep, forest_step!, 100, adata=[(:status, length), (:status, count)], when=1:100) setup=(forest = model_initiation(f=0.05, d=0.8, p=0.01, griddims=(20, 20), seed=2))
 display(a)
 
 println("\n\nmove_agent!")
@@ -22,7 +22,7 @@ display(run(a))
 
 println("\n\nSchelling model")
 include("schelling_defs.jl")
-a = @benchmark data=step!(model, agent_step!, 10, [:pos, :mood, :group], when=1:10) setup=(model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=5))
+a = @benchmark data=run!(model, agent_step!, 10, adata=[:pos, :mood, :group], when=1:10) setup=(model = instantiate_modelS(numagents=370, griddims=(20,20), min_to_be_happy=5))
 display(a)
 
 println("\n\nsample! 1 - no space - n == numagents")

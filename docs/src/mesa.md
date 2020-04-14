@@ -1,11 +1,22 @@
 # Agents.jl vs Mesa: speed comparison
 
-Julia code can run much faster than Python. And since Agents.jl is a minimal framework, an agent-based model written in Julia and using Agents.jl can be much faster than the same algorithm written in Python and using the Mesa package. Furthermore, Agents.jl has a considerably simpler API which reduces the learning curve. Mesa, on the other hand, is much stronger in visualizing the simulations.
+Julia code can run much faster than Python. And since Agents.jl is a minimal 
+framework, an agent-based model written in Julia and using Agents.jl can be 
+much faster than the same algorithm written in Python and using the Mesa 
+package. Furthermore, Agents.jl has a considerably simpler API which reduces 
+the learning curve. Mesa, on the other hand, is much stronger in visualizing 
+the simulations.
 
-Here is a benchmark of a version of the forest fire model implemented both in Agents.jl and in Mesa. This version of the model is simpler than the one in the `examples` folder. The Python implementation is taken from Mesa's Github page. The Julia implementation follows the same logic as the Python implementation. The code for both implementations is in the `test/benchmark/mesa` folder on Agents.jl's Github page.
+Here is a benchmark of two models, forest fire and boid flocking,
+implemented in Agents.jl and Mesa 
+(code is available in `test/benchmark/mesa` folder on Agents.jl's Github page).
+We took the Python implementations from Mesa's Github page.
+The Julia implementations follow the same logic as the Python implementations.
+We tested a range of grid sizes and population sizes for the forest fire the boid flocking models, respectively, hence the multiple points.
 
-Briefly, the model has two parameters: grid size and forest density. It initially plants trees on the grid given the density. Next, it sets trees on one edge of the forest on fire. During each iteration, neighboring trees to a tree on fire catch fire and those trees already on fire burn down. There is no growth of trees.
+Figure below shows the ratio of the time it takes to run the models in Mesa
+over the time it takes to run them in Agents.jl. The model implemented in 
+Agents.jl is up to more than 14 times faster than the model implemented in Mesa
+for the forest fire model and about 9 times faster for the boid flocking.
 
-Figure below shows the time it takes for 100 iterations of a "forest fire" model with a density of 0.6 in Mesa and Agents.jl. The x-axis of the figure is different grid sizes. The model implemented in Agents.jl is up to more than 13 times faster than the model implemented in Mesa.
-
-![Speed comparison of a version of "forest fire" model in Agents.jl vs Mesa.](benchmark01.png)
+![Speed comparison of a version of "forest fire" and "boid flocking" models in Agents.jl vs Mesa.](benchmark_mesa.svg)
