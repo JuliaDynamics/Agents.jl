@@ -24,11 +24,11 @@ dd = DataFrame(runtime=vcat(pyresults./jlresults, pyboid./jlboid),
               model = vcat(fill("Forest fire", 4), fill("Boid flocking", 4)))
 
 p = @vlplot(
-  width=100, height=300,
+  width=300, height=90,
   data = dd,
   mark = :circle,
-  x = {"model:n", axis={title=""}},
-  y = {:runtime, axis={title="Mesa/Agents run time"}},
+  y = {"model:n", axis={title=""}},
+  x = {:runtime, axis={title="Mesa/Agents run time"}},
   color = {"model:n", legend=false}
 )
 save("benchmark_mesa.svg", p)
