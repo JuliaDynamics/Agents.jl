@@ -33,19 +33,9 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   use the function [`aggname`](@ref), and create something like `mean(weight)` or
   `maximum(f)`. This name doesn't play well with anonymous functions!
 
-  **A note on aggregation with models containing zero agents**
-
-  If a model uses [`kill_agent!`](@ref) or [`genocide!`](@ref), care must be taken when
-  attempting to collect aggregated data. When there are zero agents in the model
-  it is very hard (if not impossible) to know what the return type should be for a
-  general function. Therefore, it is best practice to provide a default return type
-  in this scenario.
-
-  For example, the `sum` over a variable of type `Float64`:
-
-  ```julia
-  total(v) = length(v) == 0 ? 0.0 : sum(v)
-  ```
+  **Notice:** Aggregating only works if there are agents to be aggregated over.
+  If you remove agents during model run, you should modify the aggregating functions.
+  *E.g.* instead of passing `mean`, pass `mymean(a) = isempty(a) ? 0.0 : mean(a)`.
 
 * `mdata::Vector` means "model data to collect" and works exactly like `adata`.
   For the model, no aggregation is possible (nothing to aggregate over).
