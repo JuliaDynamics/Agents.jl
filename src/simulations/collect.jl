@@ -35,7 +35,7 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
 
   **A note on aggregation with models containing zero agents**
 
-  If a model uses [`kill_agent`](@ref) or [`genocide`](@ref), care must be taken when
+  If a model uses [`kill_agent!`](@ref) or [`genocide!`](@ref), care must be taken when
   attempting to collect aggregated data. When there are zero agents in the model
   it is very hard (if not impossible) to know what the return type should be for a
   general function. Therefore, it is best practice to provide a default return type
