@@ -48,7 +48,7 @@ cd(@__DIR__)
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(modules = [Agents,AgentsPlots],
 sitename= "Agents.jl",
-authors = "Ali R. Vahdati, George Datseris and contributors.",
+authors = "Ali R. Vahdati, George Datseris, Tim DuBois and contributors.",
 doctest = false,
 format = Documenter.HTML(
     prettyurls = CI,
