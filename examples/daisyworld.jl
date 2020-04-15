@@ -1,6 +1,14 @@
 # # Daisyworld
 # ![](daisyworld.gif)
-# ![](details.gif)
+#
+# Study this example to learn about
+# - Simple agent properties with complex model interactions
+# - Rolling your own plots
+# - Collecting data with the low-level data collection API
+# - Simultaneously plotting and collecting data
+# - Analyzing the behavior of a model
+#
+# ## Overview of Daisyworld
 #
 # This model explores the [Gaia hypothesis](https://en.wikipedia.org/wiki/Gaia_hypothesis),
 # which considers the Earth as a single, self-regulating system including both living and
@@ -218,7 +226,9 @@ sum(map(a -> [a.breed == :white, a.breed == :black], allagents(model)))
 # Some of these methods are, for the moment, not implemented in
 # [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl), although this does
 # give us an opportunity to test out some of the new data collection features in
-# Agents.jl v3.0.
+# Agents.jl v3.0. *Think you have a nice recipe for a plot that would help others?*
+# [Send us a pull request](https://github.com/JuliaDynamics/AgentsPlots.jl/pulls)
+# or [open an issue](https://github.com/JuliaDynamics/AgentsPlots.jl/issues).
 
 # First, our fluctuating solar luminosity scenario.
 
@@ -283,29 +293,22 @@ gif(anim, "daisyworld.gif", fps = 10)
 # data, so now if we plot our different properties over the same time period, we can see
 # how each of the values effect Daisyworld as a whole.
 
-p1 = plot(
-    [_ -> model_df[1, :solar_luminosity]],
-    1,
-    legend = false,
-    ylabel = "Solar Luminosity",
-)
-p2 = plot(
-    [_ -> model_df[1, :global_temperature]],
-    1,
-    legend = false,
-    ylabel = "Global Temperature",
-)
-p3 = plot(
-    [_ -> agent_df[1, aggname(white, total)], _ -> agent_df[1, aggname(black, total)]],
-    1,
-    legend = false,
-    ylabel = "Population",
-)
-plot(p1, p2, p3, layout = grid(1, 3), size = (800, 300))
-anim = @animate for t in 1:900
-    push!(p1, t, [model_df[t, :solar_luminosity]])
-    push!(p2, t, [model_df[t, :global_temperature]])
-    push!(p3, t, [agent_df[t, aggname(white, total)], agent_df[t, aggname(black, total)]])
-end
-gif(anim, "details.gif", fps = 10)
+p1 = plot(model_df[!, :solar_luminosity], legend = false, ylabel = "Solar Luminosity")
+p2 = plot(model_df[!, :global_temperature], legend = false, ylabel = "Global Temperature")
+p3 = plot([agent_df[!, aggname(white, total)], agent_df[!, aggname(black, total)]], legend = false, ylabel = "Population")
+plot(p1, p2, p3, layout = grid(3, 1), size = (500, 800))
 
+# We observe an initial period of low solar luminosity which favors a large population of
+# black daisies. The population however is kept in check by competition from white daisies
+# and a semi-stable global temperature regime is reached, fluctuating between ~32 and 41
+# degrees.
+#
+# An increase in solar luminosity forces a population inversion, then a struggle for
+# survival for the black daisies -- which ultimately leads to their extinction. At
+# extremely high solar output the white daisies dominate the landscape, leading to a
+# uniform surface temperature.
+#
+# Finally, as the sun fades back to normal levels, both the temperature and white daisy
+# population struggle to find equilibrium. The counterbalancing force of the black daisies
+# being absent, Daisyworld is plunged into a chaotic regime -- indicating the strong role
+# biodiversity has to play in stabilizing climate.
