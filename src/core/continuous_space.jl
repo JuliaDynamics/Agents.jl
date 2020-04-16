@@ -316,7 +316,7 @@ function elastic_collision!(a, b, f = nothing)
 end
 
 """
-    interacting_pairs(model, r)
+    interacting_pairs(model, r, scheduler = model.scheduler)
 Return an iterator that yields pairs of agents `(a1, a2)` that are closest
 neighbors to each other, within some interaction radius `r`.
 
@@ -326,16 +326,21 @@ some pairwise interaction across all pairs of closest agents once
 is unavoidable when using `agent_step!`).
 
 Internally uses [`nearest_neighbor`](@ref).
+
+# TODO: describe what schedulers do
 """
-function interacting_pairs(model, r)
-  pairs = Tuple{Int, Int}[]
+function interacting_pairs(model, r, scheduler = model.scheduler)
   #TODO: This can be optimized further I assume
-  for id in keys(model.agents)
+  pairs = Tuple{Int, Int}[]
+  for id in scheduler(model)
     # Skip already checked agents
     any(isequal(id), p[2] for p in pairs) && continue
     a1 = model[id]
     a2 = nearest_neighbor(a1, model, r)
-    a2 ≠ nothing && push!(pairs, (id, a2.id))
+    # This line ensures each neighbor exists in only one pair:
+    if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
+      push!(pairs, (id, a2.id))
+    end
   end
   return PairIterator(pairs, model.agents)
 end

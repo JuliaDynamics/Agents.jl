@@ -82,3 +82,27 @@
   @test length(space_neighbors((1, 1), c, r)) == 10
   @test 4 < length(space_neighbors((1, 1), e, r)) < 10
 end
+
+@testset "Interacting pairs" begin
+  space = ContinuousSpace(2, extend = (10, 10), periodic = false, metric = :euclidean)
+  model = ABM(Agent6, space; scheduler = fastest)
+  model = ABM(Agent6, space; scheduler = model -> sort!(collect(keys(model.agents));rev=true))
+  pos = [
+    (7.074386436066224, 4.963014649338054)
+    (5.831962448496828, 4.926297135685473)
+    (5.122087781793935, 5.300031210394806)
+    (3.9715633336430156, 4.8106570045816675)
+  ]
+  for i in 1:4
+    add_agent_pos!(Agent6(i+2, pos[i], (0.0, 0.0), 0), model)
+  end
+  pairs = interacting_pairs(model, 2.0).pairs
+  @test length(pairs) == 2
+  fi = [p[1] for p in pairs]
+  se = [p[2] for p in pairs]
+  @test fi == unique(fi)
+  @test se == unique(se)
+  for id in fi
+    @test id ∉ se
+  end
+end
