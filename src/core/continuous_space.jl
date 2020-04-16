@@ -315,19 +315,27 @@ function elastic_collision!(a, b, f = nothing)
   return true
 end
 
+# TODO: Add "true_interacting_pairs" where it is guaranteed that each agent
+# is only paired with its true nearest neighbor
+
+# TODO: add "all_interacting_pairs", the original function asked in #220
+
 """
     interacting_pairs(model, r, scheduler = model.scheduler)
-Return an iterator that yields pairs of agents `(a1, a2)` that are closest
+Return an iterator that yields unique pairs of agents `(a1, a2)` that are closest
 neighbors to each other, within some interaction radius `r`.
+Each agent can only belong to one pair.
 
 This function is usefully combined with `model_step!`, when one wants to perform
 some pairwise interaction across all pairs of closest agents once
 (and does not want to trigger the event twice, both with `a1` and with `a2`, which
 is unavoidable when using `agent_step!`).
 
-Internally uses [`nearest_neighbor`](@ref).
-
-# TODO: describe what schedulers do
+Notice that the pairs are created by scanning each agent according to the given
+`scheduler`. This is important, because this function does not match each agent with
+its absolute nearest neighbor. Imagine three agents A B C where the
+nearest neighbor of A is B but the nearest neighbor of B is C. If you start with A,
+you get the pair (A, B), but if you start with B you get (B, C).
 """
 function interacting_pairs(model, r, scheduler = model.scheduler)
   #TODO: This can be optimized further I assume
