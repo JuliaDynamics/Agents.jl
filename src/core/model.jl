@@ -72,6 +72,9 @@ to agents. Use `model[id]` to get the agent with the given `id`.
 [`ContinuousSpace`](@ref).
 If it is ommited then all agents are virtually in one node and have no spatial structure.
 
+**Note:** Spaces are mutable objects and are not designed to be shared between models.
+Create a fresh instance of a space with the same properties if you need to do this.
+
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. However, if `properties` is a dictionary with
 key type `Symbol`, or of it is a struct, then the syntax
