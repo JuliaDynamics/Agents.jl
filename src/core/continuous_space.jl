@@ -371,17 +371,47 @@ function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r, schedul
 end
 
 function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
-  for id in keys(model.agents)
-    for nid in space_neighbors(model[id], model, r)
+  for a in allagents(model)
+    for nid in space_neighbors(a, model, r)
       # Sort the pair to overcome any uniqueness issues
-      new_pair = isless(id, nid) ? (id, nid) : (nid, id)
+      new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
       !(new_pair in pairs) && push!(pairs, new_pair)
     end
   end
 end
 
 function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
-    #Unimplemented
+  distances = Vector{Float64}(undef, 0)
+  for a in allagents(model)
+    nid = nearest_neighbor(a, model, r).id
+    nid == nothing && break
+    # Sort the pair to overcome any uniqueness issues
+    new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+    if !(new_pair in pairs)
+      # We also need to check if our current pair is closer to each
+      # other than any pair using our first id already in the list,
+      # so we keep track of nn distances.
+      dist = pair_distance(a.pos, model[nid].pos, model.space.metric)
+
+      idx = findfirst(x->first(new_pair) == x, first.(pairs))
+      if idx == nothing
+        push!(pairs, new_pair)
+        push!(distances, dist)
+      elseif idx != nothing && distances[idx] > dist
+        # Replace this pair, it is not the true neighbor
+        pairs[idx] = new_pair
+        distances[idx] = dist
+      end
+    end
+  end
+end
+
+function pair_distance(pos1, pos2, metric)
+  if metric == :euclidean
+    @inbounds sqrt(sum(abs2.(pos1 .- pos2)))
+  elseif metric == :cityblock
+    @inbounds sum(abs.(pos1 .- pos2))
+  end
 end
 
 struct PairIterator{A}
