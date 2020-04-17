@@ -331,15 +331,33 @@ some pairwise interaction across all pairs of closest agents once
 (and does not want to trigger the event twice, both with `a1` and with `a2`, which
 is unavoidable when using `agent_step!`).
 
-Notice that the pairs are created by scanning each agent according to the given
+Notice that by default the pairs are created by scanning each agent according to the given
 `scheduler`. This is important, because this function does not match each agent with
 its absolute nearest neighbor. Imagine three agents A B C where the
 nearest neighbor of A is B but the nearest neighbor of B is C. If you start with A,
 you get the pair (A, B), but if you start with B you get (B, C).
+
+The keyword argument `method = :scheduler` provides two additional pairing scenarios
+- `:true`: where it is guaranteed that each agent is only paired with its true
+nearest neighbor.
+- `:all`: returns every pair of agents within the interaction radius `r` regardless of
+their nearest neighbor status.
 """
-function interacting_pairs(model, r, scheduler = model.scheduler)
-  #TODO: This can be optimized further I assume
+function interacting_pairs(model, r, scheduler = model.scheduler; method = :scheduler)
+  @assert method ∈ [:scheduler, :true, :all]
   pairs = Tuple{Int, Int}[]
+  if method == :scheduler
+    scheduler_pairs!(pairs, model, r, scheduler)
+  elseif method == :all
+    all_pairs!(pairs, model, r)
+  else
+    true_pairs!(pairs, model, r)
+  end
+  return PairIterator(pairs, model.agents)
+end
+
+function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r, scheduler)
+  #TODO: This can be optimized further I assume
   for id in scheduler(model)
     # Skip already checked agents
     any(isequal(id), p[2] for p in pairs) && continue
@@ -350,7 +368,20 @@ function interacting_pairs(model, r, scheduler = model.scheduler)
       push!(pairs, (id, a2.id))
     end
   end
-  return PairIterator(pairs, model.agents)
+end
+
+function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
+  for id in keys(model.agents)
+    for nid in space_neighbors(model[id], model, r)
+      # Sort the pair to overcome any uniqueness issues
+      new_pair = isless(id, nid) ? (id, nid) : (nid, id)
+      !(new_pair in pairs) && push!(pairs, new_pair)
+    end
+  end
+end
+
+function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
+    #Unimplemented
 end
 
 struct PairIterator{A}
