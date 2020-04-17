@@ -344,7 +344,7 @@ nearest neighbor.
 their nearest neighbor status.
 """
 function interacting_pairs(model, r, scheduler = model.scheduler; method = :scheduler)
-  @assert method ∈ [:scheduler, :true, :all]
+  @assert method ∈ (:scheduler, :true, :all)
   pairs = Tuple{Int, Int}[]
   if method == :scheduler
     scheduler_pairs!(pairs, model, r, scheduler)
