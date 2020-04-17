@@ -408,9 +408,9 @@ end
 
 function pair_distance(pos1, pos2, metric)
   if metric == :euclidean
-    @inbounds sqrt(sum(abs2.(pos1 .- pos2)))
+    sqrt(sum(abs2.(pos1 .- pos2)))
   elseif metric == :cityblock
-    @inbounds sum(abs.(pos1 .- pos2))
+    sum(abs.(pos1 .- pos2))
   end
 end
 
