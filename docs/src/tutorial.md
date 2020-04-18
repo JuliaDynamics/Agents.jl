@@ -9,6 +9,7 @@ Agents.jl structures simulations in three components:
 1. A subtype of [`AbstractAgent`](@ref) for the agents.
 
 To run simulations and collect data, the following are also necessary
+
 4. Stepping functions that controls how the agents and the model evolve.
 5. Specifying which data should be collected from the agents and/or the model.
 
