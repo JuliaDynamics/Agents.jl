@@ -343,7 +343,7 @@ nearest neighbor.
 - `:all`: returns every pair of agents within the interaction radius `r` regardless of
 their nearest neighbor status.
 """
-function interacting_pairs(model, r, scheduler = model.scheduler; method = :scheduler)
+function interacting_pairs(model::ABM, r::Real, scheduler = model.scheduler; method = :scheduler)
   @assert method ∈ (:scheduler, :true, :all)
   pairs = Tuple{Int, Int}[]
   if method == :scheduler
@@ -356,7 +356,7 @@ function interacting_pairs(model, r, scheduler = model.scheduler; method = :sche
   return PairIterator(pairs, model.agents)
 end
 
-function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r, scheduler)
+function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real, scheduler)
   #TODO: This can be optimized further I assume
   for id in scheduler(model)
     # Skip already checked agents
@@ -370,7 +370,7 @@ function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r, schedul
   end
 end
 
-function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
+function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
   for a in allagents(model)
     for nid in space_neighbors(a, model, r)
       # Sort the pair to overcome any uniqueness issues
@@ -380,18 +380,18 @@ function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
   end
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
+function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
   distances = Vector{Float64}(undef, 0)
   for a in allagents(model)
-    nid = nearest_neighbor(a, model, r).id
-    nid == nothing && break
+    nn = nearest_neighbor(a, model, r)
+    nn == nothing && break
     # Sort the pair to overcome any uniqueness issues
-    new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+    new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
     if !(new_pair in pairs)
       # We also need to check if our current pair is closer to each
       # other than any pair using our first id already in the list,
       # so we keep track of nn distances.
-      dist = pair_distance(a.pos, model[nid].pos, model.space.metric)
+      dist = pair_distance(a.pos, model[nn.id].pos, model.space.metric)
 
       idx = findfirst(x->first(new_pair) == x, first.(pairs))
       if idx == nothing
@@ -406,7 +406,7 @@ function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r)
   end
 end
 
-function pair_distance(pos1, pos2, metric)
+function pair_distance(pos1, pos2, metric::Symbol)
   if metric == :euclidean
     sqrt(sum(abs2.(pos1 .- pos2)))
   elseif metric == :cityblock
