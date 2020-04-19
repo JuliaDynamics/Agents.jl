@@ -105,23 +105,7 @@ end
   for id in fi
     @test id ∉ se
   end
-  pairs = interacting_pairs(model, 2.0; method = :all).pairs
+  pairs = interacting_pairs(model, 2.0; all = true).pairs
   @test length(pairs) == 5
   @test (3, 6) ∉ pairs
-
-  space2 = ContinuousSpace(2, extend = (10, 10), periodic = false, metric = :euclidean)
-  model2 = ABM(Agent6, space2; scheduler = by_id)
-  for i in 1:4
-    add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
-  end
-  # Note that length here is not the same as the test above with the same function
-  # call. This is due to the `scheduler` order of operation
-  pairs = interacting_pairs(model2, 2.0).pairs
-  @test length(pairs) == 3
-  # A more expensive search, but guarantees true nearest neighbors
-  pairs = interacting_pairs(model2, 2.0; method = :true).pairs
-  @test length(pairs) == 2
-  pairs = interacting_pairs(model2, 2.0; method = :all).pairs
-  @test length(pairs) == 5
-  @test (1, 4) ∉ pairs
 end
