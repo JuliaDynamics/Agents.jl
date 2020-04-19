@@ -105,7 +105,4 @@ end
   for id in fi
     @test id ∉ se
   end
-  pairs = interacting_pairs(model, 2.0; all = true).pairs
-  @test length(pairs) == 5
-  @test (3, 6) ∉ pairs
 end
