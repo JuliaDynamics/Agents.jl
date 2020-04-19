@@ -13,14 +13,6 @@ To run simulations and collect data, the following are also necessary
 4. Stepping functions that controls how the agents and the model evolve.
 5. Specifying which data should be collected from the agents and/or the model.
 
-With these, Agents.jl's tools manage the rest of the path to producing and processing data, as well as visualizations (Fig. 1).
-
-![Fig. 1. __Path from building a model to gaining information from the model using Agents.jl.__ The box in cyan is what the user has to provide and the boxes in green are what Agents.jl provides.](overviewModel.png)
-
------
-
-![Fig. 2. __Fields of a model object and their types.__](overviewModelObject.png)
-
 ## 1. The model
 
 ```@docs
