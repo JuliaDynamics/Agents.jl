@@ -98,8 +98,7 @@ per node. If there are no empty nodes, the agent wont move.
 Only valid for non-continuous spaces.
 """
 function move_agent_single!(agent::AbstractAgent, model::ABM)
-  # TODO: this inefficient
-  empty_cells = [i for i in 1:length(model.space.agent_positions) if length(model.space.agent_positions[i]) == 0]
+  empty_cells = find_empty_nodes(model)
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     move_agent!(agent, random_node, model)
@@ -227,8 +226,7 @@ Add agent to a random node in the space while respecting a maximum one agent per
 This function throws a warning if no empty nodes remain.
 """
 function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
-  msa = model.space.agent_positions
-  empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
+  empty_cells = find_empty_nodes(model)
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
     add_agent!(agent, random_node, model)
@@ -244,11 +242,10 @@ Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
 function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
-  msa = model.space.agent_positions
-  id = nextid(model)
-  empty_cells = [i for i in 1:length(msa) if length(msa[i]) == 0]
+  empty_cells = find_empty_nodes(model)
   if length(empty_cells) > 0
     random_node = rand(empty_cells)
+    id = nextid(model)
     cnode = correct_pos_type(random_node, model)
     agent = A(id, cnode, properties...; kwargs...)
     add_agent!(agent, random_node, model)
