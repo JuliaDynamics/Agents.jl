@@ -28,7 +28,7 @@ end
 agent_step!(agent, model) =  move_agent!(agent, model, dt)
 
 function model_step!(model)
-  ipairs = interacting_pairs(model, diameter)
+  ipairs = interacting_pairs(model, diameter, :scheduler)
   for (a1, a2) in ipairs
     e = elastic_collision!(a1, a2, :weight)
     if e
@@ -53,7 +53,7 @@ x = count(!isapprox(initvels[id][1], model[id].vel[1]) for id in 1:100)
 
 K0, p0 = kinetic(model)
 step!(model, agent_step!, model_step!, 10)
-ipairs = interacting_pairs(model, diameter)
+ipairs = interacting_pairs(model, diameter, :scheduler)
 @test length(ipairs) ≠ 100
 @test length(ipairs) ≠ 0
 

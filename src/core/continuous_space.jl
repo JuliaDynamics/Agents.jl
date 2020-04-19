@@ -317,7 +317,7 @@ function elastic_collision!(a, b, f = nothing)
 end
 
 """
-    interacting_pairs(model, r, method = :all; scheduler = model.scheduler)
+    interacting_pairs(model, r, method; scheduler = model.scheduler)
 Return an iterator that yields unique pairs of agents `(a1, a2)` that are close
 neighbors to each other, within some interaction radius `r`.
 
@@ -339,7 +339,7 @@ The argument `method` provides three pairing scenarios
   to only one pair. This functionality is useful e.g. when you want some agents to be
   paired "guaranteed", even if some other agents might be nearest to each other.
 """
-function interacting_pairs(model::ABM, r::Real, method = :all; scheduler = model.scheduler)
+function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
   @assert method ∈ (:scheduler, :nearest, :all)
   pairs = Tuple{Int, Int}[]
   if method == :nearest
