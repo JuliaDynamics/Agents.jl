@@ -315,11 +315,6 @@ function elastic_collision!(a, b, f = nothing)
   return true
 end
 
-# TODO: Add "true_interacting_pairs" where it is guaranteed that each agent
-# is only paired with its true nearest neighbor
-
-# TODO: add "all_interacting_pairs", the original function asked in #220
-
 """
     interacting_pairs(model, r, scheduler = model.scheduler)
 Return an iterator that yields unique pairs of agents `(a1, a2)` that are closest
@@ -331,27 +326,26 @@ some pairwise interaction across all pairs of closest agents once
 (and does not want to trigger the event twice, both with `a1` and with `a2`, which
 is unavoidable when using `agent_step!`).
 
-Notice that by default the pairs are created by scanning each agent according to the given
-`scheduler`. This is important, because this function does not match each agent with
-its absolute nearest neighbor. Imagine three agents A B C where the
-nearest neighbor of A is B but the nearest neighbor of B is C. If you start with A,
-you get the pair (A, B), but if you start with B you get (B, C).
-
-The keyword argument `method = :scheduler` provides two additional pairing scenarios
+The keyword argument `method = :true` provides three pairing scenarios
 - `:true`: where it is guaranteed that each agent is only paired with its true
 nearest neighbor.
 - `:all`: returns every pair of agents within the interaction radius `r` regardless of
 their nearest neighbor status.
+- `:scheduler`: all pairs created by scanning each agent according to the given
+`scheduler`. This function does not match each agent with its absolute nearest neighbor.
+Imagine three agents A B C where the nearest neighbor of A is B but the nearest neighbor
+of B is C. If you start with A, you get the pair (A, B), but if you start with B you get
+(B, C).
 """
-function interacting_pairs(model::ABM, r::Real, scheduler = model.scheduler; method = :scheduler)
+function interacting_pairs(model::ABM, r::Real, scheduler = model.scheduler; method = :true)
   @assert method ∈ (:scheduler, :true, :all)
   pairs = Tuple{Int, Int}[]
-  if method == :scheduler
+  if method == :true
+    true_pairs!(pairs, model, r)
+  elseif method == :scheduler
     scheduler_pairs!(pairs, model, r, scheduler)
   elseif method == :all
     all_pairs!(pairs, model, r)
-  else
-    true_pairs!(pairs, model, r)
   end
   return PairIterator(pairs, model.agents)
 end
