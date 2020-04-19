@@ -384,7 +384,7 @@ function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
   distances = Vector{Float64}(undef, 0)
   for a in allagents(model)
     nn = nearest_neighbor(a, model, r)
-    nn == nothing && break
+    nn == nothing && continue
     # Sort the pair to overcome any uniqueness issues
     new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
     if !(new_pair in pairs)
