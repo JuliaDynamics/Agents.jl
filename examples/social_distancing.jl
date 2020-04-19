@@ -80,7 +80,7 @@ gif(anim, "socialdist1.gif", fps = 45)
 # We want all agents to interact in one go, and we want to avoid double interactions
 # (as instructed by [`interacting_pairs`](@ref)), so we define a model step
 function model_step!(model)
-    for (a1, a2) in interacting_pairs(model, 0.012)
+    for (a1, a2) in interacting_pairs(model, 0.012, :nearest)
         elastic_collision!(a1, a2, :mass)
     end
 end
@@ -237,7 +237,7 @@ end
 
 function sir_model_step!(model)
     r = model.interaction_radius
-    for (a1, a2) in interacting_pairs(model, r)
+    for (a1, a2) in interacting_pairs(model, r, :nearest)
         transmit!(a1, a2, model.reinfection_probability)
         elastic_collision!(a1, a2, :mass)
     end

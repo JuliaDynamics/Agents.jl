@@ -31,7 +31,8 @@ the agent's velocity to use [`move_agent!`](@ref).
 The optional argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
 the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
 You can of course change the agents' velocities
-during the agent interaction, the `update_vel!` functionality targets arbitrary forces.
+during the agent interaction, the `update_vel!` functionality targets arbitrary force
+fields acting on the agents (e.g. some magnetic field).
 By default no update is done this way.
 
 ## Keywords
@@ -315,31 +316,44 @@ function elastic_collision!(a, b, f = nothing)
   return true
 end
 
-# TODO: Add "true_interacting_pairs" where it is guaranteed that each agent
-# is only paired with its true nearest neighbor
-
-# TODO: add "all_interacting_pairs", the original function asked in #220
-
 """
-    interacting_pairs(model, r, scheduler = model.scheduler)
-Return an iterator that yields unique pairs of agents `(a1, a2)` that are closest
+    interacting_pairs(model, r, method; scheduler = model.scheduler)
+Return an iterator that yields unique pairs of agents `(a1, a2)` that are close
 neighbors to each other, within some interaction radius `r`.
-Each agent can only belong to one pair.
 
 This function is usefully combined with `model_step!`, when one wants to perform
-some pairwise interaction across all pairs of closest agents once
+some pairwise interaction across all pairs of close agents once
 (and does not want to trigger the event twice, both with `a1` and with `a2`, which
 is unavoidable when using `agent_step!`).
 
-Notice that the pairs are created by scanning each agent according to the given
-`scheduler`. This is important, because this function does not match each agent with
-its absolute nearest neighbor. Imagine three agents A B C where the
-nearest neighbor of A is B but the nearest neighbor of B is C. If you start with A,
-you get the pair (A, B), but if you start with B you get (B, C).
+The argument `method` provides three pairing scenarios
+- `:all`: return every pair of agents that are within radius `r` of each other,
+  not only the nearest ones.
+- `:nearest`: agents are only paired with their true nearest neighbor
+  (existing within radius `r`).
+  Each agent can only belong to one pair, therefore if two agents share the same nearest
+  neighbor only one of them (sorted by id) will be paired.
+- `:scheduler`: agents are scanned according to the given keyword `scheduler`
+  (by default the model's scheduler), and each scanned
+  agent is paired to its nearest neighbor. Similar to `:true`, each agent can belong
+  to only one pair. This functionality is useful e.g. when you want some agents to be
+  paired "guaranteed", even if some other agents might be nearest to each other.
 """
-function interacting_pairs(model, r, scheduler = model.scheduler)
-  #TODO: This can be optimized further I assume
+function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
+  @assert method ∈ (:scheduler, :nearest, :all)
   pairs = Tuple{Int, Int}[]
+  if method == :nearest
+    true_pairs!(pairs, model, r)
+  elseif method == :scheduler
+    scheduler_pairs!(pairs, model, r, scheduler)
+  elseif method == :all
+    all_pairs!(pairs, model, r)
+  end
+  return PairIterator(pairs, model.agents)
+end
+
+function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real, scheduler)
+  #TODO: This can be optimized further I assume
   for id in scheduler(model)
     # Skip already checked agents
     any(isequal(id), p[2] for p in pairs) && continue
@@ -350,7 +364,50 @@ function interacting_pairs(model, r, scheduler = model.scheduler)
       push!(pairs, (id, a2.id))
     end
   end
-  return PairIterator(pairs, model.agents)
+end
+
+function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
+  for a in allagents(model)
+    for nid in space_neighbors(a, model, r)
+      # Sort the pair to overcome any uniqueness issues
+      new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+      !(new_pair in pairs) && push!(pairs, new_pair)
+    end
+  end
+end
+
+function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
+  distances = Vector{Float64}(undef, 0)
+  for a in allagents(model)
+    nn = nearest_neighbor(a, model, r)
+    nn == nothing && continue
+    # Sort the pair to overcome any uniqueness issues
+    new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
+    if new_pair ∉ pairs
+      # We also need to check if our current pair is closer to each
+      # other than any pair using our first id already in the list,
+      # so we keep track of nn distances.
+      dist = pair_distance(a.pos, model[nn.id].pos, model.space.metric)
+
+      idx = findfirst(x->first(new_pair) == x, first.(pairs))
+      if idx == nothing
+        push!(pairs, new_pair)
+        push!(distances, dist)
+      elseif idx != nothing && distances[idx] > dist
+        # Replace this pair, it is not the true neighbor
+        pairs[idx] = new_pair
+        distances[idx] = dist
+      end
+    end
+  end
+end
+
+function pair_distance(pos1, pos2, metric::Symbol)
+  if metric == :euclidean
+    sqrt(sum(abs2.(pos1 .- pos2)))
+  elseif metric == :cityblock
+    sum(abs.(pos1 .- pos2))
+  end
 end
 
 struct PairIterator{A}
