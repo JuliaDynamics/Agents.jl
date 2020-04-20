@@ -335,90 +335,90 @@ The argument `method` provides three pairing scenarios
   neighbor only one of them (sorted by id) will be paired.
 - `:scheduler`: agents are scanned according to the given keyword `scheduler`
   (by default the model's scheduler), and each scanned
-  agent is paired to its nearest neighbor. Similar to `:true`, each agent can belong
+  agent is paired to its nearest neighbor. Similar to `:nearest`, each agent can belong
   to only one pair. This functionality is useful e.g. when you want some agents to be
   paired "guaranteed", even if some other agents might be nearest to each other.
 """
 function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
-  @assert method ∈ (:scheduler, :nearest, :all)
-  pairs = Tuple{Int, Int}[]
-  if method == :nearest
-    true_pairs!(pairs, model, r)
-  elseif method == :scheduler
-    scheduler_pairs!(pairs, model, r, scheduler)
-  elseif method == :all
-    all_pairs!(pairs, model, r)
-  end
-  return PairIterator(pairs, model.agents)
+    @assert method ∈ (:scheduler, :nearest, :all)
+    pairs = Tuple{Int,Int}[]
+    if method == :nearest
+        true_pairs!(pairs, model, r)
+    elseif method == :scheduler
+        scheduler_pairs!(pairs, model, r, scheduler)
+    elseif method == :all
+        all_pairs!(pairs, model, r)
+    end
+    return PairIterator(pairs, model.agents)
 end
 
-function scheduler_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real, scheduler)
-  #TODO: This can be optimized further I assume
-  for id in scheduler(model)
-    # Skip already checked agents
-    any(isequal(id), p[2] for p in pairs) && continue
-    a1 = model[id]
-    a2 = nearest_neighbor(a1, model, r)
-    # This line ensures each neighbor exists in only one pair:
-    if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
-      push!(pairs, (id, a2.id))
+function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+    #TODO: This can be optimized further I assume
+    for id in scheduler(model)
+        # Skip already checked agents
+        any(isequal(id), p[2] for p in pairs) && continue
+        a1 = model[id]
+        a2 = nearest_neighbor(a1, model, r)
+        # This line ensures each neighbor exists in only one pair:
+        if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
+            push!(pairs, (id, a2.id))
+        end
     end
-  end
 end
 
-function all_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
-  for a in allagents(model)
-    for nid in space_neighbors(a, model, r)
-      # Sort the pair to overcome any uniqueness issues
-      new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
-      !(new_pair in pairs) && push!(pairs, new_pair)
+function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+    for a in allagents(model)
+        for nid in space_neighbors(a, model, r)
+            # Sort the pair to overcome any uniqueness issues
+            new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+            new_pair ∉ pairs && push!(pairs, new_pair)
+        end
     end
-  end
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM, r::Real)
-  distances = Vector{Float64}(undef, 0)
-  for a in allagents(model)
-    nn = nearest_neighbor(a, model, r)
-    nn == nothing && continue
-    # Sort the pair to overcome any uniqueness issues
-    new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
-    if new_pair ∉ pairs
-      # We also need to check if our current pair is closer to each
-      # other than any pair using our first id already in the list,
-      # so we keep track of nn distances.
-      dist = pair_distance(a.pos, model[nn.id].pos, model.space.metric)
+function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+    distances = Vector{Float64}(undef, 0)
+    for a in allagents(model)
+        nn = nearest_neighbor(a, model, r)
+        nn == nothing && continue
+        # Sort the pair to overcome any uniqueness issues
+        new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
+        if new_pair ∉ pairs
+            # We also need to check if our current pair is closer to each
+            # other than any pair using our first id already in the list,
+            # so we keep track of nn distances.
+            dist = pair_distance(a.pos, model[nn.id].pos, model.space.metric)
 
-      idx = findfirst(x->first(new_pair) == x, first.(pairs))
-      if idx == nothing
-        push!(pairs, new_pair)
-        push!(distances, dist)
-      elseif idx != nothing && distances[idx] > dist
-        # Replace this pair, it is not the true neighbor
-        pairs[idx] = new_pair
-        distances[idx] = dist
-      end
+            idx = findfirst(x -> first(new_pair) == x, first.(pairs))
+            if idx == nothing
+                push!(pairs, new_pair)
+                push!(distances, dist)
+            elseif idx != nothing && distances[idx] > dist
+                # Replace this pair, it is not the true neighbor
+                pairs[idx] = new_pair
+                distances[idx] = dist
+            end
+        end
     end
-  end
 end
 
 function pair_distance(pos1, pos2, metric::Symbol)
-  if metric == :euclidean
-    sqrt(sum(abs2.(pos1 .- pos2)))
-  elseif metric == :cityblock
-    sum(abs.(pos1 .- pos2))
-  end
+    if metric == :euclidean
+        sqrt(sum(abs2.(pos1 .- pos2)))
+    elseif metric == :cityblock
+        sum(abs.(pos1 .- pos2))
+    end
 end
 
 struct PairIterator{A}
-  pairs::Vector{Tuple{Int, Int}}
-  agents::Dict{Int, A}
+    pairs::Vector{Tuple{Int,Int}}
+    agents::Dict{Int,A}
 end
 
 Base.length(iter::PairIterator) = length(iter.pairs)
 function Base.iterate(iter::PairIterator, i = 1)
-  i > length(iter) && return nothing
-  p = iter.pairs[i]
-  id1, id2 = p
-  return (iter.agents[id1], iter.agents[id2]), i+1
+    i > length(iter) && return nothing
+    p = iter.pairs[i]
+    id1, id2 = p
+    return (iter.agents[id1], iter.agents[id2]), i + 1
 end
