@@ -41,7 +41,7 @@ function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
       for t in 2:noccurances
         newagent = deepcopy(model.agents[id])
         newagent.id = n
-        add_agent_pos!(newagent, model)
+        add_agent!(newagent, model)
         n += 1
       end
     end
