@@ -109,22 +109,22 @@ end
 #######################################################################################
 # Adding agents
 #######################################################################################
-# TODO: the Source code of `add_agent!` for discrete space is overly complex.
-# Similarly with the continuous
-# space case, `add_agent_pos!` should be defined first and be the low-level method
-# all other methods call. The other `add_agent!` methods simply prepare an agent with
-# appropriate position and give it to `add_agent_pos!`
 
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::AbstractAgent, model::ABM)
-  if :pos ∈ fieldnames(typeof(agent))
-    return add_agent!(agent, agent.pos, model)
-  else
-    return add_agent!(agent, model)
-  end
+function add_agent_pos!(agent::A, model::ABM{A,<:GridSpace}) where {A<:AbstractAgent}
+    model[agent.id] = agent
+    nn = coord2vertex(agent.pos, model)
+    push!(model.space.agent_positions[nn], agent.id)
+    return model[agent.id]
+end
+
+function add_agent_pos!(agent::A, model::ABM{A,<:GraphSpace}) where {A<:AbstractAgent}
+    model[agent.id] = agent
+    push!(model.space.agent_positions[agent.pos], agent.id)
+    return model[agent.id]
 end
 
 """
@@ -136,30 +136,34 @@ The `agent`'s position is always updated to match `position`, and therefore for 
 the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
 the `agent`'s position.
 """
-function add_agent!(agent::A, pos::Tuple, model::ABM{A, <: DiscreteSpace}) where {A}
-  # node number from x, y, z coordinates
-  nodenumber = coord2vertex(pos, model)
-  add_agent!(agent, nodenumber, model)
+function add_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    agent.pos = correct_pos_type(rand(1:nv(model)), model)
+    add_agent_pos!(agent, model)
 end
 
-function add_agent!(agent::A, pos::Integer, model::ABM{A, <: DiscreteSpace}) where {A}
-  push!(model.space.agent_positions[pos], agent.id)
-  model[agent.id] = agent
-  # update agent position
-  agent.pos = correct_pos_type(pos, model)
-  return agent
+function add_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
+    model[agent.id] = agent
+    return model[agent.id]
 end
 
-function add_agent!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
-  nodenumber = rand(1:nv(model.space))
-  add_agent!(agent, nodenumber, model)
+function add_agent!(
+    agent::A,
+    pos::NTuple{D,Integer},
+    model::ABM{A,<:DiscreteSpace},
+) where {A<:AbstractAgent,D}
+    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
+    agent.pos = pos
+    add_agent_pos!(agent, model)
 end
 
-function add_agent!(agent::A, model::ABM{A, <: Nothing}) where {A}
-  model[agent.id] = agent
-  return agent
+function add_agent!(
+    agent::A,
+    pos::Integer,
+    model::ABM{A,<:DiscreteSpace},
+) where {A<:AbstractAgent}
+    agent.pos = correct_pos_type(pos, model)
+    add_agent_pos!(agent, model)
 end
-
 
 """
     add_agent!([pos,] model::ABM, args...; kwargs...)
@@ -190,27 +194,33 @@ add_agent!(5, model, 0.5, true) # add at node 5
 add_agent!(model; w = 0.5, k =true) # use keywords: weight becomes 0.5
 ```
 """
-function add_agent!(node, model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
+function add_agent!(
+    model::ABM{A,<:DiscreteSpace},
+    properties...;
+    kwargs...,
+) where {A<:AbstractAgent}
+    add_agent!(rand(1:nv(model)), model, properties...; kwargs...)
+end
+
+function add_agent!(
+    model::ABM{A,Nothing},
+    properties...;
+    kwargs...,
+) where {A<:AbstractAgent}
+    id = nextid(model)
+    model[id] = A(id, properties...; kwargs...)
+    return model[id]
+end
+
+function add_agent!(
+    node,
+    model::ABM{A,<:DiscreteSpace},
+    properties...;
+    kwargs...,
+) where {A<:AbstractAgent}
     id = nextid(model)
     cnode = correct_pos_type(node, model)
-    agent = A(id, cnode, properties...; kwargs...)
-    add_agent!(agent, cnode, model)
-end
-
-function add_agent!(model::ABM{A, Nothing}, properties...; kwargs...) where {A}
-  @assert model.space == nothing
-  id = nextid(model)
-  model[id] = A(id, properties...; kwargs...)
-  return model[id]
-end
-
-function add_agent!(model::ABM{A, S}, properties...; kwargs...) where {A, S<:AbstractSpace}
-  id = nextid(model)
-  n = rand(1:nv(model))
-  cnode = correct_pos_type(n, model)
-  model[id] = A(id, cnode, properties...; kwargs...)
-  push!(model.space.agent_positions[n], id)
-  return model[id]
+    add_agent_pos!(A(id, cnode, properties...; kwargs...), model)
 end
 
 """
@@ -225,15 +235,14 @@ nextid(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
 Add agent to a random node in the space while respecting a maximum one agent per node.
 This function throws a warning if no empty nodes remain.
 """
-function add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) where {A}
-  empty_cells = find_empty_nodes(model)
-  if length(empty_cells) > 0
-    random_node = rand(empty_cells)
-    add_agent!(agent, random_node, model)
-  else
-    @warn "No empty nodes found for `add_agent_single!`."
-  end
-  return agent
+function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        agent.pos = correct_pos_type(rand(empty_cells), model)
+        add_agent_pos!(agent, model)
+    else
+        @warn "No empty nodes found for `add_agent_single!`."
+    end
 end
 
 """
@@ -241,14 +250,13 @@ end
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
-function add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...) where {A}
-  empty_cells = find_empty_nodes(model)
-  if length(empty_cells) > 0
-    random_node = rand(empty_cells)
-    id = nextid(model)
-    cnode = correct_pos_type(random_node, model)
-    agent = A(id, cnode, properties...; kwargs...)
-    add_agent!(agent, random_node, model)
-    return agent
-  end
+function add_agent_single!(
+    model::ABM{A,<:DiscreteSpace},
+    properties...;
+    kwargs...,
+) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        add_agent!(rand(empty_cells), model, properties...; kwargs...)
+    end
 end
