@@ -1,8 +1,14 @@
 #=
 This file establishes the agent-space interaction API.
 =#
-export move_agent!, add_agent!, add_agent_single!, add_agent_pos!,
-move_agent_single!, kill_agent!, genocide!, nextid
+export move_agent!,
+    add_agent!,
+    add_agent_single!,
+    add_agent_pos!,
+    move_agent_single!,
+    kill_agent!,
+    genocide!,
+    nextid
 
 #######################################################################################
 # Killing agents
@@ -12,17 +18,19 @@ move_agent_single!, kill_agent!, genocide!, nextid
 
 Remove an agent from model, and from the space if the model has a space.
 """
-function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:AbstractSpace}
-  agentnode = coord2vertex(agent.pos, model)
-   # remove from the space
-  splice!(agent_positions(model)[agentnode],
-          findfirst(a->a==agent.id, agent_positions(model)[agentnode]))
-  delete!(model.agents, agent.id)
-  return model
+function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    agentnode = coord2vertex(agent.pos, model)
+    # remove from the space
+    splice!(
+        agent_positions(model)[agentnode],
+        findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
+    )
+    delete!(model.agents, agent.id)
+    return model
 end
 
-function kill_agent!(agent::A, model::ABM{A, Nothing}) where A
-  delete!(model.agents, agent.id)
+function kill_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
+    delete!(model.agents, agent.id)
 end
 
 kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
@@ -32,13 +40,16 @@ kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
     genocide!(model::ABM)
 Kill all the agents of the model.
 """
-genocide!(model::ABM) = for (i, a) in model.agents; kill_agent!(a, model); end
+genocide!(model::ABM) =
+    for a in allagents(model)
+        kill_agent!(a, model)
+    end
 
 """
     genocide!(model::ABM, n::Int)
 Kill the agents of the model whose IDs are larger than n.
 """
-function genocide!(model::ABM, n::Int)
+function genocide!(model::ABM, n::Integer)
     for (k, v) in model.agents
         k > n && kill_agent!(v, model)
     end
@@ -49,8 +60,8 @@ end
 Kill all agents where the function `f(agent)` returns `true`.
 """
 function genocide!(model::ABM, f::Function)
-    for (k, v) in model.agents
-        f(v) && kill_agent!(v, model)
+    for a in allagents(model)
+        f(a) && kill_agent!(a, model)
     end
 end
 
@@ -65,29 +76,40 @@ in the model and remove it from the old position
 (also update the agent to have the new position).
 `pos` must be the appropriate position type depending on the space type.
 """
-function move_agent!(agent::AbstractAgent, pos::Tuple, model::ABM)
-  nodenumber = coord2vertex(pos, model)
-  move_agent!(agent, nodenumber, model)
+function move_agent!(
+    agent::A,
+    pos::NTuple{D,Integer},
+    model::ABM{A,<:DiscreteSpace},
+) where {A<:AbstractAgent,D}
+    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
+    nodenumber = coord2vertex(pos, model)
+    move_agent!(agent, nodenumber, model)
 end
 
 function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
-  # remove agent from old position
-  if typeof(agent.pos) <: Tuple
-    oldnode = coord2vertex(agent.pos, model)
-    splice!(model.space.agent_positions[oldnode], findfirst(a->a==agent.id, model.space.agent_positions[oldnode]))
-    agent.pos = vertex2coord(pos, model)  # update agent position
-  else
-    splice!(model.space.agent_positions[agent.pos], findfirst(a->a==agent.id, model.space.agent_positions[agent.pos]))
-    agent.pos = pos
-  end
-  push!(model.space.agent_positions[pos], agent.id)
-  return agent
+    # remove agent from old position
+    if typeof(agent.pos) <: Tuple
+        oldnode = coord2vertex(agent.pos, model)
+        splice!(
+            model.space.agent_positions[oldnode],
+            findfirst(a -> a == agent.id, model.space.agent_positions[oldnode]),
+        )
+        agent.pos = vertex2coord(pos, model)  # update agent position
+    else
+        splice!(
+            model.space.agent_positions[agent.pos],
+            findfirst(a -> a == agent.id, model.space.agent_positions[agent.pos]),
+        )
+        agent.pos = pos
+    end
+    push!(model.space.agent_positions[pos], agent.id)
+    return agent
 end
 
 function move_agent!(agent::AbstractAgent, model::ABM)
-  nodenumber = rand(1:nv(model.space))
-  move_agent!(agent, nodenumber, model)
-  return agent
+    nodenumber = rand(1:nv(model.space))
+    move_agent!(agent, nodenumber, model)
+    return agent
 end
 
 """
@@ -98,12 +120,12 @@ per node. If there are no empty nodes, the agent wont move.
 Only valid for non-continuous spaces.
 """
 function move_agent_single!(agent::AbstractAgent, model::ABM)
-  empty_cells = find_empty_nodes(model)
-  if length(empty_cells) > 0
-    random_node = rand(empty_cells)
-    move_agent!(agent, random_node, model)
-  end
-  return agent
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        random_node = rand(empty_cells)
+        move_agent!(agent, random_node, model)
+    end
+    return agent
 end
 
 #######################################################################################
@@ -114,16 +136,10 @@ end
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::A, model::ABM{A,<:GridSpace}) where {A<:AbstractAgent}
+function add_agent_pos!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
     model[agent.id] = agent
     nn = coord2vertex(agent.pos, model)
     push!(model.space.agent_positions[nn], agent.id)
-    return model[agent.id]
-end
-
-function add_agent_pos!(agent::A, model::ABM{A,<:GraphSpace}) where {A<:AbstractAgent}
-    model[agent.id] = agent
-    push!(model.space.agent_positions[agent.pos], agent.id)
     return model[agent.id]
 end
 
@@ -260,3 +276,4 @@ function add_agent_single!(
         add_agent!(rand(empty_cells), model, properties...; kwargs...)
     end
 end
+
