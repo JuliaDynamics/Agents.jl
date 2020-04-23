@@ -24,11 +24,25 @@ mutable struct Grass <: AbstractAgent
     countdown::Int
 end
 
+# randomize with the constraint that types must be together
+function by_breed(model::ABM)
+    types = [Grass,Wolf,Sheep]
+    shuffle!(types)
+    order = Int[]
+    ids = collect(keys(model.agents))
+    for t in types
+        type_ids = filter(x->isa(model.agents[x], t), ids)
+        setdiff!(ids, type_ids)
+        push!(order, shuffle!(type_ids)...)
+    end
+    return order
+end
+
 function initialize_model(;n_sheep=100, n_wolves=50, dims=(20,20), regrowth_time=30,
     Δenergy_sheep=4, Δenergy_wolf=20, sheep_reproduce=.04, wolf_reproduce=.05)
     space = GridSpace(dims)
     properties = Dict(:step=>0)
-    model = ABM(Union{Sheep,Wolf,Grass}, space, properties=properties, scheduler=random_activation, warn=false)
+    model = ABM(Union{Sheep,Wolf,Grass}, space, properties=properties, scheduler=by_breed, warn=false)
     id = 0
     for _ in 1:n_sheep
         id += 1
