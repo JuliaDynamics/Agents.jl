@@ -26,16 +26,14 @@ end
 
 # randomize with the constraint that types must be together
 function by_breed(model::ABM)
-    types = [Grass,Wolf,Sheep]
-    shuffle!(types)
-    order = Int[]
-    ids = collect(keys(model.agents))
-    for t in types
-        type_ids = filter(x->isa(model.agents[x], t), ids)
-        setdiff!(ids, type_ids)
-        push!(order, shuffle!(type_ids)...)
+    c = [Int[], Int[], Int[]] # first=wolf, second=sheep
+    for a in allagents(model)
+        j = a isa Wolf ? 1 : a isa Sheep ? 2 : 3
+        push!(c[j], a.id)
     end
-    return order
+    for i in c; shuffle!(i); end
+    shuffle!(c)
+    return vcat(c...)
 end
 
 function initialize_model(;n_sheep=100, n_wolves=50, dims=(20,20), regrowth_time=30,
