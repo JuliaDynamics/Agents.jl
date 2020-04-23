@@ -61,12 +61,12 @@ agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 
-anim = @animate for i in 1:100
+anim = @animate for i in 1:2:100
     p1 = plotabm(model, as = 4)
     title!(p1, "step $(i)")
-    step!(model, agent_step!, 1)
+    step!(model, agent_step!, 2)
 end
-gif(anim, "socialdist1.gif", fps = 45)
+gif(anim, "socialdist1.gif", fps = 25)
 
 # As you can see the agents move in a straight line in periodic space.
 # There is no interaction yet. Let's change that.
@@ -87,12 +87,12 @@ end
 
 model2 = ball_model()
 
-anim = @animate for i in 1:100
+anim = @animate for i in 1:2:100
     p1 = plotabm(model2, as = 4)
     title!(p1, "step $(i)")
-    step!(model2, agent_step!, model_step!, 1)
+    step!(model2, agent_step!, model_step!, 2)
 end
-gif(anim, "socialdist2.gif", fps = 45)
+gif(anim, "socialdist2.gif", fps = 25)
 
 # Alright, this works great so far!
 
@@ -124,12 +124,12 @@ end
 
 # let's animate this again
 
-anim = @animate for i in 1:100
+anim = @animate for i in 1:2:100
     p1 = plotabm(model3, as = 4)
     title!(p1, "step $(i)")
-    step!(model3, agent_step!, model_step!, 1)
+    step!(model3, agent_step!, model_step!, 2)
 end
-gif(anim, "socialdist3.gif", fps = 45)
+gif(anim, "socialdist3.gif", fps = 25)
 
 # ## Adding Virus spread (SIR)
 # We now add more functionality to these agents, according to the SIR model
@@ -273,12 +273,12 @@ end
 
 sir_model = sir_initiation()
 
-anim = @animate for i in 1:100
+anim = @animate for i in 1:2:100
     p1 = plotabm(sir_model; ac = sir_colors, as = 4)
     title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 1)
+    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
 end
-gif(anim, "socialdist4.gif", fps = 45)
+gif(anim, "socialdist4.gif", fps = 25)
 
 # ## Exponential spread
 # Alright, we can all agree that these animations are cool, but let's do some actual
@@ -343,12 +343,12 @@ p
 
 sir_model = sir_initiation(isolated = 0.8)
 
-anim = @animate for i in 0:1000
+anim = @animate for i in 0:2:1000
     p1 = plotabm(sir_model; ac = sir_colors, as = 4)
     title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 1)
+    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
 end
-gif(anim, "socialdist5.gif", fps = 45)
+gif(anim, "socialdist5.gif", fps = 25)
 
 # Here we let some 20% of the population *not* be isolated, probably teenagers still partying,
 # or anti-vaxers / flat-earthers that don't believe in science.
