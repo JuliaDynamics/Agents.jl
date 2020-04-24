@@ -135,8 +135,8 @@ function reproduce!(agent, model)
     id = nextid(model)
     energy = rand(1:agent.Δenergy*2) - 1
     A = typeof(agent)
-    spawn = A(id, (0,0), energy, agent.reproduction_prob, agent.Δenergy)
-    add_agent!(spawn, model)
+    spawn = A(id, agent.pos, energy, agent.reproduction_prob, agent.Δenergy)
+    add_agent_pos!(spawn, model)
     return nothing
 end
 
