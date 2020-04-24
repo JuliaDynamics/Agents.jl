@@ -38,7 +38,7 @@ end
 
 function initialize_model(;n_sheep=100, n_wolves=50, dims=(20,20), regrowth_time=30,
     Δenergy_sheep=4, Δenergy_wolf=20, sheep_reproduce=.04, wolf_reproduce=.05)
-    space = GridSpace(dims)
+    space = GridSpace(dims, moore = true)
     properties = Dict(:step=>0)
     model = ABM(Union{Sheep,Wolf,Grass}, space, properties=properties, scheduler=by_breed, warn=false)
     id = 0
@@ -140,25 +140,17 @@ function reproduce!(agent, model)
     return nothing
 end
 
-function model_step!(model, df)
-    agents = values(model.agents)
-    model.properties[:step] += 1
-    step = model.properties[:step]
-    n_sheep = count(x->typeof(x) == Sheep, agents)
-    n_wolves = count(x->typeof(x) == Wolf, agents)
-    n_grass = count(x->(typeof(x) == Grass) && x.fully_grown, agents)
-    push!(df, [step n_sheep n_wolves n_grass])
-end
-
-
 n_steps = 500
 Random.seed!(23182)
 model = initialize_model()
-results = DataFrame(step=Int[], n_sheep=Int[], n_wolves=Int[], n_grass=Int[])
-step!(model, agent_step!, x->model_step!(x, results), n_steps)
+sheep(a) = typeof(a) == Sheep
+wolves(a) = typeof(a) == Wolf
+grass(a) = typeof(a) == Grass && a.fully_grown
+adata = [(sheep, count), (wolves, count), (grass, count)]
+results, _ = run!(model, agent_step!, n_steps; adata = adata)
 
 pyplot()
-@df results plot(:step, :n_sheep, grid=false, xlabel="Step",
+@df results plot(:step, cols(Symbol("count(sheep)")), grid=false, xlabel="Step",
     ylabel="Population", label="Sheep")
-@df results plot!(:step, :n_wolves, label="Wolves")
-@df results plot!(:step, :n_grass, label="Grass")
+@df results plot!(:step, cols(Symbol("count(wolves)")), label="Wolves")
+@df results plot!(:step, cols(Symbol("count(grass)")), label="Grass")
