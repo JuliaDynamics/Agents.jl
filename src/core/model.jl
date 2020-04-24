@@ -192,11 +192,24 @@ Checks for mutability and existence and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
+    if isconcretetype(A)
+        do_checks(A, space, warn)
+    else
+        warn && @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
+        for type in union_types(A)
+            do_checks(type, space, warn)
+        end
+    end
+end
+
+"""
+    do_checks(agent, space)
+Helper function for `agent_validator`.
+"""
+function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     if warn
-        isconcretetype(A) || @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
         isbitstype(A) && @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
-    isconcretetype(A) || return # no checks can be done for union types
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space != nothing
@@ -218,7 +231,6 @@ function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgen
         end
     end
 end
-
 """
     random_agent(model)
 Return a random agent from the model.

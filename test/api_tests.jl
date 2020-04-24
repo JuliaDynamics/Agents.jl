@@ -69,6 +69,10 @@ end
     #Type inferance using an instance can help users here
     agent = ParametricAgent(1, (1,1), 5, "Info")
     @test Agents.agenttype(ABM(agent, GridSpace((1,1)))) <: AbstractAgent
+    #Mixed agents
+    @test Agents.agenttype(ABM(Union{Agent0,Agent1}; warn=false)) <: AbstractAgent
+    @test_logs (:warn, "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.") ABM(Union{Agent0,Agent1})
+    @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
 end
 
 model1 = ABM(Agent1, GridSpace((3,3)))
