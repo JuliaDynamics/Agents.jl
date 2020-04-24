@@ -16,6 +16,7 @@
 * `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs.
 * Added example of flocking birds in `ContinuousSpace` and Daisyworld in `GridSpace`.
 - Collection of model and agent data simultaneously is now possible using the `mdata` and `adata` keywords (respectively) used in conjunction with the revamped data collection scheme (see below).
+- Better support for mixed-ABMs and a new `by_type` scheduler.
 
 ## Breaking Changes
 * Deprecated `Space` in favor of the individual spaces: `Nothing, GridSpace, GraphSpace, ContinuousSpace`.
