@@ -87,49 +87,6 @@ pos1 = get_node_contents((1,1), model1)
 pos2 = get_node_contents((2,2), model1)
 @test pos2[1] == 1
 
-# %% Scheduler tests
-N = 1000
-
-# by_id
-model = ABM(Agent0; scheduler = by_id)
-for i in 1:N; add_agent!(model); end
-@test sort!(collect(keys(model.agents))) == 1:N
-@test model.scheduler(model) == 1:N
-
-# fastest
-Random.seed!(12)
-model = ABM(Agent0; scheduler = fastest)
-for i in 1:N; add_agent!(model); end
-@test sort!(collect(model.scheduler(model))) == 1:N
-
-# random
-Random.seed!(12)
-model = ABM(Agent0; scheduler = random_activation)
-for i in 1:N; add_agent!(model); end
-@test model.scheduler(model)[1:3] == [913, 522, 637] # reproducibility test
-
-# partial
-Random.seed!(12)
-model = ABM(Agent0; scheduler = partial_activation(0.1))
-for i in 1:N; add_agent!(model); end
-
-a = model.scheduler(model)
-@test length(a) < N
-@test a[1] == 74 # reproducibility test
-
-# by property
-model = ABM(Agent2; scheduler = property_activation(:weight))
-for i in 1:N; add_agent!(model, rand()/rand()); end
-
-Random.seed!(12)
-a = model.scheduler(model)
-
-ids = collect(keys(model.agents))
-properties = [model.agents[id].weight for id in ids]
-
-@test ids[sortperm(properties)] == a
-
-
 # %% get/set testing
 model = ABM(Agent1, GridSpace((10,10)); properties=Dict(:number => 1, :nested => BadAgent(1,1)))
 add_agent!(model)
@@ -320,9 +277,10 @@ end
   @test nagents(model) == 5
 
   # Testing genocide!(model::ABM, f::Function) when the function is invalid (i.e. does not return a bool)
+  Random.seed!(1565)
   for i in 1:20
-    agent = Agent3(i, (1,1), i*2)
-    add_agent_single!(agent, model)
+    agent = Agent3(i, (rand(1:10),rand(1:10)), i*2)
+    add_agent_pos!(agent, model)
   end
   @test_throws TypeError genocide!(model, a -> a.id)
 
@@ -336,5 +294,5 @@ end
     end
   end
   genocide!(model, complex_logic)
-  @test nagents(model) == 17
+  @test nagents(model) == 13
 end
