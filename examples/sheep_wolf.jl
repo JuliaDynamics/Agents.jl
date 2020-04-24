@@ -94,7 +94,7 @@ function agent_step!(sheep::Sheep, model)
     agents = get_node_agents(sheep.pos, model)
     dinner = filter!(x->isa(x, Grass), agents)
     eat!(sheep, dinner, model)
-    if sheep.energy <= 0
+    if sheep.energy < 0
         kill_agent!(sheep, model)
         return nothing
     end
@@ -109,7 +109,7 @@ function agent_step!(wolf::Wolf, model)
     agents = get_node_agents(wolf.pos, model)
     dinner = filter!(x->isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
-    if wolf.energy <= 0
+    if wolf.energy < 0
         kill_agent!(wolf, model)
         return nothing
     end
@@ -133,9 +133,8 @@ end
 function reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    energy = rand(1:agent.Δenergy*2) - 1
     A = typeof(agent)
-    spawn = A(id, agent.pos, energy, agent.reproduction_prob, agent.Δenergy)
+    spawn = A(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
     add_agent_pos!(spawn, model)
     return nothing
 end
