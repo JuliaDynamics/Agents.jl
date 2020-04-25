@@ -143,6 +143,11 @@ function add_agent_pos!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:Abstr
     return model[agent.id]
 end
 
+function add_agent_pos!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
+    model[agent.id] = agent
+    return model[agent.id]
+end
+
 """
     add_agent!(agent::AbstractAgent [, position], model::ABM) → agent
 
@@ -158,8 +163,7 @@ function add_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractA
 end
 
 function add_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
-    model[agent.id] = agent
-    return model[agent.id]
+    add_agent_pos!(agent, model)
 end
 
 function add_agent!(
@@ -223,9 +227,7 @@ function add_agent!(
     properties...;
     kwargs...,
 ) where {A<:AbstractAgent}
-    id = nextid(model)
-    model[id] = A(id, properties...; kwargs...)
-    return model[id]
+    add_agent_pos!(A(nextid(model), properties...; kwargs...), model)
 end
 
 function add_agent!(
