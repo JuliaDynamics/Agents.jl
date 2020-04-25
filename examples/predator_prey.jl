@@ -3,7 +3,7 @@
 # The predator-prey model emmulates the population dynamics of predator and prey animals who live in
 # a common ecosystem and compete over limited resources. This model is an agent-based analog to the
 # classic [Lotka-Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) differential
-# equation model. This example illustrates how to develop models heterogeneous agents.
+# equation model. This example illustrates how to develop models with heterogeneous agents.
 
 # The environment is a two dimensional grid containing sheep, wolves and grass. In the model, wolves eat
 # sheep and sheep eat grass. Their populations will oscillate over time if the correct balance of resources
