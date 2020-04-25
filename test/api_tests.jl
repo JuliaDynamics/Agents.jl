@@ -75,6 +75,7 @@ end
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
 end
 
+Random.seed!(65465)
 model1 = ABM(Agent1, GridSpace((3,3)))
 
 agent = add_agent!((1,1), model1)

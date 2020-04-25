@@ -12,10 +12,6 @@ This is the fastest way to activate all agents once per step.
 """
 fastest(model::ABM) = keys(model.agents)
 
-function fastest(sets::Vector{Vector{Integer}})
-    vcat(sets...)
-end
-
 """
     by_id
 Activate agents at each step according to their id.
@@ -23,11 +19,6 @@ Activate agents at each step according to their id.
 function by_id(model::ABM)
     agent_ids = sort(collect(keys(model.agents)))
     return agent_ids
-end
-
-function by_id(sets::Vector{Vector{Integer}})
-    [sort!(set) for set in sets]
-    vcat(sets...)
 end
 
 @deprecate as_added by_id
@@ -41,12 +32,6 @@ function random_activation(model::ABM)
     order = shuffle(collect(keys(model.agents)))
 end
 
-function random_activation(sets::Vector{Vector{Integer}})
-    [shuffle!(set) for set in sets]
-    shuffle!(sets)
-    vcat(sets...)
-end
-
 """
     partial_activation(p)
 At each step, activate only `p` percentage of randomly chosen agents.
@@ -57,11 +42,6 @@ function partial_activation(p::Real)
         return randsubseq(ids, p)
     end
     return partial
-end
-
-function partial_activation(sets::Vector{Vector{Integer}}, p::Real)
-    subset = [randsubseq(set, p) for set in sets]
-    vcat(subset...)
 end
 
 """
@@ -80,18 +60,12 @@ function property_activation(p::Symbol)
 end
 
 """
-    by_type(fastest)
+    by_type(shuffle)
 Useful only for mixed agent models using `Union` types.
-Activate agents by type order, then by a subsequent `method`.
-
-`method` may be any inbuilt scheduler listed above (except for `property_activation`),
-or a custom function that accepts `sets::Vector{Vector{Integer}}` of agent ids separated
-into `n` vectors, where `n` is the number of `AbstractAgent` types inside the `Union`.
-
-Any additional scheduler properties are passed on, for example
-`by_type(partial_activation, p)`.
+Activate agents by type in order of appearance in the `Union`.
+To group by type, but randomize the type order, set `shuffle = true`.
 """
-function by_type(method::Function, properties...)
+function by_type(shuffle::Bool)
     function by_union(model::ABM{A,S,F,P}) where {A,S,F,P}
         types = union_types(A)
         sets = [Integer[] for _ in types]
@@ -99,7 +73,27 @@ function by_type(method::Function, properties...)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        return method(sets, properties...)
+        shuffle && shuffle!(sets)
+        vcat(sets...)
     end
 end
 
+"""
+    by_type((C, B, A))
+Activate agents by type in specified order (since `Union`s are not order preserving).
+"""
+function by_type(order::Tuple{Type, Vararg{Type}})
+    function by_ordered_union(model::ABM{A,S,F,P}) where {A,S,F,P}
+        types = union_types(A)
+        if order != nothing
+            @assert length(types) == length(order) "Invalid dimension for `order`"
+            types = order
+        end
+        sets = [Integer[] for _ in types]
+        for agent in allagents(model)
+            idx = findfirst(t -> t == typeof(agent), types)
+            push!(sets[idx], agent.id)
+        end
+        vcat(sets...)
+    end
+end

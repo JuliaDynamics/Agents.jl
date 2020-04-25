@@ -52,24 +52,35 @@
     @test ids[sortperm(properties)] == a
 end
 
+@testset "Union Types" begin
+    @test Agents.union_types(Union{Agent0}) == (Agent0,)
+    @test Agents.union_types(Union{Agent0,Agent1}) == (Agent0, Agent1)
+    @test Agents.union_types(Union{Agent0,Agent1,Agent2,Agent3}) ==
+          (Agent0, Agent1, Agent2, Agent3)
+    #Union types are not order preserving
+    @test Agents.union_types(Union{Agent1,Agent0}) == (Agent0, Agent1)
+    @test Agents.union_types(Union{Agent1,Agent3,Agent2,Agent0}) ==
+          (Agent0, Agent1, Agent2, Agent3)
+end
+
 # Mixed model
 function init_mixed_model(; scheduler = fastest)
     model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
-    for id in 1:5
-        a0 = Agent0(id)
-        add_agent!(a0, model)
-    end
-    for id in 6:10
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
-    end
-    for id in 11:15
-        a2 = Agent2(id, 5.0)
-        add_agent!(a2, model)
-    end
-    for id in 16:20
-        a3 = Agent3(id, (0, 0), 5.0)
-        add_agent!(a3, model)
+    for id in 1:20
+        choice = rand(0:3)
+        if choice == 0
+            a0 = Agent0(id)
+            add_agent!(a0, model)
+        elseif choice == 1
+            a1 = Agent1(id, (0, 0))
+            add_agent!(a1, model)
+        elseif choice == 2
+            a2 = Agent2(id, 5.0)
+            add_agent!(a2, model)
+        elseif choice == 3
+            a3 = Agent3(id, (0, 0), 5.0)
+            add_agent!(a3, model)
+        end
     end
     return model
 end
@@ -78,43 +89,85 @@ end
     model = init_mixed_model()
     @test sort!(collect(model.scheduler(model))) == 1:20
 
-    model = init_mixed_model(scheduler = by_type(fastest))
-    @test sort!(collect(model.scheduler(model))) == 1:20
+    Random.seed!(12)
+    model = init_mixed_model(scheduler = by_type(false))
+    @test model.scheduler(model)[1:3] == [18, 7, 10]
+    @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 6
+    @test [typeof(model[id]) for id in model.scheduler(model)] == [
+        Agent0,
+        Agent0,
+        Agent0,
+        Agent0,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent3,
+        Agent3,
+        Agent3,
+    ]
 
-    model = init_mixed_model(scheduler = by_id)
-    @test model.scheduler(model) == 1:20
+    Random.seed!(13)
+    model = init_mixed_model(scheduler = by_type(true))
+    @test model.scheduler(model)[1:3] == [7, 9, 14]
+    @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 7
+    @test [typeof(model[id]) for id in model.scheduler(model)] == [
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent1,
+        Agent0,
+        Agent0,
+        Agent3,
+        Agent3,
+        Agent3,
+        Agent3,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+        Agent2,
+    ]
 
-    model = init_mixed_model(scheduler = by_type(by_id))
-    @test model.scheduler(model) == 1:20
-
-    # Swapping union order
-    model = ABM(Union{Agent0,Agent1}, scheduler = by_type(by_id), warn = false)
-    for id in 1:5
+    # Offset union order and ids
+    Random.seed!(12)
+    model = ABM(Union{Agent0,Agent1}, scheduler = by_type(false), warn = false)
+    for id in 1:3
         a1 = Agent1(id, (0, 0))
         add_agent!(a1, model)
     end
-    for id in 6:10
+    for id in 4:6
         a0 = Agent0(id)
         add_agent!(a0, model)
     end
-
-    @test model.scheduler(model) == vcat(6:10, 1:5)
-
-    Random.seed!(12)
-    model = init_mixed_model(scheduler = random_activation)
-    @test model.scheduler(model)[1:3] == [17, 5, 11] # reproducibility test
+    @test [typeof(model[id]) for id in model.scheduler(model)] ==
+          [Agent0, Agent0, Agent0, Agent1, Agent1, Agent1]
 
     Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(random_activation))
-    @test model.scheduler(model)[1:3] == [1, 2, 5] # reproducibility test
-
-    Random.seed!(12)
-    model = init_mixed_model(scheduler = partial_activation(0.5))
-    @test model.scheduler(model) == [18, 16, 11, 17, 8, 4, 3, 5, 13]
-
-    Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(partial_activation, 0.5))
-    @test model.scheduler(model) == [2, 3, 5, 8, 6, 13, 14, 15, 18]
-    @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 4
+    model = ABM(Union{Agent1,Agent0}, scheduler = by_type((Agent1, Agent0)), warn = false)
+    for id in 1:3
+        a1 = Agent1(id, (0, 0))
+        add_agent!(a1, model)
+    end
+    for id in 4:6
+        a0 = Agent0(id)
+        add_agent!(a0, model)
+    end
+    @test [typeof(model[id]) for id in model.scheduler(model)] ==
+          [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
 end
 
