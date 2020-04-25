@@ -199,7 +199,7 @@ grass(a) = typeof(a) == Grass && a.fully_grown
 adata = [(sheep, count), (wolves, count), (grass, count)]
 results, _ = run!(model, agent_step!, n_steps; adata = adata)
 
-# The plot shows the population dynamics over time. Initially, wolves become extent because they
+# The plot shows the population dynamics over time. Initially, wolves become extinct because they
 # consume the sheep too quickly. The few remaining sheep reproduce and gradually reach an
 # equalibrium that can be supported by the amount of available grass.
 
