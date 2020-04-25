@@ -60,7 +60,7 @@ function property_activation(p::Symbol)
 end
 
 """
-    by_type(shuffle)
+    by_type(shuffle::Bool)
 Useful only for mixed agent models using `Union` types.
 Activate agents by type in order of appearance in the `Union`.
 To group by type, but randomize the type order, set `shuffle = true`.
