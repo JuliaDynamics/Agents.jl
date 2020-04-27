@@ -1,5 +1,5 @@
 using DataFrames, SQLite
-export ContinuousSpace, index!
+export ContinuousSpace, index!, update_space!
 
 #######################################################################################
 # Continuous space structure
@@ -34,6 +34,9 @@ You can of course change the agents' velocities
 during the agent interaction, the `update_vel!` functionality targets arbitrary force
 fields acting on the agents (e.g. some magnetic field).
 By default no update is done this way.
+
+Notice that if you need to write your own custom `move_agent` function, call
+[`update_space`](@ref) at the end, like in e.g. the [Bacteria Growth](@ref) example.
 
 ## Keywords
 * `periodic = true` : whether continuous space is periodic or not
@@ -158,6 +161,7 @@ end
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
 Propagate the agent forwards one step according to its velocity,
 _after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
+Also take care of periodic boundary conditions.
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
@@ -169,8 +173,17 @@ function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:Abstr
   if model.space.periodic
     agent.pos = mod.(agent.pos, model.space.extend)
   end
-  DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
+  update_space!(model, agent)
   return agent.pos
+end
+
+"""
+    update_space!(model::ABM{A, ContinuousSpace}, agent)
+Update the internal representation of continuous space to match the new position of
+the agent (useful in custom `move_agent` functions).
+"""
+function update_space!(model::ABM{A, <: ContinuousSpace}, agent) where {A}
+  DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
 end
 
 function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:ContinuousSpace}

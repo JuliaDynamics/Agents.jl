@@ -47,6 +47,7 @@ interacting_pairs
 nearest_neighbor
 elastic_collision!
 index!
+update_space!
 ```
 
 ## Data collection
