@@ -69,7 +69,8 @@ pages = [
         "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
         "Flocking" => "examples/flock.md",
-        "Daisyworld" => "examples/daisyworld.md"
+        "Daisyworld" => "examples/daisyworld.md",
+        "Predator-Prey" => "examples/predator_prey.md"
         ],
     "API" => "api.md",
     "Comparison against Mesa (Python)" => "mesa.md"
