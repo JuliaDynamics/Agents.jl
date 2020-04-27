@@ -1,6 +1,4 @@
-export nagents, AbstractAgent, ABM, AgentBasedModel,
-random_activation, by_id, fastest, partial_activation, random_agent,
-property_activation, allagents
+export AbstractAgent, ABM, AgentBasedModel, nagents, random_agent, allagents
 
 abstract type AbstractSpace end
 
@@ -55,9 +53,23 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     scheduler::F
     properties::P
 end
+
 const ABM = AgentBasedModel
+
 agenttype(::ABM{A}) where {A} = A
 spacetype(::ABM{A, S}) where {A, S} = S
+
+"""
+    union_types(U)
+Return a set of types within a `Union`. Preserves order.
+"""
+union_types(x::Union) = union_types(x.a, x.b)
+union_types(a::Union, b::Type) = (union_types(a)..., b)
+union_types(a::Type, b::Type) = (a, b)
+union_types(x::Type) = (x,)
+# For completness
+union_types(a::Type, b::Union) = (a, union_types(b)...)
+
 
 """
     AgentBasedModel(AgentType [, space]; scheduler, properties) → model
@@ -180,11 +192,24 @@ Checks for mutability and existence and correct types for fields depending on `S
 """
 function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     # Check A for required properties & fields
+    if isconcretetype(A)
+        do_checks(A, space, warn)
+    else
+        warn && @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
+        for type in union_types(A)
+            do_checks(type, space, warn)
+        end
+    end
+end
+
+"""
+    do_checks(agent, space)
+Helper function for `agent_validator`.
+"""
+function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     if warn
-        isconcretetype(A) || @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
         isbitstype(A) && @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
-    isconcretetype(A) || return # no checks can be done for union types
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space != nothing
@@ -206,7 +231,6 @@ function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgen
         end
     end
 end
-
 """
     random_agent(model)
 Return a random agent from the model.
@@ -225,60 +249,3 @@ Return an iterator over all agents of the model.
 """
 allagents(model) = values(model.agents)
 
-####################################
-# Schedulers
-####################################
-"""
-    fastest
-Activate all agents once per step in the order dictated by the agent's container,
-which is arbitrary (the keys sequence of a dictionary).
-This is the fastest way to activate all agents once per step.
-"""
-fastest(model) = keys(model.agents)
-
-"""
-    by_id
-Activate agents at each step according to their id.
-"""
-function by_id(model::ABM)
-  agent_ids = sort(collect(keys(model.agents)))
-  return agent_ids
-end
-
-@deprecate as_added by_id
-
-"""
-    random_activation
-Activate agents once per step in a random order.
-Different random ordering is used at each different step.
-"""
-function random_activation(model::ABM)
-  order = shuffle(collect(keys(model.agents)))
-end
-
-"""
-    partial_activation(p)
-At each step, activate only `p` percentage of randomly chosen agents.
-"""
-function partial_activation(p::Real)
-    function partial(model::ABM{A, S, F, P}) where {A, S, F, P}
-        ids = collect(keys(model.agents))
-        return randsubseq(ids, p)
-    end
-    return partial
-end
-
-"""
-    property_activation(property)
-At each step, activate the agents in an order dictated by their `property`,
-with agents with greater `property` acting first. `property` is a `Symbol`, which
-just dictates which field the agents to compare.
-"""
-function property_activation(p::Symbol)
-    function by_property(model::ABM{A, S, F, P}) where {A, S, F, P}
-        ids = collect(keys(model.agents))
-        properties = [getproperty(model.agents[id], p) for id in ids]
-        s = sortperm(properties)
-        return ids[s]
-    end
-end
