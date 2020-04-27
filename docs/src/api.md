@@ -93,11 +93,16 @@ by_id
 random_activation
 partial_activation
 property_activation
-by_type
 ```
 
 ## Plotting
 Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need to install both `AgentsPlots`, as well as a plotting backend (we use GR) to use the following functions.
+
+The version of `AgentsPlots` is:
+```@example versions
+using Pkg
+Pkg.status("AgentsPlots")
+```
 
 ```@docs
 plotabm
