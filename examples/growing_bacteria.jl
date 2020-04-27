@@ -1,6 +1,18 @@
-# Bacteria Growth
+# Bacterial Growth
 
 # ![](bacteria.gif)
+
+
+# Bacterial colonies are a prime example for growing active matter, where systems
+# are driven  out of equilibrium by proliferation. This relatively new field of
+# study has practical applications in biotechnology and synthetic biology, and
+# provides interisting insights for nonequilibrium statistical physics.
+
+# This model is a simplified version of unpublished work by Yoav G. Pollack and
+# Philip Bittihn; similar models can be found in literature.
+# Here, a bacterium is modelled by two soft disk "nodes" linked by a spring,
+# whose rest length grows with a constant growth rate. When it has reached its
+# full extension, the cell divides into two daughter cells with the same orientation.
 
 
 using Agents
@@ -33,6 +45,11 @@ mutable struct SimpleCell <: AbstractAgent
 end
 
 
+# In this model, the agents have to store their state in two redundant ways:
+# the cell coordinates (position, length, orientation) are required for the
+# equations of motion, while the positions of the disk-shaped nodes are necessary
+# for calculating mechanical forces between cells. To transform from one set of
+# coordinates to the other, we need to write a function
 """
     update_nodes!(agent::SimpleCell)
 Updates the node positions `agent.p1` and `agent.p2` from the cell coordinates
@@ -43,7 +60,7 @@ function update_nodes!(a::SimpleCell)
     a.p2 = a.pos .- offset
 end
 
-
+# Some geometry
 unitvector(φ) = reverse(sincos(φ))
 cross2D(a, b) = a[1]*b[2] - a[2]*b[1]
 
@@ -53,12 +70,14 @@ cross2D(a, b) = a[1]*b[2] - a[2]*b[1]
 function model_step!(model)
     for a in allagents(model)
         if a.growthprog ≥ 1
-            ## split old cells into daughters
+            # When a cell has matured, it divides into two daughter cells on the
+            # positions of its nodes.
             add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
             add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
             kill_agent!(a, model)
         else
-            ## compute internal spring compression
+            # The rest lengh of the internal spring grows with time. This causes
+            # the nodes to physically separate. 
             uv = unitvector(a.orientation)
             internalforce = model.hardness*(a.length - a.growthprog) .* uv
             a.f1 = -1 .* internalforce
@@ -66,6 +85,8 @@ function model_step!(model)
         end
     end
 
+    # Bacteria can interact with more than on other cell at the same time, therefore,
+    # we need to specify the option `:all` in `interacting_pairs`
     for (a1, a2) in interacting_pairs(model, 2.0, :all)
         interact!(a1, a2, model)
     end
@@ -74,9 +95,12 @@ end
 
 # Here we use a custom [`move_agent!`](@ref) function,
 # because the agents have several moving parts.
+# Notice that the first derivatives of all degrees of freedom is directly
+# proportional to the force applied to them. This overdamped approximation is
+# valid for small length scales, where viscous forces dominate over inertia.
 function agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-    ## overdamped dynamics, v ∝ F
+
     agent.pos = agent.pos .+ model.dt * model.mobility .* fsym
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
