@@ -2,27 +2,22 @@
 
 # ![](bacteria.gif)
 
-
 # Bacterial colonies are a prime example for growing active matter, where systems
-# are driven  out of equilibrium by proliferation. This relatively new field of
-# study has practical applications in biotechnology and synthetic biology, and
-# provides interisting insights for nonequilibrium statistical physics.
-
+# are driven out of equilibrium by proliferation.
 # This model is a simplified version of unpublished work by Yoav G. Pollack and
-# Philip Bittihn; similar models can be found in literature.
+# [Philip Bittihn](https://www.ds.mpg.de/lmp/dyn-sys); similar models can be found in literature.
 # Here, a bacterium is modelled by two soft disk "nodes" linked by a spring,
 # whose rest length grows with a constant growth rate. When it has reached its
 # full extension, the cell divides into two daughter cells with the same orientation.
 
+# This example is a showcase of a complex continuous system.
+# Agents will be splitting into more agents, thus having agent generation in continuous
+# space. The model also uses advanced agent movement in continuous space, where a
+# specialized "`move_agent`" function is created. Advanced plotting is also done,
+# since each agent is a specialized shape.
 
-using Agents
-using LinearAlgebra
+using Agents, LinearAlgebra
 
-"""
-    SimpleCell <: AbstractAgent
-A simple bacterial cell, modelled by two soft disks linked with a spring.
-Based on an (as of 04/2020) unpublished model by Yoav G. Pollack and Philip Bittihn.
-"""
 mutable struct SimpleCell <: AbstractAgent
     id::Int
     pos::NTuple{2, Float64}
@@ -50,43 +45,37 @@ end
 # equations of motion, while the positions of the disk-shaped nodes are necessary
 # for calculating mechanical forces between cells. To transform from one set of
 # coordinates to the other, we need to write a function
-"""
-    update_nodes!(agent::SimpleCell)
-Updates the node positions `agent.p1` and `agent.p2` from the cell coordinates
-"""
 function update_nodes!(a::SimpleCell)
     offset = 0.5 * a.length .* unitvector(a.orientation)
     a.p1 = a.pos .+ offset
     a.p2 = a.pos .- offset
 end
 
-# Some geometry
+# Some geometry convenience functions
 unitvector(φ) = reverse(sincos(φ))
 cross2D(a, b) = a[1]*b[2] - a[2]*b[1]
 
-
-## API functions ###########################################################################
+# ## Stepping functions
 
 function model_step!(model)
     for a in allagents(model)
         if a.growthprog ≥ 1
-            # When a cell has matured, it divides into two daughter cells on the
-            # positions of its nodes.
+            ## When a cell has matured, it divides into two daughter cells on the
+            ## positions of its nodes.
             add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
             add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
             kill_agent!(a, model)
         else
-            # The rest lengh of the internal spring grows with time. This causes
-            # the nodes to physically separate. 
+            ## The rest lengh of the internal spring grows with time. This causes
+            ## the nodes to physically separate.
             uv = unitvector(a.orientation)
             internalforce = model.hardness*(a.length - a.growthprog) .* uv
             a.f1 = -1 .* internalforce
             a.f2 = internalforce
         end
     end
-
-    # Bacteria can interact with more than on other cell at the same time, therefore,
-    # we need to specify the option `:all` in `interacting_pairs`
+    ## Bacteria can interact with more than on other cell at the same time, therefore,
+    ## we need to specify the option `:all` in `interacting_pairs`
     for (a1, a2) in interacting_pairs(model, 2.0, :all)
         interact!(a1, a2, model)
     end
@@ -100,7 +89,6 @@ end
 # valid for small length scales, where viscous forces dominate over inertia.
 function agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-
     agent.pos = agent.pos .+ model.dt * model.mobility .* fsym
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
@@ -110,31 +98,18 @@ function agent_step!(agent::SimpleCell, model::ABM)
     return agent.pos
 end
 
-
-## Helper functions ########################################################################
-
-"""
-    interact!(a1::SimpleCell, a2::SimpleCell, model)
-Computes the interactions between two [`SimpleCell`](@ref)s using
-[`noderepulsion`](@ref)
-"""
+# ### Helper functions
 function interact!(a1::SimpleCell, a2::SimpleCell, model)
     n11 = noderepulsion(a1.p1, a2.p1, model)
     n12 = noderepulsion(a1.p1, a2.p2, model)
     n21 = noderepulsion(a1.p2, a2.p1, model)
     n22 = noderepulsion(a1.p2, a2.p2, model)
-
     a1.f1 = @. a1.f1 + (n11 + n12)
     a1.f2 = @. a1.f2 + (n21 + n22)
     a2.f1 = @. a2.f1 - (n11 + n21)
     a2.f2 = @. a2.f2 - (n12 + n22)
 end
 
-
-"""
-    noderepulsion(p1, p2, model) → force
-Returns the repulsive force due to the interaction of nodes at `p1` and `p2`
-"""
 function noderepulsion(p1::NTuple{2, Float64}, p2::NTuple{2, Float64}, model::ABM)
     delta = p1 .- p2
     distance = norm(delta)
@@ -145,15 +120,10 @@ function noderepulsion(p1::NTuple{2, Float64}, p2::NTuple{2, Float64}, model::AB
     return (0, 0)
 end
 
-
-"""
-    transform_forces(agent::SimpleCell) → fsym, compression, torque
-Transforms the node forces into forces on the cell coordinates.
-"""
 function transform_forces(agent::SimpleCell)
-    # symmetric forces (CM movement)
+    ## symmetric forces (CM movement)
     fsym = agent.f1 .+ agent.f2
-    # antisymmetric forces (compression, torque)
+    ## antisymmetric forces (compression, torque)
     fasym = agent.f1 .- agent.f2
     uv = unitvector(agent.orientation)
     compression = dot(uv, fasym)
@@ -161,13 +131,16 @@ function transform_forces(agent::SimpleCell)
     return fsym, compression, torque
 end
 
+# ## Animating bacterial growth
 
-## simulation script #######################################################################
+# Okay, we can now initialize a model and see what it does.
 
-space = ContinuousSpace(2, extend = (10, 10), periodic = false, metric = :euclidean)
+space = ContinuousSpace(2, extend = (12, 12), periodic = false, metric = :euclidean)
 model = ABM(SimpleCell, space, properties =
     Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0)
 )
+
+# Let's start with just two agents.
 
 add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
 add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
@@ -177,17 +150,14 @@ add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
 
 adata = [:pos, :length, :orientation, :growthprog, :p1, :p2, :f1, :f2]
 
-# and then [`run!`](@ref) the model.
-
-
-# ## Animating bacterial growth
+# and then [`run!`](@ref) the model. But we'll animate the model directly.
 
 # Here we once again use the huge flexibility provided by [`plotabm`](@ref) to
 # plot the becteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
 using AgentsPlots, Plots
 
-function cassiniOval(agent)
+function cassini_oval(agent)
     t = LinRange(0, 2π, 50)
     a = agent.growthprog
     b = 1
@@ -211,9 +181,9 @@ bacteria_colors(agent) = HSV.(agent.id*2.718.%1, agent.id*3.14.%1, agent.id*1.61
 
 # and proceed with the animation
 
-anim = @animate for i in 0:100:12000
+anim = @animate for i in 0:50:5000
     step!(model, agent_step!, model_step!, 100)
-    p1 = plotabm(model, am = cassiniOval, as = 30, ac = bacteria_colors)
+    p1 = plotabm(model, am = cassini_oval, as = 30, ac = bacteria_colors)
     title!(p1, "n = $(i)")
 end
 
