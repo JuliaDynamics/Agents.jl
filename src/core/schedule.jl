@@ -60,12 +60,14 @@ function property_activation(p::Symbol)
 end
 
 """
-    by_type(shuffle::Bool)
+    by_type(shuffle_types::Bool, shuffle_agents::Bool)
 Useful only for mixed agent models using `Union` types.
-Activate agents by type in order of appearance in the `Union`.
-To group by type, but randomize the type order, set `shuffle = true`.
+- Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
+Otherwise returns agents grouped in order of appearance in the `Union`.
+- `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
+the default order of the container (equivalent to [fastest](@ref)).
 """
-function by_type(shuffle::Bool)
+function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{A,S,F,P}) where {A,S,F,P}
         types = union_types(A)
         sets = [Integer[] for _ in types]
@@ -73,16 +75,18 @@ function by_type(shuffle::Bool)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        shuffle && shuffle!(sets)
+        shuffle_types && shuffle!(sets)
+        shuffle_agents && [shuffle!(set) for set in sets]
         vcat(sets...)
     end
 end
 
 """
-    by_type((C, B, A))
+    by_type((C, B, A), shuffle_agents::Bool)
 Activate agents by type in specified order (since `Union`s are not order preserving).
+`shuffle_agents = true` randomizes the order of agents within each group.
 """
-function by_type(order::Tuple{Type, Vararg{Type}})
+function by_type(order::Tuple{Type, Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{A,S,F,P}) where {A,S,F,P}
         types = union_types(A)
         if order != nothing
@@ -94,6 +98,7 @@ function by_type(order::Tuple{Type, Vararg{Type}})
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
+        shuffle_agents && [shuffle!(set) for set in sets]
         vcat(sets...)
     end
 end
