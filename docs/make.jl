@@ -6,7 +6,7 @@ Pkg.update()
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
-using Plots
+using Plots, StatsPlots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
