@@ -13,6 +13,10 @@ before_script:
   - git config --global user.name "GitUser"
   - git config --global user.email "git@us.er"
 
+codecov: true
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+
 matrix:
   allow_failures:
     - julia: nightly
