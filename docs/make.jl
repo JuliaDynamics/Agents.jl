@@ -6,7 +6,7 @@ Pkg.update()
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
-using Plots
+using Plots, StatsPlots
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
@@ -70,6 +70,7 @@ pages = [
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
         "Flocking" => "examples/flock.md",
         "Daisyworld" => "examples/daisyworld.md",
+        "Predator-Prey" => "examples/predator_prey.md",
         "Bacteria Growth" => "examples/growing_bacteria.md"
         ],
     "API" => "api.md",
