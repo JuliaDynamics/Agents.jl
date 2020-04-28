@@ -38,8 +38,8 @@ model = initialize()
 end
 
 @testset "aggname" begin
-    @test aggname(:weight, mean) == Symbol("mean(weight)")
-    @test aggname(x_position, length) == Symbol("length(x_position)")
+    @test aggname(:weight, mean) == :mean_weight
+    @test aggname(x_position, length) == :length_x_position
 end
 
 @testset "Aggregate Collections" begin
@@ -57,8 +57,8 @@ end
     # Activate aggregation. Weight column is expected to be one value for this step,
     # renamed mean(weight). ID is meaningless and will therefore be dropped.
     @test size(df) == (1, 2)
-    @test names(df) == [:step, Symbol("mean(weight)")]
-    @test df[1, Symbol("mean(weight)")] ≈ 0.3917615139
+    @test names(df) == [:step, :mean_weight]
+    @test df[1, aggname(:weight, mean)] ≈ 0.3917615139
 
     # Add a function as a property
     props = [:weight, x_position]
@@ -72,8 +72,8 @@ end
     df = init_agent_dataframe(model, props)
     collect_agent_data!(df, model, props, 1)
     @test size(df) == (1, 3)
-    @test names(df) == [:step, Symbol("mean(weight)"), Symbol("mean(x_position)")]
-    @test df[1, Symbol("mean(x_position)")] ≈ 4.3333333
+    @test names(df) == [:step, :mean_weight, :mean_x_position]
+    @test df[1, aggname(x_position, mean)] ≈ 4.3333333
 end
 
 @testset "High-level API for Collections" begin
@@ -93,7 +93,7 @@ end
     )
 
     @test size(agent_data) == (11, 2)
-    @test names(agent_data) == [:step, Symbol("mean(weight)")]
+    @test names(agent_data) == [:step, :mean_weight]
     @test maximum(agent_data[!, :step]) == 1820
 
     @test size(model_data) == (6, 3)
@@ -128,7 +128,7 @@ end
     @test maximum(daily_model_data[!, :step]) == 1825
 
     @test size(daily_agent_aggregate) == (1825, 2)
-    @test names(daily_agent_aggregate) == [:step, Symbol("mean(weight)")]
+    @test names(daily_agent_aggregate) == [:step, :mean_weight]
     @test maximum(daily_agent_aggregate[!, :step]) == 1825
 
     @test size(yearly_agent_data) == (15, 3)

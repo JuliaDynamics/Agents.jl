@@ -93,6 +93,7 @@ by_id
 random_activation
 partial_activation
 property_activation
+by_type
 ```
 
 ## Plotting

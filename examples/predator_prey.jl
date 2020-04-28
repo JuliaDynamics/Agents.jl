@@ -246,14 +246,14 @@ results, _ = run!(model, agent_step!, n_steps; adata = adata)
 
 @df results plot(
     :step,
-    cols(aggname(sheep, count)),
+    :count_sheep,
     grid = false,
     xlabel = "Step",
     ylabel = "Population",
     label = "Sheep",
 )
-@df results plot!(:step, cols(aggname(wolves, count)), label = "Wolves")
-@df results plot!(:step, cols(aggname(grass, count)), label = "Grass")
+@df results plot!(:step, :count_wolves, label = "Wolves")
+@df results plot!(:step, :count_grass, label = "Grass")
 
 # Altering the input conditions, we now see a landscape where all three agents find an
 # equilibrium.
@@ -267,15 +267,14 @@ model = initialize_model(
     wolf_reproduce = 0.08,
 )
 results, _ = run!(model, agent_step!, n_steps; adata = adata)
-
 @df results plot(
     :step,
-    cols(aggname(sheep, count)),
+    :count_sheep,
     grid = false,
     xlabel = "Step",
     ylabel = "Population",
     label = "Sheep",
 )
-@df results plot!(:step, cols(aggname(wolves, count)), label = "Wolves")
-@df results plot!(:step, cols(aggname(grass, count)), label = "Grass")
+@df results plot!(:step, :count_wolves, label = "Wolves")
+@df results plot!(:step, :count_grass, label = "Grass")
 

@@ -289,9 +289,9 @@ data[1:10, :]
 
 N = sum(model.Ns) # Total initial population
 x = data.step
-p = Plots.plot(x, log10.(data[:, Symbol("infected(status)")]), label = "infected")
-plot!(p, x, log10.(data[:, Symbol("recovered(status)")]), label = "recovered")
-dead = log10.(N .- data[:, Symbol("length(status)")])
+p = Plots.plot(x, log10.(data[:, aggname(:status, infected)]), label = "infected")
+plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
+dead = log10.(N .- data[:, aggname(:status, length)])
 plot!(p, x, dead, label = "dead")
 xlabel!(p, "steps")
 ylabel!(p, "log( count )")
