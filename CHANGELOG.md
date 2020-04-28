@@ -14,7 +14,7 @@
 * New function `nextid`
 * Cool new logo.
 * `node_neighbors` now accepts a `neighbor_type` keyword for working with directed graphs.
-* Added examples of flocking birds in `ContinuousSpace`, Daisyworld and Predator-Prey in `GridSpace`.
+* Added examples of flocking birds and bacterial growth in `ContinuousSpace`, daisyworld and predator-prey in `GridSpace`.
 - Collection of model and agent data simultaneously is now possible using the `mdata` and `adata` keywords (respectively) used in conjunction with the revamped data collection scheme (see below).
 - Better support for mixed-ABMs and a new `by_type` scheduler.
 
