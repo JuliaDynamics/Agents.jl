@@ -27,7 +27,7 @@
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
 
-using Agents, StatsPlots
+using Agents, Plots, StatsPlots
 using Random # hide
 
 mutable struct Sheep <: AbstractAgent
@@ -193,14 +193,50 @@ end
 
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
-# grass patches after each step.
+# grass patches after each step. First: initialize the model.
 
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
+
+# To view our starting population, we can build an overview plot:
+
 sheep(a) = typeof(a) == Sheep
 wolves(a) = typeof(a) == Wolf
 grass(a) = typeof(a) == Grass && a.fully_grown
+allgrass(a) = typeof(a) == Grass
+
+grass_pos = [a.pos for a in allagents(model) if allgrass(a)]
+grass_color = [a.countdown / a.regrowth_time for a in allagents(model) if allgrass(a)]
+scatter(
+    grass_pos,
+    label = "Grass",
+    marker = (:square, 10),
+    color = cgrad([:brown, :green]),
+    marker_z = grass_color,
+    size = (800, 600),
+    showaxis = false,
+    aspect_ratio = :equal,
+    grid = false,
+)
+sheep_shape = Shape(:circle)
+sheep_shape.x .+= 0.5
+scatter!(
+    [a.pos for a in allagents(model) if sheep(a)],
+    marker = (sheep_shape, 13, 0.7, :white),
+    label = "Sheep",
+)
+wolf_shape = Shape(:utriangle)
+wolf_shape.x .-= 0.5
+wolf_shape.y .-= 0.2
+scatter!(
+    [a.pos for a in allagents(model) if wolves(a)],
+    marker = (wolf_shape, 15, 0.9, :gray),
+    label = "Wolves",
+)
+
+# Now, lets run the simulation and collect some data.
+
 adata = [(sheep, count), (wolves, count), (grass, count)]
 results, _ = run!(model, agent_step!, n_steps; adata = adata)
 
@@ -224,12 +260,9 @@ results, _ = run!(model, agent_step!, n_steps; adata = adata)
 
 Random.seed!(7756) # hide
 model = initialize_model(
-    n_sheep = 100,
     n_wolves = 20,
     dims = (25, 25),
-    regrowth_time = 30,
     Δenergy_sheep = 5,
-    Δenergy_wolf = 20,
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
 )
