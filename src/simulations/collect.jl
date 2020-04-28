@@ -30,8 +30,8 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
   continuing from the above example, we would have
   `adata = [(:weight, mean), (f, maximum)]`. The resulting data name columns
-  use the function [`aggname`](@ref), and create something like `mean(weight)` or
-  `maximum(f)`. This name doesn't play well with anonymous functions!
+  use the function [`aggname`](@ref), and create something like `:mean_weight` or
+  `:maximum_f`. This name doesn't play well with anonymous functions!
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
@@ -192,9 +192,9 @@ function `agg`.
 """
 function aggname(k, agg)
     @static if VERSION >= v"1.1"
-        Symbol(join([string(agg),"(", string(k), ")"], ""))
+        Symbol(join([string(agg), string(k)], "_"))
     else
-        Symbol(join([split(string(agg), ".")[end],"(", string(k), ")"], ""))
+        Symbol(join([split(string(agg), ".")[end], string(k)], "_"))
     end
 end
 

@@ -323,9 +323,9 @@ data1[(end - 10):end, :]
 
 # Now, we can plot the number of infected versus time
 
-p = plot(data1[:, Symbol("infected(status)")], label = "r=$r1, beta=$β1")
-plot!(p, data2[:, Symbol("infected(status)")], label = "r=$r2, beta=$β1")
-plot!(p, data3[:, Symbol("infected(status)")], label = "r=$r1, beta=$β2")
+p = plot(data1[:, aggname(:status, infected)], label = "r=$r1, beta=$β1")
+plot!(p, data2[:, aggname(:status, infected)], label = "r=$r2, beta=$β1")
+plot!(p, data3[:, aggname(:status, infected)], label = "r=$r1, beta=$β2")
 yaxis!(p, "Infected")
 p
 
@@ -368,7 +368,7 @@ data4, _ = run!(
     adata = adata,
 )
 
-plot!(p, data4[:, Symbol("infected(status)")], label = "r=$r4, social distancing")
+plot!(p, data4[:, aggname(:status, infected)], label = "r=$r4, social distancing")
 p
 
 # Here you can see the characteristic "flattening the curve" phrase you hear all over the
