@@ -36,7 +36,7 @@ fields acting on the agents (e.g. some magnetic field).
 By default no update is done this way.
 
 Notice that if you need to write your own custom `move_agent` function, call
-[`update_space`](@ref) at the end, like in e.g. the [Bacteria Growth](@ref) example.
+[`update_space!`](@ref) at the end, like in e.g. the [Bacterial Growth](@ref) example.
 
 ## Keywords
 * `periodic = true` : whether continuous space is periodic or not

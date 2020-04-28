@@ -1,4 +1,4 @@
-# Bacterial Growth
+# # Bacterial Growth
 
 # ![](bacteria.gif)
 
