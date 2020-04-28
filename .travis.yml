@@ -13,6 +13,8 @@ before_script:
   - git config --global user.name "GitUser"
   - git config --global user.email "git@us.er"
 
+codecov: true
+
 matrix:
   allow_failures:
     - julia: nightly
