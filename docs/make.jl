@@ -70,7 +70,8 @@ pages = [
         "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
         "Flocking" => "examples/flock.md",
         "Daisyworld" => "examples/daisyworld.md",
-        "Predator-Prey" => "examples/predator_prey.md"
+        "Predator-Prey" => "examples/predator_prey.md",
+        "Bacteria Growth" => "examples/growing_bacteria.md"
         ],
     "API" => "api.md",
     "Comparison against Mesa (Python)" => "mesa.md"
