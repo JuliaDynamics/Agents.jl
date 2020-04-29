@@ -54,6 +54,7 @@
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model1)
+  @test Agents.defvel(agent, model) == nothing
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
 
   # agents within some range are found correctly

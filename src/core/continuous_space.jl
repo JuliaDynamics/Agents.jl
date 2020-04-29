@@ -182,17 +182,17 @@ end
 Update the internal representation of continuous space to match the new position of
 the agent (useful in custom `move_agent` functions).
 """
-function update_space!(model::ABM{A, <: ContinuousSpace}, agent) where {A}
+function update_space!(model::ABM{A,<:ContinuousSpace}, agent) where {A}
   DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
 end
 
-function kill_agent!(agent::AbstractAgent, model::ABM{A, S}) where {A, S<:ContinuousSpace}
+function kill_agent!(agent::AbstractAgent, model::ABM{A,<:ContinuousSpace}) where {A}
   DBInterface.execute(model.space.deleteq, (agent.id,))
   delete!(model.agents, agent.id)
   return model
 end
 
-function genocide!(model::ABM{A, S}, n::Int) where {A, S<:ContinuousSpace}
+function genocide!(model::ABM{A,<:ContinuousSpace}, n::Int) where {A}
   ids = strip(join("$id," for id in keys(model.agents) if id > n), ',')
   DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
   for id in keys(model.agents)
@@ -201,7 +201,7 @@ function genocide!(model::ABM{A, S}, n::Int) where {A, S<:ContinuousSpace}
   return model
 end
 
-function genocide!(model::ABM{A, S}, f::Function) where {A, S<:ContinuousSpace}
+function genocide!(model::ABM{A,<:ContinuousSpace}, f::Function) where {A}
   ids = strip(join("$(agent.id)," for agent in values(model.agents) if f(agent)), ',')
   DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
   for agent in values(model.agents)
@@ -210,9 +210,9 @@ function genocide!(model::ABM{A, S}, f::Function) where {A, S<:ContinuousSpace}
   return model
 end
 
-function genocide!(model::ABM{A, S}) where {A, S<:ContinuousSpace}
+function genocide!(model::ABM{A,<:ContinuousSpace}) where {A}
   DBInterface.execute(model.space.db, "DELETE FROM tab")
-  for agent in model.agents
+  for agent in values(model.agents)
     delete!(model.agents, agent.id)
   end
 end

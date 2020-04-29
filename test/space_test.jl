@@ -47,10 +47,10 @@ end
     @test length(a.agent_positions) == 6
     @test length(b.agent_positions) == 6
 
-    @test Agents.nv(a) == 6
-    @test Agents.ne(a) == 7
-    @test Agents.nv(b) == 6
-    @test Agents.ne(b) == 9
+    @test nv(a) == 6
+    @test ne(a) == 7
+    @test nv(b) == 6
+    @test ne(b) == 9
 
     ae = collect(Agents.LightGraphs.edges(a.graph))
     be = collect(Agents.LightGraphs.edges(b.graph))
@@ -120,6 +120,8 @@ end
     @test Agents.coord2vertex(((1, 3, 1)), (2, 3, 3)) == 5
     @test Agents.coord2vertex((1, 3, 2), (2, 3, 3)) == 11
     @test Agents.coord2vertex((1, 3, 3), (2, 3, 3)) == 17
+    @test Agents.coord2vertex((2,), (2, 3, 3)) == 2
+    @test Agents.coord2vertex(2, (2, 3, 3)) == 2
 
     @test Agents.vertex2coord(5, (2, 3, 3)) == (1, 3, 1)
     @test Agents.vertex2coord(7, (2, 3, 3)) == (1, 1, 2)
@@ -128,21 +130,39 @@ end
     @test Agents.vertex2coord(15, (2, 3, 3)) == (1, 2, 3)
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
+
+    Random.seed!(648)
+    model = ABM(Agent3, GridSpace((5,5)))
+    agent = Agent3(1, (1,1), 5.5)
+    add_agent!(agent, model)
+    @test Agents.coord2vertex(agent, model) == 20
+    @test Agents.coord2vertex((1, 3), model) == 11
+    @test Agents.coord2vertex(15, model) == 15
+    @test Agents.vertex2coord((2,3), model) == (2,3)
+    @test_throws MethodError Agents.coord2vertex((1, 3, 7), model) == 11
+    @test_throws ErrorException Agents.vertex2coord(3, GraphSpace(complete_digraph(5)))
 end
 
 @testset "nodes" begin
+    Random.seed!(782)
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
+    @test has_empty_nodes(model)
     for node in nodes(model)
         if rand() > 0.7
             add_agent!(node, model)
         end
     end
+    @test pick_empty(model) == 4
     @test nodes(model) == 1:9
-    @test nodes(model, by = :random) == [8, 9, 1, 7, 6, 5, 3, 2, 4]
-    @test nodes(model, by = :population) == [4, 5, 8, 9, 1, 2, 3, 6, 7]
-    @test length(get_node_contents(4, model)) > length(get_node_contents(7, model))
+    @test nodes(model, by = :random) == [9, 1, 8, 6, 3, 5, 7, 2, 4]
+    @test nodes(model, by = :population) == [1, 5, 6, 9, 2, 3, 4, 7, 8]
+    @test length(get_node_contents(5, model)) > length(get_node_contents(7, model))
     @test_throws ErrorException nodes(model, by = :notreal)
+
+    iter = NodeIterator(model)
+    @test length(iter) == 9
+    @test first(NodeIterator(model))[1] == model[1].pos
 end
 
 @testset "Neighbors" begin

@@ -40,30 +40,39 @@ kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
     genocide!(model::ABM)
 Kill all the agents of the model.
 """
-genocide!(model::ABM) =
+genocide!(model::ABM{A,<:DiscreteSpace}) where {A} = _genocide!(model)
+genocide!(model::ABM{A,Nothing}) where {A} = _genocide!(model)
+
+# Wrap methods to mitigate ambiguities with ContinuousSpace
+_genocide!(model::ABM) =
     for a in allagents(model)
         kill_agent!(a, model)
     end
+
 
 """
     genocide!(model::ABM, n::Int)
 Kill the agents of the model whose IDs are larger than n.
 """
-function genocide!(model::ABM, n::Integer)
+genocide!(model::ABM{A,<:DiscreteSpace}, n::Integer) where {A} = _genocide!(model, n)
+genocide!(model::ABM{A,Nothing}, n::Integer) where {A} = _genocide!(model, n)
+
+_genocide!(model::ABM, n::Integer) =
     for (k, v) in model.agents
         k > n && kill_agent!(v, model)
     end
-end
 
 """
     genocide!(model::ABM, f::Function)
 Kill all agents where the function `f(agent)` returns `true`.
 """
-function genocide!(model::ABM, f::Function)
+genocide!(model::ABM{A,<:DiscreteSpace}, f::Function) where {A} = _genocide!(model, f)
+genocide!(model::ABM{A,Nothing}, f::Function) where {A} = _genocide!(model, f)
+
+_genocide!(model::ABM, f::Function) =
     for a in allagents(model)
         f(a) && kill_agent!(a, model)
     end
-end
 
 #######################################################################################
 # Moving agents
