@@ -38,3 +38,22 @@ end
     @test_nowarn @inferred test1(model1)
     @test_nowarn @inferred test2(model2)
 end
+
+@testset "Core methods" begin
+    model = ABM(Agent3, GridSpace((5,5)))
+    @test Agents.agenttype(model) == Agent3
+    @test Agents.spacetype(model) <: GridSpace
+    @test ne(model) == 40
+    @test nv(model) == 25
+    @test Agents.agent_positions(model) == Agents.agent_positions(model.space)
+    @test size(model.space) == (5,5)
+    @test all(isempty(n, model) for n in nodes(model))
+end
+
+@testset "Display" begin
+    model = ABM(Agent3, GridSpace((5,5)))
+    @test sprint(show, model) == "AgentBasedModel with 0 agents of type Agent3\n space: GridSpace with 25 nodes and 40 edges\n scheduler: fastest"
+    @test sprint(show, model.space) == "GridSpace with 25 nodes and 40 edges"
+    model = ABM(Agent6, ContinuousSpace(2))
+    @test sprint(show, model.space) == "2-dimensional periodic ContinuousSpace"
+end

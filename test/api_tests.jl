@@ -154,7 +154,7 @@ add_agent!(model)
   @test !allunique(allweights)
 end
 
-@testset "add_agent!" begin
+@testset "add_agent! (discrete)" begin
   properties = Dict(:x1=>1)
   space = GraphSpace(complete_digraph(10))
   model = ABM(Agent7, space; properties=properties)
@@ -166,9 +166,19 @@ end
   @test model.agents[1].pos == model.agents[2].pos
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
+  Random.seed!(6546)
+  agent = Agent7(3, 2, attributes...)
+  @test add_agent!(agent, model).pos == 7
+  @test add_agent_single!(model, attributes...).pos == 8
+  for id in 5:11
+      agent.id = id
+      add_agent_single!(agent, model)
+  end
+  @test !has_empty_nodes(model)
+  @test_logs (:warn, "No empty nodes found for `add_agent_single!`.") add_agent_single!(agent, model)
 end
 
-@testset "add_agent continuous!" begin
+@testset "add_agent! (continuous)" begin
   properties = Dict(:x1=>1)
   space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
   model = ABM(Agent8, space2d; properties=properties)
@@ -179,6 +189,9 @@ end
   @test model.agents[1].id != model.agents[2].id
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
+  Random.seed!(864)
+  agent = Agent8(3, (0,0), false, 6)
+  @test add_agent!(agent, model).pos[1] ≈ 0.70149 atol=1e-3
 end
 
 @testset "move_agent!" begin
@@ -232,6 +245,8 @@ end
   @test nagents(model) == 2
   kill_agent!(model.agents[1], model)
   @test nagents(model) == 1
+  kill_agent!(2, model)
+  @test nagents(model) == 0
   # GridSpace
   model = ABM(Agent1, GridSpace((5,5)))
   add_agent!((1,3), model)
@@ -252,6 +267,17 @@ end
 end
 
 @testset "genocide!" begin
+  # Testing no space
+  model = ABM(Agent0)
+  for _ in 1:10 add_agent!(model) end
+  genocide!(model)
+  @test nagents(model) == 0
+  for _ in 1:10 add_agent!(model) end
+  genocide!(model, 5)
+  @test nagents(model) == 5
+  genocide!(model, a -> a.id < 3)
+  @test nagents(model) == 3
+
   model = ABM(Agent3, GridSpace((10, 10)))
 
   # Testing genocide!(model::ABM)
@@ -300,4 +326,16 @@ end
   end
   genocide!(model, complex_logic)
   @test nagents(model) == 13
+
+  space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
+  model = ABM(Agent8, space2d)
+  attributes = (f1=true,f2=1)
+  for _ in 1:10 add_agent!(model, attributes...) end
+  genocide!(model)
+  @test nagents(model) == 0
+  for _ in 1:10 add_agent!(model, attributes...) end
+  genocide!(model, 5)
+  @test nagents(model) == 5
+  genocide!(model, a -> a.id < 3)
+  @test nagents(model) == 3
 end

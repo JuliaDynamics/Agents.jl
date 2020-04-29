@@ -46,7 +46,7 @@ Base.size(s::GridSpace) = s.dimensions
 Return `true` if there are no agents in `node`.
 """
 Base.isempty(node::Integer, model::ABM) =
-length(model.space.agent_positions[node]) == 0
+isempty(model.space.agent_positions[node])
 
 """
     GraphSpace(graph::AbstractGraph)
@@ -306,10 +306,9 @@ vertex2coord(v::Tuple, model::ABM) = v
 
 Returns the indices of empty nodes on the model space.
 """
-function find_empty_nodes(model::ABM)
+function find_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
   ap = agent_positions(model)
-  empty_nodes = [i for i in 1:length(ap) if length(ap[i]) == 0]
-  return empty_nodes
+  [i for i in 1:length(ap) if isempty(ap[i])]
 end
 
 """
@@ -317,14 +316,10 @@ end
 
 Return a random empty node or `0` if there are no empty nodes.
 """
-function pick_empty(model)
+function pick_empty(model::ABM{A,<:DiscreteSpace}) where {A}
   empty_nodes = find_empty_nodes(model)
-  if length(empty_nodes) == 0
-    return 0
-  else
-    random_node = rand(empty_nodes)
-    return random_node
-  end
+  isempty(empty_nodes) && return 0
+  rand(empty_nodes)
 end
 
 """
@@ -332,11 +327,8 @@ end
 
 Return true if there are empty nodes in the `model`.
 """
-function has_empty_nodes(model)
-  for el in agent_positions(model)
-    length(el) != 0 && return true
-  end
-  return false
+function has_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
+    any(isempty, agent_positions(model))
 end
 
 """
@@ -345,16 +337,16 @@ end
 Return the ids of agents in the `node` of the model's space (which
 is an integer for `GraphSpace` and a tuple for `GridSpace`).
 """
-get_node_contents(n::Integer, model) = agent_positions(model)[n]
+get_node_contents(n::Integer, model::ABM{A,<:DiscreteSpace}) where {A} = agent_positions(model)[n]
 
 """
     get_node_contents(agent::AbstractAgent, model)
 
 Return all agents' ids in the same node as the `agent` (including the agent's own id).
 """
-get_node_contents(agent::AbstractAgent, model) = get_node_contents(agent.pos, model)
+get_node_contents(agent::AbstractAgent, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_contents(agent.pos, model)
 
-function get_node_contents(coords::Tuple, model)
+function get_node_contents(coords::Tuple, model::ABM{A,<:DiscreteSpace}) where {A}
   node_number = coord2vertex(coords, model)
   agent_positions(model)[node_number]
 end
@@ -364,7 +356,7 @@ end
 Same as `get_node_contents(x, model)` but directly returns the list of agents
 instead of just the list of IDs.
 """
-get_node_agents(x, model) = [model[id] for id in get_node_contents(x, model)]
+get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
@@ -483,21 +475,21 @@ end
 Create an iterator that returns node coordinates, if the space is a grid,
 or otherwise node number, and the agent IDs in each node.
 """
-struct NodeIterator{M<:ABM, S}
+struct NodeIterator{M<:ABM, S<:DiscreteSpace}
   model::M
   length::Int
 end
 
-NodeIterator(model::ABM) = NodeIterator(model, model.space)
+NodeIterator(model::ABM{A,<:DiscreteSpace}) where {A} = NodeIterator(model, model.space)
 
-function NodeIterator(m::M, s::S) where {M, S}
+function NodeIterator(m::M, s::S) where {M, S<:DiscreteSpace}
   L = LightGraphs.nv(s)
   return NodeIterator{M, S}(m, L)
 end
 
 Base.length(iter::NodeIterator) = iter.length
 
-function Base.iterate(iter::NodeIterator{M,S}, state=1) where {M, S}
+function Base.iterate(iter::NodeIterator{M,S}, state=1) where {M, S<:DiscreteSpace}
   state > iter.length && return nothing
   nodecontent = agent_positions(iter.model)[state]
   if S <: GridSpace

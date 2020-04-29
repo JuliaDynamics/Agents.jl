@@ -31,6 +31,12 @@ x_position(agent) = first(agent.pos)
 model = initialize()
 
 @testset "DataFrame init" begin
+    @test init_agent_dataframe(model, nothing) == DataFrame()
+    @test collect_agent_data!(DataFrame(), model, nothing, 1) == DataFrame()
+
+    @test init_model_dataframe(model, nothing) == DataFrame()
+    @test collect_model_data!(DataFrame(), model, nothing, 1) == DataFrame()
+
     props = [:weight]
     @test sprint(show, "text/csv", describe(init_agent_dataframe(model, props), :eltype)) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
     props = [:year]
@@ -99,6 +105,19 @@ end
     @test size(model_data) == (6, 3)
     @test names(model_data) == [:step, :flag, :year]
     @test maximum(model_data[!, :step]) == 1825
+
+    agent_data, model_data = run!(
+        model,
+        agent_step!,
+        model_step!,
+        365 * 5;
+        when_model = [1, 365*5],
+        when = false,
+        mdata = [:flag, :year],
+        adata = [(:weight, mean)],
+    )
+    @test size(agent_data) == (0, 2)
+    @test size(model_data) == (2, 3)
 end
 
 @testset "Low-level API for Collections" begin
@@ -134,6 +153,14 @@ end
     @test size(yearly_agent_data) == (15, 3)
     @test names(yearly_agent_data) == [:step, :id, :weight]
     @test maximum(yearly_agent_data[!, :step]) == 5
+
+    @test_logs (:warn, "`step!` with keyword arguments is deprecated. Use `run!` instead.") step!(model, agent_step!, model_step!, 1; adata = agent_props)
+    tick = model.tick
+    step!(model, agent_step!, 1)
+    @test tick == model.tick
+    stop(m, s) = m.year == 6
+    step!(model, agent_step!, model_step!, stop)
+    @test model.tick == 365*6
 end
 
 n = 10
