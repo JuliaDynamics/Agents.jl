@@ -277,4 +277,3 @@ results, _ = run!(model, agent_step!, n_steps; adata = adata)
 )
 @df results plot!(:step, :count_wolves, label = "Wolves")
 @df results plot!(:step, :count_grass, label = "Grass")
-
