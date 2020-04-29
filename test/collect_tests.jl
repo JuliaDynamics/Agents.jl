@@ -154,6 +154,8 @@ end
     @test names(yearly_agent_data) == [:step, :id, :weight]
     @test maximum(yearly_agent_data[!, :step]) == 5
 
+    @test dummystep(model) == nothing
+    @test dummystep(agent, model) == nothing
     @test_logs (:warn, "`step!` with keyword arguments is deprecated. Use `run!` instead.") step!(model, agent_step!, model_step!, 1; adata = agent_props)
     tick = model.tick
     step!(model, agent_step!, 1)

@@ -192,6 +192,8 @@ end
   Random.seed!(864)
   agent = Agent8(3, (0,0), false, 6)
   @test add_agent!(agent, model).pos[1] ≈ 0.70149 atol=1e-3
+  agent.id = 4
+  @test add_agent!(agent, (0.5, 0.5), model).pos[1] ≈ 0.5 atol=1e-3
 end
 
 @testset "move_agent!" begin
