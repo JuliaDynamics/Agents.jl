@@ -159,7 +159,7 @@ adata = [:pos, :length, :orientation, :growthprog, :p1, :p2, :f1, :f2]
 # plot the becteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
 using AgentsPlots, Plots
-pyplot() # hide
+gr() # hide
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)

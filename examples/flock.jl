@@ -145,7 +145,7 @@ end
 
 # And here is the animation
 using AgentsPlots, Plots
-pyplot() # hide
+gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src
 model = initialize_model()
@@ -155,7 +155,7 @@ anim = @animate for i in 0:100
     p1 = plotabm(
         model;
         am = bird_triangle,
-        as = 15,
+        as = 10,
         showaxis = false,
         grid = false,
         xlims = (0, e[1]),

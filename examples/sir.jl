@@ -39,7 +39,7 @@ using Agents, Random, DataFrames, LightGraphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using Plots
-pyplot() # hide
+gr() # hide
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int

@@ -18,7 +18,7 @@
 # ## Defining the agent type
 
 using Agents, AgentsPlots, Plots
-pyplot() # hide
+gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent

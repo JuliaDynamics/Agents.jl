@@ -133,7 +133,7 @@ W10 = wealth_distr(data, model2D, 9);
 #
 
 using Plots
-pyplot() # hide
+gr() # hide
 
 Plots.heatmap(W1)
 

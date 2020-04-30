@@ -37,7 +37,7 @@
 # and an associated `albedo` value, again set by the user.
 using Agents, AgentsPlots, Plots, Random
 using Statistics: mean
-pyplot() # hide
+gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
@@ -265,7 +265,7 @@ anim = @animate for t in 1:900
     )
     scatter!(
         [a.pos for a in allagents(model)];
-        marker = (:circle, 6),
+        marker = (:circle, 5),
         markercolor = [a.breed for a in allagents(model)],
         label = :none,
         showaxis = false,

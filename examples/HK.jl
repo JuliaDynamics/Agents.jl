@@ -140,7 +140,7 @@ agent_data
 # Finally we run three scenarios, collect the data and plot it.
 using Plots
 using Random # hide
-pyplot() # hide
+gr() # hide
 
 plotsim(data, ϵ) = plot(
     data.step,
