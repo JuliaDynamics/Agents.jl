@@ -17,7 +17,8 @@
 
 # ## Defining the agent type
 
-using Agents
+using Agents, AgentsPlots, Plots
+gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
@@ -190,19 +191,17 @@ data
 # We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
 # 2D grid at every generation, via the `AgentsPLots` package. Let's color the
 # two groups orange and blue and make one a square and the other a circle
-using AgentsPlots
-groupcolor(a) = a[1].group == 1 ? :blue : :orange
-groupmarker(a) = a[1].group == 1 ? :circle : :square
-plotabm(model; ac = groupcolor, am = groupmarker)
+groupcolor(a) = a.group == 1 ? :blue : :orange
+groupmarker(a) = a.group == 1 ? :circle : :square
+plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
 
 # ## Animating the evolution
 
 # The function [`plotabm`](@ref) can be used to make your own animations
 cd(@__DIR__) #src
-using Plots # for @animate
 model = initialize();
 anim = @animate for i in 0:10
-    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = x->4)
+    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
     title!(p1, "step $(i)")
     step!(model, agent_step!, 1)
 end
@@ -259,13 +258,7 @@ adata = [(:mood, happyperc)]
 parameters =
     Dict(:min_to_be_happy => collect(2:5), :numagents => [200, 300], :griddims => (20, 20))
 
-data, _ = paramscan(
-    parameters,
-    initialize;
-    adata = adata,
-    n = 3,
-    agent_step! = agent_step!,
-)
+data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
 data
 
 # `paramscan` also allows running replicates per parameter setting:
@@ -294,3 +287,4 @@ select!(data_mean, Not(:replicate_mean))
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
+

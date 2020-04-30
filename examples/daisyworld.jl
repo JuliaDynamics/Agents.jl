@@ -37,6 +37,7 @@
 # and an associated `albedo` value, again set by the user.
 using Agents, AgentsPlots, Plots, Random
 using Statistics: mean
+gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
@@ -209,11 +210,11 @@ end
 # activity is similar to that of our own:
 
 cd(@__DIR__) #src
-Random.seed!(165)
+Random.seed!(165) # hide
 model = daisyworld(scenario = :ours)
 step!(model, agent_step!, model_step!, 100)
-daisycolor(a) = a[1].breed
-plotabm(model; ac = daisycolor, as = d -> 5)
+daisycolor(a) = a.breed
+plotabm(model; ac = daisycolor, as = 5)
 
 # We can see that this world achieves quasi-equilibrium, where one `breed` does not
 # totally dominate the other.
@@ -251,26 +252,10 @@ agent_df = init_agent_dataframe(model, adata);
 
 # Now we can evolve our model and observe what happens
 
-daisycolor(a) = a[1].breed
-as = x -> 5
-am = x -> :circle
-
-D = length(model.space.dimensions)
-N = nodes(model)
-
 anim = @animate for t in 1:900
     step!(model, agent_step!, model_step!, 1)
     collect_model_data!(model_df, model, mdata, t)
     collect_agent_data!(agent_df, model, adata, t)
-    ncolor, weights, markers, pos = [], Float64[], Symbol[], NTuple{D,Int}[]
-    for n in N
-        a = get_node_agents(n, model)
-        isempty(a) && continue
-        for (c, f) in zip((ncolor, weights, markers), (daisycolor, as, am))
-            push!(c, f(a))
-        end
-        push!(pos, Agents.vertex2coord(n, model))
-    end
     heatmap(
         1:model.space.dimensions[1],
         1:model.space.dimensions[2],
@@ -279,10 +264,9 @@ anim = @animate for t in 1:900
         colorbar_title = "Temperature",
     )
     scatter!(
-        pos;
-        color = ncolor,
-        ms = weights,
-        marker = markers,
+        [a.pos for a in allagents(model)];
+        marker = (:circle, 5),
+        markercolor = [a.breed for a in allagents(model)],
         label = :none,
         showaxis = false,
     )
@@ -300,7 +284,7 @@ p3 = plot(
     legend = false,
     ylabel = "Population",
 )
-plot(p1, p2, p3, layout = grid(3, 1), size = (500, 800))
+plot(p1, p2, p3, layout = (3, 1), size = (500, 800))
 
 # We observe an initial period of low solar luminosity which favors a large population of
 # black daisies. The population however is kept in check by competition from white daisies

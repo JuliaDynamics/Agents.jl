@@ -21,6 +21,7 @@
 # they have a `pos` and `vel` fields, both of which are tuples of float numbers.
 
 using Agents, Random, AgentsPlots, Plots
+gr() # hide
 cd(@__DIR__) #src
 mutable struct Agent <: AbstractAgent
     id::Int
@@ -38,7 +39,7 @@ function ball_model(; speed = 0.002)
     model = ABM(Agent, space2d, properties = Dict(:dt => 1.0))
 
     ## And add some agents to the model
-    Random.seed!(42)
+    Random.seed!(42) # hide
     for ind in 1:500
         pos = Tuple(rand(2))
         vel = sincos(2π * rand()) .* speed
@@ -61,8 +62,17 @@ agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 
+e = model.space.extend
 anim = @animate for i in 1:2:100
-    p1 = plotabm(model, as = 4)
+    p1 = plotabm(
+        model,
+        as = 4,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
+
     title!(p1, "step $(i)")
     step!(model, agent_step!, 2)
 end
@@ -87,8 +97,16 @@ end
 
 model2 = ball_model()
 
+e = model.space.extend
 anim = @animate for i in 1:2:100
-    p1 = plotabm(model2, as = 4)
+    p1 = plotabm(
+        model2,
+        as = 4,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
     title!(p1, "step $(i)")
     step!(model2, agent_step!, model_step!, 2)
 end
@@ -124,8 +142,16 @@ end
 
 # let's animate this again
 
+e = model.space.extend
 anim = @animate for i in 1:2:100
-    p1 = plotabm(model3, as = 4)
+    p1 = plotabm(
+        model3,
+        as = 4,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
     title!(p1, "step $(i)")
     step!(model3, agent_step!, model_step!, 2)
 end
@@ -215,7 +241,17 @@ sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-plotabm(sir_model; ac = sir_colors, as = 4)
+e = model.space.extend
+plotabm(
+    sir_model;
+    ac = sir_colors,
+    as = 4,
+    msc=:auto,
+    showaxis = false,
+    grid = false,
+    xlims = (0, e[1]),
+    ylims = (0, e[2]),
+)
 
 # We have increased the size of the model 10-fold (for more realistic further analysis)
 
@@ -273,8 +309,18 @@ end
 
 sir_model = sir_initiation()
 
+e = model.space.extend
 anim = @animate for i in 1:2:100
-    p1 = plotabm(sir_model; ac = sir_colors, as = 4)
+    p1 = plotabm(
+        sir_model;
+        ac = sir_colors,
+        as = 4,
+        msc=:auto,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
     title!(p1, "step $(i)")
     step!(sir_model, sir_agent_step!, sir_model_step!, 2)
 end
@@ -297,36 +343,21 @@ sir_model1 = sir_initiation(reinfection_probability = r1, βmin = β1)
 sir_model2 = sir_initiation(reinfection_probability = r2, βmin = β1)
 sir_model3 = sir_initiation(reinfection_probability = r1, βmin = β2)
 
-data1, _ = run!(
-    sir_model1,
-    sir_agent_step!,
-    sir_model_step!,
-    2000;
-    adata = adata,
-)
-data2, _ = run!(
-    sir_model2,
-    sir_agent_step!,
-    sir_model_step!,
-    2000;
-    adata = adata,
-)
-data3, _ = run!(
-    sir_model3,
-    sir_agent_step!,
-    sir_model_step!,
-    2000;
-    adata = adata,
-)
+data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata = adata)
 
 data1[(end - 10):end, :]
 
 # Now, we can plot the number of infected versus time
 
-p = plot(data1[:, aggname(:status, infected)], label = "r=$r1, beta=$β1")
+p = plot(
+    data1[:, aggname(:status, infected)],
+    label = "r=$r1, beta=$β1",
+    ylabel = "Infected",
+)
 plot!(p, data2[:, aggname(:status, infected)], label = "r=$r2, beta=$β1")
 plot!(p, data3[:, aggname(:status, infected)], label = "r=$r1, beta=$β2")
-yaxis!(p, "Infected")
 p
 
 # Exponential growth is evident in all cases.
@@ -343,8 +374,18 @@ p
 
 sir_model = sir_initiation(isolated = 0.8)
 
+e = model.space.extend
 anim = @animate for i in 0:2:1000
-    p1 = plotabm(sir_model; ac = sir_colors, as = 4)
+    p1 = plotabm(
+        sir_model;
+        ac = sir_colors,
+        as = 4,
+        msc=:auto,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
     title!(p1, "step $(i)")
     step!(sir_model, sir_agent_step!, sir_model_step!, 2)
 end
@@ -360,16 +401,11 @@ gif(anim, "socialdist5.gif", fps = 25)
 r4 = 0.04
 sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated = 0.8)
 
-data4, _ = run!(
-    sir_model4,
-    sir_agent_step!,
-    sir_model_step!,
-    2000;
-    adata = adata,
-)
+data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata = adata)
 
 plot!(p, data4[:, aggname(:status, infected)], label = "r=$r4, social distancing")
 p
 
 # Here you can see the characteristic "flattening the curve" phrase you hear all over the
 # news.
+

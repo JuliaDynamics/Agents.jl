@@ -54,12 +54,12 @@ M = 2000
 adata = [:wealth]
 model = wealth_model(numagents = M)
 data, _ = run!(model, agent_step!, N; adata = adata)
-data[end - 20:end, :]
+data[(end - 20):end, :]
 
 # What we mostly care about is the distribution of wealth,
 # which we can obtain for example by doing the following query:
 
-wealths = filter(x -> x.step == N-1, data)[!, :wealth]
+wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 
 # and then we can make a histogram of the result.
 # With a simple visualization we immediately see the power-law distribution:
@@ -108,8 +108,8 @@ function agent_step_2d!(agent, model)
 end
 
 # ## Running the model with space
-using Random
-Random.seed!(5)
+using Random # hide
+Random.seed!(5) # hide
 init_wealth = 4
 model = wealth_model_2D(; wealth = init_wealth)
 adata = [:wealth, :pos]
@@ -133,6 +133,8 @@ W10 = wealth_distr(data, model2D, 9);
 #
 
 using Plots
+gr() # hide
+
 Plots.heatmap(W1)
 
 #
