@@ -6,7 +6,7 @@
 
 using Agents, AgentsPlots, Plots
 using Random # hide
-pyplot() # hide
+gr() # hide
 
 # ## 1. Define the rules
 
