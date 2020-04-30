@@ -25,6 +25,12 @@ matrix:
     - stage: "Documentation"
       julia: 1
       os: linux
+      addons:
+        apt:
+          packages:
+            - python3-matplotlib
+      env:
+        - PYTHON=python3
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()));'
