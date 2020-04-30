@@ -28,6 +28,7 @@ mutable struct Tree <: AbstractAgent
     pos::Tuple{Int,Int}
     status::Bool  # true is green and false is burning
 end
+nothing # hide
 
 # The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any agent,
 # and a `status` field that we introduce for this specific model.

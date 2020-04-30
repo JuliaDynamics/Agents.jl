@@ -246,6 +246,7 @@ plotabm(
     sir_model;
     ac = sir_colors,
     as = 4,
+    msc=:auto,
     showaxis = false,
     grid = false,
     xlims = (0, e[1]),
@@ -314,6 +315,7 @@ anim = @animate for i in 1:2:100
         sir_model;
         ac = sir_colors,
         as = 4,
+        msc=:auto,
         showaxis = false,
         grid = false,
         xlims = (0, e[1]),
@@ -378,6 +380,7 @@ anim = @animate for i in 0:2:1000
         sir_model;
         ac = sir_colors,
         as = 4,
+        msc=:auto,
         showaxis = false,
         grid = false,
         xlims = (0, e[1]),

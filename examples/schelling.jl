@@ -193,7 +193,7 @@ data
 # two groups orange and blue and make one a square and the other a circle
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :square
-plotabm(model; ac = groupcolor, am = groupmarker)
+plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
 
 # ## Animating the evolution
 
@@ -201,7 +201,7 @@ plotabm(model; ac = groupcolor, am = groupmarker)
 cd(@__DIR__) #src
 model = initialize();
 anim = @animate for i in 0:10
-    p1 = plotabm(model; ac = groupcolor, am = groupmarker)
+    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
     title!(p1, "step $(i)")
     step!(model, agent_step!, 1)
 end
