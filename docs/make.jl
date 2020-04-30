@@ -7,6 +7,9 @@ using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
 using Plots, StatsPlots
+# Initialise pyplot to squash build output bleeding into docs.
+pyplot()
+plot([1,1])
 const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 

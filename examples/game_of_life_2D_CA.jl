@@ -6,7 +6,8 @@
 
 using Agents, AgentsPlots, Plots
 using Random # hide
-gr() # hide
+gr(); # hide
+nothing # hide
 
 # ## 1. Define the rules
 
