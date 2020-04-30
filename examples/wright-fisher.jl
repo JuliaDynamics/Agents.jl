@@ -44,7 +44,7 @@ modelstep_neutral!(m) = sample!(m, nagents(m));
 # function (as the agents perform no actions).
 using Statistics: mean
 
-data, _ = run!(m, dummystep, modelstep_neutral!, 20; adata = [(:trait,mean)])
+data, _ = run!(m, dummystep, modelstep_neutral!, 20; adata = [(:trait, mean)])
 data
 
 # As expected, the average value of the "trait" remains around 0.5.

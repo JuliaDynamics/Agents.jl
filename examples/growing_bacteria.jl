@@ -17,20 +17,21 @@
 # since each agent is a specialized shape.
 
 using Agents, LinearAlgebra
+cd(@__DIR__) #src
 
 mutable struct SimpleCell <: AbstractAgent
     id::Int
-    pos::NTuple{2, Float64}
+    pos::NTuple{2,Float64}
     length::Float64
     orientation::Float64
     growthprog::Float64
     growthrate::Float64
 
     ## node positions/forces
-    p1::NTuple{2, Float64}
-    p2::NTuple{2, Float64}
-    f1::NTuple{2, Float64}
-    f2::NTuple{2, Float64}
+    p1::NTuple{2,Float64}
+    p2::NTuple{2,Float64}
+    f1::NTuple{2,Float64}
+    f2::NTuple{2,Float64}
 
     function SimpleCell(id, pos, l, φ, g, γ)
         a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
@@ -53,7 +54,7 @@ end
 
 # Some geometry convenience functions
 unitvector(φ) = reverse(sincos(φ))
-cross2D(a, b) = a[1]*b[2] - a[2]*b[1]
+cross2D(a, b) = a[1] * b[2] - a[2] * b[1]
 
 # ## Stepping functions
 
@@ -62,14 +63,14 @@ function model_step!(model)
         if a.growthprog ≥ 1
             ## When a cell has matured, it divides into two daughter cells on the
             ## positions of its nodes.
-            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
-            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1rand() + 0.05)
+            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand() + 0.05)
+            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand() + 0.05)
             kill_agent!(a, model)
         else
             ## The rest lengh of the internal spring grows with time. This causes
             ## the nodes to physically separate.
             uv = unitvector(a.orientation)
-            internalforce = model.hardness*(a.length - a.growthprog) .* uv
+            internalforce = model.hardness * (a.length - a.growthprog) .* uv
             a.f1 = -1 .* internalforce
             a.f2 = internalforce
         end
@@ -110,12 +111,12 @@ function interact!(a1::SimpleCell, a2::SimpleCell, model)
     a2.f2 = @. a2.f2 - (n12 + n22)
 end
 
-function noderepulsion(p1::NTuple{2, Float64}, p2::NTuple{2, Float64}, model::ABM)
+function noderepulsion(p1::NTuple{2,Float64}, p2::NTuple{2,Float64}, model::ABM)
     delta = p1 .- p2
     distance = norm(delta)
     if distance ≤ 1
-        uv = delta./distance
-        return (model.hardness*(1 - distance)).*uv
+        uv = delta ./ distance
+        return (model.hardness * (1 - distance)) .* uv
     end
     return (0, 0)
 end
@@ -127,7 +128,7 @@ function transform_forces(agent::SimpleCell)
     fasym = agent.f1 .- agent.f2
     uv = unitvector(agent.orientation)
     compression = dot(uv, fasym)
-    torque = 0.5*cross2D(uv, fasym)
+    torque = 0.5 * cross2D(uv, fasym)
     return fsym, compression, torque
 end
 
@@ -136,8 +137,10 @@ end
 # Okay, we can now initialize a model and see what it does.
 
 space = ContinuousSpace(2, extend = (12, 12), periodic = false, metric = :euclidean)
-model = ABM(SimpleCell, space, properties =
-    Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0)
+model = ABM(
+    SimpleCell,
+    space,
+    properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
 )
 
 # Let's start with just two agents.
@@ -156,35 +159,48 @@ adata = [:pos, :length, :orientation, :growthprog, :p1, :p2, :f1, :f2]
 # plot the becteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
 using AgentsPlots, Plots
+pyplot() # hide
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)
     a = agent.growthprog
     b = 1
-    m = @. 2*sqrt((b^4-a^4)+a^4*cos(2*t)^2)+2*a^2*cos(2*t)
-    C = sqrt.(m/2)
+    m = @. 2 * sqrt((b^4 - a^4) + a^4 * cos(2 * t)^2) + 2 * a^2 * cos(2 * t)
+    C = sqrt.(m / 2)
 
-    x = C.*cos.(t)
-    y = C.*sin.(t)
+    x = C .* cos.(t)
+    y = C .* sin.(t)
 
     uv = unitvector(agent.orientation)
-    θ = atan(uv[2],uv[1])
+    θ = atan(uv[2], uv[1])
     R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
 
-    bacteria = R*permutedims([x y])
-    Shape(bacteria[1,:], bacteria[2,:])
+    bacteria = R * permutedims([x y])
+    Shape(bacteria[1, :], bacteria[2, :])
 end
 
 # and set up some nice colors
 
-bacteria_colors(agent) = HSV.(agent.id*2.718.%1, agent.id*3.14.%1, agent.id*1.618.%1)
+bacteria_colors(agent) =
+    HSV.(agent.id * 2.718 .% 1, agent.id * 3.14 .% 1, agent.id * 1.618 .% 1)
 
 # and proceed with the animation
 
+e = model.space.extend
 anim = @animate for i in 0:50:5000
     step!(model, agent_step!, model_step!, 100)
-    p1 = plotabm(model, am = cassini_oval, as = 30, ac = bacteria_colors)
+    p1 = plotabm(
+        model,
+        am = cassini_oval,
+        as = 30,
+        ac = bacteria_colors,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
     title!(p1, "n = $(i)")
 end
 
 gif(anim, "bacteria.gif", fps = 25)
+

@@ -39,6 +39,7 @@ using Agents, Random, DataFrames, LightGraphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using Plots
+pyplot() # hide
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int
@@ -260,7 +261,7 @@ end
 model = model_initiation(; params...)
 
 anim = @animate for i in 0:30
-    i>0 && step!(model, agent_step!, 1)
+    i > 0 && step!(model, agent_step!, 1)
     p1 = plotabm(model; ac = infected_fraction, plotargs...)
     title!(p1, "Day $(i)")
 end
@@ -289,13 +290,17 @@ data[1:10, :]
 
 N = sum(model.Ns) # Total initial population
 x = data.step
-p = Plots.plot(x, log10.(data[:, aggname(:status, infected)]), label = "infected")
+p = plot(
+    x,
+    log10.(data[:, aggname(:status, infected)]),
+    label = "infected",
+    xlabel = "steps",
+    ylabel = "log(count)",
+)
 plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
 dead = log10.(N .- data[:, aggname(:status, length)])
 plot!(p, x, dead, label = "dead")
-xlabel!(p, "steps")
-ylabel!(p, "log( count )")
-p
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases
 # linearly, until everyone is infected.
+

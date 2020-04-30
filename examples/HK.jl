@@ -115,8 +115,7 @@ model[1]
 
 function model_run(; kwargs...)
     model = hk_model(; kwargs...)
-    agent_data, _ = run!(model, agent_step!, model_step!, terminate;
-                         adata = [:new_opinion])
+    agent_data, _ = run!(model, agent_step!, model_step!, terminate; adata = [:new_opinion])
     return agent_data
 end
 
@@ -128,24 +127,33 @@ data[(end - 19):end, :]
 # function for the `when` argument:
 
 model = hk_model()
-agent_data, _ = run!(model, agent_step!, model_step!, terminate;
-                     adata = [:new_opinion], when = terminate)
+agent_data, _ = run!(
+    model,
+    agent_step!,
+    model_step!,
+    terminate;
+    adata = [:new_opinion],
+    when = terminate,
+)
 agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
-using Plots, Random
+using Plots
+using Random # hide
+pyplot() # hide
 
 plotsim(data, ϵ) = plot(
-    data[!, :step],
-    data[!, :new_opinion],
+    data.step,
+    data.new_opinion,
     leg = false,
-    group = data[!, :id],
+    group = data.id,
     title = "epsilon = $(ϵ)",
 )
 
-Random.seed!(42)
+Random.seed!(42) # hide
 
 plt001, plt015, plt03 =
     map(e -> (model_run(ϵ = e), e) |> t -> plotsim(t[1], t[2]), [0.05, 0.15, 0.3])
 
 plot(plt001, plt015, plt03, layout = (3, 1))
+
