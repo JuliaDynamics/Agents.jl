@@ -16,6 +16,7 @@ nothing # hide
 # survive if the number of their living neighbors is ≤S,
 # come to life if their living neighbors are  ≥R and ≤O.
 rules = (2, 3, 3, 3)
+nothing # hide
 
 # ## 2. Build the model
 
@@ -47,6 +48,7 @@ function build_model(; rules::Tuple, dims = (100, 100), Moore = true)
     end
     return model
 end
+nothing # hide
 
 # Now we define a stepping function for the model to apply the rules to agents.
 
@@ -77,6 +79,7 @@ function nlive_neighbors(ag, model)
     end
     return nlive
 end
+nothing # hide
 
 # now we can instantiate the model:
 Random.seed!(120) # hide
@@ -99,6 +102,7 @@ anim = @animate for i in 0:100
     i > 0 && step!(model, dummystep, ca_step!, 1)
     p1 = plotabm(model; ac = ac, as = 3, am = :square, showaxis = false)
 end
+nothing # hide
 
 # We can now save the animation to a gif.
 

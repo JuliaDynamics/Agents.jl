@@ -50,7 +50,8 @@ isempty(model.space.agent_positions[node])
 
 """
     GraphSpace(graph::AbstractGraph)
-Create a `GraphSpace` instance that is underlined by an arbitrary graph from LightGraphs.jl.
+Create a `GraphSpace` instance that is underlined by an arbitrary graph from
+[LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 In this case, your agent type must have a `pos` field that is of type `Int`.
 """
 function GraphSpace(graph::G) where {G<:AbstractGraph}

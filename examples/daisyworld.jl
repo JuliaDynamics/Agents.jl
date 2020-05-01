@@ -35,8 +35,9 @@
 # `id` and `pos` for an agent that lives on a [`GridSpace`](@ref). Each daisy has an `age`,
 # confined later by a maximum age set by the user, a `breed` (either `:black` or `:white`)
 # and an associated `albedo` value, again set by the user.
-using Agents, AgentsPlots, Plots, Random
+using Agents, AgentsPlots, Plots
 using Statistics: mean
+using Random # hide
 gr() # hide
 
 mutable struct Daisy <: AbstractAgent
@@ -80,6 +81,7 @@ function diffuse_temperature!(node::Int, model::ABM{Daisy}; ratio = 0.5)
         ## amount to each of *its* neighbors
         sum(model.temperature[neighbors]) * 0.125 * ratio
 end
+nothing # hide
 
 # ## Initialising Daisyworld
 
@@ -141,6 +143,7 @@ function daisyworld(;
     end
     return model
 end
+nothing # hide
 
 # ## Model dynamics
 
@@ -174,6 +177,7 @@ function propagate!(node::Int, model::ABM{Daisy})
         end
     end
 end
+nothing # hide
 
 # Now, we need to write the model and agent step functions for Agents.jl to advance
 # Daisyworld's dynamics. Since we have constructed a number of helper functions,
@@ -204,6 +208,7 @@ function agent_step!(agent::Daisy, model::ABM{Daisy})
     agent.age += 1
     agent.age >= model.max_age && kill_agent!(agent, model)
 end
+nothing # hide
 
 # ## Look at the pretty flowers!
 # Lets run the model for a bit and see what our world looks like when the solar
@@ -248,7 +253,8 @@ white(agent) = agent.breed == :white
 black(agent) = agent.breed == :black
 total(v) = length(v) == 0 ? 0.0 : sum(v)
 adata = [(white, total), (black, total)]
-agent_df = init_agent_dataframe(model, adata);
+agent_df = init_agent_dataframe(model, adata)
+nothing # hide
 
 # Now we can evolve our model and observe what happens
 

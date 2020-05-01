@@ -13,14 +13,16 @@ uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 version = "0.3.3"
 
 [[Agents]]
-deps = ["DataFrames", "Distributed", "LightGraphs", "Random", "StatsBase", "Test"]
-git-tree-sha1 = "db547a3cdbb0c8dfee9502c98a2eba6db6a42ee2"
+deps = ["DataFrames", "Distributed", "LightGraphs", "LinearAlgebra", "Random", "SQLite", "StatsBase"]
+git-tree-sha1 = "63b45cf24c0674be62d25306a01b2ebdab1a687b"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaDynamics/Agents.jl.git"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
-version = "2.4.0"
+version = "3.0.0"
 
 [[AgentsPlots]]
 deps = ["Agents", "GraphRecipes", "LightGraphs", "Plots", "Reexport"]
-git-tree-sha1 = "017e6d699cf5b8df6ded2ab4696e8e1dc4b822e3"
+git-tree-sha1 = "363213c241ae5e7717e345227d9db599db566a84"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaDynamics/AgentsPlots.jl.git"
 uuid = "7820620d-95fb-4739-93b3-b0a14dd83f9a"

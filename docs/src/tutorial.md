@@ -5,7 +5,7 @@ Agents.jl is composed of components for building models, building and managing s
 Agents.jl structures simulations in three components:
 
 1. An [`AgentBasedModel`](@ref) instance.
-1. A space instance.
+1. A [space](@ref Space) instance.
 1. A subtype of [`AbstractAgent`](@ref) for the agents.
 
 To run simulations and collect data, the following are also necessary
@@ -49,14 +49,14 @@ For more functions visit the [API](@ref) page.
 ## 4. Evolving the model
 
 Any ABM model should have at least one and at most two step functions.
-An _agent step function_ is always required.
+An _agent step function_ is required by default.
 Such an agent step function defines what happens to an agent when it activates.
 Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
 
 An agent step function should only accept two arguments: first, an agent object, and second, a model object.
 
 The model step function should accept only one argument, that is the model object.
-To use only a model step function, users can use the built-in `dummystep` as the agent step function.
+To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function.
 
 After you have defined these two functions, you evolve your model with `step!`:
 ```@docs
@@ -77,4 +77,6 @@ This means that [`run!`](@ref) has not been designed for maximum performance (or
 
 
 ## An educative example
-A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref). There the visualization aspect is also discussed.
+A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref).
+Each of the examples listed within this documentation are designed to showcase different ways of interacting with the API.
+If you are not sure about how to use a particular function, most likely one of the examples can show you how to interact with it.

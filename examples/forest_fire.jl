@@ -33,9 +33,9 @@ nothing # hide
 # The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any agent,
 # and a `status` field that we introduce for this specific model.
 # The `status` field will hold `true` for a green tree and `false` for a burning one.
-# All other model parameters go into the `AgentBasedModel`
+# All other model parameters go into the `AgentBasedModel`.
 
-# We then make a setup function that initializes the model
+# We then make a setup function that initializes the model.
 function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
     Random.seed!(seed)
     space = GridSpace(griddims, moore = true)
@@ -52,7 +52,7 @@ function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), 
     return forest
 end
 
-forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2);
+forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2)
 
 # ## Defining the step!
 # Because of the way the forest fire model is defined, we only need a
@@ -85,6 +85,7 @@ function forest_step!(forest)
         end
     end
 end
+nothing # hide
 
 # as we discussed, there is no agent_step! function here, so we will just use `dummystep`.
 

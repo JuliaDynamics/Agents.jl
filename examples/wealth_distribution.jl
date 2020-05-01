@@ -14,7 +14,7 @@
 # Even though this rule-set is simple, it can still recreate the basic
 # properties of wealth distributions, e.g. power-laws distributions.
 
-# ## Core structures, space-less
+# ## Core structures: space-less
 # We start by defining the Agent type and initializing the model.
 using Agents
 mutable struct WealthAgent <: AbstractAgent
@@ -43,8 +43,9 @@ function agent_step!(agent, model)
     agent.wealth -= 1
     ragent.wealth += 1
 end
+nothing # hide
 
-# We use `random_agent` as a convenient way to just grab a random agent.
+# We use `random_agent` as a convenient way to just grab a second agent.
 # (this may return the same agent as `agent`, but we don't care in the long run)
 
 # ## Running the space-less model
@@ -67,7 +68,7 @@ wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 using UnicodePlots
 UnicodePlots.histogram(wealths)
 
-# ## Core structures, with space
+# ## Core structures: with space
 # We now expand this model to (in this case) a 2D grid. The rules are the same
 # but agents exchange wealth only with their neighbors.
 # We therefore have to add a `pos` field as the second field of the agents:
@@ -106,6 +107,7 @@ function agent_step_2d!(agent, model)
         random_neighbor_agent.wealth += 1
     end
 end
+nothing # hide
 
 # ## Running the model with space
 using Random # hide
@@ -118,6 +120,9 @@ data[(end - 20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
+using Plots
+gr() # hide
+
 function wealth_distr(data, model, n)
     W = zeros(Int, size(model.space))
     for row in eachrow(filter(r -> r.step == n, data)) # iterate over rows at a specific step
@@ -127,22 +132,16 @@ function wealth_distr(data, model, n)
 end
 
 W1 = wealth_distr(data, model2D, 1)
-W5 = wealth_distr(data, model2D, 5)
-W10 = wealth_distr(data, model2D, 9);
-
-#
-
-using Plots
-gr() # hide
-
 Plots.heatmap(W1)
 
 #
 
+W5 = wealth_distr(data, model2D, 5)
 Plots.heatmap(W5)
 
 #
 
+W10 = wealth_distr(data, model2D, 9)
 Plots.heatmap(W10)
 
 # What we see is that wealth gets more and more localized.
