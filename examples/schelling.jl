@@ -17,7 +17,7 @@
 
 # ## Defining the agent type
 
-using Agents, AgentsPlots, Plots
+using Agents, AgentsPlots
 gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
@@ -61,8 +61,8 @@ schelling2 = ABM(
     scheduler = property_activation(:group),
 )
 
-# Notice that `partial_activation` accepts an argument and returns a function,
-# which is why we didn't just give `partial_activation` to `scheduler`.
+# Notice that `property_activation` accepts an argument and returns a function,
+# which is why we didn't just give `property_activation` to `scheduler`.
 
 # ## Creating the ABM through a function
 
@@ -87,10 +87,12 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     end
     return model
 end
+nothing # hide
 
 # Notice that the position that an agent is initialized does not matter
 # in this example.
-# This is because it is set properly when adding an agent to the model.
+# This is because we use [`add_agent_single!`](@ref), which places the agent in a random,
+# empty location on the grid, thus updating its position.
 
 # ## Defining a step function
 
@@ -127,11 +129,12 @@ function agent_step!(agent, model)
     end
     return
 end
+nothing # hide
 
 # For the purpose of this implementation of Schelling's segregation model,
 # we only need an agent step function.
 
-# For defining `agent_step!` we used some of the built-in functions of Agents.jl,
+# When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
 # such as [`node_neighbors`](@ref) that returns the neighboring nodes of the
 # node on which the agent resides, [`get_node_contents`](@ref) that returns the
 # IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves
@@ -155,13 +158,11 @@ step!(model, agent_step!, 3)
 # We can use the [`run!`](@ref) function with keywords to run the model for
 # multiple steps and collect values of our desired fields from every agent
 # and put these data in a `DataFrame` object.
-
-model = initialize()
-
 # We define vector of `Symbols`
 # for the agent fields that we want to collect as data
 properties = [:pos, :mood, :group]
 
+model = initialize()
 data, _ = run!(model, agent_step!, 5; adata = properties)
 data[1:10, :] # print only a few rows
 
@@ -182,15 +183,16 @@ properties = [(:mood, sum), (x, maximum)]
 data, _ = run!(model, agent_step!, 5; adata = properties)
 data
 
-# The other `Examples` pages are more realistic examples with a much more meaningful
+# Other examples in the documentation are more realistic, with a much more meaningful
 # collected data. Don't forget to use the function [`aggname`](@ref) to access the
 # columns of the resulting dataframe by name.
 
 # ## Visualizing the data
 
 # We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
-# 2D grid at every generation, via the `AgentsPLots` package. Let's color the
-# two groups orange and blue and make one a square and the other a circle
+# 2D grid at every generation, via the
+# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl) package.
+# Let's color the two groups orange and blue and make one a square and the other a circle.
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :square
 plotabm(model; ac = groupcolor, am = groupmarker, as = 4)

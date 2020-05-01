@@ -40,7 +40,6 @@ mutable struct SimpleCell <: AbstractAgent
     end
 end
 
-
 # In this model, the agents have to store their state in two redundant ways:
 # the cell coordinates (position, length, orientation) are required for the
 # equations of motion, while the positions of the disk-shaped nodes are necessary
@@ -51,10 +50,12 @@ function update_nodes!(a::SimpleCell)
     a.p1 = a.pos .+ offset
     a.p2 = a.pos .- offset
 end
+nothing # hide
 
 # Some geometry convenience functions
 unitvector(φ) = reverse(sincos(φ))
 cross2D(a, b) = a[1] * b[2] - a[2] * b[1]
+nothing # hide
 
 # ## Stepping functions
 
@@ -81,7 +82,7 @@ function model_step!(model)
         interact!(a1, a2, model)
     end
 end
-
+nothing # hide
 
 # Here we use a custom [`move_agent!`](@ref) function,
 # because the agents have several moving parts.
@@ -98,6 +99,7 @@ function agent_step!(agent::SimpleCell, model::ABM)
     update_space!(model, agent)
     return agent.pos
 end
+nothing # hide
 
 # ### Helper functions
 function interact!(a1::SimpleCell, a2::SimpleCell, model)
@@ -131,6 +133,7 @@ function transform_forces(agent::SimpleCell)
     torque = 0.5 * cross2D(uv, fasym)
     return fsym, compression, torque
 end
+nothing # hide
 
 # ## Animating bacterial growth
 
@@ -147,11 +150,13 @@ model = ABM(
 
 add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
 add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
+nothing # hide
 
 # The model has several parameters, and some of them are of interest.
 # We could e.g. define
 
 adata = [:pos, :length, :orientation, :growthprog, :p1, :p2, :f1, :f2]
+nothing # hide
 
 # and then [`run!`](@ref) the model. But we'll animate the model directly.
 
@@ -178,11 +183,13 @@ function cassini_oval(agent)
     bacteria = R * permutedims([x y])
     Shape(bacteria[1, :], bacteria[2, :])
 end
+nothing # hide
 
-# and set up some nice colors
+# set up some nice colors
 
 bacteria_colors(agent) =
     HSV.(agent.id * 2.718 .% 1, agent.id * 3.14 .% 1, agent.id * 1.618 .% 1)
+nothing # hide
 
 # and proceed with the animation
 

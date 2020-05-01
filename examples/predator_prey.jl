@@ -99,6 +99,7 @@ function initialize_model(;
     end
     return model
 end
+nothing # hide
 
 # The function `agent_step!` is dispatched on each subtype in order to produce
 # type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
@@ -135,6 +136,7 @@ function agent_step!(wolf::Wolf, model)
         reproduce!(wolf, model)
     end
 end
+nothing # hide
 
 # The behavior of grass functions differently. If it is fully grown, it is consumable.
 # Otherwise, it cannot be consumed until it regrows after a delay specified by
@@ -150,6 +152,7 @@ function agent_step!(grass::Grass, model)
         end
     end
 end
+nothing # hide
 
 # Sheep and wolves move to a random adjacent cell with the `move!` function.
 function move!(agent, model)
@@ -157,6 +160,7 @@ function move!(agent, model)
     cell = rand(neighbors)
     move_agent!(agent, cell, model)
 end
+nothing # hide
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
 # additional energy and the grass will not be available for consumption until regrowth time
@@ -178,6 +182,7 @@ function eat!(wolf::Wolf, sheep, model)
         wolf.energy += wolf.Δenergy
     end
 end
+nothing # hide
 
 # Sheep and wolves share a common reproduction method. Reproduction has a cost of 1/2 the
 # current energy level of the parent. The offspring is an exact copy of the parent, with
@@ -191,6 +196,7 @@ function reproduce!(agent, model)
     add_agent_pos!(offspring, model)
     return
 end
+nothing # hide
 
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable

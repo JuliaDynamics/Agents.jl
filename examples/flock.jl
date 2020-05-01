@@ -12,7 +12,8 @@
 
 # We begin by calling the required packages and defining an agent type representing a bird.
 
-using Agents, Random, LinearAlgebra
+using Agents, LinearAlgebra
+using Random # hide
 
 mutable struct Bird <: AbstractAgent
     id::Int
@@ -21,7 +22,7 @@ mutable struct Bird <: AbstractAgent
     speed::Float64
     cohere_factor::Float64
     separation::Float64
-    seperate_factor::Float64
+    separate_factor::Float64
     match_factor::Float64
     visual_distance::Float64
 end
@@ -34,7 +35,7 @@ end
 # The contribution of each rule defined above recieves an importance weight: `cohere_factor`
 # is the importance of maintaining the average position of neighbors,
 # `match_factor` is the importance of matching the average trajectory of neighboring birds,
-# and `seperate_factor` is the importance of maining the minimum
+# and `separate_factor` is the importance of maining the minimum
 # distance from neighboring birds.
 
 # The function `initialize_model` generates birds and returns a model object using default values.
@@ -43,7 +44,7 @@ function initialize_model(;
     speed = 1.0,
     cohere_factor = 0.25,
     separation = 4.0,
-    seperate_factor = 0.25,
+    separate_factor = 0.25,
     match_factor = 0.01,
     visual_distance = 5.0,
     dims = (100, 100),
@@ -58,7 +59,7 @@ function initialize_model(;
             speed,
             cohere_factor,
             separation,
-            seperate_factor,
+            separate_factor,
             match_factor,
             visual_distance,
         )
@@ -66,17 +67,18 @@ function initialize_model(;
     index!(model)
     return model
 end
+nothing # hide
 
 # ## Defining the agent_step!
 # `agent_step!` is the primary function called for each step and computes velocity
 # according to the three rules defined above.
 function agent_step!(bird, model)
-    ## Obtain the ids of neibhors within the bird's visual distance
+    ## Obtain the ids of neighbors within the bird's visual distance
     ids = space_neighbors(bird, model, bird.visual_distance)
     ## Compute velocity based on rules defined above
     bird.vel =
         (
-            bird.vel .+ cohere(bird, model, ids) .+ seperate(bird, model, ids) .+
+            bird.vel .+ cohere(bird, model, ids) .+ separate(bird, model, ids) .+
             match(bird, model, ids)
         ) ./ 2
     bird.vel = bird.vel ./ norm(bird.vel)
@@ -87,6 +89,7 @@ end
 distance(a1, a2) = sqrt(sum((a1.pos .- a2.pos) .^ 2))
 
 get_heading(a1, a2) = a1.pos .- a2.pos
+nothing # hide
 
 # `cohere` computes the average position of neighboring birds, weighted by importance
 function cohere(bird, model, ids)
@@ -98,9 +101,10 @@ function cohere(bird, model, ids)
     end
     return coherence ./ N .* bird.cohere_factor
 end
+nothing # hide
 
-# `seperate` repells the bird away from neighboring birds
-function seperate(bird, model, ids)
+# `separate` repels the bird away from neighboring birds
+function separate(bird, model, ids)
     seperation_vec = (0.0, 0.0)
     N = max(length(ids), 1)
     birds = model.agents
@@ -110,8 +114,9 @@ function seperate(bird, model, ids)
             seperation_vec = seperation_vec .- get_heading(neighbor, bird)
         end
     end
-    return seperation_vec ./ N .* bird.seperate_factor
+    return seperation_vec ./ N .* bird.separate_factor
 end
+nothing # hide
 
 # `match` computes the average trajectory of neighboring birds, weighted by importance
 function match(bird, model, ids)
@@ -123,13 +128,13 @@ function match(bird, model, ids)
     end
     return match_vector ./ N .* bird.match_factor
 end
+nothing # hide
 
 # ## Running the model
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
 step!(model, agent_step!, n_steps)
-
 
 # ## Plotting the birds
 # The great thing about [`plotabm`](@ref) is its flexibility. We can incorporate the
@@ -142,6 +147,7 @@ function bird_triangle(b::Bird)
     ys = [(i ∈ (0, 3) ? 2 : 1) * sin(i * 2π / 3 + φ) for i in 0:3]
     Shape(xs, ys)
 end
+nothing # hide
 
 # And here is the animation
 using AgentsPlots

@@ -48,7 +48,7 @@ end
 # as the model termination requires access to a property's value
 # at the end of the previous step, and the end of the current step.
 
-# We could also make the three opinions a single field with vector value.
+# We could, alternatively, make the three opinions a single field with vector value.
 
 function hk_model(; numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))
@@ -70,12 +70,14 @@ function boundfilter(agent, model)
         [a.old_opinion for a in allagents(model)],
     )
 end
+nothing # hide
 
 # Now we implement the `agent_step!`
 function agent_step!(agent, model)
     agent.previous_opinon = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent, model))
 end
+nothing # hide
 
 # and `model_step!`
 function model_step!(model)
@@ -83,6 +85,7 @@ function model_step!(model)
         a.old_opinion = a.new_opinion
     end
 end
+nothing # hide
 
 # From this implementation we see that to implement synchronous scheduling
 # we define an Agent type with `old` and `new` fields for attributes that

@@ -108,11 +108,12 @@ function model_initiation(;
     end
     return model
 end
+nothing # hide
 
 # We will make a function that starts a model with `C` number of cities,
 # and creates the other parameters automatically by attributing some random
 # values to them. You could directly use the above constructor and specify all
-# `Ns, β`, etc. but the following is convenient for this example
+# `Ns, β`, etc. for a given set of cities.
 
 # All cities are connected with each other, while it is more probable to travel from a city
 # with small population into a city with large population.
@@ -256,6 +257,7 @@ function recover_or_die!(agent, model)
         end
     end
 end
+nothing # hide
 
 # ## Example animation
 model = model_initiation(; params...)
@@ -277,6 +279,7 @@ gif(anim, "covid_evolution.gif", fps = 5)
 # data collection:
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
+nothing # hide
 
 # and then collect data
 model = model_initiation(; params...)

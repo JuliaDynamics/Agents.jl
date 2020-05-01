@@ -58,6 +58,7 @@ model = ball_model()
 # The agent step function for now is trivial. It is just [`move_agent!`](@ref) in
 # continuous space
 agent_step!(agent, model) = move_agent!(agent, model, model.dt)
+nothing # hide
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
@@ -88,7 +89,8 @@ gif(anim, "socialdist1.gif", fps = 25)
 # 1. [`elastic_collision!`](@ref)
 
 # We want all agents to interact in one go, and we want to avoid double interactions
-# (as instructed by [`interacting_pairs`](@ref)), so we define a model step
+# (as instructed by [`interacting_pairs`](@ref)), so we define a model step and re-run the
+# animation.
 function model_step!(model)
     for (a1, a2) in interacting_pairs(model, 0.012, :nearest)
         elastic_collision!(a1, a2, :mass)
@@ -172,14 +174,14 @@ mutable struct PoorSoul <: AbstractAgent
     β::Float64
 end
 
-# Here `β` is the transmission probability, which we choose to make a
-# agent parameter instead of model parameter. It can reflect the level of hygiene
-# of the individual. In a realistic scenario, the actual virus transmission
+# Here `β` is the transmission probability, which we choose to make an
+# agent parameter instead of a model parameter. It reflects the level of hygiene
+# of an individual. In a realistic scenario, the actual virus transmission
 # would depend on the `β` value of both agents, but we don't do that here for
 # simplicity.
 
-# And we also significantly modify the model creation, to have SIR-related parameters.
-# Each step in the model corresponds to one hour
+# We also significantly modify the model creation, to have SIR-related parameters.
+# Each step in the model corresponds to one hour.
 
 const steps_per_day = 24
 
@@ -229,6 +231,7 @@ function sir_initiation(;
     Agents.index!(model)
     return model
 end
+nothing # hide
 
 # Notice the constant `steps_per_day`, which approximates how many model steps
 # correspond to one day (since the parameters we used in the previous graph SIR example
@@ -278,9 +281,10 @@ function sir_model_step!(model)
         elastic_collision!(a1, a2, :mass)
     end
 end
+nothing # hide
 
 # Notice that it is not necessary that the transmission interaction radius is the same
-# as the billiard-ball dynamics. We only have them here the same for convenience,
+# as the billiard-ball dynamics. We only have them the same here for convenience,
 # but in a real model they will probably differ.
 
 # We also modify the `agent_step!` function, so that we keep track of how long the
@@ -304,6 +308,7 @@ function recover_or_die!(agent, model)
         end
     end
 end
+nothing # hide
 
 # Alright, now we can animate this process for default parameters
 
@@ -327,14 +332,15 @@ end
 gif(anim, "socialdist4.gif", fps = 25)
 
 # ## Exponential spread
-# Alright, we can all agree that these animations are cool, but let's do some actual
-# analysis of this model. The interesting quantity
+# We can all agree that these animations look interesting, but let's do some actual
+# analysis of this model. The quantity we wish to look at
 # is the number of infected over time, so let's calculate this, similarly with
 # the graph SIR model.
 
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
 adata = [(:status, infected), (:status, recovered)]
+nothing # hide
 
 # Let's do the following runs, with different parameters probabilities
 r1, r2 = 0.04, 0.33
