@@ -20,7 +20,7 @@
 # ## Defining the core structures
 
 # We start by defining the agent type
-using Agents, Random, AgentsPlots, Plots
+using Agents, Random, AgentsPlots
 pyplot() # hide
 
 mutable struct Tree <: AbstractAgent

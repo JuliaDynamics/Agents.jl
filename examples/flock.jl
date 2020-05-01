@@ -144,7 +144,7 @@ function bird_triangle(b::Bird)
 end
 
 # And here is the animation
-using AgentsPlots, Plots
+using AgentsPlots
 gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src

@@ -4,7 +4,7 @@
 
 # [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
-using Agents, AgentsPlots, Plots
+using Agents, AgentsPlots
 using Random # hide
 gr(); # hide
 nothing # hide
