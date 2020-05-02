@@ -1,6 +1,6 @@
 # v3.0
 ## Additions
-* Added `ContinuousSpace` as a space option. Supports Euclidean and Cityblock metrics.
+* Added `ContinuousSpace` as a space option. Supports Euclidean and Cityblock metrics. Several new API functions were added for continuous space.
 * Universal plotting function `plotabm` that works for models with any kind of space.
 * new function `space_neighbors`, which works for any space. It always and consistently returns the **IDs** of neighbors irrespectively of the spatial structure.
 * `AgentBasedModel` now allows you to pass in an `AbstractAgent` type, or an instance of your agent.
