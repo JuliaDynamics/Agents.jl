@@ -180,8 +180,7 @@ end
 
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, vel::NTuple{D, N}, dt = 1.0)
-Propagate the agent forwards one step according to vel.
-Also take care of periodic boundary conditions.
+Propagate the agent forwards one step according to `vel` and the model's space.
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
