@@ -179,6 +179,24 @@ function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:Abstr
 end
 
 """
+    move_agent!(agent::A, model::ABM{A, ContinuousSpace}, vel::NTuple{D, N}, dt = 1.0)
+Propagate the agent forwards one step according to vel.
+Also take care of periodic boundary conditions.
+
+For this continuous space version of `move_agent!`, the "evolution algorithm"
+is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
+as `agent.pos += vel * dt`.
+"""
+function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, N}, dt = 1.0) where {A <: AbstractAgent, S <: ContinuousSpace, F, P, D, N <: AbstractFloat}
+      agent.pos = agent.pos .+ dt .* vel
+      if model.space.periodic
+        agent.pos = mod.(agent.pos, model.space.extend)
+      end
+      update_space!(model, agent)
+      return agent.pos
+end 
+
+"""
     update_space!(model::ABM{A, ContinuousSpace}, agent)
 Update the internal representation of continuous space to match the new position of
 the agent (useful in custom `move_agent` functions).
