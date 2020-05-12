@@ -54,7 +54,7 @@ end
     collect_agent_data!(df, model, props, 1)
     # Expecting weight values of all three agents. ID and step included.
     @test size(df) == (3, 3)
-    @test names(df) == [:step, :id, :weight]
+    @test propertynames(df) == [:step, :id, :weight]
     @test mean(df[!, :weight]) ≈ 0.3917615139
 
     props = [(:weight, mean)]
@@ -63,7 +63,7 @@ end
     # Activate aggregation. Weight column is expected to be one value for this step,
     # renamed mean(weight). ID is meaningless and will therefore be dropped.
     @test size(df) == (1, 2)
-    @test names(df) == [:step, :mean_weight]
+    @test propertynames(df) == [:step, :mean_weight]
     @test df[1, aggname(:weight, mean)] ≈ 0.3917615139
 
     # Add a function as a property
@@ -71,14 +71,14 @@ end
     df = init_agent_dataframe(model, props)
     collect_agent_data!(df, model, props, 1)
     @test size(df) == (3, 4)
-    @test names(df) == [:step, :id, :weight, :x_position]
+    @test propertynames(df) == [:step, :id, :weight, :x_position]
     @test mean(df[!, :x_position]) ≈ 4.3333333
 
     props = [(:weight, mean), (x_position, mean)]
     df = init_agent_dataframe(model, props)
     collect_agent_data!(df, model, props, 1)
     @test size(df) == (1, 3)
-    @test names(df) == [:step, :mean_weight, :mean_x_position]
+    @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
     @test df[1, aggname(x_position, mean)] ≈ 4.3333333
 end
 
@@ -99,11 +99,11 @@ end
     )
 
     @test size(agent_data) == (11, 2)
-    @test names(agent_data) == [:step, :mean_weight]
+    @test propertynames(agent_data) == [:step, :mean_weight]
     @test maximum(agent_data[!, :step]) == 1820
 
     @test size(model_data) == (6, 3)
-    @test names(model_data) == [:step, :flag, :year]
+    @test propertynames(model_data) == [:step, :flag, :year]
     @test maximum(model_data[!, :step]) == 1825
 
     agent_data, model_data = run!(
@@ -143,15 +143,15 @@ end
     end
 
     @test size(daily_model_data) == (1825, 3)
-    @test names(daily_model_data) == [:step, :flag, :year]
+    @test propertynames(daily_model_data) == [:step, :flag, :year]
     @test maximum(daily_model_data[!, :step]) == 1825
 
     @test size(daily_agent_aggregate) == (1825, 2)
-    @test names(daily_agent_aggregate) == [:step, :mean_weight]
+    @test propertynames(daily_agent_aggregate) == [:step, :mean_weight]
     @test maximum(daily_agent_aggregate[!, :step]) == 1825
 
     @test size(yearly_agent_data) == (15, 3)
-    @test names(yearly_agent_data) == [:step, :id, :weight]
+    @test propertynames(yearly_agent_data) == [:step, :id, :weight]
     @test maximum(yearly_agent_data[!, :step]) == 5
 
     @test dummystep(model) == nothing
