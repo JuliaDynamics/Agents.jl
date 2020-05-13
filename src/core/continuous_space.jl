@@ -352,9 +352,15 @@ The argument `method` provides three pairing scenarios
   agent is paired to its nearest neighbor. Similar to `:nearest`, each agent can belong
   to only one pair. This functionality is useful e.g. when you want some agents to be
   paired "guaranteed", even if some other agents might be nearest to each other.
+- `:types`: For mixed agent models only. Return every pair of agents within radius `r`
+  (similar to `:all`), only capturing pairs of differing types. For example, a model of
+  `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
+  agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
+  `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
+  types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
 function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
-    @assert method ∈ (:scheduler, :nearest, :all)
+    @assert method ∈ (:scheduler, :nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r)
@@ -362,6 +368,8 @@ function interacting_pairs(model::ABM, r::Real, method; scheduler = model.schedu
         scheduler_pairs!(pairs, model, r, scheduler)
     elseif method == :all
         all_pairs!(pairs, model, r)
+    elseif method == :types
+        type_pairs!(pairs, model, r, scheduler)
     end
     return PairIterator(pairs, model.agents)
 end
@@ -411,6 +419,21 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
                 # Replace this pair, it is not the true neighbor
                 pairs[idx] = new_pair
                 distances[idx] = dist
+            end
+        end
+    end
+end
+
+function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+    # We don't know ahead of time what types the scheduler will provide. Get a list.
+    available_types = unique(typeof(model[id]) for id in scheduler(model))
+    for id in scheduler(model)
+        for nid in space_neighbors(model[id], model, r)
+            neigbor_type = typeof(model[nid])
+            if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
+                # Sort the pair to overcome any uniqueness issues
+                new_pair = isless(id, nid) ? (id, nid) : (nid, id)
+                new_pair ∉ pairs && push!(pairs, new_pair)
             end
         end
     end
