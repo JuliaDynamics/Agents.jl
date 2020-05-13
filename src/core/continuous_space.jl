@@ -180,11 +180,7 @@ end
 
 """
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, vel::NTuple{D, N}, dt = 1.0)
-Propagate the agent forwards one step according to `vel` and the model's space.
-
-For this continuous space version of `move_agent!`, the "evolution algorithm"
-is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
-as `agent.pos += vel * dt`.
+Propagate the agent forwards one step according to `vel`, with dt as the time step,  and the model's space.
 """
 function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, N}, dt = 1.0) where {A <: AbstractAgent, S <: ContinuousSpace, F, P, D, N <: AbstractFloat}
       agent.pos = agent.pos .+ dt .* vel
