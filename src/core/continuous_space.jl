@@ -354,7 +354,8 @@ The argument `method` provides three pairing scenarios
   paired "guaranteed", even if some other agents might be nearest to each other.
 - `:types`: For mixed agent models only. Return every pair of agents within radius `r`
   (similar to `:all`), only capturing pairs of differing types. For example, a model of
-  `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case multiple
+  `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
+
   agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
