@@ -353,10 +353,11 @@ The argument `method` provides three pairing scenarios
   to only one pair. This functionality is useful e.g. when you want some agents to be
   paired "guaranteed", even if some other agents might be nearest to each other.
 - `:types`: For mixed agent models only. Return every pair of agents within radius `r`
-  (similar to `:all`), with an additional constraint that excludes neighbors with the same
-  type. For example, a mixed agent model of `Union{Sheep,Wolf,Grass}`, pairs of 
-  `(Sheep,Sheep)` will be excluded. To also exclude `(Wolf,Grass)` pairs, provide a
-  scheduler that samples only matchable parings.
+  (similar to `:all`), only capturing pairs of differing types. For example, a model of
+  `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case multiple
+  agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
+  `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
+  types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
 function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
     @assert method ∈ (:scheduler, :nearest, :all, :types)
