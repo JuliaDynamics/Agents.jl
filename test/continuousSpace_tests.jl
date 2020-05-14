@@ -50,23 +50,6 @@
   kill_agent!(model1.agents[1], model1)
   dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
   @test size(dbrow) == (0,0)
-  
-  # move_agent! with a velocity argument
-  add_agent!(pos, model1, vel, dia)
-  @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [1]
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
-  @test dbrow[1, :a] == 0.5
-  @test dbrow[1, :b] == 0.5
-  
-  move_agent!(model1.agents[1], model1, (0.3, 0.5))
-  @test dbrow[1, :a] == 0.8
-  @test dbrow[1, :b] == 1.0
-  @test dbrow[1, :a] == model1.agents[1].pos[1]
-  @test dbrow[1, :b] == model1.agents[1].pos[2]
-  
-  kill_agent!(model1.agents[1], model1)
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
-  @test size(dbrow) == (0,0)
 
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
