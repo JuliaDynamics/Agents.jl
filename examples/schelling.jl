@@ -277,11 +277,12 @@ data, _ = paramscan(
 data[(end - 10):end, :]
 
 # We can combine all replicates with an aggregating function, such as mean, using
-# the `aggregate` function from the `DataFrames` package:
+# the `groupby` and `combine` functions from the `DataFrames` package:
 
-using DataFrames: aggregate, Not, select!
+using DataFrames: groupby, combine, Not, select!
 using Statistics: mean
-data_mean = aggregate(data, [:step, :min_to_be_happy, :numagents], mean)
+gd = groupby(data,[:step, :min_to_be_happy, :numagents])
+data_mean = combine(gd,[:happyperc_mood,:replicate].=>mean)
 select!(data_mean, Not(:replicate_mean))
 
 # Note that the second argument takes the column names on which to split the data,
