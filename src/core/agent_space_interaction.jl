@@ -204,13 +204,13 @@ mutable struct Agent <: AbstractAgent
     w::Float64
     k::Bool
 end
-Agent(id; w, k) = Agent(id, w, k) # keyword constructor
+Agent(id, pos; w, k) = Agent(id, pos, w, k) # keyword constructor
 model = ABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id is set internally
-add_agent!(model, 0.5, true) # correct: weight becomes 0.5
-add_agent!(5, model, 0.5, true) # add at node 5
-add_agent!(model; w = 0.5, k =true) # use keywords: weight becomes 0.5
+add_agent!(model, 0.5, true) # correct: w becomes 0.5
+add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
+add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5
 ```
 """
 function add_agent!(
@@ -277,4 +277,3 @@ function add_agent_single!(
         add_agent!(rand(empty_cells), model, properties...; kwargs...)
     end
 end
-
