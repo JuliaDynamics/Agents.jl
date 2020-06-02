@@ -1,3 +1,7 @@
+# v3.1
+## Additions
+- Extend `interacting_pairs` to allow interactions of disparate types when using mixed models.
+
 # v3.0
 ## Additions
 * Added `ContinuousSpace` as a space option. Supports Euclidean and Cityblock metrics. Several new API functions were added for continuous space.
