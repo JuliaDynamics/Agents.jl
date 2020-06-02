@@ -13,7 +13,7 @@ SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-DataFrames = "< 1, 1"
+DataFrames = "0.21, 1"
 LightGraphs = "1"
 SQLite = "1.0"
 StatsBase = "0.32, 0.33"

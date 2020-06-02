@@ -1,5 +1,6 @@
 export run!, collect_agent_data!, collect_model_data!,
-       init_agent_dataframe, init_model_dataframe, aggname
+       init_agent_dataframe, init_model_dataframe, aggname,
+       should_we_collect
 
 ###################################################
 # Definition of the data collection API
@@ -116,7 +117,7 @@ end
 # core data collection functions per step
 ###################################################
 """
-    init_agent_dataframe(model, properties) → agent_df
+    init_agent_dataframe(model, adata) → agent_df
 Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 """
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
@@ -166,11 +167,11 @@ end
 function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to "*
     "initialize data collection"))
-    headers = Vector{Symbol}(undef, 1+length(properties))
+    headers = Vector{String}(undef, 1+length(properties))
     types = Vector{Vector}(undef, 1+length(properties))
     alla = allagents(model)
 
-    headers[1] = :step
+    headers[1] = "step"
     types[1] = Int[]
 
     for (i, (k, agg)) in enumerate(properties)
@@ -185,18 +186,20 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
 end
 
 """
-    aggname(k, agg) → name
+    aggname(k) → name
 
-Return the name of the column of the aggregated data with key `k` and aggregating
-function `agg`.
+Return the name of the column of the `i`-th collected data where `k = adata[i]`
+(or `mdata[i]`).
 """
 function aggname(k, agg)
     @static if VERSION >= v"1.1"
-        Symbol(join([string(agg), string(k)], "_"))
+        join([string(agg), string(k)], "_")
     else
-        Symbol(join([split(string(agg), ".")[end], string(k)], "_"))
+        join([split(string(agg), ".")[end], string(k)], "_")
     end
 end
+aggname(x::Tuple) = aggname(x[1], x[2])
+aggname(x::Union{Function, Symbol, String}) = string(x)
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
     alla = allagents(model)
@@ -214,7 +217,7 @@ end
 
 # Model data
 """
-    init_model_dataframe(model, properties) → model_df
+    init_model_dataframe(model, mdata) → model_df
 Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
 """
 function init_model_dataframe(model::ABM, properties::Vector)
