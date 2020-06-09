@@ -1,5 +1,5 @@
 export node_neighbors, find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-NodeIterator, space_neighbors, nodes, get_node_agents
+NodeIterator, space_neighbors, nodes, get_node_agents, coord2vertex, vertex2coord
 export nv, ne
 export GraphSpace, GridSpace
 
