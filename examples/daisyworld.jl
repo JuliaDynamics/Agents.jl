@@ -29,7 +29,7 @@
 # forcing, the daisies will not be able to self regulate the temperature of the planet
 # and eventually go extinct.
 
-# ## Defining the agent type
+# ## Defining the agent types
 
 # The agent here is not so complex. We see it has three values (other than the required
 # `id` and `pos` for an agent that lives on a [`GridSpace`](@ref). Each daisy has an `age`,
@@ -48,100 +48,48 @@ mutable struct Daisy <: AbstractAgent
     albedo::Float64 # 0-1 fraction
 end
 
+mutable struct Land <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int}
+    temperature::Float64
+end
+
 # ## World heating
 
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
 
-function suface_temperature!(node::Int, model::ABM{Daisy})
+function update_surface_temperature!(model)
+    for n in nodes(model)
+        update_surface_temperature!(n, model)
+    end
+end
+
+function update_surface_temperature!(node::Int, model)
     ids = get_node_contents(node, model)
-    absorbed_luminosity = if isempty(ids)
+    absorbed_luminosity = if length(ids) == 1 # no daisy
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
     else
         ## Set luminosity via daisy albedo
-        (1 - model[ids[1]].albedo) * model.solar_luminosity
+        (1 - model[ids[2]].albedo) * model.solar_luminosity
     end
     ## We expect local heating to be 80C for an absorbed luminosity of 1,
     ## approximately 30 for 0.5 and approximately -273 for 0.01.
-    local_heating = if absorbed_luminosity > 0
-        72 * log(absorbed_luminosity) + 80
-    else
-        80
-    end
+    local_heating = absorbed_luminosity > 0 ? 72 * log(absorbed_luminosity) + 80 : 80
     ## Surface temperature is the average of the current temperature and local heating.
-    model.temperature[node] = (model.temperature[node] + local_heating) / 2
+    T0 = model[ids[1]].temperature
+    model[ids[1]].temperature = (T0 + local_heating) / 2
 end
 
 function diffuse_temperature!(node::Int, model::ABM{Daisy}; ratio = 0.5)
     neighbors = node_neighbors(node, model)
+    # TODO: update this to use Land agent
     model.temperature[node] =
         (1 - ratio) * model.temperature[node] +
         ## Each neighbor is giving up 1/8 of the diffused
         ## amount to each of *its* neighbors
         sum(model.temperature[neighbors]) * 0.125 * ratio
-end
-nothing # hide
-
-# ## Initialising Daisyworld
-
-# Here, we construct a function to initialize a Daisyworld. We need to know how many
-# daisies of each type to seed the planet with and what their albedo's are. The albedo
-# of the planet, as well as how intense the world's star tends to be. Alternatively
-# we can provide a `scenario` flag, which alters the stars luminosity in different
-# ways.
-
-function daisyworld(;
-    griddims = (30, 30),
-    max_age = 25,
-    init_white = 20, # % cover of the world surface of white breed
-    init_black = 20, # % cover of the world surface of black breed
-    albedo_white = 0.75,
-    albedo_black = 0.25,
-    albedo_surface = 0.4,
-    solar_luminosity = 0.8,
-    scenario = :default,
-)
-    @assert scenario ∈ [
-        :default, # User provided solar_luminosity
-        :ramp, # Increase & decrease luminosity over an 850 year period
-        :high, # White daisies will prefer this climate
-        :low, # Black daisies will prefer this climate
-        :ours, # The Sun's equivalent, achieving an equilibrium of daisies
-    ]
-
-    space = GridSpace(griddims, moore = true, periodic = true)
-    luminosity = if scenario == :ramp
-        0.8
-    elseif scenario == :high
-        1.4
-    elseif scenario == :low
-        0.6
-    elseif scenario == :ours
-        1.0
-    else
-        solar_luminosity
-    end
-
-    properties = Dict(
-        :max_age => max_age,
-        :temperature => zeros(prod(griddims)),
-        :surface_albedo => albedo_surface,
-        :solar_luminosity => luminosity,
-        :scenario => scenario,
-        :tick => 0,
-    )
-    model = ABM(Daisy, space; properties = properties)
-    for _ in 1:(init_white * nv(space) / 100)
-        add_agent_single!(model, :white, rand(0:max_age), albedo_white)
-    end
-    for _ in 1:(init_black * nv(space) / 100)
-        add_agent_single!(model, :black, rand(0:max_age), albedo_black)
-    end
-    for n in nodes(model)
-        suface_temperature!(n, model)
-    end
-    return model
 end
 nothing # hide
 
@@ -196,7 +144,7 @@ end
 
 function model_step!(model::ABM{Daisy})
     for n in nodes(model)
-        suface_temperature!(n, model)
+        update_surface_temperature!(n, model)
         diffuse_temperature!(n, model)
         propagate!(n, model)
     end
@@ -210,6 +158,82 @@ function agent_step!(agent::Daisy, model::ABM{Daisy})
 end
 nothing # hide
 
+# ## Initialising Daisyworld
+
+# Here, we construct a function to initialize a Daisyworld. We need to know how many
+# daisies of each type to seed the planet with and what their albedo's are. The albedo
+# of the planet, as well as how intense the world's star tends to be. Alternatively
+# we can provide a `scenario` flag, which alters the stars luminosity in different
+# ways.
+import StatsBase
+
+function daisyworld(;
+    griddims = (30, 30),
+    max_age = 25,
+    init_white = 0.2, # % cover of the world surface of white breed
+    init_black = 0.2, # % cover of the world surface of black breed
+    albedo_white = 0.75,
+    albedo_black = 0.25,
+    albedo_surface = 0.4,
+    solar_luminosity = 0.8,
+    scenario = :default,
+)
+    @assert scenario ∈ [
+        :default, # User provided solar_luminosity
+        :ramp, # Increase & decrease luminosity over an 850 year period
+        :high, # White daisies will prefer this climate
+        :low, # Black daisies will prefer this climate
+        :ours, # The Sun's equivalent, achieving an equilibrium of daisies
+    ]
+
+    space = GridSpace(griddims, moore = true, periodic = true)
+    luminosity = if scenario == :ramp
+        0.8
+    elseif scenario == :high
+        1.4
+    elseif scenario == :low
+        0.6
+    elseif scenario == :ours
+        1.0
+    else
+        solar_luminosity
+    end
+
+    properties = Dict(
+        :max_age => max_age,
+        :surface_albedo => albedo_surface,
+        :solar_luminosity => luminosity,
+        :scenario => scenario,
+        :tick => 0,
+    )
+
+    model = ABM(Union{Daisy, Land}, space; properties = properties)
+
+    ## fill model with `Land`: every grid cell has 1 land instance
+    for _ in 1:nv(space)
+        a = Land(nextid(model), (1, 1), 0.0)
+        add_agent_single!(a, model)
+    end
+
+    ## Populate with daisies: each cell has only one daisy (black or white)
+    white_nodes = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
+    for n in white_nodes
+        wd = Daisy(nextid(model), vertex2coord(n), :white, rand(0:max_age), albedo_white)
+        add_agent_pos!(wd, model)
+    end
+    allowed = setdiff(1:nv(space), white_nodes)
+    black_nodes = StatsBase.sample(allowed, Int(init_black * nv(space)); replace = false)
+    for n in black_nodes
+        wd = Daisy(nextid(model), vertex2coord(n), :black, rand(0:max_age), albedo_black)
+        add_agent_pos!(wd, model)
+    end
+
+    update_surface_temperature!(model)
+    return model
+end
+nothing # hide
+
+
 # ## Look at the pretty flowers!
 # Lets run the model for a bit and see what our world looks like when the solar
 # activity is similar to that of our own:
@@ -218,7 +242,10 @@ cd(@__DIR__) #src
 Random.seed!(165) # hide
 model = daisyworld(scenario = :ours)
 step!(model, agent_step!, model_step!, 100)
-daisycolor(a) = a.breed
+daisycolor(a::Land) = RGBA(a.temperature/300, 0, 0, 0)
+daisycolor(a::Daisy) = a.breed
+daisyshape(a::Land) = :square
+daisyshape(a::Daisy) = :circle
 plotabm(model; ac = daisycolor, as = 5)
 
 # We can see that this world achieves quasi-equilibrium, where one `breed` does not
@@ -306,4 +333,3 @@ plot(p1, p2, p3, layout = (3, 1), size = (500, 800))
 # population struggle to find equilibrium. The counterbalancing force of the black daisies
 # being absent, Daisyworld is plunged into a chaotic regime -- indicating the strong role
 # biodiversity has to play in stabilizing climate.
-
