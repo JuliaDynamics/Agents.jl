@@ -6,5 +6,6 @@ module Models
 using Agents
 
 include("flocking.jl")
+include("social_distancing.jl")
 
 end
