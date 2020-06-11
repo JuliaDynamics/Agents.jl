@@ -7,6 +7,7 @@
 # * fly towards the average position of neighbors
 # * fly in the average direction of neighbors
 
+# It is also available from the `Models` module as [`Models.flocking`](@ref).
 
 # ## Defining the core structures
 
@@ -170,4 +171,3 @@ anim = @animate for i in 0:100
     title!(p1, "step $(i)")
 end
 gif(anim, "flock.gif", fps = 30)
-

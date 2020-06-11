@@ -21,4 +21,8 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
+# Predefined models
+include("models/Models.jl")
+export Models
+
 end # module
