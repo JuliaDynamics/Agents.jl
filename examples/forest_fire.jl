@@ -15,7 +15,8 @@
 # The forest has an innate density `d`, which is the proportion of trees initialized as
 # green.
 # This model is an example that does _not_ have an `agent_step!` function. It only
-# uses a `model_step!`
+# uses a `model_step!`.
+# It is also available as [`Models.forest_fire`](@ref).
 
 # ## Defining the core structures
 
@@ -124,4 +125,3 @@ anim = @animate for i in 0:20
 end
 
 gif(anim, "forest.gif", fps = 2)
-
