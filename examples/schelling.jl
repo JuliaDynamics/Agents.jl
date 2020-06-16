@@ -15,6 +15,8 @@
 # belonging to the same group (e.g. preferring that at least 30% of neighbors to
 # be in the same group) could lead to total segregation of neighborhoods.
 
+# This model is also available as [`Models.schelling`](@ref).
+
 # ## Defining the agent type
 
 using Agents, AgentsPlots

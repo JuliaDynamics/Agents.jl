@@ -57,7 +57,8 @@ format = Documenter.HTML(
     prettyurls = CI,
     assets = [
         asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
-    ],
+        ],
+    collapselevel = 1,
     ),
 pages = [
     "Introduction" => "index.md",
@@ -76,6 +77,7 @@ pages = [
         "Predator-Prey" => "examples/predator_prey.md",
         "Bacteria Growth" => "examples/growing_bacteria.md"
         ],
+    "Predefined Models" => "models.md",
     "API" => "api.md",
     "Comparison against Mesa (Python)" => "mesa.md"
     ],
