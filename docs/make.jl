@@ -7,6 +7,8 @@ using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
 using Plots, StatsPlots
+import InteractiveChaos
+
 # Initialise pyplot to squash build output bleeding into docs.
 pyplot()
 plot([1,1])
@@ -49,7 +51,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 cd(@__DIR__)
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,AgentsPlots],
+makedocs(modules = [Agents,AgentsPlots,InteractiveChaos],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris, Tim DuBois and contributors.",
 doctest = false,
@@ -79,6 +81,7 @@ pages = [
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
+    "Interactive application" => "interact.md",
     "Comparison against Mesa (Python)" => "mesa.md"
     ],
 )
