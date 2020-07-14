@@ -7,7 +7,7 @@ using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
 using Plots, StatsPlots, BenchmarkTools
-import OrdinaryDiffEq
+import OrdinaryDiffEq, DiffEqCallbacks
 import InteractiveChaos
 
 # Initialise pyplot to squash build output bleeding into docs.

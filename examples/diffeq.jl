@@ -338,6 +338,8 @@ modelcb = initialise_cb()
 
 # That's it for the `Agents` side of things! Now to build the ODE.
 
+import DiffEqCallbacks
+
 function fish!(integrator, model)
     integrator.p[2] = integrator.u[1] > model.min_threshold ?
         sum(a.yearly_catch for a in allagents(model)) : 0.0
@@ -356,9 +358,9 @@ const max_population = 500.0
 prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [initial_stock], tspan, [max_population, 0.0])
 
 ## Each Dec 31st, we call fish! that adds our catch modifier to the stock, and steps the model
-fish = OrdinaryDiffEq.PeriodicCallback(i -> fish!(i, modelcb), 364)
+fish = DiffEqCallbacks.PeriodicCallback(i -> fish!(i, modelcb), 364)
 ## Stocks are replenished again
-reset = OrdinaryDiffEq.PeriodicCallback(i -> i.p[2] = 0.0, 365)
+reset = DiffEqCallbacks.PeriodicCallback(i -> i.p[2] = 0.0, 365)
 
 sol = OrdinaryDiffEq.solve(
     prob,
