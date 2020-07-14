@@ -210,12 +210,15 @@ function model_diffeq_step!(model)
     model.i.p[2] =
         model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
         0.0
+    ## Notify the integrator that conditions may be altered
+    OrdinaryDiffEq.u_modified!(model.i, true)
     ## Then apply our catch modifier
     OrdinaryDiffEq.step!(model.i, 1.0, true)
     ## Store yearly stock in the model for plotting
     model.stock = model.i.u[1]
     ## And reset for the next year
     model.i.p[2] = 0.0
+    OrdinaryDiffEq.u_modified!(model.i, true)
 end
 
 function initialise_diffeq(;
