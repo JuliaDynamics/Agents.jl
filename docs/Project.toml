@@ -2,6 +2,7 @@
 Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 AgentsPlots = "7820620d-95fb-4739-93b3-b0a14dd83f9a"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
