@@ -6,7 +6,7 @@ Pkg.update()
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
-using Plots, StatsPlots
+using Plots, StatsPlots, BenchmarkTools
 import DifferentialEquations
 import InteractiveChaos
 
