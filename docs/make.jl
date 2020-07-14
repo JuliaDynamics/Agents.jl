@@ -7,7 +7,7 @@ using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
 using Plots, StatsPlots, BenchmarkTools
-import DifferentialEquations
+import OrdinaryDiffEq
 import InteractiveChaos
 
 # Initialise pyplot to squash build output bleeding into docs.
@@ -83,7 +83,7 @@ pages = [
     "Predefined Models" => "models.md",
     "API" => "api.md",
     "Interactive application" => "interact.md",
-    "Integration" => ["DifferentialEquations.jl" => "examples/diffeq.md"],
+    "Ecosystem Integration" => ["DifferentialEquations.jl" => "examples/diffeq.md"],
     "Comparison against Mesa (Python)" => "mesa.md"
     ],
 )

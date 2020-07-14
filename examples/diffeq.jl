@@ -4,14 +4,14 @@
 # strengths Agents.jl provides over alternative ABMs.
 #
 # The [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) package
-# [consistently outperforms](http://www.stochasticlifestyle.com/wp-content/uploads/2019/08/de_solver_software_comparsion.pdf)
-# other differential equation solvers.
+# is one excellent example.
 # Here, we provide a few ways of leveraging `DifferentialEquations` to solve agent based
 # models in an efficient and performant manner, whilst mitigating stability issues one
 # may encounter.
 #
 # It is common in discrete time step tools (such as `Agents`) to also discretise equations
-# required for obtaining solutions. In the following example, we use the [forward Euler method](https://en.wikipedia.org/wiki/Euler_method)
+# required for obtaining solutions. In the following example, we use the
+# [forward Euler method](https://en.wikipedia.org/wiki/Euler_method)
 # to discretise a logistic function
 #
 # ``\frac{\mathrm{d}s}{\mathrm{d}t} = s \left(1-\frac{s}{120}\right) - h``
@@ -197,7 +197,7 @@ Random.seed!(6549) #hide
 # Lets therefore modify our system to solve the logistic equation in a continuous context, but
 # discretely monitor and harvest.
 
-import DifferentialEquations
+import OrdinaryDiffEq
 
 function agent_diffeq_step!(agent, model)
     agent.yearly_catch = rand(Poisson(agent.competence))
@@ -205,13 +205,13 @@ end
 
 function model_diffeq_step!(model)
     ## We step 364 days with this call.
-    DifferentialEquations.step!(model.i, 364.0, true)
+    OrdinaryDiffEq.step!(model.i, 364.0, true)
     ## Only allow fishing if stocks are high enough
     model.i.p[2] =
         model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
         0.0
     ## Then apply our catch modifier
-    DifferentialEquations.step!(model.i, 1.0, true)
+    OrdinaryDiffEq.step!(model.i, 1.0, true)
     ## Store yearly stock in the model for plotting
     model.stock = model.i.u[1]
     ## And reset for the next year
@@ -229,17 +229,9 @@ function initialise_diffeq(;
         max_population, h = p
         ds[1] = s[1] * (1 - (s[1] / max_population)) - h
     end
-    prob = DifferentialEquations.ODEProblem(
-        fish_stock!,
-        [stock],
-        (0.0, Inf),
-        [max_population, 0.0],
-    )
-    integrator = DifferentialEquations.init(
-        prob,
-        DifferentialEquations.Tsit5();
-        advance_to_tstop = true,
-    )
+    prob =
+        OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+    integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
 
     model = ABM(
         Fisher;
@@ -247,7 +239,7 @@ function initialise_diffeq(;
             :stock => stock,
             :max_population => max_population,
             :min_threshold => min_threshold,
-            :i => integrator, # The DifferentialEquations integrator
+            :i => integrator, # The OrdinaryDiffEq integrator
         ),
     )
     for _ in 1:nagents
@@ -261,6 +253,13 @@ nothing #hide
 # ODE solver is now in charge of evolving the logistic function forward.
 # We've used the [integrator interface](https://docs.sciml.ai/stable/basics/integrator/)
 # to achieve this.
+#
+# Note that we use [`OrdinaryDiffEq`](https://github.com/SciML/OrdinaryDiffEq.jl) here,
+# which is a component of `DifferentialEquations`.
+# Users may switch this to any subcomponent of the `DifferentialEquations` ecosystem,
+# or use `DifferentialEquations` directly. Since we don't need other components for this
+# example, we'll stick with the subcomponent but speak in general terms since the
+# packages are interchangable in this context.
 #
 # This implementation uses `import` to explicitly identify which functions are from
 # `DifferentialEquations` and not `Agents`. However, since both `Agents` and
@@ -351,22 +350,17 @@ tspan = (0.0, 20.0 * 365.0)
 const initial_stock = 400.0
 const max_population = 500.0
 
-prob = DifferentialEquations.ODEProblem(
-    fish_stock!,
-    [initial_stock],
-    tspan,
-    [max_population, 0.0],
-)
+prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [initial_stock], tspan, [max_population, 0.0])
 
 ## Each Dec 31st, we call fish! that adds our catch modifier to the stock, and steps the model
-fish = DifferentialEquations.PeriodicCallback(i -> fish!(i, modelcb), 364)
+fish = OrdinaryDiffEq.PeriodicCallback(i -> fish!(i, modelcb), 364)
 ## Stocks are replenished again
-reset = DifferentialEquations.PeriodicCallback(i -> i.p[2] = 0.0, 365)
+reset = OrdinaryDiffEq.PeriodicCallback(i -> i.p[2] = 0.0, 365)
 
-sol = DifferentialEquations.solve(
+sol = OrdinaryDiffEq.solve(
     prob,
-    DifferentialEquations.Tsit5();
-    callback = DifferentialEquations.CallbackSet(fish, reset),
+    OrdinaryDiffEq.Tsit5();
+    callback = OrdinaryDiffEq.CallbackSet(fish, reset),
 )
 
 plot(
