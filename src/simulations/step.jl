@@ -1,18 +1,18 @@
 export step!, dummystep
 
 """
-    step!(model, agent_step! [, model_step!], n::Integer = 1)
+    step!(model, agent_step!, n::Integer = 1)
+    step!(model, agent_step!, model_step!, n::Integer = 1)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
-If given the optional function `model_step!`, it is triggered _after_ every scheduled
-agent has acted.
+In the second version `model_step!` is triggered _after_ every scheduled agent has acted.
 
     step!(model, agent_step!, model_step!, n::Function)
 
 `n` can be also be a function.
 Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
 current amount of steps taken (starting from 0).
-(in this case `model_step!` must be provided always, see [`dummystep`](@ref))
+(in this case `model_step!` must be provided always)
 """
 function step! end
 
@@ -34,7 +34,7 @@ until(ss, n, model) = !n(model, ss)
 
 step!(model::ABM, agent_step!, n::Int=1) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!, model_step!, n)
+function step!(model::ABM, agent_step!, model_step!, n = 1)
   s = 0
   while until(s, n, model)
     activation_order = model.scheduler(model)
