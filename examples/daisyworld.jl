@@ -90,15 +90,13 @@ end
 # In addition, temperature diffuses over time
 function diffuse_temperature!(node::Int, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
-    neighbors = space_neighbors(node, model)
-    id = get_node_contents(node, model)[1] # land ID at current node
-    model[id].temperature =
-        (1 - ratio) * model[id].temperature +
-        ## Each neighbor land patch is giving up 1/8 of the diffused
-        ## amount to each of *its* neighbors
-        sum(a.temperature for a in neighbors if a isa Land) * 0.125 * ratio
+    ids = space_neighbors(node, model)
+    meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
+    land = model[get_node_contents(node, model)[1]] # land at current node
+    ## Each neighbor land patch is giving up 1/8 of the diffused
+    ## amount to each of *its* neighbors
+    land.temperature = (1 - ratio)*land.temperature + ratio*meantemp
 end
-nothing # hide
 
 # ## Daisy dynamics
 
@@ -110,7 +108,7 @@ nothing # hide
 
 function propagate!(node::Int, model::DaisyWorld)
     ids = get_node_contents(node, model)
-    if length(agents) > 1
+    if length(ids) > 1
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
         ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
@@ -142,14 +140,13 @@ end
 
 # We also need to define a version for the `Land` instances
 # (the dynamics of the `Land` are resolved at model level)
-agent_step!(agent::Land, model) = nothing
-nothing # hide
+agent_step!(agent::Land, model::DaisyWorld) = nothing
 
 # The model step function and agent step functions for Agents.jl to advance
 # Daisyworld's dynamics. Since we have constructed a number of helper functions,
 # these methods are quite straightforward.
 
-function model_step!(model::ABM{Daisy})
+function model_step!(model::DaisyWorld)
     for n in nodes(model)
         update_surface_temperature!(n, model)
         diffuse_temperature!(n, model)
@@ -158,13 +155,12 @@ function model_step!(model::ABM{Daisy})
     model.tick += 1
     solar_activity!(model)
 end
-nothing # hide
 
 # Notice that `solar_activity!` changes the incoming solar radiation over time,
 # if the given "scenario" (a model parameter) is `:ramp`.
 # The parameter `tick` of the model keeps track of time.
 
-function solar_activity!(model::ABM{Daisy})
+function solar_activity!(model::DaisyWorld)
     if model.scenario == :ramp
         if model.tick > 200 && model.tick <= 400
             model.solar_luminosity += 0.005
@@ -174,8 +170,6 @@ function solar_activity!(model::ABM{Daisy})
         end
     end
 end
-
-nothing # hide
 
 # ## Initialising Daisyworld
 
@@ -200,11 +194,16 @@ function daisyworld(;
     )
 
     space = GridSpace(griddims, moore = true, periodic = true)
-    properties = @dict max_age surface_albedo solar_liminosity scenario
+    properties = @dict max_age surface_albedo solar_luminosity scenario
     properties[:tick] = 0
-    model = ABM(Union{Daisy, Land}, space; properties = properties)
+    ## create a scheduler that only schedules Daisies
+    daisysched(model) = [id for id in keys(model) if model[id] isa Daisy]
+    model = ABM(Union{Daisy, Land}, space;
+        scheduler = daisysched, properties = properties, warn = false
+    )
 
     ## fill model with `Land`: every grid cell has 1 land instance
+    ## TODO: Fill space!
     for _ in 1:nv(space)
         a = Land(nextid(model), (1, 1), 0.0)
         add_agent_single!(a, model)
@@ -213,35 +212,48 @@ function daisyworld(;
     ## Populate with daisies: each cell has only one daisy (black or white)
     white_nodes = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
     for n in white_nodes
-        wd = Daisy(nextid(model), vertex2coord(n), :white, rand(0:max_age), albedo_white)
+        wd = Daisy(nextid(model), vertex2coord(n, space), :white, rand(0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(1:nv(space), white_nodes)
     black_nodes = StatsBase.sample(allowed, Int(init_black * nv(space)); replace = false)
     for n in black_nodes
-        wd = Daisy(nextid(model), vertex2coord(n), :black, rand(0:max_age), albedo_black)
+        wd = Daisy(nextid(model), vertex2coord(n, space), :black, rand(0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 
-    update_surface_temperature!(model)
     return model
 end
-nothing # hide
 
-
-# ## Look at the pretty flowers!
-# Lets run the model for a bit and see what our world looks like when the solar
-# activity is similar to that of our own:
+# ## Simple model run
+# Lets run the model with constant solar isolation and visualize the result
 
 cd(@__DIR__) #src
 Random.seed!(165) # hide
-model = daisyworld(scenario = :ours)
-step!(model, agent_step!, model_step!, 100)
-daisycolor(a::Land) = RGBA(a.temperature/300, 0, 0, 0)
+model = daisyworld()
+
+# To visualize we need to define the necessary functions for [`plotabm`](@ref).
+# The daisies will obviously be black or white, but the land will have a color
+# that reflects its temperature, with -50 darkest and 100 ᵒC brightest color
+
 daisycolor(a::Daisy) = a.breed
-daisyshape(a::Land) = :square
+const landcolor = cgrad(:thermal)
+daisycolor(a::Land) = landcolor[(a.temperature+50)/150]
+
+# And we plot daisies as circles, and land patches as squares
 daisyshape(a::Daisy) = :circle
-plotabm(model; ac = daisycolor, as = 5)
+daisysize(a::Daisy) = 8
+daisyshape(a::Land) = :square
+daisysize(a::Land) = 13
+
+# Notice that we want to ensure that the Land patches are always plotted first.
+plotsched = by_type((Land, Daisy), false)
+
+p = plotabm(model; ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
+plot!(p; aspect_ratio = 1, size = (600, 600))
+
+# And now we step the model a bit
+step!(model, agent_step!, model_step!)
 
 # We can see that this world achieves quasi-equilibrium, where one `breed` does not
 # totally dominate the other.
