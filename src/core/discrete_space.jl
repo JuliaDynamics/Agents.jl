@@ -399,6 +399,7 @@ end
     node_neighbors(node, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
 Return all nodes that are neighbors to the given `node`, which can be an `Int` for
 [`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
+Use [`vertex2coord`](@ref) to convert nodes to positions for `GridSpace`.
 
     node_neighbors(agent, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
 Same as above, but uses `agent.pos` as `node`.

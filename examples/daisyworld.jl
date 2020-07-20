@@ -7,7 +7,7 @@
 # - the `fill_space!` function
 # - represent a space "surface property" as an agent
 # - counting time in the model and having time-dependent dynamics
-# - performing interactive research
+# - performing interactive scientific research
 #
 # ## Overview of Daisyworld
 #
@@ -125,8 +125,9 @@ function propagate!(node::Int, model::DaisyWorld)
             end
             if !isempty(empty_neighbors)
                 ## Seed a new daisy in one of those cells
-                seeding_place = rand(empty_neighbors)
-                add_agent!(seeding_place, model, daisy.breed, 0, daisy.albedo)
+                seeding_place = vertex2coord(rand(empty_neighbors), model)
+                a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
+                add_agent_pos!(a, model)
             end
         end
     end
@@ -199,7 +200,7 @@ function daisyworld(;
     properties = @dict max_age surface_albedo solar_luminosity scenario
     properties[:tick] = 0
     ## create a scheduler that only schedules Daisies
-    daisysched(model) = [id for id in keys(model) if model[id] isa Daisy]
+    daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
     model = ABM(Union{Daisy, Land}, space;
         scheduler = daisysched, properties = properties, warn = false
     )
@@ -223,7 +224,7 @@ function daisyworld(;
     return model
 end
 
-# ## Simple model run
+# ## Visualizing & animating
 # Lets run the model with constant solar isolation and visualize the result
 
 cd(@__DIR__) #src
@@ -254,11 +255,23 @@ plotkwargs = (
 
 p = plotabm(model; plotkwargs...)
 
-# And now we step the model a bit
-step!(model, agent_step!, model_step!)
+# And after a couple of steps
+step!(model, agent_step!, model_step!, 5)
+p = plotabm(model; plotkwargs...)
 
-# We can see that this world achieves quasi-equilibrium, where one `breed` does not
-# totally dominate the other.
+# Let's do some animation now
+Random.seed!(165) # hide
+model = daisyworld()
+anim = @animate for i in 0:30
+    p = plotabm(model; plotkwargs...)
+    title!(p, "step $(i)")
+    step!(model, agent_step!, model_step!)
+end
+gif(anim, "daisyworld.gif", fps = 3)
+
+# Running this animation for longer is a hint that this world achieves quasi-equilibrium,
+# where one `breed` does not totally dominate the other.
+# Of course we can check this easily through data collection
 
 sum(map(a -> [a.breed == :white, a.breed == :black], allagents(model)))
 
