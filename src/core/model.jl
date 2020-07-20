@@ -249,3 +249,9 @@ Return an iterator over all agents of the model.
 """
 allagents(model) = values(model.agents)
 
+
+"""
+    allids(model)
+Return an iterator over all agent IDs of the model.
+"""
+allids(model) = keys(model.agents)

@@ -8,6 +8,7 @@ space_neighbors
 random_agent
 nagents
 allagents
+allids
 nextid
 ```
 
@@ -28,6 +29,7 @@ sample!
 
 ## Discrete space exclusives
 ```@docs
+fill_space!
 node_neighbors
 nv(::ABM)
 ne(::ABM)
