@@ -3,10 +3,11 @@
 #
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
-# - Rolling your own plots
 # - Collecting data with the low-level data collection API
-# - Simultaneously plotting and collecting data
-# - Analyzing the behavior of a model
+# - the `fill_space!` function
+# - represent a space "surface property" as an agent
+# - counting time in the model and having time-dependent dynamics
+# - performing interactive research
 #
 # ## Overview of Daisyworld
 #
@@ -42,11 +43,11 @@
 # surface temperature via a matrix (parameter of the model). This is done in an older version,
 # see file `examples/daisyworld_old.jl`. The old version has a slight performance advantage.
 # However, the advantage of making the surface composed of
-# agents is that visualization is simple and one can use the interactive applications.
+# agents is that visualization is simple and one can use the interactive application to also
+# visualize surface temperature.
 
-using Agents, AgentsPlots, Plots
+using Agents, AgentsPlots, Plots, Random
 using Statistics: mean
-using Random # hide
 gr() # hide
 
 mutable struct Daisy <: AbstractAgent
@@ -146,7 +147,7 @@ agent_step!(agent::Land, model::DaisyWorld) = nothing
 # Daisyworld's dynamics. Since we have constructed a number of helper functions,
 # these methods are quite straightforward.
 
-function model_step!(model::DaisyWorld)
+function model_step!(model)
     for n in nodes(model)
         update_surface_temperature!(n, model)
         diffuse_temperature!(n, model)
@@ -173,11 +174,12 @@ end
 
 # ## Initialising Daisyworld
 
-# Here, we construct a function to initialize a Daisyworld. We need to know how many
-# daisies of each type to seed the planet with and what their albedo's are. The albedo
-# of the planet, as well as how intense the world's star tends to be. Alternatively
-# we can provide a `scenario` flag, which alters the stars luminosity in different
-# ways.
+# Here, we construct a function to initialize a Daisyworld. We use [`fill_space!`](@ref)
+# to fill the space with `Land` instances. Then, we need to know how many
+# daisies of each type to seed the planet with and what their albedo's are.
+# We also want a value for surface albedo, as well as solar intensity
+# (and we also choose between constant or time-dependent intensity with `scenario`).
+
 import StatsBase
 import DrWatson: @dict
 
@@ -203,11 +205,7 @@ function daisyworld(;
     )
 
     ## fill model with `Land`: every grid cell has 1 land instance
-    ## TODO: Fill space!
-    for _ in 1:nv(space)
-        a = Land(nextid(model), (1, 1), 0.0)
-        add_agent_single!(a, model)
-    end
+    fill_space!(Land, model, 0.0) # zero starting temperature
 
     ## Populate with daisies: each cell has only one daisy (black or white)
     white_nodes = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
@@ -244,13 +242,17 @@ daisycolor(a::Land) = landcolor[(a.temperature+50)/150]
 daisyshape(a::Daisy) = :circle
 daisysize(a::Daisy) = 8
 daisyshape(a::Land) = :square
-daisysize(a::Land) = 13
+daisysize(a::Land) = 13.5
 
-# Notice that we want to ensure that the Land patches are always plotted first.
+# Notice that we want to ensure that the `Land` patches are always plotted first.
 plotsched = by_type((Land, Daisy), false)
 
-p = plotabm(model; ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
-plot!(p; aspect_ratio = 1, size = (600, 600))
+plotkwargs = (
+    ac = daisycolor, am = daisyshape, as = daisysize,
+    scheduler = plotsched, aspect_ratio = 1, size = (600, 600), showaxis = false,
+)
+
+p = plotabm(model; plotkwargs...)
 
 # And now we step the model a bit
 step!(model, agent_step!, model_step!)
