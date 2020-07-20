@@ -1,5 +1,6 @@
+# v3.2
+- New `Models` submodule, that conveniently allows loading a model from the examples.
 # v3.1
-## Additions
 - Extend `interacting_pairs` to allow interactions of disparate types when using mixed models.
 
 # v3.0
