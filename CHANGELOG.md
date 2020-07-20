@@ -1,3 +1,7 @@
+# v3.3
+- New `fill_space!` function for discrete spaces.
+- The Daisyworld example now uses multi-agent approach (surface is agent).
+
 # v3.2
 - New `Models` submodule, that conveniently allows loading a model from the examples.
 # v3.1
