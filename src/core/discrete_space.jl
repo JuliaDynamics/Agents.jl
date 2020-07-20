@@ -367,15 +367,14 @@ get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id 
 Return the ids of the agents neighboring the given `position` (which must match type
 with the spatial structure of the `model`). `r` is the radius to search for agents.
 
-For `DiscreteSpace`s `r` must be integer and defines higher degree neighbors.
+For `DiscreteSpace` `r` must be integer and defines higher degree neighbors.
 For example, for `r=2` include first and second degree neighbors,
 that is, neighbors and neighbors of neighbors.
+Specifically for `GraphSpace`, the keyword `neighbor_type` can also be used
+as in [`node_neighbors`](@ref) to restrict search on directed graphs.
 
 For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
 (based on the space's metric).
-
-The [`node_neighbors`](@ref) keyword `neighbor_type` can also be used here to restrict
-the spatial search on directed graphs.
 
     space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
 
@@ -405,10 +404,9 @@ Return all nodes that are neighbors to the given `node`, which can be an `Int` f
 Same as above, but uses `agent.pos` as `node`.
 
 Keyword argument `neighbor_type=:default` can be used to select differing neighbors
-depending on the underlying graph type.
+depending on the underlying graph directionality type.
 - `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
-to `:out`.
-Using any of the following options on an undirected graph is the equivalent to `:default`.
+to `:out`. For undirected graphs, all options are equivalent to `:out`.
 - `:all` returns both `:in` and `:out` neighbors.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
