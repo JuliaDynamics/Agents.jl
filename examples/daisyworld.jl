@@ -173,6 +173,8 @@ function solar_activity!(model::DaisyWorld)
         if model.tick > 500 && model.tick <= 750
             model.solar_luminosity -= model.solar_change/2
         end
+    elseif model.scenario == :change
+        model.solar_luminosity += model.solar_change
     end
 end
 
@@ -323,7 +325,6 @@ p3 = plot(model_df[!, :step], model_df[!, :solar_luminosity], ylabel = "L", xlab
 
 plot(p, p2, p3, layout = (3, 1))
 
-# %% #src
 # We observe an initial period of low solar luminosity which favors a large population of
 # black daisies. The population however is kept in check by competition from white daisies
 # and a semi-stable global temperature regime is reached, fluctuating between ~32 and 41
@@ -336,80 +337,9 @@ plot(p, p2, p3, layout = (3, 1))
 #
 # Finally, as the sun fades back to normal levels, both the temperature and white daisy
 # population struggle to find equilibrium. The counterbalancing force of the black daisies
-# being absent, Daisyworld is plunged into a chaotic regime -- indicating the strong role
-# biodiversity has to play in stabilizing climate.
+# being absent, Daisyworld loses all "life".
 
-
-
-
-
-# Now we'll take a look at some of the complex dynamics this world can manifest.
-# Some of these methods are, for the moment, not implemented in
-# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl), although this does
-# give us an opportunity to test out some of the new data collection features in
-# Agents.jl v3.0. *Think you have a nice recipe for a plot that would help others?*
-# [Send us a pull request](https://github.com/JuliaDynamics/AgentsPlots.jl/pulls)
-# or [open an issue](https://github.com/JuliaDynamics/AgentsPlots.jl/issues).
-
-# First, our fluctuating solar luminosity scenario.
-
-model = daisyworld(scenario = :ramp)
-
-# Then, let us initialize some dataframes for our model and agents. We are interested
-# in the global surface temperature, the current solar luminosity and populations of
-# each daisy breed. Notice that we made sure that `sum` has been given a default value
-# since this model is using `kill_agent!` (see [`run!`](@ref) for more details).
-
-global_temperature(model) = mean(model.temperature)
-mdata = [global_temperature, :solar_luminosity]
-model_df = init_model_dataframe(model, mdata)
-
-white(agent) = agent.breed == :white
-black(agent) = agent.breed == :black
-total(v) = length(v) == 0 ? 0.0 : sum(v)
-adata = [(white, total), (black, total)]
-agent_df = init_agent_dataframe(model, adata)
-nothing # hide
-
-# Now we can evolve our model and observe what happens
-
-anim = @animate for t in 1:900
-    step!(model, agent_step!, model_step!, 1)
-    collect_model_data!(model_df, model, mdata, t)
-    collect_agent_data!(agent_df, model, adata, t)
-    heatmap(
-        1:model.space.dimensions[1],
-        1:model.space.dimensions[2],
-        transpose(reshape(model.temperature, model.space.dimensions));
-        clims = (-50, 110),
-        colorbar_title = "Temperature",
-    )
-    scatter!(
-        [a.pos for a in allagents(model)];
-        marker = (:circle, 5),
-        markercolor = [a.breed for a in allagents(model)],
-        label = :none,
-        showaxis = false,
-    )
-end
-gif(anim, "daisyworld.gif", fps = 10)
-
-# Very interesting! But why is this all happening? Luckily we have collected some useful
-# data, so now if we plot our different properties over the same time period, we can see
-# how each of the values effect Daisyworld as a whole.
-
-p1 = plot(model_df[!, :solar_luminosity], legend = false, ylabel = "Solar Luminosity")
-p2 = plot(model_df[!, :global_temperature], legend = false, ylabel = "Global Temperature")
-p3 = plot(
-    [agent_df[!, aggname(white, total)], agent_df[!, aggname(black, total)]],
-    legend = false,
-    ylabel = "Population",
-)
-plot(p1, p2, p3, layout = (3, 1), size = (500, 800))
-
-
-
-
+# %% #src
 
 # ## Interactive scientific research
 # Notice that could have used the low-level API for data collection, step by step
@@ -423,3 +353,40 @@ plot(p1, p2, p3, layout = (3, 1), size = (500, 800))
 # However, it is extremely useful for the scientist to build intuition for the model, and
 # see in an interactive manner how the model behaves for a smaller pool of different
 # parameters. We will do this using the interactive application [`interactive_abm`](@ref).
+
+using InteractiveChaos, Makie
+Random.seed!(165) # hide
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+
+# Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
+# color/shape/size functions, and we can re-use them for the interactive application.
+# Unfortunately, because `InteractiveChaos` uses a different plotting package, we have
+# to redefine the plotting functions. However, in the near future where AgentsPlots.jl
+# will move to Makie.jl, this will not be necessary.
+using AbstractPlotting: to_color
+daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
+const landcolor = cgrad(:thermal)
+daisycolor(a::Land) = to_color(landcolor[(a.temperature+50)/150])
+
+daisyshape(a::Daisy) = :circle
+daisysize(a::Daisy) = 1
+daisyshape(a::Land) = :rect
+daisysize(a::Land) = 2
+
+# The only difference is that we make a parameter container for surface albedo and
+# for the rate of change of solar luminosity, and add some labels for clarity.
+
+params = Dict(
+    :solar_change => -0.1:0.01:0.1,
+    :surface_albedo => 0:0.01:1,
+)
+
+alabels = ["black", "white", "T"]
+mlabels = ["L"]
+
+
+scene, agent_df, model_def = interactive_abm(
+    model, agent_step!, model_step!, params;
+    ac = daisycolor, am = daisyshape, as = daisysize,
+    mdata = mdata, adata = adata, alabels = alabels, mlabels = mlabels
+)
