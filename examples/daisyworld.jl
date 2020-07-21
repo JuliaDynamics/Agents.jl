@@ -4,9 +4,11 @@
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
 # - Collecting data with the low-level data collection API
+# - Diffusion of a quantity in a `GridSpace`
 # - the `fill_space!` function
 # - represent a space "surface property" as an agent
 # - counting time in the model and having time-dependent dynamics
+# - data collection in a mixed-agent model
 # - performing interactive scientific research
 #
 # ## Overview of Daisyworld
@@ -32,7 +34,7 @@
 
 # ## Defining the agent types
 
-# The agents here is not so complex. `Daisy` has three values (other than the required
+# `Daisy` has three values (other than the required
 # `id` and `pos` for an agent that lives on a [`GridSpace`](@ref). Each daisy has an `age`,
 # confined later by a maximum age set by the user, a `breed` (either `:black` or `:white`)
 # and an associated `albedo` value, again set by the user.
@@ -46,8 +48,9 @@
 # agents is that visualization is simple and one can use the interactive application to also
 # visualize surface temperature.
 
-using Agents, AgentsPlots, Plots, Random
+using Agents, AgentsPlots, Plots
 using Statistics: mean
+using Random # hide
 gr() # hide
 
 mutable struct Daisy <: AbstractAgent
@@ -165,10 +168,10 @@ end
 function solar_activity!(model::DaisyWorld)
     if model.scenario == :ramp
         if model.tick > 200 && model.tick <= 400
-            model.solar_luminosity += 0.005
+            model.solar_luminosity += model.solar_change
         end
         if model.tick > 500 && model.tick <= 750
-            model.solar_luminosity -= 0.0025
+            model.solar_luminosity -= model.solar_change/2
         end
     end
 end
@@ -192,12 +195,13 @@ function daisyworld(;
         albedo_white = 0.75,
         albedo_black = 0.25,
         surface_albedo = 0.4,
-        solar_luminosity = 0.8, # initial luminosity
+        solar_change = 0.005,
+        solar_luminosity = 1.0, # initial luminosity
         scenario = :default,
     )
 
     space = GridSpace(griddims, moore = true, periodic = true)
-    properties = @dict max_age surface_albedo solar_luminosity scenario
+    properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
     properties[:tick] = 0
     ## create a scheduler that only schedules Daisies
     daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
@@ -225,6 +229,7 @@ function daisyworld(;
 end
 
 # ## Visualizing & animating
+# %% #src
 # Lets run the model with constant solar isolation and visualize the result
 
 cd(@__DIR__) #src
@@ -269,13 +274,74 @@ anim = @animate for i in 0:30
 end
 gif(anim, "daisyworld.gif", fps = 3)
 
-# Running this animation for longer is a hint that this world achieves quasi-equilibrium,
-# where one `breed` does not totally dominate the other.
-# Of course we can check this easily through data collection
+# Running this animation for longer hints that this world achieves quasi-equilibrium
+# for some input parameters, where one `breed` does not totally dominate the other.
+# Of course we can check this easily through data collection.
+# Notice that here we have to define a function `breed` that gives the daisy's `breed`
+# field. We cannot use just `:breed` to automatically find it, because in this mixed
+# agent model, the `Land` doesn't have any `breed`.
+# %% # src
+black(y) = count(x -> x == :black, y)
+white(y) = count(x -> x == :white, y)
+breed(a) = a isa Daisy ? a.breed : :land
+adata = [(breed, black), (breed, white)]
 
-sum(map(a -> [a.breed == :white, a.breed == :black], allagents(model)))
+Random.seed!(165) # hide
+model = daisyworld(; solar_luminosity = 1.0)
 
-# ---
+agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata)
+
+p = plot(agent_df[!, :step], agent_df[!, :black_breed], label = "black")
+plot!(p, agent_df[!, :step], agent_df[!, :white_breed], label = "white")
+plot!(p; xlabel = "tick", ylabel = "daisy count")
+
+# ## Time dependent dynamics
+# %% #src
+
+# To use the time-dependent dynamics we simple use the keyword `scenario = :ramp` during
+# model creation. However, we also want to see how the planet surface temperature changes
+# and would be nice to plot solar luminosity as well.
+# Thus, we define in addition
+gettemperature(a) = a isa Land ? a.temperature : missing
+meantemperature(x) = mean(skipmissing(x))
+adata = [(breed, black), (breed, white), (gettemperature, meantemperature)]
+
+# And, to have it as reference, we also record the solar luminosity value
+mdata = [:solar_luminosity]
+
+# And we run (and plot) everything
+Random.seed!(165) # hide
+model = daisyworld(solar_luminosity = 1.0, scenario = :ramp)
+agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+
+p = plot(agent_df[!, :step], agent_df[!, :black_breed], label = "black")
+plot!(p, agent_df[!, :step], agent_df[!, :white_breed], label = "white")
+plot!(p; xlabel = "tick", ylabel = "daisy count")
+
+p2 = plot(agent_df[!, :step], agent_df[!, aggname(adata[3])], ylabel = "temperature")
+p3 = plot(model_df[!, :step], model_df[!, :solar_luminosity], ylabel = "L", xlabel = "ticks")
+
+plot(p, p2, p3, layout = (3, 1))
+
+# %% #src
+# We observe an initial period of low solar luminosity which favors a large population of
+# black daisies. The population however is kept in check by competition from white daisies
+# and a semi-stable global temperature regime is reached, fluctuating between ~32 and 41
+# degrees.
+#
+# An increase in solar luminosity forces a population inversion, then a struggle for
+# survival for the black daisies -- which ultimately leads to their extinction. At
+# extremely high solar output the white daisies dominate the landscape, leading to a
+# uniform surface temperature.
+#
+# Finally, as the sun fades back to normal levels, both the temperature and white daisy
+# population struggle to find equilibrium. The counterbalancing force of the black daisies
+# being absent, Daisyworld is plunged into a chaotic regime -- indicating the strong role
+# biodiversity has to play in stabilizing climate.
+
+
+
+
 
 # Now we'll take a look at some of the complex dynamics this world can manifest.
 # Some of these methods are, for the moment, not implemented in
@@ -341,17 +407,19 @@ p3 = plot(
 )
 plot(p1, p2, p3, layout = (3, 1), size = (500, 800))
 
-# We observe an initial period of low solar luminosity which favors a large population of
-# black daisies. The population however is kept in check by competition from white daisies
-# and a semi-stable global temperature regime is reached, fluctuating between ~32 and 41
-# degrees.
-#
-# An increase in solar luminosity forces a population inversion, then a struggle for
-# survival for the black daisies -- which ultimately leads to their extinction. At
-# extremely high solar output the white daisies dominate the landscape, leading to a
-# uniform surface temperature.
-#
-# Finally, as the sun fades back to normal levels, both the temperature and white daisy
-# population struggle to find equilibrium. The counterbalancing force of the black daisies
-# being absent, Daisyworld is plunged into a chaotic regime -- indicating the strong role
-# biodiversity has to play in stabilizing climate.
+
+
+
+
+# ## Interactive scientific research
+# Notice that could have used the low-level API for data collection, step by step
+# plotted both the Daisyworld itself, as well as the changing of temperature, see
+# `examples/daisyworld_old.jl`. However, below we will achieve this using the interactive
+# application.
+
+# Now, a big part of the daisyworld is identifying for which ranges of model parameters
+# the world is stable (i.e. neither population dies out).
+# Of course, this has to be done somewhat rigorously via means of e.g. [`paramscan`](@ref).
+# However, it is extremely useful for the scientist to build intuition for the model, and
+# see in an interactive manner how the model behaves for a smaller pool of different
+# parameters. We will do this using the interactive application [`interactive_abm`](@ref).
