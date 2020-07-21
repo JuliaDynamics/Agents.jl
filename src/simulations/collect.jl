@@ -54,7 +54,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 """
 function run! end
 
-run!(model::ABM, agent_step!, n; kwargs...) =
+run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
 function run!(model::ABM, agent_step!, model_step!, n;
