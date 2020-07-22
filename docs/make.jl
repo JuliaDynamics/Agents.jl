@@ -28,7 +28,7 @@ outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", )
 for file in readdir(indir)
-    file ∈ toskip && continue
+    file in toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
