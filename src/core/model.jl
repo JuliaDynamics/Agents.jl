@@ -1,4 +1,4 @@
-export AbstractAgent, ABM, AgentBasedModel, nagents, random_agent, allagents
+export AbstractAgent, ABM, AgentBasedModel, nagents, random_agent, allagents, allids
 
 abstract type AbstractSpace end
 

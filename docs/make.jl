@@ -26,7 +26,7 @@ Pkg.status("AgentsPlots")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
-toskip = ()
+toskip = ("daisyworld_matrix.jl", )
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)

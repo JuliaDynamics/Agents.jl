@@ -38,11 +38,11 @@
 # confined later by a maximum age set by the user, a `breed` (either `:black` or `:white`)
 # and an associated `albedo` value, again set by the user.
 # `Land` represents the surface. We could make `Land` also have an albedo field, but
-# in this world all surface has the same albedo and thus we make it a model parameter.
+# in this world, the entire surface has the same albedo and thus we make it a model parameter.
 
 # Notice that the `Land` does not necessarily have to be an agent, and one could represent
 # surface temperature via a matrix (parameter of the model). This is done in an older version,
-# see file `examples/daisyworld_old.jl`. The old version has a slight performance advantage.
+# see file `examples/daisyworld_matrix.jl`. The old version has a slight performance advantage.
 # However, the advantage of making the surface composed of
 # agents is that visualization is simple and one can use the interactive application to also
 # visualize surface temperature.
@@ -75,10 +75,12 @@ const DaisyWorld = ABM{Union{Daisy, Land}};
 
 function update_surface_temperature!(node::Int, model::DaisyWorld)
     ids = get_node_contents(node, model)
-    absorbed_luminosity = if length(ids) == 1 # no daisy
+    ## All grid points have at least one agent (the land)
+    absorbed_luminosity = if length(ids) == 1
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
     else
+        ## more than 1 agents: daisy exists
         ## Set luminosity via daisy albedo
         (1 - model[ids[2]].albedo) * model.solar_luminosity
     end
@@ -247,9 +249,9 @@ daisycolor(a::Land) = landcolor[(a.temperature+50)/150]
 
 # And we plot daisies as circles, and land patches as squares
 daisyshape(a::Daisy) = :circle
-daisysize(a::Daisy) = 8
+daisysize(a::Daisy) = 7
 daisyshape(a::Land) = :square
-daisysize(a::Land) = 13.5
+daisysize(a::Land) = 8.8
 
 # Notice that we want to ensure that the `Land` patches are always plotted first.
 plotsched = by_type((Land, Daisy), false)
@@ -281,7 +283,7 @@ gif(anim, "daisyworld.gif", fps = 3)
 # Notice that here we have to define a function `breed` that gives the daisy's `breed`
 # field. We cannot use just `:breed` to automatically find it, because in this mixed
 # agent model, the `Land` doesn't have any `breed`.
-# %% # src
+# %% #src
 black(y) = count(x -> x == :black, y)
 white(y) = count(x -> x == :white, y)
 breed(a) = a isa Daisy ? a.breed : :land
@@ -323,17 +325,3 @@ p2 = plot(agent_df[!, :step], agent_df[!, aggname(adata[3])], ylabel = "temperat
 p3 = plot(model_df[!, :step], model_df[!, :solar_luminosity], ylabel = "L", xlabel = "ticks")
 
 plot(p, p2, p3, layout = (3, 1))
-
-# We observe an initial period of low solar luminosity which favors a large population of
-# black daisies. The population however is kept in check by competition from white daisies
-# and a semi-stable global temperature regime is reached, fluctuating between ~32 and 41
-# degrees.
-#
-# An increase in solar luminosity forces a population inversion, then a struggle for
-# survival for the black daisies -- which ultimately leads to their extinction. At
-# extremely high solar output the white daisies dominate the landscape, leading to a
-# uniform surface temperature.
-#
-# Finally, as the sun fades back to normal levels, both the temperature and white daisy
-# population struggle to find equilibrium. The counterbalancing force of the black daisies
-# being absent, Daisyworld loses all "life".

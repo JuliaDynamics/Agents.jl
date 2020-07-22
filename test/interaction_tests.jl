@@ -108,17 +108,17 @@ end
   @test !in(1, get_node_contents(agent, model))
 end
 
+mutable struct Daisy <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  breed::String
+end
+mutable struct Land <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  temperature::Float64
+end
 @testset "fill space" begin
-  mutable struct Daisy <: AbstractAgent
-      id::Int
-      pos::Tuple{Int, Int}
-      breed::String
-  end
-  mutable struct Land <: AbstractAgent
-      id::Int
-      pos::Tuple{Int, Int}
-      temperature::Float64
-  end
   space = GridSpace((10, 10), moore = true, periodic = true)
   model = ABM(Union{Daisy, Land}, space)
   temperature(pos) = (pos[1]/10, ) # make it Tuple!
