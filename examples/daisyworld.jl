@@ -9,7 +9,6 @@
 # - represent a space "surface property" as an agent
 # - counting time in the model and having time-dependent dynamics
 # - data collection in a mixed-agent model
-# - performing interactive scientific research
 #
 # ## Overview of Daisyworld
 #
@@ -338,55 +337,3 @@ plot(p, p2, p3, layout = (3, 1))
 # Finally, as the sun fades back to normal levels, both the temperature and white daisy
 # population struggle to find equilibrium. The counterbalancing force of the black daisies
 # being absent, Daisyworld loses all "life".
-
-# %% #src
-
-# ## Interactive scientific research
-# Notice that could have used the low-level API for data collection, step by step
-# plotted both the Daisyworld itself, as well as the changing of temperature, see
-# `examples/daisyworld_old.jl`. However, below we will achieve this using the interactive
-# application.
-
-# Now, a big part of the daisyworld is identifying for which ranges of model parameters
-# the world is stable (i.e. neither population dies out).
-# Of course, this has to be done somewhat rigorously via means of e.g. [`paramscan`](@ref).
-# However, it is extremely useful for the scientist to build intuition for the model, and
-# see in an interactive manner how the model behaves for a smaller pool of different
-# parameters. We will do this using the interactive application [`interactive_abm`](@ref).
-
-using InteractiveChaos, Makie
-Random.seed!(165) # hide
-model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
-
-# Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
-# color/shape/size functions, and we can re-use them for the interactive application.
-# Unfortunately, because `InteractiveChaos` uses a different plotting package, we have
-# to redefine the plotting functions. However, in the near future where AgentsPlots.jl
-# will move to Makie.jl, this will not be necessary.
-using AbstractPlotting: to_color
-daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
-const landcolor = cgrad(:thermal)
-daisycolor(a::Land) = to_color(landcolor[(a.temperature+50)/150])
-
-daisyshape(a::Daisy) = :circle
-daisysize(a::Daisy) = 1
-daisyshape(a::Land) = :rect
-daisysize(a::Land) = 2
-
-# The only difference is that we make a parameter container for surface albedo and
-# for the rate of change of solar luminosity, and add some labels for clarity.
-
-params = Dict(
-    :solar_change => -0.1:0.01:0.1,
-    :surface_albedo => 0:0.01:1,
-)
-
-alabels = ["black", "white", "T"]
-mlabels = ["L"]
-
-
-scene, agent_df, model_def = interactive_abm(
-    model, agent_step!, model_step!, params;
-    ac = daisycolor, am = daisyshape, as = daisysize,
-    mdata = mdata, adata = adata, alabels = alabels, mlabels = mlabels
-)
