@@ -280,7 +280,7 @@ gif(anim, "daisyworld.gif", fps = 3)
 # Running this animation for longer hints that this world achieves quasi-equilibrium
 # for some input parameters, where one `breed` does not totally dominate the other.
 # Of course we can check this easily through data collection.
-# Notice that here we have to define a function `breed` that gives the daisy's `breed`
+# Notice that here we have to define a function `breed` that returns the daisy's `breed`
 # field. We cannot use just `:breed` to automatically find it, because in this mixed
 # agent model, the `Land` doesn't have any `breed`.
 # %% #src
@@ -301,7 +301,7 @@ plot!(p; xlabel = "tick", ylabel = "daisy count")
 # ## Time dependent dynamics
 # %% #src
 
-# To use the time-dependent dynamics we simple use the keyword `scenario = :ramp` during
+# To use the time-dependent dynamics we simply use the keyword `scenario = :ramp` during
 # model creation. However, we also want to see how the planet surface temperature changes
 # and would be nice to plot solar luminosity as well.
 # Thus, we define in addition
