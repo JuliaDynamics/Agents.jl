@@ -8,7 +8,8 @@ export move_agent!,
     move_agent_single!,
     kill_agent!,
     genocide!,
-    nextid
+    nextid,
+    fill_space!
 
 #######################################################################################
 # Killing agents
@@ -76,10 +77,10 @@ in the model and remove it from the old position
 `pos` must be the appropriate position type depending on the space type.
 """
 function move_agent!(
-    agent::A,
-    pos::NTuple{D,Integer},
-    model::ABM{A,<:DiscreteSpace},
-) where {A<:AbstractAgent,D}
+        agent::A,
+        pos::NTuple{D,Integer},
+        model::ABM{A,<:DiscreteSpace},
+    ) where {A<:AbstractAgent,D}
     @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
     nodenumber = coord2vertex(pos, model)
     move_agent!(agent, nodenumber, model)
@@ -170,7 +171,7 @@ function add_agent!(
     pos::NTuple{D,Integer},
     model::ABM{A,<:DiscreteSpace},
 ) where {A<:AbstractAgent,D}
-    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
+    @assert isa(pos, typeof(agent.pos)) "Invalid position type for `pos`"
     agent.pos = pos
     add_agent_pos!(agent, model)
 end
@@ -193,7 +194,7 @@ keyword arguemts to the agent constructor.
 Notice that this function takes care of setting the agent's id *and* position and thus
 `args...` and `kwargs...` are propagated to other fields the agent has.
 
-Optionally provide a position to add the agent to as first argument.
+Optionally provide a position to add the agent to as *first argument*.
 
 ## Example
 ```julia
@@ -207,34 +208,34 @@ end
 Agent(id, pos; w, k) = Agent(id, pos, w, k) # keyword constructor
 model = ABM(Agent, GraphSpace(complete_digraph(5)))
 
-add_agent!(model, 1, 0.5, true) # incorrect: id is set internally
+add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
 add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
 add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5
 ```
 """
 function add_agent!(
-    model::ABM{A,<:DiscreteSpace},
-    properties...;
-    kwargs...,
-) where {A<:AbstractAgent}
+        model::ABM{A,<:DiscreteSpace},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
     add_agent!(rand(1:nv(model)), model, properties...; kwargs...)
 end
 
 function add_agent!(
-    model::ABM{A,Nothing},
-    properties...;
-    kwargs...,
-) where {A<:AbstractAgent}
+        model::ABM{A,Nothing},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
     add_agent_pos!(A(nextid(model), properties...; kwargs...), model)
 end
 
 function add_agent!(
-    node,
-    model::ABM{A,<:DiscreteSpace},
-    properties...;
-    kwargs...,
-) where {A<:AbstractAgent}
+        node,
+        model::ABM{A,<:DiscreteSpace},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
     id = nextid(model)
     cnode = correct_pos_type(node, model)
     add_agent_pos!(A(id, cnode, properties...; kwargs...), model)
@@ -268,12 +269,65 @@ Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a node with no other agents (does nothing if no such node exists).
 """
 function add_agent_single!(
-    model::ABM{A,<:DiscreteSpace},
-    properties...;
-    kwargs...,
-) where {A<:AbstractAgent}
+        model::ABM{A,<:DiscreteSpace},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
     empty_cells = find_empty_nodes(model)
     if length(empty_cells) > 0
         add_agent!(rand(empty_cells), model, properties...; kwargs...)
     end
+end
+
+"""
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, args...; kwargs...)
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, f::Function; kwargs...)
+Add one agent to each node in the model's space. Similarly with [`add_agent!`](@ref),
+the function creates the necessary agents and
+the `args...; kwargs...` are propagated into agent creation.
+If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
+applying `f` where `pos` is each position (tuple for grid, node index for graph).
+
+An optional first argument is an agent **type** to be created, and targets mixed-agent
+models where the agent constructor cannot be deduced (since it is a union).
+
+## Example
+```julia
+using Agents
+mutable struct Daisy <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    breed::String
+end
+mutable struct Land <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    temperature::Float64
+end
+space = GridSpace((10, 10), moore = true, periodic = true)
+model = ABM(Union{Daisy, Land}, space)
+temperature(pos) = (pos[1]/10, ) # make it Tuple!
+fill_space!(Land, model, temperature)
+```
+"""
+fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
+fill_space!(A, model, args...; kwargs...)
+
+function fill_space!(::Type{A}, model::ABM, args...; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
+end
+
+function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        args = f(cnode)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
 end
