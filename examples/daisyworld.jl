@@ -91,6 +91,7 @@ function update_surface_temperature!(node::Int, model::DaisyWorld)
     T0 = model[ids[1]].temperature
     model[ids[1]].temperature = (T0 + local_heating) / 2
 end
+nothing # hide
 
 # In addition, temperature diffuses over time
 function diffuse_temperature!(node::Int, model::DaisyWorld)
@@ -102,6 +103,7 @@ function diffuse_temperature!(node::Int, model::DaisyWorld)
     ## amount to each of *its* neighbors
     land.temperature = (1 - ratio)*land.temperature + ratio*meantemp
 end
+nothing # hide
 
 # ## Daisy dynamics
 
@@ -136,6 +138,7 @@ function propagate!(node::Int, model::DaisyWorld)
         end
     end
 end
+nothing # hide
 
 # And if the daisies cross an age threshold, they die out.
 # Death is controlled by the `agent_step` function
@@ -143,10 +146,12 @@ function agent_step!(agent::Daisy, model::DaisyWorld)
     agent.age += 1
     agent.age >= model.max_age && kill_agent!(agent, model)
 end
+nothing # hide
 
 # We also need to define a version for the `Land` instances
 # (the dynamics of the `Land` are resolved at model level)
 agent_step!(agent::Land, model::DaisyWorld) = nothing
+nothing # hide
 
 # The model step function and agent step functions for Agents.jl to advance
 # Daisyworld's dynamics. Since we have constructed a number of helper functions,
@@ -161,6 +166,7 @@ function model_step!(model)
     model.tick += 1
     solar_activity!(model)
 end
+nothing # hide
 
 # Notice that `solar_activity!` changes the incoming solar radiation over time,
 # if the given "scenario" (a model parameter) is `:ramp`.
@@ -178,6 +184,7 @@ function solar_activity!(model::DaisyWorld)
         model.solar_luminosity += model.solar_change
     end
 end
+nothing # hide
 
 # ## Initialising Daisyworld
 
@@ -230,6 +237,7 @@ function daisyworld(;
 
     return model
 end
+nothing # hide
 
 # ## Visualizing & animating
 # %% #src
@@ -246,12 +254,14 @@ model = daisyworld()
 daisycolor(a::Daisy) = a.breed
 const landcolor = cgrad(:thermal)
 daisycolor(a::Land) = landcolor[(a.temperature+50)/150]
+nothing # hide
 
 # And we plot daisies as circles, and land patches as squares
 daisyshape(a::Daisy) = :circle
 daisysize(a::Daisy) = 7
 daisyshape(a::Land) = :square
 daisysize(a::Land) = 8.8
+nothing # hide
 
 # Notice that we want to ensure that the `Land` patches are always plotted first.
 plotsched = by_type((Land, Daisy), false)
