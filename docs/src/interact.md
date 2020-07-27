@@ -1,6 +1,8 @@
 # Interactive application
-The interactive applications of Agents.jl work for _any_ agent based model, and are created on the principle of simplicity and generality.
-They are based on [`InteractiveChaos`](https://juliadynamics.github.io/InteractiveChaos.jl/dev/), another package of JuliaDynamics.
+The interactive application of Agents.jl is _model-agnostic_.
+This means that provided that the space of the model is one of the supported types (currently only 2D `GridSpace` or `ContinuousSpace`), the application does not care about the model dynamics or agent properties.
+
+The app is based on [`InteractiveChaos`](https://juliadynamics.github.io/InteractiveChaos.jl/dev/), another package of JuliaDynamics.
 
 Here is an example application
 
