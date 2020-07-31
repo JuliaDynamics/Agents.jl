@@ -14,5 +14,6 @@ include("HK.jl")
 include("wright-fisher.jl")
 include("sir.jl")
 include("daisyworld.jl")
+include("predator_prey.jl")
 
 end
