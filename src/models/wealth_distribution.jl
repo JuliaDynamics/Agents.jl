@@ -15,7 +15,7 @@ function wealth_distribution(; numagents = 100, initwealth = 1)
     for i in 1:numagents
         add_agent!(model, initwealth)
     end
-    return model, agent_step!
+    return model, agent_step!, dummystep
 end
 
 function agent_step!(agent, model)
