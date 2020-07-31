@@ -13,7 +13,7 @@
 # * Each offspring chooses a parent at random and inherits its genetic material.
 
 using Agents
-n = 100
+numagents = 100
 nothing # hide
 
 # Let's define an agent. The genetic value of an agent is a number (`trait` field).
@@ -23,31 +23,31 @@ mutable struct Haploid <: AbstractAgent
 end
 
 # And make a model without any spatial structure:
-m = ABM(Haploid)
+model = ABM(Haploid)
 
 # Create `n` random individuals:
-for i in 1:n
-    add_agent!(m, rand())
+for i in 1:numagents
+    add_agent!(model, rand())
 end
 
 # To create a new generation, we can use the `sample!` function. It chooses
 # random individuals with replacement from the current individuals and updates
 # the model. For example:
-sample!(m, nagents(m))
+sample!(model, nagents(model))
 nothing # hide
 
 # The model can be run for many generations and we can collect the average trait
 # value of the population. To do this we will use a model-step function (see [`step!`](@ref))
 # that utilizes [`sample!`](@ref):
 
-modelstep_neutral!(m) = sample!(m, nagents(m))
+modelstep_neutral!(model::ABM) = sample!(model, nagents(model))
 nothing # hide
 
 # We can now run the model and collect data. We use `dummystep` for the agent-step
 # function (as the agents perform no actions).
 using Statistics: mean
 
-data, _ = run!(m, dummystep, modelstep_neutral!, 20; adata = [(:trait, mean)])
+data, _ = run!(model, dummystep, modelstep_neutral!, 20; adata = [(:trait, mean)])
 data
 
 # As expected, the average value of the "trait" remains around 0.5.
@@ -57,14 +57,14 @@ data
 # We can sample individuals according to their trait values, supposing that their
 # fitness is correlated with their trait values.
 
-m = ABM(Haploid)
-for i in 1:100
-    add_agent!(m, rand())
+model = ABM(Haploid)
+for i in 1:numagents
+    add_agent!(model, rand())
 end
 
-modelstep_selection!(m::ABM) = sample!(m, nagents(m), :trait)
+modelstep_selection!(model::ABM) = sample!(model, nagents(model), :trait)
 
-data, _ = run!(m, dummystep, modelstep_selection!, 20; adata = [(:trait, mean)])
+data, _ = run!(model, dummystep, modelstep_selection!, 20; adata = [(:trait, mean)])
 data
 
 # Here we see that as time progresses, the trait becomes closer and closer to 1,
