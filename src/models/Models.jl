@@ -12,5 +12,6 @@ include("forestfire.jl")
 include("wealth_distribution.jl")
 include("HK.jl")
 include("wright-fisher.jl")
+include("sir.jl")
 
 end
