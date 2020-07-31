@@ -22,7 +22,8 @@ mutable struct Grass <: AbstractAgent
     countdown::Int
 end
 
-""" julia
+"""
+``` julia
 predator_prey(; 
     n_sheep = 100,
     n_wolves = 50,
@@ -33,6 +34,7 @@ predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
+```
 Same as in [Model of predator-prey dynamics](@ref).
 """
 function predator_prey(;

@@ -9,7 +9,8 @@ mutable struct PoorSoul <: AbstractAgent
     status::Symbol
 end
 
-""" julia
+"""
+``` julia
 sir(; 
     C = 8, 
     max_travel_rate = 0.01,
@@ -20,6 +21,7 @@ sir(;
     Is = [zeros(Int, C - 1)..., 1],
     seed = 19
 )
+```
 Same as in [SIR model for the spread of COVID-19](@ref).
 """
 function sir(; 

@@ -3,11 +3,13 @@ mutable struct Haploid <: AbstractAgent
     trait::Float64
 end
 
-""" julia
+"""
+``` julia
 wright-fisher(; 
     numagents = 100,
     selection = true
 )
+```
 Same as in [Wright-Fisher model of evolution](@ref).
 """
 function wright-fisher(; numagents = 100, selection = true)

@@ -5,11 +5,13 @@ mutable struct HKAgent <: AbstractAgent
     previous_opinon::Float64
 end
 
-""" julia
+"""
+``` julia
 HK(; 
     numagents = 100, 
     ϵ = 0.2
 )
+```
 Same as in [HK (Hegselmann and Krause) opinion dynamics model](@ref).
 """
 function HK(; numagents = 100, ϵ = 0.2)

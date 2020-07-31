@@ -5,7 +5,15 @@ mutable struct Tree <: AbstractAgent
 end
 
 """
-    forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
+``` julia
+forest_fire(; 
+    f = 0.02, 
+    d = 0.8, 
+    p = 0.01, 
+    griddims = (100, 100), 
+    seed = 111
+)
+```
 Same as in [Forest fire model](@ref).
 """
 function forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)

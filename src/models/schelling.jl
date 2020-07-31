@@ -6,7 +6,13 @@ mutable struct SchellingAgent <: AbstractAgent
 end
 
 """
-    schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+``` julia
+schelling(; 
+    numagents = 320, 
+    griddims = (20, 20), 
+    min_to_be_happy = 3
+)
+```
 Same as in [Schelling's segregation model](@ref).
 """
 function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)

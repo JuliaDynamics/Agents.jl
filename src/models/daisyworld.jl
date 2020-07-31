@@ -16,7 +16,8 @@ mutable struct Land <: AbstractAgent
     temperature::Float64
 end
 
-""" julia
+"""
+``` julia
 daisyworld(; 
     griddims = (30, 30),
     max_age = 25,
@@ -30,6 +31,7 @@ daisyworld(;
     scenario = :default,
     seed = 165
 )
+```
 Same as in [Daisyworld](@ref).
 """
 function daisyworld(;

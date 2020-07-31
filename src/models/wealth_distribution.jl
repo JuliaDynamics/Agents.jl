@@ -3,11 +3,13 @@ mutable struct WealthAgent <: AbstractAgent
     wealth::Int
 end
 
-""" julia
+"""
+``` julia
 wealth_distribution(; 
     numagents = 100, 
     initwealth = 1
 )
+```
 Same as in [Wealth distribution model](@ref).
 """
 function wealth_distribution(; numagents = 100, initwealth = 1)
