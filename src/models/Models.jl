@@ -13,5 +13,6 @@ include("wealth_distribution.jl")
 include("HK.jl")
 include("wright-fisher.jl")
 include("sir.jl")
+include("daisyworld.jl")
 
 end
