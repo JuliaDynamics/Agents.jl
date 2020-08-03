@@ -27,6 +27,8 @@
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
 
+# It is also available from the `Models` module as [`Models.predator_prey`](@ref).
+
 using Agents, AgentsPlots, StatsPlots
 using Random # hide
 pyplot() # hide

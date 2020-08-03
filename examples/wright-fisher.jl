@@ -6,6 +6,8 @@
 # of chromosomes) while for simplicity, focus only on one locus (a specific gene).
 # In this example we will be dealing with a population of constant size.
 
+# It is also available from the `Models` module as [`Models.wright_fisher`](@ref).
+
 # ## A neutral model
 
 # * Imagine a population of `n` haploid individuals.

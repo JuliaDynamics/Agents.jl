@@ -15,6 +15,7 @@
 # space. The model also uses advanced agent movement in continuous space, where a
 # specialized "`move_agent`" function is created. Advanced plotting is also done,
 # since each agent is a specialized shape.
+# It is also available from the `Models` module as [`Models.growing_bacteria`](@ref).
 
 using Agents, LinearAlgebra
 cd(@__DIR__) #src

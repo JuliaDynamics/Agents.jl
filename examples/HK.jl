@@ -27,6 +27,7 @@
 # - The update rule: at each step every agent adopts the mean of the opinions which are within
 #   the confidence bound ( |xᵢ - xⱼ| ≤ ϵ).
 
+# It is also available from the `Models` module as [`Models.HK`](@ref).
 
 # ## Core structures
 # We start by defining the Agent type and initializing the model.

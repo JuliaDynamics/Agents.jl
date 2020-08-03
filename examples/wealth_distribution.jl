@@ -14,6 +14,8 @@
 # Even though this rule-set is simple, it can still recreate the basic
 # properties of wealth distributions, e.g. power-laws distributions.
 
+# It is also available from the `Models` module as [`Models.wealth_distribution`](@ref).
+
 # ## Core structures: space-less
 # We start by defining the Agent type and initializing the model.
 using Agents
