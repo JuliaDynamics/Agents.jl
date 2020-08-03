@@ -1,6 +1,5 @@
 using Random
 import StatsBase
-import DrWatson: @dict
 
 mutable struct Daisy <: AbstractAgent
     id::Int
@@ -50,8 +49,14 @@ function daisyworld(;
 
     Random.seed!(seed)
     space = GridSpace(griddims, moore = true, periodic = true)
-    properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
-    properties[:tick] = 0
+    properties = Dict(
+        :max_age => max_age,
+        :surface_albedo => surface_albedo,
+        :solar_luminosity => solar_luminosity,
+        :solar_change => solar_change,
+        :scenario => scenario,
+        :tick => 0
+    )
     ## create a scheduler that only schedules Daisies
     daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
     model = ABM(Union{Daisy, Land}, space;

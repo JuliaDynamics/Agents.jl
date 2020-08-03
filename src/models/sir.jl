@@ -1,5 +1,4 @@
 using Distributions: Poisson, DiscreteNonParametric
-using DrWatson: @dict
 using LinearAlgebra: diagind
 
 mutable struct PoorSoul <: AbstractAgent
@@ -51,17 +50,17 @@ function sir(;
     migration_rates = (migration_rates .* max_travel_rate) ./ maxM
     migration_rates[diagind(migration_rates)] .= 1.0
 
-    params = @dict(
-        Ns,
-        migration_rates,
-        β_und,
-        β_det,
-        infection_period,
-        reinfection_probability,
-        detection_time,
-        death_rate,
-        Is,
-        seed
+    params = Dict(
+        :Ns => Ns,
+        :migration_rates => migration_rates,
+        :β_und => β_und,
+        :β_det => β_det,
+        :infection_period => infection_period,
+        :reinfection_probability => reinfection_probability,
+        :detection_time => detection_time,
+        :death_rate => death_rate,
+        :Is => Is,
+        :seed => seed
     )
 
     model = model_initiation(; params...)
@@ -96,19 +95,17 @@ function model_initiation(;
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-    properties = @dict(
-        Ns,
-        Is,
-        β_und,
-        β_det,
-        β_det,
-        migration_rates,
-        infection_period,
-        infection_period,
-        reinfection_probability,
-        detection_time,
-        C,
-        death_rate
+    properties = Dict(
+        :Ns => Ns,
+        :Is => Is,
+        :β_und => β_und,
+        :β_det => β_det,
+        :migration_rates => migration_rates,
+        :infection_period => infection_period,
+        :reinfection_probability => reinfection_probability,
+        :detection_time => detection_time,
+        :C => C,
+        :death_rate => death_rate
     )
     space = GraphSpace(complete_digraph(C))
     model = ABM(PoorSoul, space; properties = properties)
