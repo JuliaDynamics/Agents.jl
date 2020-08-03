@@ -11,14 +11,13 @@ mutable struct SimpleCell <: AbstractAgent
     p2::NTuple{2,Float64}
     f1::NTuple{2,Float64}
     f2::NTuple{2,Float64}
-
-    function SimpleCell(id, pos, l, φ, g, γ)
-        a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
-        update_nodes!(a)
-        return a
-    end
 end
 
+function SimpleCell(id, pos, l, φ, g, γ)
+    a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    update_nodes!(a)
+    return a
+end
 
 """
 ``` julia

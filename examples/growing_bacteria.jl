@@ -32,12 +32,12 @@ mutable struct SimpleCell <: AbstractAgent
     p2::NTuple{2,Float64}
     f1::NTuple{2,Float64}
     f2::NTuple{2,Float64}
+end
 
-    function SimpleCell(id, pos, l, φ, g, γ)
-        a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
-        update_nodes!(a)
-        return a
-    end
+function SimpleCell(id, pos, l, φ, g, γ)
+    a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    update_nodes!(a)
+    return a
 end
 
 # In this model, the agents have to store their state in two redundant ways:
