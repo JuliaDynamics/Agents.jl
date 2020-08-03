@@ -29,10 +29,10 @@ function forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed 
             add_agent!(node, forest, true)
         end
     end
-    return forest, dummystep, forest_step!
+    return forest, dummystep, forest_model_step!
 end
 
-function forest_step!(forest)
+function forest_model_step!(forest)
     for node in nodes(forest, by = :random)
         nc = get_node_contents(node, forest)
         ## the cell is empty, maybe a tree grows here

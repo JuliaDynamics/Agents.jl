@@ -72,10 +72,10 @@ function predator_prey(;
         grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
         add_agent!(grass, n, model)
     end
-    return model, agent_step!, dummystep
+    return model, predator_prey_agent_step!, dummystep
 end
 
-function agent_step!(sheep::Sheep, model)
+function predator_prey_agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
     agents = get_node_agents(sheep.pos, model)
@@ -90,7 +90,7 @@ function agent_step!(sheep::Sheep, model)
     end
 end
 
-function agent_step!(wolf::Wolf, model)
+function predator_prey_agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
     agents = get_node_agents(wolf.pos, model)
@@ -105,7 +105,7 @@ function agent_step!(wolf::Wolf, model)
     end
 end
 
-function agent_step!(grass::Grass, model)
+function predator_prey_agent_step!(grass::Grass, model)
     if !grass.fully_grown
         if grass.countdown <= 0
             grass.fully_grown = true

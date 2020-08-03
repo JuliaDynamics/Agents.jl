@@ -36,7 +36,7 @@ function growing_bacteria()
     add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
     add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
     
-    return model, agent_step!, model_step!
+    return model, growing_bacteria_agent_step!, growing_bacteria_model_step!
 end
 
 function update_nodes!(a::SimpleCell)
@@ -51,7 +51,7 @@ cross2D(a, b) = a[1] * b[2] - a[2] * b[1]
 
 # ## Stepping functions
 
-function model_step!(model)
+function growing_bacteria_model_step!(model)
     for a in allagents(model)
         if a.growthprog ≥ 1
             ## When a cell has matured, it divides into two daughter cells on the
@@ -75,7 +75,7 @@ function model_step!(model)
     end
 end
 
-function agent_step!(agent::SimpleCell, model::ABM)
+function growing_bacteria_agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
     agent.pos = agent.pos .+ model.dt * model.mobility .* fsym
     agent.length += model.dt * model.mobility .* compression

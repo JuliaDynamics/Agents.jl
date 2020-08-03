@@ -65,7 +65,7 @@ function sir(;
     )
 
     model = model_initiation(; params...)
-    return model, agent_step!, dummystep
+    return model, sir_agent_step!, dummystep
 end
 
 function model_initiation(;
@@ -129,7 +129,7 @@ function model_initiation(;
     return model
 end
 
-function agent_step!(agent, model)
+function sir_agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
     update!(agent, model)

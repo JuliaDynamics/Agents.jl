@@ -72,7 +72,7 @@ function social_distancing(;
     end
 
     Agents.index!(model)
-    return model, sir_agent_step!, sir_model_step!
+    return model, social_distancing_agent_step!, social_distancing_model_step!
 end
 
 
@@ -88,7 +88,7 @@ function sd_transmit!(a1, a2, rp)
     healthy.status = :I
 end
 
-function sir_model_step!(model)
+function social_distancing_model_step!(model)
     r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :nearest)
         sd_transmit!(a1, a2, model.reinfection_probability)
@@ -97,7 +97,7 @@ function sir_model_step!(model)
 end
 
 
-function sir_agent_step!(agent, model)
+function social_distancing_agent_step!(agent, model)
     move_agent!(agent, model, model.dt)
     sd_update!(agent)
     recover_or_die!(agent, model)

@@ -20,7 +20,7 @@ function HK(; numagents = 100, ϵ = 0.2)
         o = rand()
         add_agent!(model, o, o, -1)
     end
-    return model, agent_step!, model_step!, terminate
+    return model, HK_agent_step!, HK_model_step!, terminate
 end
 
 function boundfilter(agent, model)
@@ -30,12 +30,12 @@ function boundfilter(agent, model)
     )
 end
 
-function agent_step!(agent, model)
+function HK_agent_step!(agent, model)
     agent.previous_opinon = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent, model))
 end
 
-function model_step!(model)
+function HK_model_step!(model)
     for a in allagents(model)
         a.old_opinion = a.new_opinion
     end

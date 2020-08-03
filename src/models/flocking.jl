@@ -54,10 +54,10 @@ function flocking(;
         )
     end
     index!(model)
-    return model, flocking_step!, dummystep
+    return model, flocking_agent_step!, dummystep
 end
 
-function flocking_step!(bird, model)
+function flocking_agent_step!(bird, model)
     ## Obtain the ids of neighbors within the bird's visual distance
     ids = space_neighbors(bird, model, bird.visual_distance)
     ## Compute velocity based on rules defined above

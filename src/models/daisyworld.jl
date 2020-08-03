@@ -74,7 +74,7 @@ function daisyworld(;
         add_agent_pos!(wd, model)
     end
 
-    return model, agent_step!, model_step!
+    return model, daisyworld_agent_step!, daisyworld_model_step!
 end
 
 function update_surface_temperature!(node::Int, model::DaisyWorld)
@@ -132,14 +132,14 @@ function propagate!(node::Int, model::DaisyWorld)
     end
 end
 
-function agent_step!(agent::Daisy, model::DaisyWorld)
+function daisyworld_agent_step!(agent::Daisy, model::DaisyWorld)
     agent.age += 1
     agent.age >= model.max_age && kill_agent!(agent, model)
 end
 
-agent_step!(agent::Land, model::DaisyWorld) = nothing
+daisyworld_agent_step!(agent::Land, model::DaisyWorld) = nothing
 
-function model_step!(model)
+function daisyworld_model_step!(model)
     for n in nodes(model)
         update_surface_temperature!(n, model)
         diffuse_temperature!(n, model)
