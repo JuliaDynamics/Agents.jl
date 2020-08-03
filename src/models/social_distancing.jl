@@ -1,6 +1,6 @@
 using Random
 
-mutable struct PoorSoul <: AbstractAgent
+mutable struct SocietyMember <: AbstractAgent
     id::Int
     pos::NTuple{2,Float64}
     vel::NTuple{2,Float64}
@@ -58,7 +58,7 @@ function social_distancing(;
         :dt => dt,
     )
     space = ContinuousSpace(2)
-    model = ABM(PoorSoul, space, properties = properties)
+    model = ABM(SocietyMember, space, properties = properties)
 
     Random.seed!(seed)
     for ind in 1:N
