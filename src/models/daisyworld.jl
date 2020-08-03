@@ -15,6 +15,8 @@ mutable struct Land <: AbstractAgent
     temperature::Float64
 end
 
+const DaisyWorld = ABM{Union{Daisy, Land}};
+
 """
 ``` julia
 daisyworld(; 

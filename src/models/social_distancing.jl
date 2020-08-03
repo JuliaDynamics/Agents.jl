@@ -100,12 +100,12 @@ end
 function social_distancing_agent_step!(agent, model)
     move_agent!(agent, model, model.dt)
     sd_update!(agent)
-    recover_or_die!(agent, model)
+    social_distancing_recover_or_die!(agent, model)
 end
 
 sd_update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
-function recover_or_die!(agent, model)
+function social_distancing_recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
         if rand() ≤ model.death_rate
             kill_agent!(agent, model)
