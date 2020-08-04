@@ -35,6 +35,11 @@ daisyworld(;
 )
 ```
 Same as in [Daisyworld](@ref).
+
+To access the `Daisy` and `Land` types, simply call
+``` julia
+using Agents.Models: Daisy, Land
+```
 """
 function daisyworld(;
         griddims = (30, 30),
