@@ -29,10 +29,10 @@ function game_of_life(;
             node_idx += 1
         end
     end
-    return model, game_of_life_agent_step!, dummystep
+    return model, dummystep, game_of_life_model_step!, dummystep
 end
 
-function game_of_life_agent_step!(model)
+function game_of_life_model_step!(model)
     new_status = fill(false, nagents(model))
     for (agid, ag) in model.agents
         nlive = nlive_neighbors(ag, model)
