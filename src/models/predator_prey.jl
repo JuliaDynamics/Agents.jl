@@ -38,6 +38,11 @@ predator_prey(;
 )
 ```
 Same as in [Model of predator-prey dynamics](@ref).
+
+To access the `Sheep`, `Wolf` and `Grass` types, simply call
+``` julia
+using Agents.Models: Sheep, Wolf, Grass
+```
 """
 function predator_prey(;
     n_sheep = 100,

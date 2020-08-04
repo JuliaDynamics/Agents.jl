@@ -177,7 +177,7 @@ function cassini_oval(agent)
     x = C .* cos.(t)
     y = C .* sin.(t)
 
-    uv = unitvector(agent.orientation)
+    uv = reverse(sincos(agent.orientation))
     θ = atan(uv[2], uv[1])
     R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
 

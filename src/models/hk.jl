@@ -9,20 +9,20 @@ end
 
 """
 ``` julia
-HK(; 
+hk(; 
     numagents = 100, 
     ϵ = 0.2
 )
 ```
 Same as in [HK (Hegselmann and Krause) opinion dynamics model](@ref).
 """
-function HK(; numagents = 100, ϵ = 0.2)
+function hk(; numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
         o = rand()
         add_agent!(model, o, o, -1)
     end
-    return model, HK_agent_step!, HK_model_step!, terminate
+    return model, hk_agent_step!, hk_model_step!, terminate
 end
 
 function boundfilter(agent, model)
@@ -32,12 +32,12 @@ function boundfilter(agent, model)
     )
 end
 
-function HK_agent_step!(agent, model)
+function hk_agent_step!(agent, model)
     agent.previous_opinon = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent, model))
 end
 
-function HK_model_step!(model)
+function hk_model_step!(model)
     for a in allagents(model)
         a.old_opinion = a.new_opinion
     end
