@@ -1,3 +1,5 @@
+using StatsBase: mean
+
 mutable struct HKAgent <: AbstractAgent
     id::Int
     old_opinion::Float64

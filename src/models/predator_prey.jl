@@ -1,3 +1,5 @@
+export Sheep, Wolf, Grass
+
 mutable struct Sheep <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int}

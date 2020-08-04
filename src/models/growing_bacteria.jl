@@ -32,10 +32,10 @@ function growing_bacteria()
         space,
         properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
     )
-    
+
     add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
     add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
-    
+
     return model, growing_bacteria_agent_step!, growing_bacteria_model_step!
 end
 

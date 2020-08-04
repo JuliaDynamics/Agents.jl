@@ -1,3 +1,4 @@
+using LightGraphs
 using Distributions: Poisson, DiscreteNonParametric
 using LinearAlgebra: diagind
 
@@ -10,8 +11,8 @@ end
 
 """
 ``` julia
-sir(; 
-    C = 8, 
+sir(;
+    C = 8,
     max_travel_rate = 0.01,
     infection_period = 30,
     reinfection_probability = 0.05,
@@ -23,15 +24,15 @@ sir(;
 ```
 Same as in [SIR model for the spread of COVID-19](@ref).
 """
-function sir(; 
-    C = 8, 
+function sir(;
+    C = 8,
     max_travel_rate = 0.01,
     infection_period = 30,
     reinfection_probability = 0.05,
     detection_time = 14,
     death_rate = 0.02,
     Is = [zeros(Int, C - 1)..., 1],
-    seed = 19
+    seed = 19,
 )
 
     Random.seed!(seed)
@@ -60,7 +61,7 @@ function sir(;
         :detection_time => detection_time,
         :death_rate => death_rate,
         :Is => Is,
-        :seed => seed
+        :seed => seed,
     )
 
     model = model_initiation(; params...)
@@ -77,7 +78,7 @@ function model_initiation(;
     detection_time,
     death_rate,
     Is,
-    seed
+    seed,
 )
 
     Random.seed!(seed)
@@ -105,7 +106,7 @@ function model_initiation(;
         :reinfection_probability => reinfection_probability,
         :detection_time => detection_time,
         :C => C,
-        :death_rate => death_rate
+        :death_rate => death_rate,
     )
     space = GraphSpace(complete_digraph(C))
     model = ABM(PoorSoul, space; properties = properties)
@@ -177,3 +178,4 @@ function recover_or_die!(agent, model)
         end
     end
 end
+

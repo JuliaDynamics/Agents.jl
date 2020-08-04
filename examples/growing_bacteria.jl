@@ -36,7 +36,7 @@ mutable struct SimpleCell <: AbstractAgent
 end
 
 function SimpleCell(id, pos, l, φ, g, γ)
-    a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    a = SimpleCell(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
     update_nodes!(a)
     return a
 end

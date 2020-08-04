@@ -1,5 +1,6 @@
 using Random
 import StatsBase
+export Daisy, Land, DaisyWorld
 
 mutable struct Daisy <: AbstractAgent
     id::Int
