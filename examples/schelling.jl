@@ -47,8 +47,8 @@ space = GridSpace((10, 10), moore = true)
 # To make our model we follow the instructions of [`AgentBasedModel`](@ref).
 # We also want to include a property `min_to_be_happy` in our model, and so we have:
 
-adata = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; adata = adata)
+properties = Dict(:min_to_be_happy => 3)
+schelling = ABM(SchellingAgent, space; properties = properties)
 
 
 # Here we used the default scheduler (which is also the fastest one) to create
@@ -59,7 +59,7 @@ schelling = ABM(SchellingAgent, space; adata = adata)
 schelling2 = ABM(
     SchellingAgent,
     space;
-    adata = adata,
+    properties = properties,
     scheduler = property_activation(:group),
 )
 
@@ -78,9 +78,9 @@ schelling2 = ABM(
 
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
-    adata = Dict(:min_to_be_happy => min_to_be_happy)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
     model =
-        ABM(SchellingAgent, space; adata = adata, scheduler = random_activation)
+        ABM(SchellingAgent, space; properties = properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
     for n in 1:numagents
