@@ -29,7 +29,7 @@ function game_of_life(;
             node_idx += 1
         end
     end
-    return model, dummystep, game_of_life_model_step!, dummystep
+    return model, dummystep, game_of_life_model_step!
 end
 
 function game_of_life_model_step!(model)
