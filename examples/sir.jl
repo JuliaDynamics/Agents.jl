@@ -32,8 +32,6 @@
 # implement here to also include age as an additional property of each agent.
 # This makes ABMs flexible and suitable for research of virus spreading.
 
-# It is also available from the `Models` module as [`Models.sir`](@ref).
-
 # ## Making the model in Agents.jl
 # We start by defining the `PoorSoul` agent type and the ABM
 cd(@__DIR__) #src
