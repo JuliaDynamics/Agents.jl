@@ -6,7 +6,13 @@ mutable struct SchellingAgent <: AbstractAgent
 end
 
 """
-    schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+``` julia
+schelling(; 
+    numagents = 320, 
+    griddims = (20, 20), 
+    min_to_be_happy = 3
+)
+```
 Same as in [Schelling's segregation model](@ref).
 """
 function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
@@ -21,11 +27,11 @@ function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
-    return model, schelling_step!, dummystep
+    return model, schelling_agent_step!, dummystep
 end
 
 
-function schelling_step!(agent, model)
+function schelling_agent_step!(agent, model)
     agent.mood == true && return # do nothing if already happy
     minhappy = model.min_to_be_happy
     neighbor_cells = node_neighbors(agent, model)

@@ -15,6 +15,7 @@
 # space. The model also uses advanced agent movement in continuous space, where a
 # specialized "`move_agent`" function is created. Advanced plotting is also done,
 # since each agent is a specialized shape.
+# It is also available from the `Models` module as [`Models.growing_bacteria`](@ref).
 
 using Agents, LinearAlgebra
 cd(@__DIR__) #src
@@ -32,12 +33,12 @@ mutable struct SimpleCell <: AbstractAgent
     p2::NTuple{2,Float64}
     f1::NTuple{2,Float64}
     f2::NTuple{2,Float64}
+end
 
-    function SimpleCell(id, pos, l, φ, g, γ)
-        a = new(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
-        update_nodes!(a)
-        return a
-    end
+function SimpleCell(id, pos, l, φ, g, γ)
+    a = SimpleCell(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    update_nodes!(a)
+    return a
 end
 
 # In this model, the agents have to store their state in two redundant ways:
@@ -176,7 +177,7 @@ function cassini_oval(agent)
     x = C .* cos.(t)
     y = C .* sin.(t)
 
-    uv = unitvector(agent.orientation)
+    uv = reverse(sincos(agent.orientation))
     θ = atan(uv[2], uv[1])
     R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
 

@@ -16,7 +16,7 @@
 # green.
 # This model is an example that does _not_ have an `agent_step!` function. It only
 # uses a `model_step!`.
-# It is also available as [`Models.forest_fire`](@ref).
+# It is also available from the `Models` module as [`Models.forest_fire`](@ref).
 
 # ## Defining the core structures
 
