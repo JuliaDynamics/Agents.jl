@@ -15,6 +15,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 DataFrames = "0.21, 1"
+Distributions = "0.23"
 LightGraphs = "1"
 SQLite = "1.0"
 StatsBase = "0.32, 0.33"
