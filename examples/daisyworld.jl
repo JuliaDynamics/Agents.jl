@@ -342,11 +342,11 @@ plot(p, p2, p3, layout = (3, 1))
 # ## Interactive scientific research
 # Julia is an interactive language, and thus everything that you do with Agents.jl can be
 # considered interactive. However, we can do even better by using our interactive application.
-# In this example, we care about exploring some time-dependent forcing of the system, and
-# so far we have been pre-describing it. But with using the interactive application,
-# we can control by ourselves, in real time, how much to change the solar forcing.
+# In this example, rather than describing what solar forcing we want to investigate before
+# hand, we use the interactive application, to control by ourselves, in real time, how
+# much solar forcing is delivered to daisyworld.
 
-# So, let's use [`interactive_abm`](@ref)!
+# So, let's use `interactive_abm` from the [`Interactive application`](@ref) page!
 
 # ```julia
 # using InteractiveChaos, Makie, Random
@@ -356,10 +356,10 @@ plot(p, p2, p3, layout = (3, 1))
 
 # Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
 # color/shape/size functions, and we can re-use them for the interactive application.
-# Unfortunately, because `InteractiveChaos` uses a different plotting package, Makie.jl, we have
-# to redefine the plotting functions. However, in the near future where AgentsPlots.jl
-# will move to Makie.jl, this will not be necessary.
-#
+# Because `InteractiveChaos` uses a different plotting package, Makie.jl, the plotting
+# functions we have defined for `plotabm` need to be slightly adjusted.
+# In the near future, AgentsPlots.jl will move to Makie.jl, so no adjustment will be necessary.
+
 # ```julia
 # using AbstractPlotting: to_color
 # daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
@@ -372,8 +372,8 @@ plot(p, p2, p3, layout = (3, 1))
 # daisysize(a::Land) = 1
 # ```
 
-# The only difference is that we make a parameter container for surface albedo and
-# for the rate of change of solar luminosity, and add some labels for clarity.
+# The only significant addition to use the interactive application is that we make a parameter
+# container for surface albedo and for the rate of change of solar luminosity, and add some labels for clarity.
 
 # ```julia
 # params = Dict(
@@ -394,8 +394,8 @@ plot(p, p2, p3, layout = (3, 1))
 # )
 # ```
 
-```@raw html
-<video width="100%" height="auto" controls autoplay loop>
-<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/daisies.mp4?raw=true" type="video/mp4">
-</video>
-```
+# ```@raw html
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/daisies.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
