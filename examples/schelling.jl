@@ -79,8 +79,8 @@ schelling2 = ABM(
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model =
-        ABM(SchellingAgent, space; properties = properties, scheduler = random_activation)
+    model = ABM(SchellingAgent, space;
+                properties = properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
     for n in 1:numagents
@@ -293,3 +293,39 @@ select!(data_mean, Not(:replicate_mean))
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
+
+# ## Launching the interactive application
+# Given the definitions we have already created for a normal study of the Schelling model,
+# it is almost trivial to launch an interactive application for it.
+# First, we load `InteractiveChaos` to access `interactive_abm`
+# %% #src
+using InteractiveChaos
+using GLMakie # we choose OpenGL as plotting backend
+
+# Then, we define a dictionary that maps some model-level parameters to a range of potential
+# values, so that we can interactively change them.
+parange = Dict(:min_to_be_happy => 0:8)
+
+# Due to the different plotting backend (Plots.jl vs Makie.jl) we redefine some of the
+# plotting functions (in the near future this won't be necessary, as everything will be Makie.jl based)
+
+groupcolor(a) = a.group == 1 ? :blue : :orange
+groupmarker(a) = a.group == 1 ? :circle : :rect
+
+# We define the `alabels` so that we can simple see the plotted timeseries with a
+# shorter name (since the defaults can get large)
+adata = [(:mood, sum), (x, mean)]
+alabels = ["happy", "avg. x"]
+
+model = initialize(; numagents = 300) # fresh model, noone happy
+
+scene, adf, modeldf =
+interactive_abm(model, agent_step!, dummystep, parange;
+                ac = groupcolor, am = groupmarker, as = 1,
+                adata = adata, alabels = alabels)
+
+# ```@raw html
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
