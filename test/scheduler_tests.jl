@@ -1,5 +1,6 @@
 # %% Scheduler tests
-@testset "Standard Scheduler" begin
+@testset "Scheduler tests" begin
+@testset "Simple Schedulers" begin
     N = 1000
 
     # by_id
@@ -92,56 +93,23 @@ end
 
     Random.seed!(12)
     model = init_mixed_model(scheduler = by_type(false, false))
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent0,
-        Agent0,
-        Agent0,
+    @test unique([typeof(model[id]) for id in model.scheduler(model)]) == [
         Agent0,
         Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
         Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent3,
-        Agent3,
         Agent3,
     ]
-    @test model.scheduler(model)[1:3] == [18, 7, 10]
     @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 6
 
     Random.seed!(13)
     model = init_mixed_model(scheduler = by_type(true, false))
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
+    schedtyp = unique([typeof(model[id]) for id in model.scheduler(model)])
+    @test schedtyp ≠ [
         Agent0,
-        Agent0,
+        Agent1,
         Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
+        Agent3,
     ]
-    @test model.scheduler(model)[1:3] == [2, 16, 10]
     @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 7
 
     # Offset union order and ids
@@ -250,4 +218,4 @@ end
     @test model.scheduler(model) == [3, 2, 1, 4, 6, 5]
 end
 
-
+end

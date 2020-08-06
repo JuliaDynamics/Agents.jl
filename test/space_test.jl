@@ -1,4 +1,5 @@
 Random.seed!(209)
+@testset "Space" begin
 
 @testset "Deprecated spaces" begin
     # GraphSpace
@@ -143,7 +144,7 @@ end
     @test_throws ErrorException Agents.vertex2coord(3, GraphSpace(complete_digraph(5)))
 end
 
-@testset "nodes" begin
+@testset "Nodes" begin
     Random.seed!(782)
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
@@ -227,4 +228,4 @@ end
     @test typeof(space_neighbors((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
 end
 
-
+end

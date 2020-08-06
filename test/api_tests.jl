@@ -168,8 +168,8 @@ end
   @test model.agents[1].f2 == model.agents[2].f2
   Random.seed!(6546)
   agent = Agent7(3, 2, attributes...)
-  @test add_agent!(agent, model).pos == 7
-  @test add_agent_single!(model, attributes...).pos == 8
+  @test add_agent!(agent, model).pos ∈ 1:10
+  @test add_agent_single!(model, attributes...).pos ∈ 1:10
   for id in 5:11
       agent.id = id
       add_agent_single!(agent, model)
@@ -311,25 +311,27 @@ end
   genocide!(model, a -> a.id > 5)
   @test nagents(model) == 5
 
-  # Testing genocide!(model::ABM, f::Function) when the function is invalid (i.e. does not return a bool)
+  # Testing genocide!(model::ABM, f::Function) when the function is invalid
+  # (i.e. does not return a bool)
   Random.seed!(1565)
   for i in 1:20
-    agent = Agent3(i, (rand(1:10),rand(1:10)), i*2)
+    agent = Agent3(i, (rand(1:10), rand(1:10)), i*2)
     add_agent_pos!(agent, model)
   end
   @test_throws TypeError genocide!(model, a -> a.id)
+  N = nagents(model)
 
   # Testing genocide!(model::ABM, f::Function) with a named function
   # No need to replenish population since the last test fails
   function complex_logic(agent::A) where A <: AbstractAgent
-    if first(agent.pos) <= 5 && agent.weight > 25
+    if agent.pos[1] <= 5 && agent.weight > 25
       true
     else
       false
     end
   end
   genocide!(model, complex_logic)
-  @test nagents(model) == 13
+  @test nagents(model) < N
 
   space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
   model = ABM(Agent8, space2d)
