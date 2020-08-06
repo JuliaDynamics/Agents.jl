@@ -299,8 +299,10 @@ select!(data_mean, Not(:replicate_mean))
 # it is almost trivial to launch an interactive application for it.
 # First, we load `InteractiveChaos` to access `interactive_abm`
 # %% #src
-using InteractiveChaos
-using GLMakie # we choose OpenGL as plotting backend
+# ```julia
+# using InteractiveChaos
+# using GLMakie # we choose OpenGL as plotting backend
+# ```
 
 # Then, we define a dictionary that maps some model-level parameters to a range of potential
 # values, so that we can interactively change them.
@@ -319,11 +321,13 @@ alabels = ["happy", "avg. x"]
 
 model = initialize(; numagents = 300) # fresh model, noone happy
 
-scene, adf, modeldf =
-interactive_abm(model, agent_step!, dummystep, parange;
-                ac = groupcolor, am = groupmarker, as = 1,
-                adata = adata, alabels = alabels)
-
+# ```julia
+# scene, adf, modeldf =
+# interactive_abm(model, agent_step!, dummystep, parange;
+#                 ac = groupcolor, am = groupmarker, as = 1,
+#                 adata = adata, alabels = alabels)
+# ```
+#
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
