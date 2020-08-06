@@ -9,6 +9,7 @@
 # - represent a space "surface property" as an agent
 # - counting time in the model and having time-dependent dynamics
 # - data collection in a mixed-agent model
+# - performing interactive scientific research
 #
 # ## Overview of Daisyworld
 #
@@ -336,3 +337,65 @@ p2 = plot(agent_df[!, :step], agent_df[!, aggname(adata[3])], ylabel = "temperat
 p3 = plot(model_df[!, :step], model_df[!, :solar_luminosity], ylabel = "L", xlabel = "ticks")
 
 plot(p, p2, p3, layout = (3, 1))
+
+
+# ## Interactive scientific research
+# Julia is an interactive language, and thus everything that you do with Agents.jl can be
+# considered interactive. However, we can do even better by using our interactive application.
+# In this example, rather than describing what solar forcing we want to investigate before
+# hand, we use the interactive application, to control by ourselves, in real time, how
+# much solar forcing is delivered to daisyworld.
+
+# So, let's use `interactive_abm` from the [`Interactive application`](@ref) page!
+
+# ```julia
+# using InteractiveChaos, Makie, Random
+# Random.seed!(165)
+# model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+# ```
+
+# Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
+# color/shape/size functions, and we can re-use them for the interactive application.
+# Because `InteractiveChaos` uses a different plotting package, Makie.jl, the plotting
+# functions we have defined for `plotabm` need to be slightly adjusted.
+# In the near future, AgentsPlots.jl will move to Makie.jl, so no adjustment will be necessary.
+
+# ```julia
+# using AbstractPlotting: to_color
+# daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
+# const landcolor = cgrad(:thermal)
+# daisycolor(a::Land) = to_color(landcolor[(a.temperature+50)/150])
+#
+# daisyshape(a::Daisy) = :circle
+# daisysize(a::Daisy) = 0.6
+# daisyshape(a::Land) = :rect
+# daisysize(a::Land) = 1
+# ```
+
+# The only significant addition to use the interactive application is that we make a parameter
+# container for surface albedo and for the rate of change of solar luminosity, and add some labels for clarity.
+
+# ```julia
+# params = Dict(
+#     :solar_change => -0.1:0.01:0.1,
+#     :surface_albedo => 0:0.01:1,
+# )
+#
+# alabels = ["black", "white", "T"]
+# mlabels = ["L"]
+#
+# landfirst = by_type((Land, Daisy), false)
+#
+# scene, agent_df, model_def = interactive_abm(
+#     model, agent_step!, model_step!, params;
+#     ac = daisycolor, am = daisyshape, as = daisysize,
+#     mdata = mdata, adata = adata, alabels = alabels, mlabels = mlabels,
+#     scheduler = landfirst # crucial to change model scheduler!
+# )
+# ```
+
+# ```@raw html
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/daisies.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
