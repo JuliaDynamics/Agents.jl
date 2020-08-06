@@ -4,6 +4,8 @@
 
 # [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
+# It is also available from the `Models` module as [`Models.game_of_life`](@ref).
+
 using Agents, AgentsPlots
 using Random # hide
 gr(); # hide

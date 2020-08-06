@@ -1,6 +1,6 @@
 using Random
 
-mutable struct PoorSoul <: AbstractAgent
+mutable struct SocietyMember <: AbstractAgent
     id::Int
     pos::NTuple{2,Float64}
     vel::NTuple{2,Float64}
@@ -58,7 +58,7 @@ function social_distancing(;
         :dt => dt,
     )
     space = ContinuousSpace(2)
-    model = ABM(PoorSoul, space, properties = properties)
+    model = ABM(SocietyMember, space, properties = properties)
 
     Random.seed!(seed)
     for ind in 1:N
@@ -72,7 +72,7 @@ function social_distancing(;
     end
 
     Agents.index!(model)
-    return model, sir_agent_step!, sir_model_step!
+    return model, social_distancing_agent_step!, social_distancing_model_step!
 end
 
 
@@ -88,7 +88,7 @@ function sd_transmit!(a1, a2, rp)
     healthy.status = :I
 end
 
-function sir_model_step!(model)
+function social_distancing_model_step!(model)
     r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :nearest)
         sd_transmit!(a1, a2, model.reinfection_probability)
@@ -97,15 +97,15 @@ function sir_model_step!(model)
 end
 
 
-function sir_agent_step!(agent, model)
+function social_distancing_agent_step!(agent, model)
     move_agent!(agent, model, model.dt)
     sd_update!(agent)
-    recover_or_die!(agent, model)
+    social_distancing_recover_or_die!(agent, model)
 end
 
 sd_update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
-function recover_or_die!(agent, model)
+function social_distancing_recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
         if rand() ≤ model.death_rate
             kill_agent!(agent, model)

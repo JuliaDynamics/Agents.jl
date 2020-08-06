@@ -47,6 +47,7 @@
 # However, the advantage of making the surface composed of
 # agents is that visualization is simple and one can use the interactive application to also
 # visualize surface temperature.
+# It is also available from the `Models` module as [`Models.daisyworld`](@ref).
 
 using Agents, AgentsPlots, Plots
 using Statistics: mean

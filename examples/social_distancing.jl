@@ -14,6 +14,8 @@
 # Notice that a detailed description of the basics of the model regarding disease spreading
 # exists in the SIR example, and is not repeated here.
 
+# It is also available from the `Models` module as [`Models.social_distancing`](@ref).
+
 # ## Moving agents in continuous space
 
 # Let us first create a simple model where balls move around in a continuous space.
