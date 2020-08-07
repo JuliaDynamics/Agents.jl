@@ -29,7 +29,7 @@ end
 
 x_position(agent) = first(agent.pos)
 model = initialize()
-@testeset "DataCollection" begin
+@testset "DataCollection" begin
 
 @testset "DataFrame init" begin
     @test init_agent_dataframe(model, nothing) == DataFrame()
