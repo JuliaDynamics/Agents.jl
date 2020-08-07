@@ -75,7 +75,6 @@ end
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
 end
 
-Random.seed!(65465)
 model1 = ABM(Agent1, GridSpace((3,3)))
 
 agent = add_agent!((1,1), model1)
@@ -166,16 +165,15 @@ end
   @test model.agents[1].pos == model.agents[2].pos
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
-  Random.seed!(6546)
-  agent = Agent7(3, 2, attributes...)
-  @test add_agent!(agent, model).pos ∈ 1:10
   @test add_agent_single!(model, attributes...).pos ∈ 1:10
-  for id in 5:11
-      agent.id = id
+  for id in 4:11
+      agent = Agent7(id, 2, attributes...)
       add_agent_single!(agent, model)
   end
   @test !has_empty_nodes(model)
+  agent = Agent7(12,5, attributes...)
   @test_logs (:warn, "No empty nodes found for `add_agent_single!`.") add_agent_single!(agent, model)
+  @test add_agent!(agent, model).pos ∈ 1:10
 end
 
 @testset "add_agent! (continuous)" begin
@@ -189,9 +187,8 @@ end
   @test model.agents[1].id != model.agents[2].id
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
-  Random.seed!(864)
   agent = Agent8(3, (0,0), false, 6)
-  @test add_agent!(agent, model).pos[1] ≈ 0.70149 atol=1e-3
+  @test 0 <= add_agent!(agent, model).pos[1] <= 1
   agent.id = 4
   @test add_agent!(agent, (0.5, 0.5), model).pos[1] ≈ 0.5 atol=1e-3
 end
@@ -313,7 +310,6 @@ end
 
   # Testing genocide!(model::ABM, f::Function) when the function is invalid
   # (i.e. does not return a bool)
-  Random.seed!(1565)
   for i in 1:20
     agent = Agent3(i, (rand(1:10), rand(1:10)), i*2)
     add_agent_pos!(agent, model)
