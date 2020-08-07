@@ -6,6 +6,7 @@ os:
 
 julia:
   - 1
+  - 1.4.2
   - 1.0
   # - nightly
 
@@ -19,11 +20,11 @@ after_success:
 
 matrix:
   allow_failures:
-    - julia: nightly
+    - julia: 1
   fast_finish: true
   include:
     - stage: "Documentation"
-      julia: 1
+      julia: 1.4.2
       os: linux
       script:
         - julia -e 'using Pkg; ENV["PYTHON"]=""; py="PyCall"; Pkg.add(py); Pkg.build(); Pkg.add("PyPlot"); Pkg.add("StaticArrays")'
