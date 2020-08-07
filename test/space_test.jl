@@ -131,7 +131,6 @@ end
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
 
-    Random.seed!(648)
     model = ABM(Agent3, GridSpace((5,5)))
     agent = Agent3(1, (2,4), 5.5)
     add_agent_pos!(agent, model)
