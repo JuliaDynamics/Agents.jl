@@ -4,7 +4,6 @@ speed = 0.002
 dt = 1.0
 diameter = 0.015
 function model_initiation()
-  Random.seed!(12345)
   space = ContinuousSpace(2; periodic = true, extend = (1.0, 1.0))
   model = ABM(Agent6, space; properties = Dict(:c => 0));
 
