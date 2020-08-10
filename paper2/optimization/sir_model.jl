@@ -138,6 +138,9 @@ function transmit!(agent, model)
       model.β_det[agent.pos]
   end
 
+  if rate < 0.0 
+    rate = 0.0
+  end
   d = Poisson(rate)
   n = rand(d)
   n == 0 && return

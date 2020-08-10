@@ -20,16 +20,16 @@ function cost(x)
 end
 
 
-max_travel_rate = 0.1
-death_rate=0.02
-β_und1=0.1; β_und2=0.2; β_und3=0.3
-x0 = [max_travel_rate, death_rate, β_und1, β_und2, β_und3]
-cost(x0)
+# max_travel_rate = 0.1
+# death_rate=0.02
+# β_und1=0.1; β_und2=0.2; β_und3=0.3
+# x0 = [max_travel_rate, death_rate, β_und1, β_und2, β_und3]
+# cost(x0)
 
-result = bboptimize(cost, SearchRange = (0.0, 1.0), NumDimensions = 5, MaxTime=15)
+# result = bboptimize(cost, SearchRange = (0.0, 1.0), NumDimensions = 5, MaxTime=15)
 
-best_fitness(result)
-best_candidate(result)
+# best_fitness(result)
+# best_candidate(result)
 
 ## Multi-objective optimization
 
@@ -44,14 +44,21 @@ function cost_multi(x)
   )
 
   model = model_initiation(; params...)
+  initial_size = nagents(model)
 
   infected_fraction(model) = count(a.status == :I for a in values(model.agents)) / nagents(model)
   recovered_fraction(model) = -count(a.status == :R for a in values(model.agents)) / nagents(model)
-  _, data = run!(model, agent_step!, 10; mdata = [infected_fraction, population_size], when_model=[10])
+  n_fraction(model) = initial_size/nagents(model)
+  _, data = run!(model, agent_step!, 100; mdata = [infected_fraction, recovered_fraction], when_model=[100])
 
   return data.infected_fraction[1], data.recovered_fraction[1]
 end
 
+# max_travel_rate = 0.1
+# death_rate=0.02
+# β_und1=0.1; β_und2=0.2; β_und3=0.3
+# x0 = [max_travel_rate, death_rate, β_und1, β_und2, β_und3]
+# cost_multi(x0)
 
 result = bboptimize(cost_multi, Method=:borg_moea, FitnessScheme=ParetoFitnessScheme{2}(is_minimizing=true), SearchRange = (0.0, 1.0), NumDimensions = 5, MaxTime=30)
 
