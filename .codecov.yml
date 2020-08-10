@@ -1,0 +1,7 @@
+ignore:
+  - "examples"   # No need to cover the examples
+  - "src/models" # Examples provide integration testing here
+  - "test"
+  - "docs"
+  - "paper"
+

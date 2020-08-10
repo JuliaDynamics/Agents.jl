@@ -1,3 +1,4 @@
+using Agents, Test, Random
 ### Interactions are tested with the forest fire model
 mutable struct Tree <: AbstractAgent
   id::Int
@@ -105,4 +106,25 @@ end
   kill_agent!(agent, model)
   @test_throws KeyError model[1]
   @test !in(1, get_node_contents(agent, model))
+end
+
+mutable struct Daisy <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  breed::String
+end
+mutable struct Land <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  temperature::Float64
+end
+@testset "fill space" begin
+  space = GridSpace((10, 10), moore = true, periodic = true)
+  model = ABM(Union{Daisy, Land}, space)
+  temperature(pos) = (pos[1]/10, ) # make it Tuple!
+  fill_space!(Land, model, temperature)
+  @test nagents(model) == 100
+  for a in values(model.agents)
+    @test a.temperature == a.pos[1]/10
+  end
 end

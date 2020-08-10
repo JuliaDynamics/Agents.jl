@@ -4,6 +4,9 @@ Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modelin
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
 To get started, please read the [Tutorial](@ref) page.
 
+!!! tip "Latest news"
+    Interactive applications & predefined models!
+
 ## Features
 
 * Intuitive, small, yet powerful and simple-to-learn API for agent based models.
@@ -16,6 +19,13 @@ To get started, please read the [Tutorial](@ref) page.
 * Distributed computing
 * Batch running and batch data collection
 * Visualize agent distributions on regular grids, arbitrary graphs or continuous space.
+* Interactive applications for any agent based model (in continuous or grid space), which are created with only 5 lines of code and look like this:
+
+```@raw html
+<video width="100%" height="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
+</video>
+```
 
 ## Installation
 

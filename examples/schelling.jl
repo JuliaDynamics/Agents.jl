@@ -15,6 +15,8 @@
 # belonging to the same group (e.g. preferring that at least 30% of neighbors to
 # be in the same group) could lead to total segregation of neighborhoods.
 
+# This model is also available as [`Models.schelling`](@ref).
+
 # ## Defining the agent type
 
 using Agents, AgentsPlots
@@ -160,27 +162,27 @@ step!(model, agent_step!, 3)
 # and put these data in a `DataFrame` object.
 # We define vector of `Symbols`
 # for the agent fields that we want to collect as data
-properties = [:pos, :mood, :group]
+adata = [:pos, :mood, :group]
 
 model = initialize()
-data, _ = run!(model, agent_step!, 5; adata = properties)
+data, _ = run!(model, agent_step!, 5; adata = adata)
 data[1:10, :] # print only a few rows
 
-# We could also use functions in `properties`, for example we can define
+# We could also use functions in `adata`, for example we can define
 x(agent) = agent.pos[1]
 model = initialize()
-properties = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata = properties)
+adata = [x, :mood, :group]
+data, _ = run!(model, agent_step!, 5; adata = adata)
 data[1:10, :]
 
-# With the above `properties` vector, we collected all agent's data.
+# With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
 # For example, let's only get the number of happy individuals, and the
 # maximum of the "x" (not very interesting, but anyway!)
 
 model = initialize();
-properties = [(:mood, sum), (x, maximum)]
-data, _ = run!(model, agent_step!, 5; adata = properties)
+adata = [(:mood, sum), (x, maximum)]
+data, _ = run!(model, agent_step!, 5; adata = adata)
 data
 
 # Other examples in the documentation are more realistic, with a much more meaningful
@@ -216,7 +218,7 @@ gif(anim, "schelling.gif", fps = 2)
 # To that end, we only need to specify `replicates` in the `run!` function:
 
 model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
-data, _ = run!(model, agent_step!, 5; adata = properties, replicates = 3)
+data, _ = run!(model, agent_step!, 5; adata = adata, replicates = 3)
 data[(end - 10):end, :]
 
 # It is possible to run the replicates in parallel.
@@ -240,7 +242,7 @@ data[(end - 10):end, :]
 # Then we can tell the `run!` function to run replicates in parallel:
 
 # ```julia
-# data, _ = run!(model, agent_step!, 2, adata=properties,
+# data, _ = run!(model, agent_step!, 2, adata=adata,
 #                replicates=5, parallel=true)
 # ```
 

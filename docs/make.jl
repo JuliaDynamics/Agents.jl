@@ -6,7 +6,10 @@ Pkg.update()
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
-using Plots, StatsPlots
+using Plots, StatsPlots, BenchmarkTools
+import OrdinaryDiffEq, DiffEqCallbacks
+import InteractiveChaos
+
 # Initialise pyplot to squash build output bleeding into docs.
 pyplot()
 plot([1,1])
@@ -24,7 +27,7 @@ Pkg.status("AgentsPlots")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
-toskip = ()
+toskip = ("daisyworld_matrix.jl", )
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -49,7 +52,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 cd(@__DIR__)
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,AgentsPlots],
+makedocs(modules = [Agents,AgentsPlots,InteractiveChaos],
 sitename= "Agents.jl",
 authors = "Ali R. Vahdati, George Datseris, Tim DuBois and contributors.",
 doctest = false,
@@ -57,7 +60,8 @@ format = Documenter.HTML(
     prettyurls = CI,
     assets = [
         asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
-    ],
+        ],
+    collapselevel = 1,
     ),
 pages = [
     "Introduction" => "index.md",
@@ -70,13 +74,16 @@ pages = [
         "Forest fire" => "examples/forest_fire.md",
         "Conway's game of life" => "examples/game_of_life_2D_CA.md",
         "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
-        "Hegselmann-Krause opinion dynamics" => "examples/HK.md",
+        "Hegselmann-Krause opinion dynamics" => "examples/hk.md",
         "Flocking" => "examples/flock.md",
         "Daisyworld" => "examples/daisyworld.md",
         "Predator-Prey" => "examples/predator_prey.md",
         "Bacteria Growth" => "examples/growing_bacteria.md"
         ],
+    "Predefined Models" => "models.md",
     "API" => "api.md",
+    "Interactive application" => "interact.md",
+    "Ecosystem Integration" => ["DifferentialEquations.jl" => "examples/diffeq.md"],
     "Comparison against Mesa (Python)" => "mesa.md"
     ],
 )

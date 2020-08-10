@@ -44,8 +44,8 @@ model = initialize()
 end
 
 @testset "aggname" begin
-    @test aggname(:weight, mean) == :mean_weight
-    @test aggname(x_position, length) == :length_x_position
+    @test aggname(:weight, mean) == "mean_weight"
+    @test aggname(x_position, length) == "length_x_position"
 end
 
 @testset "Aggregate Collections" begin

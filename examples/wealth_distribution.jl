@@ -71,6 +71,9 @@ UnicodePlots.histogram(wealths)
 # ## Core structures: with space
 # We now expand this model to (in this case) a 2D grid. The rules are the same
 # but agents exchange wealth only with their neighbors.
+
+# It is also available from the `Models` module as [`Models.wealth_distribution`](@ref).
+
 # We therefore have to add a `pos` field as the second field of the agents:
 
 mutable struct WealthInSpace <: AbstractAgent
