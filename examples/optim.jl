@@ -1,8 +1,8 @@
 # # Optimizing agent-based models
 
-# Agent-based models (ABMs) are computationally expensive and can have many parameters. Sometimes we need to fine-tune a model's parameters to a specific outcome. Brute-force algorithms can take too long for testing each parameter setting. Even if it was feasbile to run the model for every parameter setting, it would not be enough because ABMs are stochastic and the effect of a parameter setting should be derived from running the model several times and taking its average behavior.
+# Agent-based models (ABMs) are often computationally expensive and can have many parameters. Sometimes we need to fine-tune a model's parameters to a specific outcome. Brute-force algorithms can take too long for testing each parameter setting. Even if it was feasbile to run the model for every parameter setting, it would not be enough because ABMs are stochastic and the effect of a parameter setting should be derived from running the model several times and taking its average behavior.
 
-# Here we show how to use optimizations based on evolutionary algorithms with ABMs ([BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl)).
+# Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.j
 
 # We optimize the parameters of our SIR model. First we define the ABM:
 
@@ -218,7 +218,7 @@ best_fitness(result)
 
 best_candidate(result)
 
-# We notice that the death rate is 96%, and transmission rates have also increased, while reinfection probability is much smaller. When all the infected indiduals die, infection doesn't transmit. Let's modify the cost function to give us a better solution that doesn't involve so much death.
+# We notice that the death rate is 96%, and transmission rates have also increased, while reinfection probability is much smaller. When all the infected indiduals die, infection doesn't transmit. Let's modify the cost function to also keep the mortality rate low.
 
 # This can be tested by running the model with the new parameter values:
 migration_rate, death_rate, β_det, β_und, infection_period, reinfection_probability, detection_time = best_candidate(result)
