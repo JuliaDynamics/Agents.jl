@@ -1,6 +1,6 @@
 # # Optimizing agent-based models
 
-# Agent-based models (ABMs) are often computationally expensive and can have many parameters. Sometimes we need to fine-tune a model's parameters to a specific outcome. Brute-force algorithms can take too long for testing each parameter setting. Even if it was feasbile to run the model for every parameter setting, it would not be enough because ABMs are stochastic and the effect of a parameter setting should be derived from running the model several times and taking its average behavior.
+# Agent-based models (ABMs) are computationally more expensive than analytical models, and can have many parameters. Sometimes we need to fine-tune a model's parameters to a specific outcome. Brute-force algorithms can take too long for testing each parameter setting. Even if it was feasbile to run the model for every parameter setting, it would not be enough because ABMs are stochastic and the effect of a parameter setting should be derived from running the model several times and taking its average behavior.
 
 # Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.j
 
