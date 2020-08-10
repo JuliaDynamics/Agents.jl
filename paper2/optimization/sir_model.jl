@@ -15,15 +15,17 @@ function model_initiation(;
     migration_rates,
     β_und,
     β_det,
-    infection_period = 30,
+    infection_period = 10,
     reinfection_probability = 0.05,
-    detection_time = 14,
+    detection_time = 3,
     death_rate = 0.02,
-    Is = [zeros(Int, length(Ns) - 1)..., 1],
-    seed = 0,
+    Is = ones(Int, length(Ns)),
+    seed = nothing,
   )
 
-    Random.seed!(seed)
+    if !isnothing(seed)
+        Random.seed!(seed)
+    end
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -71,33 +73,20 @@ function model_initiation(;
     return model
 end
 
-
 function create_params(;
   C,
-  max_travel_rate,
-  infection_period = 30,
+  Ns,
+  β_det,
+  migration_rate,
+  infection_period = 10,
   reinfection_probability = 0.05,
-  detection_time = 14,
+  detection_time = 3,
   death_rate = 0.02,
   Is = ones(Int, C),
-  β_und = rand(0.3:0.02:0.6, C),
-  seed = 19,
+  β_und = [0.1 for i in 1:C],
   )
 
-  Random.seed!(seed)
-  Ns = rand(50:5000, C)
-  β_det = β_und ./ 10
-
-  Random.seed!(seed)
-  migration_rates = zeros(C, C)
-  for c in 1:C
-      for c2 in 1:C
-          migration_rates[c, c2] = (Ns[c] + Ns[c2]) / Ns[c]
-      end
-  end
-  maxM = maximum(migration_rates)
-  migration_rates = (migration_rates .* max_travel_rate) ./ maxM
-  migration_rates[diagind(migration_rates)] .= 1.0
+  migration_rates = reshape([migration_rate for i in 1:C*C], C,C)
 
   params = @dict(
       Ns,
@@ -138,9 +127,9 @@ function transmit!(agent, model)
       model.β_det[agent.pos]
   end
 
-  if rate < 0.0 
-    rate = 0.0
-  end
+#   if rate < 0.0 
+#     rate = 0.0
+#   end
   d = Poisson(rate)
   n = rand(d)
   n == 0 && return
