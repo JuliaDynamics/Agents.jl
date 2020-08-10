@@ -4,7 +4,7 @@
 
 # Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.j
 
-# We optimize the parameters of an epidemiological model (SIR). We explain it in detail in the Examples documentation. Here, we just import it. 
+# We optimize the parameters of an epidemiological model (SIR). We explain it in detail in the [SIR model for the spread of COVID-19](@ref). Here, we just import it. 
 
 include("siroptim.jl")
 
