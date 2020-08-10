@@ -83,7 +83,10 @@ pages = [
     "Predefined Models" => "models.md",
     "API" => "api.md",
     "Interactive application" => "interact.md",
-    "Ecosystem Integration" => ["DifferentialEquations.jl" => "examples/diffeq.md"],
+    "Ecosystem Integration" => [
+        "DifferentialEquations.jl" => "examples/diffeq.md",
+        "BlackBoxOptim" => "examples/optim.md"
+        ],
     "Comparison against Mesa (Python)" => "mesa.md"
     ],
 )
