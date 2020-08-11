@@ -203,16 +203,23 @@ end
   new_pos = agent.pos
   @test new_pos != init_pos
   # Checking a random move
-  move_agent!(agent, model)
-  @test agent.pos != new_pos
+  ni = 0; init_pos = agent.pos
+  while agent.pos == init_pos
+      move_agent!(agent, model)
+  end
+  @test ni < Inf
 
   # GridSpace
   model = ABM(Agent1, GridSpace((5,5)))
   agent = add_agent!((2,4), model)
   move_agent!(agent, (1,3), model)
   @test agent.pos == (1,3)
-  move_agent!(agent, model)
-  @test agent.pos != (1,3)
+  ni = 0; init_pos = agent.pos
+  while agent.pos == init_pos
+      move_agent!(agent, model)
+  end
+  @test ni < Inf
+
   model = ABM(Agent1, GridSpace((2,1)))
   agent = add_agent!((1,1), model)
   move_agent_single!(agent, model)
@@ -340,4 +347,25 @@ end
   @test nagents(model) == 5
   genocide!(model, a -> a.id < 3)
   @test nagents(model) == 3
+end
+
+mutable struct Daisy <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  breed::String
+end
+mutable struct Land <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  temperature::Float64
+end
+@testset "fill space" begin
+  space = GridSpace((10, 10), moore = true, periodic = true)
+  model = ABM(Union{Daisy, Land}, space)
+  temperature(pos) = (pos[1]/10, ) # make it Tuple!
+  fill_space!(Land, model, temperature)
+  @test nagents(model) == 100
+  for a in values(model.agents)
+    @test a.temperature == a.pos[1]/10
+  end
 end
