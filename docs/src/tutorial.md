@@ -22,7 +22,7 @@ AgentBasedModel
 ## [2. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
 
-The discrete possibilities are
+The discrete possibilities, often summarized as `DiscreteSpace`, are
 
 ```@docs
 GraphSpace
