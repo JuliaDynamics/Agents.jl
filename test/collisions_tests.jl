@@ -2,16 +2,16 @@
 
 speed = 0.002
 dt = 1.0
-diameter = 0.015
+diameter = 0.1
 function model_initiation()
   space = ContinuousSpace(2; periodic = true, extend = (1.0, 1.0))
   model = ABM(Agent6, space; properties = Dict(:c => 0));
 
   ## Add initial individuals
-  for ind in 1:100
-    pos = Tuple(rand(2))
+  for i in 1:10, j in 1:10
+    pos = (i/10, j/10)
     # these agents have infinite mass and 0 velocity. They are fixed.
-    if ind > 50
+    if i > 5
       vel = sincos(2π*rand()) .* speed
       mass = 1.33
     else
