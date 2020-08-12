@@ -1,4 +1,4 @@
-Random.seed!(209)
+@testset "Space" begin
 
 @testset "Deprecated spaces" begin
     # GraphSpace
@@ -131,11 +131,10 @@ end
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
     @test Agents.vertex2coord(18, (2, 3, 3)) == (2, 3, 3)
 
-    Random.seed!(648)
     model = ABM(Agent3, GridSpace((5,5)))
-    agent = Agent3(1, (1,1), 5.5)
-    add_agent!(agent, model)
-    @test Agents.coord2vertex(agent, model) == 20
+    agent = Agent3(1, (2,4), 5.5)
+    add_agent_pos!(agent, model)
+    @test Agents.coord2vertex(agent, model) == 17
     @test Agents.coord2vertex((1, 3), model) == 11
     @test Agents.coord2vertex(15, model) == 15
     @test Agents.vertex2coord((2,3), model) == (2,3)
@@ -143,20 +142,19 @@ end
     @test_throws ErrorException Agents.vertex2coord(3, GraphSpace(complete_digraph(5)))
 end
 
-@testset "nodes" begin
-    Random.seed!(782)
+@testset "Nodes" begin
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
     @test has_empty_nodes(model)
-    for node in nodes(model)
-        if rand() > 0.7
-            add_agent!(node, model)
-        end
+    for node in [1, 5, 6, 9, 2, 3, 4]
+        add_agent!(node, model)
     end
-    @test pick_empty(model) == 4
+    # only nodes 7 and 8 should be empty
+    @test pick_empty(model) ∈ 7:8
     @test nodes(model) == 1:9
-    @test nodes(model, by = :random) == [9, 1, 8, 6, 3, 5, 7, 2, 4]
-    @test nodes(model, by = :population) == [1, 5, 6, 9, 2, 3, 4, 7, 8]
+    random_nodes = nodes(model, by = :random)
+    @test all(n ∈ 1:9 for n in random_nodes) && sort(random_nodes) == 1:9
+    @test nodes(model, by = :population) == [1, 2, 3, 4, 5, 6, 9, 7, 8]
     @test length(get_node_contents(5, model)) > length(get_node_contents(7, model))
     @test_throws ErrorException nodes(model, by = :notreal)
 
@@ -227,4 +225,4 @@ end
     @test typeof(space_neighbors((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
 end
 
-
+end

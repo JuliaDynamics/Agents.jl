@@ -1,4 +1,5 @@
 # %% accessing model
+@testset "Model Access" begin
 @testset "Accessing model" begin
     model = ABM(Agent0; properties = Dict(:a => 2, :b => "test"))
     # add 5 aents
@@ -56,4 +57,6 @@ end
     @test sprint(show, model.space) == "GridSpace with 25 nodes and 40 edges"
     model = ABM(Agent6, ContinuousSpace(2))
     @test sprint(show, model.space) == "2-dimensional periodic ContinuousSpace"
+end
+
 end
