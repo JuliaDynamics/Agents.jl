@@ -54,7 +54,7 @@
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model1)
-  @test Agents.defvel(agent, model) == nothing
+  @test Agents.defvel(agent, model1) == nothing
   @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
 
   # agents within some range are found correctly
@@ -142,20 +142,19 @@ end
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
 
-  Random.seed!(658)
   space3 = ContinuousSpace(2, extend = (1, 1), periodic = false, metric = :euclidean)
   model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
   for i in 1:10
-    add_agent!(Agent6(i, (rand(), rand()), (0.0, 0.0), 0), model3)
+    add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
   end
   for i in 11:20
-    add_agent!(AgentU1(i, (rand(), rand()), (0.0, 0.0)), model3)
+    add_agent_pos!(AgentU1(i, (i/10-1, 0.5), (0.0, 0.0)), model3)
   end
   for i in 21:30
-    add_agent!(AgentU2(i, (rand(), rand()), (0.0, 0.0)), model3)
+    add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
   end
   pairs = interacting_pairs(model3, 0.1, :types).pairs
-  @test length(pairs) == 11
+  @test length(pairs) == 12
   for (a,b) in pairs
       @test typeof(model3[a]) !== typeof(model3[b])
   end
@@ -163,8 +162,8 @@ end
 
   # Test that we have at least some Agent6's in this match
   @test any(typeof(model3[a]) <: Agent6 || typeof(model3[b]) <: Agent6 for (a,b) in pairs)
-  pairs = interacting_pairs(model3, 0.1, :types; scheduler = ignore_six).pairs
-  @test length(pairs) == 3
+  pairs = interacting_pairs(model3, 0.2, :types; scheduler = ignore_six).pairs
+  @test length(pairs) == 12
   # No Agent6's when using the ignore_six scheduler
   @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
 end

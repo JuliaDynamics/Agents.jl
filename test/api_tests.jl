@@ -75,7 +75,6 @@ end
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
 end
 
-Random.seed!(65465)
 model1 = ABM(Agent1, GridSpace((3,3)))
 
 agent = add_agent!((1,1), model1)
@@ -166,16 +165,15 @@ end
   @test model.agents[1].pos == model.agents[2].pos
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
-  Random.seed!(6546)
-  agent = Agent7(3, 2, attributes...)
-  @test add_agent!(agent, model).pos == 7
-  @test add_agent_single!(model, attributes...).pos == 8
-  for id in 5:11
-      agent.id = id
+  @test add_agent_single!(model, attributes...).pos ∈ 1:10
+  for id in 4:11
+      agent = Agent7(id, 2, attributes...)
       add_agent_single!(agent, model)
   end
   @test !has_empty_nodes(model)
+  agent = Agent7(12,5, attributes...)
   @test_logs (:warn, "No empty nodes found for `add_agent_single!`.") add_agent_single!(agent, model)
+  @test add_agent!(agent, model).pos ∈ 1:10
 end
 
 @testset "add_agent! (continuous)" begin
@@ -189,9 +187,8 @@ end
   @test model.agents[1].id != model.agents[2].id
   @test model.agents[1].f1 == model.agents[2].f1
   @test model.agents[1].f2 == model.agents[2].f2
-  Random.seed!(864)
   agent = Agent8(3, (0,0), false, 6)
-  @test add_agent!(agent, model).pos[1] ≈ 0.70149 atol=1e-3
+  @test 0 <= add_agent!(agent, model).pos[1] <= 1
   agent.id = 4
   @test add_agent!(agent, (0.5, 0.5), model).pos[1] ≈ 0.5 atol=1e-3
 end
@@ -206,16 +203,23 @@ end
   new_pos = agent.pos
   @test new_pos != init_pos
   # Checking a random move
-  move_agent!(agent, model)
-  @test agent.pos != new_pos
+  ni = 0; init_pos = agent.pos
+  while agent.pos == init_pos
+      move_agent!(agent, model)
+  end
+  @test ni < Inf
 
   # GridSpace
   model = ABM(Agent1, GridSpace((5,5)))
   agent = add_agent!((2,4), model)
   move_agent!(agent, (1,3), model)
   @test agent.pos == (1,3)
-  move_agent!(agent, model)
-  @test agent.pos != (1,3)
+  ni = 0; init_pos = agent.pos
+  while agent.pos == init_pos
+      move_agent!(agent, model)
+  end
+  @test ni < Inf
+
   model = ABM(Agent1, GridSpace((2,1)))
   agent = add_agent!((1,1), model)
   move_agent_single!(agent, model)
@@ -311,25 +315,26 @@ end
   genocide!(model, a -> a.id > 5)
   @test nagents(model) == 5
 
-  # Testing genocide!(model::ABM, f::Function) when the function is invalid (i.e. does not return a bool)
-  Random.seed!(1565)
+  # Testing genocide!(model::ABM, f::Function) when the function is invalid
+  # (i.e. does not return a bool)
   for i in 1:20
-    agent = Agent3(i, (rand(1:10),rand(1:10)), i*2)
+    agent = Agent3(i, (rand(1:10), rand(1:10)), i*2)
     add_agent_pos!(agent, model)
   end
   @test_throws TypeError genocide!(model, a -> a.id)
+  N = nagents(model)
 
   # Testing genocide!(model::ABM, f::Function) with a named function
   # No need to replenish population since the last test fails
   function complex_logic(agent::A) where A <: AbstractAgent
-    if first(agent.pos) <= 5 && agent.weight > 25
+    if agent.pos[1] <= 5 && agent.weight > 25
       true
     else
       false
     end
   end
   genocide!(model, complex_logic)
-  @test nagents(model) == 13
+  @test nagents(model) < N
 
   space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
   model = ABM(Agent8, space2d)
@@ -342,4 +347,25 @@ end
   @test nagents(model) == 5
   genocide!(model, a -> a.id < 3)
   @test nagents(model) == 3
+end
+
+mutable struct Daisy <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  breed::String
+end
+mutable struct Land <: AbstractAgent
+  id::Int
+  pos::Tuple{Int, Int}
+  temperature::Float64
+end
+@testset "fill space" begin
+  space = GridSpace((10, 10), moore = true, periodic = true)
+  model = ABM(Union{Daisy, Land}, space)
+  temperature(pos) = (pos[1]/10, ) # make it Tuple!
+  fill_space!(Land, model, temperature)
+  @test nagents(model) == 100
+  for a in values(model.agents)
+    @test a.temperature == a.pos[1]/10
+  end
 end

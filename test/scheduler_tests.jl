@@ -1,5 +1,6 @@
 # %% Scheduler tests
-@testset "Standard Scheduler" begin
+@testset "Scheduler tests" begin
+@testset "Simple Schedulers" begin
     N = 1000
 
     # by_id
@@ -64,177 +65,68 @@ end
 end
 
 # Mixed model
-function init_mixed_model(; scheduler = fastest)
+function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = fastest)
     model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
-    for id in 1:20
-        choice = rand(0:3)
-        if choice == 0
-            a0 = Agent0(id)
-            add_agent!(a0, model)
-        elseif choice == 1
-            a1 = Agent1(id, (0, 0))
-            add_agent!(a1, model)
-        elseif choice == 2
-            a2 = Agent2(id, 5.0)
-            add_agent!(a2, model)
-        elseif choice == 3
-            a3 = Agent3(id, (0, 0), 5.0)
-            add_agent!(a3, model)
-        end
+    atypes = (Agent0,Agent1,Agent2,Agent3)
+    id = 1
+    for i in 1:choices[1]
+        a0 = Agent0(id)
+        add_agent!(a0, model)
+        id += 1
+    end
+    for i in 1:choices[2]
+        a1 = Agent1(id, (0, 0))
+        add_agent!(a1, model)
+        id +=1
+    end
+    for i in 1:choices[3]
+        a2 = Agent2(id, 5.0)
+        add_agent!(a2, model)
+        id += 1
+    end
+    for i in 1:choices[4]
+        a3 = Agent3(id, (0, 0), 5.0)
+        add_agent!(a3, model)
+        id += 1
     end
     return model
 end
 
 @testset "Mixed Scheduler" begin
-    # Type shuffles
+    # standard scheduler
     model = init_mixed_model()
-    @test sort!(collect(model.scheduler(model))) == 1:20
+    @test sort!(collect(model.scheduler(model))) == 1:12
 
-    Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(false, false))
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent0,
-        Agent0,
-        Agent0,
-        Agent0,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent3,
-        Agent3,
-        Agent3,
-    ]
-    @test model.scheduler(model)[1:3] == [18, 7, 10]
-    @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 6
-
-    Random.seed!(13)
+    # shuffling types scheduler
     model = init_mixed_model(scheduler = by_type(true, false))
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent0,
-        Agent0,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-    ]
-    @test model.scheduler(model)[1:3] == [2, 16, 10]
-    @test count(a -> a == Agent2, typeof(model[id]) for id in model.scheduler(model)) == 7
+    s1 = model.scheduler(model)
+    s2 = model.scheduler(model)
+    @test unique([typeof(model[id]) for id in s1]) != unique([typeof(model[id]) for id in s2])
+    @test count(model[id] isa Agent2 for id in model.scheduler(model)) == 3
+    c = begin
+        x = 0; s = model.scheduler(model)
+        x += count(a -> a == Agent0, typeof(model[id]) for id in s)
+        x += count(a -> a == Agent1, typeof(model[id]) for id in s)
+        x += count(a -> a == Agent2, typeof(model[id]) for id in s)
+        x += count(a -> a == Agent3, typeof(model[id]) for id in s)
+    end
+    @test c == 12
 
-    # Offset union order and ids
-    Random.seed!(833)
-    model = ABM(Union{Agent0,Agent1}, scheduler = by_type(false, false), warn = false)
-    for id in 1:3
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
-    end
-    for id in 4:6
-        a0 = Agent0(id)
-        add_agent!(a0, model)
-    end
-    @test [typeof(model[id]) for id in model.scheduler(model)] ==
-          [Agent0, Agent0, Agent0, Agent1, Agent1, Agent1]
+    # NOT shuffling types scheduler
+    model = init_mixed_model(scheduler = by_type(false, false))
+    s1 = model.scheduler(model)
+    s2 = model.scheduler(model)
+    @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
-    Random.seed!(833)
-    model = ABM(
-        Union{Agent1,Agent0},
-        scheduler = by_type((Agent1, Agent0), false),
-        warn = false,
-    )
-    for id in 1:3
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
-    end
-    for id in 4:6
-        a0 = Agent0(id)
-        add_agent!(a0, model)
-    end
-    @test [typeof(model[id]) for id in model.scheduler(model)] ==
-          [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
-    @test model.scheduler(model) == [2, 3, 1, 4, 5, 6]
-
-    # Agent shuffles
-    Random.seed!(12)
-    # Same seed as before, should be shuffled.
+    # Not shuffling types, but shuffling agents
     model = init_mixed_model(scheduler = by_type(false, true))
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent0,
-        Agent0,
-        Agent0,
-        Agent0,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent3,
-        Agent3,
-        Agent3,
-    ]
-    @test model.scheduler(model)[1:3] != [18, 7, 10]
-    # Shoul still be grouped correctly.
+    s1 = model.scheduler(model)
+    s2 = model.scheduler(model)
+    @test [typeof(model[id]) for id in s1] == [typeof(model[id]) for id in s2]
+    # here we actually check whether agents of same type are shuffled
+    @test model[s1[1]].id ≠ model[s2[1]] || model[s1[2]].id ≠ model[s2[2]]
 
-    Random.seed!(13)
-    # Shuffle both type and agents
-    model = init_mixed_model(scheduler = by_type(true, true))
-    # Type order expected to be out of order, but the same as above due to seed
-    @test [typeof(model[id]) for id in model.scheduler(model)] == [
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent3,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent1,
-        Agent0,
-        Agent0,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-        Agent2,
-    ]
-    # Agent order expected to be different
-    @test model.scheduler(model)[1:3] != [7, 9, 14]
-
-    Random.seed!(833)
+    # Explicit order of types scheduling
     model =
         ABM(Union{Agent1,Agent0}, scheduler = by_type((Agent1, Agent0), true), warn = false)
     for id in 1:3
@@ -245,9 +137,11 @@ end
         a0 = Agent0(id)
         add_agent!(a0, model)
     end
-    @test [typeof(model[id]) for id in model.scheduler(model)] ==
+    s = model.scheduler(model)
+    @test [typeof(model[id]) for id in s] ==
           [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
-    @test model.scheduler(model) == [3, 2, 1, 4, 6, 5]
+    @test all(x -> x < 4, s[1:3])
+    @test all(x -> x > 3, s[4:6])
 end
 
-
+end

@@ -22,7 +22,7 @@ AgentBasedModel
 ## [2. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
 
-The discrete possibilities are
+The discrete possibilities, often summarized as `DiscreteSpace`, are
 
 ```@docs
 GraphSpace
@@ -77,6 +77,7 @@ This means that [`run!`](@ref) has not been designed for maximum performance (or
 
 
 ## An educative example
-A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref).
+A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.
+
 Each of the examples listed within this documentation are designed to showcase different ways of interacting with the API.
 If you are not sure about how to use a particular function, most likely one of the examples can show you how to interact with it.

@@ -191,13 +191,7 @@ end
 Return the name of the column of the `i`-th collected data where `k = adata[i]`
 (or `mdata[i]`).
 """
-function aggname(k, agg)
-    @static if VERSION >= v"1.1"
-        join([string(agg), string(k)], "_")
-    else
-        join([split(string(agg), ".")[end], string(k)], "_")
-    end
-end
+aggname(k, agg) = string(agg)*"_"*string(k)
 aggname(x::Tuple) = aggname(x[1], x[2])
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
