@@ -4,14 +4,17 @@
 
 # Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.jl, to optimize the parameters of an epidemiological model (SIR). We explain this model in detail in [SIR model for the spread of COVID-19](@ref). For brevity here, we just import it.
 
-cd(@__DIR__) #src
-cd("../../../examples/") #src
-include("siroptim.jl") ## From the examples directory
+# ```julia
+# include("siroptim.jl") # From the examples directory
+# ```
+
+include(joinpath(@__DIR__, "../../../examples/siroptim.jl")) #hide
+nothing #hide
 
 # Now we need to define a cost function. The cost function takes as agruments the model parameters that we want to tune, here migration rate, death rate, transmission rate when an infected person has been (not) detected (`β_det`, `β_und`), infection period, reinfection probability, and time until the infection is detected. The function returns one or more numbers as the objective to be minimized. Here, we try to minimize the number of infected people after 50 days.
 
-using BlackBoxOptim
-import Statistics: mean
+using BlackBoxOptim, Random
+using Statistics: mean
 
 function cost(x)
     migration_rate,
@@ -216,4 +219,5 @@ x[2] = 0.02
 cost_multi(x)
 
 # The fraction of infected increases to 0.04%. This is an interesting result, confirming the importance of social distancing. Without changing infection period and travel rate, even by increasing the transmission rate of the infected and detected (from 5% to 20%), by just decreasing the transmission rate of the undetected individuals, death rate drops 73 times and the number of infected decreases from 96% of the population to 3%.
+
 
