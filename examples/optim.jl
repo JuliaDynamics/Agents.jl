@@ -2,12 +2,11 @@
 
 # Agent-based models (ABMs) are computationally more expensive than analytical models, and can have many parameters. Sometimes we need to fine-tune a model's parameters to a specific outcome. Brute-force algorithms can take too long for testing each parameter setting. Even if it was feasbile to run the model for every parameter setting, it would not be enough because ABMs are stochastic and the effect of a parameter setting should be derived from running the model several times and taking its average behavior.
 
-# Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.j
-
-# We optimize the parameters of an epidemiological model (SIR). We explain it in detail in the [SIR model for the spread of COVID-19](@ref). Here, we just import it.
+# Here we show how to use the evolutionary algorithms in [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) with Agents.jl, to optimize the parameters of an epidemiological model (SIR). We explain this model in detail in [SIR model for the spread of COVID-19](@ref). For brevity here, we just import it.
 
 cd(@__DIR__) #src
-include("siroptim.jl")
+cd("../../../examples/") #src
+include("siroptim.jl") ## From the examples directory
 
 # Now we need to define a cost function. The cost function takes as agruments the model parameters that we want to tune, here migration rate, death rate, transmission rate when an infected person has been (not) detected (`β_det`, `β_und`), infection period, reinfection probability, and time until the infection is detected. The function returns one or more numbers as the objective to be minimized. Here, we try to minimize the number of infected people after 50 days.
 
