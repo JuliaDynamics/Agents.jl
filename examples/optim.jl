@@ -17,31 +17,20 @@ using BlackBoxOptim, Random
 using Statistics: mean
 
 function cost(x)
-    migration_rate,
-    death_rate,
-    β_det,
-    β_und,
-    infection_period,
-    reinfection_probability,
-    detection_time = x
-    C = 3
-    params = create_params(
-        C = C,
-        Ns = [500 for i in 1:C],
-        β_det = [β_det for i in 1:C],
-        migration_rate = migration_rate,
-        infection_period = infection_period,
-        reinfection_probability = reinfection_probability,
-        detection_time = detection_time,
-        death_rate = death_rate,
-        Is = ones(Int, C),
-        β_und = [β_und for i in 1:C],
+    model = model_initiation(;
+        Ns = [500, 500, 500],
+        migration_rate = x[1],
+        death_rate = x[2],
+        β_det = x[3],
+        β_und = x[4],
+        infection_period = x[5],
+        reinfection_probability = x[6],
+        detection_time = x[7],
     )
 
-    model = model_initiation(; params...)
-
     infected_fraction(model) =
-        count(a.status == :I for a in values(model.agents)) / nagents(model)
+        count(a.status == :I for a in allagents(model)) / nagents(model)
+
     _, data = run!(
         model,
         agent_step!,
@@ -60,21 +49,14 @@ end
 
 Random.seed!(10)
 
-migration_rate = 0.2
-death_rate = 0.1
-β_det = 0.05
-β_und = 0.3
-infection_period = 10
-reinfection_probability = 0.1
-detection_time = 5
 x0 = [
-    migration_rate,
-    death_rate,
-    β_det,
-    β_und,
-    infection_period,
-    reinfection_probability,
-    detection_time,
+    0.2,  # migration_rate = 0.2,
+    0.1,  # death_rate = 0.1,
+    0.05, # β_det = 0.05,
+    0.3,  # β_und = 0.3,
+    10,   # infection_period = 10,
+    0.1,  # reinfection_probability = 0.1,
+    5,    # detection_time = 5,
 ]
 cost(x0)
 
@@ -105,30 +87,21 @@ best_candidate(result)
 # We notice that the death rate is 96%, and transmission rates have also increased, while reinfection probability is much smaller. When all the infected indiduals die, infection doesn't transmit. Let's modify the cost function to also keep the mortality rate low.
 
 # This can be tested by running the model with the new parameter values:
-migration_rate,
-death_rate,
-β_det,
-β_und,
-infection_period,
-reinfection_probability,
-detection_time = best_candidate(result)
-C = 3
-params = create_params(
-    C = C,
-    Ns = [500 for i in 1:C],
-    β_det = [β_det for i in 1:C],
-    migration_rate = migration_rate,
-    infection_period = infection_period,
-    reinfection_probability = reinfection_probability,
-    detection_time = detection_time,
-    death_rate = death_rate,
-    Is = ones(Int, C),
-    β_und = [β_und for i in 1:C],
-)
+
+x = best_candidate(result)
 
 Random.seed!(0)
-model = model_initiation(; params...)
-nagents(model)
+
+model = model_initiation(;
+    Ns = [500, 500, 500],
+    migration_rate = x[1],
+    death_rate = x[2],
+    β_det = x[3],
+    β_und = x[4],
+    infection_period = x[5],
+    reinfection_probability = x[6],
+    detection_time = x[7],
+)
 
 _, data =
     run!(model, agent_step!, 50; mdata = [nagents], when_model = [50], replicates = 10)
@@ -140,33 +113,23 @@ mean(data.nagents)
 # We can define a multi-objective cost function that minimizes the number of infected and deaths.
 
 function cost_multi(x)
-    migration_rate,
-    death_rate,
-    β_det,
-    β_und,
-    infection_period,
-    reinfection_probability,
-    detection_time = x
-    C = 3
-    params = create_params(
-        C = C,
-        Ns = [500 for i in 1:C],
-        β_det = [β_det for i in 1:C],
-        migration_rate = migration_rate,
-        infection_period = infection_period,
-        reinfection_probability = reinfection_probability,
-        detection_time = detection_time,
-        death_rate = death_rate,
-        Is = ones(Int, C),
-        β_und = [β_und for i in 1:C],
+    model = model_initiation(;
+        Ns = [500, 500, 500],
+        migration_rate = x[1],
+        death_rate = x[2],
+        β_det = x[3],
+        β_und = x[4],
+        infection_period = x[5],
+        reinfection_probability = x[6],
+        detection_time = x[7],
     )
 
-    model = model_initiation(; params...)
     initial_size = nagents(model)
 
     infected_fraction(model) =
-        count(a.status == :I for a in values(model.agents)) / nagents(model)
+        count(a.status == :I for a in allagents(model)) / nagents(model)
     n_fraction(model) = -1.0 * nagents(model) / initial_size
+
     _, data = run!(
         model,
         agent_step!,
@@ -219,5 +182,4 @@ x[2] = 0.02
 cost_multi(x)
 
 # The fraction of infected increases to 0.04%. This is an interesting result, confirming the importance of social distancing. Without changing infection period and travel rate, even by increasing the transmission rate of the infected and detected (from 5% to 20%), by just decreasing the transmission rate of the undetected individuals, death rate drops 73 times and the number of infected decreases from 96% of the population to 3%.
-
 

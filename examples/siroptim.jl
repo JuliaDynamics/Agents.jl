@@ -11,14 +11,14 @@ mutable struct PoorSoul <: AbstractAgent
 end
 
 function model_initiation(;
-    Ns,
-    migration_rates,
-    β_und,
-    β_det,
+    Ns = [500, 500, 500],
+    migration_rate = 0.2,
+    death_rate = 0.1,
+    β_det = 0.05,
+    β_und = 0.1,
     infection_period = 10,
     reinfection_probability = 0.05,
     detection_time = 3,
-    death_rate = 0.02,
     Is = ones(Int, length(Ns)),
     seed = nothing,
 )
@@ -26,14 +26,12 @@ function model_initiation(;
     if !isnothing(seed)
         Random.seed!(seed)
     end
-    @assert length(Ns) ==
-    length(Is) ==
-    length(β_und) ==
-    length(β_det) ==
-    size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
-    @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     C = length(Ns)
+    β_det = [β_det for i in 1:C]
+    β_und = [β_und for i in 1:C]
+
+    migration_rates = reshape([migration_rate for i in 1:(C * C)], C, C)
     # normalize migration_rates
     migration_rates_sum = sum(migration_rates, dims = 2)
     for c in 1:C
@@ -42,24 +40,22 @@ function model_initiation(;
 
     properties = @dict(
         Ns,
-        Is,
         β_und,
-        β_det,
         β_det,
         migration_rates,
         infection_period,
-        infection_period,
         reinfection_probability,
         detection_time,
+        death_rate,
+        Is,
         C,
-        death_rate
     )
     space = GraphSpace(complete_digraph(C))
     model = ABM(PoorSoul, space; properties = properties)
 
     # Add initial individuals
     for city in 1:C, n in 1:Ns[city]
-        ind = add_agent!(city, model, 0, :S) # Susceptible
+        add_agent!(city, model, 0, :S) # Susceptible
     end
     # add infected individuals
     for city in 1:C
@@ -73,40 +69,10 @@ function model_initiation(;
     return model
 end
 
-function create_params(;
-    C,
-    Ns,
-    β_det,
-    migration_rate,
-    infection_period = 10,
-    reinfection_probability = 0.05,
-    detection_time = 3,
-    death_rate = 0.02,
-    Is = ones(Int, C),
-    β_und = [0.1 for i in 1:C],
-)
-
-    migration_rates = reshape([migration_rate for i in 1:(C * C)], C, C)
-
-    params = @dict(
-        Ns,
-        β_und,
-        β_det,
-        migration_rates,
-        infection_period,
-        reinfection_probability,
-        detection_time,
-        death_rate,
-        Is
-    )
-
-    return params
-end
-
 function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
-    update!(agent, model)
+    update_status!(agent, model)
     recover_or_die!(agent, model)
 end
 
@@ -142,7 +108,7 @@ function transmit!(agent, model)
     end
 end
 
-update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
+update_status!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
@@ -154,4 +120,5 @@ function recover_or_die!(agent, model)
         end
     end
 end
+
 
