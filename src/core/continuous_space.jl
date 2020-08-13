@@ -167,6 +167,9 @@ Also take care of periodic boundary conditions.
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
 as `agent.pos += agent.vel * dt`.
+
+Notice that if you want the agent to instantly move to a specified position, do
+`agent.pos = pos` and then `update_space!(agent, model)`.
 """
 function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
   model.space.update_vel!(agent, model)
@@ -189,7 +192,7 @@ function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, N}, dt = 1.0)
       end
       update_space!(model, agent)
       return agent.pos
-end 
+end
 
 """
     update_space!(model::ABM{A, ContinuousSpace}, agent)
