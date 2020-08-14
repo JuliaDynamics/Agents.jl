@@ -42,8 +42,11 @@
     end
 
     @testset "aggname" begin
+        @test aggname(:weight) == "weight"
         @test aggname(:weight, mean) == "mean_weight"
         @test aggname(x_position, length) == "length_x_position"
+        @test aggname((x_position, length)) == "length_x_position"
+        @test aggname((x_position, length, a->a.pos[1]>5)) == "conditional_length_x_position"
     end
 
     @testset "Aggregate Collections" begin
@@ -83,24 +86,25 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 2)
-        @test propertynames(df) == [:step, :mean_weight]
-        @test df[1, aggname(:weight, mean)] ≈ 0.35
+        @test propertynames(df) == [:step, :conditional_mean_weight]
+        @test_throws ArgumentError df[1, aggname(:weight, mean)]
+        @test df[1, aggname(:weight, mean; condition = true)] ≈ 0.35
 
         ytest(agent) = agent.pos[2] > 5
         props = [(:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 2)
-        @test propertynames(df) == [:step, :mean_weight]
-        @test df[1, aggname(:weight, mean)] ≈ 0.67
+        @test propertynames(df) == [:step, :conditional_mean_weight]
+        @test df[1, aggname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
-        @test propertynames(df) == [:step, :mean_weight, :mean_weight]
+        @test propertynames(df) == [:step, :mean_weight, :conditional_mean_weight]
         @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
-        @test df[1, aggname(:weight, mean)] ≈ 0.67
+        @test df[1, aggname(:weight, mean; condition = true)] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin

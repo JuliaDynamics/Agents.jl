@@ -181,25 +181,38 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     headers[1] = "step"
     types[1] = Int[]
 
-    for (i, (k, agg)) in enumerate(properties)
-        headers[i+1] = aggname(k, agg)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = aggname(property)
         # This line assumes that `agg` can work with iterators directly
         current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
         isconcretetype(current_type) || warn("Type is not concrete when using function $(agg) "*
-        "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
+            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
         types[i+1] = current_type[]
     end
     DataFrame(types, headers)
 end
 
 """
-    aggname(k) → name
+    aggname(k; condition = false) → name
 
 Return the name of the column of the `i`-th collected data where `k = adata[i]`
 (or `mdata[i]`).
+
+Passing tuple types is the suggested method such that `(:weight, mean)` and
+`(:weight, mean, cond)` can return appropreate columns.
+To return a conditional aggregate with separate variables, use
+`aggname(k, agg; condition = true)`.
 """
-aggname(k, agg) = string(agg)*"_"*string(k)
-aggname(x::Tuple) = aggname(x[1], x[2])
+function aggname(k, agg; condition = false)
+    if condition
+        "conditional_"*string(agg)*"_"*string(k)
+    else
+        string(agg)*"_"*string(k)
+    end
+end
+aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
+aggname(x::Tuple{K,A,<:Function}) where {K,A} = aggname(x[1], x[2]; condition = true)
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
