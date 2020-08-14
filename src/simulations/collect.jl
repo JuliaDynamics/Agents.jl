@@ -25,14 +25,22 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
   The resulting dataframe columns are named with the input symbol (here `:weight, :f`).
 
-* `adata::Vector{<:Tuple}`: if `adata` is a vector of 2-tuples instead,
-  data aggregation is done over the agent properties. For each 2-tuple, the first entry
-  is the "key" (any entry like the ones mentioned above, e.g. `:weight, f`). The second
-  entry is an aggregating function that aggregates the key, e.g. `mean, maximum`. So,
-  continuing from the above example, we would have
-  `adata = [(:weight, mean), (f, maximum)]`. The resulting data name columns
-  use the function [`aggname`](@ref), and create something like `:mean_weight` or
-  `:maximum_f`. This name doesn't play well with anonymous functions!
+* `adata::Vector{<:Tuple}`: if `adata` is a vector of tuples instead,
+  data aggregation is done over the agent properties.
+
+  For each 2-tuple, the first entry is the "key" (any entry like the ones mentioned above,
+  e.g. `:weight, f`). The second entry is an aggregating function that aggregates the key,
+  e.g. `mean, maximum`. So, continuing from the above example, we would have
+  `adata = [(:weight, mean), (f, maximum)]`.
+
+  It's also possible to provide a 3-tuple, with the third entry being a conditional
+  function (returning a `Bool`), which assesses if each agent should be included in the
+  aggregate. For example: `x_pos(a) = a.pos[1]>5` with `(:weight, mean, x_pos)` will result
+  in the average weight of agents conditional on their x-position being greater than 5.
+
+  The resulting data name columns use the function [`aggname`](@ref), and create something
+  like `:mean_weight` or `:maximum_f_x_pos`.
+  This name doesn't play well with anonymous functions!
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
@@ -174,12 +182,13 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     headers[1] = "step"
     types[1] = Int[]
 
-    for (i, (k, agg)) in enumerate(properties)
-        headers[i+1] = aggname(k, agg)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = aggname(property)
         # This line assumes that `agg` can work with iterators directly
         current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
         isconcretetype(current_type) || warn("Type is not concrete when using function $(agg) "*
-        "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
+            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
         types[i+1] = current_type[]
     end
     DataFrame(types, headers)
@@ -187,25 +196,39 @@ end
 
 """
     aggname(k) → name
+    aggname(k, agg) → name
+    aggname(k, agg, condition) → name
 
 Return the name of the column of the `i`-th collected data where `k = adata[i]`
 (or `mdata[i]`).
+`aggname` also accepts tuples with aggregate and conditional values.
 """
 aggname(k, agg) = string(agg)*"_"*string(k)
-aggname(x::Tuple) = aggname(x[1], x[2])
+aggname(k, agg, condition) = string(agg)*"_"*string(k)*"_"*string(condition)
+aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
+aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2], x[3])
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
     alla = allagents(model)
     push!(df[!, 1], step)
-    for (i, (k, agg)) in enumerate(properties)
-        _add_col_data!(df[!, i+1], agg, k, alla)
+    for (i, prop) in enumerate(properties)
+        _add_col_data!(df[!, i+1], prop, alla)
     end
     return df
 end
-# Function barrier
-function _add_col_data!(col::AbstractVector{T}, agg, k, alla) where {T}
-    res::T = agg(get_data(a, k) for a in alla)
+
+# Normal aggregates
+function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter) where {T,K,A}
+    k, agg = property
+    res::T = agg(get_data(a, k) for a in agent_iter)
+    push!(col, res)
+end
+
+# Conditional aggregates
+function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter) where {T,K,A,C}
+    k, agg, condition = property
+    res::T = agg(get_data(a, k) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
 

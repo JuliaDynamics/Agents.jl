@@ -1,5 +1,11 @@
+# v3.5
+- Aggregation data for agents is now possible to do conditionally.
+- Example on how to integrate Agents.jl with BlackBoxOptim.jl.
+
 # v3.4
-- Supported Julia version moved to 1.5 from 1.0.
+- Added interactivity examples for Schelling and Daisyworld.
+- Example on how to integrate Agents.jl with DifferentialEquations.jl.
+- Dropped support for Julia 1.0, will be targeting LTS for v1.6 in the future.
 
 # v3.3
 - New `fill_space!` function for discrete spaces.

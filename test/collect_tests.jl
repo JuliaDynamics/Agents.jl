@@ -42,8 +42,12 @@
     end
 
     @testset "aggname" begin
+        @test aggname(:weight) == "weight"
         @test aggname(:weight, mean) == "mean_weight"
         @test aggname(x_position, length) == "length_x_position"
+        @test aggname((x_position, length)) == "length_x_position"
+        ypos(a) = a.pos[2]>5
+        @test aggname((x_position, length, ypos)) == "length_x_position_ypos"
     end
 
     @testset "Aggregate Collections" begin
@@ -78,6 +82,32 @@
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
         @test df[1, aggname(x_position, mean)] ≈ 4.3333333
+
+        xtest(agent) = agent.pos[1] > 5
+        ytest(agent) = agent.pos[2] > 5
+
+        props = [(:weight, mean, ytest)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 2)
+        @test propertynames(df) == [:step, :mean_weight_ytest]
+        @test df[1, aggname((:weight, mean, ytest))] ≈ 0.67
+
+        props = [(:weight, mean), (:weight, mean, ytest)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 3)
+        @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
+        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
+        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
+
+        props = [(:weight, mean, xtest), (:weight, mean, ytest)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 3)
+        @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
+        @test df[1, aggname(:weight, mean, xtest)] ≈ 0.35
+        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin
