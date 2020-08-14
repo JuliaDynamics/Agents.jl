@@ -93,6 +93,14 @@
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight]
         @test df[1, aggname(:weight, mean)] ≈ 0.67
+
+        props = [(:weight, mean), (:weight, mean, ytest)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 3)
+        @test propertynames(df) == [:step, :mean_weight, :mean_weight]
+        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
+        @test df[1, aggname(:weight, mean)] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin
