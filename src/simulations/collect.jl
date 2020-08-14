@@ -34,12 +34,13 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   `adata = [(:weight, mean), (f, maximum)]`.
 
   It's also possible to provide a 3-tuple, with the third entry being a conditional
-  function (returning a `Bool`), which asseses if each agent should be included in the
-  aggregate. For example: `(:weight, mean, a -> a.pos[1] > 5)` will result in the average
-  weight of agents conditinal on their x-position being greater than 5.
+  function (returning a `Bool`), which assesses if each agent should be included in the
+  aggregate. For example: `x_pos(a) = a.pos[1]>5` with `(:weight, mean, x_pos)` will result
+  in the average weight of agents conditional on their x-position being greater than 5.
 
   The resulting data name columns use the function [`aggname`](@ref), and create something
-  like `:mean_weight` or `:maximum_f`. This name doesn't play well with anonymous functions!
+  like `:mean_weight` or `:maximum_f_x_pos`.
+  This name doesn't play well with anonymous functions!
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
@@ -194,25 +195,18 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
 end
 
 """
-    aggname(k; condition = false) → name
+    aggname(k) → name
+    aggname(k, agg) → name
+    aggname(k, agg, condition) → name
 
 Return the name of the column of the `i`-th collected data where `k = adata[i]`
 (or `mdata[i]`).
-
-Passing tuple types is the suggested method such that `(:weight, mean)` and
-`(:weight, mean, cond)` can return appropreate columns.
-To return a conditional aggregate with separate variables, use
-`aggname(k, agg; condition = true)`.
+`aggname` also accepts tuples with aggregate and conditional values.
 """
-function aggname(k, agg; condition = false)
-    if condition
-        "conditional_"*string(agg)*"_"*string(k)
-    else
-        string(agg)*"_"*string(k)
-    end
-end
+aggname(k, agg) = string(agg)*"_"*string(k)
+aggname(k, agg, condition) = string(agg)*"_"*string(k)*"_"*string(condition)
 aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
-aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2]; condition = true)
+aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2], x[3])
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
