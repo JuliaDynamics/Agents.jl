@@ -78,6 +78,21 @@
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
         @test df[1, aggname(x_position, mean)] ≈ 4.3333333
+
+        props = [(:weight, mean, a->x_position(a) >= 5)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 2)
+        @test propertynames(df) == [:step, :mean_weight]
+        @test df[1, aggname(:weight, mean)] ≈ 0.35
+
+        ytest(agent) = agent.pos[2] > 5
+        props = [(:weight, mean, ytest)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props, 1)
+        @test size(df) == (1, 2)
+        @test propertynames(df) == [:step, :mean_weight]
+        @test df[1, aggname(:weight, mean)] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin
