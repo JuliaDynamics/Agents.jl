@@ -346,7 +346,7 @@ plot(p, p2, p3, layout = (3, 1))
 # hand, we use the interactive application, to control by ourselves, in real time, how
 # much solar forcing is delivered to daisyworld.
 
-# So, let's use `interactive_abm` from the [`Interactive application`](@ref) page!
+# So, let's use `interactive_abm` from the [Interactive application](@ref) page!
 
 # ```julia
 # using InteractiveChaos, Makie, Random
