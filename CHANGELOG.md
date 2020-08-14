@@ -1,3 +1,6 @@
+# v3.4
+- Supported Julia version moved to 1.5 from 1.0.
+
 # v3.3
 - New `fill_space!` function for discrete spaces.
 - The Daisyworld example now uses multi-agent approach (surface is agent).
