@@ -212,7 +212,7 @@ function aggname(k, agg; condition = false)
     end
 end
 aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
-aggname(x::Tuple{K,A,<:Function}) where {K,A} = aggname(x[1], x[2]; condition = true)
+aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2]; condition = true)
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
 function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
@@ -232,7 +232,7 @@ function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter
 end
 
 # Conditional aggregates
-function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,<:Function}, agent_iter) where {T,K,A}
+function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter) where {T,K,A,C}
     k, agg, condition = property
     res::T = agg(get_data(a, k) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
