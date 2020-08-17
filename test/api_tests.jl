@@ -174,6 +174,13 @@ end
   agent = Agent7(12,5, attributes...)
   @test_logs (:warn, "No empty nodes found for `add_agent_single!`.") add_agent_single!(agent, model)
   @test add_agent!(agent, model).pos ∈ 1:10
+
+  agent = Agent7(13,5, attributes...)
+  @test add_agent!(agent, 3, model).pos == 3
+
+  model = ABM(Agent1, GridSpace((10,10)))
+  agent = Agent1(1,(3,6))
+  @test add_agent!(agent, (7,8), model).pos == (7,8)
 end
 
 @testset "add_agent! (continuous)" begin
@@ -360,12 +367,31 @@ mutable struct Land <: AbstractAgent
   temperature::Float64
 end
 @testset "fill space" begin
+  space = GridSpace((10, 10))
+  model = ABM(Land, space)
+  fill_space!(model, 15)
+  @test nagents(model) == 100
+  for a in values(model.agents)
+    @test a isa Land
+    @test a.temperature == 15
+  end
+
+  space = GridSpace((10, 10))
+  model = ABM(Union{Daisy, Land}, space; warn = false)
+  fill_space!(Daisy, model, "black")
+  @test nagents(model) == 100
+  for a in values(model.agents)
+    @test a isa Daisy
+    @test a.breed == "black"
+  end
+
   space = GridSpace((10, 10), moore = true, periodic = true)
-  model = ABM(Union{Daisy, Land}, space)
+  model = ABM(Union{Daisy, Land}, space; warn = false)
   temperature(pos) = (pos[1]/10, ) # make it Tuple!
   fill_space!(Land, model, temperature)
   @test nagents(model) == 100
   for a in values(model.agents)
     @test a.temperature == a.pos[1]/10
   end
+
 end
