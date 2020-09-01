@@ -1,6 +1,7 @@
 using Pkg
 Pkg.activate(@__DIR__)
 cd(@__DIR__)
+Pkg.pin(PackageSpec(name="Plots", version="1.6.0"))
 Pkg.update()
 
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite

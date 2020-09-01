@@ -12,18 +12,15 @@ before_script:
   - git config --global user.name "GitUser"
   - git config --global user.email "git@us.er"
 
-notifications:
-  email: false
+codecov: true
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 
-jobs:
+matrix:
+  allow_failures:
+    - julia: nightly
   fast_finish: true
   include:
-    - stage: test
-      allow_failures:
-        - julia: nightly
-      codecov: true
-      after_success:
-        - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
     - stage: "Documentation"
       julia: 1
       os: linux
@@ -33,3 +30,5 @@ jobs:
                                     Pkg.develop(PackageSpec(path=pwd()));'
         - travis_wait 30 julia --project=docs/ docs/make.jl
       after_success: skip
+notifications:
+  email: false
