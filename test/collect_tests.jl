@@ -1,9 +1,14 @@
 @testset "DataCollection" begin
     function initialize()
         model = ABM(
-        Agent3,
-        GridSpace((10, 10));
-        properties = Dict(:year => 0, :tick => 0, :flag => false),
+            Agent3,
+            GridSpace((10, 10));
+            properties = Dict(
+                :year => 0,
+                :tick => 0,
+                :flag => false,
+                :container => Float64[],
+            ),
         )
         add_agent!((4, 3), model, 0.1)
         add_agent!((7, 5), model, 0.35)
@@ -36,9 +41,18 @@
         @test collect_model_data!(DataFrame(), model, nothing, 1) == DataFrame()
 
         props = [:weight]
-        @test sprint(show, "text/csv", describe(init_agent_dataframe(model, props), :eltype)) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
+        @test sprint(
+            show,
+            "text/csv",
+            describe(init_agent_dataframe(model, props), :eltype),
+        ) ==
+              "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
         props = [:year]
-        @test sprint(show, "text/csv", describe(init_model_dataframe(model, props), :eltype)) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
+        @test sprint(
+            show,
+            "text/csv",
+            describe(init_model_dataframe(model, props), :eltype),
+        ) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
     end
 
     @testset "aggname" begin
@@ -46,7 +60,7 @@
         @test aggname(:weight, mean) == "mean_weight"
         @test aggname(x_position, length) == "length_x_position"
         @test aggname((x_position, length)) == "length_x_position"
-        ypos(a) = a.pos[2]>5
+        ypos(a) = a.pos[2] > 5
         @test aggname((x_position, length, ypos)) == "length_x_position_ypos"
     end
 
@@ -139,7 +153,7 @@
             agent_step!,
             model_step!,
             365 * 5;
-            when_model = [1, 365*5],
+            when_model = [1, 365 * 5],
             when = false,
             mdata = [:flag, :year],
             adata = [(:weight, mean)],
@@ -184,92 +198,110 @@
 
         @test dummystep(model) == nothing
         @test dummystep(model[1], model) == nothing
-        @test_logs (:warn, "`step!` with keyword arguments is deprecated. Use `run!` instead.") step!(model, agent_step!, model_step!, 1; adata = agent_props)
+        @test_logs (
+            :warn,
+            "`step!` with keyword arguments is deprecated. Use `run!` instead.",
+        ) step!(model, agent_step!, model_step!, 1; adata = agent_props)
         tick = model.tick
         step!(model, agent_step!, 1)
         @test tick == model.tick
         stop(m, s) = m.year == 6
         step!(model, agent_step!, model_step!, stop)
-        @test model.tick == 365*6
+        @test model.tick == 365 * 6
+    end
+
+    @testset "Issue #280 Fix" begin
+        model = initialize()
+        model_props = [:container]
+        model_data = init_model_dataframe(model, model_props)
+        push!(model.container, 50.0)
+        collect_model_data!(model_data, model, model_props, 0)
+        push!(model.container, 37.2)
+        collect_model_data!(model_data, model, model_props, 1)
+        model.container[1] += 21.9
+        collect_model_data!(model_data, model, model_props, 2)
+        @test model_data.container[1][1] ≈ 50.0
+        @test model_data.container[3][1] ≈ 71.9
+        @test length.(model_data.container) == [1, 2, 2]
     end
 end
 
 @testset "Parameter scan" begin
     n = 10
     parameters = Dict(
-       :f => [0.05, 0.07],
-       :d => [0.6, 0.7, 0.8],
-       :p => 0.01,
-       :griddims => (20, 20),
-       :seed => 2,
+        :f => [0.05, 0.07],
+        :d => [0.6, 0.7, 0.8],
+        :p => 0.01,
+        :griddims => (20, 20),
+        :seed => 2,
     )
 
     forest, agent_step!, forest_step! = Models.forest_fire()
-    forest_initiation(;kwargs...) = Models.forest_fire(;kwargs...)[1]
+    forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
     @testset "Standard Scan" begin
-       adata = [(:status, length), (:status, count)]
-       data, _ = paramscan(
-           parameters,
-           forest_initiation;
-           n = n,
-           agent_step! = dummystep,
-           model_step! = forest_step!,
-           adata = adata,
-           progress = false,
-       )
-       # 6 is the number of combinations of changing params
-       @test size(data) == ((n+1) * 6, 5)
-       data, _ = paramscan(
-           parameters,
-           forest_initiation;
-           n = n,
-           agent_step! = dummystep,
-           model_step! = forest_step!,
-           include_constants = true,
-           adata = adata,
-           progress = false,
-       )
-       # 6 is the number of combinations of changing params,
-       # 8 is 5+3, where 3 is the number of constant parameters
-       @test size(data) == ((n+1) * 6, 8)
+        adata = [(:status, length), (:status, count)]
+        data, _ = paramscan(
+            parameters,
+            forest_initiation;
+            n = n,
+            agent_step! = dummystep,
+            model_step! = forest_step!,
+            adata = adata,
+            progress = false,
+        )
+        # 6 is the number of combinations of changing params
+        @test size(data) == ((n + 1) * 6, 5)
+        data, _ = paramscan(
+            parameters,
+            forest_initiation;
+            n = n,
+            agent_step! = dummystep,
+            model_step! = forest_step!,
+            include_constants = true,
+            adata = adata,
+            progress = false,
+        )
+        # 6 is the number of combinations of changing params,
+        # 8 is 5+3, where 3 is the number of constant parameters
+        @test size(data) == ((n + 1) * 6, 8)
 
-       adata = [:status]
-       data, _ = paramscan(
-           parameters,
-           forest_initiation;
-           n = n,
-           agent_step! = dummystep,
-           model_step! = forest_step!,
-           adata = adata,
-           progress = false,
-       )
-       @test unique(data.step) == 0:10
-       @test unique(data.f) == [0.05, 0.07]
-       @test unique(data.d) == [0.6, 0.7, 0.8]
+        adata = [:status]
+        data, _ = paramscan(
+            parameters,
+            forest_initiation;
+            n = n,
+            agent_step! = dummystep,
+            model_step! = forest_step!,
+            adata = adata,
+            progress = false,
+        )
+        @test unique(data.step) == 0:10
+        @test unique(data.f) == [0.05, 0.07]
+        @test unique(data.d) == [0.6, 0.7, 0.8]
     end
 
     @testset "Scan with replicates" begin
-       adata = [(:status, length), (:status, count)]
-       data, _ = paramscan(
-           parameters,
-           forest_initiation;
-           n = n,
-           agent_step! = dummystep,
-           model_step! = forest_step!,
-           replicates = 3,
-           adata = adata,
-           progress = false,
-       )
-       # the first 6 is the number of combinations of changing params
-       @test size(data) == (((n+1) * 6) * 3, 6)
+        adata = [(:status, length), (:status, count)]
+        data, _ = paramscan(
+            parameters,
+            forest_initiation;
+            n = n,
+            agent_step! = dummystep,
+            model_step! = forest_step!,
+            replicates = 3,
+            adata = adata,
+            progress = false,
+        )
+        # the first 6 is the number of combinations of changing params
+        @test size(data) == (((n + 1) * 6) * 3, 6)
     end
 end
 
 @testset "Issue #179 fix" begin
     # only ids sorted, not properties
     model = ABM(Agent2)
-    for i = 1:5
+    for i in 1:5
         add_agent!(model, i * 0.2)
     end
     data, _ = run!(model, dummystep, 2; adata = [:weight])
@@ -277,3 +309,4 @@ end
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
+

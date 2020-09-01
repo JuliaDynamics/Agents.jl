@@ -5,8 +5,8 @@ export run!, collect_agent_data!, collect_model_data!,
 ###################################################
 # Definition of the data collection API
 ###################################################
-get_data(a, s::Symbol) = getproperty(a, s)
-get_data(a, f::Function) = f(a)
+get_data(a, s::Symbol) = deepcopy(getproperty(a, s))
+get_data(a, f::Function) = deepcopy(f(a))
 
 should_we_collect(s, model, when::AbstractVector) = s ∈ when
 should_we_collect(s, model, when::Bool) = when
