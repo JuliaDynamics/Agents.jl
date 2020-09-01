@@ -87,10 +87,41 @@ return df_agent, df_model
 (here `until` and `should_we_collect` are internal functions)
 
 ## [Schedulers](@id Schedulers)
-The schedulers of Agents.jl have a very simple interface. All schedulers are functions,
-that take as an input the ABM and return an iterator over agent IDs.
-Notice that this iterator can be a "true" iterator or can be just a standard vector of IDs.
+The schedulers of Agents.jl have a very simple interface.
+All schedulers are functions, that take as an input the ABM and return an iterator over agent IDs.
+Notice that this iterator can be a "true" iterator (non-allocated) or can be just a standard vector of IDs.
 You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
+
+Also notice that you can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
+For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
+```julia
+mutable struct MyScheduller
+    n::Int # step number
+    w::Float64
+end
+```
+and then define a calling method for it like so
+```julia
+function (ms::MyScheduller)(model::ABM)
+    ms.n += 1 # increment internal counter by 1 for each step
+    if ms.n < 10
+        return keys(model.agents) # order doesn't matter in this case
+    else
+        ids = collect(allids(model))
+        # filter all ids whose agents have `w` less than some amount
+        filter!(id -> model[id].w < ms.w, ids)
+        return ids
+    end
+end
+```
+and pass it to e.g. `step!` by initializing it
+```julia
+ms = MyScheduler(100, 0.5)
+run!(model, agentstep, modelstep, 100; scheduler = ms)
+```
+
+### Predefined schedulers
+Some useful schedulers are available below as part of the Agents.jl public API:
 ```@docs
 fastest
 by_id
