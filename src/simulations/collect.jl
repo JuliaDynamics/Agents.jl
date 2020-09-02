@@ -5,8 +5,8 @@ export run!, collect_agent_data!, collect_model_data!,
 ###################################################
 # Definition of the data collection API
 ###################################################
-get_data(a, s::Symbol; obtainer = identity) = obtainer(getproperty(a, s))
-get_data(a, f::Function; obtainer = identity) = obtainer(f(a))
+get_data(a, s::Symbol, obtainer::Function) = obtainer(getproperty(a, s))
+get_data(a, f::Function, obtainer::Function) = obtainer(f(a))
 
 should_we_collect(s, model, when::AbstractVector) = s ∈ when
 should_we_collect(s, model, when::Bool) = when
@@ -57,12 +57,11 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
   returns `true`. By default data are collected in every step.
 * `when_model = when` : same as `when` but for model data.
-* `obtainer = identity` : the method used to transfer information from the `model` to
-the `DataFrame`. `copy` is useful for when you wish to save a container (e.g. an `Array`),
-or a `struct` that you have implemented
-[Base.copy](https://docs.julialang.org/en/v1/base/base/#Base.copy) for.
-`deepcopy` should be used when you need to save a
-[nested mutable struct](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy).
+* `obtainer = identity` : method to transfer collected data to the `DataFrame`.
+Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
+if some data are mutable containers (e.g. `Vector`) which change during evolution,
+or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
+nested mutable containers.
 Both of these options have performance penalties.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
@@ -159,7 +158,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     types[2] = Int[]
     a = random_agent(model)
     for (i, k) in enumerate(properties)
-        current_type = typeof(get_data(a, k))
+        current_type = typeof(get_data(a, k, identity))
         isconcretetype(current_type) || warn("Type is not concrete when using $(k)"*
         "on agents. Consider narrowning the type signature of $(k).")
         types[i+2] = current_type[]
@@ -173,7 +172,7 @@ function collect_agent_data!(df, model, properties::Vector, step::Int=0; obtaine
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a->a.id, alla)
     for fn in properties
-        dd[!, Symbol(fn)] = collect(get_data(a, fn; obtainer = obtainer) for a in alla)
+        dd[!, Symbol(fn)] = collect(get_data(a, fn, obtainer) for a in alla)
     end
     append!(df, dd)
     return df
@@ -194,7 +193,7 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
         k, agg = property
         headers[i+1] = aggname(property)
         # This line assumes that `agg` can work with iterators directly
-        current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
+        current_type = typeof( agg( get_data(a, k, identity) for a in Iterators.take(alla,1) ) )
         isconcretetype(current_type) || warn("Type is not concrete when using function $(agg) "*
             "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
         types[i+1] = current_type[]
@@ -229,14 +228,14 @@ end
 # Normal aggregates
 function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter; obtainer = identity) where {T,K,A}
     k, agg = property
-    res::T = agg(get_data(a, k; obtainer = obtainer) for a in agent_iter)
+    res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
     push!(col, res)
 end
 
 # Conditional aggregates
 function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter; obtainer = identity) where {T,K,A,C}
     k, agg, condition = property
-    res::T = agg(get_data(a, k; obtainer = obtainer) for a in Iterators.filter(condition, agent_iter))
+    res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
 
@@ -275,7 +274,7 @@ Same as [`collect_agent_data!`](@ref) but for model data instead.
 function collect_model_data!(df, model, properties::Vector, step::Int=0; obtainer = identity)
   push!(df[!, :step], step)
   for fn in properties
-    push!(df[!, Symbol(fn)], get_data(model, fn; obtainer = obtainer))
+    push!(df[!, Symbol(fn)], get_data(model, fn, obtainer))
   end
   return df
 end
