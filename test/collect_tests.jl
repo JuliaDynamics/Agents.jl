@@ -215,11 +215,11 @@
         model_props = [:container]
         model_data = init_model_dataframe(model, model_props)
         push!(model.container, 50.0)
-        collect_model_data!(model_data, model, model_props, 0)
+        collect_model_data!(model_data, model, model_props, 0; obtainer = copy)
         push!(model.container, 37.2)
-        collect_model_data!(model_data, model, model_props, 1)
+        collect_model_data!(model_data, model, model_props, 1; obtainer = copy)
         model.container[1] += 21.9
-        collect_model_data!(model_data, model, model_props, 2)
+        collect_model_data!(model_data, model, model_props, 2; obtainer = copy)
         @test model_data.container[1][1] ≈ 50.0
         @test model_data.container[3][1] ≈ 71.9
         @test length.(model_data.container) == [1, 2, 2]
