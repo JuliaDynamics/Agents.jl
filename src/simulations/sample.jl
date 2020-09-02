@@ -24,7 +24,7 @@ function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
   nagents(model) > 0 || return
   org_ids = collect(keys(model.agents))
   if weight != nothing
-    weights = Weights([get_data(a, weight, Identity) for a in values(model.agents)])
+    weights = Weights([get_data(a, weight) for a in values(model.agents)])
     newids = sample(rng, org_ids, weights, n, replace=replace)
   else
     newids = sample(rng, org_ids, n, replace=replace)
