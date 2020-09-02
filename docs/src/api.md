@@ -95,15 +95,16 @@ You can define your own scheduler according to this API and use it when making a
 Also notice that you can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
 ```julia
-mutable struct MyScheduller
+mutable struct MyScheduler
     n::Int # step number
     w::Float64
 end
 ```
 and then define a calling method for it like so
 ```julia
-function (ms::MyScheduller)(model::ABM)
-    ms.n += 1 # increment internal counter by 1 for each step
+function (ms::MyScheduler)(model::ABM)
+    ms.n += 1 # increment internal counter by 1 each time its called
+              # be careful to use a *new* instance of this scheduler when plotting!
     if ms.n < 10
         return keys(model.agents) # order doesn't matter in this case
     else

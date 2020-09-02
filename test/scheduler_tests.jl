@@ -144,4 +144,36 @@ end
     @test all(x -> x > 3, s[4:6])
 end
 
+@testset "Scheduler as struct" begin
+    mutable struct MyScheduler
+        n::Int # step number
+        w::Float64
+    end
+    function (ms::MyScheduler)(model::ABM)
+        ms.n += 1 # increment internal counter by 1 for each step
+        if ms.n < 5
+            return keys(model.agents) # order doesn't matter in this case
+        else
+            ids = collect(allids(model))
+            # filter all ids whose agents have `w` less than some amount
+            filter!(id -> model[id].weight > ms.w, ids)
+            return ids
+        end
+    end
+
+    model = ABM(Agent2;
+        properties = Dict{Int, Bool}(),
+        scheduler = MyScheduler(0, 5.0)
+    )
+    for w in 1.0:10.0
+        add_agent!(model, w)
+    end
+    for i in 1:10
+        ids = sort!(collect(model.scheduler(model)))
+        if i < 5
+            @test ids == 1:10
+        else
+            @test ids == 6:10
+        end
+    end
 end
