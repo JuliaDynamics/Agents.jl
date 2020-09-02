@@ -1,3 +1,6 @@
+# v3.6
+- Add ability to customise `run!` such that mutation on containers and nested structures does not affect data collection.
+
 # v3.5
 - Aggregation data for agents is now possible to do conditionally.
 - Example on how to integrate Agents.jl with BlackBoxOptim.jl.

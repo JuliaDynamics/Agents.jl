@@ -12,15 +12,18 @@ before_script:
   - git config --global user.name "GitUser"
   - git config --global user.email "git@us.er"
 
-codecov: true
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+notifications:
+  email: false
 
-matrix:
-  allow_failures:
-    - julia: nightly
+jobs:
   fast_finish: true
   include:
+    - stage: test
+      allow_failures:
+        - julia: nightly
+      codecov: true
+      after_success:
+        - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
     - stage: "Documentation"
       julia: 1
       os: linux
@@ -28,7 +31,5 @@ matrix:
         - julia -e 'using Pkg; ENV["PYTHON"]=""; py="PyCall"; Pkg.add(py); Pkg.build(); Pkg.add("PyPlot"); Pkg.add("StaticArrays")'
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()));'
-        - travis_wait 45 julia --project=docs/ docs/make.jl
+        - travis_wait 60 julia --project=docs/ docs/make.jl
       after_success: skip
-notifications:
-  email: false
