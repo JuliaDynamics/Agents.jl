@@ -1,12 +1,20 @@
 export run!, collect_agent_data!, collect_model_data!,
        init_agent_dataframe, init_model_dataframe, aggname,
-       should_we_collect
+       should_we_collect, Identity, Copy, DeepCopy
+
+abstract type Obtainer end
+struct Identity <: Obtainer end
+struct Copy <: Obtainer end
+struct DeepCopy <: Obtainer end
 
 ###################################################
 # Definition of the data collection API
 ###################################################
-get_data(a, s::Symbol) = deepcopy(getproperty(a, s))
-get_data(a, f::Function) = deepcopy(f(a))
+get_data(a, p, o::Type{O}) where {O<:Obtainer} = _get_data(a, p)
+get_data(a, p, o::Type{Copy}) = copy(_get_data(a, p))
+get_data(a, p, o::Type{DeepCopy}) = deepcopy(_get_data(a, p))
+_get_data(a, s::Symbol) = getproperty(a, s)
+_get_data(a, f::Function) = f(a)
 
 should_we_collect(s, model, when::AbstractVector) = s ∈ when
 should_we_collect(s, model, when::Bool) = when
@@ -57,6 +65,12 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
   returns `true`. By default data are collected in every step.
 * `when_model = when` : same as `when` but for model data.
+* `obtainer = Identity` : with 2 other options, `Copy` & `DeepCopy`. `Copy` is useful for
+when you wish to save a container (e.g. an `Array`) to the DataFrame, or a `struct` that
+you have implemented [Base.copy](https://docs.julialang.org/en/v1/base/base/#Base.copy) for.
+`DeepCopy` is for when you need to save a
+[nested mutable struct](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy).
+Both of these options have performance penalties.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
 """
@@ -90,7 +104,7 @@ Core function that loops over stepping a model and collecting data at each step.
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
                agent_properties=nothing, model_properties=nothing,
-               mdata=model_properties, adata=agent_properties)
+               mdata=model_properties, adata=agent_properties, obtainer::Type{O} = Identity) where {O<:Obtainer}
 
     agent_properties ≠ nothing && @warn "use `adata` instead of `agent_properties`"
     model_properties ≠ nothing && @warn "use `mdata` instead of `model_properties`"
@@ -104,19 +118,19 @@ function _run!(model, agent_step!, model_step!, n;
     s = 0
     while until(s, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s)
+            collect_agent_data!(df_agent, model, adata, obtainer, s)
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s)
+            collect_model_data!(df_model, model, mdata, obtainer, s)
         end
         step!(model, agent_step!, model_step!, 1)
         s += 1
     end
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s)
+        collect_agent_data!(df_agent, model, adata, obtainer, s)
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s)
+        collect_model_data!(df_model, model, mdata, obtainer, s)
     end
     return df_agent, df_model
 end
@@ -133,9 +147,9 @@ init_agent_dataframe(model, properties::Nothing) = DataFrame()
 """
     collect_agent_data!(df, model, properties, step = 0)
 Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties`). `step` is given because the step number information is not known.
+of `properties` and `obtainer`). `step` is given because the step number information is not known.
 """
-collect_agent_data!(df, model, properties::Nothing, step::Int=0) = df
+collect_agent_data!(df, model, properties::Nothing, obtainer::Type{O}, step::Int=0) where {O<:Obtainer} = df
 
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to "*
@@ -151,7 +165,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     types[2] = Int[]
     a = random_agent(model)
     for (i, k) in enumerate(properties)
-        current_type = typeof(get_data(a, k))
+        current_type = typeof(get_data(a, k, Identity))
         isconcretetype(current_type) || warn("Type is not concrete when using $(k)"*
         "on agents. Consider narrowning the type signature of $(k).")
         types[i+2] = current_type[]
@@ -159,13 +173,13 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     DataFrame(types, headers)
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Int=0)
+function collect_agent_data!(df, model, properties::Vector, obtainer::Type{O}, step::Int=0) where {O<:Obtainer}
     alla = sort!(collect(values(model.agents)), by=a->a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a->a.id, alla)
     for fn in properties
-        dd[!, Symbol(fn)] = collect(get_data(a, fn) for a in alla)
+        dd[!, Symbol(fn)] = collect(get_data(a, fn, obtainer) for a in alla)
     end
     append!(df, dd)
     return df
@@ -186,7 +200,7 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
         k, agg = property
         headers[i+1] = aggname(property)
         # This line assumes that `agg` can work with iterators directly
-        current_type = typeof( agg( get_data(a, k) for a in Iterators.take(alla,1) ) )
+        current_type = typeof( agg( get_data(a, k, Identity) for a in Iterators.take(alla,1) ) )
         isconcretetype(current_type) || warn("Type is not concrete when using function $(agg) "*
             "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...")
         types[i+1] = current_type[]
@@ -209,26 +223,26 @@ aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
 aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2], x[3])
 aggname(x::Union{Function, Symbol, String}) = string(x)
 
-function collect_agent_data!(df, model, properties::Vector{<:Tuple}, step::Int=0)
+function collect_agent_data!(df, model, properties::Vector{<:Tuple}, obtainer::Type{O}, step::Int=0) where {O<:Obtainer}
     alla = allagents(model)
     push!(df[!, 1], step)
     for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla)
+        _add_col_data!(df[!, i+1], prop, obtainer, alla)
     end
     return df
 end
 
 # Normal aggregates
-function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter) where {T,K,A}
+function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, obtainer::Type{O}, agent_iter) where {T,K,A, O<:Obtainer}
     k, agg = property
-    res::T = agg(get_data(a, k) for a in agent_iter)
+    res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
     push!(col, res)
 end
 
 # Conditional aggregates
-function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter) where {T,K,A,C}
+function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, obtainer::Type{O}, agent_iter) where {T,K,A,C, O<:Obtainer}
     k, agg, condition = property
-    res::T = agg(get_data(a, k) for a in Iterators.filter(condition, agent_iter))
+    res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
 
@@ -264,15 +278,15 @@ init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
     collect_model_data!(df, model, properties, step = 0)
 Same as [`collect_agent_data!`](@ref) but for model data instead.
 """
-function collect_model_data!(df, model, properties::Vector, step::Int=0)
+function collect_model_data!(df, model, properties::Vector, obtainer::Type{O}, step::Int=0) where {O<:Obtainer}
   push!(df[!, :step], step)
   for fn in properties
-    push!(df[!, Symbol(fn)], get_data(model, fn))
+    push!(df[!, Symbol(fn)], get_data(model, fn, obtainer))
   end
   return df
 end
 
-collect_model_data!(df, model, properties::Nothing, step::Int=0) = df
+collect_model_data!(df, model, properties::Nothing, obtainer::Type{O}, step::Int=0) where {O<:Obtainer} = df
 
 
 ###################################################
