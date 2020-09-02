@@ -1,8 +1,10 @@
 using Pkg
 Pkg.activate(@__DIR__)
 cd(@__DIR__)
+@info "Updating packages"
 Pkg.update()
 
+@info "Loading packages"
 using Documenter, Agents, DataFrames, Random, Statistics, SQLite
 using AgentsPlots
 using Literate
@@ -24,6 +26,7 @@ println("AgentsPlots status:")
 Pkg.status("AgentsPlots")
 
 # %% Literate convertion
+@info "Converting Examples to Docuementation"
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
@@ -35,6 +38,7 @@ end
 
 # %%
 # download the themes
+@info "Applying Theme"
 using DocumenterTools: Themes
 for file in ("juliadynamics-lightdefs.scss", "juliadynamics-darkdefs.scss", "juliadynamics-style.scss")
     download("https://raw.githubusercontent.com/JuliaDynamics/doctheme/master/$file", joinpath(@__DIR__, file))
@@ -51,6 +55,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 
 # %%
 cd(@__DIR__)
+@info "Building Documentation"
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(modules = [Agents,AgentsPlots,InteractiveChaos],
 sitename= "Agents.jl",
@@ -91,6 +96,7 @@ pages = [
     ],
 )
 
+@info "Deploying Documentation"
 if CI
     deploydocs(
         repo = "github.com/JuliaDynamics/Agents.jl.git",
