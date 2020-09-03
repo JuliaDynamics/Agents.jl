@@ -1,4 +1,8 @@
 @testset "DataCollection" begin
+    mutable struct Nested
+        data::Vector{Float64}
+    end
+
     function initialize()
         model = ABM(
             Agent3,
@@ -8,6 +12,7 @@
                 :tick => 0,
                 :flag => false,
                 :container => Float64[],
+                :deep => Nested([20.0, 52.1])
             ),
         )
         add_agent!((4, 3), model, 0.1)
@@ -27,6 +32,7 @@
         model.flag = !model.flag
         if model.tick % 365 == 0
             model.year += 1
+            model.deep.data[1] += 0.5
         end
     end
 
@@ -160,6 +166,18 @@
         )
         @test size(agent_data) == (0, 2)
         @test size(model_data) == (2, 3)
+
+        _, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [1, 365 * 5],
+            when = false,
+            mdata = [:deep],
+            obtainer = deepcopy,
+        )
+        @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
     end
 
     @testset "Low-level API for Collections" begin
@@ -210,7 +228,7 @@
         @test model.tick == 365 * 6
     end
 
-    @testset "Issue #280 Fix" begin
+    @testset "Observers" begin
         model = initialize()
         model_props = [:container]
         model_data = init_model_dataframe(model, model_props)
@@ -223,6 +241,34 @@
         @test model_data.container[1][1] ≈ 50.0
         @test model_data.container[3][1] ≈ 71.9
         @test length.(model_data.container) == [1, 2, 2]
+
+        model = initialize()
+        model_props = [:deep]
+        model_data = init_model_dataframe(model, model_props)
+        push!(model.deep.data, 17.5)
+        collect_model_data!(model_data, model, model_props, 0; obtainer = deepcopy)
+        push!(model.deep.data, 1.2)
+        collect_model_data!(model_data, model, model_props, 1; obtainer = deepcopy)
+        model.deep.data[1] += 0.9
+        collect_model_data!(model_data, model, model_props, 2; obtainer = deepcopy)
+        @test model_data[1,:deep].data[1] ≈ 20.0
+        @test model_data[3,:deep].data[1] ≈ 20.9
+        @test [length(d.data) for d in model_data[!,:deep]] == [3, 4, 4]
+
+        model = initialize()
+        agent_data, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [1, 365 * 5],
+            when = false,
+            mdata = [:flag, :year, :container, :deep],
+            adata = [(:weight, mean)],
+            obtainer = deepcopy,
+        )
+        @test size(agent_data) == (0, 2)
+        @test size(model_data) == (2, 5)
     end
 end
 
