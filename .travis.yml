@@ -15,14 +15,11 @@ before_script:
 notifications:
   email: false
 
-
 stages:
   - name: test
   - name: docs
 
 jobs:
-  allow_failures:
-    - julia: nightly
   include:
     - stage: docs
       julia: 1
@@ -30,7 +27,8 @@ jobs:
       script:
         - julia -e 'using Pkg; ENV["PYTHON"]=""; py="PyCall"; Pkg.add(py); Pkg.build(); Pkg.add("PyPlot"); Pkg.add("StaticArrays")'
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
-                                    Pkg.develop(PackageSpec(path=pwd()));'
+                                    Pkg.develop(PackageSpec(path=pwd()));
+                                    Pkg.update();'
         - travis_wait 60 julia --project=docs/ docs/make.jl
       after_success: skip
 
