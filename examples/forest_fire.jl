@@ -22,7 +22,7 @@
 
 # We start by defining the agent type
 using Agents, Random, AgentsPlots
-pyplot() # hide
+gr() # hide
 
 mutable struct Tree <: AbstractAgent
     id::Int
