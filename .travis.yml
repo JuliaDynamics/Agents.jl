@@ -19,12 +19,12 @@ before_script:
 notifications:
   email: false
 
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-
 jobs:
   fast_finish: true
   include:
+    - stage: test
+      after_success:
+        - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
     - stage: "Documentation"
       julia: 1
       os: linux
