@@ -35,4 +35,3 @@ jobs:
                                     Pkg.update();'
         - julia --project=docs/ docs/make.jl
       after_success: skip
-

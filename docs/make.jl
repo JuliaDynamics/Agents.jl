@@ -23,6 +23,7 @@ CI && (ENV["GKSwstype"] = "100")
 ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")
 # %% Literate convertion
+@info "Converting Examples to Docuementation"
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
@@ -91,6 +92,7 @@ pages = [
     ],
 )
 
+@info "Deploying Documentation"
 if CI
     deploydocs(
         repo = "github.com/JuliaDynamics/Agents.jl.git",

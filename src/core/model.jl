@@ -123,12 +123,15 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
     else
         s*= "\n space: $(sprint(show, abm.space))"
     end
-    s*= "\n scheduler: $(nameof(abm.scheduler))"
+    s*= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
         print(io, "\n properties: ", abm.properties)
     end
 end
+schedulername(x::Union{Function, DataType}) = nameof(x)
+schedulername(x) = string(x)
+
 
 """
     getindex(model::ABM, id::Integer)
