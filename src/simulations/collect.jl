@@ -58,11 +58,11 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   returns `true`. By default data are collected in every step.
 * `when_model = when` : same as `when` but for model data.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
-Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
-if some data are mutable containers (e.g. `Vector`) which change during evolution,
-or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
-nested mutable containers.
-Both of these options have performance penalties.
+  Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
+  if some data are mutable containers (e.g. `Vector`) which change during evolution,
+  or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
+  nested mutable containers.
+  Both of these options have performance penalties.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
 """
