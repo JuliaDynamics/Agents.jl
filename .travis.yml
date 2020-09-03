@@ -15,16 +15,16 @@ before_script:
 notifications:
   email: false
 
+
+stages:
+  - name: test
+  - name: docs
+
 jobs:
-  fast_finish: true
+  allow_failures:
+    - julia: nightly
   include:
-    - stage: test
-      allow_failures:
-        - julia: nightly
-      codecov: true
-      after_success:
-        - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-    - stage: "Documentation"
+    - stage: docs
       julia: 1
       os: linux
       script:
@@ -33,3 +33,7 @@ jobs:
                                     Pkg.develop(PackageSpec(path=pwd()));'
         - travis_wait 60 julia --project=docs/ docs/make.jl
       after_success: skip
+
+codecov: true
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'

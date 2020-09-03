@@ -3,11 +3,8 @@ Pkg.activate(@__DIR__)
 cd(@__DIR__)
 Pkg.update()
 
-using Documenter, Agents, DataFrames, Random, Statistics, SQLite
-using AgentsPlots
-using Literate
-using Plots, StatsPlots, BenchmarkTools
-import OrdinaryDiffEq, DiffEqCallbacks
+using Documenter, Agents, Plots, AgentsPlots
+import Literate
 import InteractiveChaos
 
 # Initialise pyplot to squash build output bleeding into docs.
