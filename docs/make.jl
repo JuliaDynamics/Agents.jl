@@ -1,17 +1,19 @@
-using Pkg
-Pkg.activate(@__DIR__)
 cd(@__DIR__)
-@info "Updating packages"
-Pkg.update()
-
-@info "Loading packages"
-using Documenter, Agents, DataFrames, Random, Statistics, SQLite
+println("Loading Packages")
+println("Documenter...")
+using Documenter
+println("Agents...")
+using Agents
+println("Plots...")
+using Plots
+println("AgentsPlots...")
 using AgentsPlots
-using Literate
-using Plots, StatsPlots, BenchmarkTools
-import OrdinaryDiffEq, DiffEqCallbacks
+println("Literate...")
+import Literate
+println("InteractiveChaos...")
 import InteractiveChaos
 
+println("Setting up Environment")
 # Initialise pyplot to squash build output bleeding into docs.
 pyplot()
 plot([1,1])
@@ -19,12 +21,7 @@ const CI = get(ENV, "CI", nothing) == "true"
 CI && (ENV["GKSwstype"] = "100")
 
 ENV["GKS_ENCODING"]="utf-8"
-println("Agents status:")
-Pkg.status("Agents")
-
-println("AgentsPlots status:")
-Pkg.status("AgentsPlots")
-
+println("Converting Examples")
 # %% Literate convertion
 @info "Converting Examples to Docuementation"
 indir = joinpath(@__DIR__, "..", "examples")
@@ -38,7 +35,7 @@ end
 
 # %%
 # download the themes
-@info "Applying Theme"
+println("Themeing")
 using DocumenterTools: Themes
 for file in ("juliadynamics-lightdefs.scss", "juliadynamics-darkdefs.scss", "juliadynamics-style.scss")
     download("https://raw.githubusercontent.com/JuliaDynamics/doctheme/master/$file", joinpath(@__DIR__, file))
@@ -54,8 +51,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-light.scss"), joinpath(@__DIR__
 Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__, "src/assets/themes/documenter-dark.css"))
 
 # %%
-cd(@__DIR__)
-@info "Building Documentation"
+println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(modules = [Agents,AgentsPlots,InteractiveChaos],
 sitename= "Agents.jl",
@@ -105,5 +101,4 @@ if CI
     )
 end
 
-
-println("done")
+println("Finished")
