@@ -8,6 +8,10 @@ julia:
   - 1
   # - nightly
 
+cache:
+  directories:
+    - ~/.julia/artifacts
+
 before_script:
   - git config --global user.name "GitUser"
   - git config --global user.email "git@us.er"
@@ -15,13 +19,13 @@ before_script:
 notifications:
   email: false
 
-stages:
-  - name: test
-  - name: docs
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 
 jobs:
+  fast_finish: true
   include:
-    - stage: docs
+    - stage: "Documentation"
       julia: 1
       os: linux
       script:
@@ -29,9 +33,6 @@ jobs:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()));
                                     Pkg.update();'
-        - travis_wait 60 julia --project=docs/ docs/make.jl
+        - julia --project=docs/ docs/make.jl
       after_success: skip
 
-codecov: true
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
