@@ -37,7 +37,6 @@ function adopt!(agent, model)
 	neighbor = rand(space_neighbors(agent, model))
 	matches = model[neighbor].opinion .== agent.opinion
 	nmatches = count(matches)
-	## Adopt a different opinion w/ calculated probability
 	if nmatches < model.nopinions && rand() < nmatches/model.nopinions
 		switchId = rand(findall(x-> x==false, matches))
 		agent.opinion[switchId] = model[neighbor].opinion[switchId]
