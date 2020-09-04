@@ -66,7 +66,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   Both of these options have performance penalties.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
-* `agents_first=true` : Wether to update agents first and then the model, or wise versa.
+* `agents_first=true` : Whether to update agents first and then the model, or vise versa.
 """
 function run! end
 
