@@ -1,5 +1,7 @@
 # # Opinion spread
 
+# ![](opinion.gif)
+
 # This is a simple model of how an opinion spreads through a community. Each individual has a number of opinions as a list of integers. They can change their opinion by changing the numbers in the list.
 
 # Agents can change their opinion at each step. They choose one of their neighbors randomly, and adopt one of the neighbor's opinion. They are more likely to adopt their neighbors opinion if the share more opinions with each other.
@@ -86,7 +88,10 @@ ac(agent) = RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions=3, levels_per_opinion=levels_per_opinion)
 anim = @animate for sp in 1:500
   step!(model, agent_step!)
-  p = plotabm(model, ac=ac, as=12)
+  p = plotabm(model, ac=ac, as=12, am=:square)
   title!(p, "Step $(sp)")
+  if rununtil(model, 1)
+    break
+  end
 end
-gif(anim)
+gif(anim, "opinion.gif")
