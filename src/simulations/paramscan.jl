@@ -19,7 +19,8 @@ can take both model and agent constructor properties.
 All the following keywords are propagated into [`run!`](@ref).
 Defaults are also listed for convenience:
 `agent_step! = dummystep, n = 1, when = 1:n, model_step! = dummystep`,
-`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
+`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`,
+agents_first::Bool=true.
 Keyword arguments such as `adata` and `mdata` are
 also propagated.
 
@@ -33,7 +34,7 @@ included in the output `DataFrame`.
 function paramscan(parameters::Dict{Symbol,}, initialize;
   n = 1, agent_step! = dummystep,  model_step! = dummystep,
   progress::Bool = true, include_constants::Bool = false,
-  kwargs...)
+  agents_first::Bool=true, kwargs...)
 
   if include_constants
     changing_params = collect(keys(parameters))
