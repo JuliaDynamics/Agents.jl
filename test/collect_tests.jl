@@ -216,10 +216,6 @@
 
         @test dummystep(model) == nothing
         @test dummystep(model[1], model) == nothing
-        @test_logs (
-            :warn,
-            "`step!` with keyword arguments is deprecated. Use `run!` instead.",
-        ) step!(model, agent_step!, model_step!, 1; adata = agent_props)
         tick = model.tick
         step!(model, agent_step!, 1)
         @test tick == model.tick
