@@ -79,7 +79,8 @@ pages = [
         "Flocking" => "examples/flock.md",
         "Daisyworld" => "examples/daisyworld.md",
         "Predator-Prey" => "examples/predator_prey.md",
-        "Bacteria Growth" => "examples/growing_bacteria.md"
+        "Bacteria Growth" => "examples/growing_bacteria.md",
+        "Opinion spread" => "examples/opinion_spread.md"
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
