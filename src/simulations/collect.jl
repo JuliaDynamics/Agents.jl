@@ -68,10 +68,13 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 """
 function run! end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
+run!(model::ABM, agent_step!::Function, n::Int = 1; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function run!(model::ABM, agent_step!, model_step!, n;
+run!(model::ABM, agent_step!::Function, n::Function; kwargs...) =
+run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+
+function run!(model::ABM, agent_step!::Function, model_step!::Function, n;
   replicates::Int=0, parallel::Bool=false, kwargs...)
 
   r = replicates

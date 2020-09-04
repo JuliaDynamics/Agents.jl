@@ -130,6 +130,17 @@
         @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
     end
 
+    @testset "run! conditions without model_step!" begin
+        model = initialize()
+        agent_data, _ = run!(model, agent_step!, 2; adata = [(:weight, mean)])
+        @test size(agent_data) == (3, 2)
+
+        model = initialize()
+        until(model, step) = step == 5
+        agent_data, _ = run!(model, agent_step!, until; adata = [(:weight, mean)])
+        @test size(agent_data) == (6, 2)
+    end
+
     @testset "High-level API for Collections" begin
         # Extract data from the model every year for five years,
         # with the average `weight` of all agents every six months.
