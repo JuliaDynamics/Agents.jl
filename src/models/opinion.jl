@@ -20,7 +20,7 @@ function opinion(;dims=(10, 10), nopinions=3, levels_per_opinion=4)
 	for cell in 1:nv(model)
 		add_agent!(cell, model, false, rand(1:levels_per_opinion, nopinions), rand(1:levels_per_opinion, nopinions))
 	end
-	return model, opinion_agent_step!
+	return model, opinion_agent_step!, dummystep
 end
 
 function adopt!(agent, model)
