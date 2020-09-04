@@ -66,6 +66,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   Both of these options have performance penalties.
 * `replicates=0` : Run `replicates` replicates of the simulation.
 * `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
+* `agents_first=true` : Wether to update agents first and then the model, or wise versa.
 """
 function run! end
 
@@ -97,7 +98,8 @@ Core function that loops over stepping a model and collecting data at each step.
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
                agent_properties=nothing, model_properties=nothing,
-               mdata=model_properties, adata=agent_properties, obtainer = identity)
+               mdata=model_properties, adata=agent_properties, obtainer = identity,
+               agents_first=true)
 
     agent_properties ≠ nothing && @warn "use `adata` instead of `agent_properties`"
     model_properties ≠ nothing && @warn "use `mdata` instead of `model_properties`"
@@ -116,7 +118,7 @@ function _run!(model, agent_step!, model_step!, n;
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer = obtainer)
         end
-        step!(model, agent_step!, model_step!, 1)
+        step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
     end
     if should_we_collect(s, model, when)

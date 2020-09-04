@@ -32,22 +32,31 @@ dummystep(agent, model) = nothing
 until(ss, n::Int, model) = ss < n
 until(ss, n, model) = !n(model, ss)
 
-step!(model::ABM, agent_step!, n::Int=1) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n)
 
-function step!(model::ABM, agent_step!, model_step!, n = 1)
+function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
   s = 0
   while until(s, n, model)
-    activation_order = model.scheduler(model)
-    for index in activation_order
-      haskey(model.agents, index) || continue
-      agent_step!(model.agents[index], model)
+    if agents_first
+      activation_order = model.scheduler(model)
+      for index in activation_order
+        haskey(model.agents, index) || continue
+        agent_step!(model.agents[index], model)
+      end
+      model_step!(model)
+    else
+      model_step!(model)
+      activation_order = model.scheduler(model)
+      for index in activation_order
+        haskey(model.agents, index) || continue
+        agent_step!(model.agents[index], model)
+      end
     end
-    model_step!(model)
     s += 1
   end
 end
 
-function step!(model, agent_step!, model_step!, n; kwargs...)
+function step!(model, agent_step!, model_step!, n, agents_first; kwargs...)
   @warn "`step!` with keyword arguments is deprecated. Use `run!` instead."
-  run!(model, agent_step!, model_step!, n; kwargs...)
+  run!(model, agent_step!, model_step!, n, agents_first; kwargs...)
 end
