@@ -48,7 +48,3 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
   end
 end
 
-function step!(model, agent_step!, model_step!, n, agents_first; kwargs...)
-  @warn "`step!` with keyword arguments is deprecated. Use `run!` instead."
-  run!(model, agent_step!, model_step!, n, agents_first; kwargs...)
-end
