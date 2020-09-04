@@ -32,7 +32,7 @@ dummystep(agent, model) = nothing
 until(ss, n::Int, model) = ss < n
 until(ss, n, model) = !n(model, ss)
 
-step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n)
+step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
 
 function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
   s = 0
