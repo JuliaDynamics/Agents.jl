@@ -13,9 +13,10 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, agent_step! [, model_step!], n; kwargs...) → agent_df, model_df
+    run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
+    run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
 
-Run the model (step it with the input arguments propagated into `step!`) and collect
+Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
 
