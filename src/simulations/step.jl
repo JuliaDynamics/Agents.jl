@@ -2,12 +2,12 @@ export step!, dummystep
 
 """
     step!(model, agent_step!, n::Integer = 1)
-    step!(model, agent_step!, model_step!, n::Integer = 1, , agents_first::Bool=true)
+    step!(model, agent_step!, model_step!, n::Integer = 1, agents_first::Bool=true)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
 In the second version `model_step!` is triggered _after_ every scheduled agent has acted.
 
-    step!(model, agent_step!, model_step!, n::Function)
+    step!(model, agent_step!, model_step!, n::Function, agents_first::Bool=true)
 
 `n` can be also be a function.
 Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
