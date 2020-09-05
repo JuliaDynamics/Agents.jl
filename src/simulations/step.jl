@@ -2,7 +2,7 @@ export step!, dummystep
 
 """
     step!(model, agent_step!, n::Integer = 1)
-    step!(model, agent_step!, model_step!, n::Integer = 1)
+    step!(model, agent_step!, model_step!, n::Integer = 1, , agents_first::Bool=true)
 
 Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
 In the second version `model_step!` is triggered _after_ every scheduled agent has acted.
@@ -13,6 +13,7 @@ In the second version `model_step!` is triggered _after_ every scheduled agent h
 Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
 current amount of steps taken (starting from 0).
 (in this case `model_step!` must be provided always)
+`agents_first` determines the activation order of `agent_step!` and `model_step!`. When `true` (default) agents are activated first.
 """
 function step! end
 
