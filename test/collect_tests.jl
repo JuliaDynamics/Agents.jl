@@ -178,6 +178,17 @@
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
+        agent_data, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            20;
+            agents_first=false,
+            when_model = [1, 20],
+            when = false,
+            mdata = [:flag, :year],
+            adata = [(:weight, mean)],
+        )
     end
 
     @testset "Low-level API for Collections" begin
@@ -222,6 +233,7 @@
         stop(m, s) = m.year == 6
         step!(model, agent_step!, model_step!, stop)
         @test model.tick == 365 * 6
+        step!(model, agent_step!, model_step!, 1, false)
     end
 
     @testset "Observers" begin
