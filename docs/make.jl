@@ -68,6 +68,7 @@ pages = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
+        "Sugarscape" => "examples/sugarscape.md",
         "Schelling's segregation model" => "examples/schelling.md",
         "SIR model for the spread of COVID-19" => "examples/sir.md",
         "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
