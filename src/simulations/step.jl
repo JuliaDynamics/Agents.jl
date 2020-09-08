@@ -1,19 +1,22 @@
 export step!, dummystep
 
 """
-    step!(model, agent_step!, n::Integer = 1)
-    step!(model, agent_step!, model_step!, n::Integer = 1, agents_first::Bool=true)
+    step!(model, agent_step!, n::Int = 1)
+    step!(model, agent_step!, model_step!, n::Int = 1, agents_first::Bool=true)
 
-Update agents `n` steps. Agents will be updated as specified by the `model.scheduler`.
-In the second version `model_step!` is triggered _after_ every scheduled agent has acted.
+Update agents `n` steps according to the stepping function `agent_step!`.
+Agents will be activated as specified by the `model.scheduler`.
+`model_step!` is triggered _after_ every scheduled agent has acted, unless
+the argument `agents_first` is `false` (which then first calls `model_step!` and then
+activates the agents).
 
     step!(model, agent_step!, model_step!, n::Function, agents_first::Bool=true)
 
-`n` can be also be a function.
+In this version `n` is a function.
 Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
-current amount of steps taken (starting from 0).
-(in this case `model_step!` must be provided always)
-`agents_first` determines the activation order of `agent_step!` and `model_step!`. When `true` (default) agents are activated first.
+current amount of steps taken, starting from 0.
+For this method of `step!`, `model_step!` must be provided always (use [`dummystep`](@ref)
+if you have no model stepping dynamics).
 """
 function step! end
 
@@ -48,4 +51,3 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
     s += 1
   end
 end
-
