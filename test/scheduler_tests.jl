@@ -98,6 +98,7 @@ end
     @test sort!(collect(model.scheduler(model))) == 1:12
 
     # shuffling types scheduler
+    Random.seed!(12)
     model = init_mixed_model(scheduler = by_type(true, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
@@ -113,12 +114,14 @@ end
     @test c == 12
 
     # NOT shuffling types scheduler
+    Random.seed!(12)
     model = init_mixed_model(scheduler = by_type(false, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
     @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
     # Not shuffling types, but shuffling agents
+    Random.seed!(12)
     model = init_mixed_model(scheduler = by_type(false, true))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
@@ -127,6 +130,7 @@ end
     @test model[s1[1]].id ≠ model[s2[1]] || model[s1[2]].id ≠ model[s2[2]]
 
     # Explicit order of types scheduling
+    Random.seed!(12)
     model =
         ABM(Union{Agent1,Agent0}, scheduler = by_type((Agent1, Agent0), true), warn = false)
     for id in 1:3

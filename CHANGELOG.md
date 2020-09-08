@@ -1,3 +1,5 @@
+# v3.7
+- Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.
 # v3.6
 - Add ability to customise `run!` such that mutation on containers and nested structures does not affect data collection.
 

@@ -75,31 +75,6 @@ end
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
 end
 
-model1 = ABM(Agent1, GridSpace((3,3)))
-
-agent = add_agent!((1,1), model1)
-@test agent.pos == (1, 1)
-@test agent.id == 1
-pos1 = get_node_contents((1,1), model1)
-@test length(pos1) == 1
-@test pos1[1] == 1
-
-move_agent!(agent, (2,2), model1)
-@test agent.pos == (2,2)
-pos1 = get_node_contents((1,1), model1)
-@test length(pos1) == 0
-pos2 = get_node_contents((2,2), model1)
-@test pos2[1] == 1
-
-# %% get/set testing
-model = ABM(Agent1, GridSpace((10,10)); properties=Dict(:number => 1, :nested => BadAgent(1,1)))
-add_agent!(model)
-add_agent!(model)
-@test (model.number += 1) == 2
-@test (model.nested.pos = 5) == 5
-@test_throws ErrorException (model.space = ContinuousSpace(2))
-
-
 @testset "sample!" begin
   model = ABM(Agent2)
   for i in 1:20; add_agent!(model, rand()/rand()); end
@@ -394,4 +369,30 @@ end
     @test a.temperature == a.pos[1]/10
   end
 
+end
+
+@testset "model step order" begin
+    function model_step!(model)
+        for a in allagents(model)
+            if a.weight > 1.0
+                model.count += 1
+            end
+        end
+    end
+    function agent_step!(a, model)
+        a.weight += 1
+    end
+
+    for bool in (true, false)
+        model = ABM(Agent2; properties = Dict(:count => 0))
+        for i in 1:100
+            add_agent!(model, rand())
+        end
+        step!(model, agent_step!, model_step!, 1, bool)
+        if bool
+            @test model.count == 100
+        else
+            @test model.count == 0
+        end
+    end
 end

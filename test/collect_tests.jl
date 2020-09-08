@@ -216,16 +216,13 @@
 
         @test dummystep(model) == nothing
         @test dummystep(model[1], model) == nothing
-        @test_logs (
-            :warn,
-            "`step!` with keyword arguments is deprecated. Use `run!` instead.",
-        ) step!(model, agent_step!, model_step!, 1; adata = agent_props)
         tick = model.tick
         step!(model, agent_step!, 1)
         @test tick == model.tick
         stop(m, s) = m.year == 6
         step!(model, agent_step!, model_step!, stop)
         @test model.tick == 365 * 6
+        step!(model, agent_step!, model_step!, 1, false)
     end
 
     @testset "Observers" begin
@@ -355,4 +352,3 @@ end
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
-
