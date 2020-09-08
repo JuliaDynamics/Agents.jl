@@ -396,7 +396,7 @@ end
 
 end
 
-@testeset "model step order" begin
+@testset "model step order" begin
     function model_step!(model)
         for a in allagents(model)
             if a.weight > 1.0
