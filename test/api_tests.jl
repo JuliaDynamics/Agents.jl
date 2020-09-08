@@ -395,3 +395,29 @@ end
   end
 
 end
+
+@testeset "model step order" begin
+    function model_step!(model)
+        for a in allagents(model)
+            if a.weight > 1.0
+                model.count += 1
+            end
+        end
+    end
+    function agent_step!(a, model)
+        a.weight += 1
+    end
+
+    for bool in (true, false)
+        model = ABM(Agent2; properties = Dict(:count => 0))
+        for i in 1:100
+            add_agent!(model, rand())
+        end
+        step!(model, agent_step!, model_step!, 1, bool)
+        if bool
+            @test model.count == 100
+        else
+            @test model.count == 0
+        end
+    end
+end

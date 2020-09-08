@@ -178,17 +178,6 @@
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
-        agent_data, model_data = run!(
-            model,
-            agent_step!,
-            model_step!,
-            20;
-            agents_first=false,
-            when_model = [1, 20],
-            when = false,
-            mdata = [:flag, :year],
-            adata = [(:weight, mean)],
-        )
     end
 
     @testset "Low-level API for Collections" begin
@@ -363,4 +352,3 @@ end
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
-
