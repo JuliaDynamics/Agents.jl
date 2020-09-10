@@ -242,18 +242,21 @@ function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) 
   right = pos .+ r
   res = interlace(left, right)
   ids = collect_ids(DBInterface.execute(model.space.searchqNoId, res))
-  if model.space.metric == :cityblock
-    return ids
-  elseif model.space.metric == :euclidean
-    return filter!(i -> sqrt(sum(abs2.(model[i].pos .- pos))) ≤ r, ids)
+  if model.space.metric == :euclidean
+    filter!(i -> sqrt(sum(abs2.(model[i].pos .- pos))) ≤ r, ids)
   end
+  ids
 end
 
 function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
   left = agent.pos .- r
   right = agent.pos .+ r
   res = interlace(left, right)
-  collect_ids(DBInterface.execute(model.space.searchq, (res...,agent.id)))
+  ids = collect_ids(DBInterface.execute(model.space.searchq, (res...,agent.id)))
+  if model.space.metric == :euclidean
+    filter!(i -> sqrt(sum(abs2.(model[i].pos .- agent.pos))) ≤ r, ids)
+  end
+  ids
 end
 
 @generated function interlace(left::NTuple{D}, right::NTuple{D}) where {D}
