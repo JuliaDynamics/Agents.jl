@@ -19,6 +19,11 @@
   @test space7.D == 3
   @test space8.D == 3
 
+  @test_throws AssertionError ContinuousSpace(2; extend = (-1,1)) # Cannot have negative extent
+  @test_throws AssertionError ContinuousSpace(2; extend = [1,1]) # Must be a tuple
+  @test_throws AssertionError ContinuousSpace(2; extend = (1,1,1)) # Must be length D
+  @test_throws AssertionError ContinuousSpace(2; extend = ("one",1.0)) # Must contain reals
+
   model1 = ABM(Agent6, space1)
   model2 = ABM(Agent6, space2)
   model3 = ABM(Agent6, space3)
