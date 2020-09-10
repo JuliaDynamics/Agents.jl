@@ -40,7 +40,7 @@ Notice that if you need to write your own custom `move_agent` function, call
 
 ## Keywords
 * `periodic = true` : whether continuous space is periodic or not
-* `extend::NTuple{D} = ones` : Extend of space. The `d` dimension starts at 0
+* `extend::NTuple{D} = ones` : Extent of space. The `d` dimension starts at 0
   and ends at `extend[d]`. If `periodic = true`, this is also when
   periodicity occurs. If `periodic ≠ true`, `extend` is only used at plotting.
 * `metric = :cityblock` : metric that configures distances for finding nearest neighbors
@@ -55,6 +55,8 @@ function ContinuousSpace(D::Int, update_vel! = defvel;
   periodic = true, extend = Tuple(1.0 for i in 1:D), metric = :cityblock)
 
   @assert metric ∈ (:cityblock, :euclidean)
+  @assert typeof(extend) <: NTuple{D} "extend must be a tuple of length(D)"
+  @assert all(typeof(e) <: Real && e > 0 for e in extend) "extend must contain positive integers or floating point numbers"
   db, q, q2, q3, q4, q5 = prepare_database(D)
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
