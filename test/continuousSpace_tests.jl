@@ -159,7 +159,7 @@ end
     add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
   end
   pairs = interacting_pairs(model3, 0.1, :types).pairs
-  @test length(pairs) == 12
+  @test length(pairs) == 7
   for (a,b) in pairs
       @test typeof(model3[a]) !== typeof(model3[b])
   end
@@ -171,4 +171,22 @@ end
   @test length(pairs) == 12
   # No Agent6's when using the ignore_six scheduler
   @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
+
+  # Fix #288
+  space = ContinuousSpace(2; periodic = true, extend = (1,1), metric=:euclidean)
+  model = ABM(Agent6, space)
+  pos = [(0.0, 0.0),(0.2, 0.2),(0.5, 0.5)]
+  for i in pos
+    add_agent!(i,model,(0.0,0.0),1.0)
+  end
+  pairs = interacting_pairs(model, .29, :all)
+  @test length(pairs) == 1
+  (a,b) = first(pairs)
+  @test (a.id, b.id) == (1,2)
+  # Before the #288 fix, this would return (2,3) as a pair
+  # which has a euclidean distance of 0.42
+  pairs = interacting_pairs(model, .3, :all)
+  @test length(pairs) == 1
+  (a,b) = first(pairs)
+  @test (a.id, b.id) == (1,2)
 end
