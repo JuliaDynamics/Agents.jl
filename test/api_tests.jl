@@ -76,6 +76,7 @@ end
 end
 
 @testset "sample!" begin
+  Random.seed!(6459)
   model = ABM(Agent2)
   for i in 1:20; add_agent!(model, rand()/rand()); end
   allweights = [i.weight for i in values(model.agents)]
@@ -91,6 +92,7 @@ end
   mean_weights_new = sum(allweights)/length(allweights)
   @test mean_weights_new > mean_weights
 
+  Random.seed!(6459)
   model2 = ABM(Agent3, GridSpace((10, 10)))
   for i in 1:20; add_agent_single!(Agent3(i, (1,1), rand()/rand()), model2); end
   @test sample!(model2, 10, :weight) == nothing
@@ -105,6 +107,7 @@ end
   sample!(model2, 40, :weight)
   @test Agents.nagents(model2) == 40
 
+  Random.seed!(6459)
   #Guarantee all starting weights are unique
   model3 = ABM(Agent2)
   while true
