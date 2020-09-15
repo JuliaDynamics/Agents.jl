@@ -334,7 +334,7 @@ function has_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
 end
 
 """
-    get_node_contents(node, model)
+    get_node_contents(node, model) → ids
 
 Return the ids of agents in the `node` of the model's space (which
 is an integer for `GraphSpace` and a tuple for `GridSpace`).
@@ -342,7 +342,7 @@ is an integer for `GraphSpace` and a tuple for `GridSpace`).
 get_node_contents(n::Integer, model::ABM{A,<:DiscreteSpace}) where {A} = agent_positions(model)[n]
 
 """
-    get_node_contents(agent::AbstractAgent, model)
+    get_node_contents(agent::AbstractAgent, model) → ids
 
 Return all agents' ids in the same node as the `agent` (including the agent's own id).
 """
@@ -354,11 +354,20 @@ function get_node_contents(coords::Tuple, model::ABM{A,<:DiscreteSpace}) where {
 end
 
 """
-    get_node_agents(x, model)
+    get_node_agents(x, model) → agents
 Same as `get_node_contents(x, model)` but directly returns the list of agents
 instead of just the list of IDs.
 """
 get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
+
+"""
+    get_node_agents(x::Array{NTuple{Int}, 1}, model) → agents
+Same as `get_node_agents(x, model)` but iterates over a list of nodes instead
+of just a single node.
+"""
+function get_node_agents(x::Array{NTuple{Int}, 1}, model::ABM{A,<:DiscreteSpace}) where {A}
+  [model[id] for id in get_node_contents.(x, Ref(model))]
+end
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
