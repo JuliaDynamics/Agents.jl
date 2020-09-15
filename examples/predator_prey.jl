@@ -56,6 +56,7 @@ mutable struct Grass <: AbstractAgent
     regrowth_time::Int
     countdown::Int
 end
+nothing # hide
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
