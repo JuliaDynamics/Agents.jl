@@ -367,9 +367,7 @@ point `x`.
 """
 get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
 
-function get_node_agents(x::Array{Any, 1}, model::ABM{A,<:DiscreteSpace}) where {A}
-  [model[id] for id in get_node_contents.(x, Ref(model))]
-end
+get_node_agents(x::Array{Tuple{Int, Int}, 1}, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_agents.(x, Ref(model))
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 

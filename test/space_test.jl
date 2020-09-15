@@ -209,7 +209,7 @@ end
     @test_throws MethodError space_neighbors((1, 2), gridspace, 1.5)
     @test sort!(space_neighbors((2, 2), gridspace)) == [1, 2]
     @test space_neighbors(a, gridspace) == [2]
-    @test get_node_agents(node_neighbors(a), gridspace) == [[], [], [], [], [a], [], [], [b], []]
+    @test get_node_agents(node_neighbors(a, gridspace), gridspace) == [[], [], [b], []]
 
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
