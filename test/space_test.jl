@@ -203,12 +203,13 @@ end
     @test node_neighbors((2, 2), gridspace) == [(2, 1), (1, 2), (3, 2), (2, 3)]
     @test node_neighbors((1, 1), gridspace) == [(2, 1), (1, 2)]
     a = add_agent!((2, 2), gridspace, rand())
-    add_agent!((3, 2), gridspace, rand())
+    b = add_agent!((3, 2), gridspace, rand())
     @test space_neighbors((1, 2), gridspace) == [1]
     @test sort!(space_neighbors((1, 2), gridspace, 2)) == [1, 2]
     @test_throws MethodError space_neighbors((1, 2), gridspace, 1.5)
     @test sort!(space_neighbors((2, 2), gridspace)) == [1, 2]
     @test space_neighbors(a, gridspace) == [2]
+    @test get_node_agents(node_neighbors(a), gridspace) == [[], [], [], [], [a], [], [], [b], []]
 
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
