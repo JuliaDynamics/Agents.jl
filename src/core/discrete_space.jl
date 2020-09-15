@@ -355,17 +355,19 @@ end
 
 """
     get_node_agents(x, model) → agents
+
 Same as `get_node_contents(x, model)` but directly returns the list of agents
 instead of just the list of IDs.
+
+    get_node_agents(x::Array{Any, 1}, model) → agents
+
+Call `get_node_contents(x, model)` by broadcasting a list of nodes or agents.
+Useful to obtain a list of agents with their relative direction from starting 
+point `x`.
 """
 get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
 
-"""
-    get_node_agents(x::Array{NTuple{Int}, 1}, model) → agents
-Same as `get_node_agents(x, model)` but iterates over a list of nodes instead
-of just a single node.
-"""
-function get_node_agents(x::Array{NTuple{Int}, 1}, model::ABM{A,<:DiscreteSpace}) where {A}
+function get_node_agents(x::Array{Any, 1}, model::ABM{A,<:DiscreteSpace}) where {A}
   [model[id] for id in get_node_contents.(x, Ref(model))]
 end
 
