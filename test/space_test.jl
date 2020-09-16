@@ -234,6 +234,41 @@ end
         [[], [], [a], [], []]
     end
 
+    gridspace_periodic = ABM(Agent3, GridSpace((3, 3); periodic = true))
+    @test node_neighbors((1, 1), gridspace_periodic) == [(1, 3), (3, 1), (2, 1), (1, 2)]
+    a = add_agent!((2, 2), gridspace_periodic, rand())
+    b = add_agent!((3, 2), gridspace_periodic, rand())
+    @test space_neighbors((1, 2), gridspace_periodic) == [2, 1]
+    @test sort!(space_neighbors((1, 3), gridspace_periodic, 2)) == [1, 2]
+    @test_throws MethodError space_neighbors((1, 3), gridspace_periodic, 1.5)
+    @test begin 
+        get_node_agents(node_neighbors(a, gridspace_periodic), gridspace_periodic) == 
+        [[], [], [b], []]
+    end
+    @test begin 
+        get_node_agents(node_neighbors(b, gridspace_periodic), gridspace_periodic) == 
+        [[], [a], [], []]
+    end
+
+    gridspace_pm = ABM(Agent3, GridSpace((3, 3); periodic = true, moore = true))
+    @test begin 
+        node_neighbors((1, 1), gridspace_pm) == 
+        [(3, 3), (1, 3), (2, 3), (3, 1), (2, 1), (3, 2), (1, 2), (2, 2)]
+    end
+    a = add_agent!((2, 2), gridspace_pm, rand())
+    b = add_agent!((3, 2), gridspace_pm, rand())
+    @test space_neighbors((1, 2), gridspace_pm) == [2, 1]
+    @test sort!(space_neighbors((1, 3), gridspace_pm, 2)) == [1, 2]
+    @test_throws MethodError space_neighbors((1, 3), gridspace_pm, 1.5)
+    @test begin 
+        get_node_agents(node_neighbors(a, gridspace_pm), gridspace_pm) == 
+        [[], [], [], [], [b], [], [], []]
+    end
+    @test begin 
+        get_node_agents(node_neighbors(b, gridspace_pm), gridspace_pm) == 
+        [[], [], [], [a], [], [], [], []]
+    end
+
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
