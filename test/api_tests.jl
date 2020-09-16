@@ -262,10 +262,16 @@ end
 @testset "genocide!" begin
   # Testing no space
   model = ABM(Agent0)
-  for _ in 1:10 add_agent!(model) end
+  for i in 1:10
+      a = Agent0(i)
+      add_agent!(a, model)
+  end
   genocide!(model)
   @test nagents(model) == 0
-  for _ in 1:10 add_agent!(model) end
+  for i in 1:10
+      a = Agent0(i)
+      add_agent!(a, model)
+  end
   genocide!(model, 5)
   @test nagents(model) == 5
   genocide!(model, a -> a.id < 3)
