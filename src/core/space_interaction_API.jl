@@ -1,5 +1,7 @@
 #=
 This file establishes the agent-space interaction API.
+All space types should implement this API (except the space-agnostic functions
+which have their own section)
 =#
 export move_agent!,
     add_agent!,
@@ -10,6 +12,9 @@ export move_agent!,
     genocide!,
     nextid,
     fill_space!
+
+
+
 
 #######################################################################################
 # Killing agents
@@ -239,93 +244,25 @@ function add_agent!(
     add_agent_pos!(A(id, cnode, properties...; kwargs...), model)
 end
 
-"""
-    nextid(model::ABM) → id
-Return a valid `id` for creating a new agent with it.
-"""
-nextid(model::ABM) = isempty(model.agents) ? 1 : maximum(keys(model.agents)) + 1
-
-"""
-    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
-
-Add agent to a random node in the space while respecting a maximum one agent per node.
-This function throws a warning if no empty nodes remain.
-"""
-function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    empty_cells = find_empty_nodes(model)
-    if length(empty_cells) > 0
-        agent.pos = correct_pos_type(rand(empty_cells), model)
-        add_agent_pos!(agent, model)
-    else
-        @warn "No empty nodes found for `add_agent_single!`."
-    end
-end
-
-"""
-    add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...)
-Same as `add_agent!(model, properties...)` but ensures that it adds an agent
-into a node with no other agents (does nothing if no such node exists).
-"""
-function add_agent_single!(
-        model::ABM{A,<:DiscreteSpace},
-        properties...;
-        kwargs...,
-    ) where {A<:AbstractAgent}
-    empty_cells = find_empty_nodes(model)
-    if length(empty_cells) > 0
-        add_agent!(rand(empty_cells), model, properties...; kwargs...)
-    end
-end
-
-"""
-    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, args...; kwargs...)
-    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, f::Function; kwargs...)
-Add one agent to each node in the model's space. Similarly with [`add_agent!`](@ref),
-the function creates the necessary agents and
-the `args...; kwargs...` are propagated into agent creation.
-If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
-applying `f` where `pos` is each position (tuple for grid, node index for graph).
-
-An optional first argument is an agent **type** to be created, and targets mixed-agent
-models where the agent constructor cannot be deduced (since it is a union).
-
-## Example
-```julia
-using Agents
-mutable struct Daisy <: AbstractAgent
-    id::Int
-    pos::Tuple{Int, Int}
-    breed::String
-end
-mutable struct Land <: AbstractAgent
-    id::Int
-    pos::Tuple{Int, Int}
-    temperature::Float64
-end
-space = GridSpace((10, 10), moore = true, periodic = true)
-model = ABM(Union{Daisy, Land}, space)
-temperature(pos) = (pos[1]/10, ) # make it Tuple!
-fill_space!(Land, model, temperature)
-```
-"""
-fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
-fill_space!(A, model, args...; kwargs...)
-
-function fill_space!(::Type{A}, model::ABM, args...; kwargs...) where {A<:AbstractAgent}
-    for n in nodes(model)
-        id = nextid(model)
-        cnode = correct_pos_type(n, model)
-        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
-    end
-    return model
-end
-
-function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:AbstractAgent}
-    for n in nodes(model)
-        id = nextid(model)
-        cnode = correct_pos_type(n, model)
-        args = f(cnode)
-        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
-    end
-    return model
-end
+#######################################################################################
+# Space agnostic functions (these do NOT have to be implemented!)
+#######################################################################################
+# random_position(model::ABM) = random_position(model.space)
+# function positions end
+# function add_agent!(model::ABM, properties...; kwargs...)
+#     add_agent!(random_position(model), model, properties...; kwargs...)
+# end
+# function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
+#     id = nextid(model)
+#     add_agent_pos!(A(id, pos, properties...; kwargs...), model)
+# end
+#
+# add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
+# function add_agent!(a::AbstractAgent, pos, model::ABM)
+#     a.pos = pos
+#     add_agent_pos!(a, model)
+# end
+#
+# function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
+#     move_agent!(agent, random_position(model), model)
+# end
