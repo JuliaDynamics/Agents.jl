@@ -1,7 +1,10 @@
 #=
 This file establishes the agent-space interaction API.
-All space types should implement this API (except the space-agnostic functions
-which have their own section)
+All space types should implement this API.
+Some functions DO NOT need to be implemented for every space, they are space agnostic.
+These functions have complete source code here, while the functions that DO need to
+be implemented for every space have only documentation strings here and an
+error message.
 =#
 export move_agent!,
     add_agent!,
@@ -14,16 +17,16 @@ export move_agent!,
     fill_space!
 
 
-
-
 #######################################################################################
 # Killing agents
 #######################################################################################
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
+    kill_agent!(id::Int, model::ABM)
 
 Remove an agent from model, and from the space if the model has a space.
 """
+kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
 function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
     agentnode = coord2vertex(agent.pos, model)
     # remove from the space
@@ -39,7 +42,6 @@ function kill_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
     delete!(model.agents, agent.id)
 end
 
-kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
 
 
 """
@@ -247,22 +249,20 @@ end
 #######################################################################################
 # Space agnostic functions (these do NOT have to be implemented!)
 #######################################################################################
-# random_position(model::ABM) = random_position(model.space)
-# function positions end
-# function add_agent!(model::ABM, properties...; kwargs...)
-#     add_agent!(random_position(model), model, properties...; kwargs...)
-# end
-# function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
-#     id = nextid(model)
-#     add_agent_pos!(A(id, pos, properties...; kwargs...), model)
-# end
-#
-# add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
-# function add_agent!(a::AbstractAgent, pos, model::ABM)
-#     a.pos = pos
-#     add_agent_pos!(a, model)
-# end
-#
-# function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
-#     move_agent!(agent, random_position(model), model)
-# end
+function add_agent!(model::ABM, properties...; kwargs...)
+    add_agent!(random_position(model), model, properties...; kwargs...)
+end
+function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
+    id = nextid(model)
+    add_agent_pos!(A(id, pos, properties...; kwargs...), model)
+end
+
+add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
+function add_agent!(a::AbstractAgent, pos, model::ABM)
+    a.pos = pos
+    add_agent_pos!(a, model)
+end
+
+function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
+    move_agent!(agent, random_position(model), model)
+end
