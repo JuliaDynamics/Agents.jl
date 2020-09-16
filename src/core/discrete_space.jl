@@ -370,7 +370,7 @@ On a 2D grid for example, agent lists will be returned in a [N, W, E, S] pattern
 and [NW, N, NE, W, E, SW, S, SE] if `moore = true`, as long as each direction does
 not exceed the limits of the grid.
 """
-get_node_agents(x::Vector{NTuple{N, Int}}, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_agents.(x, Ref(model))
+get_node_agents(x::Vector{NTuple{N, Int}}, model::ABM{A,<:DiscreteSpace}) where {A,N} = get_node_agents.(x, Ref(model))
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
