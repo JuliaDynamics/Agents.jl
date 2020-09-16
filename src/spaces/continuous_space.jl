@@ -64,9 +64,6 @@ function ContinuousSpace(D::Int, update_vel! = defvel;
   ContinuousSpace(D, update_vel!, periodic, extend, metric, db, q, q2, q3, q4, q5)
 end
 
-# Deprecate Space constructor
-@deprecate Space(D::Int, update_vel!::Function) ContinuousSpace(D::Int, update_vel!::Function)
-
 function prepare_database(D)
   db = SQLite.DB()
   dimexpression = join("$x REAL, " for x in COORDS[1:D])
