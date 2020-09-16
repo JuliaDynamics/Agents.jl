@@ -352,7 +352,7 @@ end
 #######################################################################################
 # Extra space-related functions dedicated to discrete space
 #######################################################################################
-export add_agent_single!, move_agent_single!, fill_space!, move_agent_single!
+export add_agent_single!, fill_space!, move_agent_single!
 
 """
     add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
