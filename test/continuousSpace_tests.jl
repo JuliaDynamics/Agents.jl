@@ -139,7 +139,7 @@ end
   # Note that length here is not the same as the test above with the same function
   # call. This is due to the `scheduler` order of operation
   pairs = interacting_pairs(model2, 2.0, :scheduler).pairs
-  @test length(pairs) == 3
+  @test length(pairs) == 2
   # A more expensive search (in memory, not time), but guarantees true nearest neighbors
   pairs = interacting_pairs(model2, 2.0, :nearest).pairs
   @test length(pairs) == 2
@@ -189,4 +189,22 @@ end
   @test length(pairs) == 1
   (a,b) = first(pairs)
   @test (a.id, b.id) == (1,2)
+end
+
+@testset "nearest neighbor" begin 
+  space = ContinuousSpace(2; periodic = true, extend = (1,1), metric = :euclidean)
+  model = ABM(Agent9, space)
+  pos = [(0.0, 0.0),(0.2, 0.0),(0.2, 0.2),(0.5, 0.5)]
+  for i in pos
+    add_agent!(i,model,(0.0,0.0),nothing)
+  end
+
+  for agent in values(model.agents)
+    agent.f1 = nearest_neighbor(agent, model, sqrt(2)).id
+  end
+
+  @test model.agents[1].f1 == 2
+  @test model.agents[2].f1 == 1
+  @test model.agents[3].f1 == 2 ## This is evaluated as 1
+  @test model.agents[4].f1 == 3
 end
