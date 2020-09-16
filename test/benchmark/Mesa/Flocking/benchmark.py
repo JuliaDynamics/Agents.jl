@@ -23,7 +23,7 @@ def runthemodel(flock):
 flock = BoidFlockers()
 """
 
-for a in range(0, 10):
-    tt = timeit.timeit('runthemodel(flock)', setup=setup, number=1)
-    print(tt)
+tt = timeit.Timer('runthemodel(flock)', setup=setup)
+a = min(tt.repeat(100, 1))
+print("Mesa Flocking (ms):", a*1e3)
 

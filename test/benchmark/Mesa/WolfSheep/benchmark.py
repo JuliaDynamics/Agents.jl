@@ -19,4 +19,4 @@ wolfsheepmodel = WolfSheep()
 
 tt = timeit.Timer('wolfsheepmodel.run_model()', setup=setup)
 a = min(tt.repeat(100, 1))
-print(a)
+print("Mesa WolfSheep (ms):", a*1e3)
