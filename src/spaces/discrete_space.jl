@@ -538,28 +538,22 @@ end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+function random_position(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+  correct_pos_type(rand(1:nv(model)), model)
+end
+
+function remove_agent_from_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
     agentnode = coord2vertex(agent.pos, model)
     # remove from the space
     splice!(
         agent_positions(model)[agentnode],
         findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
     )
-    delete!(model.agents, agent.id)
     return model
 end
 
-function move_agent!(
-        agent::A,
-        pos::NTuple{D,Integer},
-        model::ABM{A,<:DiscreteSpace},
-    ) where {A<:AbstractAgent,D}
-    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
-    nodenumber = coord2vertex(pos, model)
-    move_agent!(agent, nodenumber, model)
-end
-
-function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM{A,<:DiscreteSpace}) where {A}
+function move_agent!(agent::AbstractAgent, _pos::Integer, model::ABM{A,<:DiscreteSpace}) where {A}
+    pos = correct_pos_type(_pos, model)
     # remove agent from old position
     if typeof(agent.pos) <: Tuple
         oldnode = coord2vertex(agent.pos, model)
@@ -579,10 +573,17 @@ function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM{A,<:Discrete
     return agent
 end
 
+function add_agent_to_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    nn = coord2vertex(agent.pos, model)
+    push!(model.space.agent_positions[nn], agent.id)
+    return agent
+end
+
+
 #######################################################################################
 # Extra space-related functions dedicated to discrete space
 #######################################################################################
-export add_agent_single!, move_agent_single!
+export add_agent_single!, move_agent_single!, fill_space!, move_agent_single!
 
 """
     add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
