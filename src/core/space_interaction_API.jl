@@ -6,7 +6,7 @@ These functions have complete source code here, while the functions that DO need
 be implemented for every space have only documentation strings here and an
 error message.
 
-In short: IMPLEMENT ALL FUNCTIONS IN SECTION "ABSOLUTELY IMPLEMENT"
+In short: IMPLEMENT ALL FUNCTIONS IN SECTION "ABSOLUTELY IMPLEMENT", WITH SAME ARGUMENTS!
 =#
 export move_agent!,
     add_agent!,
@@ -19,12 +19,7 @@ export move_agent!,
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
 #######################################################################################
-# Absolutely implement!
-#######################################################################################
-kill_agent!(a::AbstractAgent, model::ABM) = notimplemented(model)
-
-#######################################################################################
-# Killing agents
+# ABSOLUTELY IMPLEMENT!
 #######################################################################################
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
@@ -32,6 +27,32 @@ kill_agent!(a::AbstractAgent, model::ABM) = notimplemented(model)
 
 Remove an agent from model, and from the space if the model has a space.
 """
+kill_agent!(a::AbstractAgent, model::ABM) = notimplemented(model)
+
+"""
+    random_position(model) → pos
+Return a random position in the model's space (always with appropriate Type).
+"""
+random_position(model) = notimplemented(model)
+
+"""
+    move_agent!(agent [, pos], model::ABM) → agent
+
+Move agent to the given position, or to a random one if a position is not given.
+`pos` must be the appropriate position type depending on the space type.
+"""
+move_agent!(agent::A, pos, model::ABM{A}) where {A<:AbstractAgent} = notimplemented(model)
+
+"""
+    add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
+Add the agent to the `model` at the agent's own position.
+"""
+add_agent_pos!(agent::A, model::ABM) = notimplemented(model)
+
+
+#######################################################################################
+# Space agnostic
+#######################################################################################
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
@@ -64,66 +85,30 @@ genocide!(model::ABM, f::Function)
     end
 end
 
+# Notice: this function is overwritten for continuous space and instead implements
+# the Euler scheme.
+function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
+    move_agent!(agent, random_position(model), model)
+end
+
 #######################################################################################
-# Moving agents
+# Space agnostic add_agent!
 #######################################################################################
-"""
-    move_agent!(agent::A [, pos], model::ABM{A, <: DiscreteSpace}) → agent
+# function add_agent!(model::ABM, properties...; kwargs...)
+#     add_agent!(random_position(model), model, properties...; kwargs...)
+# end
+# function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
+#     id = nextid(model)
+#     add_agent_pos!(A(id, pos, properties...; kwargs...), model)
+# end
+#
+# add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
+# function add_agent!(a::AbstractAgent, pos, model::ABM)
+#     a.pos = pos
+#     add_agent_pos!(a, model)
+# end
+#
 
-Move agent to the given position, or to a random one if a position is not given.
-`pos` must be the appropriate position type depending on the space type.
-"""
-function move_agent!(
-        agent::A,
-        pos::NTuple{D,Integer},
-        model::ABM{A,<:DiscreteSpace},
-    ) where {A<:AbstractAgent,D}
-    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
-    nodenumber = coord2vertex(pos, model)
-    move_agent!(agent, nodenumber, model)
-end
-
-function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM)
-    # remove agent from old position
-    if typeof(agent.pos) <: Tuple
-        oldnode = coord2vertex(agent.pos, model)
-        splice!(
-            model.space.agent_positions[oldnode],
-            findfirst(a -> a == agent.id, model.space.agent_positions[oldnode]),
-        )
-        agent.pos = vertex2coord(pos, model)  # update agent position
-    else
-        splice!(
-            model.space.agent_positions[agent.pos],
-            findfirst(a -> a == agent.id, model.space.agent_positions[agent.pos]),
-        )
-        agent.pos = pos
-    end
-    push!(model.space.agent_positions[pos], agent.id)
-    return agent
-end
-
-function move_agent!(agent::AbstractAgent, model::ABM)
-    nodenumber = rand(1:nv(model.space))
-    move_agent!(agent, nodenumber, model)
-    return agent
-end
-
-"""
-    move_agent_single!(agent::AbstractAgent, model::ABM) → agent
-
-Move agent to a random node while respecting a maximum of one agent
-per node. If there are no empty nodes, the agent wont move.
-Only valid for non-continuous spaces.
-"""
-function move_agent_single!(agent::AbstractAgent, model::ABM)
-    empty_cells = find_empty_nodes(model)
-    if length(empty_cells) > 0
-        random_node = rand(empty_cells)
-        move_agent!(agent, random_node, model)
-    end
-    return agent
-end
 
 #######################################################################################
 # Adding agents
@@ -137,11 +122,6 @@ function add_agent_pos!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:Abstr
     model[agent.id] = agent
     nn = coord2vertex(agent.pos, model)
     push!(model.space.agent_positions[nn], agent.id)
-    return model[agent.id]
-end
-
-function add_agent_pos!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
-    model[agent.id] = agent
     return model[agent.id]
 end
 
@@ -159,9 +139,6 @@ function add_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractA
     add_agent_pos!(agent, model)
 end
 
-function add_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
-    add_agent_pos!(agent, model)
-end
 
 function add_agent!(
     agent::A,
@@ -220,14 +197,6 @@ function add_agent!(
 end
 
 function add_agent!(
-        model::ABM{A,Nothing},
-        properties...;
-        kwargs...,
-    ) where {A<:AbstractAgent}
-    add_agent_pos!(A(nextid(model), properties...; kwargs...), model)
-end
-
-function add_agent!(
         node,
         model::ABM{A,<:DiscreteSpace},
         properties...;
@@ -236,25 +205,4 @@ function add_agent!(
     id = nextid(model)
     cnode = correct_pos_type(node, model)
     add_agent_pos!(A(id, cnode, properties...; kwargs...), model)
-end
-
-#######################################################################################
-# Space agnostic functions (these do NOT have to be implemented!)
-#######################################################################################
-function add_agent!(model::ABM, properties...; kwargs...)
-    add_agent!(random_position(model), model, properties...; kwargs...)
-end
-function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
-    id = nextid(model)
-    add_agent_pos!(A(id, pos, properties...; kwargs...), model)
-end
-
-add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
-function add_agent!(a::AbstractAgent, pos, model::ABM)
-    a.pos = pos
-    add_agent_pos!(a, model)
-end
-
-function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
-    move_agent!(agent, random_position(model), model)
 end

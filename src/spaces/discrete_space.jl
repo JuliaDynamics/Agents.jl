@@ -549,6 +549,36 @@ function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:Abstract
     return model
 end
 
+function move_agent!(
+        agent::A,
+        pos::NTuple{D,Integer},
+        model::ABM{A,<:DiscreteSpace},
+    ) where {A<:AbstractAgent,D}
+    @assert isa(pos, typeof(agent.pos)) "Invalid dimension for `pos`"
+    nodenumber = coord2vertex(pos, model)
+    move_agent!(agent, nodenumber, model)
+end
+
+function move_agent!(agent::AbstractAgent, pos::Integer, model::ABM{A,<:DiscreteSpace}) where {A}
+    # remove agent from old position
+    if typeof(agent.pos) <: Tuple
+        oldnode = coord2vertex(agent.pos, model)
+        splice!(
+            model.space.agent_positions[oldnode],
+            findfirst(a -> a == agent.id, model.space.agent_positions[oldnode]),
+        )
+        agent.pos = vertex2coord(pos, model)  # update agent position
+    else
+        splice!(
+            model.space.agent_positions[agent.pos],
+            findfirst(a -> a == agent.id, model.space.agent_positions[agent.pos]),
+        )
+        agent.pos = pos
+    end
+    push!(model.space.agent_positions[pos], agent.id)
+    return agent
+end
+
 #######################################################################################
 # Extra space-related functions dedicated to discrete space
 #######################################################################################
@@ -638,4 +668,20 @@ function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:Ab
         add_agent_pos!(A(id, cnode, args...; kwargs...), model)
     end
     return model
+end
+
+"""
+    move_agent_single!(agent::AbstractAgent, model::ABM) → agent
+
+Move agent to a random node while respecting a maximum of one agent
+per node. If there are no empty nodes, the agent wont move.
+Only valid for non-continuous spaces.
+"""
+function move_agent_single!(agent::AbstractAgent, model::ABM)
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        random_node = rand(empty_cells)
+        move_agent!(agent, random_node, model)
+    end
+    return agent
 end
