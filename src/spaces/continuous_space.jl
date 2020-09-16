@@ -191,16 +191,17 @@ function remove_agent_from_space!(agent::AbstractAgent, model::ABM{A,<:Continuou
 end
 
 # For performance, we also extend all genocide functions
-function genocide!(model::ABM{A,<:ContinuousSpace}, n::Int) where {A}
+function genocide!(model::ABM{A,<:ContinuousSpace}, n::Integer) where {A<:AbstractAgent}
   ids = strip(join("$id," for id in keys(model.agents) if id > n), ',')
   DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
   for id in keys(model.agents)
     id > n && (delete!(model.agents, id))
   end
+  model.maxid[1] = n
   return model
 end
 
-function genocide!(model::ABM{A,<:ContinuousSpace}, f::Function) where {A}
+function genocide!(model::ABM{A,<:ContinuousSpace}, f::Function) where {A<:AbstractAgent}
   ids = strip(join("$(agent.id)," for agent in values(model.agents) if f(agent)), ',')
   DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")
   for agent in values(model.agents)
@@ -209,11 +210,13 @@ function genocide!(model::ABM{A,<:ContinuousSpace}, f::Function) where {A}
   return model
 end
 
-function genocide!(model::ABM{A,<:ContinuousSpace}) where {A}
+function genocide!(model::ABM{A,<:ContinuousSpace}) where {A<:AbstractAgent}
   DBInterface.execute(model.space.db, "DELETE FROM tab")
   for agent in values(model.agents)
     delete!(model.agents, agent.id)
   end
+  model.maxid[1] = 0
+  return model
 end
 
 #######################################################################################

@@ -456,6 +456,14 @@ function move_agent_single!(agent::AbstractAgent, model::ABM)
     return agent
 end
 
+# This method is extended here because of the stupid reason of allowing "nodes"
+# (i.e. integers) to represent positions in GridSpace (e.g. with node_neighbors)
+# function add_agent!(pos::ValidPos, A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
+#     id = nextid(model)
+#     newagent = A(id, pos, properties...; kwargs...)
+#     add_agent_pos!(newagent, model)
+# end
+
 
 #######################################################################################
 # finding specific nodes or agents
