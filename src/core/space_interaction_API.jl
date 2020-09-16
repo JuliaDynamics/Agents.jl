@@ -59,7 +59,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 Remove an agent from the model, and from the space, if the model has a space.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
-    delete!(model.agents, agent.id)
+    delete!(model.agents, a.id)
     remove_agent_from_space!(a, model)
 end
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
@@ -88,7 +88,7 @@ end
     genocide!(model::ABM, f::Function)
 Kill all agents where the function `f(agent)` returns `true`.
 """
-genocide!(model::ABM, f::Function)
+function genocide!(model::ABM, f::Function)
     for a in allagents(model)
         f(a) && kill_agent!(a, model)
     end
@@ -107,7 +107,7 @@ end
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::A, model::ABM)
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
     model[agent.id] = agent
     model.maxid[1] < agent.id && (model.maxid[1] = agent.id)
     add_agent_to_space!(agent, model)

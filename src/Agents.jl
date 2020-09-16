@@ -13,7 +13,7 @@ include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
-include("space/nothing.jl")
+include("spaces/nothing.jl")
 include("spaces/discrete_space.jl")
 include("spaces/continuous_space.jl")
 
