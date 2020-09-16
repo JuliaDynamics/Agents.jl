@@ -72,6 +72,7 @@ function genocide!(model::ABM)
     for a in allagents(model)
         kill_agent!(a, model)
     end
+    model.maxid[1] = 0
 end
 
 """
@@ -82,6 +83,7 @@ function genocide!(model::ABM, n::Integer)
     for (k, v) in model.agents
         k > n && kill_agent!(v, model)
     end
+    model.maxid[1] = n
 end
 
 """
