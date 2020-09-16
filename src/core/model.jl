@@ -119,8 +119,8 @@ end
 export random_agent, nagents, allagents, allids
 
 """
-    getindex(model::ABM, id::Integer)
     model[id]
+    getindex(model::ABM, id::Integer)
 
 Return an agent given its ID.
 """
@@ -148,19 +148,13 @@ Return a valid `id` for creating a new agent with it.
 nextid(model::ABM) = model.maxid[1] + 1
 
 """
-    getproperty(model::ABM, prop::Symbol)
     model.prop
+    getproperty(model::ABM, prop::Symbol)
 
-Return a property from the current `model`, assuming the model properties are i  Possibilities are
-- `:agents`, list of all agents present
-- `:space`, current space information
-- `:scheduler`, which sheduler is being used
-- `:properties`, dictionary of all model properties
-- `:maxid`
-- Any symbol that exists within the model properties dictionary
-
-Alternatively, all of these values can be returned using the `model.x` syntax.
-For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`, retrieving these values can be obtained via `model.properties` as well as the `getproperty()` method. Equivalently, we can use `getproperty(model, :weight)` and `model.weight`.
+Return a property from the current `model`, assuming the model `properties` are either
+a dictionary with key type `Symbol` or a Julia struct.
+For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
+retrieving these values can be obtained via `model.weight`.
 """
 function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
     if s === :agents
