@@ -538,12 +538,21 @@ end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-
-
+function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    agentnode = coord2vertex(agent.pos, model)
+    # remove from the space
+    splice!(
+        agent_positions(model)[agentnode],
+        findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
+    )
+    delete!(model.agents, agent.id)
+    return model
+end
 
 #######################################################################################
-# Extra space-related functions
+# Extra space-related functions dedicated to discrete space
 #######################################################################################
+export add_agent_single!, move_agent_single!
 
 """
     add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent

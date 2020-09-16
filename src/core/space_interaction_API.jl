@@ -5,17 +5,23 @@ Some functions DO NOT need to be implemented for every space, they are space agn
 These functions have complete source code here, while the functions that DO need to
 be implemented for every space have only documentation strings here and an
 error message.
+
+In short: IMPLEMENT ALL FUNCTIONS IN SECTION "ABSOLUTELY IMPLEMENT"
 =#
 export move_agent!,
     add_agent!,
-    add_agent_single!,
     add_agent_pos!,
-    move_agent_single!,
     kill_agent!,
     genocide!,
     nextid,
     fill_space!
 
+notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
+
+#######################################################################################
+# Absolutely implement!
+#######################################################################################
+kill_agent!(a::AbstractAgent, model::ABM) = notimplemented(model)
 
 #######################################################################################
 # Killing agents
@@ -26,51 +32,37 @@ export move_agent!,
 
 Remove an agent from model, and from the space if the model has a space.
 """
-kill_agent!(id::Integer, model) = kill_agent!(model[id], model)
-function kill_agent!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    agentnode = coord2vertex(agent.pos, model)
-    # remove from the space
-    splice!(
-        agent_positions(model)[agentnode],
-        findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
-    )
-    delete!(model.agents, agent.id)
-    return model
-end
-
-function kill_agent!(agent::A, model::ABM{A,Nothing}) where {A<:AbstractAgent}
-    delete!(model.agents, agent.id)
-end
-
-
+kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
     genocide!(model::ABM)
 Kill all the agents of the model.
 """
-genocide!(model::ABM{A,<:Union{DiscreteSpace,Nothing}}) where {A} =
+function genocide!(model::ABM)
     for a in allagents(model)
         kill_agent!(a, model)
     end
-
+end
 
 """
     genocide!(model::ABM, n::Int)
 Kill the agents of the model whose IDs are larger than n.
 """
-genocide!(model::ABM{A,<:Union{DiscreteSpace,Nothing}}, n::Integer) where {A} =
+function genocide!(model::ABM, n::Integer)
     for (k, v) in model.agents
         k > n && kill_agent!(v, model)
     end
+end
 
 """
     genocide!(model::ABM, f::Function)
 Kill all agents where the function `f(agent)` returns `true`.
 """
-genocide!(model::ABM{A,<:Union{DiscreteSpace,Nothing}}, f::Function) where {A} =
+genocide!(model::ABM, f::Function)
     for a in allagents(model)
         f(a) && kill_agent!(a, model)
     end
+end
 
 #######################################################################################
 # Moving agents
