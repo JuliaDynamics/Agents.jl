@@ -37,6 +37,14 @@ function Base.show(io::IO, abm::DiscreteSpace)
     print(io, s)
 end
 
+function correct_pos_type(n, model)
+    if typeof(model.space) <: GraphSpace
+        return coord2vertex(n, model)
+    elseif typeof(model.space) <: GridSpace
+        return vertex2coord(n, model)
+    end
+end
+
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::DiscreteSpace) = m.agent_positions
 Base.size(s::GridSpace) = s.dimensions
@@ -522,4 +530,103 @@ function nodes(model; by = :id)
     else
         error("unknown `by`.")
     end
+end
+
+
+
+
+#######################################################################################
+# Agents.jl space API
+#######################################################################################
+
+
+
+#######################################################################################
+# Extra space-related functions
+#######################################################################################
+
+"""
+    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
+
+Add agent to a random node in the space while respecting a maximum one agent per node.
+This function throws a warning if no empty nodes remain.
+"""
+function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        agent.pos = correct_pos_type(rand(empty_cells), model)
+        add_agent_pos!(agent, model)
+    else
+        @warn "No empty nodes found for `add_agent_single!`."
+    end
+end
+
+"""
+    add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...)
+Same as `add_agent!(model, properties...)` but ensures that it adds an agent
+into a node with no other agents (does nothing if no such node exists).
+"""
+function add_agent_single!(
+        model::ABM{A,<:DiscreteSpace},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        add_agent!(rand(empty_cells), model, properties...; kwargs...)
+    end
+end
+
+
+"""
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, args...; kwargs...)
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, f::Function; kwargs...)
+Add one agent to each node in the model's space. Similarly with [`add_agent!`](@ref),
+the function creates the necessary agents and
+the `args...; kwargs...` are propagated into agent creation.
+If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
+applying `f` where `pos` is each position (tuple for grid, node index for graph).
+
+An optional first argument is an agent **type** to be created, and targets mixed-agent
+models where the agent constructor cannot be deduced (since it is a union).
+
+## Example
+```julia
+using Agents
+mutable struct Daisy <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    breed::String
+end
+mutable struct Land <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    temperature::Float64
+end
+space = GridSpace((10, 10), moore = true, periodic = true)
+model = ABM(Union{Daisy, Land}, space)
+temperature(pos) = (pos[1]/10, ) # make it Tuple!
+fill_space!(Land, model, temperature)
+```
+"""
+fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
+fill_space!(A, model, args...; kwargs...)
+
+function fill_space!(::Type{A}, model::ABM, args...; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
+end
+
+function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        args = f(cnode)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
 end

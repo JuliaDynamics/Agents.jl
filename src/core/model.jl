@@ -1,7 +1,8 @@
-export AbstractAgent, ABM, AgentBasedModel, nagents, random_agent, allagents, allids
+export AbstractAgent, ABM, AgentBasedModel
 
-abstract type AbstractSpace end
-
+#######################################################################################
+# %% Fundamental type definitions
+#######################################################################################
 """
 All agents must be a mutable subtype of `AbstractAgent`.
 Your agent type **must have** the `id` field as first field.
@@ -37,14 +38,7 @@ space.
 """
 abstract type AbstractAgent end
 
-function correct_pos_type(n, model)
-    if typeof(model.space) <: GraphSpace
-        return coord2vertex(n, model)
-    elseif typeof(model.space) <: GridSpace
-        return vertex2coord(n, model)
-    end
-end
-
+abstract type AbstractSpace end
 SpaceType=Union{Nothing, AbstractSpace}
 
 struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
@@ -52,6 +46,7 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     space::S
     scheduler::F
     properties::P
+    maxid::Vector{Int}
 end
 
 const ABM = AgentBasedModel
@@ -108,33 +103,21 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties)
+    return ABM{A, S, F, P}(agents, space, scheduler, properties, [0])
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
     return ABM(typeof(agent), args...; kwargs...)
 end
 
-function Base.show(io::IO, abm::ABM{A}) where {A}
-    n = isconcretetype(A) ? nameof(A) : string(A)
-    s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
-    if abm.space == nothing
-        s*= "\n no space"
-    else
-        s*= "\n space: $(sprint(show, abm.space))"
-    end
-    s*= "\n scheduler: $(schedulername(abm.scheduler))"
-    print(io, s)
-    if abm.properties ≠ nothing
-        print(io, "\n properties: ", abm.properties)
-    end
-end
-schedulername(x::Union{Function, DataType}) = nameof(x)
-schedulername(x) = string(x)
-
+#######################################################################################
+# %% Model accessing api
+#######################################################################################
+export random_agent, nagents, allagents, allids
 
 """
     getindex(model::ABM, id::Integer)
+    model[id]
 
 Return an agent given its ID.
 """
@@ -142,22 +125,35 @@ Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 """
     setindex!(model::ABM, agent::AbstractAgent, id::Int)
+    model[id] = agent
 
-Add an `agent` to the `model` at a given index: `id`. Note this method will return an error if the `id` requested is not equal to `agent.id`.
+Add an `agent` to the `model` at a given index: `id`.
+Note this method will return an error if the `id` requested is not equal to `agent.id`.
+**Internal method**, ose [`add_agents!`](@ref) instead to actually add an agent.
 """
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
+    m.maxid[1] < id && (m.maxid[1] += 1)
+    return a
 end
 
 """
-    getproperty(model::ABM, prop::Symbol)
+    nextid(model::ABM) → id
+Return a valid `id` for creating a new agent with it.
+"""
+nextid(model::ABM) = model.maxid[1] + 1
 
-Return a property from the current `model`. Possibilities are
+"""
+    getproperty(model::ABM, prop::Symbol)
+    model.prop
+
+Return a property from the current `model`, assuming the model properties are i  Possibilities are
 - `:agents`, list of all agents present
 - `:space`, current space information
 - `:scheduler`, which sheduler is being used
 - `:properties`, dictionary of all model properties
+- `:maxid`
 - Any symbol that exists within the model properties dictionary
 
 Alternatively, all of these values can be returned using the `model.x` syntax.
@@ -172,6 +168,8 @@ function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
         return getfield(m, :scheduler)
     elseif s === :properties
         return getfield(m, :properties)
+    elseif s === :maxid
+        return getfield(m, :maxid)
     elseif P <: Dict
         return getindex(getfield(m, :properties), s)
     else # properties is assumed to be a struct
@@ -181,13 +179,41 @@ end
 
 function Base.setproperty!(m::ABM{A, S, F, P}, s::Symbol, x) where {A, S, F, P}
     properties = getfield(m, :properties)
-    if properties != nothing && haskey(properties, s)
+    if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
     else
         throw(ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor."))
     end
 end
 
+"""
+    random_agent(model)
+Return a random agent from the model.
+"""
+random_agent(model) = model[rand(keys(model.agents))]
+
+"""
+    nagents(model::ABM)
+Return the number of agents in the `model`.
+"""
+nagents(model::ABM) = length(model.agents)
+
+"""
+    allagents(model)
+Return an iterator over all agents of the model.
+"""
+allagents(model) = values(model.agents)
+
+
+"""
+    allids(model)
+Return an iterator over all agent IDs of the model.
+"""
+allids(model) = keys(model.agents)
+
+#######################################################################################
+# %% Model construction validation
+#######################################################################################
 """
     agent_validator(agent, space)
 Validate the user supplied agent (subtype of `AbstractAgent`).
@@ -234,27 +260,23 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
         end
     end
 end
-"""
-    random_agent(model)
-Return a random agent from the model.
-"""
-random_agent(model) = model[rand(keys(model.agents))]
 
-"""
-    nagents(model::ABM)
-Return the number of agents in the `model`.
-"""
-nagents(model::ABM) = length(model.agents)
-
-"""
-    allagents(model)
-Return an iterator over all agents of the model.
-"""
-allagents(model) = values(model.agents)
-
-
-"""
-    allids(model)
-Return an iterator over all agent IDs of the model.
-"""
-allids(model) = keys(model.agents)
+#######################################################################################
+# %% Pretty printing
+#######################################################################################
+function Base.show(io::IO, abm::ABM{A}) where {A}
+    n = isconcretetype(A) ? nameof(A) : string(A)
+    s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
+    if abm.space == nothing
+        s*= "\n no space"
+    else
+        s*= "\n space: $(sprint(show, abm.space))"
+    end
+    s*= "\n scheduler: $(schedulername(abm.scheduler))"
+    print(io, s)
+    if abm.properties ≠ nothing
+        print(io, "\n properties: ", abm.properties)
+    end
+end
+schedulername(x::Union{Function, DataType}) = nameof(x)
+schedulername(x) = string(x)
