@@ -1,3 +1,6 @@
+#=
+This file implements a continuous space type using SQLite database
+=#
 using DataFrames, SQLite
 export ContinuousSpace, index!, update_space!
 
@@ -124,40 +127,17 @@ function index!(model)
 end
 
 #######################################################################################
-# add, move and kill
+# Agent-space interaction API implementation
 #######################################################################################
+function random_position(model::ABM{A, <:ContinuousSpace}) where {A}
+    pos = Tuple(rand(model.space.D))
+    model.space.extend ≠ nothing && (pos = pos .* model.space.extend)
+    return pos
+end
 # central, low level function that is always called by all others!
-function add_agent_pos!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
+function add_agent_to_space!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A}
   DBInterface.execute(model.space.insertq, (agent.pos..., agent.id))
-  model[agent.id] = agent
   return agent
-end
-
-function randompos(space::ContinuousSpace)
-  pos = Tuple(rand(space.D))
-  space.extend ≠ nothing && (pos = pos .* space.extend)
-  return pos
-end
-
-function add_agent!(agent::A, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
-  agent.pos = randompos(model.space)
-  add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::A, pos, model::ABM{A, <: ContinuousSpace}) where {A<:AbstractAgent}
-  agent.pos = pos
-  add_agent_pos!(agent, model)
-end
-
-# versions that create the agents
-function add_agent!(model::ABM{A, <: ContinuousSpace}, args...; kwargs...) where {A<:AbstractAgent}
-  add_agent!(randompos(model.space), model, args...; kwargs...)
-end
-
-function add_agent!(pos::Tuple, model::ABM{A, <: ContinuousSpace}, args...; kwargs...) where {A<:AbstractAgent}
-  id = nextid(model)
-  agent = A(id, pos, args...; kwargs...)
-  add_agent_pos!(agent, model)
 end
 
 """
@@ -173,7 +153,7 @@ as `agent.pos += agent.vel * dt`.
 Notice that if you want the agent to instantly move to a specified position, do
 `agent.pos = pos` and then `update_space!(agent, model)`.
 """
-function move_agent!(agent::A, model::ABM{A, S, F, P}, dt = 1.0) where {A<:AbstractAgent, S <: ContinuousSpace, F, P}
+function move_agent!(agent::A, model::ABM{A, <: ContinuousSpace}, dt::Real = 1.0) where {A <: AbstractAgent}
   model.space.update_vel!(agent, model)
   agent.pos = agent.pos .+ dt .* agent.vel
   if model.space.periodic
@@ -187,7 +167,7 @@ end
     move_agent!(agent::A, model::ABM{A, ContinuousSpace}, vel::NTuple{D, N}, dt = 1.0)
 Propagate the agent forwards one step according to `vel` and the model's space, with `dt` as the time step. (`update_vel!` is not used)
 """
-function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, N}, dt = 1.0) where {A <: AbstractAgent, S <: ContinuousSpace, F, P, D, N <: AbstractFloat}
+function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, X}, dt = 1.0) where {A <: AbstractAgent, S <: ContinuousSpace, F, P, D, X <: AbstractFloat}
       agent.pos = agent.pos .+ dt .* vel
       if model.space.periodic
         agent.pos = mod.(agent.pos, model.space.extend)
@@ -205,12 +185,12 @@ function update_space!(model::ABM{A,<:ContinuousSpace}, agent) where {A}
   DBInterface.execute(model.space.updateq, (agent.pos..., agent.id))
 end
 
-function kill_agent!(agent::AbstractAgent, model::ABM{A,<:ContinuousSpace}) where {A}
+function remove_agent_from_space!(agent::AbstractAgent, model::ABM{A,<:ContinuousSpace}) where {A}
   DBInterface.execute(model.space.deleteq, (agent.id,))
-  delete!(model.agents, agent.id)
   return model
 end
 
+# For performance, we also extend all genocide functions
 function genocide!(model::ABM{A,<:ContinuousSpace}, n::Int) where {A}
   ids = strip(join("$id," for id in keys(model.agents) if id > n), ',')
   DBInterface.execute(model.space.db, "DELETE FROM tab WHERE id IN ($ids)")

@@ -6,7 +6,7 @@ These functions have complete source code here, while the functions that DO need
 be implemented for every space have only documentation strings here and an
 error message.
 
-In short: IMPLEMENT ALL FUNCTIONS IN SECTION "ABSOLUTELY IMPLEMENT", WITH SAME ARGUMENTS!
+In short: IMPLEMENT ALL FUNCTIONS IN SECTION "IMPLEMENT", WITH SAME ARGUMENTS!
 =#
 export move_agent!,
     add_agent!,
@@ -17,7 +17,7 @@ export move_agent!,
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
 #######################################################################################
-# ABSOLUTELY IMPLEMENT!
+# %% IMPLEMENT
 #######################################################################################
 """
     random_position(model) → pos
@@ -31,7 +31,7 @@ random_position(model) = notimplemented(model)
 Move agent to the given position, or to a random one if a position is not given.
 `pos` must be the appropriate position type depending on the space type.
 """
-move_agent!(agent::A, pos, model::ABM{A}) where {A<:AbstractAgent} = notimplemented(model)
+move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = notimplemented(model)
 
 """
     add_agent_to_space!(agent, model)
@@ -50,7 +50,7 @@ This function is NOT part of the public API.
 remove_agent_from_space!(agent, model) = notimplemented(model)
 
 #######################################################################################
-# Space agnostic
+# %% Space agnostic
 #######################################################################################
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
@@ -101,7 +101,7 @@ function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
 end
 
 #######################################################################################
-# Adding agents (also space agnostic)
+# %% Adding agents (also space agnostic)
 #######################################################################################
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent

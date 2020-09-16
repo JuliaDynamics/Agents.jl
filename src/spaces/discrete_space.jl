@@ -321,7 +321,7 @@ function remove_agent_from_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where
     return model
 end
 
-function move_agent!(agent::AbstractAgent, _pos::Integer, model::ABM{A,<:DiscreteSpace}) where {A}
+function move_agent!(agent::A, _pos::ValidPos, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
     pos = correct_pos_type(_pos, model)
     # remove agent from old position
     if typeof(agent.pos) <: Tuple
@@ -338,7 +338,7 @@ function move_agent!(agent::AbstractAgent, _pos::Integer, model::ABM{A,<:Discret
         )
         agent.pos = pos
     end
-    push!(model.space.agent_positions[pos], agent.id)
+    push!(model.space.agent_positions[coord2vertex(pos, model)], agent.id)
     return agent
 end
 
