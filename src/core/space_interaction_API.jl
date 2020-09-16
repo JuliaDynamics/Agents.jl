@@ -127,6 +127,10 @@ function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
     add_agent_pos!(agent, model)
 end
+function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+    agent.pos = pos
+    add_agent_pos!(agent, model)
+end
 
 """
     add_agent!([pos,] model::ABM, args...; kwargs...) → newagent
@@ -153,13 +157,13 @@ mutable struct Agent <: AbstractAgent
     w::Float64
     k::Bool
 end
-Agent(id, pos; w, k) = Agent(id, pos, w, k) # keyword constructor
+Agent(id, pos; w=0.5, k=false) = Agent(id, pos, w, k) # keyword constructor
 model = ABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
 add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
-add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5
+add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
 function add_agent!(model::ABM{A}, properties...; kwargs...) where {A}
@@ -168,8 +172,12 @@ end
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
+function add_agent!(pos::ValidPos, model::ABM{A}, properties...; kwargs...) where {A}
+    add_agent!(pos, A, model, properties...; kwargs...)
+end
 
-function add_agent!(pos, A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...) where {A}
+# lowest level:
+function add_agent!(pos::ValidPos, A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)

@@ -307,7 +307,7 @@ vertex2coord(v::Tuple, model::ABM) = v
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-function random_position(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+function random_position(model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
   correct_pos_type(rand(1:nv(model)), model)
 end
 
