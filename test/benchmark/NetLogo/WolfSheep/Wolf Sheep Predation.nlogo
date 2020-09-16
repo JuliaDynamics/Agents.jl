@@ -65,7 +65,7 @@ to benchmark
 end
 
 to go
-  if ticks >= 500 [ stop ]
+  if ticks >= 200 [ stop ]
   ; stop the model if there are no wolves and no sheep
   if not any? turtles [ stop ]
   ; stop the model if there are no wolves and the number of sheep gets very large

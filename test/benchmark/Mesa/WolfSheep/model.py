@@ -141,7 +141,7 @@ class WolfSheep(Model):
                 ]
             )
 
-    def run_model(self, step_count=500):
+    def run_model(self, step_count=200):
 
         if self.verbose:
             print("Initial number wolves: ", self.schedule.get_breed_count(Wolf))
