@@ -86,10 +86,6 @@ function GridSpace(dims::NTuple{D, I}; periodic = false, moore = false) where {D
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
 end
 
-# Deprecation
-@deprecate Space(graph::G) where {G<:AbstractGraph} GraphSpace(graph::G) where {G<:AbstractGraph}
-@deprecate Space(dims::NTuple{D, I}) where {D, I} GridSpace(dims::NTuple{D, I}) where {D, I}
-
 # 1d grid
 function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
   g = LightGraphs.path_graph(length)
