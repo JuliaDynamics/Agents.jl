@@ -427,13 +427,13 @@ function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; n
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn =
         if neighbor_type == :default
-            neighbors
+            LightGraphs.neighbors
         elseif neighbor_type == :in
-            inneighbors
+            LightGraphs.inneighbors
         elseif neighbor_type == :out
-            outneighbors
+            LightGraphs.outneighbors
         else
-            all_neighbors
+            LightGraphs.all_neighbors
         end
     neighborfn(model.space.graph, node_number)
 end

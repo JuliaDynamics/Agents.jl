@@ -56,7 +56,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
     kill_agent!(agent::AbstractAgent, model::ABM)
     kill_agent!(id::Int, model::ABM)
 
-Remove an agent from model, and from the space if the model has a space.
+Remove an agent from the model, and from the space, if the model has a space.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
     delete!(model.agents, agent.id)
@@ -166,21 +166,3 @@ function add_agent!(pos, model::ABM, properties...; kwargs...)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)
 end
-
-#######################################################################################
-# Space agnostic add_agent!
-#######################################################################################
-# function add_agent!(model::ABM, properties...; kwargs...)
-#     add_agent!(random_position(model), model, properties...; kwargs...)
-# end
-# function add_agent!(pos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
-#     id = nextid(model)
-#     add_agent_pos!(A(id, pos, properties...; kwargs...), model)
-# end
-#
-# add_agent!(a::AbstractAgent, model::ABM) = add_agent!(a, random_position(model), model)
-# function add_agent!(a::AbstractAgent, pos, model::ABM)
-#     a.pos = pos
-#     add_agent_pos!(a, model)
-# end
-#
