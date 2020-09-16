@@ -49,7 +49,7 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     space::S
     scheduler::F
     properties::P
-    maxid::RefValue{Int64}
+    maxid::Base.RefValue{Int64}
 end
 
 const ABM = AgentBasedModel
@@ -106,7 +106,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties, [0])
+    return ABM{A, S, F, P}(agents, space, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)

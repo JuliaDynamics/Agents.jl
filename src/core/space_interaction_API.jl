@@ -111,14 +111,13 @@ Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
     model[agent.id] = agent
-    model.maxid[1] < agent.id && (model.maxid[1] = agent.id)
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
     add_agent_to_space!(agent, model)
     return agent
 end
 
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
-
 Add the `agent` to the model in the given position.
 If `pos` is not given, the `agent` is added to a random position.
 The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
