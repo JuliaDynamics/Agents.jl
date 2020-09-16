@@ -133,7 +133,7 @@ end
     model = ABM(Agent1, space)
     @test has_empty_nodes(model)
     for node in [1, 5, 6, 9, 2, 3, 4]
-        add_agent!(node, model)
+        add_agent!(vertex2coord(node, model), model)
     end
     # only nodes 7 and 8 should be empty
     @test pick_empty(model) ∈ 7:8

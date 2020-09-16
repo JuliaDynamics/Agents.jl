@@ -29,7 +29,7 @@ random_position(model) = notimplemented(model)
     move_agent!(agent [, pos], model::ABM) → agent
 
 Move agent to the given position, or to a random one if a position is not given.
-`pos` must be the appropriate position type depending on the space type.
+`pos` must have the appropriate position type depending on the space type.
 """
 move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = notimplemented(model)
 
@@ -37,13 +37,13 @@ move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = noti
     add_agent_to_space!(agent, model)
 Add the agent to the underlying space structure at the agent's own position.
 This function is called after the agent is already inserted into the model dictionary
-and changing max id has been taken care of. This function is NOT part of the public API.
+and `maxid` has been updated. This function is NOT part of the public API.
 """
 add_agent_to_space!(agent, model) = notimplemented(model)
 
 """
     remove_agent_from_space!(agent, model)
-Remove the agent to the underlying space structure.
+Remove the agent from the underlying space structure.
 This function is called after the agent is already removed from the model dictionary
 This function is NOT part of the public API.
 """
@@ -124,6 +124,8 @@ If `pos` is not given, the `agent` is added to a random position.
 The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
 the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
 the `agent`'s position.
+
+The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
@@ -139,10 +141,11 @@ end
 Create and add a new agent to the model by constructing an agent of the
 type of the `model`. Propagate all *extra* positional arguments and
 keyword arguemts to the agent constructor.
-Optionally provide a position to add the agent to as *first argument*.
+Optionally provide a position to add the agent to as *first argument*, which must
+match the space position type.
 
 Notice that this function takes care of setting the agent's id *and* position and thus
-`args...` and `kwargs...` are propagated to other fields the agent has.
+`args...` and `kwargs...` are propagated to other fields the agent has (see example below).
 
     add_agent!([pos,] A, model::ABM, args...; kwargs...) → newagent
 
@@ -168,13 +171,13 @@ add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{A}, properties...; kwargs...) where {A}
+function add_agent!(model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
     add_agent!(A, model, properties...; kwargs...)
 end
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
-function add_agent!(pos::ValidPos, model::ABM{A}, properties...; kwargs...) where {A}
+function add_agent!(pos::ValidPos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
     add_agent!(pos, A, model, properties...; kwargs...)
 end
 
