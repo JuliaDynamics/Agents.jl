@@ -17,7 +17,6 @@ from model import WolfSheep
 wolfsheepmodel = WolfSheep()
 """
 
-for a in range(0, 10):
-    tt = timeit.timeit('wolfsheepmodel.run_model()', setup=setup, number=1)
-    print(tt)
-
+tt = timeit.Timer('wolfsheepmodel.run_model()', setup=setup)
+a = min(tt.repeat(100, 1))
+print(a)
