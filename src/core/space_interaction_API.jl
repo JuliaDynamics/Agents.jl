@@ -30,6 +30,8 @@ random_position(model) = notimplemented(model)
 
 Move agent to the given position, or to a random one if a position is not given.
 `pos` must have the appropriate position type depending on the space type.
+
+The agent's position is updated to match `pos` after the move.
 """
 move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = notimplemented(model)
 
