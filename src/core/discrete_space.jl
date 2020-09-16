@@ -362,31 +362,15 @@ instead of just the list of IDs.
 get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
 
 """
-    get_node_agents(x::Vector{Tuple{Int, Int}}, model) → agents
+    get_node_agents(x::Vector{NTuple{N, Int}}, model) → agents
 
-Call `get_node_agents(x, model)` by broadcasting a list of nodes or agents on a 
-2D grid. Useful to obtain a list of agents with their relative direction from 
-starting point `x`.
-By default, nodes outside the grid will be omitted and a list of agents in the 
-following directions and order is returned: [N, W, E, S] 
-If `moore == true`, the order of the list will be [NW, N, NE, W, E, SW, S, SE].
-If `periodic == true` the list will include neighboring agents on the other end 
-of the grid (e.g. if there's no neighbor to the west of the observed node `x`, the node 
-farthest to the east in the same row on the grid is returned).
+Obtain a list of agents with their relative direction from starting point `x`.
+`x` may either be a list of nodes or a list of agents.
+On a 2D grid for example, agent lists will be returned in a [N, W, E, S] pattern,
+and [NW, N, NE, W, E, SW, S, SE] if `moore = true`, as long as each direction does
+not exceed the limits of the grid.
 """
-get_node_agents(x::Vector{Tuple{Int, Int}}, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_agents.(x, Ref(model))
-
-"""
-    get_node_agents(x::Vector{Tuple{Int, Int, Int}}, model) → agents
-
-Call `get_node_agents(x, model)` by broadcasting a list of nodes or agents on a 
-3D grid. Useful to obtain a list of agents with their relative direction from 
-starting point `x`.
-By default, nodes outside the grid will be omitted and a list of agents in the 
-following directions and order is returned: `PLACEHOLDER`
-"""
-get_node_agents(x::Vector{Tuple{Int, Int, Int}}, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_agents.(x, Ref(model))
-
+get_node_agents(x::Vector{NTuple{N, Int}}, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_agents.(x, Ref(model))
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
