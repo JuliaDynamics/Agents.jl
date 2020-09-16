@@ -194,7 +194,7 @@ function genocide!(model::ABM{A,<:ContinuousSpace}, n::Integer) where {A<:Abstra
   for id in keys(model.agents)
     id > n && (delete!(model.agents, id))
   end
-  model.maxid[1] = n
+  model.maxid[] = n
   return model
 end
 
@@ -212,7 +212,7 @@ function genocide!(model::ABM{A,<:ContinuousSpace}) where {A<:AbstractAgent}
   for agent in values(model.agents)
     delete!(model.agents, agent.id)
   end
-  model.maxid[1] = 0
+  model.maxid[] = 0
   return model
 end
 

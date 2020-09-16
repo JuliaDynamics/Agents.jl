@@ -49,7 +49,7 @@ struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
     space::S
     scheduler::F
     properties::P
-    maxid::Vector{Int}
+    maxid::RefValue{Int64}
 end
 
 const ABM = AgentBasedModel
@@ -137,7 +137,7 @@ Note this method will return an error if the `id` requested is not equal to `age
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
-    m.maxid[1] < id && (m.maxid[1] += 1)
+    m.maxid[] < id && (m.maxid[] += 1)
     return a
 end
 
@@ -145,7 +145,7 @@ end
     nextid(model::ABM) → id
 Return a valid `id` for creating a new agent with it.
 """
-nextid(model::ABM) = model.maxid[1] + 1
+nextid(model::ABM) = model.maxid[] + 1
 
 """
     model.prop
