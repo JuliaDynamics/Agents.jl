@@ -133,11 +133,16 @@ end
 Create and add a new agent to the model by constructing an agent of the
 type of the `model`. Propagate all *extra* positional arguments and
 keyword arguemts to the agent constructor.
+Optionally provide a position to add the agent to as *first argument*.
 
 Notice that this function takes care of setting the agent's id *and* position and thus
 `args...` and `kwargs...` are propagated to other fields the agent has.
 
-Optionally provide a position to add the agent to as *first argument*.
+    add_agent!([pos,] A, model::ABM, args...; kwargs...) → newagent
+
+Use this version for mixed agent models, with `A` the agent type you wish to create
+(to be called as `A(id, pos, args...; kwargs...)`), because it is otherwise not possible
+to deduce a constructor for `A`.
 
 ## Example
 ```julia
@@ -157,11 +162,14 @@ add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
 add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5
 ```
 """
-function add_agent!(model::ABM, properties...; kwargs...)
-    add_agent!(random_position(model), model, properties...; kwargs...)
+function add_agent!(model::ABM{A}, properties...; kwargs...) where {A}
+    add_agent!(A, model, properties...; kwargs...)
+end
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
+    add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
 
-function add_agent!(pos, model::ABM, properties...; kwargs...)
+function add_agent!(pos, A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...) where {A}
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)
