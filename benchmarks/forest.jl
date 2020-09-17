@@ -103,9 +103,6 @@ sleep(1e-9)
 println("Move agent")
 @btime move_agent!($a, $model);
 
-println("node neighbors")
-@btime node_neighbors($a.pos, $model);
-
 println("Space neighbors")
 @btime space_neighbors($a, $model);
 

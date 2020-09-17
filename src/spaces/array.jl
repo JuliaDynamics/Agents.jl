@@ -43,6 +43,14 @@ end
 ###################################################################
 # %% neighbors
 ###################################################################
+# TODO: Use the source code of TimeseriesPrediction.jl to select neighborhoods
+# with a specific type: cityblock or indices_within_sphere
+# If the operation `indices_within_sphere` is expensive, it can be stored
+# (since we also store it in TimeseriesPrediction.jl)
+# The function that does this index selection (where the indices are stored as cartesian indices)
+# is then called in both node_neighbors and space_neighbors (because we want node_neighbors)
+# to return tuples for ease of usage, while the conversion is not necessary for space_neighbors
+
 export positions
 function positions(model::ABM{<:AbstractAgent, <:ArraySpace})
     x = CartesianIndices(model.space.s)
@@ -54,9 +62,10 @@ function positions(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
     if by == :random
         shuffle!(itr)
     elseif by == :id
+        # TODO: By id is wrong...?
         sort!(itr)
     else
-        error("unknown by")
+        error("unknown `by`")
     end
     return itr
 end
