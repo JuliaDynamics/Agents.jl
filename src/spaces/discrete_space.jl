@@ -518,14 +518,14 @@ get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id 
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
-function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
   d = findfirst(isequal(agent.id), all)
   d ≠ nothing && deleteat!(all, d)
   return all
 end
 
-function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   node = coord2vertex(pos, model)
   nn = node_neighbors(node, model, args...; kwargs...)
   # We include the current node in the search since we are searching over space
