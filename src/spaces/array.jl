@@ -240,3 +240,11 @@ function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs..
   all = space_neighbors(agent.pos, model, args...; kwargs...)
   Iterators.filter(!isequal(agent.id), all)
 end
+
+###################################################################
+# %% pretty printing
+###################################################################
+function Base.show(io::IO, abm::ArraySpace)
+    s = "Array space with size $(size(abm.s)), moore=$(abm.moore), and periodic=$(abm.periodic)"
+    print(io, s)
+end
