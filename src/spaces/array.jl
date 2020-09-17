@@ -38,8 +38,8 @@ in the range `1:d[i]` for the `i`th dimension.
 `:chebyshev` metric means that the `r`-neighborhood of a node are all
 nodes within the hypercube having side length of `2*floor(r)` and being centered in the node.
 
-`:euclidean` metric means all nodes whose cartesian indices have Euclidean distance `≤ r`
-from the cartesian index of the given node.
+`:euclidean` metric means that the `r`-neighborhood of a node are all nodes whose cartesian
+indices have Euclidean distance `≤ r` from the cartesian index of the given node.
 """
 function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :chebyshev) where {D}
     s = Array{Vector{Int}, D}(undef, d)
