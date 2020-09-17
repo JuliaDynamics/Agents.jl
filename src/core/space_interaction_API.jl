@@ -33,7 +33,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = notimplemented(model)
+move_agent!(agent, pos, model) = notimplemented(model)
 
 """
     add_agent_to_space!(agent, model)
@@ -100,7 +100,7 @@ end
 
 # Notice: this function is overwritten for continuous space and instead implements
 # the Euler scheme.
-function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
+function move_agent!(agent, model::ABM)
     move_agent!(agent, random_position(model), model)
 end
 
