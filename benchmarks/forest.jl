@@ -10,7 +10,7 @@ mutable struct Tree <: AbstractAgent
 end
 function forest_fire_array(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
     Random.seed!(seed)
-    space = ArraySpace(griddims, true)
+    space = ArraySpace(griddims)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 

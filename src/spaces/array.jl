@@ -46,7 +46,7 @@ function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :ch
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{D, periodic}}())
+    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{D}}())
 end
 
 #######################################################################################
@@ -209,6 +209,6 @@ end
 # %% pretty printing
 ###################################################################
 function Base.show(io::IO, abm::ArraySpace)
-    s = "Array space with size $(size(abm.s)), moore=$(abm.moore), and periodic=$(abm.periodic)"
+    s = "Array space with size $(size(abm.s)), periodic=$(abm.periodic) and metric=$(abm.metric)"
     print(io, s)
 end
