@@ -56,6 +56,7 @@ println("Times of old grid")
 # @btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = Models.forest_fire())
 
 model, agent_step!, model_step! = Models.forest_fire()
+step!(model, agent_step!, model_step!, 10)
 a = random_agent(model)
 
 sleep(1e-9)
@@ -97,6 +98,7 @@ step!(model, agent_step!, model_step!, 10)
 # @btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
 
 (model, agent_step!, model_step!) = forest_fire_array()
+step!(model, agent_step!, model_step!, 10)
 a = random_agent(model)
 sleep(1e-9)
 

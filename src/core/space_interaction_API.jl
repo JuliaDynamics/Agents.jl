@@ -56,7 +56,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    space_neighbors(position, model::ABM, r) → ids
+    space_neighbors(position, model::ABM, r=1) → ids
 
 Return an iterator of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
@@ -67,17 +67,17 @@ What the "radius" means depends on the space type:
 - `GridSpace, ContinuousSpace`: Standard distance implementation according to the
   underlying space metric.
 """
-space_neighbors(position, model, r) = notimplemented(model)
+space_neighbors(position, model, r=1) = notimplemented(model)
 
 
 """
-    node_neighbors(position, model::ABM, r) → positions
+    node_neighbors(position, model::ABM, r=1) → positions
 
 Return an iterator of all positions within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
 The value of `r` operates identically to [`space_neighbors`](@ref).
 """
-node_neighbors(position, model, r) = notimplemented(model)
+node_neighbors(position, model, r=1) = notimplemented(model)
 
 
 
@@ -223,23 +223,23 @@ end
 # %% Space agnostic neighbors
 #######################################################################################
 """
-    space_neighbors(agent::AbstractAgent, model::ABM, r)
+    space_neighbors(agent::AbstractAgent, model::ABM, r=1)
 
 Same as `space_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
 `agent`'s id.
 """
-function space_neighbors(agent::A, model::ABM{A}, r; kwargs...) where {A<:AbstractAgent}
-    all = space_neighbors(agent.pos, model, r; kwargs...)
+function space_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = space_neighbors(agent.pos, model, args...; kwargs...)
     Iterators.filter(!isequal(agent.id), all)
 end
 
 """
-    node_neighbors(agent::AbstractAgent, model::ABM, r)
+    node_neighbors(agent::AbstractAgent, model::ABM, r=1)
 
 Same as `node_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
 `agent`'s position.
 """
-function node_neighbors(agent::A, model::ABM{A}, r; kwargs...) where {A<:AbstractAgent}
-    all = node_neighbors(agent.pos, model, r; kwargs...)
+function node_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = node_neighbors(agent.pos, model, args...; kwargs...)
     Iterators.filter(!isequal(agent.pos), all)
 end
