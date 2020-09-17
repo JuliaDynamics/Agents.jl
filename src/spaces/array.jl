@@ -6,7 +6,7 @@ struct ArraySpace{D} <: AbstractSpace
     periodic::Bool
 end
 
-function ArraySpace(d::NTuple{D, Int}, moore::Bool, peeriodic::Bool) where {D}
+function ArraySpace(d::NTuple{D, Int}, moore::Bool=true, periodic::Bool=true) where {D}
     s = Array{Vector{Int}, D}(undef, d)
     for i in eachindex(s)
         s[i] = Int[]
@@ -38,3 +38,63 @@ function move_agent!(a::A, pos::Tuple, model::ABM{A, <: ArraySpace}) where {A<:A
     a.pos = pos
     add_agent_to_space!(a, model)
 end
+
+
+###################################################################
+# %% neighbors
+###################################################################
+export positions
+function positions(model::ABM{<:AbstractAgent, <:ArraySpace})
+    x = CartesianIndices(model.space.s)
+    return (Tuple(y) for y in x)
+end
+
+function positions(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
+    itr = collect(positions(model))
+    if by == :random
+        shuffle!(itr)
+    elseif by == :id
+        sort!(itr)
+    else
+        error("unknown by")
+    end
+    return itr
+end
+
+function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    return model.space.s[pos...]
+end
+
+# Code a version with explicit D = 2, r = 1 and moore and not periodic for quick benchmark
+function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    d = size(model.space.s)
+    rangex = max(1, pos[1]-1):min(d[1], pos[1]+1)
+    rangey = max(1, pos[2]-1):min(d[2], pos[2]+1)
+    # TODO: This includes current position
+    near = Iterators.product(rangex, rangey)
+end
+
+# Collecting version:
+function space_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    nn = node_neighbors(pos, model)
+    ids = Int[]
+    for n in nn
+        append!(ids, model.space.s[n...])
+    end
+    return ids
+end
+
+function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs...) where {A}
+  all = space_neighbors(agent.pos, model, args...; kwargs...)
+  d = findfirst(isequal(agent.id), all)
+  d ≠ nothing && deleteat!(all, d)
+  return all
+end
+
+# Iterator version
+# function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs...) where {A}
+#   all = space_neighbors(agent.pos, model, args...; kwargs...)
+#   d = findfirst(isequal(agent.id), all)
+#   d ≠ nothing && deleteat!(all, d)
+#   return all
+# end
