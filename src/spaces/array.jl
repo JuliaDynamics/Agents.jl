@@ -65,14 +65,13 @@ end
 # of given radious and metric type are stored and re-used for each search.
 
 """
-	Hood{Φ, P}
-Internal struct for efficiently finding neighboring nodes from a given node in `Φ`
-dimensions, that has pre-initialized several structures, e.g. whether the node is near
-the edge, and whether is periodic or not.
+	Hood{Φ}
+Internal struct for efficiently finding neighboring nodes to a given node.
+It contains pre-initialized neighbor cartesian indices and delimiters of when the
+neighboring indices would exceed the size of the underlying array.
 """
-struct Hood{Φ, P} # type P stands for Periodic and is a boolean
-	# mini and maxi are limits for whether the search will reach the boundaries of `s`
-	inner::Region{Φ}  #inner field far from boundary
+struct Hood{Φ} # type P stands for Periodic and is a boolean
+	inner::Region{Φ}  # inner field far from boundary
 	whole::Region{Φ}
 	# `βs` are the actual neighborhood cartesian indices
 	βs::Vector{CartesianIndex{Φ}}
@@ -84,14 +83,7 @@ end
 
 Base.length(r::Region{Φ}) where Φ = prod(r.maxi .- r.mini .+1)
 function Base.in(idx, r::Region{Φ}) where Φ
-	for φ=1:Φ
-		r.mini[φ] <= idx[φ] <= r.maxi[φ] || return false
- 	end
- 	return true
-end
-
-function isinner(idx, r::Hood{Φ}) where Φ
-	for φ=1:Φ
+	@inbounds for φ=1:Φ
 		r.mini[φ] <= idx[φ] <= r.maxi[φ] || return false
  	end
  	return true
@@ -118,11 +110,11 @@ function initialize_neighborhood!(space::ArraySpace{Φ}, r::Real) where {Φ}
 	r0 = floor(Int, r)
 	if space.metric == :euclidean
 		# hypercube of indices
-		hypercube = CartesianIndices((repeat([-r0:r0], dimension)...,))
+		hypercube = CartesianIndices((repeat([-r0:r0], Φ)...,))
 		# select subset of hc which is in Hypersphere
-		βs = [ β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r ]
+		βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
 	elseif space.metric == :chebyshev
-		βs = CartesianIndex.(collect(Iterators.product([-r0:r0 for φ=1:Φ]...)))
+		βs = [CartesianIndex(a) for a in Iterators.product([-r0:r0 for φ=1:Φ]...)]
 	else
 		error("Unknown metric type")
 	end
@@ -150,18 +142,15 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 		initialize_neighborhood!(space, r)
 	end
 
-	# Now we create an iterator based on the SpatioTemporalEmbedding functor
-
-	if isinner(α, hood) # `α` won't reach the walls with this Hood
-		return (α + β for β in hood.βs)
-	else # `α` WILL reach the walls with this Hood
-		@inbounds for n=1:X
-			rvec[n] = α + r.β[n] in r.whole ? s[ t+r.τ[n] ][ α+r.β[n] ] : r.boundary.b
-		end
+	# These iterators
+	if isinner(α, hood)   # `α` won't reach the walls with this Hood
+		return (Tuple(α + β) for β in hood.βs)
+	elseif space.periodic # `α` WILL reach the walls and then loop
+		return ((mod1.(Tuple(α+β), r.maxi)) for β in hood.βs)
+	else                  # `α` WILL reach the walls and then stop
+		return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 	end
 	return nothing
-
-
 end
 
 grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.space, α)
