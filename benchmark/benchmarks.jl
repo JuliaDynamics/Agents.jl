@@ -208,17 +208,14 @@ SUITE["grid"]["node"]["agents"] =
 #### API -> CONTINUOUS ####
 
 continuous_model = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))
-continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
-
-# We must create the model inside our benchmark call here, otherwise we hit the issue from #226.
 
 SUITE["continuous"]["add"]["agent"] = @benchmarkable add_agent!(
-    $continuous_agent,
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
+    ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false),
+    $continuous_model,
 )
 SUITE["continuous"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!(
-    $continuous_agent,
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
+    ContinuousAgent(2, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false),
+    $continuous_model,
 )
 SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
     (5.8, 3.5, 9.4),
@@ -230,34 +227,20 @@ SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
 SUITE["continuous"]["add"]["create"] =
     @benchmarkable add_agent!($continuous_model, (0.1, 0.7, 0.2), 6.5, false)
 
+continuous_model2 = ABM(
+        Union{
+            ContinuousAgent,
+            ContinuousAgentTwo,
+            ContinuousAgentThree,
+            ContinuousAgentFour,
+            ContinuousAgentFive,
+        },
+        ContinuousSpace(3; extend = (10.0, 10.0, 10.0)), warn=false)
+
 SUITE["continuous"]["add_union"]["agent"] = @benchmarkable add_agent!(
-    $continuous_agent,
-    ABM(
-        Union{
-            ContinuousAgent,
-            ContinuousAgentTwo,
-            ContinuousAgentThree,
-            ContinuousAgentFour,
-            ContinuousAgentFive,
-        },
-        ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-        warn = false,
-    ),
-)
+    ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false), $continuous_model2)
 SUITE["continuous"]["add_union"]["agent_pos"] = @benchmarkable add_agent_pos!(
-    $continuous_agent,
-    ABM(
-        Union{
-            ContinuousAgent,
-            ContinuousAgentTwo,
-            ContinuousAgentThree,
-            ContinuousAgentFour,
-            ContinuousAgentFive,
-        },
-        ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-        warn = false,
-    ),
-)
+    ContinuousAgent(2, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false), $continuous_model2)
 
 for _ in 1:500
     add_agent!(continuous_model, (0.8, 0.7, 1.3), 6.5, false)
