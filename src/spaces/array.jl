@@ -1,11 +1,29 @@
 export ArraySpace
 
+struct Region{D}
+	mini::NTuple{D,Int}
+	maxi::NTuple{D,Int}
+end
+
+"""
+	Hood{D}
+Internal struct for efficiently finding neighboring nodes to a given node.
+It contains pre-initialized neighbor cartesian indices and delimiters of when the
+neighboring indices would exceed the size of the underlying array.
+"""
+struct Hood{D} # type P stands for Periodic and is a boolean
+	inner::Region{D}  # inner field far from boundary
+	whole::Region{D}
+	# `βs` are the actual neighborhood cartesian indices
+	βs::Vector{CartesianIndex{D}}
+end
+
 struct ArraySpace{D} <: AbstractSpace
     s::Array{Vector{Int}, D}
 	periodic::Bool
 	metric::Symbol
 	# `hoods` is a preinitialized container of neighborhood cartesian indices
-	hoods::Dict{Float64, Hood{Φ}}
+	hoods::Dict{Float64, Hood{D}}
 end
 
 
@@ -28,7 +46,7 @@ function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :ch
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{Φ, periodic}}())
+    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{D, periodic}}())
 end
 
 #######################################################################################
@@ -90,26 +108,9 @@ end
 # It creates a performant envinroment where the cartesian indices of a given neighborhood
 # of given radious and metric type are stored and re-used for each search.
 
-"""
-	Hood{Φ}
-Internal struct for efficiently finding neighboring nodes to a given node.
-It contains pre-initialized neighbor cartesian indices and delimiters of when the
-neighboring indices would exceed the size of the underlying array.
-"""
-struct Hood{Φ} # type P stands for Periodic and is a boolean
-	inner::Region{Φ}  # inner field far from boundary
-	whole::Region{Φ}
-	# `βs` are the actual neighborhood cartesian indices
-	βs::Vector{CartesianIndex{Φ}}
-end
-struct Region{Φ}
-	mini::NTuple{Φ,Int}
-	maxi::NTuple{Φ,Int}
-end
-
-Base.length(r::Region{Φ}) where Φ = prod(r.maxi .- r.mini .+1)
-function Base.in(idx, r::Region{Φ}) where Φ
-	@inbounds for φ=1:Φ
+Base.length(r::Region{D}) where D = prod(r.maxi .- r.mini .+1)
+function Base.in(idx, r::Region{D}) where D
+	@inbounds for φ=1:D
 		r.mini[φ] <= idx[φ] <= r.maxi[φ] || return false
  	end
  	return true
@@ -117,37 +118,37 @@ end
 
 # This function calculates how large the inner region should be based on the neighborhood
 # βs and the actual array size `d`
-function inner_region(βs::Vector{CartesianIndex{Φ}}, d::NTuple{Φ, Int}) where Φ
+function inner_region(βs::Vector{CartesianIndex{D}}, d::NTuple{D, Int}) where D
 	mini = Int[]
 	maxi = Int[]
-	for φ = 1:Φ
+	for φ = 1:D
 		js = map(β -> β[φ], βs) # jth entries
 		mi, ma = extrema(js)
 		push!(mini, 1 - min(mi, 0))
 		push!(maxi, d[φ] - max(ma, 0))
 	end
-	return Region{Φ}((mini...,), (maxi...,))
+	return Region{D}((mini...,), (maxi...,))
 end
 
 # This function initializes the standard cartesian indices that needs to be added to some
 # index `α` to obtain its neighborhood
 import LinearAlgebra
-function initialize_neighborhood!(space::ArraySpace{Φ}, r::Real) where {Φ}
+function initialize_neighborhood!(space::ArraySpace{D}, r::Real) where {D}
 	d = size(space.s)
 	r0 = floor(Int, r)
 	if space.metric == :euclidean
 		# hypercube of indices
-		hypercube = CartesianIndices((repeat([-r0:r0], Φ)...,))
+		hypercube = CartesianIndices((repeat([-r0:r0], D)...,))
 		# select subset of hc which is in Hypersphere
 		βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
 	elseif space.metric == :chebyshev
-		βs = [CartesianIndex(a) for a in Iterators.product([-r0:r0 for φ=1:Φ]...)]
+		βs = [CartesianIndex(a) for a in Iterators.product([-r0:r0 for φ=1:D]...)]
 	else
 		error("Unknown metric type")
 	end
 	inner = inner_region(βs, d)
 	whole = Region(map(one, d), d)
-	hood = Hood{Φ, P}(inner, whole, βs)
+	hood = Hood{D, P}(inner, whole, βs)
 	space.hoods[float(r)] = hood
 	return hood
 end
