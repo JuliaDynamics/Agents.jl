@@ -190,7 +190,7 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.spac
 ###################################################################
 
 # Code a version with explicit D = 2, r = 1 and moore and not periodic for quick benchmark
-function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace}, r)
     d = size(model.space.s)
     rangex = max(1, pos[1]-1):min(d[1], pos[1]+1)
     rangey = max(1, pos[2]-1):min(d[2], pos[2]+1)
@@ -202,11 +202,6 @@ function space_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
     nn = node_neighbors(pos, model)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
-end
-
-function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs...) where {A}
-  all = space_neighbors(agent.pos, model, args...; kwargs...)
-  Iterators.filter(!isequal(agent.id), all)
 end
 
 ###################################################################
