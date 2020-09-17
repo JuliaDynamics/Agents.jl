@@ -111,13 +111,13 @@ function move_agent!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    move_agent_single!(agent::AbstractAgent, model::ABM{A,<:DiscreteSpace}) → agent
+    move_agent_single!(agent::AbstractAgent, model::ABM) → agent
 
 Move agent to a random node while respecting a maximum of one agent
 per node. If there are no empty nodes, the agent wont move.
 Only valid for non-continuous spaces.
 """
-function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+function move_agent_single!(agent::AbstractAgent, model::ABM)
     empty_cells = find_empty_nodes(model)
     if length(empty_cells) > 0
         random_node = rand(empty_cells)
