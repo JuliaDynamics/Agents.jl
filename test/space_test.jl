@@ -192,14 +192,14 @@ end
     add_agent!((3, 2), gridspace, rand())
     @test space_neighbors((1, 2), gridspace) == [1]
     @test sort!(space_neighbors((1, 2), gridspace, 2)) == [1, 2]
-    @test_throws MethodError space_neighbors((1, 2), gridspace, 1.5)
+    @test_throws ErrorException space_neighbors((1, 2), gridspace, 1.5)
     @test sort!(space_neighbors((2, 2), gridspace)) == [1, 2]
     @test space_neighbors(a, gridspace) == [2]
 
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-    @test_throws MethodError node_neighbors(1, continuousspace)
+    @test_throws ErrorException node_neighbors(1, continuousspace)
     @test space_neighbors(a, continuousspace, 0.05) == []
     @test space_neighbors(a, continuousspace, 0.1) == [2]
     @test sort!(space_neighbors((0.55, 0.5), continuousspace, 0.05)) == [1, 2]

@@ -16,6 +16,7 @@ include("core/space_interaction_API.jl")
 include("spaces/nothing.jl")
 include("spaces/discrete_space.jl")
 include("spaces/continuous_space.jl")
+include("spaces/array.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")

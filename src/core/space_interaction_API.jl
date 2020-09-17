@@ -12,7 +12,8 @@ export move_agent!,
     add_agent!,
     add_agent_pos!,
     kill_agent!,
-    genocide!
+    genocide!,
+    random_position
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
@@ -33,7 +34,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-move_agent!(agent::A, pos::ValidPos, model::ABM) where {A<:AbstractAgent} = notimplemented(model)
+move_agent!(agent, pos, model) = notimplemented(model)
 
 """
     add_agent_to_space!(agent, model)
@@ -52,7 +53,36 @@ This function is NOT part of the public API.
 remove_agent_from_space!(agent, model) = notimplemented(model)
 
 #######################################################################################
-# %% Space agnostic
+# %% IMPLEMENT: Neighbors and stuff
+#######################################################################################
+"""
+    space_neighbors(position, model::ABM, r=1) → ids
+
+Return an iterator of the ids of the agents within "radius" `r` of the given `position`
+(which must match type with the spatial structure of the `model`).
+
+What the "radius" means depends on the space type:
+- `GraphSpace`: `r` means the degree of neighbors and is an integer.
+  For example, for `r=2` include first and second degree neighbors.
+- `GridSpace, ContinuousSpace`: Standard distance implementation according to the
+  underlying space metric.
+"""
+space_neighbors(position, model, r=1) = notimplemented(model)
+
+
+"""
+    node_neighbors(position, model::ABM, r=1) → positions
+
+Return an iterator of all positions within "radius" `r` of the given `position`
+(which must match type with the spatial structure of the `model`).
+The value of `r` operates identically to [`space_neighbors`](@ref).
+"""
+node_neighbors(position, model, r=1) = notimplemented(model)
+
+
+
+#######################################################################################
+# %% Space agnostic killing and moving
 #######################################################################################
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
@@ -100,12 +130,12 @@ end
 
 # Notice: this function is overwritten for continuous space and instead implements
 # the Euler scheme.
-function move_agent!(agent::A, model::ABM{A}) where {A<:AbstractAgent}
+function move_agent!(agent, model::ABM)
     move_agent!(agent, random_position(model), model)
 end
 
 #######################################################################################
-# %% Adding agents (also space agnostic)
+# %% Space agnostic adding
 #######################################################################################
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
@@ -187,4 +217,29 @@ function add_agent!(pos::ValidPos, A::Type{<:AbstractAgent}, model::ABM, propert
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)
+end
+
+#######################################################################################
+# %% Space agnostic neighbors
+#######################################################################################
+"""
+    space_neighbors(agent::AbstractAgent, model::ABM, r=1)
+
+Same as `space_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
+`agent`'s id.
+"""
+function space_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = space_neighbors(agent.pos, model, args...; kwargs...)
+    Iterators.filter(!isequal(agent.id), all)
+end
+
+"""
+    node_neighbors(agent::AbstractAgent, model::ABM, r=1)
+
+Same as `node_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
+`agent`'s position.
+"""
+function node_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = node_neighbors(agent.pos, model, args...; kwargs...)
+    Iterators.filter(!isequal(agent.pos), all)
 end

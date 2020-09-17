@@ -518,34 +518,14 @@ get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id 
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
-"""
-    space_neighbors(position, model::ABM, r) → ids
-
-Return the ids of the agents neighboring the given `position` (which must match type
-with the spatial structure of the `model`). `r` is the radius to search for agents.
-
-For `DiscreteSpace` `r` must be integer and defines higher degree neighbors.
-For example, for `r=2` include first and second degree neighbors,
-that is, neighbors and neighbors of neighbors.
-Specifically for `GraphSpace`, the keyword `neighbor_type` can also be used
-as in [`node_neighbors`](@ref) to restrict search on directed graphs.
-
-For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
-(based on the space's metric).
-
-    space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
-
-Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
-`agent` from the neighbors.
-"""
-function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
   d = findfirst(isequal(agent.id), all)
   d ≠ nothing && deleteat!(all, d)
   return all
 end
 
-function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   node = coord2vertex(pos, model)
   nn = node_neighbors(node, model, args...; kwargs...)
   # We include the current node in the search since we are searching over space
