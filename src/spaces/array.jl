@@ -1,18 +1,34 @@
 export ArraySpace
 
-struct ArraySpace{D, P} <: AbstractSpace
+struct ArraySpace{D} <: AbstractSpace
     s::Array{Vector{Int}, D}
+	periodic::Bool
 	metric::Symbol
 	# `hoods` is a preinitialized container of neighborhood cartesian indices
-	hoods::Dict{Float64, Hood{Φ, P}}
+	hoods::Dict{Float64, Hood{Φ}}
 end
 
-function ArraySpace(d::NTuple{D, Int}, periodic::Bool=true, metric = :chebyshev) where {D}
+
+"""
+	GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
+Create a `GridSpace` that has size given by the tuple `d`, having `D` dimensions.
+Optionally decide whether the space will be periodic and what will be the distance metric
+used, which decides the behavior of e.g. [`space_neighbors`](@ref).
+The position type for this space is `NTuple{D, Int}` and valid positions have indices
+in the range `1:d[i]` for the `i`th dimension.
+
+`:chebyshev` metric means that the `r`-neighborhood of a node are all
+nodes within the hypercube having side length of `2*floor(r)` and being centered in the node.
+
+`:euclidean` metric means all nodes whose cartesian indices have Euclidean distance `≤ r`
+from the cartesian index of the given node.
+"""
+function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :chebyshev) where {D}
     s = Array{Vector{Int}, D}(undef, d)
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return ArraySpace{D, periodic}(s, metric, Dict{Float64, Hood{Φ, periodic}}())
+    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{Φ, periodic}}())
 end
 
 #######################################################################################
