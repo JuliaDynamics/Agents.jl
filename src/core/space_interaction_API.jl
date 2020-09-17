@@ -12,7 +12,8 @@ export move_agent!,
     add_agent!,
     add_agent_pos!,
     kill_agent!,
-    genocide!
+    genocide!,
+    random_position
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
