@@ -1,6 +1,8 @@
 mutable struct GraphAgent <: AbstractAgent
     id::Int
     pos::Int
+    one::Float64
+    two::Bool
 end
 
 mutable struct GraphAgentTwo <: AbstractAgent
@@ -26,6 +28,8 @@ end
 mutable struct GridAgent <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int}
+    one::Float64
+    two::Bool
 end
 
 mutable struct GridAgentTwo <: AbstractAgent
@@ -52,6 +56,8 @@ mutable struct ContinuousAgent <: AbstractAgent
     id::Int
     pos::NTuple{3,Float64}
     vel::NTuple{3,Float64}
+    one::Float64
+    two::Bool
 end
 
 mutable struct ContinuousAgentTwo <: AbstractAgent

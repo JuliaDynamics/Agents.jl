@@ -54,7 +54,7 @@ SUITE["model"]["initialise_union"]["continuous"] = @benchmarkable ABM(
 #### API ###
 
 for space in ["graph", "grid", "continuous"]
-    SUITE[space] = BenchmarkGroup(["add", "add_union", "move"])
+    SUITE[space] = BenchmarkGroup(["add", "add_union", "move", "neighbors"])
 
     SUITE[space]["add"] = BenchmarkGroup([
         "agent",
@@ -67,13 +67,22 @@ for space in ["graph", "grid", "continuous"]
     SUITE[space]["add_union"] = BenchmarkGroup(["agent", "agent_pos", "agent_single"])
     if space == "continuous"
         SUITE[space]["move"] = BenchmarkGroup(["update", "vel"])
+        SUITE[space]["neighbors"] =
+            BenchmarkGroup(["space_pos", "space_agent", "nearest", "interacting"])
     else
         SUITE[space]["move"] = BenchmarkGroup(["random", "pos", "single"])
+        SUITE[space]["neighbors"] =
+            BenchmarkGroup(["space_pos", "space_agent", "node_pos", "node_agent"])
     end
+    SUITE[space]["collect"] = BenchmarkGroup(["init_agent", "store_agent"])
 end
 # some spaces have specific things we'd like to add
 push!(SUITE["grid"]["add_union"].tags, "agent_fill")
 push!(SUITE["grid"]["add"].tags, "create_fill")
+for space in ["grid", "graph"]
+    push!(SUITE[space].tags, "node")
+    SUITE[space]["node"] = BenchmarkGroup(["contents", "agents"])
+end
 # some spaces need a few things dropped
 for add in ["add", "add_union"]
     group = SUITE["continuous"][add].tags
@@ -83,11 +92,11 @@ end
 
 #### API -> GRAPH ####
 
-graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(30_000)))
-graph_agent = GraphAgent(1, 82)
+graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(40_000)))
+graph_agent = GraphAgent(1, 82, 6.5, false)
 graph_union_model = ABM(
     Union{GraphAgent,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
-    GraphSpace(complete_digraph(30_000)), # Needs to be this large otherwise single! will hit the roof
+    GraphSpace(complete_digraph(40_000)), # Needs to be this large otherwise single! will hit the roof
     warn = false,
 )
 
@@ -96,9 +105,11 @@ SUITE["graph"]["add"]["agent_pos"] =
     @benchmarkable add_agent_pos!($graph_agent, $graph_model)
 SUITE["graph"]["add"]["agent_single"] =
     @benchmarkable add_agent_single!($graph_agent, $graph_model)
-SUITE["graph"]["add"]["create_pos"] = @benchmarkable add_agent!(26, $graph_model)
-SUITE["graph"]["add"]["create_single"] = @benchmarkable add_agent_single!($graph_model)
-SUITE["graph"]["add"]["create"] = @benchmarkable add_agent!($graph_model)
+SUITE["graph"]["add"]["create_pos"] =
+    @benchmarkable add_agent!(26, $graph_model, 6.5, false)
+SUITE["graph"]["add"]["create_single"] =
+    @benchmarkable add_agent_single!($graph_model, 6.5, false)
+SUITE["graph"]["add"]["create"] = @benchmarkable add_agent!($graph_model, 6.5, false)
 
 SUITE["graph"]["add_union"]["agent"] =
     @benchmarkable add_agent!($graph_agent, $graph_union_model)
@@ -107,18 +118,33 @@ SUITE["graph"]["add_union"]["agent_pos"] =
 SUITE["graph"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($graph_agent, $graph_union_model)
 
-for _ in 1:50
-    add_agent!(graph_model)
+graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(1000)))
+for _ in 1:800
+    add_agent!(graph_model, 6.5, false)
 end
 a = random_agent(graph_model)
 SUITE["graph"]["move"]["random"] = @benchmarkable move_agent!($a, $graph_model)
 SUITE["graph"]["move"]["pos"] = @benchmarkable move_agent!($a, 68, $graph_model)
 SUITE["graph"]["move"]["single"] = @benchmarkable move_agent_single!($a, $graph_model)
 
-#### API -> GRID ####
+SUITE["graph"]["neighbors"]["space_pos"] =
+    @benchmarkable space_neighbors(rand(1:1000), $graph_model, 5)
+SUITE["graph"]["neighbors"]["space_agent"] =
+    @benchmarkable space_neighbors(random_agent($graph_model), $graph_model, 5)
+SUITE["graph"]["neighbors"]["node_pos"] =
+    @benchmarkable node_neighbors(rand(1:1000), $graph_model)
+SUITE["graph"]["neighbors"]["node_agent"] =
+    @benchmarkable node_neighbors(random_agent($graph_model), $graph_model)
+
+SUITE["graph"]["node"]["contents"] =
+    @benchmarkable get_node_contents(rand(1:1000), $graph_model)
+SUITE["graph"]["node"]["agents"] =
+    @benchmarkable get_node_agents(random_agent($graph_model), $graph_model)
+
+##### API -> GRID ####
 
 grid_model = ABM(GridAgent, GridSpace((1000, 1000)))
-grid_agent = GridAgent(1, (2, 3))
+grid_agent = GridAgent(1, (2, 3), 6.5, false)
 grid_union_model = ABM(
     Union{GridAgent,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
     GridSpace((1000, 1000));
@@ -137,10 +163,13 @@ SUITE["grid"]["add"]["agent"] = @benchmarkable add_agent!($grid_agent, $grid_mod
 SUITE["grid"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!($grid_agent, $grid_model)
 SUITE["grid"]["add"]["agent_single"] =
     @benchmarkable add_agent_single!($grid_agent, $grid_model)
-SUITE["grid"]["add"]["create_pos"] = @benchmarkable add_agent!((1, 3), $grid_model)
-SUITE["grid"]["add"]["create_single"] = @benchmarkable add_agent_single!($grid_model)
-SUITE["grid"]["add"]["create"] = @benchmarkable add_agent!($grid_model)
-SUITE["grid"]["add"]["create_fill"] = @benchmarkable fill_space!($small_grid_model)
+SUITE["grid"]["add"]["create_pos"] =
+    @benchmarkable add_agent!((1, 3), $grid_model, 6.5, false)
+SUITE["grid"]["add"]["create_single"] =
+    @benchmarkable add_agent_single!($grid_model, 6.5, false)
+SUITE["grid"]["add"]["create"] = @benchmarkable add_agent!($grid_model, 6.5, false)
+SUITE["grid"]["add"]["create_fill"] =
+    @benchmarkable fill_space!($small_grid_model, 6.5, false)
 
 # Think this is only on current master, will need to rebase
 #SUITE["grid"]["add"]["agent_union"] = @benchmarkable add_agent!(GridAgent, $grid_union_model)
@@ -151,19 +180,35 @@ SUITE["grid"]["add_union"]["agent_pos"] =
 SUITE["grid"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($grid_agent, $grid_union_model)
 SUITE["grid"]["add_union"]["agent_fill"] =
-    @benchmarkable fill_space!(GridAgent, $small_grid_union_model)
+    @benchmarkable fill_space!(GridAgent, $small_grid_union_model, 6.5, false)
 
-for _ in 1:50
-    add_agent!(grid_model)
+grid_model = ABM(GridAgent, GridSpace((100, 100)))
+for _ in 1:9000
+    add_agent!(grid_model, 6.5, false)
 end
 a = random_agent(grid_model)
 SUITE["grid"]["move"]["random"] = @benchmarkable move_agent!($a, $grid_model)
 SUITE["grid"]["move"]["pos"] = @benchmarkable move_agent!($a, (14, 35), $grid_model)
 SUITE["grid"]["move"]["single"] = @benchmarkable move_agent_single!($a, $grid_model)
 
+SUITE["grid"]["neighbors"]["space_pos"] =
+    @benchmarkable space_neighbors(tuple(rand(1:100, 2)...), $grid_model, 5)
+SUITE["grid"]["neighbors"]["space_agent"] =
+    @benchmarkable space_neighbors(random_agent($grid_model), $grid_model, 5)
+SUITE["grid"]["neighbors"]["node_pos"] =
+    @benchmarkable node_neighbors(tuple(rand(1:100, 2)...), $grid_model)
+SUITE["grid"]["neighbors"]["node_agent"] =
+    @benchmarkable node_neighbors(random_agent($grid_model), $grid_model)
+
+SUITE["grid"]["node"]["contents"] =
+    @benchmarkable get_node_contents(tuple(rand(1:100, 2)...), $grid_model)
+SUITE["grid"]["node"]["agents"] =
+    @benchmarkable get_node_agents(random_agent($grid_model), $grid_model)
+
 #### API -> CONTINUOUS ####
 
-continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01))
+continuous_model = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))
+continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
 # We must create the model inside our benchmark call here, otherwise we hit the issue from #226.
 
@@ -177,13 +222,13 @@ SUITE["continuous"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!(
 )
 SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
     (5.8, 3.5, 9.4),
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
+    $continuous_model,
     (0.9, 0.6, 0.5),
+    6.5,
+    false,
 )
-SUITE["continuous"]["add"]["create"] = @benchmarkable add_agent!(
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
-    (0.1, 0.7, 0.2),
-)
+SUITE["continuous"]["add"]["create"] =
+    @benchmarkable add_agent!($continuous_model, (0.1, 0.7, 0.2), 6.5, false)
 
 SUITE["continuous"]["add_union"]["agent"] = @benchmarkable add_agent!(
     $continuous_agent,
@@ -214,14 +259,42 @@ SUITE["continuous"]["add_union"]["agent_pos"] = @benchmarkable add_agent_pos!(
     ),
 )
 
-continuous_model = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))
-for _ in 1:50
-    add_agent!(continuous_model, (0.8, 0.7, 1.3))
+for _ in 1:500
+    add_agent!(continuous_model, (0.8, 0.7, 1.3), 6.5, false)
 end
 a = random_agent(continuous_model)
 SUITE["continuous"]["move"]["update"] = @benchmarkable move_agent!($a, $continuous_model)
 SUITE["continuous"]["move"]["vel"] =
     @benchmarkable move_agent!($a, $continuous_model, (1.2, 0.0, 0.7))
 
+SUITE["continuous"]["neighbors"]["space_pos"] =
+    @benchmarkable space_neighbors(tuple(10 .* rand(3)...), $continuous_model, 5)
+SUITE["continuous"]["neighbors"]["space_agent"] =
+    @benchmarkable space_neighbors(random_agent($continuous_model), $continuous_model, 5)
+SUITE["continuous"]["neighbors"]["nearest"] =
+    @benchmarkable nearest_neighbor(random_agent($continuous_model), $continuous_model, 5)
+SUITE["continuous"]["neighbors"]["interacting"] =
+    @benchmarkable interacting_pairs($continuous_model, 1, :scheduler)
+
 #### DATA COLLECTION ###
+
+adata = [:one, :two]
+graph_df = init_agent_dataframe(graph_model, adata)
+grid_df = init_agent_dataframe(grid_model, adata)
+continuous_df = init_agent_dataframe(continuous_model, adata)
+
+SUITE["graph"]["collect"]["init_agent"] =
+    @benchmarkable init_agent_dataframe($graph_model, $adata)
+SUITE["grid"]["collect"]["init_agent"] =
+    @benchmarkable init_agent_dataframe($grid_model, $adata)
+SUITE["continuous"]["collect"]["init_agent"] =
+    @benchmarkable init_agent_dataframe($continuous_model, $adata)
+
+SUITE["graph"]["collect"]["store_agent"] =
+    @benchmarkable collect_agent_data!($graph_df, $graph_model, $adata, 0)
+SUITE["grid"]["collect"]["store_agent"] =
+    @benchmarkable collect_agent_data!($grid_df, $grid_model, $adata, 0)
+SUITE["continuous"]["collect"]["store_agent"] =
+    @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
+
 
