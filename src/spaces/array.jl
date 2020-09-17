@@ -56,6 +56,32 @@ function move_agent!(a::A, pos::Tuple, model::ABM{A, <: ArraySpace}) where {A<:A
     add_agent_to_space!(a, model)
 end
 
+#######################################################################################
+# %% Further discrete space  functions
+#######################################################################################
+export positions
+function positions(model::ABM{<:AbstractAgent, <:ArraySpace})
+    x = CartesianIndices(model.space.s)
+    return (Tuple(y) for y in x)
+end
+
+function positions(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
+    itr = collect(positions(model))
+    if by == :random
+        shuffle!(itr)
+    elseif by == :id
+        # TODO: By id is wrong...?
+        sort!(itr)
+    else
+        error("unknown `by`")
+    end
+    return itr
+end
+
+function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    return model.space.s[pos...]
+end
+
 ##########################################################################################
 # %% Structures for collecting neighbors on a grid
 ##########################################################################################
@@ -103,8 +129,9 @@ function inner_region(βs::Vector{CartesianIndex{Φ}}, d::NTuple{Φ, Int}) where
 	return Region{Φ}((mini...,), (maxi...,))
 end
 
+# This function initializes the standard cartesian indices that needs to be added to some
+# index `α` to obtain its neighborhood
 import LinearAlgebra
-
 function initialize_neighborhood!(space::ArraySpace{Φ}, r::Real) where {Φ}
 	d = size(space.s)
 	r0 = floor(Int, r)
@@ -129,11 +156,16 @@ end
 """
 	grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 
-Return an iterator over all positions within distance `r` from `α`.
+Return an iterator over all positions within distance `r` from `α` according to the `space`.
 
 The only reason this function is not equivalent with `node_neighbors` is because
 `node_neighbors` skips the current position `α`, while `α` is always included in the
 returned iterator (because the `0` index is always included in `βs`).
+
+This function re-uses the source code of TimeseriesPrediction.jl, along with the
+helper struct `Hood` and generates neighboring cartesian indices on the fly,
+reducing the amount of computations necessary (i.e. we don't "find" new indices,
+we only add a pre-determined amount of indices to `α`).
 """
 function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 	hood = if hasindex(space.hoods, r)
@@ -142,7 +174,6 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 		initialize_neighborhood!(space, r)
 	end
 
-	# These iterators
 	if isinner(α, hood)   # `α` won't reach the walls with this Hood
 		return (Tuple(α + β) for β in hood.βs)
 	elseif space.periodic # `α` WILL reach the walls and then loop
@@ -150,87 +181,13 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 	else                  # `α` WILL reach the walls and then stop
 		return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 	end
-	return nothing
 end
 
 grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.space, α)
 
-
-
-# USE THE FOLLOWING FUNCTION TO CREATE AN ITERATOR:
-# we don't care about t argument or first [ ] of `s`. we only care about accessing
-# s with `α` and `β`. `α` is the current center, the corrent position,
-# while `β` are the nearby cartesian indices
-# The end goal of this function is to create an iterator which is in fact equivalent with
-# node positions
-function (r::SpatioTemporalEmbedding{Φ,ConstantBoundary{T},X})(rvec,s,t,α) where {T,Φ,X}
-	if α in r.inner
-		@inbounds for n=1:X
-			rvec[n] = s[ t + r.τ[n] ][ α + r.β[n] ]
-		end
-	else
-		@inbounds for n=1:X
-			rvec[n] = α + r.β[n] in r.whole ? s[ t+r.τ[n] ][ α+r.β[n] ] : r.boundary.b
-		end
-	end
-	return nothing
-end
-
-function (r::SpatioTemporalEmbedding{Φ,PeriodicBoundary,X})(rvec,s,t,α) where {Φ,X}
-	if α in r.inner
-		@inbounds for n=1:X
-			rvec[n] = s[ t + r.τ[n] ][ α + r.β[n] ]
-		end
-	else
-		@inbounds for n=1:X
-			rvec[n] = s[ t + r.τ[n] ][ project_inside(α + r.β[n], r.whole) ]
-		end
-	end
-	return nothing
-end
-
-
-# This is used in periodic boundary conditions
-function project_inside(α::CartesianIndex{Φ}, r::Hood{Φ, true}) where Φ
-	CartesianIndex(mod.(α.I .-1, r.maxi).+1)
-end
-
 ###################################################################
-# %% neighbors
+# %% Neighbors API
 ###################################################################
-# TODO: Use the source code of TimeseriesPrediction.jl to select neighborhoods
-# with a specific type: cityblock or indices_within_sphere
-# If the operation `indices_within_sphere` is expensive, it can be stored
-# (since we also store it in TimeseriesPrediction.jl)
-# The function that does this index selection (where the indices are stored as cartesian indices)
-# is then called in both node_neighbors and space_neighbors (because we want node_neighbors)
-# to return tuples for ease of usage, while the conversion is not necessary for space_neighbors
-
-
-
-
-export positions
-function positions(model::ABM{<:AbstractAgent, <:ArraySpace})
-    x = CartesianIndices(model.space.s)
-    return (Tuple(y) for y in x)
-end
-
-function positions(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
-    itr = collect(positions(model))
-    if by == :random
-        shuffle!(itr)
-    elseif by == :id
-        # TODO: By id is wrong...?
-        sort!(itr)
-    else
-        error("unknown `by`")
-    end
-    return itr
-end
-
-function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
-    return model.space.s[pos...]
-end
 
 # Code a version with explicit D = 2, r = 1 and moore and not periodic for quick benchmark
 function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
