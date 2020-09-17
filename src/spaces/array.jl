@@ -95,12 +95,17 @@ function inner_region(βs::Vector{CartesianIndex{Φ}}, d::NTuple{Φ, Int}) where
 	return Region{Φ}((mini...,), (maxi...,))
 end
 
+import LinearAlgebra
+
 function initialize_neighborhood!(space::ArraySpace{Φ}, r::Real) where {Φ}
 	d = size(space.s)
+	r0 = floor(Int, r)
 	if space.metric == :euclidean
-		# use light cone embedding to create βs
+		# hypercube of indices
+		hypercube = CartesianIndices((repeat([-r0:r0], dimension)...,))
+		# select subset of hc which is in Hypersphere
+		βs = [ β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r ]
 	elseif space.metric == :chebyshev
-		r0 = floor(Int, r)
 		βs = CartesianIndex.(collect(Iterators.product([-r0:r0 for φ=1:Φ]...)))
 	else
 		error("Unknown metric type")
