@@ -441,13 +441,13 @@ function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:Ab
 end
 
 """
-    move_agent_single!(agent::AbstractAgent, model::ABM) → agent
+    move_agent_single!(agent::AbstractAgent, model::ABM{A,<:DiscreteSpace}) → agentt
 
 Move agent to a random node while respecting a maximum of one agent
 per node. If there are no empty nodes, the agent wont move.
 Only valid for non-continuous spaces.
 """
-function move_agent_single!(agent::AbstractAgent, model::ABM)
+function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
     empty_cells = find_empty_nodes(model)
     if length(empty_cells) > 0
         random_node = rand(empty_cells)
