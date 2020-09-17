@@ -210,16 +210,14 @@ SUITE["grid"]["node"]["agents"] =
 continuous_model = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))
 continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
-# We must create the model inside our benchmark call here, otherwise we hit the issue from #226.
+# We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 
-SUITE["continuous"]["add"]["agent"] = @benchmarkable add_agent!(
-    $continuous_agent,
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
-)
-SUITE["continuous"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!(
-    $continuous_agent,
-    ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))),
-)
+SUITE["continuous"]["add"]["agent"] =
+    @benchmarkable add_agent!($continuous_agent, cmodel) setup =
+        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))))
+SUITE["continuous"]["add"]["agent_pos"] =
+    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
+        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0))))
 SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
     (5.8, 3.5, 9.4),
     $continuous_model,
@@ -230,34 +228,34 @@ SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
 SUITE["continuous"]["add"]["create"] =
     @benchmarkable add_agent!($continuous_model, (0.1, 0.7, 0.2), 6.5, false)
 
-SUITE["continuous"]["add_union"]["agent"] = @benchmarkable add_agent!(
-    $continuous_agent,
-    ABM(
-        Union{
-            ContinuousAgent,
-            ContinuousAgentTwo,
-            ContinuousAgentThree,
-            ContinuousAgentFour,
-            ContinuousAgentFive,
-        },
-        ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-        warn = false,
-    ),
-)
-SUITE["continuous"]["add_union"]["agent_pos"] = @benchmarkable add_agent_pos!(
-    $continuous_agent,
-    ABM(
-        Union{
-            ContinuousAgent,
-            ContinuousAgentTwo,
-            ContinuousAgentThree,
-            ContinuousAgentFour,
-            ContinuousAgentFive,
-        },
-        ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-        warn = false,
-    ),
-)
+SUITE["continuous"]["add_union"]["agent"] =
+    @benchmarkable add_agent!($continuous_agent, cmodel) setup = (
+        cmodel = ABM(
+            Union{
+                ContinuousAgent,
+                ContinuousAgentTwo,
+                ContinuousAgentThree,
+                ContinuousAgentFour,
+                ContinuousAgentFive,
+            },
+            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
+            warn = false,
+        )
+    )
+SUITE["continuous"]["add_union"]["agent_pos"] =
+    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup = (
+        cmodel = ABM(
+            Union{
+                ContinuousAgent,
+                ContinuousAgentTwo,
+                ContinuousAgentThree,
+                ContinuousAgentFour,
+                ContinuousAgentFive,
+            },
+            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
+            warn = false,
+        )
+    )
 
 for _ in 1:500
     add_agent!(continuous_model, (0.8, 0.7, 1.3), 6.5, false)
@@ -296,5 +294,4 @@ SUITE["grid"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($grid_df, $grid_model, $adata, 0)
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
-
 
