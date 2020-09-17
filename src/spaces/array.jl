@@ -95,12 +95,13 @@ function inner_region(βs::Vector{CartesianIndex{Φ}}, d::NTuple{Φ, Int}) where
 	return Region{Φ}((mini...,), (maxi...,))
 end
 
-function initialize_neighborhood!(space::ArraySpace{Φ, P}, r::Real) where {Φ, P}
+function initialize_neighborhood!(space::ArraySpace{Φ}, r::Real) where {Φ}
 	d = size(space.s)
 	if space.metric == :euclidean
 		# use light cone embedding to create βs
 	elseif space.metric == :chebyshev
-		# use cubic shell embedding to create βs
+		r0 = floor(Int, r)
+		βs = CartesianIndex.(collect(Iterators.product([-r0:r0 for φ=1:Φ]...)))
 	else
 		error("Unknown metric type")
 	end
