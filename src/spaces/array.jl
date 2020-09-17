@@ -74,27 +74,13 @@ function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
     near = Iterators.product(rangex, rangey)
 end
 
-# Collecting version:
 function space_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
     nn = node_neighbors(pos, model)
-    ids = Int[]
-    for n in nn
-        append!(ids, model.space.s[n...])
-    end
-    return ids
+    s = model.space.s
+    Iterators.flatten((s[i...] for i in nn))
 end
 
 function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs...) where {A}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
-  d = findfirst(isequal(agent.id), all)
-  d ≠ nothing && deleteat!(all, d)
-  return all
+  Iterators.filter(!isequal(agent.id), all)
 end
-
-# Iterator version
-# function space_neighbors(agent::A, model::ABM{A,<:ArraySpace}, args...; kwargs...) where {A}
-#   all = space_neighbors(agent.pos, model, args...; kwargs...)
-#   d = findfirst(isequal(agent.id), all)
-#   d ≠ nothing && deleteat!(all, d)
-#   return all
-# end

@@ -66,6 +66,20 @@ println("Move agent")
 println("Space neighbors")
 @btime space_neighbors($a, $model);
 
+function iterate_over_neighbors(a, model)
+    s = 0
+    for x in space_neighbors(a, model)
+        s += x
+    end
+    return s
+end
+
+# TODO: Need to check this for veeery large set of neighbors
+println("Iterate over space neighbors")
+@btime iterate_over_neighbors($a, $model);
+println("Iterate over position space neighbors")
+@btime iterate_over_neighbors($a.pos, $model);
+
 println("node neighbors")
 @btime node_neighbors($a.pos, $model);
 
@@ -95,5 +109,22 @@ println("node neighbors")
 println("Space neighbors")
 @btime space_neighbors($a, $model);
 
+function iterate_over_neighbors(a, model)
+    s = 0
+    for x in space_neighbors(a, model)
+        s += x
+    end
+    return s
+end
+
+# TODO: Need to check this for veeery large set of neighbors
+println("Iterate over space neighbors")
+@btime iterate_over_neighbors($a, $model);
+println("Iterate over position space neighbors")
+@btime iterate_over_neighbors($a.pos, $model);
+
 println("Add agent")
 @btime add_agent!($model, true)
+
+println("node neighbors")
+@btime node_neighbors($a.pos, $model);
