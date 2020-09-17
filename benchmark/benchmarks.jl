@@ -12,6 +12,13 @@ grid_union_model = ABM(
     warn = false,
 )
 
+graph_space = GraphSpace(complete_digraph(5))
+grid_space = GridSpace((10, 10))
+continuous_space = ContinuousSpace(3)
+graph_space_two = GraphSpace(complete_digraph(5))
+grid_space_two = GridSpace((10, 10))
+continuous_space_two = ContinuousSpace(3)
+
 SUITE["space"] = BenchmarkGroup(["graph", "grid", "continuous"])
 SUITE["space"]["graph"] = @benchmarkable GraphSpace(complete_digraph(1000))
 SUITE["space"]["grid"] = @benchmarkable GridSpace((500, 500))
@@ -20,20 +27,19 @@ SUITE["space"]["continuous"] =
 
 SUITE["model"] = BenchmarkGroup(["initialise", "initialise_union"])
 SUITE["model"]["initialise"] = BenchmarkGroup(["graph", "grid", "continuous"])
-SUITE["model"]["initialise"]["graph"] =
-    @benchmarkable ABM(GraphAgent, GraphSpace(complete_digraph(5)))
-SUITE["model"]["initialise"]["grid"] = @benchmarkable ABM(GridAgent, GridSpace((10, 10)))
+SUITE["model"]["initialise"]["graph"] = @benchmarkable ABM(GraphAgent, $graph_space)
+SUITE["model"]["initialise"]["grid"] = @benchmarkable ABM(GridAgent, $grid_space)
 SUITE["model"]["initialise"]["continuous"] =
-    @benchmarkable ABM(ContinuousAgent, ContinuousSpace(3))
+    @benchmarkable ABM(ContinuousAgent, $continuous_space)
 SUITE["model"]["initialise_union"] = BenchmarkGroup(["graph", "grid", "continuous"])
 SUITE["model"]["initialise_union"]["graph"] = @benchmarkable ABM(
     Union{GraphAgent,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
-    GraphSpace(complete_digraph(5));
+    $graph_space_two;
     warn = false,
 )
 SUITE["model"]["initialise_union"]["grid"] = @benchmarkable ABM(
     Union{GridAgent,GridAgentTwo,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
-    GridSpace((10, 10));
+    $grid_space_two;
     warn = false,
 )
 SUITE["model"]["initialise_union"]["continuous"] = @benchmarkable ABM(
@@ -44,7 +50,7 @@ SUITE["model"]["initialise_union"]["continuous"] = @benchmarkable ABM(
         ContinuousAgentFour,
         ContinuousAgentFive,
     },
-    ContinuousSpace(3);
+    $continuous_space_two;
     warn = false,
 )
 
@@ -57,14 +63,14 @@ SUITE["grid"]["add"] = BenchmarkGroup([
     "create_pos",
     "create_single",
 ])
-SUITE["grid"]["add"]["agent"] = @benchmarkable add_agent!(grid_agent, $grid_model)
+SUITE["grid"]["add"]["agent"] = @benchmarkable add_agent!($grid_agent, $grid_model)
 # We genocide everything between benchmarks to ensure agents are 'added' and not overwritten
 # (also, the add_agent_single! calls need an empty model)
 genocide!(grid_model)
-SUITE["grid"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!(grid_agent, $grid_model)
+SUITE["grid"]["add"]["agent_pos"] = @benchmarkable add_agent_pos!($grid_agent, $grid_model)
 genocide!(grid_model)
 SUITE["grid"]["add"]["agent_single"] =
-    @benchmarkable add_agent_single!(grid_agent, $grid_model)
+    @benchmarkable add_agent_single!($grid_agent, $grid_model)
 genocide!(grid_model)
 SUITE["grid"]["add"]["create"] = @benchmarkable add_agent!($grid_model)
 genocide!(grid_model)
@@ -82,4 +88,5 @@ SUITE["grid"]["add_union"]["agent_pos"] =
 genocide!(grid_union_model)
 SUITE["grid"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!(grid_agent, $grid_union_model)
+
 
