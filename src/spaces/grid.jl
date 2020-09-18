@@ -223,7 +223,12 @@ function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
     return itr
 end
 
-function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+    x = CartesianIndices(model.space.s)
+    return (Tuple(y) for y in x)
+end
+
+function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent, <:ArraySpace})
     return model.space.s[pos...]
 end
 
