@@ -20,7 +20,7 @@ using the argument `by` which can be:
 * `:population` - nodes are sorted depending on how many agents they accommodate.
   The more populated nodes are first.
 """
-function nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace}, by)
+function nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace}, by::Symbol)
     itr = collect(nodes(model))
     if by == :random
         shuffle!(itr)
