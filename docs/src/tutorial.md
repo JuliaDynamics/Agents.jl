@@ -65,11 +65,12 @@ dummystep
 ```
 
 !!! note
-    If you are coming from other ABM frameworks, it may be confusing that Agents.jl
-    does not store the current step somewhere. Since we give users total control of
-    their models, this is something that must be implemented yourself if needed.
+    Notice that the current step number is not explicitly given to the [`model_step!`](@ref)
+    function, because this is useful only for a small subset of ABMs. If you need the
+    step information, implement this by adding a counting parameter into the model 
+    `properties`, and incrementing it by 1 each time `model_step!` is called. 
     An example can be seen in the `model_step!` function of [Daisyworld](@ref),
-    where `tick` is increased at each step.
+    where a `tick` is increased at each step.
 
 ## 5. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
