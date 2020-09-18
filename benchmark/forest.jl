@@ -67,9 +67,9 @@ end
 
 # %%
 println("\n\nTimes of old grid")
-
-# println("Standard stepping")
-# @btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = Models.forest_fire())
+#
+println("Full model stepping")
+@btime step!(model, agent_step!, model_step!, 100) setup=((model, agent_step!, model_step!) = Models.forest_fire())
 
 model, agent_step!, model_step! = Models.forest_fire(;griddims=(20,20), d=1.0)
 step!(model, agent_step!, model_step!, 1)
@@ -83,7 +83,6 @@ println("Move agent")
 println("Space neighbors")
 @btime space_neighbors($a, $model);
 
-# TODO: Need to check this for veeery large set of neighbors
 println("Iterate over space neighbors")
 @btime iterate_over_neighbors($a, $model);
 println("Iterate over position space neighbors")
@@ -99,11 +98,11 @@ println("Add agent")
 
 # %% ARRAY VERSION
 println("\n\nTimes of NEW grid")
-(model, agent_step!, model_step!) = forest_fire_array(;periodic=false)
+(model, agent_step!, model_step!) = forest_fire_array(;periodic=true)
 step!(model, agent_step!, model_step!, 10)
 
-# println("Standard stepping")
-# @btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
+println("Full model stepping")
+@btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
 
 (model, agent_step!, model_step!) = forest_fire_array(;periodic=false)
 step!(model, agent_step!, model_step!, 1)

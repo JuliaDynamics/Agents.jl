@@ -231,7 +231,8 @@ Same as `space_neighbors(agent.pos, model, r)` but the iterator *excludes* the g
 """
 function space_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
     all = space_neighbors(agent.pos, model, args...; kwargs...)
-    Iterators.filter(!isequal(agent.id), all)
+    id::Int = agent.id
+    Iterators.filter(i -> i ≠ id, all)
 end
 
 """
