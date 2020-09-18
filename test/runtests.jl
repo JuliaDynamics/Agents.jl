@@ -63,7 +63,7 @@ mutable struct Agent9 <: AbstractAgent
     pos::NTuple{2,Float64}
     vel::NTuple{2,Float64}
     f1::Union{Int,Nothing}
-  end
+end
 
 @testset "Agents.jl Tests" begin
 
