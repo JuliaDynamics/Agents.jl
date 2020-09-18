@@ -1,13 +1,13 @@
 #=
 This file implements functions shared by all discrete spaces.
 Discrete spaces are by definition spaces with a finite amount of possible positions.
+
+All these functions are granted "for free" to discrete spaces by simply extending:
+- get_node_contents(position, model)
 =#
 const DiscreteSpace = Union{GraphSpace, GridSpace}
 
-#######################################################################################
-# %% Further discrete space  functions
-#######################################################################################
-export nodes
+export nodes, find_empty_nodes
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns

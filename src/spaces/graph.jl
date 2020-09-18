@@ -1,14 +1,24 @@
 export node_neighbors, find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
 NodeIterator, space_neighbors, nodes, get_node_agents, coord2vertex, vertex2coord
-export nv, ne
-export GraphSpace, GridSpace
+export GraphSpace
 
 #######################################################################################
 # Basic space definition
 #######################################################################################
 struct GraphSpace{G} <: DiscreteSpace
-  graph::G
-  agent_positions::Vector{Vector{Int}}
+    graph::G
+    s::Vector{Vector{Int}}
+end
+
+"""
+    GraphSpace(graph::AbstractGraph)
+Create a `GraphSpace` instance that is underlined by an arbitrary graph from
+[LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
+The position type for this space is `Int`.
+"""
+function GraphSpace(graph::G) where {G<:AbstractGraph}
+    agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
+    return GraphSpace{G}(graph, agent_positions)
 end
 
 """
@@ -28,64 +38,38 @@ function Base.show(io::IO, abm::GraphSpace)
     print(io, s)
 end
 
-agent_positions(m::ABM{<:AbstractAgent, GraphSpace}) = m.space.agent_positions
-agent_positions(m::GraphSpace) = m.agent_positions
+"""
+    get_node_contents(position, model::ABM{A, <:DiscreteSpace})
 
+Return the ids of agents in the "node" corresponding to `position`.
 """
-    GraphSpace(graph::AbstractGraph)
-Create a `GraphSpace` instance that is underlined by an arbitrary graph from
-[LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
-In this case, your agent type must have a `pos` field that is of type `Int`.
-"""
-function GraphSpace(graph::G) where {G<:AbstractGraph}
-  agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
-  return GraphSpace{G}(graph, agent_positions)
-end
+get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-function random_position(model::ABM{<:AbstractAgent, <:GraphSpace})
-  correct_pos_type(rand(1:nv(model)), model)
-end
+random_position(model::ABM{<:AbstractAgent, <:GraphSpace}) = rand(1:nv(model)
 
-function remove_agent_from_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    agentnode = coord2vertex(agent.pos, model)
-    # remove from the space
-    splice!(
-        agent_positions(model)[agentnode],
-        findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
-    )
+function remove_agent_from_space!(agent::A, model::ABM{A,<:GraphSpace}) where {A<:AbstractAgent}
+    agentnode = agent.pos
+    p = get_node_contents(agentnode, model)
+    splice!(p, findfirst(a -> a == agent.id, p))
     return model
 end
 
-function move_agent!(agent::A, _pos::ValidPos, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    pos = correct_pos_type(_pos, model)
-    # remove agent from old position
-    if typeof(agent.pos) <: Tuple
-        oldnode = coord2vertex(agent.pos, model)
-        splice!(
-            model.space.agent_positions[oldnode],
-            findfirst(a -> a == agent.id, model.space.agent_positions[oldnode]),
-        )
-        agent.pos = vertex2coord(pos, model)  # update agent position
-    else
-        splice!(
-            model.space.agent_positions[agent.pos],
-            findfirst(a -> a == agent.id, model.space.agent_positions[agent.pos]),
-        )
-        agent.pos = pos
-    end
-    push!(model.space.agent_positions[coord2vertex(pos, model)], agent.id)
+function move_agent!(agent::A, pos::ValidPos, model::ABM{A,<:GraphSpace}) where {A<:AbstractAgent}
+    oldnode = agent.pos, model
+    p = get_node_contents(oldnode, model)
+    splice!(p, findfirst(a -> a == agent.id, p))
+    agent.pos = pos
+    push!(get_node_contents(agent.pos, model), agent.id)
     return agent
 end
 
 function add_agent_to_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    nn = coord2vertex(agent.pos, model)
-    push!(model.space.agent_positions[nn], agent.id)
+    push!(get_node_contents(agent.pos, model), agent.id)
     return agent
 end
-
 
 #######################################################################################
 # Extra space-related functions dedicated to discrete space
@@ -226,14 +210,6 @@ Return true if there are empty nodes in the `model`.
 function has_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
     any(isempty, agent_positions(model))
 end
-
-"""
-    get_node_contents(node, model)
-
-Return the ids of agents in the `node` of the model's space (which
-is an integer for `GraphSpace` and a tuple for `GridSpace`).
-"""
-get_node_contents(n::Integer, model::ABM{A,<:DiscreteSpace}) where {A} = agent_positions(model)[n]
 
 """
     get_node_contents(agent::AbstractAgent, model)
