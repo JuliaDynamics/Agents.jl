@@ -550,12 +550,6 @@ to `:out`. For undirected graphs, all options are equivalent to `:out`.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 """
-node_neighbors(
-    agent::AbstractAgent,
-    model::ABM{A,<:DiscreteSpace},
-    args...;
-    kwargs...,
-) where {A} = node_neighbors(agent.pos, model, args...; kwargs...)
 function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; neighbor_type::Symbol=:default) where {A}
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn =
