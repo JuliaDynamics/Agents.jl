@@ -2,7 +2,7 @@
 This file implements functions shared by all discrete spaces.
 Discrete spaces are by definition spaces with a finite amount of possible positions.
 =#
-# const DiscreteSpace = Union{GraphSpace, GridSpace}
+const DiscreteSpace = Union{GraphSpace, GridSpace}
 
 #######################################################################################
 # %% Further discrete space  functions
@@ -36,3 +36,9 @@ end
 function find_empty_nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace})
 	Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model))
 end
+
+"""
+    isempty(position, model::ABM)
+Return `true` if there are no agents in `node`.
+"""
+Base.isempty(pos, model::ABM) = isempty(get_node_contents(pos, model))

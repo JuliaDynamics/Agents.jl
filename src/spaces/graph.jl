@@ -6,54 +6,30 @@ export GraphSpace, GridSpace
 #######################################################################################
 # Basic space definition
 #######################################################################################
-abstract type DiscreteSpace <: AbstractSpace end
-
-LightGraphs.nv(space::DiscreteSpace) = LightGraphs.nv(space.graph)
-LightGraphs.ne(space::DiscreteSpace) = LightGraphs.ne(space.graph)
+struct GraphSpace{G} <: DiscreteSpace
+  graph::G
+  agent_positions::Vector{Vector{Int}}
+end
 
 """
     nv(model::ABM)
 Return the number of nodes (vertices) in the `model` space.
 """
-LightGraphs.nv(abm::ABM) = LightGraphs.nv(abm.space.graph)
+LightGraphs.nv(abm::ABM{<:Any, <:GraphSpace}) = LightGraphs.nv(abm.space.graph)
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.ne(abm::ABM) = LightGraphs.ne(abm.space.graph)
+LightGraphs.nv(abm::ABM{<:Any, <:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 
-struct GraphSpace{G} <: DiscreteSpace
-  graph::G
-  agent_positions::Vector{Vector{Int}}
-end
-struct GridSpace{G, D, I<:Integer} <: DiscreteSpace
-  graph::G # Graph
-  agent_positions::Vector{Vector{Int}}
-  dimensions::NTuple{D, I}
-end
-function Base.show(io::IO, abm::DiscreteSpace)
+function Base.show(io::IO, abm::GraphSpace)
     s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
     print(io, s)
 end
 
-function correct_pos_type(n, model)
-    if typeof(model.space) <: GraphSpace
-        return coord2vertex(n, model)
-    elseif typeof(model.space) <: GridSpace
-        return vertex2coord(n, model)
-    end
-end
-
 agent_positions(m::ABM{<:AbstractAgent, GraphSpace}) = m.space.agent_positions
 agent_positions(m::GraphSpace) = m.agent_positions
-
-"""
-    isempty(node::Int, model::ABM)
-Return `true` if there are no agents in `node`.
-"""
-Base.isempty(node::Integer, model::ABM) =
-isempty(model.space.agent_positions[node])
 
 """
     GraphSpace(graph::AbstractGraph)
@@ -69,7 +45,7 @@ end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-function random_position(model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+function random_position(model::ABM{<:AbstractAgent, <:GraphSpace})
   correct_pos_type(rand(1:nv(model)), model)
 end
 
