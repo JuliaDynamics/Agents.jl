@@ -3,11 +3,12 @@ This file implements functions shared by all discrete spaces.
 Discrete spaces are by definition spaces with a finite amount of possible positions.
 
 All these functions are granted "for free" to discrete spaces by simply extending:
+- nodes(model)
 - get_node_contents(position, model)
 =#
 const DiscreteSpace = Union{GraphSpace, GridSpace}
 
-export nodes, find_empty_nodes
+export nodes, find_empty_nodes, pick_empty
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
@@ -34,11 +35,23 @@ function nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace}, by::Symbol)
 end
 
 function find_empty_nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace})
-	Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model))
+	collect(Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model)))
 end
 
 """
-    isempty(position, model::ABM)
+    isempty(position, model::ABM{A, <:DiscreteSpace})
 Return `true` if there are no agents in `node`.
 """
 Base.isempty(pos, model::ABM) = isempty(get_node_contents(pos, model))
+
+
+"""
+    pick_empty(model::ABM{A, <:DiscreteSpace})
+
+Return a random position of an empty node or `nothing` if there are no empty nodes.
+"""
+function pick_empty(model::ABM{<:AbstractAgent, <:DiscreteSpace})
+	empty_nodes = find_empty_nodes(model)
+	isempty(empty_nodes) && return nothing
+	rand(empty_nodes)
+end

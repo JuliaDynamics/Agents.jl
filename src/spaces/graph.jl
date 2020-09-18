@@ -1,5 +1,3 @@
-export node_neighbors, find_empty_nodes, pick_empty, has_empty_nodes, get_node_contents,
-NodeIterator, space_neighbors, nodes, get_node_agents, coord2vertex, vertex2coord
 export GraphSpace
 
 #######################################################################################
@@ -38,12 +36,6 @@ function Base.show(io::IO, abm::GraphSpace)
     print(io, s)
 end
 
-"""
-    get_node_contents(position, model::ABM{A, <:DiscreteSpace})
-
-Return the ids of agents in the "node" corresponding to `position`.
-"""
-get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 
 #######################################################################################
 # Agents.jl space API
@@ -71,9 +63,21 @@ function add_agent_to_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:
     return agent
 end
 
+# The following two is for the discrete space API:
+"""
+    get_node_contents(position, model::ABM{A, <:DiscreteSpace})
+
+Return the ids of agents in the "node" corresponding to `position`.
+"""
+get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
+# NOTICE: The return type of `get_node_contents` must support `length` and `isempty`!
+
+nodes(model::ABM{<:AbstractAgent, GraphSpace}) = 1:nv(model)
+
 #######################################################################################
 # Extra space-related functions dedicated to discrete space
 #######################################################################################
+# TODO: Move all this crap to the shared file and ensure that they are lean and clean
 export add_agent_single!, fill_space!, move_agent_single!
 
 """
@@ -178,60 +182,10 @@ function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:A
     return agent
 end
 
+
 #######################################################################################
-# finding specific nodes or agents
+# Neighbors TODO
 #######################################################################################
-"""
-    find_empty_nodes(model::ABM)
-
-Returns an iterator over empty nodes (i.e. without any agents) in the model.
-"""
-function find_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
-  ap = agent_positions(model)
-  [i for i in 1:length(ap) if isempty(ap[i])]
-end
-
-"""
-    pick_empty(model)
-
-Return a random empty node or `0` if there are no empty nodes.
-"""
-function pick_empty(model::ABM{A,<:DiscreteSpace}) where {A}
-  empty_nodes = find_empty_nodes(model)
-  isempty(empty_nodes) && return 0
-  rand(empty_nodes)
-end
-
-"""
-    has_empty_nodes(model)
-
-Return true if there are empty nodes in the `model`.
-"""
-function has_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
-    any(isempty, agent_positions(model))
-end
-
-"""
-    get_node_contents(agent::AbstractAgent, model)
-
-Return all agents' ids in the same node as the `agent` (including the agent's own id).
-"""
-get_node_contents(agent::AbstractAgent, model::ABM{A,<:DiscreteSpace}) where {A} = get_node_contents(agent.pos, model)
-
-function get_node_contents(coords::Tuple, model::ABM{A,<:DiscreteSpace}) where {A}
-  node_number = coord2vertex(coords, model)
-  agent_positions(model)[node_number]
-end
-
-"""
-    get_node_agents(x, model)
-Same as `get_node_contents(x, model)` but directly returns the list of agents
-instead of just the list of IDs.
-"""
-get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id in get_node_contents(x, model)]
-
-@deprecate id2agent(id::Integer, model::ABM) model[id]
-
 function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
   d = findfirst(isequal(agent.id), all)
@@ -315,9 +269,3 @@ function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}, r
   end
   return nlist
 end
-
-
-#######################################################################################
-# Iteration over space
-#######################################################################################
-nodes(model::ABM{<:AbstractAgent, GraphSpace}) = 1:nv(model)
