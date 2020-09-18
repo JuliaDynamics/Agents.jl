@@ -6,10 +6,10 @@ include("agents.jl")
 
 #### SPACE CONSTRUCTION ####
 
-SUITE["space"] = BenchmarkGroup(["graph", "grid", "continuous"])
-SUITE["space"]["graph"] = @benchmarkable GraphSpace(complete_digraph(1000))
-SUITE["space"]["grid"] = @benchmarkable GridSpace((500, 500))
-SUITE["space"]["continuous"] =
+SUITE["space_creation"] = BenchmarkGroup(["graph", "grid", "continuous"])
+SUITE["space_creation"]["graph"] = @benchmarkable GraphSpace(complete_digraph(1000))
+SUITE["space_creation"]["grid"] = @benchmarkable GridSpace((500, 500))
+SUITE["space_creation"]["continuous"] =
     @benchmarkable ContinuousSpace(5; extend = (100, 100, 100, 100, 100))
 
 #### MODEL CREATION ####
@@ -294,4 +294,3 @@ SUITE["grid"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($grid_df, $grid_model, $adata, 0)
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
-
