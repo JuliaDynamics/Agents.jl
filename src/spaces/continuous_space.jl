@@ -270,7 +270,6 @@ function nearest_neighbor(agent, model, r)
     elseif model.space.metric == :cityblock
       @inbounds dnew = sum(abs.(agent.pos .- model[n[i]].pos))
     end
-    _, j = findmin(d)
     if dnew < d
       d, j = dnew, i
     end
