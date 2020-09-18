@@ -1,4 +1,4 @@
-mutable struct WealthAgent <: AbstractAgent
+mutable struct WealthInSpace <: AbstractAgent
     id::Int
     pos::NTuple{2,Int}
     wealth::Int
