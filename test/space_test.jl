@@ -1,19 +1,5 @@
 @testset "Space" begin
 
-@testset "Deprecated spaces" begin
-    # GraphSpace
-    @test_deprecated (@test_throws TypeError Space(Agents.Graph(1)))
-    # GridSpace
-    @test_deprecated (@test_throws TypeError Space((5, 1)))
-    # ContinuousSpace
-    @test_deprecated Space(5, (a, m) -> nothing)
-end
-
-
-@testset "0D grids" begin
-    @test GridSpace((1,)).graph == Agents.Graph(1)
-end
-
 @testset "1D grids" begin
     a = GridSpace((5, 1))
     ae = collect(Agents.LightGraphs.edges(a.graph))
@@ -147,7 +133,7 @@ end
     model = ABM(Agent1, space)
     @test has_empty_nodes(model)
     for node in [1, 5, 6, 9, 2, 3, 4]
-        add_agent!(node, model)
+        add_agent!(vertex2coord(node, model), model)
     end
     # only nodes 7 and 8 should be empty
     @test pick_empty(model) ∈ 7:8
@@ -206,14 +192,14 @@ end
     add_agent!((3, 2), gridspace, rand())
     @test space_neighbors((1, 2), gridspace) == [1]
     @test sort!(space_neighbors((1, 2), gridspace, 2)) == [1, 2]
-    @test_throws MethodError space_neighbors((1, 2), gridspace, 1.5)
+    @test_throws ErrorException space_neighbors((1, 2), gridspace, 1.5)
     @test sort!(space_neighbors((2, 2), gridspace)) == [1, 2]
     @test space_neighbors(a, gridspace) == [2]
 
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-    @test_throws MethodError node_neighbors(1, continuousspace)
+    @test_throws ErrorException node_neighbors(1, continuousspace)
     @test space_neighbors(a, continuousspace, 0.05) == []
     @test space_neighbors(a, continuousspace, 0.1) == [2]
     @test sort!(space_neighbors((0.55, 0.5), continuousspace, 0.05)) == [1, 2]

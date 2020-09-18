@@ -6,11 +6,11 @@ end
 
 """
 ``` julia
-forest_fire(; 
-    f = 0.02, 
-    d = 0.8, 
-    p = 0.01, 
-    griddims = (100, 100), 
+forest_fire(;
+    f = 0.02,
+    d = 0.8,
+    p = 0.01,
+    griddims = (100, 100),
     seed = 111
 )
 ```
@@ -26,7 +26,7 @@ function forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed 
     ## which determines the density of the forest
     for node in nodes(forest)
         if rand() ≤ forest.d
-            add_agent!(node, forest, true)
+            add_agent!(vertex2coord(node, forest), forest, true)
         end
     end
     return forest, dummystep, forest_model_step!
@@ -37,7 +37,7 @@ function forest_model_step!(forest)
         nc = get_node_contents(node, forest)
         ## the cell is empty, maybe a tree grows here
         if length(nc) == 0
-            rand() ≤ forest.p && add_agent!(node, forest, true)
+            rand() ≤ forest.p && add_agent!(vertex2coord(node, forest), forest, true)
         else
             tree = forest[nc[1]] # by definition only 1 agent per node
             if tree.status == false  # if it is has been burning, remove it.

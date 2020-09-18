@@ -11,9 +11,12 @@ import Base.length
 # Core structures of Agents.jl
 include("core/model.jl")
 include("core/schedule.jl")
-include("core/discrete_space.jl")
-include("core/continuous_space.jl")
-include("core/agent_space_interaction.jl")
+include("core/space_interaction_API.jl")
+
+include("spaces/nothing.jl")
+include("spaces/discrete_space.jl")
+include("spaces/continuous_space.jl")
+include("spaces/array.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")
