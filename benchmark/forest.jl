@@ -16,7 +16,7 @@ function forest_fire_array(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100),
 
     ## create and add trees to each pos with probability d,
     ## which determines the density of the forest
-    for pos in positions(forest)
+    for pos in nodes(forest)
         if rand() ≤ forest.d
             add_agent!(pos, forest, true)
         end
@@ -25,7 +25,7 @@ function forest_fire_array(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100),
 end
 
 function forest_model_step_array!(forest)
-    for pos in positions(forest, :random)
+    for pos in nodes(forest, :random)
         nc = get_node_contents(pos, forest)
         ## the cell is empty, maybe a tree grows here
         if length(nc) == 0

@@ -149,16 +149,30 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 		initialize_neighborhood!(space, r)
 	end
 
-	if isinner(α, hood)   # `α` won't reach the walls with this Hood
+	if α ∈ hood.inner     # `α` won't reach the walls with this Hood
 		return (Tuple(α + β) for β in hood.βs)
 	elseif space.periodic # `α` WILL reach the walls and then loop
-		return ((mod1.(Tuple(α+β), r.maxi)) for β in hood.βs)
+		return ((mod1.(Tuple(α+β), hood.whole.maxi)) for β in hood.βs)
 	else                  # `α` WILL reach the walls and then stop
 		return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 	end
 end
 
 grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.space, α)
+
+##########################################################################################
+# %% Extend neighbors API for spaces
+##########################################################################################
+function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
+    nn = grid_space_neighborhood(CartesianIndex(pos), model)
+    s = model.space.s
+    Iterators.flatten((s[i...] for i in nn))
+end
+
+function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
+	nn = grid_space_neighborhood(CartesianIndex(pos), model)
+	Iterators.filter(!isequal(pos), nn)
+end
 
 ###################################################################
 # %% pretty printing

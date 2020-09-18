@@ -74,7 +74,8 @@ space_neighbors(position, model, r=1) = notimplemented(model)
     node_neighbors(position, model::ABM, r=1) → positions
 
 Return an iterator of all positions within "radius" `r` of the given `position`
-(which must match type with the spatial structure of the `model`).
+(which excludes given `position`).
+The `position` must match type with the spatial structure of the `model`).
 The value of `r` operates identically to [`space_neighbors`](@ref).
 """
 node_neighbors(position, model, r=1) = notimplemented(model)
