@@ -161,57 +161,6 @@ end
 grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.space, α)
 
 ###################################################################
-# %% Neighbors API
-###################################################################
-
-# Code a version with explicit D = 2, r = 1 and moore and not periodic for quick benchmark
-function node_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace}, r)
-    d = size(model.space.s)
-    rangex = max(1, pos[1]-1):min(d[1], pos[1]+1)
-    rangey = max(1, pos[2]-1):min(d[2], pos[2]+1)
-    # TODO: This includes current position
-    near = Iterators.product(rangex, rangey)
-end
-
-function space_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
-    nn = node_neighbors(pos, model)
-    s = model.space.s
-    Iterators.flatten((s[i...] for i in nn))
-end
-
-
-#######################################################################################
-# %% Further discrete space  functions
-#######################################################################################
-export nodes
-function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
-    x = CartesianIndices(model.space.s)
-    return (Tuple(y) for y in x)
-end
-
-function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
-    itr = collect(nodes(model))
-    if by == :random
-        shuffle!(itr)
-    elseif by == :id
-        # TODO: By id is wrong...?
-        sort!(itr)
-    else
-        error("unknown `by`")
-    end
-    return itr
-end
-
-function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
-    return model.space.s[pos...]
-end
-
-function find_empty_nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
-	Iterators.filter(i -> length(model.space.s[i...]) == 0, nodes(pos))
-end
-
-
-###################################################################
 # %% pretty printing
 ###################################################################
 function Base.show(io::IO, abm::ArraySpace)
