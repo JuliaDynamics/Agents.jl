@@ -160,7 +160,7 @@ nothing # hide
 # Sheep and wolves move to a random adjacent cell with the `move!` function.
 function move!(agent, model)
     neighbors = node_neighbors(agent, model)
-    cell = rand(neighbors)
+    cell = rand(collect(neighbors))
     move_agent!(agent, cell, model)
 end
 nothing # hide
