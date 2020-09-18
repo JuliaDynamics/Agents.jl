@@ -32,7 +32,7 @@ end
 Create a `GridSpace` that has size given by the tuple `d`, having `D` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`space_neighbors`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid positions have indices
+The position type for this space is `NTuple{D, Int}` and valid nodes have indices
 in the range `1:d[i]` for the `i`th dimension.
 
 `:chebyshev` metric means that the `r`-neighborhood of a node are all
@@ -72,32 +72,6 @@ function move_agent!(a::A, pos::Tuple, model::ABM{A, <: ArraySpace}) where {A<:A
     remove_agent_from_space!(a, model)
     a.pos = pos
     add_agent_to_space!(a, model)
-end
-
-#######################################################################################
-# %% Further discrete space  functions
-#######################################################################################
-export positions
-function positions(model::ABM{<:AbstractAgent, <:ArraySpace})
-    x = CartesianIndices(model.space.s)
-    return (Tuple(y) for y in x)
-end
-
-function positions(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
-    itr = collect(positions(model))
-    if by == :random
-        shuffle!(itr)
-    elseif by == :id
-        # TODO: By id is wrong...?
-        sort!(itr)
-    else
-        error("unknown `by`")
-    end
-    return itr
-end
-
-function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
-    return model.space.s[pos...]
 end
 
 ##########################################################################################
@@ -157,7 +131,7 @@ end
 """
 	grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 
-Return an iterator over all positions within distance `r` from `α` according to the `space`.
+Return an iterator over all nodes within distance `r` from `α` according to the `space`.
 
 The only reason this function is not equivalent with `node_neighbors` is because
 `node_neighbors` skips the current position `α`, while `α` is always included in the
@@ -204,6 +178,38 @@ function space_neighbors(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
 end
+
+
+#######################################################################################
+# %% Further discrete space  functions
+#######################################################################################
+export nodes
+function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+    x = CartesianIndices(model.space.s)
+    return (Tuple(y) for y in x)
+end
+
+function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
+    itr = collect(nodes(model))
+    if by == :random
+        shuffle!(itr)
+    elseif by == :id
+        # TODO: By id is wrong...?
+        sort!(itr)
+    else
+        error("unknown `by`")
+    end
+    return itr
+end
+
+function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    return model.space.s[pos...]
+end
+
+function find_empty_nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+	Iterators.filter(i -> length(model.space.s[i...]) == 0, nodes(pos))
+end
+
 
 ###################################################################
 # %% pretty printing

@@ -462,7 +462,7 @@ end
 """
     find_empty_nodes(model::ABM)
 
-Returns the indices of empty nodes on the model space.
+Returns an iterator over empty nodes (i.e. without any agents) in the model.
 """
 function find_empty_nodes(model::ABM{A,<:DiscreteSpace}) where {A}
   ap = agent_positions(model)
