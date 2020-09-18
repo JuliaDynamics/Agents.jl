@@ -99,13 +99,13 @@ println("Add agent")
 
 # %% ARRAY VERSION
 println("\n\nTimes of NEW grid")
-(model, agent_step!, model_step!) = forest_fire_array()
+(model, agent_step!, model_step!) = forest_fire_array(;periodic=false)
 step!(model, agent_step!, model_step!, 10)
 
 # println("Standard stepping")
 # @btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
 
-(model, agent_step!, model_step!) = forest_fire_array()
+(model, agent_step!, model_step!) = forest_fire_array(;periodic=false)
 step!(model, agent_step!, model_step!, 1)
 a = random_agent(model)
 aa = [random_agent(model) for i in 1:100]

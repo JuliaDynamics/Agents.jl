@@ -141,34 +141,33 @@ helper struct `Hood` and generates neighboring cartesian indices on the fly,
 reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
-function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, true}, r::Real) where {D}
+function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 	hood = if haskey(space.hoods, r)
 		space.hoods[r]
 	else
 		initialize_neighborhood!(space, r)
 	end
+	_grid_space_neighborhood(α, space, hood)
+end
 
+function _grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, true}, hood) where {D}
 	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
 	# 	return Base.Generator(β -> Tuple(α + β), hood.βs)
 	# else                  # `α` WILL reach the walls and then loop
 	# 	return Base.Generator(β-> mod1.(Tuple(α+β), hood.whole.maxi), hood.βs)
 	# end
-	
+
 	# Here you will notice that we actually do not make a separation of whether the
 	# point α is near to the wall or not, and always take the modulo nevertheless.
 	# The reason is that Generators depend on the function used, and thus they would be
 	# type unstable if different function was used for different value of α.
 	# To make it type stable we would have to collect the result, but apparently
 	# this makes it slower because of allocations... so better take the mod1 always.
+
 	return ((mod1.(Tuple(α+β), hood.whole.maxi)) for β in hood.βs)
 end
-function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, false}, r::Real) where {D}
-	hood = if haskey(space.hoods, r)
-		space.hoods[r]
-	else
-		initialize_neighborhood!(space, r)
-	end
 
+function _grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, false}, hood) where {D}
 	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
 	# 	return Iterators.filter(always_true, (Tuple(α + β) for β in hood.βs))
 	# else                  # `α` WILL reach the walls and then stop
@@ -176,7 +175,6 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, false}
 	# end
 	return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 end
-always_true(args...) = true
 
 grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.space, r)
 
