@@ -121,7 +121,7 @@ end
 
 function move!(agent, model)
     neighbors = node_neighbors(agent, model)
-    cell = rand(neighbors)
+    cell = rand(collect(neighbors))
     move_agent!(agent, cell, model)
 end
 
