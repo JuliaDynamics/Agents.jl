@@ -37,6 +37,14 @@ function Base.show(io::IO, abm::DiscreteSpace)
     print(io, s)
 end
 
+function correct_pos_type(n, model)
+    if typeof(model.space) <: GraphSpace
+        return coord2vertex(n, model)
+    elseif typeof(model.space) <: GridSpace
+        return vertex2coord(n, model)
+    end
+end
+
 agent_positions(m::ABM) = m.space.agent_positions
 agent_positions(m::DiscreteSpace) = m.agent_positions
 Base.size(s::GridSpace) = s.dimensions
@@ -77,10 +85,6 @@ function GridSpace(dims::NTuple{D, I}; periodic = false, moore = false) where {D
   agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
   return GridSpace{typeof(graph), D, I}(graph, agent_positions, dims)
 end
-
-# Deprecation
-@deprecate Space(graph::G) where {G<:AbstractGraph} GraphSpace(graph::G) where {G<:AbstractGraph}
-@deprecate Space(dims::NTuple{D, I}) where {D, I} GridSpace(dims::NTuple{D, I}) where {D, I}
 
 # 1d grid
 function _grid(length::Integer, periodic::Bool=false, moore::Bool = false)
@@ -301,6 +305,158 @@ end
 vertex2coord(v::Tuple, model::ABM) = v
 
 #######################################################################################
+# Agents.jl space API
+#######################################################################################
+function random_position(model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+  correct_pos_type(rand(1:nv(model)), model)
+end
+
+function remove_agent_from_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    agentnode = coord2vertex(agent.pos, model)
+    # remove from the space
+    splice!(
+        agent_positions(model)[agentnode],
+        findfirst(a -> a == agent.id, agent_positions(model)[agentnode]),
+    )
+    return model
+end
+
+function move_agent!(agent::A, _pos::ValidPos, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    pos = correct_pos_type(_pos, model)
+    # remove agent from old position
+    if typeof(agent.pos) <: Tuple
+        oldnode = coord2vertex(agent.pos, model)
+        splice!(
+            model.space.agent_positions[oldnode],
+            findfirst(a -> a == agent.id, model.space.agent_positions[oldnode]),
+        )
+        agent.pos = vertex2coord(pos, model)  # update agent position
+    else
+        splice!(
+            model.space.agent_positions[agent.pos],
+            findfirst(a -> a == agent.id, model.space.agent_positions[agent.pos]),
+        )
+        agent.pos = pos
+    end
+    push!(model.space.agent_positions[coord2vertex(pos, model)], agent.id)
+    return agent
+end
+
+function add_agent_to_space!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    nn = coord2vertex(agent.pos, model)
+    push!(model.space.agent_positions[nn], agent.id)
+    return agent
+end
+
+
+#######################################################################################
+# Extra space-related functions dedicated to discrete space
+#######################################################################################
+export add_agent_single!, fill_space!, move_agent_single!
+
+"""
+    add_agent_single!(agent::A, model::ABM{A, <: DiscreteSpace}) → agent
+
+Add agent to a random node in the space while respecting a maximum one agent per node.
+This function throws a warning if no empty nodes remain.
+"""
+function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        agent.pos = correct_pos_type(rand(empty_cells), model)
+        add_agent_pos!(agent, model)
+    else
+        @warn "No empty nodes found for `add_agent_single!`."
+    end
+end
+
+"""
+    add_agent_single!(model::ABM{A, <: DiscreteSpace}, properties...; kwargs...)
+Same as `add_agent!(model, properties...)` but ensures that it adds an agent
+into a node with no other agents (does nothing if no such node exists).
+"""
+function add_agent_single!(
+        model::ABM{A,<:DiscreteSpace},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        add_agent!(rand(empty_cells), model, properties...; kwargs...)
+    end
+end
+
+
+"""
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, args...; kwargs...)
+    fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, f::Function; kwargs...)
+Add one agent to each node in the model's space. Similarly with [`add_agent!`](@ref),
+the function creates the necessary agents and
+the `args...; kwargs...` are propagated into agent creation.
+If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
+applying `f` where `pos` is each position (tuple for grid, node index for graph).
+
+An optional first argument is an agent **type** to be created, and targets mixed-agent
+models where the agent constructor cannot be deduced (since it is a union).
+
+## Example
+```julia
+using Agents
+mutable struct Daisy <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    breed::String
+end
+mutable struct Land <: AbstractAgent
+    id::Int
+    pos::Tuple{Int, Int}
+    temperature::Float64
+end
+space = GridSpace((10, 10), moore = true, periodic = true)
+model = ABM(Union{Daisy, Land}, space)
+temperature(pos) = (pos[1]/10, ) # make it Tuple!
+fill_space!(Land, model, temperature)
+```
+"""
+fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
+fill_space!(A, model, args...; kwargs...)
+
+function fill_space!(::Type{A}, model::ABM, args...; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
+end
+
+function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:AbstractAgent}
+    for n in nodes(model)
+        id = nextid(model)
+        cnode = correct_pos_type(n, model)
+        args = f(cnode)
+        add_agent_pos!(A(id, cnode, args...; kwargs...), model)
+    end
+    return model
+end
+
+"""
+    move_agent_single!(agent::AbstractAgent, model::ABM{A,<:DiscreteSpace}) → agentt
+
+Move agent to a random node while respecting a maximum of one agent
+per node. If there are no empty nodes, the agent wont move.
+Only valid for non-continuous spaces.
+"""
+function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    empty_cells = find_empty_nodes(model)
+    if length(empty_cells) > 0
+        random_node = rand(empty_cells)
+        move_agent!(agent, random_node, model)
+    end
+    return agent
+end
+
+#######################################################################################
 # finding specific nodes or agents
 #######################################################################################
 """
@@ -362,34 +518,14 @@ get_node_agents(x, model::ABM{A,<:DiscreteSpace}) where {A} = [model[id] for id 
 
 @deprecate id2agent(id::Integer, model::ABM) model[id]
 
-"""
-    space_neighbors(position, model::ABM, r) → ids
-
-Return the ids of the agents neighboring the given `position` (which must match type
-with the spatial structure of the `model`). `r` is the radius to search for agents.
-
-For `DiscreteSpace` `r` must be integer and defines higher degree neighbors.
-For example, for `r=2` include first and second degree neighbors,
-that is, neighbors and neighbors of neighbors.
-Specifically for `GraphSpace`, the keyword `neighbor_type` can also be used
-as in [`node_neighbors`](@ref) to restrict search on directed graphs.
-
-For `ContinuousSpace`, `r` is real number and finds all neighbors within distance `r`
-(based on the space's metric).
-
-    space_neighbors(agent::AbstractAgent, model::ABM [, r]) → ids
-
-Call `space_neighbors(agent.pos, model, r)` but *exclude* the given
-`agent` from the neighbors.
-"""
-function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   all = space_neighbors(agent.pos, model, args...; kwargs...)
   d = findfirst(isequal(agent.id), all)
   d ≠ nothing && deleteat!(all, d)
   return all
 end
 
-function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A}
+function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
   node = coord2vertex(pos, model)
   nn = node_neighbors(node, model, args...; kwargs...)
   # We include the current node in the search since we are searching over space
@@ -423,13 +559,13 @@ function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; n
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn =
         if neighbor_type == :default
-            neighbors
+            LightGraphs.neighbors
         elseif neighbor_type == :in
-            inneighbors
+            LightGraphs.inneighbors
         elseif neighbor_type == :out
-            outneighbors
+            LightGraphs.outneighbors
         else
-            all_neighbors
+            LightGraphs.all_neighbors
         end
     neighborfn(model.space.graph, node_number)
 end

@@ -25,6 +25,7 @@ move_agent_single!
 kill_agent!
 genocide!
 sample!
+random_position
 ```
 
 ## Discrete space exclusives
