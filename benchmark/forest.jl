@@ -3,14 +3,14 @@ using BenchmarkTools
 using Random
 
 # Define new space model
-mutable struct Tree <: AbstractAgent
-    id::Int
+mutable struct Tree <: AbstractAgent    id::Int
     pos::Tuple{Int,Int}
     status::Bool  # true is green and false is burning
 end
-function forest_fire_array(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
+function forest_fire_array(; f = 0.02, d = 1.0, p = 0.01,
+    griddims = (20, 20), seed = 111, periodic = true)
     Random.seed!(seed)
-    space = ArraySpace(griddims)
+    space = ArraySpace(griddims; periodic=true)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 
@@ -48,17 +48,33 @@ function forest_model_step_array!(forest)
     end
 end
 
+function iterate_over_neighbors(a, model)
+    s::Int = 0
+    for x in space_neighbors(a, model)
+        s::Int += x
+    end
+    return s
+end
+function iterate_over_neighbors2(aa::Vector, model)
+    s::Int = 0
+    for a in aa
+    for x in space_neighbors(a, model)
+        s::Int += x
+    end
+    end
+    return s
+end
 
 # %%
-println("Times of old grid")
+println("\n\nTimes of old grid")
 
 # println("Standard stepping")
 # @btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = Models.forest_fire())
 
-model, agent_step!, model_step! = Models.forest_fire()
-step!(model, agent_step!, model_step!, 10)
+model, agent_step!, model_step! = Models.forest_fire(;griddims=(20,20), d=1.0)
+step!(model, agent_step!, model_step!, 1)
 a = random_agent(model)
-
+aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
 
 println("Move agent")
@@ -67,20 +83,13 @@ println("Move agent")
 println("Space neighbors")
 @btime space_neighbors($a, $model);
 
-function iterate_over_neighbors(a, model)
-    s = 0
-    for x in space_neighbors(a, model)
-        s += x
-    end
-    return s
-end
-
 # TODO: Need to check this for veeery large set of neighbors
 println("Iterate over space neighbors")
 @btime iterate_over_neighbors($a, $model);
 println("Iterate over position space neighbors")
 @btime iterate_over_neighbors($a.pos, $model);
-
+println("Iterate over space neighbors2")
+@btime iterate_over_neighbors2($aa, $model);
 println("node neighbors")
 @btime node_neighbors($a.pos, $model);
 
@@ -89,8 +98,7 @@ println("Add agent")
 
 
 # %% ARRAY VERSION
-println("Times of new grid")
-
+println("\n\nTimes of NEW grid")
 (model, agent_step!, model_step!) = forest_fire_array()
 step!(model, agent_step!, model_step!, 10)
 
@@ -98,32 +106,24 @@ step!(model, agent_step!, model_step!, 10)
 # @btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
 
 (model, agent_step!, model_step!) = forest_fire_array()
-step!(model, agent_step!, model_step!, 10)
+step!(model, agent_step!, model_step!, 1)
 a = random_agent(model)
+aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
-
-println("Move agent")
-@btime move_agent!($a, $model);
 
 println("Space neighbors")
 @btime space_neighbors($a, $model);
-
-function iterate_over_neighbors(a, model)
-    s = 0
-    for x in space_neighbors(a, model)
-        s += x
-    end
-    return s
-end
-
-# TODO: Need to check this for veeery large set of neighbors
 println("Iterate over space neighbors")
 @btime iterate_over_neighbors($a, $model);
 println("Iterate over position space neighbors")
 @btime iterate_over_neighbors($a.pos, $model);
-
-println("Add agent")
-@btime add_agent!($model, true)
-
+println("Iterate over space neighbors2")
+@btime iterate_over_neighbors2($aa, $model);
 println("node neighbors")
 @btime node_neighbors($a.pos, $model);
+
+
+println("Move agent")
+@btime move_agent!($a, $model);
+println("Add agent")
+@btime add_agent!($model, true)

@@ -237,10 +237,8 @@ end
 """
     node_neighbors(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `node_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
-`agent`'s position.
+Same as `node_neighbors(agent.pos, model, r)`.
 """
 function node_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = node_neighbors(agent.pos, model, args...; kwargs...)
-    Iterators.filter(!isequal(agent.pos), all)
+    node_neighbors(agent.pos, model, args...; kwargs...)
 end

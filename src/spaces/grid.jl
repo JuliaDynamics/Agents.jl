@@ -18,9 +18,8 @@ struct Hood{D} # type P stands for Periodic and is a boolean
 	βs::Vector{CartesianIndex{D}}
 end
 
-struct ArraySpace{D} <: AbstractSpace
+struct ArraySpace{D, P} <: AbstractSpace
     s::Array{Vector{Int}, D}
-	periodic::Bool
 	metric::Symbol
 	# `hoods` is a preinitialized container of neighborhood cartesian indices
 	hoods::Dict{Float64, Hood{D}}
@@ -46,7 +45,7 @@ function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :ch
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return ArraySpace{D}(s, periodic, metric, Dict{Float64, Hood{D}}())
+    return ArraySpace{D, periodic}(s, metric, Dict{Float64, Hood{D}}())
 end
 
 #######################################################################################
@@ -116,13 +115,13 @@ function initialize_neighborhood!(space::ArraySpace{D}, r::Real) where {D}
 		# select subset of hc which is in Hypersphere
 		βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
 	elseif space.metric == :chebyshev
-		βs = [CartesianIndex(a) for a in Iterators.product([-r0:r0 for φ=1:D]...)]
+		βs = vec([CartesianIndex(a) for a in Iterators.product([-r0:r0 for φ=1:D]...)])
 	else
 		error("Unknown metric type")
 	end
 	inner = inner_region(βs, d)
 	whole = Region(map(one, d), d)
-	hood = Hood{D, P}(inner, whole, βs)
+	hood = Hood{D}(inner, whole, βs)
 	space.hoods[float(r)] = hood
 	return hood
 end
@@ -142,42 +141,98 @@ helper struct `Hood` and generates neighboring cartesian indices on the fly,
 reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
-function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
-	hood = if hasindex(space.hoods, r)
+function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, true}, r::Real) where {D}
+	hood = if haskey(space.hoods, r)
 		space.hoods[r]
 	else
 		initialize_neighborhood!(space, r)
 	end
 
-	if α ∈ hood.inner     # `α` won't reach the walls with this Hood
-		return (Tuple(α + β) for β in hood.βs)
-	elseif space.periodic # `α` WILL reach the walls and then loop
-		return ((mod1.(Tuple(α+β), hood.whole.maxi)) for β in hood.βs)
-	else                  # `α` WILL reach the walls and then stop
-		return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
-	end
+	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
+	# 	return Base.Generator(β -> Tuple(α + β), hood.βs)
+	# else                  # `α` WILL reach the walls and then loop
+	# 	return Base.Generator(β-> mod1.(Tuple(α+β), hood.whole.maxi), hood.βs)
+	# end
+	
+	# Here you will notice that we actually do not make a separation of whether the
+	# point α is near to the wall or not, and always take the modulo nevertheless.
+	# The reason is that Generators depend on the function used, and thus they would be
+	# type unstable if different function was used for different value of α.
+	# To make it type stable we would have to collect the result, but apparently
+	# this makes it slower because of allocations... so better take the mod1 always.
+	return ((mod1.(Tuple(α+β), hood.whole.maxi)) for β in hood.βs)
 end
+function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, false}, r::Real) where {D}
+	hood = if haskey(space.hoods, r)
+		space.hoods[r]
+	else
+		initialize_neighborhood!(space, r)
+	end
 
-grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood!(model.space, α)
+	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
+	# 	return Iterators.filter(always_true, (Tuple(α + β) for β in hood.βs))
+	# else                  # `α` WILL reach the walls and then stop
+	# 	return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
+	# end
+	return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
+end
+always_true(args...) = true
+
+grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.space, r)
 
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
 function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
-    nn = grid_space_neighborhood(CartesianIndex(pos), model)
+    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
+    # IterWrapper(Iterators.flatten((s[i...] for i in nn)))
 end
 
+struct IterWrapper{S}
+	iter::S
+end
+Base.eltype(::Type{IterWrapper}) = Int
+Base.IteratorEltype(::Type{IterWrapper}) = HasEltype()
+Base.iterate(iter::IterWrapper) = iterate(iter.iter)
+Base.iterate(iter::IterWrapper, state) = iterate(iter.iter, state)
+
 function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
-	nn = grid_space_neighborhood(CartesianIndex(pos), model)
+	nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
 	Iterators.filter(!isequal(pos), nn)
+end
+
+
+#######################################################################################
+# %% Further discrete space  functions
+#######################################################################################
+function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+    x = CartesianIndices(model.space.s)
+    return (Tuple(y) for y in x)
+end
+
+function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
+    itr = collect(nodes(model))
+    if by == :random
+        shuffle!(itr)
+    elseif by == :id
+        # TODO: By id is wrong...?
+        sort!(itr)
+    else
+        error("unknown `by`")
+    end
+    return itr
+end
+
+function get_node_contents(pos::Tuple, model::ABM{<:AbstractAgent, <:ArraySpace})
+    return model.space.s[pos...]
 end
 
 ###################################################################
 # %% pretty printing
 ###################################################################
 function Base.show(io::IO, abm::ArraySpace)
-    s = "Array space with size $(size(abm.s)), periodic=$(abm.periodic) and metric=$(abm.metric)"
+    s = "Array space with size $(size(abm.s)) and metric=$(abm.metric)"
     print(io, s)
 end
