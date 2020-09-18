@@ -67,12 +67,24 @@ for space in ["graph", "grid", "continuous"]
     SUITE[space]["add_union"] = BenchmarkGroup(["agent", "agent_pos", "agent_single"])
     if space == "continuous"
         SUITE[space]["move"] = BenchmarkGroup(["update", "vel"])
-        SUITE[space]["neighbors"] =
-            BenchmarkGroup(["space_pos", "space_agent", "nearest", "interacting"])
+        SUITE[space]["neighbors"] = BenchmarkGroup([
+            "space_pos",
+            "space_agent",
+            "space_pos_iterate",
+            "space_agent_iterate",
+            "nearest",
+            "interacting",
+        ])
     else
         SUITE[space]["move"] = BenchmarkGroup(["random", "pos", "single"])
-        SUITE[space]["neighbors"] =
-            BenchmarkGroup(["space_pos", "space_agent", "node_pos", "node_agent"])
+        SUITE[space]["neighbors"] = BenchmarkGroup([
+            "space_pos",
+            "space_agent",
+            "space_pos_iterate",
+            "space_agent_iterate",
+            "node_pos",
+            "node_agent",
+        ])
     end
     SUITE[space]["collect"] = BenchmarkGroup(["init_agent", "store_agent"])
 end
@@ -88,6 +100,14 @@ for add in ["add", "add_union"]
     group = SUITE["continuous"][add].tags
     add == "add" && splice!(group, findfirst(t -> t == "create_single", group))
     splice!(group, findfirst(t -> t == "agent_single", group))
+end
+
+function iterate_over_neighbors(a, model, r)
+    s = 0
+    for x in space_neighbors(a, model, r)
+        s += x
+    end
+    return s
 end
 
 #### API -> GRAPH ####
@@ -118,28 +138,30 @@ SUITE["graph"]["add_union"]["agent_pos"] =
 SUITE["graph"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($graph_agent, $graph_union_model)
 
-graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(1000)))
-for _ in 1:800
+graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(2000)))
+for _ in 1:1800
     add_agent!(graph_model, 6.5, false)
 end
 a = random_agent(graph_model)
+pos = rand(1:2000)
 SUITE["graph"]["move"]["random"] = @benchmarkable move_agent!($a, $graph_model)
 SUITE["graph"]["move"]["pos"] = @benchmarkable move_agent!($a, 68, $graph_model)
 SUITE["graph"]["move"]["single"] = @benchmarkable move_agent_single!($a, $graph_model)
 
+# We use a digraph, so all agents are neighbors of each other
 SUITE["graph"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors(rand(1:1000), $graph_model, 5)
+    @benchmarkable space_neighbors($pos, $graph_model)
 SUITE["graph"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors(random_agent($graph_model), $graph_model, 5)
-SUITE["graph"]["neighbors"]["node_pos"] =
-    @benchmarkable node_neighbors(rand(1:1000), $graph_model)
-SUITE["graph"]["neighbors"]["node_agent"] =
-    @benchmarkable node_neighbors(random_agent($graph_model), $graph_model)
+    @benchmarkable space_neighbors($a, $graph_model)
+SUITE["graph"]["neighbors"]["space_pos_iterate"] =
+    @benchmarkable iterate_over_neighbors($pos, $graph_model, 1)
+SUITE["graph"]["neighbors"]["space_agent_iterate"] =
+    @benchmarkable iterate_over_neighbors($a, $graph_model, 1)
+SUITE["graph"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($pos, $graph_model)
+SUITE["graph"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $graph_model)
 
-SUITE["graph"]["node"]["contents"] =
-    @benchmarkable get_node_contents(rand(1:1000), $graph_model)
-SUITE["graph"]["node"]["agents"] =
-    @benchmarkable get_node_agents(random_agent($graph_model), $graph_model)
+SUITE["graph"]["node"]["contents"] = @benchmarkable get_node_contents($pos, $graph_model)
+SUITE["graph"]["node"]["agents"] = @benchmarkable get_node_agents($a, $graph_model)
 
 ##### API -> GRID ####
 
@@ -187,23 +209,24 @@ for _ in 1:9000
     add_agent!(grid_model, 6.5, false)
 end
 a = random_agent(grid_model)
+pos = tuple(rand(1:100, 2)...)
 SUITE["grid"]["move"]["random"] = @benchmarkable move_agent!($a, $grid_model)
 SUITE["grid"]["move"]["pos"] = @benchmarkable move_agent!($a, (14, 35), $grid_model)
 SUITE["grid"]["move"]["single"] = @benchmarkable move_agent_single!($a, $grid_model)
 
 SUITE["grid"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors(tuple(rand(1:100, 2)...), $grid_model, 5)
+    @benchmarkable space_neighbors($pos, $grid_model, 5)
 SUITE["grid"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors(random_agent($grid_model), $grid_model, 5)
-SUITE["grid"]["neighbors"]["node_pos"] =
-    @benchmarkable node_neighbors(tuple(rand(1:100, 2)...), $grid_model)
-SUITE["grid"]["neighbors"]["node_agent"] =
-    @benchmarkable node_neighbors(random_agent($grid_model), $grid_model)
+    @benchmarkable space_neighbors($a, $grid_model, 5)
+SUITE["grid"]["neighbors"]["space_pos_iterate"] =
+    @benchmarkable iterate_over_neighbors($pos, $grid_model, 30)
+SUITE["grid"]["neighbors"]["space_agent_iterate"] =
+    @benchmarkable iterate_over_neighbors($a, $grid_model, 30)
+SUITE["grid"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($a, $grid_model)
+SUITE["grid"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $grid_model)
 
-SUITE["grid"]["node"]["contents"] =
-    @benchmarkable get_node_contents(tuple(rand(1:100, 2)...), $grid_model)
-SUITE["grid"]["node"]["agents"] =
-    @benchmarkable get_node_agents(random_agent($grid_model), $grid_model)
+SUITE["grid"]["node"]["contents"] = @benchmarkable get_node_contents($a, $grid_model)
+SUITE["grid"]["node"]["agents"] = @benchmarkable get_node_agents($a, $grid_model)
 
 #### API -> CONTINUOUS ####
 
@@ -257,20 +280,25 @@ SUITE["continuous"]["add_union"]["agent_pos"] =
         )
     )
 
-for _ in 1:500
+for _ in 1:1500
     add_agent!(continuous_model, (0.8, 0.7, 1.3), 6.5, false)
 end
 a = random_agent(continuous_model)
+pos = tuple(10 .* rand(3)...)
 SUITE["continuous"]["move"]["update"] = @benchmarkable move_agent!($a, $continuous_model)
 SUITE["continuous"]["move"]["vel"] =
     @benchmarkable move_agent!($a, $continuous_model, (1.2, 0.0, 0.7))
 
 SUITE["continuous"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors(tuple(10 .* rand(3)...), $continuous_model, 5)
+    @benchmarkable space_neighbors($pos, $continuous_model, 5)
 SUITE["continuous"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors(random_agent($continuous_model), $continuous_model, 5)
+    @benchmarkable space_neighbors($a, $continuous_model, 5)
+SUITE["continuous"]["neighbors"]["space_pos_iterate"] =
+    @benchmarkable iterate_over_neighbors($pos, $continuous_model, 10)
+SUITE["continuous"]["neighbors"]["space_agent_iterate"] =
+    @benchmarkable iterate_over_neighbors($a, $continuous_model, 10)
 SUITE["continuous"]["neighbors"]["nearest"] =
-    @benchmarkable nearest_neighbor(random_agent($continuous_model), $continuous_model, 5)
+    @benchmarkable nearest_neighbor($a, $continuous_model, 5)
 SUITE["continuous"]["neighbors"]["interacting"] =
     @benchmarkable interacting_pairs($continuous_model, 1, :scheduler)
 
@@ -294,3 +322,4 @@ SUITE["grid"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($grid_df, $grid_model, $adata, 0)
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
+
