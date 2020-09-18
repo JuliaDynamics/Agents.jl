@@ -263,14 +263,13 @@ Return `nothing` if no agent is within distance `r`.
 function nearest_neighbor(agent, model, r)
   n = space_neighbors(agent, model, r)
   length(n) == 0 && return nothing
-  d, j = Inf, 0
+  d, j = Inf, 1
   for i in 1:length(n)
     if model.space.metric == :euclidean
       @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
     elseif model.space.metric == :cityblock
       @inbounds dnew = sum(abs.(agent.pos .- model[n[i]].pos))
     end
-    _, j = findmin(d)
     if dnew < d
       d, j = dnew, i
     end
