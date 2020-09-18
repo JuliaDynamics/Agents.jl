@@ -382,7 +382,8 @@ function add_agent_single!(
     ) where {A<:AbstractAgent}
     empty_cells = find_empty_nodes(model)
     if length(empty_cells) > 0
-        add_agent!(rand(empty_cells), model, properties...; kwargs...)
+        pos = correct_pos_type(rand(empty_cells), model)
+        add_agent!(pos, model, properties...; kwargs...)
     end
 end
 

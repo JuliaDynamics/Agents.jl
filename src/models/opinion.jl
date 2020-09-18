@@ -24,7 +24,7 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
     )
     for cell in 1:nv(model)
         add_agent!(
-            cell,
+            vertex2coord(cell,model),
             model,
             false,
             rand(1:levels_per_opinion, nopinions),
