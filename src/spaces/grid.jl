@@ -247,7 +247,8 @@ end
 ###################################################################
 # %% pretty printing
 ###################################################################
-function Base.show(io::IO, abm::GridSpace)
-    s = "Array space with size $(size(abm.s)) and metric=$(abm.metric)"
+Base.size(space::GridSpace) = size(space.s)
+function Base.show(io::IO, space::GridSpace)
+    s = "GridSpace with size $(size(space)) and metric=$(space.metric)"
     print(io, s)
 end

@@ -89,7 +89,6 @@ function add_agent_single!(
     end
 end
 
-
 """
     fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, args...; kwargs...)
     fill_space!([A ,] model::ABM{A, <:DiscreteSpace}, f::Function; kwargs...)

@@ -248,7 +248,7 @@ end
   add_agent!((1,3), model)
   add_agent!((5,2), model)
   @test nagents(model) == 3
-  for agent in get_node_contents((1,3), model)
+  for agent in copy(get_node_contents((1,3), model))
     kill_agent!(agent, model)
   end
   @test nagents(model) == 1
