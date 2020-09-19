@@ -41,7 +41,7 @@ abstract type AbstractAgent end
 abstract type AbstractSpace end
 SpaceType=Union{Nothing, AbstractSpace}
 
-const DiscreteSpace <: AbstractSpace
+abstract type DiscreteSpace <: AbstractSpace end
 
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}} where {N, M}

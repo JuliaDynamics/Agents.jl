@@ -29,7 +29,7 @@ LightGraphs.nv(abm::ABM{<:Any, <:GraphSpace}) = LightGraphs.nv(abm.space.graph)
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.nv(abm::ABM{<:Any, <:GraphSpace}) = LightGraphs.ne(abm.space.graph)
+LightGraphs.ne(abm::ABM{<:Any, <:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 
 function Base.show(io::IO, abm::GraphSpace)
     s = "$(nameof(typeof(abm))) with $(nv(abm)) nodes and $(ne(abm)) edges"
@@ -40,7 +40,7 @@ end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-random_position(model::ABM{<:AbstractAgent, <:GraphSpace}) = rand(1:nv(model)
+random_position(model::ABM{<:AbstractAgent, <:GraphSpace}) = rand(1:nv(model))
 
 function remove_agent_from_space!(agent::A, model::ABM{A,<:GraphSpace}) where {A<:AbstractAgent}
     agentnode = agent.pos
@@ -77,7 +77,7 @@ nodes(model::ABM{<:AbstractAgent, GraphSpace}) = 1:nv(model)
 #######################################################################################
 # Neighbors
 #######################################################################################
-function space_neighbors(pos::Int, model::ABM{A, <: GraphSpace}, args...; kwargs...)
+function space_neighbors(pos::Int, model::ABM{A, <: GraphSpace}, args...; kwargs...) where {A}
   nn = node_neighbors(pos, model, args...; kwargs...)
   # TODO: Use flatten here or something for performance?
   # `model.space.s[nn]...` allocates a lot
