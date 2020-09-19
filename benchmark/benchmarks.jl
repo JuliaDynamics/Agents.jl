@@ -242,7 +242,7 @@ SUITE["grid"]["neighbors"]["space_agent_iterate"] =
 SUITE["grid"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($a, $grid_model)
 SUITE["grid"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $grid_model)
 
-SUITE["grid"]["node"]["contents"] = @benchmarkable get_node_contents($a, $grid_model)
+SUITE["grid"]["node"]["contents"] = @benchmarkable get_node_contents($pos, $grid_model)
 SUITE["graph"]["node"]["nodes"] = @benchmarkable nodes($graph_model)
 
 #### API -> CONTINUOUS ####
