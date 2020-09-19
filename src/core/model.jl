@@ -118,7 +118,7 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-export random_agent, nagents, allagents, allids
+export random_agent, nagents, allagents, allids, nextid
 
 """
     model[id]

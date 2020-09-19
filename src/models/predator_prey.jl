@@ -77,7 +77,7 @@ function predator_prey(;
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
-        add_agent!(grass, n, model)
+        add_agent!(grass, vertex2coord(n, model), model)
     end
     return model, predator_prey_agent_step!, dummystep
 end
@@ -125,7 +125,7 @@ end
 
 function move!(agent, model)
     neighbors = node_neighbors(agent, model)
-    cell = rand(neighbors)
+    cell = rand(collect(neighbors))
     move_agent!(agent, cell, model)
 end
 
