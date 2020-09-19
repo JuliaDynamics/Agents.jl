@@ -235,7 +235,7 @@ end
 # %% pretty printing
 ###################################################################
 Base.size(space::GridSpace) = size(space.s)
-function Base.show(io::IO, space::GridSpace)
-    s = "GridSpace with size $(size(space)) and metric=$(space.metric)"
+function Base.show(io::IO, space::GridSpace{D, P}) where {D, P}
+    s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$($P)"
     print(io, s)
 end
