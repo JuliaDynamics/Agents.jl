@@ -1,3 +1,15 @@
+# v4.0
+**Major new release**
+## New features:
+- `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
+- Agents.jl now defines a clear API for new spaces types. To create a fundamentally different type of space you have to define the space structure and extend only 5 methods.
+- `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord`.
+
+## Breaking changes
+- Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
+
+
+
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.
 # v3.6
