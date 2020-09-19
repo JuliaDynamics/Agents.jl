@@ -14,7 +14,9 @@ export move_agent!,
     kill_agent!,
     kill_agents!,
     genocide!,
-    random_position
+    random_position,
+    node_neighbors,
+    space_neighbors
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 

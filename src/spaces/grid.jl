@@ -227,19 +227,6 @@ function nodes(model::ABM{<:AbstractAgent,<:GridSpace})
     return (Tuple(y) for y in x)
 end
 
-function nodes(model::ABM{<:AbstractAgent,<:GridSpace}, by)
-    itr = collect(nodes(model))
-    if by == :random
-        shuffle!(itr)
-    elseif by == :id
-        # TODO: By id is wrong...?
-        sort!(itr)
-    else
-        error("unknown `by`")
-    end
-    return itr
-end
-
 function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
     return model.space.s[pos...]
 end

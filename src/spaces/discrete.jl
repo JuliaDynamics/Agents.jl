@@ -21,12 +21,12 @@ using the argument `by` which can be:
   The more populated nodes are first.
 """
 function nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
-    itr = collect(nodes(model))
+    n = collect(nodes(model))
+    itr = reshape(n, length(n))
     if by == :random
         shuffle!(itr)
     elseif by == :population
         sort!(itr, by = i -> length(get_node_contents(i, model)), rev = true)
-        return c
     else
         error("unknown `by`")
     end
