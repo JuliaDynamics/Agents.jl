@@ -198,8 +198,6 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-space_neighbors(agent::A, model::ABM{A,<:GridSpace}, r = 1) where {A<:AbstractAgent} = space_neighbors(agent.pos, model, r)
-
 function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
