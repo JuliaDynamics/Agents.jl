@@ -41,11 +41,16 @@ nodes within the hypercube having side length of `2*floor(r)` and being centered
 indices have Euclidean distance `≤ r` from the cartesian index of the given node.
 """
 function GridSpace(
-    d::NTuple{D,Int};
-    periodic::Bool = true,
-    metric::Symbol = :chebyshev,
-) where {D}
+        d::NTuple{D,Int};
+        periodic::Bool = true,
+        metric::Symbol = :chebyshev,
+        moore = nothing
+    ) where {D}
     s = Array{Vector{Int},D}(undef, d)
+    if moore ≠ nothing
+        @warn "Keyword `moore` is deprecated, use `metric` instead."
+        metric = moore == true ? :chebyshev : :euclidean
+    end
     for i in eachindex(s)
         s[i] = Int[]
     end
@@ -246,4 +251,3 @@ function Base.show(io::IO, abm::GridSpace)
     s = "Array space with size $(size(abm.s)) and metric=$(abm.metric)"
     print(io, s)
 end
-
