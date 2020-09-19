@@ -28,7 +28,7 @@ end
 
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
-Create a `GridSpace` that has size given by the tuple `d`, having `D` dimensions.
+Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`space_neighbors`](@ref).
 The position type for this space is `NTuple{D, Int}` and valid nodes have indices

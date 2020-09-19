@@ -1,49 +1,91 @@
 # API
 
-The core API is defined by [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) and [`step!`](@ref), which are described in the [Tutorial](@ref) page. The functionality described here builds on top of the core API.
+The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 
-## Agent information and retrieval
+## Agent/model retrieval
 ```@docs
-space_neighbors
+getindex(::ABM, ::Integer)
+getproperty(::ABM, ::Symbol)
 random_agent
 nagents
 allagents
 allids
-nextid
 ```
 
-## Model-Agent interaction
+## Model-agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space, but we think
-this is clear from the documentation strings (if not, please open an issue!).
+Only some specific methods are exclusive to a specific type of space.
+
+### Adding agents
 ```@docs
 add_agent!
 add_agent_pos!
-add_agent_single!
+nextid
+random_position
+```
+
+### Moving and killing agents
+```@docs
 move_agent!
 move_agent_single!
 kill_agent!
 genocide!
 sample!
-random_position
+```
+
+## Neighbors
+```@docs
+space_neighbors
+node_neighbors
+```
+
+### WARNING: Iteration
+
+Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
+
+**Dynamic** means that when iterating over the result of e.g. the [`get_node_contents`](@ref) function, the iterator will be affected by actions that would alter its contents.
+Specifically, imagine the scenario
+```@example docs
+using Agents, LightGraphs
+mutable struct Agent <: AbstractAgent
+    id::Int
+    pos::Int
+end
+
+model = ABM(Agent, GraphSpace(complete_digraph(10)))
+add_agent!(1, model)
+add_agent!(1, model)
+add_agent!(2, model)
+for agent in get_node_contents(1, model)
+    kill_agent!(agent, model)
+end
+collect(allids(model))
+```
+You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `get_node_contents` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
+To avoid problems like these, you need to `copy` the iterator to have a non dynamic version.
+
+**Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
+A good example to illustrate this is [`space_neighbors`](@ref), where doing something like
+```@example docs
+a = random_agent(model)
+sort!(space_neighbors(random_agent(model), model))
+```
+leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
+```@example docs
+a = random_agent(model)
+sort!(collect(space_agents(a, model)))
 ```
 
 ## Discrete space exclusives
 ```@docs
+add_agent_single!
 fill_space!
-node_neighbors
-nv(::ABM)
-ne(::ABM)
-has_empty_nodes
 find_empty_nodes
 pick_empty
+move_agent_single!
 get_node_contents
-get_node_agents
 isempty(::Integer, ::ABM)
-NodeIterator
 nodes
-coord2vertex
-vertex2coord
 ```
 
 ## Continuous space exclusives
@@ -107,7 +149,7 @@ function (ms::MyScheduler)(model::ABM)
     ms.n += 1 # increment internal counter by 1 each time its called
               # be careful to use a *new* instance of this scheduler when plotting!
     if ms.n < 10
-        return keys(model.agents) # order doesn't matter in this case
+        return allids(model)) # order doesn't matter in this case
     else
         ids = collect(allids(model))
         # filter all ids whose agents have `w` less than some amount

@@ -1,4 +1,7 @@
 cd(@__DIR__)
+using Pkg; Pkg.activate(@__DIR__)
+const CI = get(ENV, "CI", nothing) == "true"
+CI && (ENV["GKSwstype"] = "100")
 println("Loading Packages")
 println("Documenter...")
 using Documenter
@@ -17,8 +20,6 @@ println("Setting up Environment")
 # Initialise pyplot to squash build output bleeding into docs.
 pyplot()
 plot([1,1])
-const CI = get(ENV, "CI", nothing) == "true"
-CI && (ENV["GKSwstype"] = "100")
 
 ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")
