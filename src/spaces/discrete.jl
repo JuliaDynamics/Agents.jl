@@ -13,20 +13,20 @@ export nodes, find_empty_nodes, pick_empty
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
 Return an iterator over all positions of a model with a discrete space (called nodes).
 
-	nodes(model::ABM{A, <:DiscreteSpace}, by::Symbol) → ns
+    nodes(model::ABM{A, <:DiscreteSpace}, by::Symbol) → ns
 Return all positions of a model with a discrete space (called nodes), sorting them
 using the argument `by` which can be:
 * `:random` - randomly sorted
 * `:population` - nodes are sorted depending on how many agents they accommodate.
   The more populated nodes are first.
 """
-function nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace}, by::Symbol)
+function nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
     itr = collect(nodes(model))
     if by == :random
         shuffle!(itr)
-	elseif by == :population
-	  sort!(itr, by = i -> length(get_node_contents(i, model)), rev = true)
-	  return c
+    elseif by == :population
+        sort!(itr, by = i -> length(get_node_contents(i, model)), rev = true)
+        return c
     else
         error("unknown `by`")
     end
@@ -34,8 +34,8 @@ function nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace}, by::Symbol)
 end
 
 # TODO: Does this really have to be collecting...?
-function find_empty_nodes(model::ABM{<:AbstractAgent, <:DiscreteSpace})
-	collect(Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model)))
+function find_empty_nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace})
+    collect(Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model)))
 end
 
 """
@@ -48,10 +48,10 @@ Base.isempty(pos, model::ABM) = isempty(get_node_contents(pos, model))
     pick_empty(model::ABM{A, <:DiscreteSpace})
 Return a random position without any agents, or `nothing` if no such positions exist.
 """
-function pick_empty(model::ABM{<:AbstractAgent, <:DiscreteSpace})
-	empty_nodes = find_empty_nodes(model)
-	isempty(empty_nodes) && return nothing
-	rand(empty_nodes)
+function pick_empty(model::ABM{<:AbstractAgent,<:DiscreteSpace})
+    empty_nodes = find_empty_nodes(model)
+    isempty(empty_nodes) && return nothing
+    rand(empty_nodes)
 end
 
 #######################################################################################
@@ -65,12 +65,12 @@ export add_agent_single!, fill_space!, move_agent_single!
 Add the `agent` to a random position in the space while respecting a maximum of one agent
 per node position. This function does nothing if there aren't any empty positions.
 """
-function add_agent_single!(agent::A, model::ABM{A, <:DiscreteSpace}) where {A<:AbstractAgent}
-	node = pick_empty(model)
-	isnothing(node) && return agent
-	agent.pos = node
+function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+    node = pick_empty(model)
+    isnothing(node) && return agent
+    agent.pos = node
     add_agent_pos!(agent, model)
-	return agent
+    return agent
 end
 
 """
@@ -78,10 +78,11 @@ end
 Same as `add_agent!(model, properties...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
 """
-function add_agent_single!(model::ABM{A,<:DiscreteSpace},
-        properties...;
-        kwargs...,
-    ) where {A<:AbstractAgent}
+function add_agent_single!(
+    model::ABM{A,<:DiscreteSpace},
+    properties...;
+    kwargs...,
+) where {A<:AbstractAgent}
     empty_positions = find_empty_nodes(model)
     if length(empty_positions) > 0
         add_agent!(rand(empty_positions), model, properties...; kwargs...)
@@ -121,9 +122,14 @@ fill_space!(Land, model, temperature)
 ```
 """
 fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
-fill_space!(A, model, args...; kwargs...)
+    fill_space!(A, model, args...; kwargs...)
 
-function fill_space!(::Type{A}, model::ABM{A, <:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
+function fill_space!(
+    ::Type{A},
+    model::ABM{A,<:DiscreteSpace},
+    args...;
+    kwargs...,
+) where {A<:AbstractAgent}
     for n in nodes(model)
         id = nextid(model)
         add_agent_pos!(A(id, n, args...; kwargs...), model)
@@ -146,7 +152,10 @@ end
 Move agent to a random node while respecting a maximum of one agent
 per node. If there are no empty nodes, the agent won't move.
 """
-function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
+function move_agent_single!(
+    agent::A,
+    model::ABM{A,<:DiscreteSpace},
+) where {A<:AbstractAgent}
     empty_positions = find_empty_nodes(model)
     if length(empty_positions) > 0
         random_node = rand(empty_positions)
@@ -154,3 +163,4 @@ function move_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:A
     end
     return agent
 end
+
