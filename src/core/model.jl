@@ -41,6 +41,8 @@ abstract type AbstractAgent end
 abstract type AbstractSpace end
 SpaceType=Union{Nothing, AbstractSpace}
 
+abstract type DiscreteSpace <: AbstractSpace end
+
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}} where {N, M}
 
@@ -127,12 +129,12 @@ Return an agent given its ID.
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 """
-    setindex!(model::ABM, agent::AbstractAgent, id::Int)
     model[id] = agent
+    setindex!(model::ABM, agent::AbstractAgent, id::Int)
 
 Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
-**Internal method**, ose [`add_agents!`](@ref) instead to actually add an agent.
+**Internal method**, use [`add_agents!`](@ref) instead to actually add an agent.
 """
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
@@ -155,6 +157,9 @@ Return a property from the current `model`, assuming the model `properties` are 
 a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
+
+The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
+and **should not be accessed by the user**.
 """
 function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
     if s === :agents

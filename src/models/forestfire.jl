@@ -18,7 +18,7 @@ Same as in [Forest fire model](@ref).
 """
 function forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
     Random.seed!(seed)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 
@@ -26,18 +26,18 @@ function forest_fire(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed 
     ## which determines the density of the forest
     for node in nodes(forest)
         if rand() ≤ forest.d
-            add_agent!(vertex2coord(node, forest), forest, true)
+            add_agent!(node, forest, true)
         end
     end
     return forest, dummystep, forest_model_step!
 end
 
 function forest_model_step!(forest)
-    for node in nodes(forest, by = :random)
+    for node in nodes(forest, :random)
         nc = get_node_contents(node, forest)
         ## the cell is empty, maybe a tree grows here
         if length(nc) == 0
-            rand() ≤ forest.p && add_agent!(vertex2coord(node, forest), forest, true)
+            rand() ≤ forest.p && add_agent!(node, forest, true)
         else
             tree = forest[nc[1]] # by definition only 1 agent per node
             if tree.status == false  # if it is has been burning, remove it.
