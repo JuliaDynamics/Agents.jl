@@ -75,47 +75,17 @@ get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.spac
 nodes(model::ABM{<:AbstractAgent, GraphSpace}) = 1:nv(model)
 
 #######################################################################################
-# Neighbors TODO
+# Neighbors
 #######################################################################################
-function space_neighbors(agent::A, model::ABM{A,<:DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
-  all = space_neighbors(agent.pos, model, args...; kwargs...)
-  d = findfirst(isequal(agent.id), all)
-  d ≠ nothing && deleteat!(all, d)
-  return all
-end
-
-function space_neighbors(pos, model::ABM{A, <: DiscreteSpace}, args...; kwargs...) where {A<:AbstractAgent}
-  node = coord2vertex(pos, model)
-  nn = node_neighbors(node, model, args...; kwargs...)
+function space_neighbors(pos::Int, model::ABM{A, <: GraphSpace}, args...; kwargs...)
+  nn = node_neighbors(pos, model, args...; kwargs...)
+  # TODO: Use flatten here or something for performance?
+  # `model.space.s[nn]...` allocates a lot
   # We include the current node in the search since we are searching over space
-  # TODO: Use flatten here or something
-  vcat(agent_positions(model)[node], agent_positions(model)[nn]...)
+  vcat(model.space.s[pos], model.space.s[nn]...)
 end
 
-"""
-    node_neighbors(node, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
-Return all nodes that are neighbors to the given `node`, which can be an `Int` for
-[`GraphSpace`](@ref), or a `NTuple{Int}` for [`GridSpace`](@ref).
-Use [`vertex2coord`](@ref) to convert nodes to positions for `GridSpace`.
-
-    node_neighbors(agent, model::ABM{A, <:DiscreteSpace}, r = 1) → nodes
-Same as above, but uses `agent.pos` as `node`.
-
-Keyword argument `neighbor_type=:default` can be used to select differing neighbors
-depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
-to `:out`. For undirected graphs, all options are equivalent to `:out`.
-- `:all` returns both `:in` and `:out` neighbors.
-- `:in` returns incoming vertex neighbors.
-- `:out` returns outgoing vertex neighbors.
-"""
-node_neighbors(
-    agent::AbstractAgent,
-    model::ABM{A,<:DiscreteSpace},
-    args...;
-    kwargs...,
-) where {A} = node_neighbors(agent.pos, model, args...; kwargs...)
-function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; neighbor_type::Symbol=:default) where {A}
+function node_neighbors(node_number::Integer, model::ABM{A, <: GraphSpace}; neighbor_type::Symbol=:default) where {A}
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn =
         if neighbor_type == :default
@@ -130,34 +100,27 @@ function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}; n
     neighborfn(model.space.graph, node_number)
 end
 
-function node_neighbors(node_coord::Tuple, model::ABM{A, <: DiscreteSpace}; kwargs...) where {A}
-  node_number = coord2vertex(node_coord, model)
-  nn = node_neighbors(node_number, model; kwargs...)
-  nc = [vertex2coord(i, model) for i in nn]
-  return nc
-end
-
-function node_neighbors(node_number::Integer, model::ABM{A, <: DiscreteSpace}, radius::Integer; kwargs...) where {A}
-  neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
-  included_nodes = Set()
-  for rad in 2:radius
-    templist = Vector{Int}()
-    for nn in neighbor_nodes
-      if !in(nn, included_nodes)
-        newns = node_neighbors(nn, model; kwargs...)
-        for newn in newns
-          push!(templist, newn)
+function node_neighbors(node_number::Integer, model::ABM{A, <: GraphSpace}, radius::Integer; kwargs...) where {A}
+    neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
+    included_nodes = Set()
+    for rad in 2:radius
+        templist = Vector{Int}()
+        for nn in neighbor_nodes
+            if !in(nn, included_nodes)
+                newns = node_neighbors(nn, model; kwargs...)
+                for newn in newns
+                    push!(templist, newn)
+                end
+            end
         end
-      end
+        for tt in templist
+            push!(neighbor_nodes, tt)
+        end
     end
-    for tt in templist
-      push!(neighbor_nodes, tt)
+    nlist = collect(neighbor_nodes)
+    j = findfirst(a-> a==node_number, nlist)
+    if j != nothing
+        deleteat!(nlist, j)
     end
-  end
-  nlist = collect(neighbor_nodes)
-  j = findfirst(a-> a==node_number, nlist)
-  if j != nothing
-    splice!(nlist, j)
-  end
-  return nlist
+    return nlist
 end

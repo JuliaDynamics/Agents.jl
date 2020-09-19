@@ -56,27 +56,38 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    space_neighbors(position, model::ABM, r=1) → ids
+    space_neighbors(position, model::ABM, r=1; kwargs...) → ids
 
 Return an iterator of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: `r` means the degree of neighbors and is an integer.
+- `GraphSpace`: `r` means the degree of neighbors in the graph and is an integer.
   For example, for `r=2` include first and second degree neighbors.
 - `GridSpace, ContinuousSpace`: Standard distance implementation according to the
   underlying space metric.
+
+## Keywords
+Keyword arguments are space-specific.
+For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
+neighbors depending on the underlying graph directionality type.
+- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
+  to `:out`. For undirected graphs, all options are equivalent to `:out`.
+- `:all` returns both `:in` and `:out` neighbors.
+- `:in` returns incoming vertex neighbors.
+- `:out` returns outgoing vertex neighbors.
 """
 space_neighbors(position, model, r=1) = notimplemented(model)
 
 
 """
-    node_neighbors(position, model::ABM, r=1) → positions
+    node_neighbors(position, model::ABM, r=1; kwargs...) → positions
 
 Return an iterator of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
 The `position` must match type with the spatial structure of the `model`).
-The value of `r` operates identically to [`space_neighbors`](@ref).
+
+The value of `r` and possible keywords operate identically to [`space_neighbors`](@ref).
 """
 node_neighbors(position, model, r=1) = notimplemented(model)
 
