@@ -12,7 +12,7 @@ All changes in this section (besides changes to default values) are deprecated a
 therefore are not "truly breaking".
 
 - Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
-- Default arguments for `GridSpace` are not `periodc = false, metric = :chebyshev`.
+- Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allows to have performance updates in the future that may change internals but not lead to breaking changes.
 
 # v3.7

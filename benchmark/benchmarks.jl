@@ -167,7 +167,7 @@ SUITE["graph"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($pos, $g
 SUITE["graph"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $graph_model)
 
 SUITE["graph"]["node"]["contents"] = @benchmarkable get_node_contents($pos, $graph_model)
-SUITE["graph"]["node"]["agents"] = @benchmarkable get_node_agents($a, $graph_model)
+SUITE["graph"]["node"]["nodes"] = @benchmarkable nodes($graph_model)
 
 ##### API -> GRID ####
 
@@ -243,7 +243,7 @@ SUITE["grid"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($a, $grid
 SUITE["grid"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $grid_model)
 
 SUITE["grid"]["node"]["contents"] = @benchmarkable get_node_contents($a, $grid_model)
-SUITE["grid"]["node"]["agents"] = @benchmarkable get_node_agents($a, $grid_model)
+SUITE["graph"]["node"]["nodes"] = @benchmarkable nodes($graph_model)
 
 #### API -> CONTINUOUS ####
 
@@ -349,4 +349,3 @@ SUITE["grid"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($grid_df, $grid_model, $adata, 0)
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
-
