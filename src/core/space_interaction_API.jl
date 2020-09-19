@@ -12,6 +12,7 @@ export move_agent!,
     add_agent!,
     add_agent_pos!,
     kill_agent!,
+    kill_agents!,
     genocide!,
     random_position
 
@@ -100,13 +101,24 @@ node_neighbors(position, model, r=1) = notimplemented(model)
     kill_agent!(agent::AbstractAgent, model::ABM)
     kill_agent!(id::Int, model::ABM)
 
-Remove an agent from the model, and from the space, if the model has a space.
+Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
     delete!(model.agents, a.id)
     remove_agent_from_space!(a, model)
 end
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
+
+"""
+    kill_agents!(ids, model::ABM)
+
+Remove all agents with then given ids agent from the model.
+"""
+function kill_agents!(ids, model::ABM)
+    for i in ids
+        kill_agent!(i, model)
+    end
+end
 
 """
     genocide!(model::ABM)
