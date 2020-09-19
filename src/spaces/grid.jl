@@ -1,4 +1,4 @@
-export ArraySpace
+export GridSpace
 
 struct Region{D}
 	mini::NTuple{D,Int}
@@ -18,7 +18,7 @@ struct Hood{D} # type P stands for Periodic and is a boolean
 	βs::Vector{CartesianIndex{D}}
 end
 
-struct ArraySpace{D, P} <: DiscreteSpace
+struct GridSpace{D, P} <: DiscreteSpace
     s::Array{Vector{Int}, D}
 	metric::Symbol
 	# `hoods` is a preinitialized container of neighborhood cartesian indices
@@ -40,34 +40,34 @@ nodes within the hypercube having side length of `2*floor(r)` and being centered
 `:euclidean` metric means that the `r`-neighborhood of a node are all nodes whose cartesian
 indices have Euclidean distance `≤ r` from the cartesian index of the given node.
 """
-function ArraySpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :chebyshev) where {D}
+function GridSpace(d::NTuple{D, Int}; periodic::Bool=true, metric::Symbol = :chebyshev) where {D}
     s = Array{Vector{Int}, D}(undef, d)
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return ArraySpace{D, periodic}(s, metric, Dict{Float64, Hood{D}}())
+    return GridSpace{D, periodic}(s, metric, Dict{Float64, Hood{D}}())
 end
 
 #######################################################################################
 # %% Implementation of space API
 #######################################################################################
-function random_position(model::ABM{<:AbstractAgent, <: ArraySpace})
+function random_position(model::ABM{<:AbstractAgent, <: GridSpace})
     Tuple(rand(CartesianIndices(model.space.s)))
 end
 
-function add_agent_to_space!(a::A, model::ABM{A, <: ArraySpace}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::A, model::ABM{A, <: GridSpace}) where {A<:AbstractAgent}
     push!(model.space.s[a.pos...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{A, <: ArraySpace}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::A, model::ABM{A, <: GridSpace}) where {A<:AbstractAgent}
     prev = model.space.s[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A, <: ArraySpace}) where {A<:AbstractAgent}
+function move_agent!(a::A, pos::Tuple, model::ABM{A, <: GridSpace}) where {A<:AbstractAgent}
     remove_agent_from_space!(a, model)
     a.pos = pos
     add_agent_to_space!(a, model)
@@ -106,7 +106,7 @@ end
 # This function initializes the standard cartesian indices that needs to be added to some
 # index `α` to obtain its neighborhood
 import LinearAlgebra
-function initialize_neighborhood!(space::ArraySpace{D}, r::Real) where {D}
+function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
 	d = size(space.s)
 	r0 = floor(Int, r)
 	if space.metric == :euclidean
@@ -128,7 +128,7 @@ end
 
 
 """
-	grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
+	grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 
 Return an iterator over all nodes within distance `r` from `α` according to the `space`.
 
@@ -141,7 +141,7 @@ helper struct `Hood` and generates neighboring cartesian indices on the fly,
 reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
-function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
+function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 	hood = if haskey(space.hoods, r)
 		space.hoods[r]
 	else
@@ -150,7 +150,7 @@ function grid_space_neighborhood(α::CartesianIndex, space::ArraySpace, r::Real)
 	_grid_space_neighborhood(α, space, hood)
 end
 
-function _grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, true}, hood) where {D}
+function _grid_space_neighborhood(α::CartesianIndex, space::GridSpace{D, true}, hood) where {D}
 	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
 	# 	return Base.Generator(β -> Tuple(α + β), hood.βs)
 	# else                  # `α` WILL reach the walls and then loop
@@ -167,7 +167,7 @@ function _grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, true}
 	return ((mod1.(Tuple(α+β), hood.whole.maxi)) for β in hood.βs)
 end
 
-function _grid_space_neighborhood(α::CartesianIndex, space::ArraySpace{D, false}, hood) where {D}
+function _grid_space_neighborhood(α::CartesianIndex, space::GridSpace{D, false}, hood) where {D}
 	# if α ∈ hood.inner     # `α` won't reach the walls with this Hood
 	# 	return Iterators.filter(always_true, (Tuple(α + β) for β in hood.βs))
 	# else                  # `α` WILL reach the walls and then stop
@@ -181,7 +181,7 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
+function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: GridSpace}, r=1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
@@ -196,7 +196,7 @@ Base.IteratorEltype(::Type{IterWrapper}) = HasEltype()
 Base.iterate(iter::IterWrapper) = iterate(iter.iter)
 Base.iterate(iter::IterWrapper, state) = iterate(iter.iter, state)
 
-function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: ArraySpace}, r=1)
+function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent, <: GridSpace}, r=1)
 	nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
 	Iterators.filter(!isequal(pos), nn)
 end
@@ -205,12 +205,12 @@ end
 #######################################################################################
 # %% Further discrete space  functions
 #######################################################################################
-function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+function nodes(model::ABM{<:AbstractAgent, <:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end
 
-function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
+function nodes(model::ABM{<:AbstractAgent, <:GridSpace}, by)
     itr = collect(nodes(model))
     if by == :random
         shuffle!(itr)
@@ -223,19 +223,19 @@ function nodes(model::ABM{<:AbstractAgent, <:ArraySpace}, by)
     return itr
 end
 
-function nodes(model::ABM{<:AbstractAgent, <:ArraySpace})
+function nodes(model::ABM{<:AbstractAgent, <:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end
 
-function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent, <:ArraySpace})
+function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent, <:GridSpace})
     return model.space.s[pos...]
 end
 
 ###################################################################
 # %% pretty printing
 ###################################################################
-function Base.show(io::IO, abm::ArraySpace)
+function Base.show(io::IO, abm::GridSpace)
     s = "Array space with size $(size(abm.s)) and metric=$(abm.metric)"
     print(io, s)
 end

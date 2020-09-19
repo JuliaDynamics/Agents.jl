@@ -10,7 +10,7 @@ end
 function forest_fire_array(; f = 0.02, d = 1.0, p = 0.01,
     griddims = (20, 20), seed = 111, periodic = true)
     Random.seed!(seed)
-    space = ArraySpace(griddims; periodic=true)
+    space = GridSpace(griddims; periodic=true)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 
