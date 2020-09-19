@@ -91,7 +91,11 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     nn = node_neighbors(pos, model, args...; kwargs...)
-    Iterators.flatten(model.space.s[i] for i in Iterators.flatten((pos,nn)))
+    # TODO: Use flatten here or something for performance?
+    # `model.space.s[nn]...` allocates, because it creates a new array!
+    # Also `vcat` allocates a second time
+    # We include the current node in the search since we are searching over space
+    vcat(model.space.s[pos], model.space.s[nn]...)
 end
 
 function node_neighbors(
@@ -109,7 +113,7 @@ function node_neighbors(
     else
         LightGraphs.all_neighbors
     end
-    Base.Generator(Int, neighborfn(model.space.graph, node_number))
+    neighborfn(model.space.graph, node_number)
 end
 
 function node_neighbors(
@@ -119,9 +123,25 @@ function node_neighbors(
     kwargs...,
 ) where {A}
     neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
-    for _ in 2:radius
-        newnns = (node_neighbors(nn, model; kwargs...) for nn in neighbor_nodes)
-        union!(neighbor_nodes, newnns...)
+    included_nodes = Set()
+    for rad in 2:radius
+        templist = Vector{Int}()
+        for nn in neighbor_nodes
+            if !in(nn, included_nodes)
+                newns = node_neighbors(nn, model; kwargs...)
+                for newn in newns
+                    push!(templist, newn)
+                end
+            end
+        end
+        for tt in templist
+            push!(neighbor_nodes, tt)
+        end
     end
-    Iterators.filter(i->i!=node_number, Base.Generator(Int, neighbor_nodes))
+    nlist = collect(neighbor_nodes)
+    j = findfirst(a -> a == node_number, nlist)
+    if j != nothing
+        deleteat!(nlist, j)
+    end
+    return nlist
 end
