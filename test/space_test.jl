@@ -119,9 +119,9 @@ end
     @test sort!(space_neighbors(2, directed)) == [2, 3]
     @test sort!(space_neighbors(2, directed; neighbor_type=:in)) == [1, 2]
     @test sort!(space_neighbors(2, directed; neighbor_type=:all)) == [1, 2, 3]
-    @test space_neighbors(directed[2], directed) == [3]
-    @test space_neighbors(directed[2], directed; neighbor_type=:in) == [1]
-    @test sort!(space_neighbors(directed[2], directed; neighbor_type=:all)) == [1, 3]
+    @test collect(space_neighbors(directed[2], directed)) == [3]
+    @test collect(space_neighbors(directed[2], directed; neighbor_type=:in)) == [1]
+    @test sort!(collect(space_neighbors(directed[2], directed; neighbor_type=:all))) == [1, 3]
 
     gridspace = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
     @test collect(node_neighbors((2, 2), gridspace)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
