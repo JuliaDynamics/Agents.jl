@@ -1,6 +1,6 @@
 #=
 This file establishes the agent-space interaction API.
-All space types should implement this API.
+All space types should implement this API (and obviously be subtypes of `AbstractSpace`)
 Some functions DO NOT need to be implemented for every space, they are space agnostic.
 These functions have complete source code here, while the functions that DO need to
 be implemented for every space have only documentation strings here and an

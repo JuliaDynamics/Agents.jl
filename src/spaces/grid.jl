@@ -18,7 +18,7 @@ struct Hood{D} # type P stands for Periodic and is a boolean
 	βs::Vector{CartesianIndex{D}}
 end
 
-struct ArraySpace{D, P} <: AbstractSpace
+struct ArraySpace{D, P} <: DiscreteSpace
     s::Array{Vector{Int}, D}
 	metric::Symbol
 	# `hoods` is a preinitialized container of neighborhood cartesian indices

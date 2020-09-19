@@ -6,7 +6,6 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - nodes(model)
 - get_node_contents(position, model)
 =#
-const DiscreteSpace = Union{GraphSpace, GridSpace}
 
 export nodes, find_empty_nodes, pick_empty
 
