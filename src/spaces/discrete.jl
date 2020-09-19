@@ -7,7 +7,7 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - get_node_contents(position, model)
 =#
 
-export nodes, find_empty_nodes, pick_empty
+export nodes, get_node_contents, find_empty_nodes, pick_empty
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
@@ -126,10 +126,10 @@ fill_space!(model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent} =
 
 function fill_space!(
     ::Type{A},
-    model::ABM{A,<:DiscreteSpace},
+    model::ABM{U,<:DiscreteSpace},
     args...;
     kwargs...,
-) where {A<:AbstractAgent}
+) where {A<:AbstractAgent,U<:AbstractAgent}
     for n in nodes(model)
         id = nextid(model)
         add_agent_pos!(A(id, n, args...; kwargs...), model)
@@ -137,10 +137,15 @@ function fill_space!(
     return model
 end
 
-function fill_space!(::Type{A}, model::ABM, f::Function; kwargs...) where {A<:AbstractAgent}
+function fill_space!(
+    ::Type{A},
+    model::ABM{U,<:DiscreteSpace},
+    f::Function;
+    kwargs...,
+) where {A<:AbstractAgent,U<:AbstractAgent}
     for n in nodes(model)
         id = nextid(model)
-        args = f(cnode)
+        args = f(n)
         add_agent_pos!(A(id, n, args...; kwargs...), model)
     end
     return model
@@ -163,4 +168,5 @@ function move_agent_single!(
     end
     return agent
 end
+
 

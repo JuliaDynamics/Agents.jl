@@ -59,7 +59,7 @@ function move_agent!(
     pos::ValidPos,
     model::ABM{A,<:GraphSpace},
 ) where {A<:AbstractAgent}
-    oldnode = agent.pos, model
+    oldnode = agent.pos
     p = get_node_contents(oldnode, model)
     splice!(p, findfirst(a -> a == agent.id, p))
     agent.pos = pos
@@ -84,7 +84,7 @@ Return the ids of agents in the "node" corresponding to `position`.
 get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 # NOTICE: The return type of `get_node_contents` must support `length` and `isempty`!
 
-nodes(model::ABM{<:AbstractAgent,GraphSpace}) = 1:nv(model)
+nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 
 #######################################################################################
 # Neighbors

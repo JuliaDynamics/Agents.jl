@@ -148,10 +148,12 @@ end
       agent = Agent7(id, 2, attributes...)
       add_agent_single!(agent, model)
   end
-  @test !has_empty_nodes(model)
+  @test length(find_empty_nodes(model)) == 0
   agent = Agent7(12,5, attributes...)
-  @test_logs (:warn, "No empty nodes found for `add_agent_single!`.") add_agent_single!(agent, model)
-  @test add_agent!(agent, model).pos ∈ 1:10
+  add_agent_single!(agent, model)
+  @test_throws KeyError model[12]
+  add_agent!(agent, model)
+  @test model[12].pos ∈ 1:10
 
   agent = Agent7(13,5, attributes...)
   @test add_agent!(agent, 3, model).pos == 3
@@ -246,7 +248,7 @@ end
   add_agent!((1,3), model)
   add_agent!((5,2), model)
   @test nagents(model) == 3
-  for agent in get_node_agents((1,3), model)
+  for agent in get_node_contents((1,3), model)
     kill_agent!(agent, model)
   end
   @test nagents(model) == 1
@@ -355,7 +357,7 @@ end
   model = ABM(Land, space)
   fill_space!(model, 15)
   @test nagents(model) == 100
-  for a in values(model.agents)
+  for a in allagents(model)
     @test a isa Land
     @test a.temperature == 15
   end
@@ -369,7 +371,7 @@ end
     @test a.breed == "black"
   end
 
-  space = GridSpace((10, 10), moore = true, periodic = true)
+  space = GridSpace((10, 10), periodic = true)
   model = ABM(Union{Daisy, Land}, space; warn = false)
   temperature(pos) = (pos[1]/10, ) # make it Tuple!
   fill_space!(Land, model, temperature)
