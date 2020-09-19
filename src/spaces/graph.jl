@@ -92,7 +92,8 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     nn = node_neighbors(pos, model, args...; kwargs...)
     # TODO: Use flatten here or something for performance?
-    # `model.space.s[nn]...` allocates a lot
+    # `model.space.s[nn]...` allocates, because it creates a new array!
+    # Also `vcat` allocates a second time
     # We include the current node in the search since we are searching over space
     vcat(model.space.s[pos], model.space.s[nn]...)
 end
@@ -144,4 +145,3 @@ function node_neighbors(
     end
     return nlist
 end
-

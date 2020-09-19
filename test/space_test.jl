@@ -100,9 +100,9 @@ end
     add_agent!(2, undirected, rand())
     add_agent!(3, undirected, rand())
     # We expect id 2 to be included for a grid based search
-    @test sort!(space_neighbors(2, undirected)) == [1, 2, 3]
+    @test sort!(collect(space_neighbors(2, undirected))) == [1, 2, 3]
     # But to be excluded if we are looking around it.
-    @test sort!(space_neighbors(undirected[2], undirected)) == [1, 3]
+    @test sort!(collect(space_neighbors(undirected[2], undirected))) == [1, 3]
 
     directed = ABM(Agent5, GraphSpace(path_digraph(5)))
     @test node_neighbors(3, directed) == [4]
@@ -130,7 +130,6 @@ end
     add_agent!((3, 2), gridspace, rand())
     @test collect(space_neighbors((1, 2), gridspace)) == [1]
     @test sort!(collect(space_neighbors((1, 2), gridspace, 2))) == [1, 2]
-    @test_throws ErrorException space_neighbors((1, 2), gridspace, 1.5)
     @test sort!(collect(space_neighbors((2, 2), gridspace))) == [1, 2]
     @test collect(space_neighbors(a, gridspace)) == [2]
 
