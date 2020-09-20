@@ -125,8 +125,8 @@ end
 
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
-    cell = rand(collect(neighbors))
-    move_agent!(agent, cell, model)
+    position = rand(collect(neighbors))
+    move_agent!(agent, position, model)
 end
 
 function eat!(sheep::Sheep, grass_array, model)

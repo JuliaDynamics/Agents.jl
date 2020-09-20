@@ -23,7 +23,7 @@ end
 function forest_step!(forest)
   for pos in positions(forest, by = :random)
     ap = agents_in_pos(pos, forest)
-    ## the cell is empty, maybe a tree grows here
+    ## the position is empty, maybe a tree grows here
     if length(ap) == 0
         rand() ≤ forest.p && add_agent!(pos, forest, true)
     else

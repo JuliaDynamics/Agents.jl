@@ -74,7 +74,7 @@ What the "radius" means depends on the space type:
 Keyword arguments are space-specific.
 For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
 neighbors depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
+- `:default` returns neighbors of a vertex (position). If graph is directed, this is equivalent
   to `:out`. For undirected graphs, all options are equivalent to `:out`.
 - `:all` returns both `:in` and `:out` neighbors.
 - `:in` returns incoming vertex neighbors.

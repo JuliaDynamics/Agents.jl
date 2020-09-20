@@ -90,7 +90,7 @@ function sugarscape(;
 end
 
 function sugarscape_env!(model)
-    # At each cell, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
+    # At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
     togrow = findall(
         x -> model.sugar_values[x] < model.sugar_capacities[x],
         1:prod(model.space.dimensions),
@@ -101,7 +101,7 @@ end
 function movement!(agent, model)
     posvertex = coord2vertex(agent.pos, model)
     newsite = posvertex
-    # find all unoccupied cells within vision
+    # find all unoccupied position within vision
     neighbors = nearby_positions(coord2vertex(agent.pos, model), model, agent.vision)
     empty_positions = [i for i in neighbors if isempty(i, model)]
     if length(empty_positions) > 0

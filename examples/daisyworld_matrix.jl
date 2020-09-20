@@ -161,7 +161,7 @@ function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
         ## Set optimum growth rate to 22.5C, with bounds of [5, 40]C
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand() < seed_threshold
-            ## Collect all adjacent cells that are empty
+            ## Collect all adjacent position that are empty
             empty_neighbors = Vector{Int}(undef, 0)
             neighbors = nearby_positions(pos, model)
             for n in neighbors
@@ -170,7 +170,7 @@ function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
                 end
             end
             if !isempty(empty_neighbors)
-                ## Seed a new daisy in one of those cells
+                ## Seed a new daisy in one of those position
                 seeding_place = rand(empty_neighbors)
                 add_agent!(seeding_place, model, agent.breed, 0, agent.albedo)
             end

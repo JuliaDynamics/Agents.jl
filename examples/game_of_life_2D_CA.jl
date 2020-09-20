@@ -74,7 +74,7 @@ function nlive_neighbors(ag, model)
     neighbor_positions = nearby_positions(ag, model)
     nlive = 0
     for np in neighbor_positions
-        nag = model.agents[Agents.coord2vertex((np[2], np[1]), model)]
+        nag = model.agents[(np[2], np[1])]
         if nag.status == true
             nlive += 1
         end

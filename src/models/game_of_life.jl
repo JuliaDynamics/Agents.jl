@@ -15,8 +15,8 @@ game_of_life(;
 Same as in [Conway's game of life](@ref).
 """
 function game_of_life(;
-    rules::Tuple = (2, 3, 3, 3), 
-    dims = (100, 100), 
+    rules::Tuple = (2, 3, 3, 3),
+    dims = (100, 100),
     Moore = true
 )
     space = GridSpace(dims, moore = Moore)
@@ -52,7 +52,7 @@ function nlive_neighbors(ag, model)
     neighbor_positions = nearby_positions(ag, model)
     nlive = 0
     for np in neighbor_positions
-        nag = model.agents[Agents.coord2vertex((np[2], np[1]), model)]
+        nag = model.agents[(np[2], np[1])]
         if nag.status == true
             nlive += 1
         end

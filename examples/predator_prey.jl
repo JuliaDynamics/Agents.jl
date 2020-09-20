@@ -22,7 +22,7 @@
 # in this model, with a probability given by `reproduction_prob`. The property `Δenergy`
 # controls how much energy is acquired after consuming a food source.
 
-# Grass is a replenishing resource that occupies every cell in the grid space. Grass can be
+# Grass is a replenishing resource that occupies every position in the grid space. Grass can be
 # consumed only if it is `fully_grown`. Once the grass has been consumed, it replenishes
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
@@ -106,7 +106,7 @@ nothing # hide
 
 # The function `agent_step!` is dispatched on each subtype in order to produce
 # type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
-# energy unit by moving to an adjacent cell and both consume a food source if available.
+# energy unit by moving to an adjacent position and both consume a food source if available.
 # If their energy level is below zero, an agent dies. Otherwise, the agent lives and
 # reproduces with some probability.
 
@@ -157,11 +157,11 @@ function agent_step!(grass::Grass, model)
 end
 nothing # hide
 
-# Sheep and wolves move to a random adjacent cell with the `move!` function.
+# Sheep and wolves move to a random adjacent position with the `move!` function.
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
-    cell = rand(collect(neighbors))
-    move_agent!(agent, cell, model)
+    position = rand(collect(neighbors))
+    move_agent!(agent, position, model)
 end
 nothing # hide
 

@@ -22,9 +22,9 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
         scheduler = random_activation,
         properties = properties,
     )
-    for cell in 1:nv(model)
+    for pos in positions(model)
         add_agent!(
-            vertex2coord(cell,model),
+            pos,
             model,
             false,
             rand(1:levels_per_opinion, nopinions),

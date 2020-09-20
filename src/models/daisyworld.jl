@@ -71,10 +71,10 @@ function daisyworld(;
         scheduler = daisysched, properties = properties, warn = false
     )
 
-    ## fill model with `Land`: every grid cell has 1 land instance
+    ## fill model with `Land`: every grid position has 1 land instance
     fill_space!(Land, model, 0.0) # zero starting temperature
 
-    ## Populate with daisies: each cell has only one daisy (black or white)
+    ## Populate with daisies: each position has only one daisy (black or white)
     white_positions = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
     for wp in white_positions
         wd = Daisy(nextid(model), wp, :white, rand(0:max_age), albedo_white)
@@ -127,7 +127,7 @@ function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
         ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand() < seed_threshold
-            ## Collect all adjacent cells that have no daisies
+            ## Collect all adjacent position that have no daisies
             empty_neighbors = Int[]
             neighbors = nearby_positions(pos, model)
             for n in neighbors
@@ -136,8 +136,8 @@ function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
                 end
             end
             if !isempty(empty_neighbors)
-                ## Seed a new daisy in one of those cells
-                seeding_place = vertex2coord(rand(empty_neighbors), model)
+                ## Seed a new daisy in one of those position
+                seeding_place = rand(empty_neighbors)
                 a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
                 add_agent_pos!(a, model)
             end

@@ -3,11 +3,11 @@
 # ![](forest.gif)
 
 # The forest fire model is defined as a cellular automaton on a grid.
-# A cell can be empty, occupied by a tree, or burning.
+# A position can be empty, occupied by a tree, or burning.
 # The model of [Drossel and Schwabl (1992)](https://en.wikipedia.org/wiki/Forest-fire_model)
 # is defined by four rules which are executed simultaneously:
 #
-# 1. A burning cell turns into an empty cell
+# 1. A burning position turns into an empty position
 # 1. A tree will burn if at least one neighbor is burning
 # 1. A tree ignites with probability `f` even if no neighbor is burning
 # 1. An empty space fills with a tree with probability `p`
