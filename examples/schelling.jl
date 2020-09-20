@@ -7,7 +7,7 @@
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional Moore grid (8 neighbors per position).
+# * The agents live in a two-dimensional Chebyshev grid (8 neighbors per position).
 # * If an agent is in the same group with at least three neighbors, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
@@ -38,9 +38,9 @@ end
 
 # ## Creating a space
 
-# For this example, we will be using a Moore 2D grid, e.g.
+# For this example, we will be using a Chebyshev 2D grid, e.g.
 
-space = GridSpace((10, 10), moore = true)
+space = GridSpace((10, 10), periodic = false)
 
 # ## Creating an ABM
 
@@ -77,7 +77,7 @@ schelling2 = ABM(
 # it will be of further use in [`paramscan`](@ref) below.
 
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
                 properties = properties, scheduler = random_activation)

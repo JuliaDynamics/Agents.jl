@@ -54,7 +54,7 @@ function predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, moore = true)
+    space = GridSpace(dims, periodic = false)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false)
     id = 0

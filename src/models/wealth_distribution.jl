@@ -25,7 +25,7 @@ end
 
 function wealth_distribution_agent_step!(agent, model)
     agent.wealth == 0 && return # do nothing
-    neighboring_positions = nearby_positions(agent.pos, model)
+    neighboring_positions = collect(nearby_positions(agent.pos, model))
     push!(neighboring_positions, agent.pos) # also consider current position
     rpos = rand(neighboring_positions) # the position that we will exchange with
     available_ids = agents_in_pos(rpos, model)

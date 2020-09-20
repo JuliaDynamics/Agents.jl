@@ -59,7 +59,7 @@ function sugarscape(;
 )
     sugar_capacities = sugar_caps(dims, sugar_peaks, max_sugar, 6)
     sugar_values = deepcopy(sugar_capacities)
-    space = GridSpace(dims, periodic = true, moore = true)
+    space = GridSpace(dims)
     properties = Dict(
         :growth_rate => growth_rate,
         :N => N,

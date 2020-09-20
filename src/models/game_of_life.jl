@@ -9,7 +9,7 @@ end
 game_of_life(;
     rules::Tuple = (2, 3, 3, 3),
     dims = (100, 100),
-    Moore = true
+    metric = :chebyshev
 )
 ```
 Same as in [Conway's game of life](@ref).
@@ -17,9 +17,9 @@ Same as in [Conway's game of life](@ref).
 function game_of_life(;
     rules::Tuple = (2, 3, 3, 3),
     dims = (100, 100),
-    Moore = true
+    metric = :chebyshev
 )
-    space = GridSpace(dims, moore = Moore)
+    space = GridSpace(dims; metric = metric)
     properties = Dict(:rules => rules)
     model = ABM(Cell, space; properties = properties)
     idx = 1
@@ -34,12 +34,12 @@ end
 
 function game_of_life_model_step!(model)
     new_status = fill(false, nagents(model))
-    for (agid, ag) in model.agents
-        nlive = nlive_neighbors(ag, model)
-        if ag.status == true && (nlive ≤ model.rules[4] && nlive ≥ model.rules[1])
-            new_status[agid] = true
-        elseif ag.status == false && (nlive ≥ model.rules[3] && nlive ≤ model.rules[4])
-            new_status[agid] = true
+    for agent in allagents(model)
+        nlive = nlive_neighbors(agent, model)
+        if agent.status == true && (nlive ≤ model.rules[4] && nlive ≥ model.rules[1])
+            new_status[agent.id] = true
+        elseif agent.status == false && (nlive ≥ model.rules[3] && nlive ≤ model.rules[4])
+            new_status[agent.id] = true
         end
     end
 
@@ -48,14 +48,8 @@ function game_of_life_model_step!(model)
     end
 end
 
-function nlive_neighbors(ag, model)
-    neighbor_positions = nearby_positions(ag, model)
-    nlive = 0
-    for np in neighbor_positions
-        nag = model.agents[(np[2], np[1])]
-        if nag.status == true
-            nlive += 1
-        end
-    end
-    return nlive
+function nlive_neighbors(agent, model)
+    neighbor_positions = nearby_positions(agent, model)
+    all_neighbors = Iterators.flatten(agents_in_pos(np,model) for np in neighbor_positions)
+    sum(model[i].status == true for i in all_neighbors)
 end

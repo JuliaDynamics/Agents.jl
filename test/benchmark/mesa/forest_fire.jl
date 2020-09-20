@@ -14,7 +14,7 @@ end
 function model_initiation(;d, griddims, seed)
   Random.seed!(seed)
 
-  space = GridSpace(griddims, moore = true)
+  space = GridSpace(griddims, periodic = false)
 
   properties = Dict(:d => d)
   forest = ABM(Tree, space; properties=properties, scheduler=random_activation)

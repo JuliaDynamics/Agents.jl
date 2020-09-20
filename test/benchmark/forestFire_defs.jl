@@ -6,7 +6,7 @@ end
 
 function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims=(100,100), seed = 111)
     Random.seed!(seed)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims, period = false)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 

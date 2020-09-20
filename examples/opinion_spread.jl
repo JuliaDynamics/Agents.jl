@@ -26,7 +26,7 @@ mutable struct Citizen <: AbstractAgent
 end
 
 function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
-    space = GridSpace(dims, periodic = true, moore = true)
+    space = GridSpace(dims)
     properties = Dict(:nopinions => nopinions)
     model = AgentBasedModel(
         Citizen,
@@ -49,7 +49,7 @@ end
 # ### 2. Stepping functions
 
 function adopt!(agent, model)
-    neighbor = rand(nearby_agents(agent, model))
+    neighbor = rand(collect(nearby_agents(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     if nmatches < model.nopinions && rand() < nmatches / model.nopinions

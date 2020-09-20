@@ -110,7 +110,7 @@ function daisyworld(;
         :ours, # The Sun's equivalent, achieving an equilibrium of daisies
     ]
 
-    space = GridSpace(griddims, moore = true, periodic = true)
+    space = GridSpace(griddims)
     luminosity = if scenario == :ramp
         0.8
     elseif scenario == :high

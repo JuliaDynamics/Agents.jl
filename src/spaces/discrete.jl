@@ -123,7 +123,7 @@ mutable struct Land <: AbstractAgent
     pos::Tuple{Int, Int}
     temperature::Float64
 end
-space = GridSpace((10, 10), moore = true, periodic = true)
+space = GridSpace((10, 10))
 model = ABM(Union{Daisy, Land}, space)
 temperature(pos) = (pos[1]/10, ) # must be Tuple!
 fill_space!(Land, model, temperature)

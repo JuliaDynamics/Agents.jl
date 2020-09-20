@@ -60,7 +60,7 @@ nothing # hide
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
-# dimensional grid space with `moore = true`, which enables animals to walk in all
+# dimensional grid space, which enables animals to walk in all
 # directions. Heterogeneous agents are specified in the model as a `Union`. Agents are
 # scheduled `by_type`, which randomizes the order of agents with the constraint that agents
 # of a particular type are scheduled consecutively.
@@ -75,7 +75,7 @@ function initialize_model(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, moore = true)
+    space = GridSpace(dims, periodic = false)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false)
     id = 0

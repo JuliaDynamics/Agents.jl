@@ -56,7 +56,7 @@ function daisyworld(;
     )
 
     Random.seed!(seed)
-    space = GridSpace(griddims, moore = true, periodic = true)
+    space = GridSpace(griddims)
     properties = Dict(
         :max_age => max_age,
         :surface_albedo => surface_albedo,
@@ -75,13 +75,15 @@ function daisyworld(;
     fill_space!(Land, model, 0.0) # zero starting temperature
 
     ## Populate with daisies: each position has only one daisy (black or white)
-    white_positions = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
+    grid = collect(positions(model))
+    num_positions = prod(griddims)
+    white_positions = StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
         wd = Daisy(nextid(model), wp, :white, rand(0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
-    allowed = setdiff(1:nv(space), white_positions)
-    black_positions = StatsBase.sample(allowed, Int(init_black * nv(space)); replace = false)
+    allowed = setdiff(grid, white_positions)
+    black_positions = StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
         wd = Daisy(nextid(model), bp, :black, rand(0:max_age), albedo_black)
         add_agent_pos!(wd, model)
@@ -128,7 +130,7 @@ function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand() < seed_threshold
             ## Collect all adjacent position that have no daisies
-            empty_neighbors = Int[]
+            empty_neighbors = Tuple{Int,Int}[]
             neighbors = nearby_positions(pos, model)
             for n in neighbors
                 if length(agents_in_pos(n, model)) == 1
