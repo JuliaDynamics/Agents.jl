@@ -6,6 +6,7 @@
 - `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord`.
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
+- Performance increase of finding neighbors in GraphSpace with r > 1.
 
 ## Breaking changes
 All changes in this section (besides changes to default values) are deprecated and
@@ -14,6 +15,7 @@ therefore are not "truly breaking".
 - Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
 - Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allows to have performance updates in the future that may change internals but not lead to breaking changes.
+- `vertex2coord, coord2vertex` do not exist anymore because they are unecessary in the new design.
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

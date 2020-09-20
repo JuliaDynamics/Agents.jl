@@ -38,7 +38,6 @@ function Base.show(io::IO, space::GraphSpace)
     )
 end
 
-
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
@@ -91,11 +90,13 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     nn = node_neighbors(pos, model, args...; kwargs...)
-    # TODO: Use flatten here or something for performance?
-    # `model.space.s[nn]...` allocates, because it creates a new array!
-    # Also `vcat` allocates a second time
-    # We include the current node in the search since we are searching over space
+    # This call is faster than reduce(vcat, ..), or Iterators.flatten
     vcat(model.space.s[pos], model.space.s[nn]...)
+end
+
+function space_neighbors(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
+    all = space_neighbors(agent.pos, model, args...; kwargs...)
+    filter!(i -> i ≠ agent.id, all)
 end
 
 function node_neighbors(
@@ -122,26 +123,12 @@ function node_neighbors(
     radius::Integer;
     kwargs...,
 ) where {A}
-    neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
-    included_nodes = Set()
-    for rad in 2:radius
-        templist = Vector{Int}()
-        for nn in neighbor_nodes
-            if !in(nn, included_nodes)
-                newns = node_neighbors(nn, model; kwargs...)
-                for newn in newns
-                    push!(templist, newn)
-                end
-            end
-        end
-        for tt in templist
-            push!(neighbor_nodes, tt)
-        end
+    output = copy(node_neighbors(node_number, model; kwargs...))
+    for _ in 2:radius
+        newnns = (node_neighbors(nn, model; kwargs...) for nn in output)
+        append!(output, reduce(vcat, newnns))
+        unique!(output)
     end
-    nlist = collect(neighbor_nodes)
-    j = findfirst(a -> a == node_number, nlist)
-    if j != nothing
-        deleteat!(nlist, j)
-    end
-    return nlist
+    filter!(i -> i != node_number, output)
 end
+
