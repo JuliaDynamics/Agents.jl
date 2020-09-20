@@ -35,7 +35,7 @@ sample!
 
 ## Neighbors
 ```@docs
-space_neighbors
+nearby_agents
 node_neighbors
 ```
 
@@ -65,10 +65,10 @@ You will notice that only 1 agent got killed. This is simply because the final s
 To avoid problems like these, you need to `copy` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
-A good example to illustrate this is [`space_neighbors`](@ref), where doing something like
+A good example to illustrate this is [`nearby_agents`](@ref), where doing something like
 ```@example docs
 a = random_agent(model)
-sort!(space_neighbors(random_agent(model), model))
+sort!(nearby_agents(random_agent(model), model))
 ```
 leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
 ```@example docs

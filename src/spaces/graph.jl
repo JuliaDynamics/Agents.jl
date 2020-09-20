@@ -89,7 +89,7 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 # Neighbors
 #######################################################################################
-function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
+function nearby_agents(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     nn = node_neighbors(pos, model, args...; kwargs...)
     # TODO: Use flatten here or something for performance?
     # `model.space.s[nn]...` allocates, because it creates a new array!

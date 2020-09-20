@@ -27,7 +27,7 @@ end
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
-used, which decides the behavior of e.g. [`space_neighbors`](@ref).
+used, which decides the behavior of e.g. [`nearby_agents`](@ref).
 The position type for this space is `NTuple{D, Int}` and valid nodes have indices
 in the range `1:d[i]` for the `i`th dimension.
 
@@ -162,7 +162,7 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_agents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))

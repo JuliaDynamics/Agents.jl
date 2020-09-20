@@ -39,7 +39,7 @@ function forest_model_step_array!(forest)
                 if rand() ≤ forest.f  # the tree ignites spontaneously
                     tree.status = false
                 else  # if any neighbor is on fire, set this tree on fire too
-                    neighbors = space_neighbors(tree, forest)
+                    neighbors = nearby_agents(tree, forest)
                     if any(n -> !(model[n].status), neighbors)
                         tree.status = false
                     end
@@ -51,7 +51,7 @@ end
 
 function iterate_over_neighbors(a, model)
     s::Int = 0
-    for x in space_neighbors(a, model)
+    for x in nearby_agents(a, model)
         s::Int += x
     end
     return s
@@ -59,7 +59,7 @@ end
 function iterate_over_neighbors2(aa::Vector, model)
     s::Int = 0
     for a in aa
-    for x in space_neighbors(a, model)
+    for x in nearby_agents(a, model)
         s::Int += x
     end
     end
@@ -78,7 +78,7 @@ aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
 
 println("Space neighbors")
-@btime space_neighbors($a, $model);
+@btime nearby_agents($a, $model);
 println("Iterate over space neighbors")
 @btime iterate_over_neighbors($a, $model);
 println("Iterate over position space neighbors")

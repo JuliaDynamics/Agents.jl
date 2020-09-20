@@ -219,7 +219,7 @@ end
 #######################################################################################
 # neighboring agents
 #######################################################################################
-function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
+function nearby_agents(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
   left = pos .- r
   right = pos .+ r
   res = interlace(left, right)
@@ -230,7 +230,7 @@ function space_neighbors(pos::Tuple, model::ABM{A, <:ContinuousSpace}, r::Real) 
   ids
 end
 
-function space_neighbors(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
+function nearby_agents(agent::A, model::ABM{A, <:ContinuousSpace}, r::Real) where {A<:AbstractAgent}
   left = agent.pos .- r
   right = agent.pos .+ r
   res = interlace(left, right)
@@ -261,7 +261,7 @@ space's metric. Valid only in continuous space.
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent, model, r)
-  n = space_neighbors(agent, model, r)
+  n = nearby_agents(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 1
   for i in 1:length(n)
@@ -390,7 +390,7 @@ end
 
 function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
     for a in allagents(model)
-        for nid in space_neighbors(a, model, r)
+        for nid in nearby_agents(a, model, r)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -428,7 +428,7 @@ function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, schedul
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in space_neighbors(model[id], model, r)
+        for nid in nearby_agents(model[id], model, r)
             neigbor_type = typeof(model[nid])
             if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues

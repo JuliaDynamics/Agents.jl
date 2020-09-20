@@ -37,7 +37,7 @@ end
 # according to the three rules defined above.
 function agent_step!(bird, model)
     # Obtain the ids of neibhors within the bird's visual distance
-    ids = space_neighbors(bird, model, bird.visual_distance)
+    ids = nearby_agents(bird, model, bird.visual_distance)
     # Compute velocity based on rules defined above
     bird.vel = (bird.vel .+ cohere(bird, model, ids) .+ seperate(bird, model, ids)
         .+ match(bird, model, ids))./2

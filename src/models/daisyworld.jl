@@ -111,7 +111,7 @@ end
 
 function diffuse_temperature!(node::Int, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
-    ids = space_neighbors(node, model)
+    ids = nearby_agents(node, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
     land = model[get_node_contents(node, model)[1]] # land at current node
     ## Each neighbor land patch is giving up 1/8 of the diffused

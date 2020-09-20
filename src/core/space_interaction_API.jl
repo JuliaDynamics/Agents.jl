@@ -16,7 +16,7 @@ export move_agent!,
     genocide!,
     random_position,
     node_neighbors,
-    space_neighbors
+    nearby_agents
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
@@ -59,7 +59,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    space_neighbors(position, model::ABM, r=1; kwargs...) → ids
+    nearby_agents(position, model::ABM, r=1; kwargs...) → ids
 
 Return an iterator of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
@@ -80,7 +80,7 @@ neighbors depending on the underlying graph directionality type.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 """
-space_neighbors(position, model, r=1) = notimplemented(model)
+nearby_agents(position, model, r=1) = notimplemented(model)
 
 
 """
@@ -90,7 +90,7 @@ Return an iterator of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
 The `position` must match type with the spatial structure of the `model`).
 
-The value of `r` and possible keywords operate identically to [`space_neighbors`](@ref).
+The value of `r` and possible keywords operate identically to [`nearby_agents`](@ref).
 """
 node_neighbors(position, model, r=1) = notimplemented(model)
 
@@ -249,13 +249,13 @@ end
 # %% Space agnostic neighbors
 #######################################################################################
 """
-    space_neighbors(agent::AbstractAgent, model::ABM, r=1)
+    nearby_agents(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `space_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
+Same as `nearby_agents(agent.pos, model, r)` but the iterator *excludes* the given
 `agent`'s id.
 """
-function space_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = space_neighbors(agent.pos, model, args...; kwargs...)
+function nearby_agents(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = nearby_agents(agent.pos, model, args...; kwargs...)
     id::Int = agent.id
     Iterators.filter(i -> i ≠ id, all)
 end

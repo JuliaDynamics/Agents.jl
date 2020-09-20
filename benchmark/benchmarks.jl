@@ -104,7 +104,7 @@ end
 
 function iterate_over_neighbors(a, model, r)
     s = 0
-    for x in space_neighbors(a, model, r)
+    for x in nearby_agents(a, model, r)
         s += x
     end
     return s
@@ -152,17 +152,17 @@ SUITE["graph"]["move"]["single"] = @benchmarkable move_agent_single!($a, $graph_
 
 # We use a digraph, so all agents are neighbors of each other
 SUITE["graph"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors($pos, $graph_model) setup =
-        (space_neighbors($pos, $graph_model))
+    @benchmarkable nearby_agents($pos, $graph_model) setup =
+        (nearby_agents($pos, $graph_model))
 SUITE["graph"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors($a, $graph_model) setup =
-        (space_neighbors($a, $graph_model))
+    @benchmarkable nearby_agents($a, $graph_model) setup =
+        (nearby_agents($a, $graph_model))
 SUITE["graph"]["neighbors"]["space_pos_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $graph_model, 1) setup =
-        (space_neighbors($pos, $graph_model))
+        (nearby_agents($pos, $graph_model))
 SUITE["graph"]["neighbors"]["space_agent_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $graph_model, 1) setup =
-        (space_neighbors($a, $graph_model))
+        (nearby_agents($a, $graph_model))
 SUITE["graph"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($pos, $graph_model)
 SUITE["graph"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $graph_model)
 
@@ -225,19 +225,19 @@ SUITE["grid"]["move"]["pos"] = @benchmarkable move_agent!($a, (14, 35), $grid_mo
 SUITE["grid"]["move"]["single"] = @benchmarkable move_agent_single!($a, $grid_model)
 
 SUITE["grid"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors($pos, $grid_model, 5) setup =
-        (space_neighbors($pos, $grid_model, 5))
+    @benchmarkable nearby_agents($pos, $grid_model, 5) setup =
+        (nearby_agents($pos, $grid_model, 5))
 SUITE["grid"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors($a, $grid_model, 5) setup =
-        (space_neighbors($a, $grid_model, 5))
+    @benchmarkable nearby_agents($a, $grid_model, 5) setup =
+        (nearby_agents($a, $grid_model, 5))
 
 SUITE["grid"]["neighbors"]["space_pos_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $grid_model, 30) setup =
-        (space_neighbors($pos, $grid_model, 30))
+        (nearby_agents($pos, $grid_model, 30))
 
 SUITE["grid"]["neighbors"]["space_agent_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $grid_model, 30) setup =
-        (space_neighbors($a, $grid_model, 30))
+        (nearby_agents($a, $grid_model, 30))
 
 SUITE["grid"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($a, $grid_model)
 SUITE["grid"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $grid_model)
@@ -311,19 +311,19 @@ SUITE["continuous"]["move"]["vel"] =
     @benchmarkable move_agent!($a, $continuous_model, (1.2, 0.0, 0.7))
 
 SUITE["continuous"]["neighbors"]["space_pos"] =
-    @benchmarkable space_neighbors($pos, $continuous_model, 5) setup =
-        (space_neighbors($pos, $continuous_model, 5))
+    @benchmarkable nearby_agents($pos, $continuous_model, 5) setup =
+        (nearby_agents($pos, $continuous_model, 5))
 
 SUITE["continuous"]["neighbors"]["space_agent"] =
-    @benchmarkable space_neighbors($a, $continuous_model, 5) setup =
-        (space_neighbors($a, $continuous_model, 5))
+    @benchmarkable nearby_agents($a, $continuous_model, 5) setup =
+        (nearby_agents($a, $continuous_model, 5))
 
 SUITE["continuous"]["neighbors"]["space_pos_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $continuous_model, 10) setup =
-        (space_neighbors($pos, $continuous_model, 10))
+        (nearby_agents($pos, $continuous_model, 10))
 SUITE["continuous"]["neighbors"]["space_agent_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $continuous_model, 10) setup =
-        (space_neighbors($a, $continuous_model, 10))
+        (nearby_agents($a, $continuous_model, 10))
 SUITE["continuous"]["neighbors"]["nearest"] =
     @benchmarkable nearest_neighbor($a, $continuous_model, 5)
 SUITE["continuous"]["neighbors"]["interacting"] =
