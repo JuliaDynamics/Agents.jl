@@ -20,16 +20,18 @@ AgentBasedModel
 ```
 
 ## [2. The space](@id Space)
-Agents.jl offers several possibilities for the space the agents live in, separated into discrete and continuous categories (notice that using a space is not actually necessary).
+Agents.jl offers several possibilities for the space the agents live in.
+In addition, the space types of Agents.jl are extendable, see [Developer Docs](@ref).
 
-The discrete possibilities, often summarized as `DiscreteSpace`, are
+Spaces are separated into `DisreteSpaces`, which by definition have a **finite** amount of **possible positions**, and continuous spaces.
 
+Discrete possibilities currently are:
 ```@docs
 GraphSpace
 GridSpace
 ```
 
-and the continuous version is
+and the continuous version is:
 ```@docs
 ContinuousSpace
 ```
@@ -63,6 +65,14 @@ After you have defined these two functions, you evolve your model with `step!`:
 step!
 dummystep
 ```
+
+!!! note
+    Notice that the current step number is not explicitly given to the [`model_step!`](@ref)
+    function, because this is useful only for a small subset of ABMs. If you need the
+    step information, implement this by adding a counting parameter into the model
+    `properties`, and incrementing it by 1 each time `model_step!` is called.
+    An example can be seen in the `model_step!` function of [Daisyworld](@ref),
+    where a `tick` is increased at each step.
 
 ## 5. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.

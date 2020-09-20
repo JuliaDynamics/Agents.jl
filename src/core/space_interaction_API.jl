@@ -1,6 +1,6 @@
 #=
 This file establishes the agent-space interaction API.
-All space types should implement this API.
+All space types should implement this API (and obviously be subtypes of `AbstractSpace`)
 Some functions DO NOT need to be implemented for every space, they are space agnostic.
 These functions have complete source code here, while the functions that DO need to
 be implemented for every space have only documentation strings here and an
@@ -12,8 +12,11 @@ export move_agent!,
     add_agent!,
     add_agent_pos!,
     kill_agent!,
+    kill_agents!,
     genocide!,
-    random_position
+    random_position,
+    node_neighbors,
+    space_neighbors
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
 
@@ -56,26 +59,38 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    space_neighbors(position, model::ABM, r=1) → ids
+    space_neighbors(position, model::ABM, r=1; kwargs...) → ids
 
 Return an iterator of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: `r` means the degree of neighbors and is an integer.
+- `GraphSpace`: `r` means the degree of neighbors in the graph and is an integer.
   For example, for `r=2` include first and second degree neighbors.
 - `GridSpace, ContinuousSpace`: Standard distance implementation according to the
   underlying space metric.
+
+## Keywords
+Keyword arguments are space-specific.
+For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
+neighbors depending on the underlying graph directionality type.
+- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
+  to `:out`. For undirected graphs, all options are equivalent to `:out`.
+- `:all` returns both `:in` and `:out` neighbors.
+- `:in` returns incoming vertex neighbors.
+- `:out` returns outgoing vertex neighbors.
 """
 space_neighbors(position, model, r=1) = notimplemented(model)
 
 
 """
-    node_neighbors(position, model::ABM, r=1) → positions
+    node_neighbors(position, model::ABM, r=1; kwargs...) → positions
 
 Return an iterator of all positions within "radius" `r` of the given `position`
-(which must match type with the spatial structure of the `model`).
-The value of `r` operates identically to [`space_neighbors`](@ref).
+(which excludes given `position`).
+The `position` must match type with the spatial structure of the `model`).
+
+The value of `r` and possible keywords operate identically to [`space_neighbors`](@ref).
 """
 node_neighbors(position, model, r=1) = notimplemented(model)
 
@@ -88,13 +103,24 @@ node_neighbors(position, model, r=1) = notimplemented(model)
     kill_agent!(agent::AbstractAgent, model::ABM)
     kill_agent!(id::Int, model::ABM)
 
-Remove an agent from the model, and from the space, if the model has a space.
+Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
     delete!(model.agents, a.id)
     remove_agent_from_space!(a, model)
 end
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
+
+"""
+    kill_agents!(ids, model::ABM)
+
+Remove all agents with then given ids agent from the model.
+"""
+function kill_agents!(ids, model::ABM)
+    for i in ids
+        kill_agent!(i, model)
+    end
+end
 
 """
     genocide!(model::ABM)
@@ -230,16 +256,15 @@ Same as `space_neighbors(agent.pos, model, r)` but the iterator *excludes* the g
 """
 function space_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
     all = space_neighbors(agent.pos, model, args...; kwargs...)
-    Iterators.filter(!isequal(agent.id), all)
+    id::Int = agent.id
+    Iterators.filter(i -> i ≠ id, all)
 end
 
 """
     node_neighbors(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `node_neighbors(agent.pos, model, r)` but the iterator *excludes* the given
-`agent`'s position.
+Same as `node_neighbors(agent.pos, model, r)`.
 """
 function node_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = node_neighbors(agent.pos, model, args...; kwargs...)
-    Iterators.filter(!isequal(agent.pos), all)
+    node_neighbors(agent.pos, model, args...; kwargs...)
 end
