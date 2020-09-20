@@ -38,7 +38,6 @@ function Base.show(io::IO, space::GraphSpace)
     )
 end
 
-
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
@@ -91,7 +90,13 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     nn = node_neighbors(pos, model, args...; kwargs...)
-    Iterators.flatten(model.space.s[i] for i in Iterators.flatten((pos,nn)))
+    # This call is faster than reduce(vcat, ..), or Iterators.flatten
+    vcat(model.space.s[pos], model.space.s[nn]...)
+end
+
+function space_neighbors(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
+    all = space_neighbors(agent.pos, model, args...; kwargs...)
+    filter!(i -> i ≠ agent.id, all)
 end
 
 function node_neighbors(
@@ -109,7 +114,7 @@ function node_neighbors(
     else
         LightGraphs.all_neighbors
     end
-    Base.Generator(Int, neighborfn(model.space.graph, node_number))
+    neighborfn(model.space.graph, node_number)
 end
 
 function node_neighbors(
@@ -118,10 +123,12 @@ function node_neighbors(
     radius::Integer;
     kwargs...,
 ) where {A}
-    neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
+    output = copy(node_neighbors(node_number, model; kwargs...))
     for _ in 2:radius
-        newnns = (node_neighbors(nn, model; kwargs...) for nn in neighbor_nodes)
-        union!(neighbor_nodes, newnns...)
+        newnns = (node_neighbors(nn, model; kwargs...) for nn in output)
+        append!(output, reduce(vcat, newnns))
+        unique!(output)
     end
-    Iterators.filter(i->i!=node_number, Base.Generator(Int, neighbor_nodes))
+    filter!(i -> i != node_number, output)
 end
+
