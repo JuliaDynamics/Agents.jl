@@ -7,7 +7,7 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - get_node_contents(position, model)
 =#
 
-export nodes, get_node_contents, find_empty_nodes, pick_empty
+export nodes, get_node_contents, find_empty_nodes, pick_empty, has_empty_nodes
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
@@ -43,6 +43,16 @@ end
 Return `true` if there are no agents in `node`.
 """
 Base.isempty(pos, model::ABM) = isempty(get_node_contents(pos, model))
+
+
+"""
+    has_empty_nodes(model::ABM{A, <:DiscreteSpace})
+Return `true` if there are any positions in the model without agents.
+"""
+function has_empty_nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace})
+    s = model.space.s
+    return any(i -> length(i) == 0, s)
+end
 
 """
     pick_empty(model::ABM{A, <:DiscreteSpace})
@@ -157,9 +167,9 @@ Move agent to a random node while respecting a maximum of one agent
 per node. If there are no empty nodes, the agent won't move.
 """
 function move_agent_single!(
-    agent::A,
-    model::ABM{A,<:DiscreteSpace},
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{A,<:DiscreteSpace},
+    ) where {A<:AbstractAgent}
     empty_positions = find_empty_nodes(model)
     if length(empty_positions) > 0
         random_node = rand(empty_positions)
@@ -167,4 +177,3 @@ function move_agent_single!(
     end
     return agent
 end
-

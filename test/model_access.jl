@@ -50,8 +50,8 @@ end
 
 @testset "Display" begin
     model = ABM(Agent3, GridSpace((5,5)))
-    @test sprint(show, model) == "AgentBasedModel with 0 agents of type Agent3\n space: GridSpace with size (5, 5) and metric=chebyshev\n scheduler: fastest"
-    @test sprint(show, model.space) == "GridSpace with size (5, 5) and metric=chebyshev"
+    @test sprint(show, model)[1:29] == "AgentBasedModel with 0 agents"
+    @test sprint(show, model.space) == "GridSpace with size (5, 5), metric=chebyshev and periodic=true"
     model = ABM(Agent6, ContinuousSpace(2))
     @test sprint(show, model.space) == "2-dimensional periodic ContinuousSpace"
 end

@@ -78,14 +78,15 @@ sort!(collect(space_agents(a, model)))
 
 ## Discrete space exclusives
 ```@docs
-add_agent_single!
+nodes
+get_node_contents
 fill_space!
+has_empty_nodes
 find_empty_nodes
 pick_empty
+add_agent_single!
 move_agent_single!
-get_node_contents
 isempty(::Integer, ::ABM)
-nodes
 ```
 
 ## Continuous space exclusives
