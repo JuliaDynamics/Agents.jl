@@ -30,6 +30,8 @@ include("simulations/sample.jl")
 @deprecate node_neighbors nearby_positions
 @deprecate get_node_contents agents_in_pos
 @deprecate pick_empty random_empty
+@deprecate find_empty_nodes empty_positions
+@deprecate has_empty_nodes has_empty_positions
 
 # Predefined models
 include("models/Models.jl")

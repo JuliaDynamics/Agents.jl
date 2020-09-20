@@ -148,7 +148,7 @@ end
       agent = Agent7(id, 2, attributes...)
       add_agent_single!(agent, model)
   end
-  @test length(find_empty_nodes(model)) == 0
+  @test !has_empty_positions(model)
   agent = Agent7(12,5, attributes...)
   add_agent_single!(agent, model)
   @test_throws KeyError model[12]

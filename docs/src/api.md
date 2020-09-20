@@ -81,8 +81,8 @@ sort!(collect(space_agents(a, model)))
 nodes
 agents_in_pos
 fill_space!
-has_empty_nodes
-find_empty_nodes
+has_empty_positions
+empty_positions
 random_empty
 add_agent_single!
 move_agent_single!

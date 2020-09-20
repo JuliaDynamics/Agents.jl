@@ -66,13 +66,13 @@ end
     @test d.metric == :euclidean
 end
 
-@testset "Nodes" begin
+@testset "Positions" begin
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
-    empty_nodes = find_empty_nodes(model)
-    @test length(empty_nodes) > 0
+    empty = empty_positions(model)
+    @test length(empty) > 0
     for n in [1, 5, 6, 9, 2, 3, 4]
-        add_agent!(empty_nodes[n], model)
+        add_agent!(empty[n], model)
     end
     # only positions (1,3) and (2,3) should be empty
     @test random_empty(model) ∈ [(1,3), (2,3)]
