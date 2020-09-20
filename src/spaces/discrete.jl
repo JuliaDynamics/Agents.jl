@@ -7,7 +7,7 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - agents_in_pos(position, model)
 =#
 
-export nodes, agents_in_pos, find_empty_nodes, pick_empty, has_empty_nodes
+export nodes, agents_in_pos, find_empty_nodes, random_empty, has_empty_nodes
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
@@ -55,10 +55,10 @@ function has_empty_nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace})
 end
 
 """
-    pick_empty(model::ABM{A, <:DiscreteSpace})
+    random_empty(model::ABM{A, <:DiscreteSpace})
 Return a random position without any agents, or `nothing` if no such positions exist.
 """
-function pick_empty(model::ABM{<:AbstractAgent,<:DiscreteSpace})
+function random_empty(model::ABM{<:AbstractAgent,<:DiscreteSpace})
     empty_nodes = find_empty_nodes(model)
     isempty(empty_nodes) && return nothing
     rand(empty_nodes)
@@ -76,9 +76,9 @@ Add the `agent` to a random position in the space while respecting a maximum of 
 per node position. This function does nothing if there aren't any empty positions.
 """
 function add_agent_single!(agent::A, model::ABM{A,<:DiscreteSpace}) where {A<:AbstractAgent}
-    node = pick_empty(model)
-    isnothing(node) && return agent
-    agent.pos = node
+    position = random_empty(model)
+    isnothing(position) && return agent
+    agent.pos = position
     add_agent_pos!(agent, model)
     return agent
 end

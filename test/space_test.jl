@@ -74,8 +74,8 @@ end
     for n in [1, 5, 6, 9, 2, 3, 4]
         add_agent!(empty_nodes[n], model)
     end
-    # only nodes (1,3) and (2,3) should be empty
-    @test pick_empty(model) ∈ [(1,3), (2,3)]
+    # only positions (1,3) and (2,3) should be empty
+    @test random_empty(model) ∈ [(1,3), (2,3)]
     node_map = [(1, 1)  (1, 2)  (1, 3)
                 (2, 1)  (2, 2)  (2, 3)
                 (3, 1)  (3, 2)  (3, 3)]
