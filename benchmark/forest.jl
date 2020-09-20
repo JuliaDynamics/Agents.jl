@@ -49,14 +49,14 @@ function forest_model_step_array!(forest)
     end
 end
 
-function iterate_over_neighbors(a, model)
+function iterate_over_nearby_agents(a, model)
     s::Int = 0
     for x in nearby_agents(a, model)
         s::Int += x
     end
     return s
 end
-function iterate_over_neighbors2(aa::Vector, model)
+function iterate_over_nearby_agents2(aa::Vector, model)
     s::Int = 0
     for a in aa
     for x in nearby_agents(a, model)
@@ -77,14 +77,14 @@ a = random_agent(model)
 aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
 
-println("Space neighbors")
+println("Nearby Agents")
 @btime nearby_agents($a, $model);
-println("Iterate over space neighbors")
-@btime iterate_over_neighbors($a, $model);
-println("Iterate over position space neighbors")
-@btime iterate_over_neighbors($a.pos, $model);
-println("Iterate over space neighbors2")
-@btime iterate_over_neighbors2($aa, $model);
+println("Iterate over nearby agents")
+@btime iterate_over_nearby_agents($a, $model);
+println("Iterate over nearby agents with position")
+@btime iterate_over_nearby_agents($a.pos, $model);
+println("Iterate over nearby agents2")
+@btime iterate_over_nearby_agents2($aa, $model);
 println("node neighbors")
 @btime nearby_positions($a.pos, $model);
 

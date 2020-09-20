@@ -55,7 +55,7 @@ model = ball_model()
 
 # We took advantage of the functionality of [`add_agent!`](@ref) that creates the
 # agents automatically. For now all agents have the same absolute `speed`, and `mass`.
-# We `index!` the model, to make finding space neighbors faster.
+# We `index!` the model, to make finding nearby agents faster.
 
 # The agent step function for now is trivial. It is just [`move_agent!`](@ref) in
 # continuous space
