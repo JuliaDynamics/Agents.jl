@@ -129,7 +129,7 @@ function propagate!(node::Int, model::DaisyWorld)
         if rand() < seed_threshold
             ## Collect all adjacent cells that have no daisies
             empty_neighbors = Int[]
-            neighbors = node_neighbors(node, model)
+            neighbors = nearby_positions(node, model)
             for n in neighbors
                 if length(get_node_contents(n, model)) == 1
                     push!(empty_neighbors, n)

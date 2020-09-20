@@ -102,18 +102,18 @@ function movement!(agent, model)
     posvertex = coord2vertex(agent.pos, model)
     newsite = posvertex
     # find all unoccupied cells within vision
-    neighbors = node_neighbors(coord2vertex(agent.pos, model), model, agent.vision)
-    empty_nodes = [i for i in neighbors if isempty(i, model)]
-    if length(empty_nodes) > 0
+    neighbors = nearby_positions(coord2vertex(agent.pos, model), model, agent.vision)
+    empty_positions = [i for i in neighbors if isempty(i, model)]
+    if length(empty_positions) > 0
         # identify the one(s) with greatest amount of sugar
-        maxsugar = maximum(model.sugar_values[empty_nodes])
+        maxsugar = maximum(model.sugar_values[empty_positions])
         if maxsugar > 0
-            sugary_sites_inds = findall(x -> x == maxsugar, model.sugar_values[empty_nodes])
-            sugary_sites = empty_nodes[sugary_sites_inds]
+            sugary_sites_inds = findall(x -> x == maxsugar, model.sugar_values[empty_positions])
+            sugary_sites = empty_positions[sugary_sites_inds]
             # select the nearest one (randomly if more than one)
             for dia in 1:(agent.vision)
-                nn = node_neighbors(posvertex, model, dia)
-                suitable = intersect(nn, sugary_sites)
+                np = nearby_positions(posvertex, model, dia)
+                suitable = intersect(np, sugary_sites)
                 if length(suitable) > 0
                     newsite = rand(suitable)
                     break

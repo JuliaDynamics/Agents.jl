@@ -71,10 +71,10 @@ function ca_step!(model)
 end
 
 function nlive_neighbors(ag, model)
-    neighbors_coords = node_neighbors(ag, model)
+    neighbor_positions = nearby_positions(ag, model)
     nlive = 0
-    for nc in neighbors_coords
-        nag = model.agents[Agents.coord2vertex((nc[2], nc[1]), model)]
+    for np in neighbor_positions
+        nag = model.agents[Agents.coord2vertex((np[2], np[1]), model)]
         if nag.status == true
             nlive += 1
         end

@@ -121,10 +121,10 @@ end
 """
     grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 
-Return an iterator over all nodes within distance `r` from `α` according to the `space`.
+Return an iterator over all positions within distance `r` from `α` according to the `space`.
 
-The only reason this function is not equivalent with `node_neighbors` is because
-`node_neighbors` skips the current position `α`, while `α` is always included in the
+The only reason this function is not equivalent with `nearby_positions` is because
+`nearby_positions` skips the current position `α`, while `α` is always included in the
 returned iterator (because the `0` index is always included in `βs`).
 
 This function re-uses the source code of TimeseriesPrediction.jl, along with the
@@ -168,7 +168,7 @@ function nearby_agents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r
     Iterators.flatten((s[i...] for i in nn))
 end
 
-function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
 end

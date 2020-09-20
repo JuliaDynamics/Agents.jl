@@ -73,8 +73,8 @@ function forest_step!(forest)
                 if rand() ≤ forest.f  # the tree ignites spontaneously
                     tree.status = false
                 else  # if any neighbor is on fire, set this tree on fire too
-                    for cell in node_neighbors(node, forest)
-                        neighbors = get_node_contents(cell, forest)
+                    for pos in nearby_positions(node, forest)
+                        neighbors = get_node_contents(pos, forest)
                         length(neighbors) == 0 && continue
                         if any(n -> !forest.agents[n].status, neighbors)
                             tree.status = false

@@ -16,6 +16,7 @@ therefore are not "truly breaking".
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allows to have performance updates in the future that may change internals but not lead to breaking changes.
 - API simplification and renaming.
   - `space_neighbors` -> `nearby_agents`
+  - `node_neighbors` -> `nearby_positions`
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

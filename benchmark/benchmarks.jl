@@ -82,8 +82,8 @@ for space in ["graph", "grid", "continuous"]
             "space_agent",
             "space_pos_iterate",
             "space_agent_iterate",
-            "node_pos",
-            "node_agent",
+            "position_pos",
+            "position_agent",
         ])
     end
     SUITE[space]["collect"] = BenchmarkGroup(["init_agent", "store_agent"])
@@ -92,8 +92,8 @@ end
 push!(SUITE["grid"]["add_union"].tags, "agent_fill")
 push!(SUITE["grid"]["add"].tags, "create_fill")
 for space in ["grid", "graph"]
-    push!(SUITE[space].tags, "node")
-    SUITE[space]["node"] = BenchmarkGroup(["contents", "agents"])
+    push!(SUITE[space].tags, "position")
+    SUITE[space]["position"] = BenchmarkGroup(["contents", "agents"])
 end
 # some spaces need a few things dropped
 for add in ["add", "add_union"]
@@ -139,9 +139,9 @@ SUITE["graph"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($graph_agent, $graph_union_model)
 
 graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(100)))
-for node in 1:100
+for position in 1:100
     for _ in 1:4
-        add_agent!(node, graph_model, 6.5, false)
+        add_agent!(position, graph_model, 6.5, false)
     end
 end
 a = graph_model[89]
@@ -163,11 +163,11 @@ SUITE["graph"]["neighbors"]["space_pos_iterate"] =
 SUITE["graph"]["neighbors"]["space_agent_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $graph_model, 1) setup =
         (nearby_agents($a, $graph_model))
-SUITE["graph"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($pos, $graph_model)
-SUITE["graph"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $graph_model)
+SUITE["graph"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($pos, $graph_model)
+SUITE["graph"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $graph_model)
 
-SUITE["graph"]["node"]["contents"] = @benchmarkable get_node_contents($pos, $graph_model)
-SUITE["graph"]["node"]["nodes"] = @benchmarkable nodes($graph_model)
+SUITE["graph"]["position"]["contents"] = @benchmarkable get_node_contents($pos, $graph_model)
+SUITE["graph"]["position"]["nodes"] = @benchmarkable nodes($graph_model)
 
 ##### API -> GRID ####
 
@@ -239,11 +239,11 @@ SUITE["grid"]["neighbors"]["space_agent_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $grid_model, 30) setup =
         (nearby_agents($a, $grid_model, 30))
 
-SUITE["grid"]["neighbors"]["node_pos"] = @benchmarkable node_neighbors($a, $grid_model)
-SUITE["grid"]["neighbors"]["node_agent"] = @benchmarkable node_neighbors($a, $grid_model)
+SUITE["grid"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($a, $grid_model)
+SUITE["grid"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $grid_model)
 
-SUITE["grid"]["node"]["contents"] = @benchmarkable get_node_contents($pos, $grid_model)
-SUITE["graph"]["node"]["nodes"] = @benchmarkable nodes($graph_model)
+SUITE["grid"]["position"]["contents"] = @benchmarkable get_node_contents($pos, $grid_model)
+SUITE["graph"]["position"]["nodes"] = @benchmarkable nodes($graph_model)
 
 #### API -> CONTINUOUS ####
 

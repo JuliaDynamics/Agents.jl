@@ -124,7 +124,7 @@ function predator_prey_agent_step!(grass::Grass, model)
 end
 
 function move!(agent, model)
-    neighbors = node_neighbors(agent, model)
+    neighbors = nearby_positions(agent, model)
     cell = rand(collect(neighbors))
     move_agent!(agent, cell, model)
 end

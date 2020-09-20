@@ -86,7 +86,7 @@ println("Iterate over position space neighbors")
 println("Iterate over space neighbors2")
 @btime iterate_over_neighbors2($aa, $model);
 println("node neighbors")
-@btime node_neighbors($a.pos, $model);
+@btime nearby_positions($a.pos, $model);
 
 
 println("Move agent")

@@ -38,9 +38,9 @@ end
 function tree_step!(tree, forest)
   if tree.status == 2
     tree.status = 3
-    neighbor_cells = node_neighbors(tree, forest)
-    for cell in neighbor_cells
-      treeid = get_node_contents(cell, forest)
+    neighbor_positions = nearby_positions(tree, forest)
+    for pos in neighbor_positions
+      treeid = get_node_contents(pos, forest)
       if length(treeid) != 0 # the cell is not empty
         treen = forest.agents[treeid[1]]
         if treen.status == 1

@@ -26,9 +26,9 @@ end
 function wealth_distribution_agent_step!(agent, model)
     agent.wealth == 0 && return # do nothing
     agent_node = coord2vertex(agent.pos, model)
-    neighboring_nodes = node_neighbors(agent_node, model)
-    push!(neighboring_nodes, agent_node) # also consider current node
-    rnode = rand(neighboring_nodes) # the node that we will exchange with
+    neighboring_positions = nearby_positions(agent_node, model)
+    push!(neighboring_positions, agent_node) # also consider current position
+    rnode = rand(neighboring_positions) # the position that we will exchange with
     available_ids = get_node_contents(rnode, model)
     if length(available_ids) > 0
         random_neighbor_agent = model[rand(available_ids)]

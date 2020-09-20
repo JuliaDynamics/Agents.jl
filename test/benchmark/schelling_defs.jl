@@ -26,12 +26,12 @@ function agent_step!(agent, model)
   agent.mood == true && return # do nothing if already happy
   minhappy = model.properties[:min_to_be_happy]
   # while agent.mood == false
-      neighbor_cells = node_neighbors(agent, model)
+      neighbor_positions = nearby_positions(agent, model)
       count_neighbors_same_group = 0
       # For each neighbor, get group and compare to current agent's group
       # and increment count_neighbors_same_group as appropriately.
-      for neighbor_cell in neighbor_cells
-          node_contents = get_node_contents(neighbor_cell, model)
+      for neighbor_pos in neighbor_positions
+          node_contents = get_node_contents(neighbor_pos, model)
           # Skip iteration if the node is empty.
           length(node_contents) == 0 && continue
           # Otherwise, get the first agent in the node...

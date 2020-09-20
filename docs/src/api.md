@@ -36,7 +36,7 @@ sample!
 ## Neighbors
 ```@docs
 nearby_agents
-node_neighbors
+nearby_positions
 ```
 
 ### WARNING: Iteration

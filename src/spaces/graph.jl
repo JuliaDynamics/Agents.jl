@@ -90,16 +90,16 @@ nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 # Neighbors
 #######################################################################################
 function nearby_agents(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
-    nn = node_neighbors(pos, model, args...; kwargs...)
+    np = nearby_positions(pos, model, args...; kwargs...)
     # TODO: Use flatten here or something for performance?
     # `model.space.s[nn]...` allocates, because it creates a new array!
     # Also `vcat` allocates a second time
     # We include the current node in the search since we are searching over space
-    vcat(model.space.s[pos], model.space.s[nn]...)
+    vcat(model.space.s[pos], model.space.s[np]...)
 end
 
-function node_neighbors(
-    node_number::Integer,
+function nearby_positions(
+    position::Integer,
     model::ABM{A,<:GraphSpace};
     neighbor_type::Symbol = :default,
 ) where {A}
@@ -113,33 +113,33 @@ function node_neighbors(
     else
         LightGraphs.all_neighbors
     end
-    neighborfn(model.space.graph, node_number)
+    neighborfn(model.space.graph, position)
 end
 
-function node_neighbors(
-    node_number::Integer,
+function nearby_positions(
+    position::Integer,
     model::ABM{A,<:GraphSpace},
     radius::Integer;
     kwargs...,
 ) where {A}
-    neighbor_nodes = Set(node_neighbors(node_number, model; kwargs...))
-    included_nodes = Set()
+    neighbor_positions = Set(nearby_positions(position, model; kwargs...))
+    included_positions = Set()
     for rad in 2:radius
         templist = Vector{Int}()
-        for nn in neighbor_nodes
-            if !in(nn, included_nodes)
-                newns = node_neighbors(nn, model; kwargs...)
-                for newn in newns
-                    push!(templist, newn)
+        for np in neighbor_positions
+            if !in(np, included_positions)
+                newns = nearby_positions(np, model; kwargs...)
+                for newnp in newnps
+                    push!(templist, newnp)
                 end
             end
         end
         for tt in templist
-            push!(neighbor_nodes, tt)
+            push!(neighbor_positions, tt)
         end
     end
-    nlist = collect(neighbor_nodes)
-    j = findfirst(a -> a == node_number, nlist)
+    nlist = collect(neighbor_positions)
+    j = findfirst(a -> a == position, nlist)
     if j != nothing
         deleteat!(nlist, j)
     end

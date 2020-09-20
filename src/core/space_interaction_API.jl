@@ -15,7 +15,7 @@ export move_agent!,
     kill_agents!,
     genocide!,
     random_position,
-    node_neighbors,
+    nearby_positions,
     nearby_agents
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
@@ -84,7 +84,7 @@ nearby_agents(position, model, r=1) = notimplemented(model)
 
 
 """
-    node_neighbors(position, model::ABM, r=1; kwargs...) → positions
+    nearby_positions(position, model::ABM, r=1; kwargs...) → positions
 
 Return an iterator of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
@@ -92,7 +92,7 @@ The `position` must match type with the spatial structure of the `model`).
 
 The value of `r` and possible keywords operate identically to [`nearby_agents`](@ref).
 """
-node_neighbors(position, model, r=1) = notimplemented(model)
+nearby_positions(position, model, r=1) = notimplemented(model)
 
 
 
@@ -261,10 +261,10 @@ function nearby_agents(agent::A, model::ABM{A}, args...; kwargs...) where {A<:Ab
 end
 
 """
-    node_neighbors(agent::AbstractAgent, model::ABM, r=1)
+    nearby_positions(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `node_neighbors(agent.pos, model, r)`.
+Same as `nearby_positions(agent.pos, model, r)`.
 """
-function node_neighbors(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
-    node_neighbors(agent.pos, model, args...; kwargs...)
+function nearby_positions(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    nearby_positions(agent.pos, model, args...; kwargs...)
 end

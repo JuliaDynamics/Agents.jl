@@ -89,13 +89,13 @@ end
 
 @testset "Neighbors" begin
     undirected = ABM(Agent5, GraphSpace(path_graph(5)))
-    @test node_neighbors(3, undirected) == [2, 4]
-    @test node_neighbors(1, undirected) == [2]
-    @test node_neighbors(5, undirected) == [4]
-    @test node_neighbors(3, undirected; neighbor_type = :out) ==
-    node_neighbors(3, undirected; neighbor_type = :in) ==
-    node_neighbors(3, undirected; neighbor_type = :all) ==
-    node_neighbors(3, undirected; neighbor_type = :default)
+    @test nearby_positions(3, undirected) == [2, 4]
+    @test nearby_positions(1, undirected) == [2]
+    @test nearby_positions(5, undirected) == [4]
+    @test nearby_positions(3, undirected; neighbor_type = :out) ==
+    nearby_positions(3, undirected; neighbor_type = :in) ==
+    nearby_positions(3, undirected; neighbor_type = :all) ==
+    nearby_positions(3, undirected; neighbor_type = :default)
     add_agent!(1, undirected, rand())
     add_agent!(2, undirected, rand())
     add_agent!(3, undirected, rand())
@@ -105,14 +105,14 @@ end
     @test sort!(collect(nearby_agents(undirected[2], undirected))) == [1, 3]
 
     directed = ABM(Agent5, GraphSpace(path_digraph(5)))
-    @test node_neighbors(3, directed) == [4]
-    @test node_neighbors(1, directed) == [2]
-    @test node_neighbors(5, directed) == []
-    @test node_neighbors(3, directed; neighbor_type = :default) ==
-          node_neighbors(3, directed)
-    @test node_neighbors(3, directed; neighbor_type = :in) == [2]
-    @test node_neighbors(3, directed; neighbor_type = :out) == [4]
-    @test sort!(node_neighbors(3, directed; neighbor_type = :all)) == [2, 4]
+    @test nearby_positions(3, directed) == [4]
+    @test nearby_positions(1, directed) == [2]
+    @test nearby_positions(5, directed) == []
+    @test nearby_positions(3, directed; neighbor_type = :default) ==
+          nearby_positions(3, directed)
+    @test nearby_positions(3, directed; neighbor_type = :in) == [2]
+    @test nearby_positions(3, directed; neighbor_type = :out) == [4]
+    @test sort!(nearby_positions(3, directed; neighbor_type = :all)) == [2, 4]
     add_agent!(1, directed, rand())
     add_agent!(2, directed, rand())
     add_agent!(3, directed, rand())
@@ -124,8 +124,8 @@ end
     @test sort!(collect(nearby_agents(directed[2], directed; neighbor_type=:all))) == [1, 3]
 
     gridspace = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
-    @test collect(node_neighbors((2, 2), gridspace)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
-    @test collect(node_neighbors((1, 1), gridspace)) == [(2, 1), (1, 2)]
+    @test collect(nearby_positions((2, 2), gridspace)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
+    @test collect(nearby_positions((1, 1), gridspace)) == [(2, 1), (1, 2)]
     a = add_agent!((2, 2), gridspace, rand())
     add_agent!((3, 2), gridspace, rand())
     @test collect(nearby_agents((1, 2), gridspace)) == [1]
@@ -136,7 +136,7 @@ end
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-    @test_throws ErrorException node_neighbors(1, continuousspace)
+    @test_throws ErrorException nearby_positions(1, continuousspace)
     @test nearby_agents(a, continuousspace, 0.05) == []
     @test nearby_agents(a, continuousspace, 0.1) == [2]
     @test sort!(nearby_agents((0.55, 0.5), continuousspace, 0.05)) == [1, 2]

@@ -74,7 +74,7 @@ function suface_temperature!(node::Int, model::ABM{Daisy})
 end
 
 function diffuse_temperature!(node::Int, model::ABM{Daisy}; ratio = 0.5)
-    neighbors = node_neighbors(node, model)
+    neighbors = nearby_positions(node, model)
     model.temperature[node] =
         (1 - ratio) * model.temperature[node] +
         ## Each neighbor is giving up 1/8 of the diffused
@@ -163,7 +163,7 @@ function propagate!(node::Int, model::ABM{Daisy})
         if rand() < seed_threshold
             ## Collect all adjacent cells that are empty
             empty_neighbors = Vector{Int}(undef, 0)
-            neighbors = node_neighbors(node, model)
+            neighbors = nearby_positions(node, model)
             for n in neighbors
                 if isempty(get_node_contents(n, model))
                     push!(empty_neighbors, n)
