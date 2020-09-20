@@ -83,7 +83,7 @@ end
     random_nodes = nodes(model, :random)
     @test all(n ∈ node_map for n in random_nodes)
     @test nodes(model, :population) == [node_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
-    @test length(get_node_contents(5, model)) > length(get_node_contents(7, model))
+    @test length(agents_in_pos(5, model)) > length(agents_in_pos(7, model))
     @test_throws ErrorException nodes(model, :notreal)
 end
 
@@ -154,15 +154,15 @@ end
     agent = add_agent!((1,1), model1)
     @test agent.pos == (1, 1)
     @test agent.id == 1
-    pos1 = get_node_contents((1,1), model1)
+    pos1 = agents_in_pos((1,1), model1)
     @test length(pos1) == 1
     @test pos1[1] == 1
 
     move_agent!(agent, (2,2), model1)
     @test agent.pos == (2,2)
-    pos1 = get_node_contents((1,1), model1)
+    pos1 = agents_in_pos((1,1), model1)
     @test length(pos1) == 0
-    pos2 = get_node_contents((2,2), model1)
+    pos2 = agents_in_pos((2,2), model1)
     @test pos2[1] == 1
 
     # %% get/set testing

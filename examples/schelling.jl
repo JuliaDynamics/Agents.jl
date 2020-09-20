@@ -109,11 +109,11 @@ function agent_step!(agent, model)
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
     for neighbor_pos in neighbor_positions
-        node_contents = get_node_contents(neighbor_pos, model)
+        pos_contents = agents_in_pos(neighbor_pos, model)
         ## Skip iteration if the node is empty.
-        length(node_contents) == 0 && continue
+        length(pos_contents) == 0 && continue
         ## Otherwise, get the first agent in the position...
-        agent_id = node_contents[1]
+        agent_id = pos_contents[1]
         ## ...and increment count_neighbors_same_group if the neighbor's group is
         ## the same.
         neighbor_agent_group = model[agent_id].group
@@ -138,7 +138,7 @@ nothing # hide
 
 # When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
 # such as [`nearby_positions`](@ref) that returns the neighboring position of the
-# position on which the agent resides, [`get_node_contents`](@ref) that returns the
+# position on which the agent resides, [`agents_in_pos`](@ref) that returns the
 # IDs of the agents on a given position, and [`move_agent_single!`](@ref) which moves
 # agents to random empty position on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.

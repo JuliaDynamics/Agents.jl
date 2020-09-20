@@ -166,7 +166,7 @@ SUITE["graph"]["neighbors"]["space_agent_iterate"] =
 SUITE["graph"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($pos, $graph_model)
 SUITE["graph"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $graph_model)
 
-SUITE["graph"]["position"]["contents"] = @benchmarkable get_node_contents($pos, $graph_model)
+SUITE["graph"]["position"]["contents"] = @benchmarkable agents_in_pos($pos, $graph_model)
 SUITE["graph"]["position"]["nodes"] = @benchmarkable nodes($graph_model)
 
 ##### API -> GRID ####
@@ -242,7 +242,7 @@ SUITE["grid"]["neighbors"]["space_agent_iterate"] =
 SUITE["grid"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($a, $grid_model)
 SUITE["grid"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $grid_model)
 
-SUITE["grid"]["position"]["contents"] = @benchmarkable get_node_contents($pos, $grid_model)
+SUITE["grid"]["position"]["contents"] = @benchmarkable agents_in_pos($pos, $grid_model)
 SUITE["graph"]["position"]["nodes"] = @benchmarkable nodes($graph_model)
 
 #### API -> CONTINUOUS ####

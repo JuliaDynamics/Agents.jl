@@ -102,8 +102,8 @@ function agent_step_2d!(agent, model)
     agent_node = coord2vertex(agent.pos, model)
     neighboring_positions = nearby_positions(agent_node, model)
     push!(neighboring_positions, agent_node) # also consider current position
-    rnode = rand(neighboring_positions) # the position that we will exchange with
-    available_ids = get_node_contents(rnode, model)
+    rpos = rand(neighboring_positions) # the position that we will exchange with
+    available_ids = agents_in_pos(rpos, model)
     if length(available_ids) > 0
         random_neighbor_agent = model[rand(available_ids)]
         agent.wealth -= 1

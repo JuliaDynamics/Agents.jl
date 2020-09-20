@@ -76,8 +76,8 @@ const DaisyWorld = ABM{Union{Daisy, Land}};
 # absorb or reflect the starlight -- altering the local temperature.
 
 function update_surface_temperature!(node::Int, model::DaisyWorld)
-    ids = get_node_contents(node, model)
-    ## All grid points have at least one agent (the land)
+    ids = agents_in_pos(node, model)
+    ## All grid positions have at least one agent (the land)
     absorbed_luminosity = if length(ids) == 1
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
@@ -100,7 +100,7 @@ function diffuse_temperature!(node::Int, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
     ids = nearby_agents(node, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
-    land = model[get_node_contents(node, model)[1]] # land at current node
+    land = model[agents_in_pos(node, model)[1]] # land at current position
     ## Each neighbor land patch is giving up 1/8 of the diffused
     ## amount to each of *its* neighbors
     land.temperature = (1 - ratio)*land.temperature + ratio*meantemp
@@ -116,7 +116,7 @@ nothing # hide
 # close to them.
 
 function propagate!(node::Int, model::DaisyWorld)
-    ids = get_node_contents(node, model)
+    ids = agents_in_pos(node, model)
     if length(ids) > 1
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
@@ -127,7 +127,7 @@ function propagate!(node::Int, model::DaisyWorld)
             empty_neighbors = Int[]
             neighbors = nearby_positions(node, model)
             for n in neighbors
-                if length(get_node_contents(n, model)) == 1
+                if length(agents_in_pos(n, model)) == 1
                     push!(empty_neighbors, n)
                 end
             end

@@ -61,12 +61,12 @@ forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed
 
 function forest_step!(forest)
     for node in nodes(forest, by = :random)
-        nc = get_node_contents(node, forest)
-        ## the cell is empty, maybe a tree grows here
-        if length(nc) == 0
+        np = agents_in_pos(node, forest)
+        ## the position is empty, maybe a tree grows here
+        if length(np) == 0
             rand() ≤ forest.p && add_agent!(node, forest, true)
         else
-            tree = forest[nc[1]] # by definition only 1 agent per node
+            tree = forest[np[1]] # by definition only 1 agent per position
             if tree.status == false  # if it is has been burning, remove it.
                 kill_agent!(tree, forest)
             else
@@ -74,7 +74,7 @@ function forest_step!(forest)
                     tree.status = false
                 else  # if any neighbor is on fire, set this tree on fire too
                     for pos in nearby_positions(node, forest)
-                        neighbors = get_node_contents(pos, forest)
+                        neighbors = agents_in_pos(pos, forest)
                         length(neighbors) == 0 && continue
                         if any(n -> !forest.agents[n].status, neighbors)
                             tree.status = false

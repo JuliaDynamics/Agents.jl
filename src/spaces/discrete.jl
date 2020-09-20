@@ -4,10 +4,10 @@ Discrete spaces are by definition spaces with a finite amount of possible positi
 
 All these functions are granted "for free" to discrete spaces by simply extending:
 - nodes(model)
-- get_node_contents(position, model)
+- agents_in_pos(position, model)
 =#
 
-export nodes, get_node_contents, find_empty_nodes, pick_empty, has_empty_nodes
+export nodes, agents_in_pos, find_empty_nodes, pick_empty, has_empty_nodes
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
@@ -17,8 +17,8 @@ Return an iterator over all positions of a model with a discrete space (called n
 Return all positions of a model with a discrete space (called nodes), sorting them
 using the argument `by` which can be:
 * `:random` - randomly sorted
-* `:population` - nodes are sorted depending on how many agents they accommodate.
-  The more populated nodes are first.
+* `:population` - positions are sorted depending on how many agents they accommodate.
+  The more populated positions are first.
 """
 function nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
     n = collect(nodes(model))
@@ -26,7 +26,7 @@ function nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
     if by == :random
         shuffle!(itr)
     elseif by == :population
-        sort!(itr, by = i -> length(get_node_contents(i, model)), rev = true)
+        sort!(itr, by = i -> length(agents_in_pos(i, model)), rev = true)
     else
         error("unknown `by`")
     end
@@ -35,14 +35,14 @@ end
 
 # TODO: Does this really have to be collecting...?
 function find_empty_nodes(model::ABM{<:AbstractAgent,<:DiscreteSpace})
-    collect(Iterators.filter(i -> length(get_node_contents(i, model)) == 0, nodes(model)))
+    collect(Iterators.filter(i -> length(agents_in_pos(i, model)) == 0, nodes(model)))
 end
 
 """
     isempty(position, model::ABM{A, <:DiscreteSpace})
-Return `true` if there are no agents in `node`.
+Return `true` if there are no agents in `position`.
 """
-Base.isempty(pos, model::ABM) = isempty(get_node_contents(pos, model))
+Base.isempty(pos, model::ABM) = isempty(agents_in_pos(pos, model))
 
 
 """

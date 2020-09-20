@@ -17,6 +17,7 @@ therefore are not "truly breaking".
 - API simplification and renaming.
   - `space_neighbors` -> `nearby_agents`
   - `node_neighbors` -> `nearby_positions`
+  - `get_node_contents` -> `agents_in_pos`
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

@@ -181,7 +181,7 @@ function nodes(model::ABM{<:AbstractAgent,<:GridSpace})
     return (Tuple(y) for y in x)
 end
 
-function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
+function agents_in_pos(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
     return model.space.s[pos...]
 end
 

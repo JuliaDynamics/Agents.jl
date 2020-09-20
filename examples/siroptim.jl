@@ -59,7 +59,7 @@ function model_initiation(;
     end
     # add infected individuals
     for city in 1:C
-        inds = get_node_contents(city, model)
+        inds = agents_in_pos(city, model)
         for n in 1:Is[city]
             agent = model[inds[n]]
             agent.status = :I # Infected
@@ -97,7 +97,7 @@ function transmit!(agent, model)
     n = rand(d)
     n == 0 && return
 
-    for contactID in get_node_contents(agent, model)
+    for contactID in agents_in_pos(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
            (contact.status == :R && rand() ≤ model.reinfection_probability)
