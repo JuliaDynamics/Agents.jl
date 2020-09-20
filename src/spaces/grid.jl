@@ -12,16 +12,13 @@ It contains pre-initialized neighbor cartesian indices and delimiters of when th
 neighboring indices would exceed the size of the underlying array.
 """
 struct Hood{D} # type P stands for Periodic and is a boolean
-    inner::Region{D}  # inner field far from boundary
-    whole::Region{D}
-    # `βs` are the actual neighborhood cartesian indices
-    βs::Vector{CartesianIndex{D}}
+    whole::Region{D} # allowed values (only useful for non periodic)
+    βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
 struct GridSpace{D,P} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
-    # `hoods` is a preinitialized container of neighborhood cartesian indices
     hoods::Dict{Float64,Hood{D}}
 end
 
@@ -98,20 +95,6 @@ function Base.in(idx, r::Region{D}) where {D}
     return true
 end
 
-# This function calculates how large the inner region should be based on the neighborhood
-# βs and the actual array size `d`
-function inner_region(βs::Vector{CartesianIndex{D}}, d::NTuple{D,Int}) where {D}
-    mini = Int[]
-    maxi = Int[]
-    for φ in 1:D
-        js = map(β -> β[φ], βs) # jth entries
-        mi, ma = extrema(js)
-        push!(mini, 1 - min(mi, 0))
-        push!(maxi, d[φ] - max(ma, 0))
-    end
-    return Region{D}((mini...,), (maxi...,))
-end
-
 # This function initializes the standard cartesian indices that needs to be added to some
 # index `α` to obtain its neighborhood
 import LinearAlgebra
@@ -128,9 +111,8 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     else
         error("Unknown metric type")
     end
-    inner = inner_region(βs, d)
     whole = Region(map(one, d), d)
-    hood = Hood{D}(inner, whole, βs)
+    hood = Hood{D}(whole, βs)
     space.hoods[float(r)] = hood
     return hood
 end
@@ -160,36 +142,18 @@ function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 end
 
 function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::GridSpace{D,true},
-    hood,
-) where {D}
-    # if α ∈ hood.inner     # `α` won't reach the walls with this Hood
-    #   return Base.Generator(β -> Tuple(α + β), hood.βs)
-    # else                  # `α` WILL reach the walls and then loop
-    #   return Base.Generator(β-> mod1.(Tuple(α+β), hood.whole.maxi), hood.βs)
-    # end
-
-    # Here you will notice that we actually do not make a separation of whether the
-    # point α is near to the wall or not, and always take the modulo nevertheless.
-    # The reason is that Generators depend on the function used, and thus they would be
-    # type unstable if different function was used for different value of α.
-    # To make it type stable we would have to collect the result, but apparently
-    # this makes it slower because of allocations... so better take the mod1 always.
-
+        α::CartesianIndex,
+        space::GridSpace{D,true},
+        hood,
+    ) where {D}
     return ((mod1.(Tuple(α + β), hood.whole.maxi)) for β in hood.βs)
 end
 
 function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::GridSpace{D,false},
-    hood,
-) where {D}
-    # if α ∈ hood.inner     # `α` won't reach the walls with this Hood
-    #   return Iterators.filter(always_true, (Tuple(α + β) for β in hood.βs))
-    # else                  # `α` WILL reach the walls and then stop
-    #   return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
-    # end
+        α::CartesianIndex,
+        space::GridSpace{D,false},
+        hood,
+    ) where {D}
     return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 end
 
@@ -202,22 +166,12 @@ function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace},
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
-    # IterWrapper(Iterators.flatten((s[i...] for i in nn)))
 end
-
-struct IterWrapper{S}
-    iter::S
-end
-Base.eltype(::Type{IterWrapper}) = Int
-Base.IteratorEltype(::Type{IterWrapper}) = HasEltype()
-Base.iterate(iter::IterWrapper) = iterate(iter.iter)
-Base.iterate(iter::IterWrapper, state) = iterate(iter.iter, state)
 
 function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
-
 
 #######################################################################################
 # %% Further discrete space  functions

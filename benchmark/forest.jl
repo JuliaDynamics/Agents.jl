@@ -3,14 +3,15 @@ using BenchmarkTools
 using Random
 
 # Define new space model
-mutable struct Tree <: AbstractAgent    id::Int
+mutable struct Tree <: AbstractAgent
+    id::Int
     pos::Tuple{Int,Int}
     status::Bool  # true is green and false is burning
 end
-function forest_fire_array(; f = 0.02, d = 1.0, p = 0.01,
-    griddims = (20, 20), seed = 111, periodic = true)
+function forest_fire_array(; f = 0.02, d = 0.9, p = 0.01,
+    griddims = (20, 20), seed = 111, periodic = true, metric = :chebyshev)
     Random.seed!(seed)
-    space = GridSpace(griddims; periodic=true)
+    space = GridSpace(griddims; periodic, metric)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 
@@ -65,46 +66,12 @@ function iterate_over_neighbors2(aa::Vector, model)
     return s
 end
 
-# %%
-println("\n\nTimes of old grid")
-#
-println("Full model stepping")
-@btime step!(model, agent_step!, model_step!, 100) setup=((model, agent_step!, model_step!) = Models.forest_fire())
-
-model, agent_step!, model_step! = Models.forest_fire(;griddims=(20,20), d=1.0)
-step!(model, agent_step!, model_step!, 1)
-a = random_agent(model)
-aa = [random_agent(model) for i in 1:100]
-sleep(1e-9)
-
-println("Move agent")
-@btime move_agent!($a, $model);
-
-println("Space neighbors")
-@btime space_neighbors($a, $model);
-
-println("Iterate over space neighbors")
-@btime iterate_over_neighbors($a, $model);
-println("Iterate over position space neighbors")
-@btime iterate_over_neighbors($a.pos, $model);
-println("Iterate over space neighbors2")
-@btime iterate_over_neighbors2($aa, $model);
-println("node neighbors")
-@btime node_neighbors($a.pos, $model);
-
-println("Add agent")
-@btime add_agent!($model, true)
-
-
 # %% ARRAY VERSION
 println("\n\nTimes of NEW grid")
-(model, agent_step!, model_step!) = forest_fire_array(;periodic=true)
-step!(model, agent_step!, model_step!, 10)
-
 println("Full model stepping")
 @btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = forest_fire_array())
 
-(model, agent_step!, model_step!) = forest_fire_array(;periodic=false)
+(model, agent_step!, model_step!) = forest_fire_array(;periodic=false, metric=:chebyshev)
 step!(model, agent_step!, model_step!, 1)
 a = random_agent(model)
 aa = [random_agent(model) for i in 1:100]
@@ -124,5 +91,7 @@ println("node neighbors")
 
 println("Move agent")
 @btime move_agent!($a, $model);
+println("Move agent single")
+@btime move_agent_single!($a, $model);
 println("Add agent")
 @btime add_agent!($model, true)
