@@ -7,7 +7,7 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - get_node_contents(position, model)
 =#
 
-export nodes, get_node_contents, find_empty_nodes, pick_empty
+export nodes, get_node_contents, find_empty_nodes, pick_empty, has_empty_nodes
 
 """
     nodes(model::ABM{A, <:DiscreteSpace}) → ns
