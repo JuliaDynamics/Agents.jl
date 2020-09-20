@@ -22,11 +22,11 @@ function game_of_life(;
     space = GridSpace(dims, moore = Moore)
     properties = Dict(:rules => rules)
     model = ABM(Cell, space; properties = properties)
-    node_idx = 1
+    idx = 1
     for x in 1:dims[1]
         for y in 1:dims[2]
-            add_agent_pos!(Cell(node_idx, (x, y), false), model)
-            node_idx += 1
+            add_agent_pos!(Cell(idx, (x, y), false), model)
+            idx += 1
         end
     end
     return model, dummystep, game_of_life_model_step!

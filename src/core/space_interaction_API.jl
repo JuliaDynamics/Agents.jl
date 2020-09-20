@@ -224,7 +224,7 @@ model = ABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
-add_agent!(5, model, 0.5, true) # add at node 5, w becomes 0.5
+add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """

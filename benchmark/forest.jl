@@ -17,7 +17,7 @@ function forest_fire_array(; f = 0.02, d = 0.9, p = 0.01,
 
     ## create and add trees to each pos with probability d,
     ## which determines the density of the forest
-    for pos in nodes(forest)
+    for pos in positions(forest)
         if rand() ≤ forest.d
             add_agent!(pos, forest, true)
         end
@@ -26,7 +26,7 @@ function forest_fire_array(; f = 0.02, d = 0.9, p = 0.01,
 end
 
 function forest_model_step_array!(forest)
-    for pos in nodes(forest, :random)
+    for pos in positions(forest, :random)
         np = agents_in_pos(pos, forest)
         ## the position is empty, maybe a tree grows here
         if length(np) == 0
@@ -85,7 +85,7 @@ println("Iterate over nearby agents with position")
 @btime iterate_over_nearby_agents($a.pos, $model);
 println("Iterate over nearby agents2")
 @btime iterate_over_nearby_agents2($aa, $model);
-println("node neighbors")
+println("nearby positions")
 @btime nearby_positions($a.pos, $model);
 
 

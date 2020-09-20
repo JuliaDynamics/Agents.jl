@@ -76,15 +76,15 @@ end
     end
     # only positions (1,3) and (2,3) should be empty
     @test random_empty(model) ∈ [(1,3), (2,3)]
-    node_map = [(1, 1)  (1, 2)  (1, 3)
-                (2, 1)  (2, 2)  (2, 3)
-                (3, 1)  (3, 2)  (3, 3)]
-    @test collect(nodes(model)) == node_map
-    random_nodes = nodes(model, :random)
-    @test all(n ∈ node_map for n in random_nodes)
-    @test nodes(model, :population) == [node_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
+    pos_map = [(1, 1)  (1, 2)  (1, 3)
+               (2, 1)  (2, 2)  (2, 3)
+               (3, 1)  (3, 2)  (3, 3)]
+    @test collect(positions(model)) == pos_map
+    random_positions = positions(model, :random)
+    @test all(n ∈ pos_map for n in random_positions)
+    @test positions(model, :population) == [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
     @test length(agents_in_pos(5, model)) > length(agents_in_pos(7, model))
-    @test_throws ErrorException nodes(model, :notreal)
+    @test_throws ErrorException positions(model, :notreal)
 end
 
 @testset "Neighbors" begin

@@ -93,12 +93,12 @@ function initialize_model(;
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
-    for n in nodes(model)
+    for p in positions(model)
         id += 1
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
-        add_agent!(grass, vertex2coord(n,model), model)
+        add_agent!(grass, p, model)
     end
     return model
 end
@@ -113,7 +113,7 @@ nothing # hide
 function agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = get_node_agents(sheep.pos, model)
+    agents = [model[a] for a in agents_in_pos(sheep.pos, model)]
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -128,7 +128,7 @@ end
 function agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = get_node_agents(wolf.pos, model)
+    agents = [model[a] for a in agents_in_pos(wolf.pos, model)]
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0

@@ -110,7 +110,7 @@ function agent_step!(agent, model)
     ## and increment count_neighbors_same_group as appropriately.
     for neighbor_pos in neighbor_positions
         pos_contents = agents_in_pos(neighbor_pos, model)
-        ## Skip iteration if the node is empty.
+        ## Skip iteration if the position is empty.
         length(pos_contents) == 0 && continue
         ## Otherwise, get the first agent in the position...
         agent_id = pos_contents[1]

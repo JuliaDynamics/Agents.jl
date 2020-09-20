@@ -216,10 +216,10 @@ function agent_step!(agent, model)
 end
 
 function migrate!(agent, model)
-    nodeid = agent.pos
-    d = DiscreteNonParametric(1:(model.C), model.migration_rates[nodeid, :])
+    pid = agent.pos
+    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
     m = rand(d)
-    if m ≠ nodeid
+    if m ≠ pid
         move_agent!(agent, m, model)
     end
 end

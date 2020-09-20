@@ -7,7 +7,7 @@ end
 
 """
     Hood{D}
-Internal struct for efficiently finding neighboring nodes to a given node.
+Internal struct for efficiently finding neighboring positions to a given position.
 It contains pre-initialized neighbor cartesian indices and delimiters of when the
 neighboring indices would exceed the size of the underlying array.
 """
@@ -28,14 +28,16 @@ end
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_agents`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid nodes have indices
+The position type for this space is `NTuple{D, Int}` and valid positions have indices
 in the range `1:d[i]` for the `i`th dimension.
 
-`:chebyshev` metric means that the `r`-neighborhood of a node are all
-nodes within the hypercube having side length of `2*floor(r)` and being centered in the node.
+`:chebyshev` metric means that the `r`-neighborhood of a position are all
+positions within the hypercube having side length of `2*floor(r)` and being centered in
+the origin position.
 
-`:euclidean` metric means that the `r`-neighborhood of a node are all nodes whose cartesian
-indices have Euclidean distance `≤ r` from the cartesian index of the given node.
+`:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
+cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+position.
 """
 function GridSpace(
         d::NTuple{D,Int};
@@ -174,9 +176,9 @@ function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}
 end
 
 #######################################################################################
-# %% Further discrete space  functions
+# %% Further discrete space functions
 #######################################################################################
-function nodes(model::ABM{<:AbstractAgent,<:GridSpace})
+function positions(model::ABM{<:AbstractAgent,<:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end

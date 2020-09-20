@@ -32,6 +32,7 @@ include("simulations/sample.jl")
 @deprecate pick_empty random_empty
 @deprecate find_empty_nodes empty_positions
 @deprecate has_empty_nodes has_empty_positions
+@deprecate nodes positions
 
 # Predefined models
 include("models/Models.jl")

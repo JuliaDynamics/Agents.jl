@@ -21,6 +21,7 @@ therefore are not "truly breaking".
   - `pick_empty` -> `random_empty`
   - `find_empty_nodes` -> `empty_positions`
   - `has_empty_nodes` -> `has_empty_positions`
+  - `nodes` -> `positions`
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

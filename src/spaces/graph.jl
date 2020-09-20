@@ -21,7 +21,7 @@ end
 
 """
     nv(model::ABM)
-Return the number of nodes (vertices) in the `model` space.
+Return the number of positions (vertices) in the `model` space.
 """
 LightGraphs.nv(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.nv(abm.space.graph)
 
@@ -34,7 +34,7 @@ LightGraphs.ne(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 function Base.show(io::IO, space::GraphSpace)
     print(
         io,
-        "$(nameof(typeof(space))) with $(nv(space.graph)) nodes and $(ne(space.graph)) edges",
+        "$(nameof(typeof(space))) with $(nv(space.graph)) positions and $(ne(space.graph)) edges",
     )
 end
 
@@ -84,7 +84,7 @@ Return the ids of agents in the position corresponding to `position`.
 agents_in_pos(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 # NOTICE: The return type of `agents_in_pos` must support `length` and `isempty`!
 
-nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
+positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 
 #######################################################################################
 # Neighbors
@@ -94,7 +94,7 @@ function nearby_agents(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...)
     # TODO: Use flatten here or something for performance?
     # `model.space.s[nn]...` allocates, because it creates a new array!
     # Also `vcat` allocates a second time
-    # We include the current node in the search since we are searching over space
+    # We include the current position in the search since we are searching over space
     vcat(model.space.s[pos], model.space.s[np]...)
 end
 

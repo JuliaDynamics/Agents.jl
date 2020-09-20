@@ -17,7 +17,7 @@ Same as in [Wealth distribution model](@ref).
 function wealth_distribution(; dims = (25, 25), wealth = 1, M = 1000)
     space = GridSpace(dims, periodic = true)
     model = ABM(WealthInSpace, space; scheduler = random_activation)
-    for i in 1:M # add agents in random nodes
+    for i in 1:M # add agents in random positions
         add_agent!(model, wealth)
     end
     return model, wealth_distribution_agent_step!, dummystep
@@ -25,9 +25,8 @@ end
 
 function wealth_distribution_agent_step!(agent, model)
     agent.wealth == 0 && return # do nothing
-    agent_node = coord2vertex(agent.pos, model)
-    neighboring_positions = nearby_positions(agent_node, model)
-    push!(neighboring_positions, agent_node) # also consider current position
+    neighboring_positions = nearby_positions(agent.pos, model)
+    push!(neighboring_positions, agent.pos) # also consider current position
     rpos = rand(neighboring_positions) # the position that we will exchange with
     available_ids = agents_in_pos(rpos, model)
     if length(available_ids) > 0

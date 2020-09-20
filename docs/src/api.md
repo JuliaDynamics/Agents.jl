@@ -78,7 +78,7 @@ sort!(collect(space_agents(a, model)))
 
 ## Discrete space exclusives
 ```@docs
-nodes
+positions
 agents_in_pos
 fill_space!
 has_empty_positions

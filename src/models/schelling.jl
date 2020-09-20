@@ -1,7 +1,7 @@
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
     pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
-    mood::Bool # whether the agent is happy in its node. (true = happy)
+    mood::Bool # whether the agent is happy in its position. (true = happy)
     group::Int # The group of the agent,  determines mood as it interacts with neighbors
 end
 
@@ -53,7 +53,7 @@ function schelling_agent_step!(agent, model)
     end
     ## After counting the neighbors, decide whether or not to move the agent.
     ## If count_neighbors_same_group is at least the min_to_be_happy, set the
-    ## mood to true. Otherwise, move the agent to a random node.
+    ## mood to true. Otherwise, move the agent to a random position.
     if count_neighbors_same_group ≥ minhappy
         agent.mood = true
     else

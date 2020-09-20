@@ -308,6 +308,7 @@ end
   genocide!(model, a -> a.id > 5)
   @test nagents(model) == 5
 
+  Random.seed!(6465)
   # Testing genocide!(model::ABM, f::Function) when the function is invalid
   # (i.e. does not return a bool)
   for i in 1:20
