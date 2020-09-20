@@ -21,7 +21,7 @@ end
 
 """
 ``` julia
-predator_prey(; 
+predator_prey(;
     n_sheep = 100,
     n_wolves = 50,
     dims = (20, 20),
@@ -49,7 +49,7 @@ function predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, moore = true)
+    space = GridSpace(dims)
     properties = Dict(:Δenergy_wolf => Δenergy_wolf, :Δenergy_sheep => Δenergy_sheep, :regrowth_time => regrowth_time, :sheep_reproduce => sheep_reproduce, :wolf_reproduce => wolf_reproduce)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false, properties=properties)
@@ -73,7 +73,7 @@ function predator_prey(;
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, countdown)
-        add_agent!(grass, vertex2coord(n, model), model)
+        add_agent!(grass, n, model)
     end
     return model, predator_prey_agent_step!, dummystep
 end
@@ -81,7 +81,7 @@ end
 function predator_prey_agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = get_node_agents(sheep.pos, model)
+    agents = [model[i] for i in get_node_contents(sheep.pos, model)]
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -96,7 +96,7 @@ end
 function predator_prey_agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = get_node_agents(wolf.pos, model)
+    agents = [model[i] for i in get_node_contents(wolf.pos, model)]
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0

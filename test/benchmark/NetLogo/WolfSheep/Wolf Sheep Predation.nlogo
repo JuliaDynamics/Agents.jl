@@ -52,20 +52,19 @@ to setup
 end
 
 to bench
-  setup
   go
 end
 
 to benchmark
+  setup
   profiler:start         ;; start profiling
-  bench
+  repeat 200 [go]        ;; run for 200 steps
   profiler:stop          ;; stop profiling
   print profiler:report  ;; view the results
   profiler:reset         ;; clear the data
 end
 
 to go
-  if ticks >= 200 [ stop ]
   ; stop the model if there are no wolves and no sheep
   if not any? turtles [ stop ]
   ; stop the model if there are no wolves and the number of sheep gets very large
@@ -188,8 +187,8 @@ GRAPHICS-WINDOW
 20
 -20
 20
-1
-1
+0
+0
 1
 ticks
 30.0
@@ -332,59 +331,6 @@ NIL
 NIL
 NIL
 0
-
-PLOT
-10
-360
-350
-530
-populations
-time
-pop.
-0.0
-100.0
-0.0
-100.0
-true
-true
-"" ""
-PENS
-"sheep" 1.0 0 -612749 true "" "plot count sheep"
-"wolves" 1.0 0 -16449023 true "" "plot count wolves"
-"grass / 4" 1.0 0 -10899396 true "" "if model-version = \"sheep-wolves-grass\" [ plot count grass / 4 ]"
-
-MONITOR
-41
-308
-111
-353
-sheep
-count sheep
-3
-1
-11
-
-MONITOR
-115
-308
-185
-353
-wolves
-count wolves
-3
-1
-11
-
-MONITOR
-191
-308
-256
-353
-grass
-count grass / 4
-0
-1
-11
 
 TEXTBOX
 20
