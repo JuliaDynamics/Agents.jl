@@ -1,4 +1,5 @@
-# # Sugarscape: growing artificial societies
+# # Sugarscape
+# **Growing Artificial Societies**
 
 # ![](sugar.gif)
 
