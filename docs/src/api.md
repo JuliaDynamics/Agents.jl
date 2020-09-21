@@ -43,7 +43,7 @@ nearby_positions
 
 Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
 
-**Dynamic** means that when iterating over the result of e.g. the [`agents_in_pos`](@ref) function, the iterator will be affected by actions that would alter its contents.
+**Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
 Specifically, imagine the scenario
 ```@example docs
 using Agents, LightGraphs
@@ -56,12 +56,12 @@ model = ABM(Agent, GraphSpace(complete_digraph(10)))
 add_agent!(1, model)
 add_agent!(1, model)
 add_agent!(2, model)
-for agent in agents_in_pos(1, model)
-    kill_agent!(agent, model)
+for id in ids_in_position(1, model)
+    kill_agent!(id, model)
 end
 collect(allids(model))
 ```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `agents_in_pos` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
+You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
 To avoid problems like these, you need to `copy` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
@@ -79,7 +79,8 @@ sort!(collect(space_agents(a, model)))
 ## Discrete space exclusives
 ```@docs
 positions
-agents_in_pos
+ids_in_position
+agents_in_position
 fill_space!
 has_empty_positions
 empty_positions

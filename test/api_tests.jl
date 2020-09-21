@@ -248,8 +248,8 @@ end
   add_agent!((1,3), model)
   add_agent!((5,2), model)
   @test nagents(model) == 3
-  for agent in copy(agents_in_pos((1,3), model))
-    kill_agent!(agent, model)
+  for id in copy(ids_in_position((1,3), model))
+    kill_agent!(id, model)
   end
   @test nagents(model) == 1
   # ContinuousSpace

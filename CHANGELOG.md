@@ -19,7 +19,8 @@ therefore are not "truly breaking".
 - API simplification and renaming.
   - `space_neighbors` -> `nearby_ids`
   - `node_neighbors` -> `nearby_positions`
-  - `get_node_contents` -> `agents_in_pos`
+  - `get_node_contents` -> `ids_in_position`
+  - `get_node_agents` -> `agents_in_position`
   - `pick_empty` -> `random_empty`
   - `find_empty_nodes` -> `empty_positions`
   - `has_empty_nodes` -> `has_empty_positions`

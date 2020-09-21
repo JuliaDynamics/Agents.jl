@@ -54,7 +54,7 @@ end
 # absorb or reflect the starlight -- altering the local temperature.
 
 function suface_temperature!(pos::Tuple{Int,Int}, model::ABM{Daisy})
-    ids = agents_in_pos(pos, model)
+    ids = ids_in_position(pos, model)
     absorbed_luminosity = if isempty(ids)
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
@@ -154,7 +154,7 @@ nothing # hide
 # close to them.
 
 function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
-    agents = [model[a] for a in agents_in_pos(pos, model)]
+    agents = collect(agents_in_position(pos, model))
     if !isempty(agents)
         agent = agents[1]
         temperature = model.temperature[pos]
@@ -165,7 +165,7 @@ function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
             empty_neighbors = Vector{Int}(undef, 0)
             neighbors = nearby_positions(pos, model)
             for n in neighbors
-                if isempty(agents_in_pos(n, model))
+                if isempty(ids_in_position(n, model))
                     push!(empty_neighbors, n)
                 end
             end

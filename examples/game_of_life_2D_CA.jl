@@ -72,7 +72,7 @@ end
 
 function nlive_neighbors(agent, model)
     neighbor_positions = nearby_positions(agent, model)
-    all_neighbors = Iterators.flatten(agents_in_pos(np,model) for np in neighbor_positions)
+    all_neighbors = Iterators.flatten(ids_in_position(np,model) for np in neighbor_positions)
     sum(model[i].status == true for i in all_neighbors)
 end
 nothing # hide

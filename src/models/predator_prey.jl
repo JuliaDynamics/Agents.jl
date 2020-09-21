@@ -85,7 +85,7 @@ end
 function predator_prey_agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = [model[a] for a in agents_in_pos(sheep.pos, model)]
+    agents = collect(agents_in_position(sheep.pos, model))
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -100,7 +100,7 @@ end
 function predator_prey_agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = [model[a] for a in agents_in_pos(wolf.pos, model)]
+    agents = collect(agents_in_position(wolf.pos, model))
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0

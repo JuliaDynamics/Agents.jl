@@ -39,7 +39,7 @@ function schelling_agent_step!(agent, model)
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
     for neighbor_pos in neighbor_positions
-        pos_contents = agents_in_pos(neighbor_pos, model)
+        pos_contents = ids_in_position(neighbor_pos, model)
         ## Skip iteration if the position is empty.
         length(pos_contents) == 0 && continue
         ## Otherwise, get the first agent in the position...

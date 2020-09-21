@@ -183,7 +183,7 @@ function positions(model::ABM{<:AbstractAgent,<:GridSpace})
     return (Tuple(y) for y in x)
 end
 
-function agents_in_pos(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
     return model.space.s[pos...]
 end
 

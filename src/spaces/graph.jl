@@ -48,8 +48,8 @@ function remove_agent_from_space!(
     model::ABM{A,<:GraphSpace},
 ) where {A<:AbstractAgent}
     agentpos = agent.pos
-    p = agents_in_pos(agentpos, model)
-    splice!(p, findfirst(a -> a == agent.id, p))
+    ids = ids_in_position(agentpos, model)
+    splice!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
@@ -59,10 +59,10 @@ function move_agent!(
     model::ABM{A,<:GraphSpace},
 ) where {A<:AbstractAgent}
     oldpos = agent.pos
-    p = agents_in_pos(oldpos, model)
-    splice!(p, findfirst(a -> a == agent.id, p))
+    ids = ids_in_position(oldpos, model)
+    splice!(ids, findfirst(a -> a == agent.id, ids))
     agent.pos = pos
-    push!(agents_in_pos(agent.pos, model), agent.id)
+    push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
 
@@ -70,18 +70,18 @@ function add_agent_to_space!(
     agent::A,
     model::ABM{A,<:DiscreteSpace},
 ) where {A<:AbstractAgent}
-    push!(agents_in_pos(agent.pos, model), agent.id)
+    push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
 
 # The following two is for the discrete space API:
 """
-    agents_in_pos(position, model::ABM{A, <:DiscreteSpace})
+    ids_in_position(position, model::ABM{A, <:DiscreteSpace})
 
 Return the ids of agents in the position corresponding to `position`.
 """
-agents_in_pos(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
-# NOTICE: The return type of `agents_in_pos` must support `length` and `isempty`!
+ids_in_position(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
+# NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 

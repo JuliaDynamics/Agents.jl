@@ -34,12 +34,12 @@ end
 
 function forest_model_step!(forest)
     for position in positions(forest, :random)
-        np = agents_in_pos(position, forest)
+        ids = ids_in_position(position, forest)
         ## the position is empty, maybe a tree grows here
-        if length(np) == 0
+        if length(ids) == 0
             rand() ≤ forest.p && add_agent!(position, forest, true)
         else
-            tree = forest[np[1]] # by definition only 1 agent per position
+            tree = forest[ids[1]] # by definition only 1 agent per position
             if tree.status == false  # if it is has been burning, remove it.
                 kill_agent!(tree, forest)
             else
@@ -47,7 +47,7 @@ function forest_model_step!(forest)
                     tree.status = false
                 else  # if any neighbor is on fire, set this tree on fire too
                     for pos in nearby_positions(position, forest)
-                        neighbors = agents_in_pos(pos, forest)
+                        neighbors = ids_in_position(pos, forest)
                         length(neighbors) == 0 && continue
                         if any(n -> !forest.agents[n].status, neighbors)
                             tree.status = false

@@ -39,7 +39,7 @@ function tree_step!(tree, forest)
   if tree.status == 2
     tree.status = 3
     for pos in nearby_positions(tree, forest)
-      treeid = agents_in_pos(pos, forest)
+      treeid = ids_in_position(pos, forest)
       if length(treeid) != 0 # the position is not empty
         treen = forest.agents[treeid[1]]
         if treen.status == 1

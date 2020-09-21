@@ -68,20 +68,20 @@ for space in ["graph", "grid", "continuous"]
     if space == "continuous"
         SUITE[space]["move"] = BenchmarkGroup(["update", "vel"])
         SUITE[space]["neighbors"] = BenchmarkGroup([
-            "space_pos",
-            "space_agent",
-            "space_pos_iterate",
-            "space_agent_iterate",
+            "nearby_ids",
+            "nearby_agents",
+            "nearby_ids_iterate",
+            "nearby_agents_iterate",
             "nearest",
             "interacting",
         ])
     else
         SUITE[space]["move"] = BenchmarkGroup(["random", "pos", "single"])
         SUITE[space]["neighbors"] = BenchmarkGroup([
-            "space_pos",
-            "space_agent",
-            "space_pos_iterate",
-            "space_agent_iterate",
+            "nearby_ids",
+            "nearby_agents",
+            "nearby_ids_iterate",
+            "nearby_agents_iterate",
             "position_pos",
             "position_agent",
         ])
@@ -151,22 +151,22 @@ SUITE["graph"]["move"]["pos"] = @benchmarkable move_agent!($a, 68, $graph_model)
 SUITE["graph"]["move"]["single"] = @benchmarkable move_agent_single!($a, $graph_model)
 
 # We use a digraph, so all agents are neighbors of each other
-SUITE["graph"]["neighbors"]["space_pos"] =
+SUITE["graph"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $graph_model) setup =
         (nearby_ids($pos, $graph_model))
-SUITE["graph"]["neighbors"]["space_agent"] =
+SUITE["graph"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $graph_model) setup =
         (nearby_ids($a, $graph_model))
-SUITE["graph"]["neighbors"]["space_pos_iterate"] =
+SUITE["graph"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $graph_model, 1) setup =
         (nearby_ids($pos, $graph_model))
-SUITE["graph"]["neighbors"]["space_agent_iterate"] =
+SUITE["graph"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $graph_model, 1) setup =
         (nearby_ids($a, $graph_model))
 SUITE["graph"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($pos, $graph_model)
 SUITE["graph"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $graph_model)
 
-SUITE["graph"]["position"]["contents"] = @benchmarkable agents_in_pos($pos, $graph_model)
+SUITE["graph"]["position"]["contents"] = @benchmarkable ids_in_position($pos, $graph_model)
 SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 ##### API -> GRID ####
@@ -224,25 +224,25 @@ SUITE["grid"]["move"]["random"] = @benchmarkable move_agent!($a, $grid_model)
 SUITE["grid"]["move"]["pos"] = @benchmarkable move_agent!($a, (14, 35), $grid_model)
 SUITE["grid"]["move"]["single"] = @benchmarkable move_agent_single!($a, $grid_model)
 
-SUITE["grid"]["neighbors"]["space_pos"] =
+SUITE["grid"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $grid_model, 5) setup =
         (nearby_ids($pos, $grid_model, 5))
-SUITE["grid"]["neighbors"]["space_agent"] =
+SUITE["grid"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $grid_model, 5) setup =
         (nearby_ids($a, $grid_model, 5))
 
-SUITE["grid"]["neighbors"]["space_pos_iterate"] =
+SUITE["grid"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $grid_model, 30) setup =
         (nearby_ids($pos, $grid_model, 30))
 
-SUITE["grid"]["neighbors"]["space_agent_iterate"] =
+SUITE["grid"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $grid_model, 30) setup =
         (nearby_ids($a, $grid_model, 30))
 
 SUITE["grid"]["neighbors"]["position_pos"] = @benchmarkable nearby_positions($a, $grid_model)
 SUITE["grid"]["neighbors"]["position_agent"] = @benchmarkable nearby_positions($a, $grid_model)
 
-SUITE["grid"]["position"]["contents"] = @benchmarkable agents_in_pos($pos, $grid_model)
+SUITE["grid"]["position"]["contents"] = @benchmarkable ids_in_position($pos, $grid_model)
 SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
@@ -310,18 +310,18 @@ SUITE["continuous"]["move"]["update"] = @benchmarkable move_agent!($a, $continuo
 SUITE["continuous"]["move"]["vel"] =
     @benchmarkable move_agent!($a, $continuous_model, (1.2, 0.0, 0.7))
 
-SUITE["continuous"]["neighbors"]["space_pos"] =
+SUITE["continuous"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $continuous_model, 5) setup =
         (nearby_ids($pos, $continuous_model, 5))
 
-SUITE["continuous"]["neighbors"]["space_agent"] =
+SUITE["continuous"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $continuous_model, 5) setup =
         (nearby_ids($a, $continuous_model, 5))
 
-SUITE["continuous"]["neighbors"]["space_pos_iterate"] =
+SUITE["continuous"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $continuous_model, 10) setup =
         (nearby_ids($pos, $continuous_model, 10))
-SUITE["continuous"]["neighbors"]["space_agent_iterate"] =
+SUITE["continuous"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $continuous_model, 10) setup =
         (nearby_ids($a, $continuous_model, 10))
 SUITE["continuous"]["neighbors"]["nearest"] =

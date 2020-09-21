@@ -93,7 +93,7 @@ function daisyworld(;
 end
 
 function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
-    ids = agents_in_pos(pos, model)
+    ids = ids_in_position(pos, model)
     ## All grid positions have at least one agent (the land)
     absorbed_luminosity = if length(ids) == 1
         ## Set luminosity via surface albedo
@@ -115,14 +115,14 @@ function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
     ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
-    land = model[agents_in_pos(pos, model)[1]] # land at current position
+    land = model[ids_in_position(pos, model)[1]] # land at current position
     ## Each neighbor land patch is giving up 1/8 of the diffused
     ## amount to each of *its* neighbors
     land.temperature = (1 - ratio)*land.temperature + ratio*meantemp
 end
 
 function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
-    ids = agents_in_pos(pos, model)
+    ids = ids_in_position(pos, model)
     if length(ids) > 1
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
@@ -133,7 +133,7 @@ function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
             empty_neighbors = Tuple{Int,Int}[]
             neighbors = nearby_positions(pos, model)
             for n in neighbors
-                if length(agents_in_pos(n, model)) == 1
+                if length(ids_in_position(n, model)) == 1
                     push!(empty_neighbors, n)
                 end
             end

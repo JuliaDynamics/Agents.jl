@@ -84,14 +84,13 @@ neighbors depending on the underlying graph directionality type.
 nearby_ids(position, model, r=1) = notimplemented(model)
 
 """
-    nearby_agents(agent, model::ABM, r=1; kwargs...) -> agent
+    nearby_agents(agent, model::ABM, args...; kwargs...) -> agent
 
-Return an iterable of the agents within the "radius" `r` of the position of the given
-`agent`.
+Return an iterable of the agents near the position of the given `agent`.
 
-The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_agents(a, model, r=1) = (model[id] for id in nearby_ids(a, model, r))
+nearby_agents(a, model, args...; kwargs...) = (model[id] for id in nearby_ids(a, model, args...; kwargs...))
 
 """
     nearby_positions(position, model::ABM, r=1; kwargs...) → positions

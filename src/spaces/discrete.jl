@@ -4,10 +4,10 @@ Discrete spaces are by definition spaces with a finite amount of possible positi
 
 All these functions are granted "for free" to discrete spaces by simply extending:
 - positions(model)
-- agents_in_pos(position, model)
+- ids_in_position(position, model)
 =#
 
-export positions, agents_in_pos, empty_positions, random_empty, has_empty_positions
+export positions, ids_in_position, agents_in_position, empty_positions, random_empty, has_empty_positions
 
 """
     positions(model::ABM{A, <:DiscreteSpace}) → ns
@@ -26,23 +26,32 @@ function positions(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
     if by == :random
         shuffle!(itr)
     elseif by == :population
-        sort!(itr, by = i -> length(agents_in_pos(i, model)), rev = true)
+        sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
         error("unknown `by`")
     end
     return itr
 end
 
+"""
+    agents_in_position(position, model::ABM{A, <:DiscreteSpace})
+    agents_in_position(agent, model::ABM{A, <:DiscreteSpace})
+
+Return the agents in the position corresponding to `position` or position of `agent`.
+"""
+agents_in_position(agent::A, model) where {A<:AbstractAgent} = agents_in_position(agent.pos, model)
+agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
+
 # TODO: Does this really have to be collecting...?
 function empty_positions(model::ABM{<:AbstractAgent,<:DiscreteSpace})
-    collect(Iterators.filter(i -> length(agents_in_pos(i, model)) == 0, positions(model)))
+    collect(Iterators.filter(i -> length(ids_in_position(i, model)) == 0, positions(model)))
 end
 
 """
     isempty(position, model::ABM{A, <:DiscreteSpace})
 Return `true` if there are no agents in `position`.
 """
-Base.isempty(pos, model::ABM) = isempty(agents_in_pos(pos, model))
+Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
 
 
 """
