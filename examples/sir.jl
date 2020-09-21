@@ -301,7 +301,7 @@ p = plot(
     log10.(data[:, aggname(:status, infected)]),
     label = "infected",
     xlabel = "steps",
-    ylabel = "log(count)",
+    ylabel = "log10(count)",
 )
 plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
 dead = log10.(N .- data[:, aggname(:status, length)])

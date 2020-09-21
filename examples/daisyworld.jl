@@ -338,7 +338,7 @@ plot!(p; xlabel = "tick", ylabel = "daisy count")
 p2 = plot(agent_df[!, :step], agent_df[!, aggname(adata[3])], ylabel = "temperature")
 p3 = plot(model_df[!, :step], model_df[!, :solar_luminosity], ylabel = "L", xlabel = "ticks")
 
-plot(p, p2, p3, layout = (3, 1))
+plot(p, p2, p3, layout = (3, 1), size=(600,700))
 
 
 # ## Interactive scientific research

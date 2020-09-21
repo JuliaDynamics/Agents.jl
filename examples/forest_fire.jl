@@ -39,7 +39,7 @@ nothing # hide
 # We then make a setup function that initializes the model.
 function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
     Random.seed!(seed)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims, periodic = false)
     properties = Dict(:f => f, :d => d, :p => p)
     forest = AgentBasedModel(Tree, space; properties = properties)
 
@@ -60,7 +60,7 @@ forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed
 # stepping function for the model
 
 function forest_step!(forest)
-    for position in positions(forest, by = :random)
+    for position in positions(forest, :random)
         np = ids_in_position(position, forest)
         ## the position is empty, maybe a tree grows here
         if length(np) == 0
@@ -103,7 +103,7 @@ forest
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
 forest = model_initiation(griddims = (20, 20), seed = 2)
-percentage(x) = count(x) / nv(forest)
+percentage(x) = count(x) / length(positions(forest))
 adata = [(:status, percentage)]
 
 data, _ = run!(forest, dummystep, forest_step!, 10; adata = adata)

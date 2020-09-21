@@ -36,7 +36,7 @@ function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
     )
     for pos in positions(model)
         add_agent!(
-            pos
+            pos,
             model,
             false,
             rand(1:levels_per_opinion, nopinions),
@@ -84,8 +84,7 @@ levels_per_opinion = 4
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 
 "run the model until all agents stabilize"
-rununtil(model, s) =
-    count(getproperty.(values(model.agents), :stabilized)) == prod(model.space.dimensions)
+rununtil(model, s) = count(a->a.stabilized, allagents(model)) == length(positions(model))
 
 agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabilized, count)])
 
