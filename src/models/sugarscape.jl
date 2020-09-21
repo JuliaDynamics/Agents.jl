@@ -93,26 +93,26 @@ function sugarscape_env!(model)
     # At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
     togrow = findall(
         x -> model.sugar_values[x] < model.sugar_capacities[x],
-        1:prod(model.space.dimensions),
+        1:length(positions(model)),
     )
     model.sugar_values[togrow] .+= model.growth_rate
 end
 
 function movement!(agent, model)
-    posvertex = coord2vertex(agent.pos, model)
-    newsite = posvertex
+    newsite = agent.pos
     # find all unoccupied position within vision
     neighbors = nearby_positions(coord2vertex(agent.pos, model), model, agent.vision)
     empty_positions = [i for i in neighbors if isempty(i, model)]
     if length(empty_positions) > 0
         # identify the one(s) with greatest amount of sugar
-        maxsugar = maximum(model.sugar_values[empty_positions])
+        available_sugar = (model.sugar_values[x,y] for (x, y) in empty_positions)
+        maxsugar = maximum(available_sugar)
         if maxsugar > 0
-            sugary_sites_inds = findall(x -> x == maxsugar, model.sugar_values[empty_positions])
+            sugary_sites_inds = findall(x -> x == maxsugar, collect(available_sugar))
             sugary_sites = empty_positions[sugary_sites_inds]
             # select the nearest one (randomly if more than one)
             for dia in 1:(agent.vision)
-                np = nearby_positions(posvertex, model, dia)
+                np = nearby_positions(agent.pos, model, dia)
                 suitable = intersect(np, sugary_sites)
                 if length(suitable) > 0
                     newsite = rand(suitable)
@@ -120,12 +120,12 @@ function movement!(agent, model)
                 end
             end
             # move there and collect all the sugar in it
-            newsite != posvertex && move_agent!(agent, newsite, model)
+            newsite != agent.pos && move_agent!(agent, newsite, model)
         end
     end
     # update wealth (collected - consumed)
-    agent.wealth += (model.sugar_values[newsite] - agent.metabolic_rate)
-    model.sugar_values[newsite] = 0
+    agent.wealth += (model.sugar_values[newsite...] - agent.metabolic_rate)
+    model.sugar_values[newsite...] = 0
     agent.age += 1
 end
 
