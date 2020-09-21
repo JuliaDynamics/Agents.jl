@@ -61,7 +61,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 """
     nearby_agents(position, model::ABM, r=1; kwargs...) → ids
 
-Return an iterator of the ids of the agents within "radius" `r` of the given `position`
+Return an iterable of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
@@ -86,7 +86,7 @@ nearby_agents(position, model, r=1) = notimplemented(model)
 """
     nearby_positions(position, model::ABM, r=1; kwargs...) → positions
 
-Return an iterator of all positions within "radius" `r` of the given `position`
+Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
 The `position` must match type with the spatial structure of the `model`).
 
@@ -251,7 +251,7 @@ end
 """
     nearby_agents(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `nearby_agents(agent.pos, model, r)` but the iterator *excludes* the given
+Same as `nearby_agents(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
 function nearby_agents(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}

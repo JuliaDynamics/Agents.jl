@@ -38,7 +38,6 @@ function Base.show(io::IO, space::GraphSpace)
     )
 end
 
-
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
@@ -91,11 +90,13 @@ positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 function nearby_agents(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     np = nearby_positions(pos, model, args...; kwargs...)
-    # TODO: Use flatten here or something for performance?
-    # `model.space.s[nn]...` allocates, because it creates a new array!
-    # Also `vcat` allocates a second time
-    # We include the current position in the search since we are searching over space
+    # This call is faster than reduce(vcat, ..), or Iterators.flatten
     vcat(model.space.s[pos], model.space.s[np]...)
+end
+
+function nearby_agents(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
+    all = nearby_agents(agent.pos, model, args...; kwargs...)
+    filter!(i -> i ≠ agent.id, all)
 end
 
 function nearby_positions(
@@ -122,26 +123,12 @@ function nearby_positions(
     radius::Integer;
     kwargs...,
 ) where {A}
-    neighbor_positions = Set(nearby_positions(position, model; kwargs...))
-    included_positions = Set()
-    for rad in 2:radius
-        templist = Vector{Int}()
-        for np in neighbor_positions
-            if !in(np, included_positions)
-                newns = nearby_positions(np, model; kwargs...)
-                for newnp in newnps
-                    push!(templist, newnp)
-                end
-            end
-        end
-        for tt in templist
-            push!(neighbor_positions, tt)
-        end
+    output = copy(nearby_positions(position, model; kwargs...))
+    for _ in 2:radius
+        newnps = (nearby_positions(np, model; kwargs...) for np in output)
+        append!(output, reduce(vcat, newnps))
+        unique!(output)
     end
-    nlist = collect(neighbor_positions)
-    j = findfirst(a -> a == position, nlist)
-    if j != nothing
-        deleteat!(nlist, j)
-    end
-    return nlist
+    filter!(i -> i != position, output)
 end
+
