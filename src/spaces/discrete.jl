@@ -34,6 +34,15 @@ function positions(model::ABM{<:AbstractAgent,<:DiscreteSpace}, by::Symbol)
 end
 
 """
+    ids_in_position(position, model::ABM{A, <:DiscreteSpace})
+    ids_in_position(agent, model::ABM{A, <:DiscreteSpace})
+
+Return the ids of agents in the position corresponding to `position` or position
+of `agent`.
+"""
+ids_in_position(agent::A, model) where {A<:AbstractAgent} = ids_in_position(agent.pos, model)
+
+"""
     agents_in_position(position, model::ABM{A, <:DiscreteSpace})
     agents_in_position(agent, model::ABM{A, <:DiscreteSpace})
 

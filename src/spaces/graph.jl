@@ -75,11 +75,6 @@ function add_agent_to_space!(
 end
 
 # The following two is for the discrete space API:
-"""
-    ids_in_position(position, model::ABM{A, <:DiscreteSpace})
-
-Return the ids of agents in the position corresponding to `position`.
-"""
 ids_in_position(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 

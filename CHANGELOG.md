@@ -7,6 +7,7 @@
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
+- New wrapping function `nearby_agents` that returns an iterable of neigboring agents.
 
 ## Breaking changes
 All changes in this section (besides changes to default values) are deprecated and
