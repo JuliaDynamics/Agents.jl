@@ -137,8 +137,8 @@ nothing # hide
 # we only need an agent step function.
 
 # When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
-# such as [`nearby_positions`](@ref) that returns the neighboring position of the
-# position on which the agent resides, [`agents_in_pos`](@ref) that returns the
+# such as [`nearby_positions`](@ref) that returns the neighboring position
+# on which the agent resides, [`agents_in_pos`](@ref) that returns the
 # IDs of the agents on a given position, and [`move_agent_single!`](@ref) which moves
 # agents to random empty position on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.

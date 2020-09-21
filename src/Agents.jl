@@ -26,7 +26,7 @@ include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
 # 4.0 Depreciations
-@deprecate space_neighbors nearby_agents
+@deprecate space_neighbors nearby_ids
 @deprecate node_neighbors nearby_positions
 @deprecate get_node_contents agents_in_pos
 @deprecate pick_empty random_empty

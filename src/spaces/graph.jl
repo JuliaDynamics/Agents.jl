@@ -88,14 +88,14 @@ positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 #######################################################################################
 # Neighbors
 #######################################################################################
-function nearby_agents(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
+function nearby_ids(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
     np = nearby_positions(pos, model, args...; kwargs...)
     # This call is faster than reduce(vcat, ..), or Iterators.flatten
     vcat(model.space.s[pos], model.space.s[np]...)
 end
 
-function nearby_agents(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
-    all = nearby_agents(agent.pos, model, args...; kwargs...)
+function nearby_ids(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
+    all = nearby_ids(agent.pos, model, args...; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
 

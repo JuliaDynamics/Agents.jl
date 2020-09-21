@@ -16,6 +16,7 @@ export move_agent!,
     genocide!,
     random_position,
     nearby_positions,
+    nearby_ids,
     nearby_agents
 
 notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
@@ -59,7 +60,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_agents(position, model::ABM, r=1; kwargs...) → ids
+    nearby_ids(position, model::ABM, r=1; kwargs...) → ids
 
 Return an iterable of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
@@ -80,8 +81,17 @@ neighbors depending on the underlying graph directionality type.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 """
-nearby_agents(position, model, r=1) = notimplemented(model)
+nearby_ids(position, model, r=1) = notimplemented(model)
 
+"""
+    nearby_agents(agent, model::ABM, r=1; kwargs...) -> agent
+
+Return an iterable of the agents within the "radius" `r` of the position of the given
+`agent`.
+
+The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+"""
+nearby_agents(a, model, r=1) = (model[id] for id in nearby_ids(a, model, r))
 
 """
     nearby_positions(position, model::ABM, r=1; kwargs...) → positions
@@ -90,7 +100,7 @@ Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
 The `position` must match type with the spatial structure of the `model`).
 
-The value of `r` and possible keywords operate identically to [`nearby_agents`](@ref).
+The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
 nearby_positions(position, model, r=1) = notimplemented(model)
 
@@ -249,15 +259,14 @@ end
 # %% Space agnostic neighbors
 #######################################################################################
 """
-    nearby_agents(agent::AbstractAgent, model::ABM, r=1)
+    nearby_ids(agent::AbstractAgent, model::ABM, r=1)
 
-Same as `nearby_agents(agent.pos, model, r)` but the iterable *excludes* the given
+Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_agents(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = nearby_agents(agent.pos, model, args...; kwargs...)
-    id::Int = agent.id
-    Iterators.filter(i -> i ≠ id, all)
+function nearby_ids(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+    all = nearby_ids(agent.pos, model, args...; kwargs...)
+    Iterators.filter(i -> i ≠ agent.id, all)
 end
 
 """

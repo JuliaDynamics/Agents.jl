@@ -1,7 +1,8 @@
 # # SIR model for the spread of COVID-19
 # ![](covid_evolution.gif)
+#
 # This example illustrates how to use `GraphSpace` and how to model agents on an graph
-# (network) where the transition probabilities between each node is not constant.
+# (network) where the transition probabilities between each node (position) is not constant.
 # ## SIR model
 
 # A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population.

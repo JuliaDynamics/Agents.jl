@@ -35,7 +35,7 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
 end
 
 function adopt!(agent, model)
-    neighbor = rand(collect(nearby_agents(agent, model)))
+    neighbor = rand(collect(nearby_ids(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     # Adopt a different opinion w/ calculated probability

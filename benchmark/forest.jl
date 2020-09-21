@@ -39,7 +39,7 @@ function forest_model_step_array!(forest)
                 if rand() ≤ forest.f  # the tree ignites spontaneously
                     tree.status = false
                 else  # if any neighbor is on fire, set this tree on fire too
-                    neighbors = nearby_agents(tree, forest)
+                    neighbors = nearby_ids(tree, forest)
                     if any(n -> !(model[n].status), neighbors)
                         tree.status = false
                     end
@@ -49,17 +49,17 @@ function forest_model_step_array!(forest)
     end
 end
 
-function iterate_over_nearby_agents(a, model)
+function iterate_over_nearby_ids(a, model)
     s::Int = 0
-    for x in nearby_agents(a, model)
+    for x in nearby_ids(a, model)
         s::Int += x
     end
     return s
 end
-function iterate_over_nearby_agents2(aa::Vector, model)
+function iterate_over_nearby_ids2(aa::Vector, model)
     s::Int = 0
     for a in aa
-    for x in nearby_agents(a, model)
+    for x in nearby_ids(a, model)
         s::Int += x
     end
     end
@@ -78,13 +78,13 @@ aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
 
 println("Nearby Agents")
-@btime nearby_agents($a, $model);
+@btime nearby_ids($a, $model);
 println("Iterate over nearby agents")
-@btime iterate_over_nearby_agents($a, $model);
+@btime iterate_over_nearby_ids($a, $model);
 println("Iterate over nearby agents with position")
-@btime iterate_over_nearby_agents($a.pos, $model);
+@btime iterate_over_nearby_ids($a.pos, $model);
 println("Iterate over nearby agents2")
-@btime iterate_over_nearby_agents2($aa, $model);
+@btime iterate_over_nearby_ids2($aa, $model);
 println("nearby positions")
 @btime nearby_positions($a.pos, $model);
 

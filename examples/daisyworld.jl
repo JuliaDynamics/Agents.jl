@@ -98,7 +98,7 @@ nothing # hide
 # In addition, temperature diffuses over time
 function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
-    ids = nearby_agents(pos, model)
+    ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
     land = model[agents_in_pos(pos, model)[1]] # land at current position
     ## Each neighbor land patch is giving up 1/8 of the diffused

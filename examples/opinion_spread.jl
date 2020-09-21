@@ -49,7 +49,7 @@ end
 # ### 2. Stepping functions
 
 function adopt!(agent, model)
-    neighbor = rand(collect(nearby_agents(agent, model)))
+    neighbor = rand(collect(nearby_ids(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     if nmatches < model.nopinions && rand() < nmatches / model.nopinions
