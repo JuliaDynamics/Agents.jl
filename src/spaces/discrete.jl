@@ -51,9 +51,13 @@ Return the agents in the position corresponding to `position` or position of `ag
 agents_in_position(agent::A, model) where {A<:AbstractAgent} = agents_in_position(agent.pos, model)
 agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
 
-# TODO: Does this really have to be collecting...?
+"""
+    empty_positions(model)
+
+Return a list of positions that currently have no agents on them.
+"""
 function empty_positions(model::ABM{<:AbstractAgent,<:DiscreteSpace})
-    collect(Iterators.filter(i -> length(ids_in_position(i, model)) == 0, positions(model)))
+    Iterators.filter(i -> length(ids_in_position(i, model)) == 0, positions(model))
 end
 
 """
@@ -78,7 +82,7 @@ Return a random position without any agents, or `nothing` if no such positions e
 function random_empty(model::ABM{<:AbstractAgent,<:DiscreteSpace})
     empty = empty_positions(model)
     isempty(empty) && return nothing
-    rand(empty)
+    rand(collect(empty))
 end
 
 #######################################################################################
@@ -110,7 +114,7 @@ function add_agent_single!(
     properties...;
     kwargs...,
 ) where {A<:AbstractAgent}
-    empty = empty_positions(model)
+    empty = collect(empty_positions(model))
     if length(empty) > 0
         add_agent!(rand(empty), model, properties...; kwargs...)
     end
@@ -187,7 +191,7 @@ function move_agent_single!(
         agent::A,
         model::ABM{A,<:DiscreteSpace},
     ) where {A<:AbstractAgent}
-    empty = empty_positions(model)
+    empty = collect(empty_positions(model))
     if length(empty) > 0
         move_agent!(agent, rand(empty), model)
     end

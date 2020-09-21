@@ -27,7 +27,6 @@ random_position
 ### Moving and killing agents
 ```@docs
 move_agent!
-move_agent_single!
 kill_agent!
 genocide!
 sample!
@@ -73,7 +72,7 @@ sort!(nearby_ids(random_agent(model), model))
 leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
 ```@example docs
 a = random_agent(model)
-sort!(collect(space_agents(a, model)))
+sort!(collect(nearby_agents(a, model)))
 ```
 
 ## Discrete space exclusives

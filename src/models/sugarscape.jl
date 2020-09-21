@@ -101,15 +101,15 @@ end
 function movement!(agent, model)
     newsite = agent.pos
     # find all unoccupied position within vision
-    neighbors = nearby_positions(coord2vertex(agent.pos, model), model, agent.vision)
-    empty_positions = [i for i in neighbors if isempty(i, model)]
-    if length(empty_positions) > 0
+    neighbors = nearby_positions(agent.pos, model, agent.vision)
+    empty = collect(empty_positions(model))
+    if length(empty) > 0
         # identify the one(s) with greatest amount of sugar
-        available_sugar = (model.sugar_values[x,y] for (x, y) in empty_positions)
+        available_sugar = (model.sugar_values[x,y] for (x, y) in empty)
         maxsugar = maximum(available_sugar)
         if maxsugar > 0
             sugary_sites_inds = findall(x -> x == maxsugar, collect(available_sugar))
-            sugary_sites = empty_positions[sugary_sites_inds]
+            sugary_sites = empty[sugary_sites_inds]
             # select the nearest one (randomly if more than one)
             for dia in 1:(agent.vision)
                 np = nearby_positions(agent.pos, model, dia)

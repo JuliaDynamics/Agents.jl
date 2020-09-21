@@ -69,7 +69,7 @@ end
 @testset "Positions" begin
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
-    empty = empty_positions(model)
+    empty = collect(empty_positions(model))
     @test length(empty) > 0
     for n in [1, 5, 6, 9, 2, 3, 4]
         add_agent!(empty[n], model)
