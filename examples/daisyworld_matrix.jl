@@ -53,8 +53,8 @@ end
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
 
-function suface_temperature!(node::Int, model::ABM{Daisy})
-    ids = get_node_contents(node, model)
+function suface_temperature!(pos::Tuple{Int,Int}, model::ABM{Daisy})
+    ids = ids_in_position(pos, model)
     absorbed_luminosity = if isempty(ids)
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
@@ -70,13 +70,13 @@ function suface_temperature!(node::Int, model::ABM{Daisy})
         80
     end
     ## Surface temperature is the average of the current temperature and local heating.
-    model.temperature[node] = (model.temperature[node] + local_heating) / 2
+    model.temperature[pos] = (model.temperature[pos] + local_heating) / 2
 end
 
-function diffuse_temperature!(node::Int, model::ABM{Daisy}; ratio = 0.5)
-    neighbors = node_neighbors(node, model)
-    model.temperature[node] =
-        (1 - ratio) * model.temperature[node] +
+function diffuse_temperature!(pos::Int, model::ABM{Daisy}; ratio = 0.5)
+    neighbors = nearby_positions(pos, model)
+    model.temperature[pos] =
+        (1 - ratio) * model.temperature[pos] +
         ## Each neighbor is giving up 1/8 of the diffused
         ## amount to each of *its* neighbors
         sum(model.temperature[neighbors]) * 0.125 * ratio
@@ -110,7 +110,7 @@ function daisyworld(;
         :ours, # The Sun's equivalent, achieving an equilibrium of daisies
     ]
 
-    space = GridSpace(griddims, moore = true, periodic = true)
+    space = GridSpace(griddims)
     luminosity = if scenario == :ramp
         0.8
     elseif scenario == :high
@@ -138,8 +138,8 @@ function daisyworld(;
     for _ in 1:(init_black * nv(space) / 100)
         add_agent_single!(model, :black, rand(0:max_age), albedo_black)
     end
-    for n in nodes(model)
-        suface_temperature!(n, model)
+    for p in positions(model)
+        suface_temperature!(p, model)
     end
     return model
 end
@@ -153,24 +153,24 @@ nothing # hide
 # daisies compete for land and attempt to spawn a new plant of their `breed` in locations
 # close to them.
 
-function propagate!(node::Int, model::ABM{Daisy})
-    agents = get_node_agents(node, model)
+function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
+    agents = collect(agents_in_position(pos, model))
     if !isempty(agents)
         agent = agents[1]
-        temperature = model.temperature[node]
+        temperature = model.temperature[pos]
         ## Set optimum growth rate to 22.5C, with bounds of [5, 40]C
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand() < seed_threshold
-            ## Collect all adjacent cells that are empty
+            ## Collect all adjacent position that are empty
             empty_neighbors = Vector{Int}(undef, 0)
-            neighbors = node_neighbors(node, model)
+            neighbors = nearby_positions(pos, model)
             for n in neighbors
-                if isempty(get_node_contents(n, model))
+                if isempty(ids_in_position(n, model))
                     push!(empty_neighbors, n)
                 end
             end
             if !isempty(empty_neighbors)
-                ## Seed a new daisy in one of those cells
+                ## Seed a new daisy in one of those position
                 seeding_place = rand(empty_neighbors)
                 add_agent!(seeding_place, model, agent.breed, 0, agent.albedo)
             end
@@ -195,10 +195,10 @@ function solar_activity!(model::ABM{Daisy})
 end
 
 function model_step!(model::ABM{Daisy})
-    for n in nodes(model)
-        suface_temperature!(n, model)
-        diffuse_temperature!(n, model)
-        propagate!(n, model)
+    for p in positions(model)
+        suface_temperature!(p, model)
+        diffuse_temperature!(p, model)
+        propagate!(p, model)
     end
     model.tick += 1
     solar_activity!(model)

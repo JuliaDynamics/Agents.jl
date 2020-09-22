@@ -7,7 +7,7 @@ end
 
 """
     Hood{D}
-Internal struct for efficiently finding neighboring nodes to a given node.
+Internal struct for efficiently finding neighboring positions to a given position.
 It contains pre-initialized neighbor cartesian indices and delimiters of when the
 neighboring indices would exceed the size of the underlying array.
 """
@@ -27,15 +27,17 @@ end
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
-used, which decides the behavior of e.g. [`space_neighbors`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid nodes have indices
+used, which decides the behavior of e.g. [`nearby_ids`](@ref).
+The position type for this space is `NTuple{D, Int}` and valid positions have indices
 in the range `1:d[i]` for the `i`th dimension.
 
-`:chebyshev` metric means that the `r`-neighborhood of a node are all
-nodes within the hypercube having side length of `2*floor(r)` and being centered in the node.
+`:chebyshev` metric means that the `r`-neighborhood of a position are all
+positions within the hypercube having side length of `2*floor(r)` and being centered in
+the origin position.
 
-`:euclidean` metric means that the `r`-neighborhood of a node are all nodes whose cartesian
-indices have Euclidean distance `≤ r` from the cartesian index of the given node.
+`:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
+cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+position.
 """
 function GridSpace(
         d::NTuple{D,Int};
@@ -121,10 +123,10 @@ end
 """
     grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 
-Return an iterator over all nodes within distance `r` from `α` according to the `space`.
+Return an iterator over all positions within distance `r` from `α` according to the `space`.
 
-The only reason this function is not equivalent with `node_neighbors` is because
-`node_neighbors` skips the current position `α`, while `α` is always included in the
+The only reason this function is not equivalent with `nearby_positions` is because
+`nearby_positions` skips the current position `α`, while `α` is always included in the
 returned iterator (because the `0` index is always included in `βs`).
 
 This function re-uses the source code of TimeseriesPrediction.jl, along with the
@@ -162,26 +164,26 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
 end
 
-function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
 
 #######################################################################################
-# %% Further discrete space  functions
+# %% Further discrete space functions
 #######################################################################################
-function nodes(model::ABM{<:AbstractAgent,<:GridSpace})
+function positions(model::ABM{<:AbstractAgent,<:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end
 
-function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
     return model.space.s[pos...]
 end
 

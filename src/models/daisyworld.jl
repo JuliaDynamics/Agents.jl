@@ -20,7 +20,7 @@ const DaisyWorld = ABM{Union{Daisy, Land}};
 
 """
 ``` julia
-daisyworld(; 
+daisyworld(;
     griddims = (30, 30),
     max_age = 25,
     init_white = 0.2,
@@ -56,7 +56,7 @@ function daisyworld(;
     )
 
     Random.seed!(seed)
-    space = GridSpace(griddims, moore = true, periodic = true)
+    space = GridSpace(griddims)
     properties = Dict(
         :max_age => max_age,
         :surface_albedo => surface_albedo,
@@ -71,28 +71,30 @@ function daisyworld(;
         scheduler = daisysched, properties = properties, warn = false
     )
 
-    ## fill model with `Land`: every grid cell has 1 land instance
+    ## fill model with `Land`: every grid position has 1 land instance
     fill_space!(Land, model, 0.0) # zero starting temperature
 
-    ## Populate with daisies: each cell has only one daisy (black or white)
-    white_nodes = StatsBase.sample(1:nv(space), Int(init_white * nv(space)); replace = false)
-    for n in white_nodes
-        wd = Daisy(nextid(model), vertex2coord(n, space), :white, rand(0:max_age), albedo_white)
+    ## Populate with daisies: each position has only one daisy (black or white)
+    grid = collect(positions(model))
+    num_positions = prod(griddims)
+    white_positions = StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
+    for wp in white_positions
+        wd = Daisy(nextid(model), wp, :white, rand(0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
-    allowed = setdiff(1:nv(space), white_nodes)
-    black_nodes = StatsBase.sample(allowed, Int(init_black * nv(space)); replace = false)
-    for n in black_nodes
-        wd = Daisy(nextid(model), vertex2coord(n, space), :black, rand(0:max_age), albedo_black)
+    allowed = setdiff(grid, white_positions)
+    black_positions = StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
+    for bp in black_positions
+        wd = Daisy(nextid(model), bp, :black, rand(0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 
     return model, daisyworld_agent_step!, daisyworld_model_step!
 end
 
-function update_surface_temperature!(node::Int, model::DaisyWorld)
-    ids = get_node_contents(node, model)
-    ## All grid points have at least one agent (the land)
+function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
+    ids = ids_in_position(pos, model)
+    ## All grid positions have at least one agent (the land)
     absorbed_luminosity = if length(ids) == 1
         ## Set luminosity via surface albedo
         (1 - model.surface_albedo) * model.solar_luminosity
@@ -109,35 +111,35 @@ function update_surface_temperature!(node::Int, model::DaisyWorld)
     model[ids[1]].temperature = (T0 + local_heating) / 2
 end
 
-function diffuse_temperature!(node::Int, model::DaisyWorld)
+function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
-    ids = space_neighbors(node, model)
+    ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land)/8
-    land = model[get_node_contents(node, model)[1]] # land at current node
+    land = model[ids_in_position(pos, model)[1]] # land at current position
     ## Each neighbor land patch is giving up 1/8 of the diffused
     ## amount to each of *its* neighbors
     land.temperature = (1 - ratio)*land.temperature + ratio*meantemp
 end
 
-function propagate!(node::Int, model::DaisyWorld)
-    ids = get_node_contents(node, model)
+function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
+    ids = ids_in_position(pos, model)
     if length(ids) > 1
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
         ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand() < seed_threshold
-            ## Collect all adjacent cells that have no daisies
-            empty_neighbors = Int[]
-            neighbors = node_neighbors(node, model)
+            ## Collect all adjacent position that have no daisies
+            empty_neighbors = Tuple{Int,Int}[]
+            neighbors = nearby_positions(pos, model)
             for n in neighbors
-                if length(get_node_contents(n, model)) == 1
+                if length(ids_in_position(n, model)) == 1
                     push!(empty_neighbors, n)
                 end
             end
             if !isempty(empty_neighbors)
-                ## Seed a new daisy in one of those cells
-                seeding_place = vertex2coord(rand(empty_neighbors), model)
+                ## Seed a new daisy in one of those position
+                seeding_place = rand(empty_neighbors)
                 a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
                 add_agent_pos!(a, model)
             end
@@ -153,10 +155,10 @@ end
 daisyworld_agent_step!(agent::Land, model::DaisyWorld) = nothing
 
 function daisyworld_model_step!(model)
-    for n in nodes(model)
-        update_surface_temperature!(n, model)
-        diffuse_temperature!(n, model)
-        propagate!(n, model)
+    for p in positions(model)
+        update_surface_temperature!(p, model)
+        diffuse_temperature!(p, model)
+        propagate!(p, model)
     end
     model.tick += 1
     solar_activity!(model)

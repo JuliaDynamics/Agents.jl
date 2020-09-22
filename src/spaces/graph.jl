@@ -21,7 +21,7 @@ end
 
 """
     nv(model::ABM)
-Return the number of nodes (vertices) in the `model` space.
+Return the number of positions (vertices) in the `model` space.
 """
 LightGraphs.nv(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.nv(abm.space.graph)
 
@@ -34,7 +34,7 @@ LightGraphs.ne(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 function Base.show(io::IO, space::GraphSpace)
     print(
         io,
-        "$(nameof(typeof(space))) with $(nv(space.graph)) nodes and $(ne(space.graph)) edges",
+        "$(nameof(typeof(space))) with $(nv(space.graph)) positions and $(ne(space.graph)) edges",
     )
 end
 
@@ -47,9 +47,9 @@ function remove_agent_from_space!(
     agent::A,
     model::ABM{A,<:GraphSpace},
 ) where {A<:AbstractAgent}
-    agentnode = agent.pos
-    p = get_node_contents(agentnode, model)
-    splice!(p, findfirst(a -> a == agent.id, p))
+    agentpos = agent.pos
+    ids = ids_in_position(agentpos, model)
+    splice!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
@@ -58,11 +58,11 @@ function move_agent!(
     pos::ValidPos,
     model::ABM{A,<:GraphSpace},
 ) where {A<:AbstractAgent}
-    oldnode = agent.pos
-    p = get_node_contents(oldnode, model)
-    splice!(p, findfirst(a -> a == agent.id, p))
+    oldpos = agent.pos
+    ids = ids_in_position(oldpos, model)
+    splice!(ids, findfirst(a -> a == agent.id, ids))
     agent.pos = pos
-    push!(get_node_contents(agent.pos, model), agent.id)
+    push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
 
@@ -70,37 +70,32 @@ function add_agent_to_space!(
     agent::A,
     model::ABM{A,<:DiscreteSpace},
 ) where {A<:AbstractAgent}
-    push!(get_node_contents(agent.pos, model), agent.id)
+    push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
 
 # The following two is for the discrete space API:
-"""
-    get_node_contents(position, model::ABM{A, <:DiscreteSpace})
+ids_in_position(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
+# NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
-Return the ids of agents in the "node" corresponding to `position`.
-"""
-get_node_contents(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
-# NOTICE: The return type of `get_node_contents` must support `length` and `isempty`!
-
-nodes(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
+positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
 
 #######################################################################################
 # Neighbors
 #######################################################################################
-function space_neighbors(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
-    nn = node_neighbors(pos, model, args...; kwargs...)
+function nearby_ids(pos::Int, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A}
+    np = nearby_positions(pos, model, args...; kwargs...)
     # This call is faster than reduce(vcat, ..), or Iterators.flatten
-    vcat(model.space.s[pos], model.space.s[nn]...)
+    vcat(model.space.s[pos], model.space.s[np]...)
 end
 
-function space_neighbors(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
-    all = space_neighbors(agent.pos, model, args...; kwargs...)
+function nearby_ids(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) where {A<:AbstractAgent}
+    all = nearby_ids(agent.pos, model, args...; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
 
-function node_neighbors(
-    node_number::Integer,
+function nearby_positions(
+    position::Integer,
     model::ABM{A,<:GraphSpace};
     neighbor_type::Symbol = :default,
 ) where {A}
@@ -114,21 +109,21 @@ function node_neighbors(
     else
         LightGraphs.all_neighbors
     end
-    neighborfn(model.space.graph, node_number)
+    neighborfn(model.space.graph, position)
 end
 
-function node_neighbors(
-    node_number::Integer,
+function nearby_positions(
+    position::Integer,
     model::ABM{A,<:GraphSpace},
     radius::Integer;
     kwargs...,
 ) where {A}
-    output = copy(node_neighbors(node_number, model; kwargs...))
+    output = copy(nearby_positions(position, model; kwargs...))
     for _ in 2:radius
-        newnns = (node_neighbors(nn, model; kwargs...) for nn in output)
-        append!(output, reduce(vcat, newnns))
+        newnps = (nearby_positions(np, model; kwargs...) for np in output)
+        append!(output, reduce(vcat, newnps))
         unique!(output)
     end
-    filter!(i -> i != node_number, output)
+    filter!(i -> i != position, output)
 end
 

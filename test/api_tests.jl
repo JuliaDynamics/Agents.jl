@@ -148,7 +148,7 @@ end
       agent = Agent7(id, 2, attributes...)
       add_agent_single!(agent, model)
   end
-  @test length(find_empty_nodes(model)) == 0
+  @test !has_empty_positions(model)
   agent = Agent7(12,5, attributes...)
   add_agent_single!(agent, model)
   @test_throws KeyError model[12]
@@ -248,8 +248,8 @@ end
   add_agent!((1,3), model)
   add_agent!((5,2), model)
   @test nagents(model) == 3
-  for agent in copy(get_node_contents((1,3), model))
-    kill_agent!(agent, model)
+  for id in copy(ids_in_position((1,3), model))
+    kill_agent!(id, model)
   end
   @test nagents(model) == 1
   # ContinuousSpace
@@ -308,6 +308,7 @@ end
   genocide!(model, a -> a.id > 5)
   @test nagents(model) == 5
 
+  Random.seed!(6465)
   # Testing genocide!(model::ABM, f::Function) when the function is invalid
   # (i.e. does not return a bool)
   for i in 1:20

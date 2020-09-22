@@ -22,7 +22,7 @@
 # in this model, with a probability given by `reproduction_prob`. The property `Δenergy`
 # controls how much energy is acquired after consuming a food source.
 
-# Grass is a replenishing resource that occupies every cell in the grid space. Grass can be
+# Grass is a replenishing resource that occupies every position in the grid space. Grass can be
 # consumed only if it is `fully_grown`. Once the grass has been consumed, it replenishes
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
@@ -60,7 +60,7 @@ nothing # hide
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
-# dimensional grid space with `moore = true`, which enables animals to walk in all
+# dimensional grid space, which enables animals to walk in all
 # directions. Heterogeneous agents are specified in the model as a `Union`. Agents are
 # scheduled `by_type`, which randomizes the order of agents with the constraint that agents
 # of a particular type are scheduled consecutively.
@@ -75,7 +75,7 @@ function initialize_model(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, moore = true)
+    space = GridSpace(dims, periodic = false)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false)
     id = 0
@@ -93,12 +93,12 @@ function initialize_model(;
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
-    for n in nodes(model)
+    for p in positions(model)
         id += 1
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
-        add_agent!(grass, vertex2coord(n,model), model)
+        add_agent!(grass, p, model)
     end
     return model
 end
@@ -106,14 +106,14 @@ nothing # hide
 
 # The function `agent_step!` is dispatched on each subtype in order to produce
 # type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
-# energy unit by moving to an adjacent cell and both consume a food source if available.
+# energy unit by moving to an adjacent position and both consume a food source if available.
 # If their energy level is below zero, an agent dies. Otherwise, the agent lives and
 # reproduces with some probability.
 
 function agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = get_node_agents(sheep.pos, model)
+    agents = collect(agents_in_position(sheep.pos, model))
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -128,7 +128,7 @@ end
 function agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = get_node_agents(wolf.pos, model)
+    agents = collect(agents_in_position(wolf.pos, model))
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0
@@ -157,11 +157,11 @@ function agent_step!(grass::Grass, model)
 end
 nothing # hide
 
-# Sheep and wolves move to a random adjacent cell with the `move!` function.
+# Sheep and wolves move to a random adjacent position with the `move!` function.
 function move!(agent, model)
-    neighbors = node_neighbors(agent, model)
-    cell = rand(collect(neighbors))
-    move_agent!(agent, cell, model)
+    neighbors = nearby_positions(agent, model)
+    position = rand(collect(neighbors))
+    move_agent!(agent, position, model)
 end
 nothing # hide
 

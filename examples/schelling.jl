@@ -7,7 +7,7 @@
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional Moore grid (8 neighbors per node).
+# * The agents live in a two-dimensional Chebyshev grid (8 neighbors per position).
 # * If an agent is in the same group with at least three neighbors, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
@@ -25,7 +25,7 @@ gr() # hide
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
     pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
-    mood::Bool # whether the agent is happy in its node. (true = happy)
+    mood::Bool # whether the agent is happy in its position. (true = happy)
     group::Int # The group of the agent,  determines mood as it interacts with neighbors
 end
 
@@ -38,9 +38,9 @@ end
 
 # ## Creating a space
 
-# For this example, we will be using a Moore 2D grid, e.g.
+# For this example, we will be using a Chebyshev 2D grid, e.g.
 
-space = GridSpace((10, 10), moore = true)
+space = GridSpace((10, 10), periodic = false)
 
 # ## Creating an ABM
 
@@ -77,7 +77,7 @@ schelling2 = ABM(
 # it will be of further use in [`paramscan`](@ref) below.
 
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
                 properties = properties, scheduler = random_activation)
@@ -104,16 +104,16 @@ nothing # hide
 function agent_step!(agent, model)
     agent.mood == true && return # do nothing if already happy
     minhappy = model.min_to_be_happy
-    neighbor_cells = node_neighbors(agent, model)
+    neighbor_positions = nearby_positions(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
-    for neighbor_cell in neighbor_cells
-        node_contents = get_node_contents(neighbor_cell, model)
-        ## Skip iteration if the node is empty.
-        length(node_contents) == 0 && continue
-        ## Otherwise, get the first agent in the node...
-        agent_id = node_contents[1]
+    for neighbor_pos in neighbor_positions
+        pos_contents = ids_in_position(neighbor_pos, model)
+        ## Skip iteration if the position is empty.
+        length(pos_contents) == 0 && continue
+        ## Otherwise, get the first agent in the position...
+        agent_id = pos_contents[1]
         ## ...and increment count_neighbors_same_group if the neighbor's group is
         ## the same.
         neighbor_agent_group = model[agent_id].group
@@ -123,7 +123,7 @@ function agent_step!(agent, model)
     end
     ## After counting the neighbors, decide whether or not to move the agent.
     ## If count_neighbors_same_group is at least the min_to_be_happy, set the
-    ## mood to true. Otherwise, move the agent to a random node.
+    ## mood to true. Otherwise, move the agent to a random position.
     if count_neighbors_same_group ≥ minhappy
         agent.mood = true
     else
@@ -137,10 +137,10 @@ nothing # hide
 # we only need an agent step function.
 
 # When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
-# such as [`node_neighbors`](@ref) that returns the neighboring nodes of the
-# node on which the agent resides, [`get_node_contents`](@ref) that returns the
-# IDs of the agents on a given node, and [`move_agent_single!`](@ref) which moves
-# agents to random empty nodes on the grid. A full list of built-in functions
+# such as [`nearby_positions`](@ref) that returns the neighboring position
+# on which the agent resides, [`ids_in_position`](@ref) that returns the
+# IDs of the agents on a given position, and [`move_agent_single!`](@ref) which moves
+# agents to random empty position on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.
 
 # ## Stepping the model

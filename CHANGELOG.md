@@ -3,10 +3,11 @@
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
 - Agents.jl now defines a clear API for new spaces types. To create a fundamentally different type of space you have to define the space structure and extend only 5 methods.
-- `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord`.
+- `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord` and `coord2vertex`.
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
+- New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 
 ## Breaking changes
 All changes in this section (besides changes to default values) are deprecated and
@@ -14,8 +15,17 @@ therefore are not "truly breaking".
 
 - Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
 - Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
-- Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allows to have performance updates in the future that may change internals but not lead to breaking changes.
-- `vertex2coord, coord2vertex` do not exist anymore because they are unecessary in the new design.
+- Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allow performance updates in the future that may change internals but not lead to breaking changes.
+- `vertex2coord, coord2vertex` do not exist anymore because they are unnecessary in the new design.
+- API simplification and renaming:
+  - `space_neighbors` -> `nearby_ids`
+  - `node_neighbors` -> `nearby_positions`
+  - `get_node_contents` -> `ids_in_position`
+  - `get_node_agents` -> `agents_in_position`
+  - `pick_empty` -> `random_empty`
+  - `find_empty_nodes` -> `empty_positions`
+  - `has_empty_nodes` -> `has_empty_positions`
+  - `nodes` -> `positions`
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

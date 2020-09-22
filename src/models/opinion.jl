@@ -14,7 +14,7 @@ end
 Same as in [Opinion spread](@ref).
 """
 function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
-    space = GridSpace(dims, periodic = true, moore = true)
+    space = GridSpace(dims)
     properties = Dict(:nopinions => nopinions)
     model = AgentBasedModel(
         Citizen,
@@ -22,9 +22,9 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
         scheduler = random_activation,
         properties = properties,
     )
-    for cell in 1:nv(model)
+    for pos in positions(model)
         add_agent!(
-            vertex2coord(cell,model),
+            pos,
             model,
             false,
             rand(1:levels_per_opinion, nopinions),
@@ -35,7 +35,7 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
 end
 
 function adopt!(agent, model)
-    neighbor = rand(space_neighbors(agent, model))
+    neighbor = rand(collect(nearby_ids(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     # Adopt a different opinion w/ calculated probability

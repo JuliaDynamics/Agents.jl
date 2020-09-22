@@ -82,7 +82,7 @@ to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
 [`ContinuousSpace`](@ref).
-If it is ommited then all agents are virtually in one node and have no spatial structure.
+If it is ommited then all agents are virtually in one position and have no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.

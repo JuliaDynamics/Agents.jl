@@ -1,4 +1,5 @@
-# # Sugarscape: growing artificial societies
+# # Sugarscape
+# **Growing Artificial Societies**
 
 # ![](sugar.gif)
 
@@ -14,34 +15,34 @@
 
 # ### Environment
 
-# The environment is a 50×50 grid that wraps around forming a torus. Grid cells have both a sugar level and a sugar capacity c. A cell's sugar level is the number of units of sugar in the cell (potentially none), and its sugar capacity c is the maximum value the sugar level can take on that cell. Sugar capacity is fixed for each individual cell and may be different for different cells. The spatial distribution of sugar capacities depicts a sugar topography consisting of two peaks (with sugar capacity c = 4) separated by a valley, and surrounded by a desert region of sugarless cells (see Figure 1) - note, however, that the grid wraps around in both directions–.
+# The environment is a 50×50 grid that wraps around forming a torus. Grid positions have both a sugar level and a sugar capacity c. A cell's sugar level is the number of units of sugar in the cell (potentially none), and its sugar capacity c is the maximum value the sugar level can take on that cell. Sugar capacity is fixed for each individual cell and may be different for different cells. The spatial distribution of sugar capacities depicts a sugar topography consisting of two peaks (with sugar capacity c = 4) separated by a valley, and surrounded by a desert region of sugarless cells (see Figure 1) - note, however, that the grid wraps around in both directions–.
 
 # ![Fig. 1: Spatial distribution of sugar capacities in the Sugarscape. Cells are coloured according to their sugar capacity.](capacities.jpg)
 
 # The Sugarscape obbeys the following rule:
 
 # Sugarscape growback rule G$\alpha$:
-#     At each cell, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
+#     At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
 
 # ### Agents
 
 # Every agent is endowed with individual (life-long) characteristics that condition her skills and capacities to survive in the Sugarscape. These individual attributes are:
 
-# * A vision _v_, which is the maximum number of cells the agent can see in each of the four principal lattice directions: north, south, east and west.
+# * A vision _v_, which is the maximum number of positions the agent can see in each of the four principal lattice directions: north, south, east and west.
 # * A metabolic rate _m_, which represents the units of sugar the agent burns per time-step.
 # * A maximum age _max-age_, which is the maximum number of time-steps the agent can live.
 
-# Agents also have the capacity to accumulate sugar wealth _w_. An agent's sugar wealth is incremented at the end of each time-step by the sugar collected and decremented by the agent's metabolic rate. __Two agents are not allowed to occupy the same cell in the grid.__
+# Agents also have the capacity to accumulate sugar wealth _w_. An agent's sugar wealth is incremented at the end of each time-step by the sugar collected and decremented by the agent's metabolic rate. __Two agents are not allowed to occupy the same position in the grid.__
 
 # The agents' behaviour is determined by the following two rules:
 
 # #### Agent movement rule _M_:
 
-# Consider the set of unoccupied cells within your vision (including the one you are standing on), identify the one(s) with the greatest amount of sugar, select the nearest one (randomly if there is more than one), move there and collect all the sugar in it. At this point, the agent's accumulated sugar wealth is incremented by the sugar collected and decremented by the agent's metabolic rate _m_. If at this moment the agent's sugar wealth is not greater than zero, then the agent dies.
+# Consider the set of unoccupied positions within your vision (including the one you are standing on), identify the one(s) with the greatest amount of sugar, select the nearest one (randomly if there is more than one), move there and collect all the sugar in it. At this point, the agent's accumulated sugar wealth is incremented by the sugar collected and decremented by the agent's metabolic rate _m_. If at this moment the agent's sugar wealth is not greater than zero, then the agent dies.
 
 # #### Agent replacement rule _R_:
 
-# Whenever an agent dies it is replaced by a new agent of age 0 placed on a randomly chosen unoccupied cell, having random attributes _v_, _m_ and _max-age_, and random initial wealth w0. All random numbers are drawn from uniform distributions with ranges specified in Table 1 below.
+# Whenever an agent dies it is replaced by a new agent of age 0 placed on a randomly chosen unoccupied position, having random attributes _v_, _m_ and _max-age_, and random initial wealth w0. All random numbers are drawn from uniform distributions with ranges specified in Table 1 below.
 
 # ### Scheduling of events
 
@@ -51,7 +52,7 @@
 
 # Our analysis corresponds to a model used by Epstein & Axtell (1996, pg. 33) to study the emergent wealth distribution in the agent population. This model is parameterised as indicated in Table 1 below (where U[a,b] denotes a uniform distribution with range [a,b]).
 
-# Initially, each cell of the Sugarscape contains a sugar level equal to its sugar capacity c, and the 250 agents are created at a random unoccupied initial location and with random attributes (using the uniform distributions indicated in Table 1).
+# Initially, each position of the Sugarscape contains a sugar level equal to its sugar capacity c, and the 250 agents are created at a random unoccupied initial location and with random attributes (using the uniform distributions indicated in Table 1).
 
 # __Table 1__
 
@@ -118,7 +119,7 @@ function sugarscape(;
 )
     sugar_capacities = sugar_caps(dims, sugar_peaks, max_sugar, 6)
     sugar_values = deepcopy(sugar_capacities)
-    space = GridSpace(dims, periodic = true, moore = true)
+    space = GridSpace(dims)
     properties = Dict(
         :growth_rate => growth_rate,
         :N => N,
@@ -153,47 +154,46 @@ model = sugarscape()
 # Fig. 1: Spatial distribution of sugar capacities in the Sugarscape. Cells are coloured according to their sugar capacity.
 
 heatmap(model.sugar_capacities)
-savefig("capacities.jpg")
 
 #
 
 function env!(model)
-    ## At each cell, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
+    ## At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
     togrow = findall(
         x -> model.sugar_values[x] < model.sugar_capacities[x],
-        1:prod(model.space.dimensions),
+        1:length(positions(model)),
     )
     model.sugar_values[togrow] .+= model.growth_rate
 end
 
 function movement!(agent, model)
-    posvertex = coord2vertex(agent.pos, model)
-    newsite = posvertex
-    ## find all unoccupied cells within vision
-    neighbors = node_neighbors(coord2vertex(agent.pos, model), model, agent.vision)
-    empty_nodes = [i for i in neighbors if isempty(i, model)]
-    if length(empty_nodes) > 0
+    newsite = agent.pos
+    ## find all unoccupied position within vision
+    neighbors = nearby_positions(agent.pos, model, agent.vision)
+    empty = collect(empty_positions(model))
+    if length(empty) > 0
         ## identify the one(s) with greatest amount of sugar
-        maxsugar = maximum(model.sugar_values[empty_nodes])
+        available_sugar = (model.sugar_values[x,y] for (x, y) in empty)
+        maxsugar = maximum(available_sugar)
         if maxsugar > 0
-            sugary_sites_inds = findall(x -> x == maxsugar, model.sugar_values[empty_nodes])
-            sugary_sites = empty_nodes[sugary_sites_inds]
+            sugary_sites_inds = findall(x -> x == maxsugar, collect(available_sugar))
+            sugary_sites = empty[sugary_sites_inds]
             ## select the nearest one (randomly if more than one)
             for dia in 1:(agent.vision)
-                nn = node_neighbors(posvertex, model, dia)
-                suitable = intersect(nn, sugary_sites)
+                np = nearby_positions(agent.pos, model, dia)
+                suitable = intersect(np, sugary_sites)
                 if length(suitable) > 0
                     newsite = rand(suitable)
                     break
                 end
             end
             ## move there and collect all the sugar in it
-            newsite != posvertex && move_agent!(agent, newsite, model)
+            newsite != agent.pos && move_agent!(agent, newsite, model)
         end
     end
     ## update wealth (collected - consumed)
-    agent.wealth += (model.sugar_values[newsite] - agent.metabolic_rate)
-    model.sugar_values[newsite] = 0
+    agent.wealth += (model.sugar_values[newsite...] - agent.metabolic_rate)
+    model.sugar_values[newsite...] = 0
     ## age
     agent.age += 1
 end
@@ -246,6 +246,7 @@ anim2 = @animate for i in 0:20
         title = "step $i",
     )
 end
+nothing # hide
 
 # We see that the distribution of wealth shifts from a more or less uniform distribution to a skewed distribution.
 

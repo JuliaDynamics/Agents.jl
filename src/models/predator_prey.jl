@@ -26,7 +26,7 @@ end
 
 """
 ``` julia
-predator_prey(; 
+predator_prey(;
     n_sheep = 100,
     n_wolves = 50,
     dims = (20, 20),
@@ -54,7 +54,7 @@ function predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, moore = true)
+    space = GridSpace(dims, periodic = false)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false)
     id = 0
@@ -72,12 +72,12 @@ function predator_prey(;
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
-    for n in nodes(model)
+    for p in positions(model)
         id += 1
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
-        add_agent!(grass, vertex2coord(n, model), model)
+        add_agent!(grass, p, model)
     end
     return model, predator_prey_agent_step!, dummystep
 end
@@ -85,7 +85,7 @@ end
 function predator_prey_agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = get_node_agents(sheep.pos, model)
+    agents = collect(agents_in_position(sheep.pos, model))
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -100,7 +100,7 @@ end
 function predator_prey_agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = get_node_agents(wolf.pos, model)
+    agents = collect(agents_in_position(wolf.pos, model))
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0
@@ -124,9 +124,9 @@ function predator_prey_agent_step!(grass::Grass, model)
 end
 
 function move!(agent, model)
-    neighbors = node_neighbors(agent, model)
-    cell = rand(collect(neighbors))
-    move_agent!(agent, cell, model)
+    neighbors = nearby_positions(agent, model)
+    position = rand(collect(neighbors))
+    move_agent!(agent, position, model)
 end
 
 function eat!(sheep::Sheep, grass_array, model)
