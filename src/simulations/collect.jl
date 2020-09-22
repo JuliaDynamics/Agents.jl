@@ -41,7 +41,8 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
 
   The resulting data name columns use the function [`aggname`](@ref), and create something
   like `:mean_weight` or `:maximum_f_x_pos`.
-  This name doesn't play well with anonymous functions!
+  This name doesn't play well with anonymous functions, but you can simply use
+  `DataFrames.rename!` to change the returned dataframe's column names.
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
