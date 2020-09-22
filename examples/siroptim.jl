@@ -59,7 +59,7 @@ function model_initiation(;
     end
     # add infected individuals
     for city in 1:C
-        inds = get_node_contents(city, model)
+        inds = ids_in_position(city, model)
         for n in 1:Is[city]
             agent = model[inds[n]]
             agent.status = :I # Infected
@@ -77,10 +77,10 @@ function agent_step!(agent, model)
 end
 
 function migrate!(agent, model)
-    nodeid = agent.pos
-    d = DiscreteNonParametric(1:(model.C), model.migration_rates[nodeid, :])
+    pid = agent.pos
+    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
     m = rand(d)
-    if m ≠ nodeid
+    if m ≠ pid
         move_agent!(agent, m, model)
     end
 end
@@ -97,7 +97,7 @@ function transmit!(agent, model)
     n = rand(d)
     n == 0 && return
 
-    for contactID in get_node_contents(agent, model)
+    for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
            (contact.status == :R && rand() ≤ model.reinfection_probability)

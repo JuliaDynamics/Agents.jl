@@ -5,7 +5,7 @@ Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynami
 To get started, please read the [Tutorial](@ref) page.
 
 !!! tip "Latest news"
-    Interactive applications & predefined models!
+    Welcome to Agents.jl v4.0! This new release features improved `GridSpace` and `ContinuousSpace` (re-written from scratch), overall performance improvements of Agents.jl of a full order of magnitude (and sometimes more) and re-naming many API functions to make sense (deprecations have been put in place). Have a look at the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
 
 ## Features
 
@@ -67,7 +67,7 @@ Use of ABMs have become feasible after the availability of computers and has bee
 
 An ABM consists of autonomous agents that behave given a set of rules.
 A classic example of an ABM is [Schelling's segregation model](https://www.tandfonline.com/doi/abs/10.1080/0022250X.1971.9989794), which we implement as an example here.
-This model uses a regular grid and defines agents as the cells of the grid.
+This model uses a regular grid and defines agents at random positions on the grid.
 Agents can be from different social groups.
 Agents are happy/unhappy based on the fraction of their neighbors that belong to the same group as they are.
 If they are unhappy, they keep moving to new locations until they are happy.

@@ -1,7 +1,8 @@
 # # SIR model for the spread of COVID-19
 # ![](covid_evolution.gif)
+#
 # This example illustrates how to use `GraphSpace` and how to model agents on an graph
-# (network) where the transition probabilities between each node is not constant.
+# (network) where the transition probabilities between each node (position) is not constant.
 # ## SIR model
 
 # A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population.
@@ -101,7 +102,7 @@ function model_initiation(;
     end
     ## add infected individuals
     for city in 1:C
-        inds = get_node_contents(city, model)
+        inds = ids_in_position(city, model)
         for n in 1:Is[city]
             agent = model[inds[n]]
             agent.status = :I # Infected
@@ -216,10 +217,10 @@ function agent_step!(agent, model)
 end
 
 function migrate!(agent, model)
-    nodeid = agent.pos
-    d = DiscreteNonParametric(1:(model.C), model.migration_rates[nodeid, :])
+    pid = agent.pos
+    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
     m = rand(d)
-    if m ≠ nodeid
+    if m ≠ pid
         move_agent!(agent, m, model)
     end
 end
@@ -236,7 +237,7 @@ function transmit!(agent, model)
     n = rand(d)
     n == 0 && return
 
-    for contactID in get_node_contents(agent, model)
+    for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
            (contact.status == :R && rand() ≤ model.reinfection_probability)
@@ -300,7 +301,7 @@ p = plot(
     log10.(data[:, aggname(:status, infected)]),
     label = "infected",
     xlabel = "steps",
-    ylabel = "log(count)",
+    ylabel = "log10(count)",
 )
 plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
 dead = log10.(N .- data[:, aggname(:status, length)])

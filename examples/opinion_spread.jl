@@ -26,7 +26,7 @@ mutable struct Citizen <: AbstractAgent
 end
 
 function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
-    space = GridSpace(dims, periodic = true, moore = true)
+    space = GridSpace(dims)
     properties = Dict(:nopinions => nopinions)
     model = AgentBasedModel(
         Citizen,
@@ -34,9 +34,9 @@ function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
         scheduler = random_activation,
         properties = properties,
     )
-    for cell in 1:nv(model)
+    for pos in positions(model)
         add_agent!(
-            vertex2coord(cell,model),
+            pos,
             model,
             false,
             rand(1:levels_per_opinion, nopinions),
@@ -49,7 +49,7 @@ end
 # ### 2. Stepping functions
 
 function adopt!(agent, model)
-    neighbor = rand(space_neighbors(agent, model))
+    neighbor = rand(collect(nearby_ids(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     if nmatches < model.nopinions && rand() < nmatches / model.nopinions
@@ -84,8 +84,7 @@ levels_per_opinion = 4
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 
 "run the model until all agents stabilize"
-rununtil(model, s) =
-    count(getproperty.(values(model.agents), :stabilized)) == prod(model.space.dimensions)
+rununtil(model, s) = count(a->a.stabilized, allagents(model)) == length(positions(model))
 
 agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabilized, count)])
 

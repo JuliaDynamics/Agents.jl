@@ -49,7 +49,7 @@ function predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims)
+    space = GridSpace(dims, metric = :euclidean, periodic = false)
     properties = Dict(:Δenergy_wolf => Δenergy_wolf, :Δenergy_sheep => Δenergy_sheep, :regrowth_time => regrowth_time, :sheep_reproduce => sheep_reproduce, :wolf_reproduce => wolf_reproduce)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false, properties=properties)
@@ -68,12 +68,12 @@ function predator_prey(;
         wolf = Wolf(id, (0, 0), energy)
         add_agent!(wolf, model)
     end
-    for n in nodes(model)
+    for p in positions(model)
         id += 1
         fully_grown = rand(Bool)
         countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, countdown)
-        add_agent!(grass, n, model)
+        add_agent!(grass, p, model)
     end
     return model, predator_prey_agent_step!, dummystep
 end
@@ -81,7 +81,7 @@ end
 function predator_prey_agent_step!(sheep::Sheep, model)
     move!(sheep, model)
     sheep.energy -= 1
-    agents = [model[i] for i in get_node_contents(sheep.pos, model)]
+    agents = collect(agents_in_position(sheep.pos, model))
     dinner = filter!(x -> isa(x, Grass), agents)
     eat!(sheep, dinner, model)
     if sheep.energy < 0
@@ -96,7 +96,7 @@ end
 function predator_prey_agent_step!(wolf::Wolf, model)
     move!(wolf, model)
     wolf.energy -= 1
-    agents = [model[i] for i in get_node_contents(wolf.pos, model)]
+    agents = collect(agents_in_position(wolf.pos, model))
     dinner = filter!(x -> isa(x, Sheep), agents)
     eat!(wolf, dinner, model)
     if wolf.energy < 0
@@ -120,9 +120,9 @@ function predator_prey_agent_step!(grass::Grass, model)
 end
 
 function move!(agent, model)
-    neighbors = node_neighbors(agent, model)
-    cell = rand(collect(neighbors))
-    move_agent!(agent, cell, model)
+    neighbors = nearby_positions(agent, model)
+    position = rand(collect(neighbors))
+    move_agent!(agent, position, model)
 end
 
 function eat!(sheep::Sheep, grass_array, model)

@@ -27,65 +27,66 @@ random_position
 ### Moving and killing agents
 ```@docs
 move_agent!
-move_agent_single!
 kill_agent!
 genocide!
 sample!
 ```
 
-## Neighbors
+## Local area
 ```@docs
-space_neighbors
-node_neighbors
+nearby_ids
+nearby_positions
 ```
 
 ### WARNING: Iteration
 
 Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
 
-**Dynamic** means that when iterating over the result of e.g. the [`get_node_contents`](@ref) function, the iterator will be affected by actions that would alter its contents.
+**Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
 Specifically, imagine the scenario
 ```@example docs
-using Agents, LightGraphs
+using Agents
 mutable struct Agent <: AbstractAgent
     id::Int
-    pos::Int
+    pos::NTuple{4, Int}
 end
 
-model = ABM(Agent, GraphSpace(complete_digraph(10)))
-add_agent!(1, model)
-add_agent!(1, model)
-add_agent!(2, model)
-for agent in get_node_contents(1, model)
-    kill_agent!(agent, model)
+model = ABM(Agent, GridSpace((5, 5, 5, 5)))
+add_agent!((1, 1, 1, 1), model)
+add_agent!((1, 1, 1, 1), model)
+add_agent!((2, 1, 1, 1), model)
+for id in ids_in_position((1, 1, 1, 1), model)
+    kill_agent!(id, model)
 end
 collect(allids(model))
 ```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `get_node_contents` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
+You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
 To avoid problems like these, you need to `copy` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
-A good example to illustrate this is [`space_neighbors`](@ref), where doing something like
-```@example docs
+A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
+```julia
 a = random_agent(model)
-sort!(space_neighbors(random_agent(model), model))
+sort!(nearby_ids(random_agent(model), model))
 ```
 leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
 ```@example docs
 a = random_agent(model)
-sort!(collect(space_agents(a, model)))
+sort!(collect(nearby_agents(a, model)))
 ```
 
 ## Discrete space exclusives
 ```@docs
-add_agent_single!
+positions
+ids_in_position
+agents_in_position
 fill_space!
-find_empty_nodes
-pick_empty
+has_empty_positions
+empty_positions
+random_empty
+add_agent_single!
 move_agent_single!
-get_node_contents
 isempty(::Integer, ::ABM)
-nodes
 ```
 
 ## Continuous space exclusives

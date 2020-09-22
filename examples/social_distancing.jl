@@ -55,7 +55,7 @@ model = ball_model()
 
 # We took advantage of the functionality of [`add_agent!`](@ref) that creates the
 # agents automatically. For now all agents have the same absolute `speed`, and `mass`.
-# We `index!` the model, to make finding space neighbors faster.
+# We `index!` the model, to make finding nearby agents faster.
 
 # The agent step function for now is trivial. It is just [`move_agent!`](@ref) in
 # continuous space
@@ -246,7 +246,7 @@ sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-e = model.space.extend
+e = sir_model.space.extend
 plotabm(
     sir_model;
     ac = sir_colors,
@@ -316,7 +316,7 @@ nothing # hide
 
 sir_model = sir_initiation()
 
-e = model.space.extend
+e = sir_model.space.extend
 anim = @animate for i in 1:2:100
     p1 = plotabm(
         sir_model;
@@ -382,7 +382,7 @@ p
 
 sir_model = sir_initiation(isolated = 0.8)
 
-e = model.space.extend
+e = sir_model.space.extend
 anim = @animate for i in 0:2:1000
     p1 = plotabm(
         sir_model;

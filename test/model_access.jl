@@ -1,8 +1,6 @@
-# %% accessing model
 @testset "Model Access" begin
 @testset "Accessing model" begin
     model = ABM(Agent0; properties = Dict(:a => 2, :b => "test"))
-    # add 5 aents
     for i in 1:5
         add_agent!(model)
     end
@@ -16,7 +14,6 @@
     @test model.a == 2
     @test model.b == "test"
 
-
     newa = Agent0(6)
     model[6] = newa
     @test model[6] == newa
@@ -25,7 +22,6 @@
     prop2 = Agent2(1, 0.5)
     model2 = ABM(Agent0; properties = prop2)
     @test model2.weight == 0.5
-
 end
 
 @testset "model access typestability" begin
@@ -45,13 +41,13 @@ end
     @test Agents.agenttype(model) == Agent3
     @test Agents.spacetype(model) <: GridSpace
     @test size(model.space) == (5,5)
-    @test all(isempty(n, model) for n in nodes(model))
+    @test all(isempty(p, model) for p in positions(model))
 end
 
 @testset "Display" begin
     model = ABM(Agent3, GridSpace((5,5)))
-    @test sprint(show, model) == "AgentBasedModel with 0 agents of type Agent3\n space: GridSpace with size (5, 5) and metric=chebyshev\n scheduler: fastest"
-    @test sprint(show, model.space) == "GridSpace with size (5, 5) and metric=chebyshev"
+    @test sprint(show, model)[1:29] == "AgentBasedModel with 0 agents"
+    @test sprint(show, model.space) == "GridSpace with size (5, 5), metric=chebyshev and periodic=true"
     model = ABM(Agent6, ContinuousSpace(2))
     @test sprint(show, model.space) == "2-dimensional periodic ContinuousSpace"
 end

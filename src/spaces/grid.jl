@@ -7,21 +7,18 @@ end
 
 """
     Hood{D}
-Internal struct for efficiently finding neighboring nodes to a given node.
+Internal struct for efficiently finding neighboring positions to a given position.
 It contains pre-initialized neighbor cartesian indices and delimiters of when the
 neighboring indices would exceed the size of the underlying array.
 """
 struct Hood{D} # type P stands for Periodic and is a boolean
-    inner::Region{D}  # inner field far from boundary
-    whole::Region{D}
-    # `βs` are the actual neighborhood cartesian indices
-    βs::Vector{CartesianIndex{D}}
+    whole::Region{D} # allowed values (only useful for non periodic)
+    βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
 struct GridSpace{D,P} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
-    # `hoods` is a preinitialized container of neighborhood cartesian indices
     hoods::Dict{Float64,Hood{D}}
 end
 
@@ -30,15 +27,17 @@ end
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
-used, which decides the behavior of e.g. [`space_neighbors`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid nodes have indices
+used, which decides the behavior of e.g. [`nearby_ids`](@ref).
+The position type for this space is `NTuple{D, Int}` and valid positions have indices
 in the range `1:d[i]` for the `i`th dimension.
 
-`:chebyshev` metric means that the `r`-neighborhood of a node are all
-nodes within the hypercube having side length of `2*floor(r)` and being centered in the node.
+`:chebyshev` metric means that the `r`-neighborhood of a position are all
+positions within the hypercube having side length of `2*floor(r)` and being centered in
+the origin position.
 
-`:euclidean` metric means that the `r`-neighborhood of a node are all nodes whose cartesian
-indices have Euclidean distance `≤ r` from the cartesian index of the given node.
+`:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
+cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+position.
 """
 function GridSpace(
         d::NTuple{D,Int};
@@ -98,20 +97,6 @@ function Base.in(idx, r::Region{D}) where {D}
     return true
 end
 
-# This function calculates how large the inner region should be based on the neighborhood
-# βs and the actual array size `d`
-function inner_region(βs::Vector{CartesianIndex{D}}, d::NTuple{D,Int}) where {D}
-    mini = Int[]
-    maxi = Int[]
-    for φ in 1:D
-        js = map(β -> β[φ], βs) # jth entries
-        mi, ma = extrema(js)
-        push!(mini, 1 - min(mi, 0))
-        push!(maxi, d[φ] - max(ma, 0))
-    end
-    return Region{D}((mini...,), (maxi...,))
-end
-
 # This function initializes the standard cartesian indices that needs to be added to some
 # index `α` to obtain its neighborhood
 import LinearAlgebra
@@ -128,9 +113,8 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     else
         error("Unknown metric type")
     end
-    inner = inner_region(βs, d)
     whole = Region(map(one, d), d)
-    hood = Hood{D}(inner, whole, βs)
+    hood = Hood{D}(whole, βs)
     space.hoods[float(r)] = hood
     return hood
 end
@@ -139,10 +123,10 @@ end
 """
     grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 
-Return an iterator over all nodes within distance `r` from `α` according to the `space`.
+Return an iterator over all positions within distance `r` from `α` according to the `space`.
 
-The only reason this function is not equivalent with `node_neighbors` is because
-`node_neighbors` skips the current position `α`, while `α` is always included in the
+The only reason this function is not equivalent with `nearby_positions` is because
+`nearby_positions` skips the current position `α`, while `α` is always included in the
 returned iterator (because the `0` index is always included in `βs`).
 
 This function re-uses the source code of TimeseriesPrediction.jl, along with the
@@ -160,36 +144,18 @@ function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
 end
 
 function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::GridSpace{D,true},
-    hood,
-) where {D}
-    # if α ∈ hood.inner     # `α` won't reach the walls with this Hood
-    #   return Base.Generator(β -> Tuple(α + β), hood.βs)
-    # else                  # `α` WILL reach the walls and then loop
-    #   return Base.Generator(β-> mod1.(Tuple(α+β), hood.whole.maxi), hood.βs)
-    # end
-
-    # Here you will notice that we actually do not make a separation of whether the
-    # point α is near to the wall or not, and always take the modulo nevertheless.
-    # The reason is that Generators depend on the function used, and thus they would be
-    # type unstable if different function was used for different value of α.
-    # To make it type stable we would have to collect the result, but apparently
-    # this makes it slower because of allocations... so better take the mod1 always.
-
+        α::CartesianIndex,
+        space::GridSpace{D,true},
+        hood,
+    ) where {D}
     return ((mod1.(Tuple(α + β), hood.whole.maxi)) for β in hood.βs)
 end
 
 function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::GridSpace{D,false},
-    hood,
-) where {D}
-    # if α ∈ hood.inner     # `α` won't reach the walls with this Hood
-    #   return Iterators.filter(always_true, (Tuple(α + β) for β in hood.βs))
-    # else                  # `α` WILL reach the walls and then stop
-    #   return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
-    # end
+        α::CartesianIndex,
+        space::GridSpace{D,false},
+        hood,
+    ) where {D}
     return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 end
 
@@ -198,36 +164,26 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-function space_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
-    # IterWrapper(Iterators.flatten((s[i...] for i in nn)))
 end
 
-struct IterWrapper{S}
-    iter::S
-end
-Base.eltype(::Type{IterWrapper}) = Int
-Base.IteratorEltype(::Type{IterWrapper}) = HasEltype()
-Base.iterate(iter::IterWrapper) = iterate(iter.iter)
-Base.iterate(iter::IterWrapper, state) = iterate(iter.iter, state)
-
-function node_neighbors(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
 
-
 #######################################################################################
-# %% Further discrete space  functions
+# %% Further discrete space functions
 #######################################################################################
-function nodes(model::ABM{<:AbstractAgent,<:GridSpace})
+function positions(model::ABM{<:AbstractAgent,<:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end
 
-function get_node_contents(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
     return model.space.s[pos...]
 end
 

@@ -91,7 +91,8 @@ pages = [
         "DifferentialEquations.jl" => "examples/diffeq.md",
         "BlackBoxOptim" => "examples/optim.md"
         ],
-    "Comparison against Mesa (Python)" => "mesa.md"
+    "Comparison against Mesa (Python)" => "mesa.md",
+    "Developer docs" => "dedocs.md"
     ],
 )
 

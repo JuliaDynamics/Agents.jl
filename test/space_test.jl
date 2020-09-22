@@ -44,7 +44,7 @@ end
     @test d.metric == :euclidean
 end
 
-@testset "3D grid" begin
+@testset "3D grids" begin
     a = GridSpace((2, 3, 4))
     @test size(a) == (2, 3, 4)
     @test typeof(a.s) <: Array{Array{Int64,1},3}
@@ -66,86 +66,86 @@ end
     @test d.metric == :euclidean
 end
 
-@testset "Nodes" begin
+@testset "Positions" begin
     space = GridSpace((3, 3))
     model = ABM(Agent1, space)
-    empty_nodes = find_empty_nodes(model)
-    @test length(empty_nodes) > 0
+    empty = collect(empty_positions(model))
+    @test length(empty) > 0
     for n in [1, 5, 6, 9, 2, 3, 4]
-        add_agent!(empty_nodes[n], model)
+        add_agent!(empty[n], model)
     end
-    # only nodes (1,3) and (2,3) should be empty
-    @test pick_empty(model) ∈ [(1,3), (2,3)]
-    node_map = [(1, 1)  (1, 2)  (1, 3)
-                (2, 1)  (2, 2)  (2, 3)
-                (3, 1)  (3, 2)  (3, 3)]
-    @test collect(nodes(model)) == node_map
-    random_nodes = nodes(model, :random)
-    @test all(n ∈ node_map for n in random_nodes)
-    @test nodes(model, :population) == [node_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
-    @test length(get_node_contents(5, model)) > length(get_node_contents(7, model))
-    @test_throws ErrorException nodes(model, :notreal)
+    # only positions (1,3) and (2,3) should be empty
+    @test random_empty(model) ∈ [(1,3), (2,3)]
+    pos_map = [(1, 1)  (1, 2)  (1, 3)
+               (2, 1)  (2, 2)  (2, 3)
+               (3, 1)  (3, 2)  (3, 3)]
+    @test collect(positions(model)) == pos_map
+    random_positions = positions(model, :random)
+    @test all(n ∈ pos_map for n in random_positions)
+    @test positions(model, :population) == [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
+    @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
+    @test_throws ErrorException positions(model, :notreal)
 end
 
-@testset "Neighbors" begin
+@testset "Nearby Agents" begin
     undirected = ABM(Agent5, GraphSpace(path_graph(5)))
-    @test node_neighbors(3, undirected) == [2, 4]
-    @test node_neighbors(1, undirected) == [2]
-    @test node_neighbors(5, undirected) == [4]
-    @test node_neighbors(3, undirected; neighbor_type = :out) ==
-    node_neighbors(3, undirected; neighbor_type = :in) ==
-    node_neighbors(3, undirected; neighbor_type = :all) ==
-    node_neighbors(3, undirected; neighbor_type = :default)
+    @test nearby_positions(3, undirected) == [2, 4]
+    @test nearby_positions(1, undirected) == [2]
+    @test nearby_positions(5, undirected) == [4]
+    @test nearby_positions(3, undirected; neighbor_type = :out) ==
+    nearby_positions(3, undirected; neighbor_type = :in) ==
+    nearby_positions(3, undirected; neighbor_type = :all) ==
+    nearby_positions(3, undirected; neighbor_type = :default)
     add_agent!(1, undirected, rand())
     add_agent!(2, undirected, rand())
     add_agent!(3, undirected, rand())
     # We expect id 2 to be included for a grid based search
-    @test sort!(collect(space_neighbors(2, undirected))) == [1, 2, 3]
+    @test sort!(collect(nearby_ids(2, undirected))) == [1, 2, 3]
     # But to be excluded if we are looking around it.
-    @test sort!(collect(space_neighbors(undirected[2], undirected))) == [1, 3]
+    @test sort!(collect(nearby_ids(undirected[2], undirected))) == [1, 3]
 
     directed = ABM(Agent5, GraphSpace(path_digraph(5)))
-    @test node_neighbors(3, directed) == [4]
-    @test node_neighbors(1, directed) == [2]
-    @test node_neighbors(5, directed) == []
-    @test node_neighbors(3, directed; neighbor_type = :default) ==
-          node_neighbors(3, directed)
-    @test node_neighbors(3, directed; neighbor_type = :in) == [2]
-    @test node_neighbors(3, directed; neighbor_type = :out) == [4]
-    @test sort!(node_neighbors(3, directed; neighbor_type = :all)) == [2, 4]
+    @test nearby_positions(3, directed) == [4]
+    @test nearby_positions(1, directed) == [2]
+    @test nearby_positions(5, directed) == []
+    @test nearby_positions(3, directed; neighbor_type = :default) ==
+          nearby_positions(3, directed)
+    @test nearby_positions(3, directed; neighbor_type = :in) == [2]
+    @test nearby_positions(3, directed; neighbor_type = :out) == [4]
+    @test sort!(nearby_positions(3, directed; neighbor_type = :all)) == [2, 4]
     add_agent!(1, directed, rand())
     add_agent!(2, directed, rand())
     add_agent!(3, directed, rand())
-    @test sort!(space_neighbors(2, directed)) == [2, 3]
-    @test sort!(space_neighbors(2, directed; neighbor_type=:in)) == [1, 2]
-    @test sort!(space_neighbors(2, directed; neighbor_type=:all)) == [1, 2, 3]
-    @test collect(space_neighbors(directed[2], directed)) == [3]
-    @test collect(space_neighbors(directed[2], directed; neighbor_type=:in)) == [1]
-    @test sort!(collect(space_neighbors(directed[2], directed; neighbor_type=:all))) == [1, 3]
+    @test sort!(nearby_ids(2, directed)) == [2, 3]
+    @test sort!(nearby_ids(2, directed; neighbor_type=:in)) == [1, 2]
+    @test sort!(nearby_ids(2, directed; neighbor_type=:all)) == [1, 2, 3]
+    @test collect(nearby_ids(directed[2], directed)) == [3]
+    @test collect(nearby_ids(directed[2], directed; neighbor_type=:in)) == [1]
+    @test sort!(collect(nearby_ids(directed[2], directed; neighbor_type=:all))) == [1, 3]
 
     gridspace = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
-    @test collect(node_neighbors((2, 2), gridspace)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
-    @test collect(node_neighbors((1, 1), gridspace)) == [(2, 1), (1, 2)]
+    @test collect(nearby_positions((2, 2), gridspace)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
+    @test collect(nearby_positions((1, 1), gridspace)) == [(2, 1), (1, 2)]
     a = add_agent!((2, 2), gridspace, rand())
     add_agent!((3, 2), gridspace, rand())
-    @test collect(space_neighbors((1, 2), gridspace)) == [1]
-    @test sort!(collect(space_neighbors((1, 2), gridspace, 2))) == [1, 2]
-    @test sort!(collect(space_neighbors((2, 2), gridspace))) == [1, 2]
-    @test collect(space_neighbors(a, gridspace)) == [2]
+    @test collect(nearby_ids((1, 2), gridspace)) == [1]
+    @test sort!(collect(nearby_ids((1, 2), gridspace, 2))) == [1, 2]
+    @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
+    @test collect(nearby_ids(a, gridspace)) == [2]
 
     continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-    @test_throws ErrorException node_neighbors(1, continuousspace)
-    @test space_neighbors(a, continuousspace, 0.05) == []
-    @test space_neighbors(a, continuousspace, 0.1) == [2]
-    @test sort!(space_neighbors((0.55, 0.5), continuousspace, 0.05)) == [1, 2]
+    @test_throws ErrorException nearby_positions(1, continuousspace)
+    @test nearby_ids(a, continuousspace, 0.05) == []
+    @test nearby_ids(a, continuousspace, 0.1) == [2]
+    @test sort!(nearby_ids((0.55, 0.5), continuousspace, 0.05)) == [1, 2]
     move_agent!(a, continuousspace)
     move_agent!(b, continuousspace)
-    @test space_neighbors(a, continuousspace, 0.1) == []
+    @test nearby_ids(a, continuousspace, 0.1) == []
     # Checks for type instability #208
-    @test typeof(space_neighbors(a, continuousspace, 0.1)) <: Vector{Int}
-    @test typeof(space_neighbors((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
+    @test typeof(nearby_ids(a, continuousspace, 0.1)) <: Vector{Int}
+    @test typeof(nearby_ids((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
 end
 
 @testset "Discrete space mutability" begin
@@ -154,15 +154,15 @@ end
     agent = add_agent!((1,1), model1)
     @test agent.pos == (1, 1)
     @test agent.id == 1
-    pos1 = get_node_contents((1,1), model1)
+    pos1 = ids_in_position((1,1), model1)
     @test length(pos1) == 1
     @test pos1[1] == 1
 
     move_agent!(agent, (2,2), model1)
     @test agent.pos == (2,2)
-    pos1 = get_node_contents((1,1), model1)
+    pos1 = ids_in_position((1,1), model1)
     @test length(pos1) == 0
-    pos2 = get_node_contents((2,2), model1)
+    pos2 = ids_in_position((2,2), model1)
     @test pos2[1] == 1
 
     # %% get/set testing
