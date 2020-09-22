@@ -84,15 +84,6 @@ neighbors depending on the underlying graph directionality type.
 nearby_ids(position, model, r=1) = notimplemented(model)
 
 """
-    nearby_agents(agent, model::ABM, args...; kwargs...) -> agent
-
-Return an iterable of the agents near the position of the given `agent`.
-
-The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
-"""
-nearby_agents(a, model, args...; kwargs...) = (model[id] for id in nearby_ids(a, model, args...; kwargs...))
-
-"""
     nearby_positions(position, model::ABM, r=1; kwargs...) → positions
 
 Return an iterable of all positions within "radius" `r` of the given `position`
@@ -276,3 +267,12 @@ Same as `nearby_positions(agent.pos, model, r)`.
 function nearby_positions(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
     nearby_positions(agent.pos, model, args...; kwargs...)
 end
+
+"""
+    nearby_agents(agent, model::ABM, args...; kwargs...) -> agent
+
+Return an iterable of the agents near the position of the given `agent`.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+"""
+nearby_agents(a, model, args...; kwargs...) = (model[id] for id in nearby_ids(a, model, args...; kwargs...))
