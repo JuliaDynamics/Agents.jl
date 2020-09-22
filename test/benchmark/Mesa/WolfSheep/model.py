@@ -22,20 +22,20 @@ class WolfSheep(Model):
     Wolf-Sheep Predation Model
     """
 
-    height = 20
-    width = 20
+    height = 25
+    width = 25
 
-    initial_sheep = 100
-    initial_wolves = 50
+    initial_sheep = 60
+    initial_wolves = 40
 
-    sheep_reproduce = 0.04
-    wolf_reproduce = 0.05
+    sheep_reproduce = 0.2
+    wolf_reproduce = 0.1
 
-    wolf_gain_from_food = 20
+    wolf_gain_from_food = 13
 
     grass = True
-    grass_regrowth_time = 30
-    sheep_gain_from_food = 4
+    grass_regrowth_time = 20
+    sheep_gain_from_food = 5
 
     verbose = False  # Print-monitoring
 
@@ -45,16 +45,16 @@ class WolfSheep(Model):
 
     def __init__(
         self,
-        height=20,
-        width=20,
-        initial_sheep=100,
-        initial_wolves=50,
-        sheep_reproduce=0.04,
-        wolf_reproduce=0.05,
-        wolf_gain_from_food=20,
+        height=25,
+        width=25,
+        initial_sheep=60,
+        initial_wolves=40,
+        sheep_reproduce=0.2,
+        wolf_reproduce=0.1,
+        wolf_gain_from_food=13,
         grass=True,
-        grass_regrowth_time=30,
-        sheep_gain_from_food=4,
+        grass_regrowth_time=20,
+        sheep_gain_from_food=5,
     ):
         """
         Create a new Wolf-Sheep model with the given parameters.
@@ -141,7 +141,7 @@ class WolfSheep(Model):
                 ]
             )
 
-    def run_model(self, step_count=200):
+    def run_model(self, step_count=500):
 
         if self.verbose:
             print("Initial number wolves: ", self.schedule.get_breed_count(Wolf))
