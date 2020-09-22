@@ -98,12 +98,9 @@ Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
-               agent_properties=nothing, model_properties=nothing,
-               mdata=model_properties, adata=agent_properties, obtainer = identity,
+               mdata=nothing, adata=nothing, obtainer = identity,
                agents_first=true)
 
-    agent_properties ≠ nothing && @warn "use `adata` instead of `agent_properties`"
-    model_properties ≠ nothing && @warn "use `mdata` instead of `model_properties`"
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
