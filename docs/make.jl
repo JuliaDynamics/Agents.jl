@@ -92,6 +92,7 @@ pages = [
         "BlackBoxOptim" => "examples/optim.md"
         ],
     "Comparison against Mesa (Python)" => "mesa.md"
+    "Developer docs" => "dedocs.md"
     ],
 )
 

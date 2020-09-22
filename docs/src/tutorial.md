@@ -21,17 +21,18 @@ AgentBasedModel
 
 ## [2. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in.
-In addition, the space types of Agents.jl are extendable, see [Developer Docs](@ref).
+In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
-Spaces are separated into `DisreteSpaces`, which by definition have a **finite** amount of **possible positions**, and continuous spaces.
+Spaces are separated into `DisreteSpace`s (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
+Thus, it is common for a specific position to contain several agents.
 
-Discrete possibilities currently are:
+### Discrete spaces
 ```@docs
 GraphSpace
 GridSpace
 ```
 
-and the continuous version is:
+### Continuous spaces
 ```@docs
 ContinuousSpace
 ```
