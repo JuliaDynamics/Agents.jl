@@ -6,6 +6,7 @@ using Test
 a = @benchmark step!(model, agent_step!, model_step!, 500) setup = (
     (model, agent_step!, model_step!) = Models.predator_prey(
         n_wolves = 40,
+        n_sheep = 60,
         dims = (25, 25),
         Δenergy_sheep = 5,
         Δenergy_wolf = 13,

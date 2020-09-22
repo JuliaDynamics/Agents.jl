@@ -49,7 +49,7 @@ function predator_prey(;
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
 )
-    space = GridSpace(dims, metric = :euclidean, periodic = false)
+    space = GridSpace(dims, periodic = false)
     properties = Dict(:Δenergy_wolf => Δenergy_wolf, :Δenergy_sheep => Δenergy_sheep, :regrowth_time => regrowth_time, :sheep_reproduce => sheep_reproduce, :wolf_reproduce => wolf_reproduce)
     model =
         ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false, properties=properties)
