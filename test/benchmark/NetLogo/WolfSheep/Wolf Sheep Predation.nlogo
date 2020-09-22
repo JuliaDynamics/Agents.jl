@@ -33,35 +33,30 @@ to setup
   [
     set shape  "sheep"
     set color white
-    set size 1.5  ; easier to see
+    set size 1  ; easier to see
     set label-color blue - 2
     set energy random (2 * sheep-gain-from-food)
-    setxy random-xcor random-ycor
+    setxy random-pxcor random-pycor
   ]
 
   create-wolves initial-number-wolves  ; create the wolves, then initialize their variables
   [
     set shape "wolf"
     set color black
-    set size 2  ; easier to see
+    set size 1  ; easier to see
     set energy random (2 * wolf-gain-from-food)
-    setxy random-xcor random-ycor
+    setxy random-pxcor random-pycor
   ]
   display-labels
   reset-ticks
 end
 
-to bench
-  go
-end
-
 to benchmark
-  setup
-  profiler:start         ;; start profiling
-  repeat 200 [go]        ;; run for 200 steps
-  profiler:stop          ;; stop profiling
-  print profiler:report  ;; view the results
   profiler:reset         ;; clear the data
+  profiler:start         ;; start profiling
+  repeat 500 [go]        ;; run for 500 steps
+  profiler:stop          ;; stop profiling
+  print profiler:report
 end
 
 to go
@@ -169,11 +164,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-773
-429
+883
+539
 -1
 -1
-10.0
+20.0
 1
 14
 1
@@ -183,10 +178,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--20
-20
--20
-20
+0
+25
+0
+25
 0
 0
 1
@@ -202,7 +197,7 @@ initial-number-sheep
 initial-number-sheep
 0
 250
-100.0
+60.0
 1
 1
 NIL
@@ -217,7 +212,7 @@ sheep-gain-from-food
 sheep-gain-from-food
 0.0
 50.0
-4.0
+5.0
 1.0
 1
 NIL
@@ -232,7 +227,7 @@ sheep-reproduce
 sheep-reproduce
 1.0
 20.0
-4.0
+20.0
 1.0
 1
 %
@@ -247,7 +242,7 @@ initial-number-wolves
 initial-number-wolves
 0
 250
-50.0
+40.0
 1
 1
 NIL
@@ -262,7 +257,7 @@ wolf-gain-from-food
 wolf-gain-from-food
 0.0
 100.0
-20.0
+13.0
 1.0
 1
 NIL
@@ -277,7 +272,7 @@ wolf-reproduce
 wolf-reproduce
 0.0
 20.0
-5.0
+10.0
 1.0
 1
 %
@@ -292,7 +287,7 @@ grass-regrowth-time
 grass-regrowth-time
 0
 100
-30.0
+20.0
 1
 1
 NIL
@@ -389,6 +384,26 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+30
+380
+330
+615
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2674135 true "" "plot count wolves"
+"pen-1" 1.0 0 -13345367 true "" "plot count sheep"
+"pen-2" 1.0 0 -10899396 true "" "plot count grass"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -826,6 +841,40 @@ setup
 repeat 75 [ go ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="benchmark" repetitions="1" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>benchmark</go>
+    <exitCondition>ticks = 500</exitCondition>
+    <enumeratedValueSet variable="wolf-gain-from-food">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-energy?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="initial-number-wolves">
+      <value value="40"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="wolf-reproduce">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="initial-number-sheep">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="model-version">
+      <value value="&quot;sheep-wolves-grass&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sheep-gain-from-food">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="grass-regrowth-time">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sheep-reproduce">
+      <value value="20"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
