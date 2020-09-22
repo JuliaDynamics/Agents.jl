@@ -45,17 +45,17 @@ Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for perf
 **Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
 Specifically, imagine the scenario
 ```@example docs
-using Agents, LightGraphs
+using Agents
 mutable struct Agent <: AbstractAgent
     id::Int
-    pos::Int
+    pos::NTuple{4, Int}
 end
 
-model = ABM(Agent, GraphSpace(complete_digraph(10)))
-add_agent!(1, model)
-add_agent!(1, model)
-add_agent!(2, model)
-for id in ids_in_position(1, model)
+model = ABM(Agent, GridSpace((5, 5, 5, 5)))
+add_agent!((1, 1, 1, 1), model)
+add_agent!((1, 1, 1, 1), model)
+add_agent!((2, 1, 1, 1), model)
+for id in ids_in_position((1, 1, 1, 1), model)
     kill_agent!(id, model)
 end
 collect(allids(model))
@@ -65,7 +65,7 @@ To avoid problems like these, you need to `copy` the iterator to have a non dyna
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
 A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
-```@example docs
+```julia
 a = random_agent(model)
 sort!(nearby_ids(random_agent(model), model))
 ```
