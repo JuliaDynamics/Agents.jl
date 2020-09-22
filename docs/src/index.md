@@ -5,7 +5,7 @@ Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynami
 To get started, please read the [Tutorial](@ref) page.
 
 !!! tip "Latest news"
-    Interactive applications & predefined models!
+    Welcome to Agents.jl v4.0! This new release features improved `GridSpace` and `ContinuousSpace` (re-written from scratch), overall performance improvements of Agents.jl of a full order of magnitude (and sometimes more) and re-naming many API functions to make sense (deprecations have been put in place). Have a look at the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
 
 ## Features
 

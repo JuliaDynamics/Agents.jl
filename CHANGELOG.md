@@ -7,7 +7,7 @@
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
-- New wrapping function `nearby_agents` that returns an iterable of neigboring agents.
+- New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 
 ## Breaking changes
 All changes in this section (besides changes to default values) are deprecated and
@@ -17,7 +17,7 @@ therefore are not "truly breaking".
 - Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allow performance updates in the future that may change internals but not lead to breaking changes.
 - `vertex2coord, coord2vertex` do not exist anymore because they are unnecessary in the new design.
-- API simplification and renaming.
+- API simplification and renaming:
   - `space_neighbors` -> `nearby_ids`
   - `node_neighbors` -> `nearby_positions`
   - `get_node_contents` -> `ids_in_position`
