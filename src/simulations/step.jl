@@ -36,7 +36,7 @@ Ignore the agent dynamics. Use instead of `agent_step!`.
 """
 dummystep(agent, model) = nothing
 
-until(s, n::Int, model) = ss < n
+until(s, n::Int, model) = s < n
 until(s, n, model) = !n(model, s)
 
 step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
