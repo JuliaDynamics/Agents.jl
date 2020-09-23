@@ -22,3 +22,6 @@ println("Agents.jl WolfSheep (ms): ", minimum(a.times) * 1e-6)
 #    ((model, agent_step!, model_step!) = Models.flocking()) samples = 50
 #println("Agents.jl Flocking (ms): ", minimum(a.times) * 1e-6)
 
+a = @benchmark step!(model, agent_step!, model_step!, 10) setup =
+    ((model, agent_step!, model_step!) = Models.schelling(griddims = (50, 50), numagents = 2000)) samples = 100
+println("Agents.jl Schelling (ms): ", minimum(a.times) * 1e-6)

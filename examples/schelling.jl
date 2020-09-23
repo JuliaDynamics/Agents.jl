@@ -108,16 +108,8 @@ function agent_step!(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
-    for neighbor_pos in neighbor_positions
-        pos_contents = ids_in_position(neighbor_pos, model)
-        ## Skip iteration if the position is empty.
-        length(pos_contents) == 0 && continue
-        ## Otherwise, get the first agent in the position...
-        agent_id = pos_contents[1]
-        ## ...and increment count_neighbors_same_group if the neighbor's group is
-        ## the same.
-        neighbor_agent_group = model[agent_id].group
-        if neighbor_agent_group == agent.group
+    for neighbor in nearby_agents(agent, model)
+        if agent.group == neighbor.group
             count_neighbors_same_group += 1
         end
     end

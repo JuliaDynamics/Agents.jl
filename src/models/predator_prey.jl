@@ -50,21 +50,30 @@ function predator_prey(;
     wolf_reproduce = 0.05,
 )
     space = GridSpace(dims, periodic = false)
-    properties = Dict(:Δenergy_wolf => Δenergy_wolf, :Δenergy_sheep => Δenergy_sheep, :regrowth_time => regrowth_time, :sheep_reproduce => sheep_reproduce, :wolf_reproduce => wolf_reproduce)
-    model =
-        ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false, properties=properties)
+    properties = Dict(
+        :Δenergy_wolf => Δenergy_wolf,
+        :Δenergy_sheep => Δenergy_sheep,
+        :regrowth_time => regrowth_time,
+        :sheep_reproduce => sheep_reproduce,
+        :wolf_reproduce => wolf_reproduce,
+    )
+    model = ABM(
+        Union{Sheep,Wolf,Grass},
+        space,
+        scheduler = by_type(true, true),
+        warn = false,
+        properties = properties,
+    )
     id = 0
     for _ in 1:n_sheep
         id += 1
-        energy = rand(1:(Δenergy_sheep * 2)) - 1
-        ## Note that we must instantiate agents before adding them in a mixed-ABM
-        ## to confirm their type.
+        energy = rand(1:(Δenergy_sheep*2)) - 1
         sheep = Sheep(id, (0, 0), energy)
         add_agent!(sheep, model)
     end
     for _ in 1:n_wolves
         id += 1
-        energy = rand(1:(Δenergy_wolf * 2)) - 1
+        energy = rand(1:(Δenergy_wolf*2)) - 1
         wolf = Wolf(id, (0, 0), energy)
         add_agent!(wolf, model)
     end
