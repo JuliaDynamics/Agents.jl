@@ -4,14 +4,10 @@ turtles-own [
   nearest-neighbor   ;; closest one of our flockmates
 ]
 
-to bench
-  setup
-  go
-end
-
 to benchmark
+  setup
   profiler:start         ;; start profiling
-  bench
+  repeat 1000 [ go ]
   profiler:stop          ;; stop profiling
   print profiler:report  ;; view the results
   profiler:reset         ;; clear the data
@@ -21,21 +17,20 @@ to setup
   clear-all
   create-turtles population
     [ set color yellow - 2 + random 7  ;; random shades look nice
-      set size 1.5  ;; easier to see
+      set size 2  ;; easier to see
       setxy random-xcor random-ycor
       set flockmates no-turtles ]
   reset-ticks
 end
 
 to go
-  if ticks >= 1000 [ stop ]
   ask turtles [ flock ]
   ;; the following line is used to make the turtles
   ;; animate more smoothly.
-  repeat 5 [ ask turtles [ fd 0.2 ] display ]
+  ;;repeat 5 [ ask turtles [ fd 0.2 ] display ]
   ;; for greater efficiency, at the expense of smooth
   ;; animation, substitute the following line instead:
-  ;;   ask turtles [ fd 1 ]
+  ask turtles [ fd 1 ]
   tick
 end
 
@@ -124,11 +119,11 @@ end
 GRAPHICS-WINDOW
 250
 10
-1665
-1426
+1066
+827
 -1
 -1
-7.0
+8.0
 1
 10
 1
@@ -138,9 +133,9 @@ GRAPHICS-WINDOW
 1
 1
 1
--100
+0
 100
--100
+0
 100
 1
 1
