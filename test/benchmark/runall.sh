@@ -20,3 +20,5 @@ python Mesa/WolfSheep/benchmark.py
 #python Mesa/Flocking/benchmark.py
 python Mesa/Schelling/benchmark.py
 python Mesa/ForestFire/benchmark.py
+
+echo "Mason Benchmarks must be run manually"
