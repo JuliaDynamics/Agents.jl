@@ -12,7 +12,11 @@ echo "NetLogo WolfSheep (ms): "$ws
 ws=$(parallel -j8 ::: $(printf './netlogo_s.sh %.0s' {1..100}) | sort | head -n1)
 echo "NetLogo Schelling (ms): "$ws
 
+ws=$(parallel -j8 ::: $(printf './netlogo_forest.sh %.0s' {1..100}) | sort | head -n1)
+echo "NetLogo ForestFire (ms): "$ws
+
 echo "Benchmarking Mesa"
 python Mesa/WolfSheep/benchmark.py
 #python Mesa/Flocking/benchmark.py
 python Mesa/Schelling/benchmark.py
+python Mesa/ForestFire/benchmark.py

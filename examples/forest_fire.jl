@@ -3,20 +3,17 @@
 # ![](forest.gif)
 
 # The forest fire model is defined as a cellular automaton on a grid.
-# A position can be empty, occupied by a tree, or burning.
-# The model of [Drossel and Schwabl (1992)](https://en.wikipedia.org/wiki/Forest-fire_model)
-# is defined by four rules which are executed simultaneously:
+# A position can be empty or occupied by a tree which is ok, burning or burnt.
+# We implement a slightly different ruleset to that of
+# [Drossel and Schwabl (1992)](https://en.wikipedia.org/wiki/Forest-fire_model),
+# so that our implementation can be compared with other ABM frameworks
 #
-# 1. A burning position turns into an empty position
+# 1. A burning position turns into a burnt position
 # 1. A tree will burn if at least one neighbor is burning
-# 1. A tree ignites with probability `f` even if no neighbor is burning
-# 1. An empty space fills with a tree with probability `p`
 
-# The forest has an innate density `d`, which is the proportion of trees initialized as
-# green.
-# This model is an example that does _not_ have an `agent_step!` function. It only
-# uses a `model_step!`.
-# It is also available from the `Models` module as [`Models.forest_fire`](@ref).
+# The forest has an innate `density`, which is the proportion of trees initialized as
+# `green`, however all trees that reside at `x=1` on the grid are `burning`.
+# The model is also available from the `Models` module as [`Models.forest_fire`](@ref).
 
 # ## Defining the core structures
 
@@ -27,88 +24,94 @@ gr() # hide
 mutable struct Tree <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int}
-    status::Bool  # true is green and false is burning
+    status::Symbol  #:green, :burning, :burnt
 end
 nothing # hide
 
 # The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any agent,
 # and a `status` field that we introduce for this specific model.
-# The `status` field will hold `true` for a green tree and `false` for a burning one.
-# All other model parameters go into the `AgentBasedModel`.
+# The `status` field will be `:green` when the tree is ok, `:burning` when on fire,
+# and finally `:burnt`.
 
 # We then make a setup function that initializes the model.
-function model_initiation(; f = 0.02, d = 0.8, p = 0.01, griddims = (100, 100), seed = 111)
-    Random.seed!(seed)
-    space = GridSpace(griddims, periodic = false)
-    properties = Dict(:f => f, :d => d, :p => p)
-    forest = AgentBasedModel(Tree, space; properties = properties)
-
-    ## create and add trees to each position with probability d,
-    ## which determines the density of the forest
+function forest_fire(; density = 0.7, griddims = (100, 100))
+    space = GridSpace(griddims; periodic = false, metric = :euclidean)
+    forest = AgentBasedModel(Tree, space)
+    ## create and add trees to each position with a probability
+    ## determined by the `density`.
     for position in positions(forest)
-        if rand() ≤ forest.d
-            add_agent!(position, forest, true)
+        if rand() < density
+            ## Set the trees at position x=1 on fire
+            state = position[1] == 1 ? :burning : :green
+            add_agent!(position, forest, state)
         end
     end
     return forest
 end
 
-forest = model_initiation(f = 0.05, d = 0.8, p = 0.05, griddims = (20, 20), seed = 2)
+forest = forest_fire()
 
 # ## Defining the step!
 # Because of the way the forest fire model is defined, we only need a
-# stepping function for the model
+# stepping function for the agents
 
-function forest_model_step!(forest)
-    for pos in positions(forest, :random)
-        trees = agents_in_position(pos, forest)
-        if length(trees) == 0
-            ## the position is empty, maybe a tree grows here
-            rand() ≤ forest.p && add_agent!(pos, forest, true)
-        else
-            tree = first(trees) # by definition only 1 agent per position
-            if rand() ≤ forest.f || any(n -> !n.status, nearby_agents(tree, forest))
-                ## the tree randomly ignites or is set on fire if a neighbor is burning
-                tree.status = false
+function tree_step!(tree, forest)
+    ## The current tree is burning
+    if tree.status == :burning
+        ## Find all green neighbors and set them on fire
+        for neighbor in nearby_agents(tree, forest)
+            if neighbor.status == :green
+                neighbor.status = :burning
             end
         end
+        tree.status = :burnt
     end
 end
 nothing # hide
 
-# as we discussed, there is no agent_step! function here, so we will just use `dummystep`.
-
 # ## Running the model
 
-step!(forest, dummystep, forest_step!, 1)
-forest
+step!(forest, tree_step!, 1)
+count(t->t.status == :burnt, allagents(forest))
 
 #
 
-step!(forest, dummystep, forest_step!, 10)
-forest
+step!(forest, tree_step!, 10)
+count(t->t.status == :burnt, allagents(forest))
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
-forest = model_initiation(griddims = (20, 20), seed = 2)
-percentage(x) = count(x) / length(positions(forest))
-adata = [(:status, percentage)]
+Random.seed!(2)
+forest = forest_fire(griddims = (20, 20))
+burnt_percentage(m) = count(t->t.status == :burnt, allagents(m)) / length(positions(m))
+mdata = [burnt_percentage]
 
-data, _ = run!(forest, dummystep, forest_step!, 10; adata = adata)
+_, data = run!(forest, tree_step!, 10; mdata = mdata)
 data
 
-# Now let's plot the model using green and red color for alive/burning
-forest = model_initiation()
-step!(forest, dummystep, forest_step!, 1)
-treecolor(a) = a.status == 1 ? :green : :red
-plotabm(forest; ac = treecolor, ms = 6, msw = 0)
+# Now let's plot the model. We use green for unburnt trees, red for burning and a
+# dark red for burnt.
+forest = forest_fire()
+step!(forest, tree_step!, 1)
+
+function treecolor(a)
+    color = :green
+    if a.status == :burning
+        color = :red
+    elseif a.status == :burnt
+        color = :darkred
+    end
+    color
+end
+
+plotabm(forest; ac = treecolor, ms = 5, msw = 0)
 
 # or animate it
 cd(@__DIR__) #src
-forest = model_initiation(f = 0.005)
-anim = @animate for i in 0:20
-    i > 0 && step!(forest, dummystep, forest_step!, 1)
-    p1 = plotabm(forest; ac = treecolor, ms = 6, msw = 0)
+forest = forest_fire(density = 0.6)
+anim = @animate for i in 0:10
+    i > 0 && step!(forest, tree_step!, 5)
+    p1 = plotabm(forest; ac = treecolor, ms = 5, msw = 0)
     title!(p1, "step $(i)")
 end
 
