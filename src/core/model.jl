@@ -252,13 +252,15 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
             throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
             throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
-        elseif space_type <: ContinuousSpace
-            if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
-            end
-            if warn && any(isequal(:vel), fieldnames(A)) && !(fieldtype(A, :vel) <: NTuple{D, <:AbstractFloat} where {D})
-                @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
-            end
+        # elseif space_type <: ContinuousSpace
+        #     if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
+        #         throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+        #     end
+        #     if warn && any(isequal(:vel), fieldnames(A)) && !(fieldtype(A, :vel) <: NTuple{D, <:AbstractFloat} where {D})
+        #         @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
+        #     end
+        elseif space_type <: CompartmentSpace
+            nothing # TODO
         end
     end
 end

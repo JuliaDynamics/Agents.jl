@@ -7,6 +7,8 @@ be implemented for every space have only documentation strings here and an
 error message.
 
 In short: IMPLEMENT ALL FUNCTIONS IN SECTION "IMPLEMENT", WITH SAME ARGUMENTS!
+
+TODO: do_checks needs to be updated for each new space type
 =#
 export move_agent!,
     add_agent!,

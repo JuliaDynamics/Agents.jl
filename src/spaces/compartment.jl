@@ -1,36 +1,38 @@
-struct CompartmentSpace{} <: AbstractSpace
+export CompartmentSpace
+
+struct CompartmentSpace{D,F} <: AbstractSpace
   s::Array{Vector{Int},D}
-  D::Int
   update_vel!::F
   periodic::Bool
-  extend::E
   metric::Symbol
+  dims::NTuple{D, Int}
 end
 
-function CompartmentSpace(D::Int, update_vel! = defvel;
-  periodic = true, extend = Tuple(1.0 for i in 1:D), metric = :cityblock)
+defvel(a, m) = nothing
+
+function CompartmentSpace(d::NTuple{D,Real}, spacing; update_vel! = defvel,
+  periodic = true, metric = :cityblock) where {D}
   @assert metric ∈ (:cityblock, :euclidean)
-  @assert typeof(extend) <: NTuple{D} "extend must be a tuple of length(D)"
-  @assert all(typeof(e) <: Real && e > 0 for e in extend) "extend must contain positive integers or floating point numbers"
-  % TODO: s
-  CompartmentSpace(s, D, update_vel!, periodic, extend, metric)
+
+  s = Array{Vector{Int},D}(undef, round.(Int, d ./ spacing))
+  for i in eachindex(s)
+      s[i] = Int[]
+  end
+  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, periodic, metric, size(s))
 end
 
-% TODO
-function Base.show(io::IO, abm::CompartmentSpace)
-    s = "$(abm.D)-dimensional $(abm.periodic ? "periodic " : "")CompartmentSpace"
-    abm.update_vel! ≠ defvel && (s *= " with velocity updates")
+function Base.show(io::IO, space::CompartmentSpace)
+    s = "$(join(space.dims, "×")) $(space.periodic ? "periodic " : "")continuous space"
+    space.update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
 end
 
-"""TODO
+"""
     random_position(model) → pos
 Return a random position in the model's space (always with appropriate Type).
 """
-function random_position(model::ABM{A, <:ContinuousSpace}) where {A}
-    pos = Tuple(rand(model.space.D))
-    model.space.extend ≠ nothing && (pos = pos .* model.space.extend)
-    return pos
+function random_position(model::ABM{A, <:CompartmentSpace}) where {A}
+  pos = rand.((:).(1, model.space.dims))
 end
 
 """
