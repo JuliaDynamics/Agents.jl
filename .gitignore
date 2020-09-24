@@ -7,3 +7,4 @@ Manifest.toml
 *.pyc
 *.code-workspace
 benchmark/*.json
+.*.tmp.nlogo
