@@ -6,26 +6,25 @@ struct CompartmentSpace{D,F} <: AbstractSpace
   periodic::Bool
   metric::Symbol
   dims::NTuple{D, Int}
-  extent::NTuple{D, Int}
+  extent::NTuple{D, Float64}
   D::Int
 end
 
 defvel(a, m) = nothing
 
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
-  update_vel! = defvel, periodic = true, metric = :cityblock,
-  extent = Tuple(1.0 for i in 1:D)) where {D}
+  update_vel! = defvel, periodic = true, metric = :cityblock) where {D}
   
   @assert metric ∈ (:cityblock, :euclidean)
   s = Array{Vector{Int},D}(undef, round.(Int, d ./ spacing))
   for i in eachindex(s)
     s[i] = Int[]
   end
-  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, periodic, metric, size(s), extent, D)
+  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, periodic, metric, size(s), d, D)
 end
 
 function Base.show(io::IO, space::CompartmentSpace)
-  s = "$(space.periodic ? "periodic" : "") continuous space on with $(join(space.dims, "×")) divisions in ranges $(Tuple(zeros(length(space.extent)))) to $(space.extent)"
+  s = "$(space.periodic ? "periodic" : "") continuous space on with $(join(space.dims, "×")) divisions"
   space.update_vel! ≠ defvel && (s *= " with velocity updates")
   print(io, s)
 end
@@ -35,7 +34,28 @@ end
 Return a random position in the model's space (always with appropriate Type).
 """
 function random_position(model::ABM{A, <:CompartmentSpace}) where {A}
-  pos = Tuple(rand(model.space.D)) .* model.space.extent
+  pos = Tuple(rand(model.space.D))
+end
+
+pos_to_cell(pos::Tuple, model) = ceil.(Int, pos .* model.space.dims)
+pos_to_cell(a::A, model) where {A<:AbstractAgent} = pos_to_cell(a.pos, model)
+
+function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
+    push!(model.space.s[pos_to_cell(a, model)...], a.id)
+    return a
+end
+
+function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
+    prev = model.space.s[pos_to_cell(a, model)...]
+    ai = findfirst(i -> i == a.id, prev)
+    deleteat!(prev, ai)
+    return a
+end
+
+function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
+  remove_agent_from_space!(a, model)
+  a.pos = pos
+  add_agent_to_space!(a, model)
 end
 
 """
@@ -74,30 +94,23 @@ function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, X}, dt = 1.0)
   return agent.pos
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-  remove_agent_from_space!(a, model)
-  a.pos = pos
-  add_agent_to_space!(a, model)
-end
-
-pos_to_cell(pos::Tuple, model) = ceil.(Int, pos .* model.space.dims)
-pos_to_cell(a::A, model) where {A<:AbstractAgent} = pos_to_cell(a.pos, model)
-
-function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-    push!(model.space.s[pos_to_cell(a, model)...], a.id)
-    return a
-end
-
-function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-    prev = model.space.s[pos_to_cell(a, model)...]
-    ai = findfirst(i -> i == a.id, prev)
-    deleteat!(prev, ai)
-    return a
-end
-
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
+
+function cell_center(cell::Tuple, model)
+  divisions = 1.0 ./ model.space.dims
+  cell_max = cell .* divisions
+  center = cell_max .- (divisions ./2)
+  return center
+end
+
+function distance_from_cell_center(pos::Tuple, model)
+  cell = pos_to_cell(pos, model)
+  δ = sqrt(sum(abs2.(pos .- cell_center(cell, model))))
+  return δ
+end
+
 """
     space_neighbors(position, model::ABM, r=1; kwargs...) → ids
 
@@ -120,7 +133,7 @@ neighbors depending on the underlying graph directionality type.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 """
-space_neighbors(position, model, r=1) = notimplemented(model)
+space_neighbors(position, model, r=1; exact=false) = notimplemented(model)
 
 
 """
@@ -132,5 +145,5 @@ The `position` must match type with the spatial structure of the `model`).
 
 The value of `r` and possible keywords operate identically to [`space_neighbors`](@ref).
 """
-node_neighbors(position, model, r=1) = notimplemented(model)
+node_neighbors(position, model, r=1; exact=false) = notimplemented(model)
 
