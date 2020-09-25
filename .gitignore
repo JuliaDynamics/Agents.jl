@@ -6,5 +6,5 @@ paper/__latexindent_temp\.tex
 Manifest.toml
 *.pyc
 *.code-workspace
-benchmark/*.json
-.benchmarkci
+/benchmark/*.json
+/.benchmarkci

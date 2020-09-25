@@ -14,7 +14,7 @@ jobs:
         with:
           version: 1.5
       - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
       - name: Run benchmarks
         run: julia -e '
           using PkgBenchmark, BenchmarkCI;
