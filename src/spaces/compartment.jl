@@ -6,10 +6,10 @@ struct CompartmentSpace{D,P,F} <: AbstractSpace
   dims::NTuple{D, Int}
 end
 
-defvel(a, m) = nothing
+defvel2(a, m) = nothing
 
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
-  update_vel! = defvel, periodic = true) where {D}
+  update_vel! = defvel2, periodic = true) where {D}
   s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
   return CompartmentSpace(s, update_vel!, size(s))
 end
@@ -76,13 +76,13 @@ grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) 
   grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-  nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+  nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos)), model, r)
   s = model.space.grid.s
   Iterators.flatten((s[i...] for i in nn))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-  nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+  nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos)), model, r)
   Iterators.filter(!isequal(pos), nn)
 end
 
