@@ -1,11 +1,11 @@
 extensions [ profiler ]
+
 turtles-own [
   flockmates         ;; agentset of nearby turtles
   nearest-neighbor   ;; closest one of our flockmates
 ]
 
 to benchmark
-  setup
   profiler:start         ;; start profiling
   repeat 1000 [ go ]
   profiler:stop          ;; stop profiling
@@ -27,10 +27,10 @@ to go
   ask turtles [ flock ]
   ;; the following line is used to make the turtles
   ;; animate more smoothly.
-  ;;repeat 5 [ ask turtles [ fd 0.2 ] display ]
+  repeat 5 [ ask turtles [ fd 0.2 ] display ]
   ;; for greater efficiency, at the expense of smooth
   ;; animation, substitute the following line instead:
-  ask turtles [ fd 1 ]
+  ;ask turtles [ fd 1 ]
   tick
 end
 
@@ -119,8 +119,8 @@ end
 GRAPHICS-WINDOW
 250
 10
-1066
-827
+1058
+819
 -1
 -1
 8.0
@@ -134,9 +134,9 @@ GRAPHICS-WINDOW
 1
 1
 0
-100
+99
 0
-100
+99
 1
 1
 1
