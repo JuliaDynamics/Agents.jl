@@ -1,32 +1,20 @@
 export CompartmentSpace
 
 struct CompartmentSpace{D,F} <: AbstractSpace
-  s::Array{Vector{Int},D}
+  grid::GridSpace
   update_vel!::F
-  periodic::Bool
-  metric::Symbol
   dims::NTuple{D, Int}
-  extent::NTuple{D, Float64}
+  periodic::Bool
   D::Int
+  spacing::Float64
 end
 
 defvel(a, m) = nothing
 
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
   update_vel! = defvel, periodic = true, metric = :cityblock) where {D}
-  
-  @assert metric ∈ (:cityblock, :euclidean)
-  s = Array{Vector{Int},D}(undef, round.(Int, d ./ spacing))
-  for i in eachindex(s)
-    s[i] = Int[]
-  end
-  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, periodic, metric, size(s), d, D)
-end
-
-function Base.show(io::IO, space::CompartmentSpace)
-  s = "$(space.periodic ? "periodic" : "") continuous space on with $(join(space.dims, "×")) divisions"
-  space.update_vel! ≠ defvel && (s *= " with velocity updates")
-  print(io, s)
+  s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=metric)
+  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, size(s),periodic, D, spacing)
 end
 
 """
@@ -34,22 +22,22 @@ end
 Return a random position in the model's space (always with appropriate Type).
 """
 function random_position(model::ABM{A, <:CompartmentSpace}) where {A}
-  pos = Tuple(rand(model.space.D))
+  pos = Tuple(rand(model.space.D) .* model.space.dims)
 end
 
-pos_to_cell(pos::Tuple, model) = ceil.(Int, pos .* model.space.dims)
-pos_to_cell(a::A, model) where {A<:AbstractAgent} = pos_to_cell(a.pos, model)
+pos2cell(pos::Tuple, model) = ceil.(Int, pos)
+pos2cell(a::A, model) where {A<:AbstractAgent} = pos2cell(a.pos, model)
 
 function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-    push!(model.space.s[pos_to_cell(a, model)...], a.id)
-    return a
+  push!(model.space.grid.s[pos2cell(a, model)...], a.id)
+  return a
 end
 
 function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-    prev = model.space.s[pos_to_cell(a, model)...]
-    ai = findfirst(i -> i == a.id, prev)
-    deleteat!(prev, ai)
-    return a
+  prev = model.space.grid.s[pos2cell(a, model)...]
+  ai = findfirst(i -> i == a.id, prev)
+  deleteat!(prev, ai)
+  return a
 end
 
 function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
@@ -75,7 +63,7 @@ function move_agent!(agent::A, model::ABM{A, <: CompartmentSpace}, dt::Real = 1.
   model.space.update_vel!(agent, model)
   pos = agent.pos .+ dt .* agent.vel
   if model.space.periodic
-    pos = mod.(pos, model.space.extent)
+    pos = mod.(pos, model.space.dims)
   end
   move_agent!(agent, pos, model)
   return agent.pos
@@ -88,28 +76,18 @@ Propagate the agent forwards one step according to `vel` and the model's space, 
 function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, X}, dt = 1.0) where {A <: AbstractAgent, S <: CompartmentSpace, F, P, D, X <: AbstractFloat}
   pos = agent.pos .+ dt .* vel
   if model.space.periodic
-    pos = mod.(pos, model.space.extent)
+    pos = mod.(pos, model.space.dims)
   end
   move_agent!(agent, pos, model)
   return agent.pos
 end
 
 #######################################################################################
-# %% IMPLEMENT: Neighbors and stuff
+# %% Neighbors and stuff
 #######################################################################################
 
-function cell_center(cell::Tuple, model)
-  divisions = 1.0 ./ model.space.dims
-  cell_max = cell .* divisions
-  center = cell_max .- (divisions ./2)
-  return center
-end
-
-function distance_from_cell_center(pos::Tuple, model)
-  cell = pos_to_cell(pos, model)
-  δ = sqrt(sum(abs2.(pos .- cell_center(cell, model))))
-  return δ
-end
+cell_center(pos::Tuple) = getindex.(modf.(pos), 2) .+ 0.5
+distance_from_cell_center(pos::Tuple) = sqrt(sum(abs2.(pos .- cell_center(pos))))
 
 """
     space_neighbors(position, model::ABM, r=1; kwargs...) → ids
@@ -133,7 +111,15 @@ neighbors depending on the underlying graph directionality type.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 """
-space_neighbors(position, model, r=1; exact=false) = notimplemented(model)
+function space_neighbors(pos, model, r=1; exact=false)
+  if exact
+    cell_in_r = ceil.(Int, r ./ model.space.spacing)
+  else
+    δ = distance_from_cell_center(pos)
+    cell_in_rp = ceil.(Int, (r+δ) ./ model.space.spacing)
+    # for cell in nearby_positions(pos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+  end
+end
 
 
 """
@@ -147,3 +133,13 @@ The value of `r` and possible keywords operate identically to [`space_neighbors`
 """
 node_neighbors(position, model, r=1; exact=false) = notimplemented(model)
 
+
+################################################################################
+### Pretty printing
+################################################################################
+
+function Base.show(io::IO, space::CompartmentSpace)
+  s = "$(space.periodic ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
+  space.update_vel! ≠ defvel && (s *= " with velocity updates")
+  print(io, s)
+end
