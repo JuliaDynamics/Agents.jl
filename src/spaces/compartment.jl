@@ -1,7 +1,7 @@
 export CompartmentSpace
 
-struct CompartmentSpace{G,F,D} <: AbstractSpace
-  grid::G
+struct CompartmentSpace{D,P,F} <: AbstractSpace
+  grid::GridSpace{D,P}
   update_vel!::F
   dims::NTuple{D, Int}
 end
@@ -18,7 +18,7 @@ end
     random_position(model) → pos
 Return a random position in the model's space (always with appropriate Type).
 """
-function random_position(model::ABM{A, <:CompartmentSpace{G, F, D}}) where {A,G, F, D}
+function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
   pos = Tuple(rand(D) .* model.space.dims)
 end
 
@@ -39,7 +39,7 @@ function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
   return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace{<:GridSpace{D, periodic}}}) where {A<:AbstractAgent, D, periodic}
+function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace{D,periodic}}) where {A<:AbstractAgent, D, periodic}
   remove_agent_from_space!(a, model)
   if periodic
     pos = mod.(pos, model.space.dims)
@@ -135,7 +135,7 @@ end
 ################################################################################
 ### Pretty printing
 ################################################################################
-function Base.show(io::IO, space::CompartmentSpace{<:GridSpace{D,P}}) where {D, P}
+function Base.show(io::IO, space::CompartmentSpace{D,P}) where {D, P}
   s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
   space.update_vel! ≠ defvel && (s *= " with velocity updates")
   print(io, s)
