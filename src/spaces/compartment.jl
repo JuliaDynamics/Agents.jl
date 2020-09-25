@@ -145,7 +145,7 @@ function space_neighbors(pos, model, r=1; exact=false)
     newr = ceil.(Int, r)
     corner_of_largest_square_in_circle = floor.(Int, center .+ newr)
     max_distance = corner_of_largest_square_in_circle[1] - focal_cell[1]
-    final_ids = Int[]
+    final_ids = Int[] # TODO make it an iterator
     allcells = nearby_positions(focal_cell, model, newr)
     for cell in allcells
       if !any(x-> x> max_distance, abs.(cell .- focal_cell)) # certain cell
@@ -164,7 +164,6 @@ function space_neighbors(pos, model, r=1; exact=false)
     return nearby_ids(focal_cell, model, newr)
   end
 end
-
 
 """
     node_neighbors(position, model::ABM, r=1; kwargs...) → positions
