@@ -7,10 +7,6 @@ on:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    env:
-      JULIA_DEBUG: BenchmarkCI
-      # Add project root directory `.` to the load path:
-      JULIA_LOAD_PATH: '@:.:'
     if: contains(github.event.pull_request.labels.*.name, 'run benchmark')
     steps:
       - uses: actions/checkout@v2
