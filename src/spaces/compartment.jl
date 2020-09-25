@@ -12,8 +12,8 @@ end
 defvel(a, m) = nothing
 
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
-  update_vel! = defvel, periodic = true, metric = :cityblock) where {D}
-  s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=metric)
+  update_vel! = defvel, periodic = true) where {D}
+  s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
   return CompartmentSpace{D,typeof(update_vel!)}(s, 
     update_vel!, size(s),periodic, D, spacing)
 end
@@ -94,14 +94,14 @@ grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) 
   grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
-    s = model.space.grid.s
-    Iterators.flatten((s[i...] for i in nn))
+  nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+  s = model.space.grid.s
+  Iterators.flatten((s[i...] for i in nn))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
-    Iterators.filter(!isequal(pos), nn)
+  nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+  Iterators.filter(!isequal(pos), nn)
 end
 
 function positions(model::ABM{<:AbstractAgent,<:CompartmentSpace})
@@ -110,11 +110,11 @@ function positions(model::ABM{<:AbstractAgent,<:CompartmentSpace})
 end
 
 function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace})
-    return model.space.grid.s[pos...]
+  return model.space.grid.s[pos...]
 end
 
 cell_center(pos::Tuple) = getindex.(modf.(pos), 2) .+ 0.5
-distance_from_cell_center(pos::Tuple) = sqrt(sum(abs2.(pos .- cell_center(pos))))
+distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 """
     space_neighbors(position, model::ABM, r=1; kwargs...) → ids
@@ -139,12 +139,29 @@ neighbors depending on the underlying graph directionality type.
 - `:out` returns outgoing vertex neighbors.
 """
 function space_neighbors(pos, model, r=1; exact=false)
+  center = cell_center(pos)
+  focal_cell = ceil.(Int, center)
   if exact
-    cell_in_r = ceil.(Int, r ./ model.space.spacing)
+    newr = ceil.(Int, r)
+    corner_of_largest_square_in_circle = floor.(Int, center .+ newr)
+    max_distance = corner_of_largest_square_in_circle[1] - focal_cell[1]
+    final_ids = Int[]
+    allcells = nearby_positions(focal_cell, model, newr)
+    for cell in allcells
+      if !any(x-> x> max_distance, abs.(cell .- focal_cell)) # certain cell
+        ids = ids_in_position(cell, model)
+        final_ids = vcat(final_ids, ids)
+      else # uncertain cell
+        ids = ids_in_position(cell, model)
+        filter!(i -> sqrt(sum(abs2.(center .- model[i]))) ≤ rnew, ids)
+        final_ids = vcat(final_ids, ids)
+      end
+    end
+    return final_ids
   else
-    δ = distance_from_cell_center(pos)
-    cell_in_rp = ceil.(Int, (r+δ) ./ model.space.spacing)
-    # for cell in nearby_positions(pos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+    δ = distance_from_cell_center(pos, center)
+    newr = ceil.(Int, r+δ)
+    return nearby_ids(focal_cell, model, newr)
   end
 end
 
