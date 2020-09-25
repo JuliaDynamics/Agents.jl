@@ -1,12 +1,9 @@
 export CompartmentSpace
 
-struct CompartmentSpace{D,F} <: AbstractSpace
-  grid::GridSpace
+struct CompartmentSpace{D,F,G} <: AbstractSpace
+  grid::G
   update_vel!::F
   dims::NTuple{D, Int}
-  periodic::Bool
-  D::Int
-  spacing::Float64
 end
 
 defvel(a, m) = nothing
@@ -14,16 +11,15 @@ defvel(a, m) = nothing
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
   update_vel! = defvel, periodic = true) where {D}
   s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
-  return CompartmentSpace{D,typeof(update_vel!)}(s, 
-    update_vel!, size(s),periodic, D, spacing)
+  return CompartmentSpace(s, update_vel!, size(s))
 end
 
 """
     random_position(model) → pos
 Return a random position in the model's space (always with appropriate Type).
 """
-function random_position(model::ABM{A, <:CompartmentSpace}) where {A}
-  pos = Tuple(rand(model.space.D) .* model.space.dims)
+function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
+  pos = Tuple(rand(D) .* model.space.dims)
 end
 
 pos2cell(pos::Tuple) = ceil.(Int, pos)
@@ -66,19 +62,6 @@ Notice that if you want the agent to instantly move to a specified position, do
 function move_agent!(agent::A, model::ABM{A, <: CompartmentSpace}, dt::Real = 1.0) where {A <: AbstractAgent}
   model.space.update_vel!(agent, model)
   pos = agent.pos .+ dt .* agent.vel
-  if model.space.periodic
-    pos = mod.(pos, model.space.dims)
-  end
-  move_agent!(agent, pos, model)
-  return agent.pos
-end
-
-"""
-    move_agent!(agent::A, model::ABM{A, CompartmentSpace}, vel::NTuple{D, N}, dt = 1.0)
-Propagate the agent forwards one step according to `vel` and the model's space, with `dt` as the time step. (`update_vel!` is not used)
-"""
-function move_agent!(agent::A, model::ABM{A,S,F,P}, vel::NTuple{D, X}, dt = 1.0) where {A <: AbstractAgent, S <: CompartmentSpace, F, P, D, X <: AbstractFloat}
-  pos = agent.pos .+ dt .* vel
   if model.space.periodic
     pos = mod.(pos, model.space.dims)
   end
@@ -165,24 +148,13 @@ function space_neighbors(pos, model, r=1; exact=false)
   end
 end
 
-"""
-    node_neighbors(position, model::ABM, r=1; kwargs...) → positions
-
-Return an iterator of all positions within "radius" `r` of the given `position`
-(which excludes given `position`).
-The `position` must match type with the spatial structure of the `model`).
-
-The value of `r` and possible keywords operate identically to [`space_neighbors`](@ref).
-"""
-node_neighbors(position, model, r=1; exact=false) = notimplemented(model)
-
 
 ################################################################################
 ### Pretty printing
 ################################################################################
-
-function Base.show(io::IO, space::CompartmentSpace)
-  s = "$(space.periodic ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
+# TODO
+function Base.show(io::IO, space::CompartmentSpace{<:GridSpace{D,P}}) where {D,P}
+  s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
   space.update_vel! ≠ defvel && (s *= " with velocity updates")
   print(io, s)
 end
