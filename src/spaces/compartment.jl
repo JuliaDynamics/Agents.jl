@@ -104,24 +104,8 @@ distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 Return an iterator of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
-
-What the "radius" means depends on the space type:
-- `GraphSpace`: `r` means the degree of neighbors in the graph and is an integer.
-  For example, for `r=2` include first and second degree neighbors.
-- `GridSpace, ContinuousSpace`: Standard distance implementation according to the
-  underlying space metric.
-
-## Keywords
-Keyword arguments are space-specific.
-For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
-neighbors depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex. If graph is directed, this is equivalent
-  to `:out`. For undirected graphs, all options are equivalent to `:out`.
-- `:all` returns both `:in` and `:out` neighbors.
-- `:in` returns incoming vertex neighbors.
-- `:out` returns outgoing vertex neighbors.
 """
-function space_neighbors(pos, model, r=1; exact=false)
+function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
   center = cell_center(pos)
   focal_cell = ceil.(Int, center)
   if exact
