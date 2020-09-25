@@ -1,6 +1,6 @@
 export CompartmentSpace
 
-struct CompartmentSpace{D,F,G} <: AbstractSpace
+struct CompartmentSpace{G,F,D} <: AbstractSpace
   grid::G
   update_vel!::F
   dims::NTuple{D, Int}
@@ -18,7 +18,7 @@ end
     random_position(model) → pos
 Return a random position in the model's space (always with appropriate Type).
 """
-function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
+function random_position(model::ABM{A, <:CompartmentSpace{G, F, D}}) where {A,G, F, D}
   pos = Tuple(rand(D) .* model.space.dims)
 end
 
@@ -39,9 +39,11 @@ function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
   return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where 
-  {A<:AbstractAgent}
+function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace{<:GridSpace{D, periodic}}}) where {A<:AbstractAgent, D, periodic}
   remove_agent_from_space!(a, model)
+  if periodic
+    pos = mod.(pos, model.space.dims)
+  end
   a.pos = pos
   add_agent_to_space!(a, model)
 end
@@ -62,9 +64,6 @@ Notice that if you want the agent to instantly move to a specified position, do
 function move_agent!(agent::A, model::ABM{A, <: CompartmentSpace}, dt::Real = 1.0) where {A <: AbstractAgent}
   model.space.update_vel!(agent, model)
   pos = agent.pos .+ dt .* agent.vel
-  if model.space.periodic
-    pos = mod.(pos, model.space.dims)
-  end
   move_agent!(agent, pos, model)
   return agent.pos
 end
@@ -136,8 +135,7 @@ end
 ################################################################################
 ### Pretty printing
 ################################################################################
-# TODO
-function Base.show(io::IO, space::CompartmentSpace{<:GridSpace{D,P}}) where {D,P}
+function Base.show(io::IO, space::CompartmentSpace{<:GridSpace{D,P}}) where {D, P}
   s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
   space.update_vel! ≠ defvel && (s *= " with velocity updates")
   print(io, s)
