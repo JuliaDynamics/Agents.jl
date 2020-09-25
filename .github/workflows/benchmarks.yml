@@ -18,11 +18,7 @@ jobs:
       - name: Run benchmarks
         run: julia -e '
           using PkgBenchmark, BenchmarkCI;
-          BenchmarkCI.judge(
-              PkgBenchmark.BenchmarkConfig(
-                  env = Dict("JULIA_NUM_THREADS" => "1"),
-              );
-          );
+          BenchmarkCI.judge();
           '
       - name: Post results
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
