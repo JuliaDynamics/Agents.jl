@@ -14,7 +14,8 @@ defvel(a, m) = nothing
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
   update_vel! = defvel, periodic = true, metric = :cityblock) where {D}
   s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=metric)
-  return CompartmentSpace{D,typeof(update_vel!)}(s, update_vel!, size(s),periodic, D, spacing)
+  return CompartmentSpace{D,typeof(update_vel!)}(s, 
+    update_vel!, size(s),periodic, D, spacing)
 end
 
 """
@@ -25,22 +26,25 @@ function random_position(model::ABM{A, <:CompartmentSpace}) where {A}
   pos = Tuple(rand(model.space.D) .* model.space.dims)
 end
 
-pos2cell(pos::Tuple, model) = ceil.(Int, pos)
-pos2cell(a::A, model) where {A<:AbstractAgent} = pos2cell(a.pos, model)
+pos2cell(pos::Tuple) = ceil.(Int, pos)
+pos2cell(a::AbstractAgent) = pos2cell(a.pos)
 
-function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-  push!(model.space.grid.s[pos2cell(a, model)...], a.id)
+function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
+  {A<:AbstractAgent}
+  push!(model.space.grid.s[pos2cell(a)...], a.id)
   return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
-  prev = model.space.grid.s[pos2cell(a, model)...]
+function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
+  {A<:AbstractAgent}
+  prev = model.space.grid.s[pos2cell(a)...]
   ai = findfirst(i -> i == a.id, prev)
   deleteat!(prev, ai)
   return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where {A<:AbstractAgent}
+function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace}) where 
+  {A<:AbstractAgent}
   remove_agent_from_space!(a, model)
   a.pos = pos
   add_agent_to_space!(a, model)
@@ -85,6 +89,29 @@ end
 #######################################################################################
 # %% Neighbors and stuff
 #######################################################################################
+
+grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) =
+  grid_space_neighborhood(α, model.space.grid, r)
+
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
+    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+    s = model.space.grid.s
+    Iterators.flatten((s[i...] for i in nn))
+end
+
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
+    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
+    Iterators.filter(!isequal(pos), nn)
+end
+
+function positions(model::ABM{<:AbstractAgent,<:CompartmentSpace})
+  x = CartesianIndices(model.space.grid.s)
+  return (Tuple(y) for y in x)
+end
+
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace})
+    return model.space.grid.s[pos...]
+end
 
 cell_center(pos::Tuple) = getindex.(modf.(pos), 2) .+ 0.5
 distance_from_cell_center(pos::Tuple) = sqrt(sum(abs2.(pos .- cell_center(pos))))
