@@ -1,0 +1,4 @@
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
