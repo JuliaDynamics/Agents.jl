@@ -248,15 +248,15 @@ continuous_model = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0,
 continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
-
-SUITE["continuous"]["add"]["agent"] =
-    @benchmarkable add_agent!($continuous_agent, cmodel) setup =
-        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
-        100
-SUITE["continuous"]["add"]["agent_pos"] =
-    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
-        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
-        100
+# For tuning, this is actually impossible. So until CompartmentSpace is implemented, we drop these tests.
+#SUITE["continuous"]["add"]["agent"] =
+#    @benchmarkable add_agent!($continuous_agent, cmodel) setup =
+#        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
+#        100
+#SUITE["continuous"]["add"]["agent_pos"] =
+#    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
+#        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
+#        100
 SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
     (5.8, 3.5, 9.4),
     $continuous_model,
@@ -267,34 +267,34 @@ SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
 SUITE["continuous"]["add"]["create"] =
     @benchmarkable add_agent!($continuous_model, (0.1, 0.7, 0.2), 6.5, false) samples = 100
 
-SUITE["continuous"]["add_union"]["agent"] =
-    @benchmarkable add_agent!($continuous_agent, cmodel) setup = (
-        cmodel = ABM(
-            Union{
-                ContinuousAgent,
-                ContinuousAgentTwo,
-                ContinuousAgentThree,
-                ContinuousAgentFour,
-                ContinuousAgentFive,
-            },
-            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-            warn = false,
-        )
-    ) samples = 100
-SUITE["continuous"]["add_union"]["agent_pos"] =
-    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup = (
-        cmodel = ABM(
-            Union{
-                ContinuousAgent,
-                ContinuousAgentTwo,
-                ContinuousAgentThree,
-                ContinuousAgentFour,
-                ContinuousAgentFive,
-            },
-            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-            warn = false,
-        )
-    ) samples = 100
+#SUITE["continuous"]["add_union"]["agent"] =
+#    @benchmarkable add_agent!($continuous_agent, cmodel) setup = (
+#        cmodel = ABM(
+#            Union{
+#                ContinuousAgent,
+#                ContinuousAgentTwo,
+#                ContinuousAgentThree,
+#                ContinuousAgentFour,
+#                ContinuousAgentFive,
+#            },
+#            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
+#            warn = false,
+#        )
+#    ) samples = 100
+#SUITE["continuous"]["add_union"]["agent_pos"] =
+#    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup = (
+#        cmodel = ABM(
+#            Union{
+#                ContinuousAgent,
+#                ContinuousAgentTwo,
+#                ContinuousAgentThree,
+#                ContinuousAgentFour,
+#                ContinuousAgentFive,
+#            },
+#            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
+#            warn = false,
+#        )
+#    ) samples = 100
 
 for x in range(0, stop = 10.0, length = 7)
     for y in range(0, stop = 10.0, length = 7)
