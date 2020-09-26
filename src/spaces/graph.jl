@@ -13,6 +13,13 @@ end
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 The position type for this space is `Int`.
+
+`GraphSpace` represents a space where each node of a graph can hold an arbitrary
+amount of agents, and each agent can move between the nodes of the graph.
+If you want to model social networks, where each agent is equivalent with a node of
+a graph, you're better of using `nothing` (or other spaces) as the model space, and using
+a graph from LightGraphs.jl directly in the model parameters, as shown in the
+[Social networks with LightGraphs.jl](@ref) integration example.
 """
 function GraphSpace(graph::G) where {G<:AbstractGraph}
     agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
@@ -126,4 +133,3 @@ function nearby_positions(
     end
     filter!(i -> i != position, output)
 end
-
