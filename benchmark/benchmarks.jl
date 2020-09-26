@@ -4,53 +4,6 @@ const SUITE = BenchmarkGroup(["Agents"])
 
 include("agents.jl")
 
-#### SPACE CONSTRUCTION ####
-
-SUITE["space_creation"] = BenchmarkGroup(["graph", "grid", "continuous"])
-SUITE["space_creation"]["graph"] = @benchmarkable GraphSpace(complete_digraph(1000))
-SUITE["space_creation"]["grid"] = @benchmarkable GridSpace((500, 500))
-SUITE["space_creation"]["continuous"] =
-    @benchmarkable ContinuousSpace(5; extend = (100, 100, 100, 100, 100))
-
-#### MODEL CREATION ####
-
-graph_space = GraphSpace(complete_digraph(5))
-grid_space = GridSpace((10, 10))
-continuous_space = ContinuousSpace(3)
-graph_space_two = GraphSpace(complete_digraph(5))
-grid_space_two = GridSpace((10, 10))
-continuous_space_two = ContinuousSpace(3)
-
-SUITE["model"] = BenchmarkGroup(["initialise", "initialise_union"])
-for set in SUITE["model"].tags
-    SUITE["model"][set] = BenchmarkGroup(["graph", "grid", "continuous"])
-end
-SUITE["model"]["initialise"]["graph"] = @benchmarkable ABM(GraphAgent, $graph_space)
-SUITE["model"]["initialise"]["grid"] = @benchmarkable ABM(GridAgent, $grid_space)
-SUITE["model"]["initialise"]["continuous"] =
-    @benchmarkable ABM(ContinuousAgent, $continuous_space)
-SUITE["model"]["initialise_union"]["graph"] = @benchmarkable ABM(
-    Union{GraphAgent,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
-    $graph_space_two;
-    warn = false,
-)
-SUITE["model"]["initialise_union"]["grid"] = @benchmarkable ABM(
-    Union{GridAgent,GridAgentTwo,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
-    $grid_space_two;
-    warn = false,
-)
-SUITE["model"]["initialise_union"]["continuous"] = @benchmarkable ABM(
-    Union{
-        ContinuousAgent,
-        ContinuousAgentTwo,
-        ContinuousAgentThree,
-        ContinuousAgentFour,
-        ContinuousAgentFive,
-    },
-    $continuous_space_two;
-    warn = false,
-)
-
 #### API ###
 
 for space in ["graph", "grid", "continuous"]
@@ -86,7 +39,7 @@ for space in ["graph", "grid", "continuous"]
             "position_agent",
         ])
     end
-    SUITE[space]["collect"] = BenchmarkGroup(["init_agent", "store_agent"])
+    SUITE[space]["collect"] = BenchmarkGroup(["store_agent"])
 end
 # some spaces have specific things we'd like to add
 push!(SUITE["grid"]["add_union"].tags, "agent_fill")
@@ -339,13 +292,6 @@ adata = [:one, :two]
 graph_df = init_agent_dataframe(graph_model, adata)
 grid_df = init_agent_dataframe(grid_model, adata)
 continuous_df = init_agent_dataframe(continuous_model, adata)
-
-SUITE["graph"]["collect"]["init_agent"] =
-    @benchmarkable init_agent_dataframe($graph_model, $adata)
-SUITE["grid"]["collect"]["init_agent"] =
-    @benchmarkable init_agent_dataframe($grid_model, $adata)
-SUITE["continuous"]["collect"]["init_agent"] =
-    @benchmarkable init_agent_dataframe($continuous_model, $adata)
 
 SUITE["graph"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($graph_df, $graph_model, $adata, 0)
