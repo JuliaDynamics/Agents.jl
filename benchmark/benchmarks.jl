@@ -9,15 +9,8 @@ include("agents.jl")
 for space in ["graph", "grid", "continuous"]
     SUITE[space] = BenchmarkGroup(["add", "add_union", "move", "neighbors"])
 
-    SUITE[space]["add"] = BenchmarkGroup([
-        "agent",
-        "agent_pos",
-        "agent_single",
-        "create",
-        "create_pos",
-        "create_single",
-    ])
-    SUITE[space]["add_union"] = BenchmarkGroup(["agent", "agent_pos", "agent_single"])
+    SUITE[space]["add"] = BenchmarkGroup(["agent_pos"])
+    SUITE[space]["add_union"] = BenchmarkGroup(["agent_pos"])
     if space == "continuous"
         SUITE[space]["move"] = BenchmarkGroup(["update", "vel"])
         SUITE[space]["neighbors"] = BenchmarkGroup([
@@ -26,7 +19,7 @@ for space in ["graph", "grid", "continuous"]
             "nearby_ids_iterate",
             "nearby_agents_iterate",
             "nearest",
-            "interacting",
+    #        "interacting",
         ])
     else
         SUITE[space]["move"] = BenchmarkGroup(["random", "pos", "single"])
@@ -48,11 +41,12 @@ for space in ["grid", "graph"]
     push!(SUITE[space].tags, "position")
     SUITE[space]["position"] = BenchmarkGroup(["contents", "agents"])
 end
-# some spaces need a few things dropped
-for add in ["add", "add_union"]
-    group = SUITE["continuous"][add].tags
-    add == "add" && splice!(group, findfirst(t -> t == "create_single", group))
-    splice!(group, findfirst(t -> t == "agent_single", group))
+for add in ["agent", "agent_single"]
+    push!(SUITE["graph"]["add"].tags, add)
+    push!(SUITE["graph"]["add_union"].tags, add)
+end
+for add in ["create", "create_pos", "create_single"]
+    push!(SUITE["graph"]["add"].tags, add)
 end
 
 function iterate_over_neighbors(a, model, r)
@@ -135,27 +129,13 @@ grid_union_model = ABM(
     warn = false,
 )
 
-SUITE["grid"]["add"]["agent"] =
-    @benchmarkable add_agent!($grid_agent, $grid_model) samples = 100
 SUITE["grid"]["add"]["agent_pos"] =
     @benchmarkable add_agent_pos!($grid_agent, $grid_model) samples = 100
-SUITE["grid"]["add"]["agent_single"] =
-    @benchmarkable add_agent_single!($grid_agent, $grid_model) samples = 100
-SUITE["grid"]["add"]["create_pos"] =
-    @benchmarkable add_agent!((1, 3), $grid_model, 6.5, false) samples = 100
-SUITE["grid"]["add"]["create_single"] =
-    @benchmarkable add_agent_single!($grid_model, 6.5, false) samples = 100
-SUITE["grid"]["add"]["create"] =
-    @benchmarkable add_agent!($grid_model, 6.5, false) samples = 100
 SUITE["grid"]["add"]["create_fill"] =
     @benchmarkable fill_space!($grid_model, 6.5, false) samples = 100
 
-SUITE["grid"]["add_union"]["agent"] =
-    @benchmarkable add_agent!($grid_agent, $grid_union_model) samples = 100
 SUITE["grid"]["add_union"]["agent_pos"] =
     @benchmarkable add_agent_pos!($grid_agent, $grid_union_model) samples = 100
-SUITE["grid"]["add_union"]["agent_single"] =
-    @benchmarkable add_agent_single!($grid_agent, $grid_union_model) samples = 100
 SUITE["grid"]["add_union"]["agent_fill"] =
     @benchmarkable fill_space!(GridAgent, $grid_union_model, 6.5, false) samples = 100
 
@@ -202,38 +182,11 @@ continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, fa
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 # For tuning, this is actually impossible. So until CompartmentSpace is implemented, we drop these tests.
-#SUITE["continuous"]["add"]["agent"] =
-#    @benchmarkable add_agent!($continuous_agent, cmodel) setup =
-#        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
-#        100
 #SUITE["continuous"]["add"]["agent_pos"] =
 #    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
 #        (cmodel = ABM(ContinuousAgent, ContinuousSpace(3; extend = (10.0, 10.0, 10.0)))) samples =
 #        100
-SUITE["continuous"]["add"]["create_pos"] = @benchmarkable add_agent!(
-    (5.8, 3.5, 9.4),
-    $continuous_model,
-    (0.9, 0.6, 0.5),
-    6.5,
-    false,
-) samples = 100
-SUITE["continuous"]["add"]["create"] =
-    @benchmarkable add_agent!($continuous_model, (0.1, 0.7, 0.2), 6.5, false) samples = 100
 
-#SUITE["continuous"]["add_union"]["agent"] =
-#    @benchmarkable add_agent!($continuous_agent, cmodel) setup = (
-#        cmodel = ABM(
-#            Union{
-#                ContinuousAgent,
-#                ContinuousAgentTwo,
-#                ContinuousAgentThree,
-#                ContinuousAgentFour,
-#                ContinuousAgentFive,
-#            },
-#            ContinuousSpace(3; extend = (10.0, 10.0, 10.0));
-#            warn = false,
-#        )
-#    ) samples = 100
 #SUITE["continuous"]["add_union"]["agent_pos"] =
 #    @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup = (
 #        cmodel = ABM(
