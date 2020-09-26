@@ -15,6 +15,20 @@ end
 """
 ```julia
 flocking(;
+n_birds = 100,
+speed = 1.0,
+cohere_factor = 0.25,
+separation = 4.0,
+separate_factor = 0.25,
+match_factor = 0.01,
+visual_distance = 5.0,
+dims = (100, 100),
+spacing = 1
+)
+```
+Same as in [Flock model](@ref).
+"""
+function flocking(;
     n_birds = 100,
     speed = 1.0,
     cohere_factor = 0.25,
@@ -22,37 +36,23 @@ flocking(;
     separate_factor = 0.25,
     match_factor = 0.01,
     visual_distance = 5.0,
-    dims = (100, 100),
-    spacing = 1
-)
-```
-Same as in [Flock model](@ref).
-"""
-function flocking(;
-        n_birds = 100,
-        speed = 1.0,
-        cohere_factor = 0.25,
-        separation = 4.0,
-        separate_factor = 0.25,
-        match_factor = 0.01,
-        visual_distance = 5.0,
-        dims = (10, 10),
-        spacing = 0.1
+    dims = (10, 10),
+    spacing = 0.1
     )
-
+    
     space2d = CompartmentSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
         add_agent!(
-            model,
-            vel,
-            speed,
-            cohere_factor,
-            separation,
-            separate_factor,
-            match_factor,
-            visual_distance,
+        model,
+        vel,
+        speed,
+        cohere_factor,
+        separation,
+        separate_factor,
+        match_factor,
+        visual_distance,
         )
     end
     return model, flocking_agent_step!, dummystep
@@ -63,10 +63,10 @@ function flocking_agent_step!(bird, model)
     ids = collect(nearby_ids(bird, model, bird.visual_distance))
     ## Compute velocity based on rules defined above
     bird.vel =
-        (
-            bird.vel .+ cohere(bird, model, ids) .+ separate(bird, model, ids) .+
-            match(bird, model, ids)
-        ) ./ 2
+    (
+    bird.vel .+ cohere(bird, model, ids) .+ separate(bird, model, ids) .+
+    match(bird, model, ids)
+    ) ./ 2
     bird.vel = bird.vel ./ norm(bird.vel)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
