@@ -7,4 +7,5 @@ Manifest.toml
 *.pyc
 *.code-workspace
 /benchmark/*.json
+!/benchmark/tune.json
 /.benchmarkci
