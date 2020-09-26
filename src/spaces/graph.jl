@@ -142,9 +142,10 @@ end
 #######################################################################################
 """
     rem_node!(n::Int, model::ABM{A, <: GraphSpace})
-Remove node `n` from the model's graph. All agents in that node are killed.
+Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
 """
 function rem_node!(n::Int, model::ABM{<:AbstractAgent, <: GraphSpace})
     for a ∈ agents_in_position(n, model); kill_agent!(a, model); end
-    # LightGraphs.rem_vertex!(model.space.graph)
+    deleteat!(model.space.s, n)
+    LightGraphs.rem_vertex!(model.space.graph, n)
 end
