@@ -140,3 +140,11 @@ end
 #######################################################################################
 # Mutable graph functions
 #######################################################################################
+"""
+    rem_node!(n::Int, model::ABM{A, <: GraphSpace})
+Remove node `n` from the model's graph. All agents in that node are killed.
+"""
+function rem_node!(n::Int, model::ABM{<:AbstractAgent, <: GraphSpace})
+    for a ∈ agents_in_position(n, model); kill_agent!(a, model); end
+    # LightGraphs.rem_vertex!(model.space.graph)
+end
