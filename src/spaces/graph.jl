@@ -14,6 +14,9 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 The position type for this space is `Int`.
 
+The nodes of the graph space can be altered with the functions [`add_node!`](@ref),
+[`rem_node!`](@ref) and [`add_edge`](@ref), assuming the used graph is mutable.
+
 `GraphSpace` represents a space where each node of a graph can hold an arbitrary
 amount of agents, and each agent can move between the nodes of the graph.
 If you want to model social networks, where each agent is equivalent with a node of
@@ -38,10 +41,10 @@ Return the number of edges in the `model` space.
 """
 LightGraphs.ne(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 
-function Base.show(io::IO, space::GraphSpace)
+function Base.show(io::IO, s::GraphSpace)
     print(
         io,
-        "$(nameof(typeof(space))) with $(nv(space.graph)) positions and $(ne(space.graph)) edges",
+        "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges",
     )
 end
 
@@ -133,3 +136,7 @@ function nearby_positions(
     end
     filter!(i -> i != position, output)
 end
+
+#######################################################################################
+# Mutable graph functions
+#######################################################################################
