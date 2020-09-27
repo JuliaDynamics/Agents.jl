@@ -11,7 +11,7 @@
 # the [MASON](https://cs.gmu.edu/~eclab/projects/mason/) ABM framework uses as an introductory example
 # in their [documentation](https://cs.gmu.edu/~eclab/projects/mason/manual.pdf).
 
-# Rather than implementing an Agents.jl&ndash;specific graph structure, we can interface with
+# Rather than implementing an Agents.jl⸺specific graph structure, we can interface with
 # [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl): a high class library for managing
 # and implementing graphs, which can be re-used to establish social networks within existing spaces.
 
@@ -114,8 +114,9 @@ function agent_step!(student, model)
     end
 
     ## Add all forces together to assign the students next position
-    new_position = student.pos .+ noise .+ teacher .+ network_force
-    move_agent!(student, new_position, model)
+    student.pos = student.pos .+ noise .+ teacher .+ network_force
+    ## Update the students position in space
+    update_space!(model, student)
 end
 
 # Applying the rules for movement is relatively simple. For the network specifically,

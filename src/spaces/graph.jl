@@ -13,6 +13,9 @@ end
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 The position type for this space is `Int`.
+
+To use graphs in combination with a grid or continuous space, see our
+[Social networks with LightGraphs.jl](@ref) integration example.
 """
 function GraphSpace(graph::G) where {G<:AbstractGraph}
     agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
