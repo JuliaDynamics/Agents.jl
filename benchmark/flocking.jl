@@ -1,3 +1,5 @@
+using Agents
+using BenchmarkTools
 using LinearAlgebra
 
 mutable struct Bird <: AbstractAgent
@@ -114,7 +116,7 @@ end
 # %% COMPARTMENT VERSION
 println("\n\nTimes of COMPARTMENT space")
 println("Full model stepping")
-@btime step!($model, $agent_step!, $model_step!, 500) setup=((model, agent_step!, model_step!) = flocking())
+@btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = flocking())
 
 model, agent_step!, model_step! = flocking()
 step!(model, agent_step!, model_step!, 1)
