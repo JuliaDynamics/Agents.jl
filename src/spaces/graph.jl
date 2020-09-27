@@ -145,16 +145,30 @@ end
     rem_node!(n::Int, model::ABM{A, <: GraphSpace})
 Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
 
-**Warning:** LightGraphs.jl (and a result Agents.jl) swaps the index of the last node with
+**Warning:** LightGraphs.jl (and thus Agents.jl) swaps the index of the last node with
 that of the one to be removed, while every other node remains as is. This means that
 when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
-`n` node (and all its edges and agents) are deleted.
+`n`-th node (and all its edges and agents) are deleted.
 """
 function rem_node!(n::Int, model::ABM{<:AbstractAgent, <: GraphSpace})
     for a ∈ agents_in_position(n, model); kill_agent!(a, model); end
-    s = model.space.s
     V = nv(model)
+    success = LightGraphs.rem_vertex!(model.space.graph, n)
+    n ∉ 1:V && error("Node number exceeds amount of nodes in graph!")
+    s = model.space.s
     s[V], s[n] = s[n], s[V]
     pop!(s)
-    LightGraphs.rem_vertex!(model.space.graph, n)
 end
+
+"""
+    add_node!(model::ABM{A, <: GraphSpace}) → n
+Add a new node (i.e. possible position) to the model's graph and return it.
+You can connect this new node with existing ones using `add_edge!(model, n, m)`.
+"""
+function add_node!(model::ABM{<:AbstractAgent, <: GraphSpace})
+    add_vertex!(model.space.graph)
+    push!(model.space.s, Int[])
+    return nv(model)
+end
+
+LightGraphs.add_edge!(model, n, m) = add_edge!(model.space.graph, n, m)
