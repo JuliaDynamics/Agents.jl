@@ -17,7 +17,7 @@
 
 # To begin, we load in some dependencies
 
-using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, LinearAlgebra, AgentsPlots
+using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, AgentsPlots
 using Random # hide
 gr() # hide
 
@@ -73,14 +73,14 @@ function schoolyard(;
     model
 end
 
-# Our model contains the `buddies` property, which is our LightGraphs.jl undirected, weighted graph.
+# Our model contains the `buddies` property, which is our LightGraphs.jl directed, weighted graph.
 # As we can see in the loop, we choose one `friend` and one `foe` at random for each `student` and
 # assign their relationship as a weighted edge on the graph.
 
 # ## Movement dynamics
 
 distance(pos) = sqrt(pos[1]^2 + pos[2]^2)
-scale(L, force) = (L / norm(force)) .* force
+scale(L, force) = (L / distance(force)) .* force
 
 function agent_step!(student, model)
     ## place a teacher in the center of the yard, so we don’t go too far away
@@ -114,15 +114,19 @@ function agent_step!(student, model)
     end
 
     ## Add all forces together to assign the students next position
-    student.pos = student.pos .+ noise .+ teacher .+ network_force
-    ## Update the students position in space
-    update_space!(model, student)
+    new_position = student.pos .+ noise .+ teacher .+ network_force
+    move_agent!(student, new_position, model)
 end
 
 # Applying the rules for movement is relatively simple. For the network specifically,
 # we find the student's `network` and figure out how far apart they are. We scale this
 # by the `buddiness` factor (how much force we should apply), then figure out if
 # that force should be in a positive or negative direction (*friend* or *foe*?).
+
+# The `findnz` function is something that may require some further explanation.
+# LightGraphs uses sparse vectors internally to efficiently represent data.
+# When we find the `network` of our `student`, we want to convert the result to
+# a dense representation by **find**ing the **n**on-**z**ero (`findnz`) elements.
 
 # ## Visualising the system
 
