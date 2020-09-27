@@ -6,6 +6,7 @@
 - `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord` and `coord2vertex`.
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
+- `GraphSpace` now allows to dynamically mutate the underlying graph via `add_node!`, `rem_node!`.
 - Performance increase of finding neighbors in GraphSpace with r > 1.
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 
