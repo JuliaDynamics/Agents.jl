@@ -17,8 +17,7 @@
 
 # To begin, we load in some dependencies
 
-using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, AgentsPlots
-using Random # hide
+using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, AgentsPlots, Random
 gr() # hide
 
 # And create a very simple agent.
@@ -138,6 +137,7 @@ model = schoolyard()
 anim = @animate for i in 0:30
     i > 0 && step!(model, agent_step!, 1)
     p1 = plotabm(model; xlims = (0, 100), ylims = (0, 100), as = 7)
+    scatter!(p1, [50], [50]; color = :red, legend = false) # Show position of teacher
     title!(p1, "step $(i)")
 end
 gif(anim, "play.gif", fps = 20)
