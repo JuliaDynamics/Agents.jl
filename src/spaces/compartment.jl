@@ -14,10 +14,6 @@ function CompartmentSpace(d::NTuple{D,Real}, spacing;
     return CompartmentSpace(s, update_vel!, size(s))
 end
 
-"""
-random_position(model) → pos
-Return a random position in the model's space (always with appropriate Type).
-"""
 function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
     pos = Tuple(rand(D) .* model.space.dims)
 end
