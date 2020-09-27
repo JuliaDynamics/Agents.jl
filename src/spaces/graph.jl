@@ -155,7 +155,7 @@ function rem_node!(model::ABM{<:AbstractAgent, <: GraphSpace}, n::Int)
     for id ∈ copy(ids_in_position(n, model)); kill_agent!(model[id], model); end
     V = nv(model)
     success = LightGraphs.rem_vertex!(model.space.graph, n)
-    n ∉ 1:V && error("Node number exceeds amount of nodes in graph!")
+    n > V && error("Node number exceeds amount of nodes in graph!")
     s = model.space.s
     s[V], s[n] = s[n], s[V]
     pop!(s)
