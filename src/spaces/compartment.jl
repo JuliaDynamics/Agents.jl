@@ -8,6 +8,33 @@ end
 
 defvel2(a, m) = nothing
 
+"""
+    CompartmentSpace(d::NTuple{D,Real}, spacing; kwargs...)
+Create a `CompartmentSpace` in range 0 to d and dimensionality D.
+In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
+where `F <: AbstractFloat`.
+In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
+the agent's velocity to use [`move_agent!`](@ref).
+
+The optional argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
+the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
+You can of course change the agents' velocities
+during the agent interaction, the `update_vel!` functionality targets arbitrary force
+fields acting on the agents (e.g. some magnetic field).
+By default no update is done this way.
+
+Notice that if you need to write your own custom `move_agent` function, call
+[`update_space!`](@ref) at the end, like in e.g. the [Bacterial Growth](@ref) example.
+
+## Keywords
+* `periodic = true` : whether continuous space is periodic or not
+* `update_vel! = defvel2` : see above.
+
+**Note:** if your model requires linear algebra operations for which tuples are not supported,
+a performant solution is to convert between Tuple and SVector using
+[StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
+as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
+"""
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
     s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
@@ -18,10 +45,7 @@ function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
     pos = Tuple(rand(D) .* model.space.dims)
 end
 
-function pos2cell(pos::Tuple) 
-    any(x-> x <= 0, pos) && throw("Position should be positive")
-    ceil.(Int, pos)
-end
+pos2cell(pos::Tuple) = ceil.(Int, pos)
 pos2cell(a::AbstractAgent) = pos2cell(a.pos)
 
 function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
@@ -100,7 +124,7 @@ distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 """
 space_neighbors(position, model::ABM, r=1; kwargs...) → ids
 
-Return an iterator of the ids of the agents within "radius" `r` of the given `position`
+Return an array of the ids of the agents within "radius" `r` of the given `position`
 (which must match type with the spatial structure of the `model`).
 """
 function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
@@ -110,7 +134,7 @@ function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=
         newr = ceil.(Int, r)
         corner_of_largest_square_in_circle = floor.(Int, pos .+ newr)
         max_distance = corner_of_largest_square_in_circle[1] - focal_cell[1]
-        final_ids = Int[] # TODO make it an iterator
+        final_ids = Int[]
         allcells = nearby_positions(focal_cell, model, newr)
         for cell in allcells
             if !any(x-> x> max_distance, abs.(cell .- focal_cell)) # certain cell
@@ -126,7 +150,7 @@ function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=
     else
         δ = distance_from_cell_center(pos, center)
         newr = ceil.(Int, r+δ)
-        return nearby_ids(focal_cell, model, newr)
+        return collect(nearby_ids(focal_cell, model, newr))
     end
 end
     
