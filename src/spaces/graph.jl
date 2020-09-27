@@ -14,10 +14,9 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 The position type for this space is `Int`.
 
-The nodes of the graph space can be altered with the functions [`add_node!`](@ref),
-[`rem_node!`](@ref) and [`add_edge`](@ref), assuming the used graph is mutable.
+The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
-`GraphSpace` represents a space where each node of a graph can hold an arbitrary
+`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
 amount of agents, and each agent can move between the nodes of the graph.
 If you want to model social networks, where each agent is equivalent with a node of
 a graph, you're better of using `nothing` (or other spaces) as the model space, and using
@@ -141,8 +140,10 @@ end
 #######################################################################################
 # Mutable graph functions
 #######################################################################################
+export rem_node!, add_node!, add_edge!
+
 """
-    rem_node!(n::Int, model::ABM{A, <: GraphSpace})
+    rem_node!(model::ABM{A, <: GraphSpace}, n::Int)
 Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
 
 **Warning:** LightGraphs.jl (and thus Agents.jl) swaps the index of the last node with
@@ -150,8 +151,8 @@ that of the one to be removed, while every other node remains as is. This means 
 when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
 `n`-th node (and all its edges and agents) are deleted.
 """
-function rem_node!(n::Int, model::ABM{<:AbstractAgent, <: GraphSpace})
-    for a ∈ agents_in_position(n, model); kill_agent!(a, model); end
+function rem_node!(model::ABM{<:AbstractAgent, <: GraphSpace}, n::Int)
+    for id ∈ copy(ids_in_position(n, model)); kill_agent!(model[id], model); end
     V = nv(model)
     success = LightGraphs.rem_vertex!(model.space.graph, n)
     n ∉ 1:V && error("Node number exceeds amount of nodes in graph!")
