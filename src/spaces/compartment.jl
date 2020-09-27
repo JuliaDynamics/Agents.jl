@@ -18,7 +18,10 @@ function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
     pos = Tuple(rand(D) .* model.space.dims)
 end
 
-pos2cell(pos::Tuple) = ceil.(Int, pos)
+function pos2cell(pos::Tuple) 
+    any(x-> x <= 0, pos) && throw("Position should be positive")
+    ceil.(Int, pos)
+end
 pos2cell(a::AbstractAgent) = pos2cell(a.pos)
 
 function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
@@ -136,4 +139,206 @@ function Base.show(io::IO, space::CompartmentSpace{D,P}) where {D, P}
     space.update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
 end
-    
+
+
+#######################################################################################
+# Continuous space exclusive
+#######################################################################################
+export nearest_neighbor, elastic_collision!, interacting_pairs
+
+"""
+    nearest_neighbor(agent, model, r) → nearest
+Return the agent that has the closest distance to given `agent`. Valid only in continuous space.
+Return `nothing` if no agent is within distance `r`.
+"""
+function nearest_neighbor(agent, model, r)
+  n = collect(nearby_ids(agent, model, r))
+  length(n) == 0 && return nothing
+  d, j = Inf, 1
+  for i in 1:length(n)
+    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
+    if dnew < d
+      d, j = dnew, i
+    end
+  end
+  return @inbounds model[n[j]]
+end
+
+using LinearAlgebra
+
+"""
+    elastic_collision!(a, b, f = nothing)
+Resolve a (hypothetical) elastic collision between the two agents `a, b`.
+They are assumed to be disks of equal size touching tangentially.
+Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
+This function works only for two dimensions.
+Notice that collision only happens if both disks face each other, to avoid
+collision-after-collision.
+
+If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a mass
+to weight the two agents for the collision. By default no weighting happens.
+
+One of the two agents can have infinite "mass", and then acts as an immovable object
+that specularly reflects the other agent. In this case of course momentum is not
+conserved, but kinetic energy is still conserved.
+"""
+function elastic_collision!(a, b, f = nothing)
+  # Do elastic collision according to
+  # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
+  length(v1) != 2 && error("This function works only for two dimensions.")
+  r1 = x1 .- x2; r2 = x2 .- x1
+  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+  # mass weights
+  m1 == m2 == Inf && return false
+  if m1 == Inf
+    @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+    dot(r1, v2) ≤ 0 && return false
+    v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 0.0, 2.0
+  elseif m2 == Inf
+    @assert v2 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+    dot(r2, v1) ≤ 0 && return false
+    v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+    f1, f2 = 2.0, 0.0
+  else
+    # Check if disks face each other, to avoid double collisions
+    !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+    f1 = (2m2/(m1+m2))
+    f2 = (2m1/(m1+m2))
+  end
+  ken = norm(v1)^2 + norm(v2)^2
+  dx = a.pos .- b.pos
+  dv = a.vel .- b.vel
+  n = norm(dx)^2
+  n == 0 && return false # do nothing if they are at the same position
+  a.vel = v1 .- f1 .* ( dot(v1 .- v2, r1) / n ) .* (r1)
+  b.vel = v2 .- f2 .* ( dot(v2 .- v1, r2) / n ) .* (r2)
+  return true
+end
+
+"""
+    interacting_pairs(model, r, method; scheduler = model.scheduler)
+Return an iterator that yields unique pairs of agents `(a1, a2)` that are close
+neighbors to each other, within some interaction radius `r`.
+
+This function is usefully combined with `model_step!`, when one wants to perform
+some pairwise interaction across all pairs of close agents once
+(and does not want to trigger the event twice, both with `a1` and with `a2`, which
+is unavoidable when using `agent_step!`).
+
+The argument `method` provides three pairing scenarios
+- `:all`: return every pair of agents that are within radius `r` of each other,
+  not only the nearest ones.
+- `:nearest`: agents are only paired with their true nearest neighbor
+  (existing within radius `r`).
+  Each agent can only belong to one pair, therefore if two agents share the same nearest
+  neighbor only one of them (sorted by id) will be paired.
+- `:scheduler`: agents are scanned according to the given keyword `scheduler`
+  (by default the model's scheduler), and each scanned
+  agent is paired to its nearest neighbor. Similar to `:nearest`, each agent can belong
+  to only one pair. This functionality is useful e.g. when you want some agents to be
+  paired "guaranteed", even if some other agents might be nearest to each other.
+- `:types`: For mixed agent models only. Return every pair of agents within radius `r`
+  (similar to `:all`), only capturing pairs of differing types. For example, a model of
+  `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
+  agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
+  `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
+  types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
+"""
+function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
+    @assert method ∈ (:scheduler, :nearest, :all, :types)
+    pairs = Tuple{Int,Int}[]
+    if method == :nearest
+        true_pairs!(pairs, model, r)
+    elseif method == :scheduler
+        scheduler_pairs!(pairs, model, r, scheduler)
+    elseif method == :all
+        all_pairs!(pairs, model, r)
+    elseif method == :types
+        type_pairs!(pairs, model, r, scheduler)
+    end
+    return PairIterator(pairs, model.agents)
+end
+
+function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+    #TODO: This can be optimized further I assume
+    for id in scheduler(model)
+        # Skip already checked agents
+        any(isequal(id), p[2] for p in pairs) && continue
+        a1 = model[id]
+        a2 = nearest_neighbor(a1, model, r)
+        # This line ensures each neighbor exists in only one pair:
+        if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
+            push!(pairs, (id, a2.id))
+        end
+    end
+end
+
+function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+    for a in allagents(model)
+        for nid in nearby_ids(a, model, r)
+            # Sort the pair to overcome any uniqueness issues
+            new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+            new_pair ∉ pairs && push!(pairs, new_pair)
+        end
+    end
+end
+
+function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+    distances = Vector{Float64}(undef, 0)
+    for a in allagents(model)
+        nn = nearest_neighbor(a, model, r)
+        nn == nothing && continue
+        # Sort the pair to overcome any uniqueness issues
+        new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
+        if new_pair ∉ pairs
+            # We also need to check if our current pair is closer to each
+            # other than any pair using our first id already in the list,
+            # so we keep track of nn distances.
+            dist = pair_distance(a.pos, model[nn.id].pos)
+
+            idx = findfirst(x -> first(new_pair) == x, first.(pairs))
+            if idx == nothing
+                push!(pairs, new_pair)
+                push!(distances, dist)
+            elseif idx != nothing && distances[idx] > dist
+                # Replace this pair, it is not the true neighbor
+                pairs[idx] = new_pair
+                distances[idx] = dist
+            end
+        end
+    end
+end
+
+function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+    # We don't know ahead of time what types the scheduler will provide. Get a list.
+    available_types = unique(typeof(model[id]) for id in scheduler(model))
+    for id in scheduler(model)
+        for nid in nearby_ids(model[id], model, r)
+            neigbor_type = typeof(model[nid])
+            if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
+                # Sort the pair to overcome any uniqueness issues
+                new_pair = isless(id, nid) ? (id, nid) : (nid, id)
+                new_pair ∉ pairs && push!(pairs, new_pair)
+            end
+        end
+    end
+end
+
+function pair_distance(pos1, pos2)
+    sqrt(sum(abs2.(pos1 .- pos2)))
+end
+
+struct PairIterator{A}
+    pairs::Vector{Tuple{Int,Int}}
+    agents::Dict{Int,A}
+end
+
+Base.length(iter::PairIterator) = length(iter.pairs)
+function Base.iterate(iter::PairIterator, i = 1)
+    i > length(iter) && return nothing
+    p = iter.pairs[i]
+    id1, id2 = p
+    return (iter.agents[id1], iter.agents[id2]), i + 1
+end

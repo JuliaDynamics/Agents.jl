@@ -73,6 +73,7 @@ end
     include("space_test.jl")
     include("collect_tests.jl")
     include("continuousSpace_tests.jl")
+    include("compartmentSpace_tests.jl")
     include("collisions_tests.jl")
 
 end
