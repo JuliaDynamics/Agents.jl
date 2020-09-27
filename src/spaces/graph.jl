@@ -14,7 +14,13 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
 The position type for this space is `Int`.
 
-To use graphs in combination with a grid or continuous space, see our
+The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
+
+`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
+amount of agents, and each agent can move between the nodes of the graph.
+If you want to model social networks, where each agent is equivalent with a node of
+a graph, you're better of using `nothing` (or other spaces) as the model space, and using
+a graph from LightGraphs.jl directly in the model parameters, as shown in the
 [Social networks with LightGraphs.jl](@ref) integration example.
 """
 function GraphSpace(graph::G) where {G<:AbstractGraph}
@@ -27,6 +33,7 @@ end
 Return the number of positions (vertices) in the `model` space.
 """
 LightGraphs.nv(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.nv(abm.space.graph)
+LightGraphs.nv(abm::GraphSpace) = LightGraphs.nv(space.graph)
 
 """
     ne(model::ABM)
@@ -34,10 +41,10 @@ Return the number of edges in the `model` space.
 """
 LightGraphs.ne(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 
-function Base.show(io::IO, space::GraphSpace)
+function Base.show(io::IO, s::GraphSpace)
     print(
         io,
-        "$(nameof(typeof(space))) with $(nv(space.graph)) positions and $(ne(space.graph)) edges",
+        "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges",
     )
 end
 
@@ -47,9 +54,9 @@ end
 random_position(model::ABM{<:AbstractAgent,<:GraphSpace}) = rand(1:nv(model))
 
 function remove_agent_from_space!(
-    agent::A,
-    model::ABM{A,<:GraphSpace},
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{A,<:GraphSpace},
+    ) where {A<:AbstractAgent}
     agentpos = agent.pos
     ids = ids_in_position(agentpos, model)
     splice!(ids, findfirst(a -> a == agent.id, ids))
@@ -57,10 +64,10 @@ function remove_agent_from_space!(
 end
 
 function move_agent!(
-    agent::A,
-    pos::ValidPos,
-    model::ABM{A,<:GraphSpace},
-) where {A<:AbstractAgent}
+        agent::A,
+        pos::ValidPos,
+        model::ABM{A,<:GraphSpace},
+    ) where {A<:AbstractAgent}
     oldpos = agent.pos
     ids = ids_in_position(oldpos, model)
     splice!(ids, findfirst(a -> a == agent.id, ids))
@@ -70,9 +77,9 @@ function move_agent!(
 end
 
 function add_agent_to_space!(
-    agent::A,
-    model::ABM{A,<:DiscreteSpace},
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{A,<:DiscreteSpace},
+    ) where {A<:AbstractAgent}
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
@@ -98,10 +105,10 @@ function nearby_ids(agent::A, model::ABM{A,<:GraphSpace}, args...; kwargs...) wh
 end
 
 function nearby_positions(
-    position::Integer,
-    model::ABM{A,<:GraphSpace};
-    neighbor_type::Symbol = :default,
-) where {A}
+        position::Integer,
+        model::ABM{A,<:GraphSpace};
+        neighbor_type::Symbol = :default,
+    ) where {A}
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn = if neighbor_type == :default
         LightGraphs.neighbors
@@ -116,11 +123,11 @@ function nearby_positions(
 end
 
 function nearby_positions(
-    position::Integer,
-    model::ABM{A,<:GraphSpace},
-    radius::Integer;
-    kwargs...,
-) where {A}
+        position::Integer,
+        model::ABM{A,<:GraphSpace},
+        radius::Integer;
+        kwargs...,
+    ) where {A}
     output = copy(nearby_positions(position, model; kwargs...))
     for _ in 2:radius
         newnps = (nearby_positions(np, model; kwargs...) for np in output)
@@ -130,3 +137,39 @@ function nearby_positions(
     filter!(i -> i != position, output)
 end
 
+#######################################################################################
+# Mutable graph functions
+#######################################################################################
+export rem_node!, add_node!, add_edge!
+
+"""
+    rem_node!(model::ABM{A, <: GraphSpace}, n::Int)
+Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
+
+**Warning:** LightGraphs.jl (and thus Agents.jl) swaps the index of the last node with
+that of the one to be removed, while every other node remains as is. This means that
+when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
+`n`-th node (and all its edges and agents) are deleted.
+"""
+function rem_node!(model::ABM{<:AbstractAgent, <: GraphSpace}, n::Int)
+    for id ∈ copy(ids_in_position(n, model)); kill_agent!(model[id], model); end
+    V = nv(model)
+    success = LightGraphs.rem_vertex!(model.space.graph, n)
+    n > V && error("Node number exceeds amount of nodes in graph!")
+    s = model.space.s
+    s[V], s[n] = s[n], s[V]
+    pop!(s)
+end
+
+"""
+    add_node!(model::ABM{A, <: GraphSpace}) → n
+Add a new node (i.e. possible position) to the model's graph and return it.
+You can connect this new node with existing ones using `add_edge!(model, n, m)`.
+"""
+function add_node!(model::ABM{<:AbstractAgent, <: GraphSpace})
+    add_vertex!(model.space.graph)
+    push!(model.space.s, Int[])
+    return nv(model)
+end
+
+LightGraphs.add_edge!(model, n, m) = add_edge!(model.space.graph, n, m)
