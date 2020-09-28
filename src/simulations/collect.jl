@@ -41,7 +41,8 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
 
   The resulting data name columns use the function [`aggname`](@ref), and create something
   like `:mean_weight` or `:maximum_f_x_pos`.
-  This name doesn't play well with anonymous functions!
+  This name doesn't play well with anonymous functions, but you can simply use
+  `DataFrames.rename!` to change the returned dataframe's column names.
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
@@ -97,12 +98,9 @@ Core function that loops over stepping a model and collecting data at each step.
 """
 function _run!(model, agent_step!, model_step!, n;
                when = true, when_model = when,
-               agent_properties=nothing, model_properties=nothing,
-               mdata=model_properties, adata=agent_properties, obtainer = identity,
+               mdata=nothing, adata=nothing, obtainer = identity,
                agents_first=true)
 
-    agent_properties ≠ nothing && @warn "use `adata` instead of `agent_properties`"
-    model_properties ≠ nothing && @warn "use `mdata` instead of `model_properties`"
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer

@@ -88,6 +88,7 @@ pages = [
     "API" => "api.md",
     "Interactive application" => "interact.md",
     "Ecosystem Integration" => [
+        "LightGraphs" => "examples/schoolyard.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",
         "BlackBoxOptim" => "examples/optim.md"
         ],
