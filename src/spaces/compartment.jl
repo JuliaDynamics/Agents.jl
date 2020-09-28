@@ -147,11 +147,11 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
         for cell in allcells
             if !any(x-> x> max_distance, abs.(cell .- focal_cell)) && max_distance > 1 # certain cell
                 ids = ids_in_position(cell, model)
-                final_ids = vcat(final_ids, ids)
+                append!(final_ids, ids)
             else # uncertain cell
                 ids = copy(ids_in_position(cell, model))
                 filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
-                final_ids = vcat(final_ids, ids)
+                append!(final_ids, ids)
             end
         end
         return final_ids
