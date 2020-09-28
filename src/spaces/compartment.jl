@@ -98,7 +98,7 @@ end
 grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) =
 grid_space_neighborhood(α, model.space.grid, r)
 
-function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
+function nearby_ids_cell(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos)), model, r)
     s = model.space.grid.s
     Iterators.flatten((s[i...] for i in nn))
@@ -122,27 +122,35 @@ cell_center(pos::Tuple) = getindex.(modf.(pos), 2) .+ 0.5
 distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 """
-space_neighbors(position, model::ABM, r=1; kwargs...) → ids
+        nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false) → ids
 
-Return an array of the ids of the agents within "radius" `r` of the given `position`
-(which must match type with the spatial structure of the `model`).
+Return an array of the ids of the agents within "radius" `r` of the given `position` in `CompartmentSpace`.
+
+If an agent is given instead of a position `pos`, the id of the agent is excluded.
+
+# Keywords
+* `exact=false` checks for exact distance rather than returing the ids of all
+agents in cells within `r`.
 """
-function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
     center = cell_center(pos)
     focal_cell = ceil.(Int, center)
     if exact
         newr = ceil.(Int, r)
         corner_of_largest_square_in_circle = floor.(Int, pos .+ newr)
         max_distance = corner_of_largest_square_in_circle[1] - focal_cell[1]
+        if max_distance == 0 
+            max_distance = r
+        end
         final_ids = Int[]
-        allcells = nearby_positions(focal_cell, model, newr)
+        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr)
         for cell in allcells
-            if !any(x-> x> max_distance, abs.(cell .- focal_cell)) # certain cell
+            if !any(x-> x> max_distance, abs.(cell .- focal_cell)) && max_distance > 1 # certain cell
                 ids = ids_in_position(cell, model)
                 final_ids = vcat(final_ids, ids)
             else # uncertain cell
-                ids = ids_in_position(cell, model)
-                filter!(i -> sqrt(sum(abs2.(pos .- model[i]))) ≤ rnew, ids)
+                ids = copy(ids_in_position(cell, model))
+                filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
                 final_ids = vcat(final_ids, ids)
             end
         end
@@ -150,11 +158,14 @@ function space_neighbors(pos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=
     else
         δ = distance_from_cell_center(pos, center)
         newr = ceil.(Int, r+δ)
-        return collect(nearby_ids(focal_cell, model, newr))
+        return collect(nearby_ids_cell(focal_cell, model, newr))
     end
 end
-    
-    
+
+function nearby_ids(a::A, model::ABM{A, <:CompartmentSpace}, r=1; exact=false) where {A<:AbstractAgent}
+    ids = nearby_ids(a.pos, model, r, exact=exact)
+    filter!(x -> x != a.id, ids)
+end
 ################################################################################
 ### Pretty printing
 ################################################################################
@@ -175,8 +186,8 @@ export nearest_neighbor, elastic_collision!, interacting_pairs
 Return the agent that has the closest distance to given `agent`. Valid only in continuous space.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent, model, r)
-  n = collect(nearby_ids(agent, model, r))
+function nearest_neighbor(agent, model, r; exact=false)
+  n = nearby_ids(agent, model, r; exact=exact)
   length(n) == 0 && return nothing
   d, j = Inf, 1
   for i in 1:length(n)
@@ -299,9 +310,9 @@ function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, sc
     end
 end
 
-function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real; exact=true)
     for a in allagents(model)
-        for nid in nearby_ids(a, model, r)
+        for nid in nearby_ids(a, model, r; exact=exact)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -335,11 +346,11 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
     end
 end
 
-function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler; exact=true)
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in nearby_ids(model[id], model, r)
+        for nid in nearby_ids(model[id], model, r, exact=exact)
             neigbor_type = typeof(model[nid])
             if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues

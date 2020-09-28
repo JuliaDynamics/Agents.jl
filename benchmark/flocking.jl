@@ -62,7 +62,7 @@ end
 
 function flocking_agent_step!(bird, model)
     ## Obtain the ids of neighbors within the bird's visual distance
-    ids = collect(nearby_ids(bird, model, bird.visual_distance))
+    ids = nearby_ids(bird, model, bird.visual_distance)
     ## Compute velocity based on rules defined above
     bird.vel =
     (
@@ -124,8 +124,10 @@ a = random_agent(model)
 aa = [random_agent(model) for i in 1:100]
 sleep(1e-9)
 
-println("Nearby Agents")
-@btime nearby_ids($a, $model);
+println("Nearby Agents - exact = false")
+@btime nearby_ids($a, $model, 1);
+println("Nearby Agents - exact = true")
+@btime nearby_ids($a, $model, 1, exact=true);
 println("nearby positions")
 @btime nearby_positions($a.pos, $model);
 
