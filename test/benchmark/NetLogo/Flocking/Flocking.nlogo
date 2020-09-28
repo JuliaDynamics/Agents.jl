@@ -7,7 +7,7 @@ turtles-own [
 
 to benchmark
   profiler:start         ;; start profiling
-  repeat 1000 [ go ]
+  repeat 100 [ go ]
   profiler:stop          ;; stop profiling
   print profiler:report  ;; view the results
   profiler:reset         ;; clear the data
@@ -27,10 +27,10 @@ to go
   ask turtles [ flock ]
   ;; the following line is used to make the turtles
   ;; animate more smoothly.
-  repeat 5 [ ask turtles [ fd 0.2 ] display ]
+  ;repeat 5 [ ask turtles [ fd 0.2 ] display ]
   ;; for greater efficiency, at the expense of smooth
   ;; animation, substitute the following line instead:
-  ;ask turtles [ fd 1 ]
+  ask turtles [ fd 1 ]
   tick
 end
 
@@ -186,7 +186,7 @@ population
 population
 1.0
 1000.0
-100.0
+300.0
 1.0
 1
 NIL
@@ -201,7 +201,7 @@ max-align-turn
 max-align-turn
 0.0
 20.0
-0.1
+5.0
 0.25
 1
 degrees
@@ -216,7 +216,7 @@ max-cohere-turn
 max-cohere-turn
 0.0
 20.0
-2.5
+3.0
 0.25
 1
 degrees
@@ -231,7 +231,7 @@ max-separate-turn
 max-separate-turn
 0.0
 20.0
-2.5
+1.5
 0.25
 1
 degrees
@@ -261,7 +261,7 @@ minimum-separation
 minimum-separation
 0.0
 5.0
-4.0
+1.0
 0.25
 1
 patches
@@ -678,6 +678,31 @@ setup
 repeat 200 [ go ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="benchmark" repetitions="1" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>benchmark</go>
+    <exitCondition>ticks = 100</exitCondition>
+    <enumeratedValueSet variable="max-cohere-turn">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-separate-turn">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="vision">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minimum-separation">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="population">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-align-turn">
+      <value value="5"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

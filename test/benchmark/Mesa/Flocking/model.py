@@ -21,15 +21,15 @@ class BoidFlockers(Model):
 
     def __init__(
         self,
-        population=100,
+        population=300,
         width=100,
         height=100,
         speed=1,
         vision=5,
-        separation=4,
-        cohere=0.25,
-        separate=0.25,
-        match=0.01,
+        separation=1,
+        cohere=0.03,
+        separate=0.015,
+        match=0.05,
     ):
         """
         Create a new Flockers model.

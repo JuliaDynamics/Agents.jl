@@ -5,7 +5,7 @@ times=()
 for i in {1..100}
 do
     startt=`date +%s%N`
-    java sim.app.flockers.FlockersBenchmark -for 1000 -quiet
+    java sim.app.flockers.FlockersBenchmark -for 100 -quiet
     endt=`date +%s%N`
     times+=(`expr $endt - $startt`)
 done

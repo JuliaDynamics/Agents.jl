@@ -18,9 +18,16 @@ a = @benchmark step!(model, agent_step!, model_step!, 500) setup = (
        count(i -> i isa Wolf, allagents(model)) > 0)
 println("Agents.jl WolfSheep (ms): ", minimum(a.times) * 1e-6)
 
-#a = @benchmark step!(model, agent_step!, model_step!, 500) setup =
-#    ((model, agent_step!, model_step!) = Models.flocking()) samples = 50
-#println("Agents.jl Flocking (ms): ", minimum(a.times) * 1e-6)
+a = @benchmark step!(model, agent_step!, model_step!, 100) setup = (
+    (model, agent_step!, model_step!) = Models.flocking(
+        n_birds = 300,
+        separation = 1,
+        cohere_factor = 0.03,
+        separate_factor = 0.015,
+        match_factor = 0.05,
+    )
+)
+println("Agents.jl Flocking (ms): ", minimum(a.times) * 1e-6)
 
 a = @benchmark step!(model, agent_step!, model_step!, 10) setup = (
     (model, agent_step!, model_step!) =

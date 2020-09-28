@@ -27,9 +27,9 @@ class Boid(Agent):
         velocity,
         vision,
         separation,
-        cohere=0.25,
-        separate=0.25,
-        match=0.01,
+        cohere=0.03,
+        separate=0.015,
+        match=0.05,
     ):
         """
         Create a new Boid flocker agent.

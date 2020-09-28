@@ -12,11 +12,8 @@ sys.path.insert(0, os.path.abspath("."))
 
 from model import BoidFlockers
 
-import random
-random.seed(2)
-
 def runthemodel(flock):
-    for i in range(0, 1000):
+    for i in range(0, 100):
       flock.step()
 
 

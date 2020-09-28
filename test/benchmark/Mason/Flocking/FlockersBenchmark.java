@@ -169,11 +169,11 @@ public class FlockersBenchmark extends SimState
         super(seed);
         this.width = 100.0; //
         this.height = 100.0; //
-        this.numFlockers = 100; //
-        this.cohesion = 0.25; //
-        this.avoidance = 4.0; //
+        this.numFlockers = 300; //
+        this.cohesion = 0.03; //
+        this.avoidance = 0.015; //
         this.randomness = 1.0; //
-        this.consistency = 0.01; //
+        this.consistency = 0.05; //
         this.momentum = 1.0; //
         this.deadFlockerProbability = 0.0; //
         this.neighborhood = 5.0; //
