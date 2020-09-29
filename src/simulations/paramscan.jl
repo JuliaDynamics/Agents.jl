@@ -30,7 +30,7 @@ The following keywords are propagated into [`run!`](@ref):
 ```julia
 agent_step!, model_step!, n, when, step0, parallel, replicates, adata, mdata
 ```
-`agent_step!, model_step!, n` are mandatory.
+`agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
 
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
