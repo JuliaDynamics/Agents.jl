@@ -260,7 +260,7 @@ Return the agent that has the closest distance to given `agent`, according to th
 space's metric. Valid only in continuous space.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent, model, r)
+function nearest_neighbor(agent, model::ABM{A, <:ContinuousSpace}, r) where {A}
   n = nearby_ids(agent, model, r)
   length(n) == 0 && return nothing
   d, j = Inf, 1
@@ -359,7 +359,7 @@ The argument `method` provides three pairing scenarios
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
-function interacting_pairs(model::ABM, r::Real, method; scheduler = model.scheduler)
+function interacting_pairs(model::ABM{A, <:ContinuousSpace}, r::Real, method; scheduler = model.scheduler) where {A}
     @assert method ∈ (:scheduler, :nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
@@ -374,7 +374,7 @@ function interacting_pairs(model::ABM, r::Real, method; scheduler = model.schedu
     return PairIterator(pairs, model.agents)
 end
 
-function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:ContinuousSpace}, r::Real, scheduler) where {A}
     #TODO: This can be optimized further I assume
     for id in scheduler(model)
         # Skip already checked agents
@@ -388,7 +388,7 @@ function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, sc
     end
 end
 
-function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
     for a in allagents(model)
         for nid in nearby_ids(a, model, r)
             # Sort the pair to overcome any uniqueness issues
@@ -398,7 +398,7 @@ function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
     end
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
+function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:ContinuousSpace}, r::Real) where {A}
     distances = Vector{Float64}(undef, 0)
     for a in allagents(model)
         nn = nearest_neighbor(a, model, r)
@@ -424,7 +424,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real)
     end
 end
 
-function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM, r::Real, scheduler)
+function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:ContinuousSpace}, r::Real, scheduler) where {A}
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)

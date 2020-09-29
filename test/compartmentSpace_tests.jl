@@ -107,7 +107,7 @@ end
     @test id ∉ se
   end
   pairs = interacting_pairs(model, 2.0, :all).pairs
-  @test length(pairs) == 3
+  @test length(pairs) == 5
   @test (3, 6) ∉ pairs
 
   space2 = CompartmentSpace((10, 10), 0.1,periodic = false)

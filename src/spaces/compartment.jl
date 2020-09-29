@@ -37,7 +37,7 @@ as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
+    s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:chebyshev)
     return CompartmentSpace(s, update_vel!, size(s))
 end
 
@@ -130,7 +130,8 @@ If an agent is given instead of a position `pos`, the id of the agent is exclude
 
 # Keywords
 * `exact=false` checks for exact distance rather than returing the ids of all
-agents in cells within `r`.
+agents in a circle within `r`. If false, returns all the cells in a square with 
+side equals 2(ceil(r)) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
     center = cell_center(pos)
