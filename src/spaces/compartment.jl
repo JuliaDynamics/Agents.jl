@@ -135,7 +135,7 @@ If an agent is given instead of a position `pos`, the id of the agent is exclude
 agents in a circle within `r`. If false, returns all the cells in a square with 
 side equals 2(ceil(r)) and the pos at its center. `exact=false` is faster.
 """
-function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false)
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
     center = cell_center(pos)
     focal_cell = ceil.(Int, center)
     if exact
@@ -146,7 +146,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
             max_distance = r
         end
         final_ids = Int[]
-        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr+1)
+        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr + sqrt(D))
         for cell in allcells
             if !any(x-> x> max_distance, abs.(cell .- focal_cell)) && max_distance > 1 # certain cell
                 ids = ids_in_position(cell, model)
