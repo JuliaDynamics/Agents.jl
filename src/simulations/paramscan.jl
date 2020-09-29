@@ -15,20 +15,18 @@ Keys of `parameters` should be of type `Symbol`.
 of which all values in `parameters` should be a subset. This means `parameters`
 can take both model and agent constructor properties.
 
-### Keywords
-All the following keywords are propagated into [`run!`](@ref).
-Defaults are also listed for convenience:
-`agent_step! = dummystep, n = 1, when = 1:n, model_step! = dummystep`,
-`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
-Keyword arguments such as `adata` and `mdata` are
-also propagated.
-
+## Keywords
 The following keywords modify the `paramscan` function:
 
-`include_constants::Bool=false` determines whether constant parameters should be
-included in the output `DataFrame`.
+- `include_constants::Bool=false` determines whether constant parameters should be
+  included in the output `DataFrame`.
+- `progress::Bool = true` whether to show the progress of simulations.
 
-`progress::Bool = true` whether to show the progress of simulations.
+The following keywords are propagated into [`run!`](@ref):
+```julia
+agent_step!, n, when, model_step!, step0, parallel, replicates
+adata, mdata
+```
 """
 function paramscan(parameters::Dict{Symbol,}, initialize;
   n = 1, agent_step! = dummystep,  model_step! = dummystep,
