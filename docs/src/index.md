@@ -49,7 +49,7 @@ Implementing an ABM framework in Julia has several advantages:
 
 Agents.jl is lightweight and modular.
 It has a short learning curve, and allows one to extend its capabilities and express complicated modeling scenarios.
-Agents.jl was originally inspired by the [Mesa](https://github.com/projectmesa/mesa) framework for Python, but has since then departed in design, leading to a dramatically simpler and cleaner API and a shorter learning curve, besides having obvious performance benefits (more than 10 times better performance than Mesa, see our [Agents.jl vs Mesa: speed comparison](@ref)).
+Agents.jl was originally inspired by the [Mesa](https://github.com/projectmesa/mesa) framework for Python, but has since then departed in design, leading to a dramatically simpler and cleaner API, besides having obvious performance benefits (more than 30 times better performance than Mesa in some cases, see our [Agents.jl Performance and Complexity Comparison](@ref)).
 
 
 ## Crash course on agent based modeling
