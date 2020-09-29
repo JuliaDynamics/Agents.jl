@@ -98,6 +98,11 @@ index!
 update_space!
 ```
 
+## Parameter scanning
+```@docs
+paramscan
+```
+
 ## Data collection
 The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
@@ -107,9 +112,7 @@ collect_agent_data!
 init_model_dataframe
 collect_model_data!
 aggname
-paramscan
 ```
-
 For example, the core loop of `run!` is just
 ```julia
 df_agent = init_agent_dataframe(model, adata)

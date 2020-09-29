@@ -257,10 +257,13 @@ data[(end - 10):end, :]
 # happy agents:
 
 happyperc(moods) = count(x -> x == true, moods) / length(moods)
-
 adata = [(:mood, happyperc)]
-parameters =
-    Dict(:min_to_be_happy => collect(2:5), :numagents => [200, 300], :griddims => (20, 20))
+
+parameters = Dict(
+    :min_to_be_happy => collect(2:5), # expanded
+    :numagents => [200, 300],         # expanded
+    :griddims => (20, 20),            # not Vector = not expanded
+)
 
 data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
 data

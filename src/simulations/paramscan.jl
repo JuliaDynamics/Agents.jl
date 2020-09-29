@@ -1,38 +1,72 @@
 export paramscan
 
 """
-    paramscan(parameters, initialize; kwargs...)
+    paramscan(parameters, initialize; kwargs...) → adf, mdf
 
-Run the model with all the parameter value combinations given in `parameters`
-while initializing the model with `initialize`.
+Perform a parameter scan of a ABM simulation output by collecting data from all
+parameter combinations into dataframes (one for agent data, one for model data).
+The dataframes columns are both the collected data (as in [`run!`](@ref)) but also the
+input parameter values used.
+
+`parameters` is a dictionary with key type `Symbol` which contains various parameters that
+will be scanned over (as well as other parameters that remain constant).
 This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
-internally. This means that every entry of `parameters` that is a `Vector`,
+convention. This means that every entry of `parameters` that is a `Vector`
 contains many parameters and thus is scanned. All other entries of
 `parameters` that are not `Vector`s are not expanded in the scan.
-Keys of `parameters` should be of type `Symbol`.
 
-`initialize` is a function that creates an ABM. It should accept keyword arguments,
-of which all values in `parameters` should be a subset. This means `parameters`
-can take both model and agent constructor properties.
+The second argument `initialize` is a function that creates an ABM and returns it.
+It should accept keyword arguments which are the *keys* of the `parameters` dictionary.
+Since the user decides how to use input arguments to make an ABM, `parameters` can be
+used to affect model properties, space type and creation as well as agent properties,
+see the example below.
 
-### Keywords
-All the following keywords are propagated into [`run!`](@ref).
-Defaults are also listed for convenience:
-`agent_step! = dummystep, n = 1, when = 1:n, model_step! = dummystep`,
-`step0::Bool = true`, `parallel::Bool = false`, `replicates::Int = 0`.
-Keyword arguments such as `adata` and `mdata` are
-also propagated.
-
+## Keywords
 The following keywords modify the `paramscan` function:
 
-`include_constants::Bool=false` determines whether constant parameters should be
-included in the output `DataFrame`.
+- `include_constants::Bool=false` determines whether constant parameters should be
+  included in the output `DataFrame`.
+- `progress::Bool = true` whether to show the progress of simulations.
 
-`progress::Bool = true` whether to show the progress of simulations.
+The following keywords are propagated into [`run!`](@ref):
+```julia
+agent_step!, model_step!, n, when, step0, parallel, replicates, adata, mdata
+```
+`agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
+
+## Example
+A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
+There we define
+```julia
+function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+    space = GridSpace(griddims, moore = true)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
+    model = ABM(SchellingAgent, space;
+                properties = properties, scheduler = random_activation)
+    for n in 1:numagents
+        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+        add_agent_single!(agent, model)
+    end
+    return model
+end
+```
+and do a parameter scan by doing:
+```julia
+happyperc(moods) = count(x -> x == true, moods) / length(moods)
+adata = [(:mood, happyperc)]
+
+parameters = Dict(
+    :min_to_be_happy => collect(2:5), # expanded
+    :numagents => [200, 300],         # expanded
+    :griddims => (20, 20),            # not Vector = not expanded
+)
+
+data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
+```
 """
 function paramscan(parameters::Dict{Symbol,}, initialize;
-  n = 1, agent_step! = dummystep,  model_step! = dummystep,
   progress::Bool = true, include_constants::Bool = false,
+  n = 1, agent_step! = dummystep,  model_step! = dummystep,
   kwargs...)
 
   if include_constants
