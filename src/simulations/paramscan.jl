@@ -3,9 +3,10 @@ export paramscan
 """
     paramscan(parameters, initialize; kwargs...) → adf, mdf
 
-Perform a parameter scan of the model by collecting simulation output from all parameter
-combinations into a single dataframe (one for the agents and one for the model),
-where the parameter values are also columns (besides the Agents.jl collected data).
+Perform a parameter scan of a ABM simulation output by collecting data from all
+parameter combinations into dataframes (one for agent data, one for model data).
+The dataframes columns are both the collected data (as in [`run!`](@ref)) but also the
+input parameter values used.
 
 `parameters` is a dictionary with key type `Symbol` which contains various parameters that
 will be scanned over (as well as other parameters that remain constant).
@@ -16,8 +17,9 @@ contains many parameters and thus is scanned. All other entries of
 
 The second argument `initialize` is a function that creates an ABM and returns it.
 It should accept keyword arguments which are the *keys* of the `parameters` dictionary.
-Since the user decides how to use input arguments to make an ABM, `parameters`
-may contain both model and agent properties.
+Since the user decides how to use input arguments to make an ABM, `parameters` can be
+used to affect model properties, space type and creation as well as agent properties,
+see the example below.
 
 ## Keywords
 The following keywords modify the `paramscan` function:
@@ -48,7 +50,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     return model
 end
 ```
-and collect data by doing:
+and do a parameter scan by doing:
 ```julia
 happyperc(moods) = count(x -> x == true, moods) / length(moods)
 adata = [(:mood, happyperc)]
