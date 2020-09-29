@@ -10,7 +10,9 @@ defvel2(a, m) = nothing
 
 """
     CompartmentSpace(d::NTuple{D,Real}, spacing; kwargs...)
-Create a `CompartmentSpace` in range 0 to d and dimensionality D.
+Create a `CompartmentSpace` in range 0 to d and with `spacing` divisions.
+For maximum performance, choose `spacing` such that there is approximately
+one agent per cell.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
 In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
@@ -37,7 +39,7 @@ as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function CompartmentSpace(d::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:chebyshev)
+    s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
     return CompartmentSpace(s, update_vel!, size(s))
 end
 
@@ -144,7 +146,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
             max_distance = r
         end
         final_ids = Int[]
-        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr)
+        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr+1)
         for cell in allcells
             if !any(x-> x> max_distance, abs.(cell .- focal_cell)) && max_distance > 1 # certain cell
                 ids = ids_in_position(cell, model)
