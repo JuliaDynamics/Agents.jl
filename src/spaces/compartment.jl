@@ -4,13 +4,15 @@ struct CompartmentSpace{D,P,F} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D, Int}
+    spacing::Float64
+    extent::NTuple{D, Float64}
 end
 
 defvel2(a, m) = nothing
 
 """
-    CompartmentSpace(d::NTuple{D,Real}, spacing; kwargs...)
-Create a `CompartmentSpace` in range 0 to d and with `spacing` divisions.
+    CompartmentSpace(extent::NTuple{D,Real}, spacing; kwargs...)
+Create a `CompartmentSpace` in range 0 to extent and with `spacing` divisions.
 For maximum performance, choose `spacing` such that there is approximately
 one agent per cell.
 In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
@@ -37,28 +39,28 @@ a performant solution is to convert between Tuple and SVector using
 [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
-function CompartmentSpace(d::NTuple{D,Real}, spacing;
+function CompartmentSpace(extent::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(floor.(Int, d ./ spacing), periodic=periodic, metric=:euclidean)
-    return CompartmentSpace(s, update_vel!, size(s))
+    s = GridSpace(floor.(Int, extent ./ spacing), periodic=periodic, metric=:euclidean)
+    return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
 function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
-    pos = Tuple(rand(D) .* model.space.dims)
+    pos = Tuple(rand(D) .* model.space.extent)
 end
 
-pos2cell(pos::Tuple) = ceil.(Int, pos)
-pos2cell(a::AbstractAgent) = pos2cell(a.pos)
+pos2cell(pos::Tuple, model) = ceil.(Int, pos ./ model.space.spacing)
+pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
 function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
     {A<:AbstractAgent}
-    push!(model.space.grid.s[pos2cell(a)...], a.id)
+    push!(model.space.grid.s[pos2cell(a, model)...], a.id)
     return a
 end
 
 function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
     {A<:AbstractAgent}
-    prev = model.space.grid.s[pos2cell(a)...]
+    prev = model.space.grid.s[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
@@ -101,13 +103,13 @@ grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) 
 grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids_cell(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos)), model, r)
+    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     s = model.space.grid.s
     Iterators.flatten((s[i...] for i in nn))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos)), model, r)
+    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
 
@@ -120,7 +122,7 @@ function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:Compartment
     return model.space.grid.s[pos...]
 end
 
-cell_center(pos::Tuple) = getindex.(modf.(pos), 2) .+ 0.5
+cell_center(pos, model) = ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing/2
 distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 """
@@ -136,22 +138,26 @@ agents in a circle within `r`. If false, returns all the cells in a square with
 side equals 2(ceil(r)) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
-    center = cell_center(pos)
-    focal_cell = ceil.(Int, center)
     if exact
-        newr = ceil.(Int, r)
-        corner_of_largest_square_in_circle = floor.(Int, pos .+ newr)
-        max_distance = corner_of_largest_square_in_circle[1] - focal_cell[1]
-        if max_distance == 0 
-            max_distance = r
-        end
+        grid_r_max = r < model.space.spacing ? r : ceil.(Int, r ./ model.space.spacing)
+        focal_cell = pos2cell(pos, model)
+        sqrtD = sqrt(D)
+        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
         final_ids = Int[]
-        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, newr + sqrt(D))
-        for cell in allcells
-            if !any(x-> x> max_distance, abs.(cell .- focal_cell)) && max_distance > 1 # certain cell
+        if grid_r_max >= 1
+            certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
+            uncertain_cells = setdiff(allcells, certain_cells)
+            for cell in certain_cells
                 ids = ids_in_position(cell, model)
                 append!(final_ids, ids)
-            else # uncertain cell
+            end
+            for cell in uncertain_cells
+                ids = copy(ids_in_position(cell, model))
+                filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
+                append!(final_ids, ids)
+            end
+        else
+            for cell in allcells
                 ids = copy(ids_in_position(cell, model))
                 filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
                 append!(final_ids, ids)
@@ -159,9 +165,9 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
         end
         return final_ids
     else
-        δ = distance_from_cell_center(pos, center)
-        newr = ceil.(Int, r+δ)
-        return collect(nearby_ids_cell(focal_cell, model, newr))
+        δ = distance_from_cell_center(pos, cell_center(pos, model))
+        grid_r = r+δ > model.space.spacing ?  ceil(Int, (r+δ)  / model.space.spacing) : 1
+        return collect(nearby_ids_cell(pos, model, grid_r))
     end
 end
 
@@ -284,7 +290,7 @@ The argument `method` provides three pairing scenarios
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
-function interacting_pairs(model::ABM{A, <:CompartmentSpace}, r::Real, method; scheduler = model.scheduler) where {A}
+function interacting_pairs(model::ABM{A, <:CompartmentSpace}, r::Real, method; scheduler = model.scheduler, exact=true) where {A}
     @assert method ∈ (:scheduler, :nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
@@ -292,9 +298,9 @@ function interacting_pairs(model::ABM{A, <:CompartmentSpace}, r::Real, method; s
     elseif method == :scheduler
         scheduler_pairs!(pairs, model, r, scheduler)
     elseif method == :all
-        all_pairs!(pairs, model, r)
+        all_pairs!(pairs, model, r, exact=exact)
     elseif method == :types
-        type_pairs!(pairs, model, r, scheduler)
+        type_pairs!(pairs, model, r, scheduler, exact=exact)
     end
     return PairIterator(pairs, model.agents)
 end
