@@ -58,13 +58,13 @@
   agent2 = model1[2]
   agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
   add_agent_pos!(agent3, model1)
-  n_ids = nearby_ids(agent2, model1, agent2.weight, exact=true)
+  n_ids = collect(nearby_ids(agent2, model1, agent2.weight, exact=true))
   @test n_ids == [3]
-  n_ids = nearby_ids(agent2, model1, agent2.weight/2, exact=true)
+  n_ids = collect(nearby_ids(agent2, model1, agent2.weight/2, exact=true))
   @test n_ids == []
 
   # test that it finds both
-  n_ids = nearby_ids(agent2.pos, model1, agent2.weight)
+  n_ids = collect(nearby_ids(agent2.pos, model1, agent2.weight))
   @test sort!(n_ids) == [2, 3]
 
 end

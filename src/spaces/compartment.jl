@@ -52,13 +52,13 @@ end
 pos2cell(pos::Tuple, model) = ceil.(Int, pos ./ model.space.spacing)
 pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
-function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
+function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
     {A<:AbstractAgent}
     push!(model.space.grid.s[pos2cell(a, model)...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where 
+function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
     {A<:AbstractAgent}
     prev = model.space.grid.s[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
@@ -128,13 +128,13 @@ distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 """
         nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false) → ids
 
-Return an array of the ids of the agents within "radius" `r` of the given `position` in `CompartmentSpace`.
+Return an iterable of the ids of the agents within "radius" `r` of the given `position` in `CompartmentSpace`.
 
 If an agent is given instead of a position `pos`, the id of the agent is excluded.
 
 # Keywords
 * `exact=false` checks for exact distance rather than returing the ids of all
-agents in a circle within `r`. If false, returns all the cells in a square with 
+agents in a circle within `r` when true. If false, returns all the cells in a square with
 side equals 2(ceil(r)) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
@@ -143,37 +143,30 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
         focal_cell = pos2cell(pos, model)
         sqrtD = sqrt(D)
         allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
-        final_ids = Int[]
         if grid_r_max >= 1
             certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
-            uncertain_cells = setdiff(allcells, certain_cells)
-            for cell in certain_cells
-                ids = ids_in_position(cell, model)
-                append!(final_ids, ids)
-            end
-            for cell in uncertain_cells
-                ids = copy(ids_in_position(cell, model))
-                filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
-                append!(final_ids, ids)
-            end
+            certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
+
+            uncertain_cells = setdiff(allcells, certain_cells) # This allocates, but not sure if there's a better way.
+            uncertain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in uncertain_cells)
+
+            additional_ids = Iterators.filter(i->sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, uncertain_ids)
+
+            return Iterators.flatten((certain_ids, additional_ids))
         else
-            for cell in allcells
-                ids = copy(ids_in_position(cell, model))
-                filter!(i -> sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, ids)
-                append!(final_ids, ids)
-            end
+            all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
+            return Iterators.filter(i->sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, all_ids)
         end
-        return final_ids
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
         grid_r = r+δ > model.space.spacing ?  ceil(Int, (r+δ)  / model.space.spacing) : 1
-        return collect(nearby_ids_cell(pos, model, grid_r))
+        return nearby_ids_cell(pos, model, grid_r)
     end
 end
 
 function nearby_ids(a::A, model::ABM{A, <:CompartmentSpace}, r=1; exact=false) where {A<:AbstractAgent}
     ids = nearby_ids(a.pos, model, r, exact=exact)
-    filter!(x -> x != a.id, ids)
+    Iterators.filter(x -> x != a.id, ids)
 end
 ################################################################################
 ### Pretty printing
@@ -196,7 +189,7 @@ Return the agent that has the closest distance to given `agent`. Valid only in c
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::A, model::ABM{A, <:CompartmentSpace}, r; exact=false) where {A}
-  n = nearby_ids(agent, model, r; exact=exact)
+  n = collect(nearby_ids(agent, model, r; exact=exact))
   length(n) == 0 && return nothing
   d, j = Inf, 1
   for i in 1:length(n)
