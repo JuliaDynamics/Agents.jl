@@ -67,9 +67,9 @@ step!
 dummystep
 ```
 
-!!! note
+!!! note "Current step number"
     Notice that the current step number is not explicitly given to the `model_step!`
-    function, because this is useful only for a small subset of ABMs. If you need the
+    function, because this is useful only for a subset of ABMs. If you need the
     step information, implement this by adding a counting parameter into the model
     `properties`, and incrementing it by 1 each time `model_step!` is called.
     An example can be seen in the `model_step!` function of [Daisyworld](@ref),
