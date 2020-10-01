@@ -41,7 +41,7 @@ function flocking(;
     dims = (10, 10),
     spacing = 0.1
     )
-    
+
     space2d = CompartmentSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
@@ -62,7 +62,7 @@ end
 
 function flocking_agent_step!(bird, model)
     ## Obtain the ids of neighbors within the bird's visual distance
-    ids = nearby_ids(bird, model, bird.visual_distance)
+    ids = collect(nearby_ids(bird, model, bird.visual_distance))
     ## Compute velocity based on rules defined above
     bird.vel =
     (

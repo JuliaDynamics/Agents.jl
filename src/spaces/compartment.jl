@@ -41,7 +41,7 @@ as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function CompartmentSpace(extent::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(floor.(Int, extent ./ spacing), periodic=periodic, metric=:euclidean)
+    s = GridSpace(ceil.(Int, extent ./ spacing), periodic=periodic, metric=:euclidean)
     return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
@@ -69,7 +69,7 @@ end
 function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace{D,periodic}}) where {A<:AbstractAgent, D, periodic}
     remove_agent_from_space!(a, model)
     if periodic
-        pos = mod.(pos, model.space.dims)
+        pos = mod.(pos, model.space.extent)
     end
     a.pos = pos
     add_agent_to_space!(a, model)
