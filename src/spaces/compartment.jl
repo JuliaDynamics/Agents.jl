@@ -51,7 +51,7 @@ function CompartmentSpace(
 end
 
 function random_position(model::ABM{A,<:CompartmentSpace{D}}) where {A,D}
-    pos = Tuple(rand(D) .* model.space.extent)
+    map(dim->rand()*dim, model.space.extent)
 end
 
 pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing) .+ 1

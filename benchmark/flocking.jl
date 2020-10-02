@@ -39,7 +39,7 @@ function flocking(;
     match_factor = 0.01,
     visual_distance = 5.0,
     dims = (10, 10),
-    spacing = 0.1
+    spacing = 5.0/1.5
     )
 
     space2d = CompartmentSpace(dims, spacing; periodic = true)
