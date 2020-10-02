@@ -3,9 +3,9 @@ export CompartmentSpace
 struct CompartmentSpace{D,P,F} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
-    dims::NTuple{D, Int}
+    dims::NTuple{D,Int}
     spacing::Float64
-    extent::NTuple{D, Float64}
+    extent::NTuple{D,Float64}
 end
 
 defvel2(a, m) = nothing
@@ -39,34 +39,46 @@ a performant solution is to convert between Tuple and SVector using
 [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
-function CompartmentSpace(extent::NTuple{D,Real}, spacing;
-    update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(floor.(Int, extent ./ spacing).+1, periodic=periodic, metric=:euclidean)
+function CompartmentSpace(
+    extent::NTuple{D,Real},
+    spacing;
+    update_vel! = defvel2,
+    periodic = true,
+) where {D}
+    s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
     return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
-function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
+function random_position(model::ABM{A,<:CompartmentSpace{D}}) where {A,D}
     pos = Tuple(rand(D) .* model.space.extent)
 end
 
-pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing).+1
+pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing) .+ 1
 pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
-function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
-    {A<:AbstractAgent}
+function add_agent_to_space!(
+    a::A,
+    model::ABM{A,<:CompartmentSpace},
+) where {A<:AbstractAgent}
     push!(model.space.grid.s[pos2cell(a, model)...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
-    {A<:AbstractAgent}
+function remove_agent_from_space!(
+    a::A,
+    model::ABM{A,<:CompartmentSpace},
+) where {A<:AbstractAgent}
     prev = model.space.grid.s[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:CompartmentSpace{D,periodic}}) where {A<:AbstractAgent, D, periodic}
+function move_agent!(
+    a::A,
+    pos::Tuple,
+    model::ABM{A,<:CompartmentSpace{D,periodic}},
+) where {A<:AbstractAgent,D,periodic}
     remove_agent_from_space!(a, model)
     if periodic
         pos = mod.(pos, model.space.extent)
@@ -88,7 +100,11 @@ as `agent.pos += agent.vel * dt`.
 Notice that if you want the agent to instantly move to a specified position, do
     `move_agent!(agent, pos, model)`.
 """
-function move_agent!(agent::A, model::ABM{A, <: CompartmentSpace}, dt::Real = 1.0) where {A <: AbstractAgent}
+function move_agent!(
+    agent::A,
+    model::ABM{A,<:CompartmentSpace},
+    dt::Real = 1.0,
+) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
     pos = agent.pos .+ dt .* agent.vel
     move_agent!(agent, pos, model)
@@ -99,16 +115,24 @@ end
 # %% Neighbors and stuff
 #######################################################################################
 
-grid_space_neighborhood(α, model::ABM{<:AbstractAgent, <:CompartmentSpace}, r) =
-grid_space_neighborhood(α, model.space.grid, r)
+grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r) =
+    grid_space_neighborhood(α, model.space.grid, r)
 
-function nearby_ids_cell(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
+function nearby_ids_cell(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:CompartmentSpace},
+    r = 1,
+)
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     s = model.space.grid.s
     Iterators.flatten((s[i...] for i in nn))
 end
 
-function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r = 1)
+function nearby_positions(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:CompartmentSpace},
+    r = 1,
+)
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
@@ -122,7 +146,8 @@ function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:Compartment
     return model.space.grid.s[pos...]
 end
 
-cell_center(pos, model) = ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing/2
+cell_center(pos, model) =
+    ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing / 2
 distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 """
@@ -135,14 +160,20 @@ If an agent is given instead of a position `pos`, the id of the agent is exclude
 # Keywords
 * `exact=false` checks for exact distance rather than returing the ids of all
 agents in a circle within `r` when true. If false, returns all the cells in a square with
-side equals 2(floor(r)) and the pos at its center. `exact=false` is faster.
+side equals 2(floor(r)+1) and the pos at its center. `exact=false` is faster.
 """
-function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
+function nearby_ids(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:CompartmentSpace{D,periodic}},
+    r = 1;
+    exact = false,
+) where {D,periodic}
     if exact
-        grid_r_max = r < model.space.spacing ? r : floor.(Int, r ./ model.space.spacing).+1
+        grid_r_max = r < model.space.spacing ? r : floor.(Int, r ./ model.space.spacing)
         focal_cell = pos2cell(pos, model)
         sqrtD = sqrt(D)
         allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
+        distance = periodic ? periodic_distance : euclidean_distance
         if grid_r_max >= 1
             certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
             certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
@@ -150,33 +181,51 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
             uncertain_cells = setdiff(allcells, certain_cells) # This allocates, but not sure if there's a better way.
             uncertain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in uncertain_cells)
 
-            additional_ids = Iterators.filter(i->sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, uncertain_ids)
+            additional_ids = Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, uncertain_ids)
 
             return Iterators.flatten((certain_ids, additional_ids))
         else
             all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
-            return Iterators.filter(i->sqrt(sum(abs2.(pos .- model[i].pos))) ≤ r, all_ids)
+            return Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, all_ids)
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
-        grid_r = r+δ > model.space.spacing ? floor(Int, (r+δ)  / model.space.spacing)+1 : 1
+        grid_r =
+            r + δ > model.space.spacing ? floor(Int, (r + δ) / model.space.spacing) + 1 : 1
         return nearby_ids_cell(pos, model, grid_r)
     end
 end
 
-function nearby_ids(a::A, model::ABM{A, <:CompartmentSpace}, r=1; exact=false) where {A<:AbstractAgent}
-    ids = nearby_ids(a.pos, model, r, exact=exact)
+euclidean_distance(p1, p2, space_dims) = sqrt(sum(abs2.(p1 .- p2)))
+function periodic_distance(p1, p2, space_dims)
+    total = 0
+    for (i, (a, b)) in enumerate(zip(p1, p2))
+        delta = abs(b - a)
+        if delta > space_dims[i] - delta
+            delta = space_dims[i] - delta
+        end
+        total += delta^2
+    end
+    sqrt(total)
+end
+
+function nearby_ids(
+    a::A,
+    model::ABM{A,<:CompartmentSpace},
+    r = 1;
+    exact = false,
+) where {A<:AbstractAgent}
+    ids = nearby_ids(a.pos, model, r, exact = exact)
     Iterators.filter(x -> x != a.id, ids)
 end
 ################################################################################
 ### Pretty printing
 ################################################################################
-function Base.show(io::IO, space::CompartmentSpace{D,P}) where {D, P}
+function Base.show(io::IO, space::CompartmentSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
     space.update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
 end
-
 
 #######################################################################################
 # Continuous space exclusive
@@ -188,17 +237,22 @@ export nearest_neighbor, elastic_collision!, interacting_pairs
 Return the agent that has the closest distance to given `agent`. Valid only in continuous space.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent::A, model::ABM{A, <:CompartmentSpace}, r; exact=false) where {A}
-  n = collect(nearby_ids(agent, model, r; exact=exact))
-  length(n) == 0 && return nothing
-  d, j = Inf, 1
-  for i in 1:length(n)
-    @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
-    if dnew < d
-      d, j = dnew, i
+function nearest_neighbor(
+    agent::A,
+    model::ABM{A,<:CompartmentSpace},
+    r;
+    exact = false,
+) where {A}
+    n = collect(nearby_ids(agent, model, r; exact = exact))
+    length(n) == 0 && return nothing
+    d, j = Inf, 1
+    for i in 1:length(n)
+        @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
+        if dnew < d
+            d, j = dnew, i
+        end
     end
-  end
-  return @inbounds model[n[j]]
+    return @inbounds model[n[j]]
 end
 
 using LinearAlgebra
@@ -220,38 +274,39 @@ that specularly reflects the other agent. In this case of course momentum is not
 conserved, but kinetic energy is still conserved.
 """
 function elastic_collision!(a, b, f = nothing)
-  # Do elastic collision according to
-  # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-  v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
-  length(v1) != 2 && error("This function works only for two dimensions.")
-  r1 = x1 .- x2; r2 = x2 .- x1
-  m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
-  # mass weights
-  m1 == m2 == Inf && return false
-  if m1 == Inf
-    @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
-    dot(r1, v2) ≤ 0 && return false
-    v1 = ntuple(x -> zero(eltype(v1)), length(v1))
-    f1, f2 = 0.0, 2.0
-  elseif m2 == Inf
-    @assert v2 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
-    dot(r2, v1) ≤ 0 && return false
-    v2 = ntuple(x -> zero(eltype(v1)), length(v1))
-    f1, f2 = 2.0, 0.0
-  else
-    # Check if disks face each other, to avoid double collisions
-    !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
-    f1 = (2m2/(m1+m2))
-    f2 = (2m1/(m1+m2))
-  end
-  ken = norm(v1)^2 + norm(v2)^2
-  dx = a.pos .- b.pos
-  dv = a.vel .- b.vel
-  n = norm(dx)^2
-  n == 0 && return false # do nothing if they are at the same position
-  a.vel = v1 .- f1 .* ( dot(v1 .- v2, r1) / n ) .* (r1)
-  b.vel = v2 .- f2 .* ( dot(v2 .- v1, r2) / n ) .* (r2)
-  return true
+    # Do elastic collision according to
+    # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+    v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
+    length(v1) != 2 && error("This function works only for two dimensions.")
+    r1 = x1 .- x2
+    r2 = x2 .- x1
+    m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+    # mass weights
+    m1 == m2 == Inf && return false
+    if m1 == Inf
+        @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        dot(r1, v2) ≤ 0 && return false
+        v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+        f1, f2 = 0.0, 2.0
+    elseif m2 == Inf
+        @assert v2 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        dot(r2, v1) ≤ 0 && return false
+        v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+        f1, f2 = 2.0, 0.0
+    else
+        # Check if disks face each other, to avoid double collisions
+        !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+        f1 = (2m2 / (m1 + m2))
+        f2 = (2m1 / (m1 + m2))
+    end
+    ken = norm(v1)^2 + norm(v2)^2
+    dx = a.pos .- b.pos
+    dv = a.vel .- b.vel
+    n = norm(dx)^2
+    n == 0 && return false # do nothing if they are at the same position
+    a.vel = v1 .- f1 .* (dot(v1 .- v2, r1) / n) .* (r1)
+    b.vel = v2 .- f2 .* (dot(v2 .- v1, r2) / n) .* (r2)
+    return true
 end
 
 """
@@ -283,7 +338,13 @@ The argument `method` provides three pairing scenarios
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
-function interacting_pairs(model::ABM{A, <:CompartmentSpace}, r::Real, method; scheduler = model.scheduler, exact=true) where {A}
+function interacting_pairs(
+    model::ABM{A,<:CompartmentSpace},
+    r::Real,
+    method;
+    scheduler = model.scheduler,
+    exact = true,
+) where {A}
     @assert method ∈ (:scheduler, :nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
@@ -291,14 +352,19 @@ function interacting_pairs(model::ABM{A, <:CompartmentSpace}, r::Real, method; s
     elseif method == :scheduler
         scheduler_pairs!(pairs, model, r, scheduler)
     elseif method == :all
-        all_pairs!(pairs, model, r, exact=exact)
+        all_pairs!(pairs, model, r, exact = exact)
     elseif method == :types
-        type_pairs!(pairs, model, r, scheduler, exact=exact)
+        type_pairs!(pairs, model, r, scheduler, exact = exact)
     end
     return PairIterator(pairs, model.agents)
 end
 
-function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentSpace}, r::Real, scheduler) where {A}
+function scheduler_pairs!(
+    pairs::Vector{Tuple{Int,Int}},
+    model::ABM{A,<:CompartmentSpace},
+    r::Real,
+    scheduler,
+) where {A}
     #TODO: This can be optimized further I assume
     for id in scheduler(model)
         # Skip already checked agents
@@ -312,9 +378,14 @@ function scheduler_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:Compart
     end
 end
 
-function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentSpace}, r::Real; exact=true) where {A}
+function all_pairs!(
+    pairs::Vector{Tuple{Int,Int}},
+    model::ABM{A,<:CompartmentSpace},
+    r::Real;
+    exact = true,
+) where {A}
     for a in allagents(model)
-        for nid in nearby_ids(a, model, r; exact=exact)
+        for nid in nearby_ids(a, model, r; exact = exact)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -322,7 +393,11 @@ function all_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentSp
     end
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentSpace}, r::Real) where {A}
+function true_pairs!(
+    pairs::Vector{Tuple{Int,Int}},
+    model::ABM{A,<:CompartmentSpace},
+    r::Real,
+) where {A}
     distances = Vector{Float64}(undef, 0)
     for a in allagents(model)
         nn = nearest_neighbor(a, model, r)
@@ -348,11 +423,17 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentS
     end
 end
 
-function type_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{A, <:CompartmentSpace}, r::Real, scheduler; exact=true) where {A}
+function type_pairs!(
+    pairs::Vector{Tuple{Int,Int}},
+    model::ABM{A,<:CompartmentSpace},
+    r::Real,
+    scheduler;
+    exact = true,
+) where {A}
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in nearby_ids(model[id], model, r, exact=exact)
+        for nid in nearby_ids(model[id], model, r, exact = exact)
             neigbor_type = typeof(model[nid])
             if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues

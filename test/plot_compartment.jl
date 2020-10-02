@@ -58,6 +58,8 @@ plot!(p, circleShape(a.pos[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw
 xlims!(0, s.extent[1])
 ylims!(0, s.extent[2])
 
+
+# --- EXACT ---
 function act(a)
     if a.id == agentid
         return :red
@@ -70,4 +72,21 @@ end
 p = plotabm(model, as=4, ac=act, grid = (:both, :dot, 1, 0.9), xticks=(0:s.spacing:s.extent[1]), yticks=(0:s.spacing:s.extent[2]), size=(1000, 1000))
 plot!(p, circleShape(a.pos[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
       c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+# Add all possible mirrors
+plot!(p, circleShape(a.pos[1]-s.extent[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]-s.extent[1], a.pos[2]-s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1], a.pos[2]-s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]+s.extent[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]+s.extent[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+# Truncate view
+xlims!(0, s.extent[1])
+ylims!(0, s.extent[2])
+
 
