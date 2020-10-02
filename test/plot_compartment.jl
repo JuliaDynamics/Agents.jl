@@ -7,7 +7,7 @@ mutable struct Ag <: AbstractAgent
     pos::NTuple{2,Float64}
 end
 
-s = CompartmentSpace((10, 10), 0.2)
+s = CompartmentSpace((10, 10), 1.0)
 model = ABM(Ag, s)
 for i in 1:800
     add_agent!(model)
@@ -41,7 +41,22 @@ p = plotabm(model, as=4, ac=ac, grid = (:both, :dot, 1, 0.9), xticks=(0:s.spacin
 scatter!(search_region; markershape=:square, markersize=8, markerstrokewidth = 0, markeralpha = 0.2, markercolor=:grey)
 plot!(p, circleShape(a.pos[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
       c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
-
+# Add all possible mirrors
+plot!(p, circleShape(a.pos[1]-s.extent[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]-s.extent[1], a.pos[2]-s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1], a.pos[2]-s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]+s.extent[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1]+s.extent[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+plot!(p, circleShape(a.pos[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw = 0.5,
+      c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
+# Truncate view
+xlims!(0, s.extent[1])
+ylims!(0, s.extent[2])
 
 function act(a)
     if a.id == agentid
