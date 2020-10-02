@@ -139,7 +139,7 @@ side equals 2(floor(r)) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
     if exact
-        grid_r_max = r < model.space.spacing ? r : ceil.(Int, r ./ model.space.spacing)
+        grid_r_max = r < model.space.spacing ? r : floor.(Int, r ./ model.space.spacing).+1
         focal_cell = pos2cell(pos, model)
         sqrtD = sqrt(D)
         allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
@@ -159,7 +159,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
-        grid_r = r+δ > model.space.spacing ? ceil(Int, (r+δ)  / model.space.spacing) : 1
+        grid_r = r+δ > model.space.spacing ? floor(Int, (r+δ)  / model.space.spacing)+1 : 1
         return nearby_ids_cell(pos, model, grid_r)
     end
 end
