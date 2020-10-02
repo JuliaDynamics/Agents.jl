@@ -12,7 +12,7 @@ for space in ["graph", "grid", "continuous"]
     SUITE[space]["add"] = BenchmarkGroup(["agent_pos"])
     SUITE[space]["add_union"] = BenchmarkGroup(["agent_pos"])
     if space == "continuous"
-        SUITE[space]["move"] = BenchmarkGroup(["update", "vel"])
+        SUITE[space]["move"] = BenchmarkGroup(["update"])
         SUITE[space]["neighbors"] = BenchmarkGroup([
             "nearby_ids",
             "nearby_agents",
@@ -177,14 +177,14 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
 
-continuous_model = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 1.5))
+continuous_model = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 0.5))
 continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 # For tuning, this is actually impossible. So until CompartmentSpace is implemented, we drop these tests.
 SUITE["continuous"]["add"]["agent_pos"] =
     @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
-        (cmodel = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 1.5))) samples =
+        (cmodel = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 0.5))) samples =
         100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
@@ -197,14 +197,14 @@ SUITE["continuous"]["add_union"]["agent_pos"] =
                 ContinuousAgentFour,
                 ContinuousAgentFive,
             },
-            CompartmentSpace((10.0, 10.0, 10.0), 1.5);
+            CompartmentSpace((10.0, 10.0, 10.0), 0.5);
             warn = false,
         )
     ) samples = 100
 
-for x in range(0, stop = 10.0, length = 7)
-    for y in range(0, stop = 10.0, length = 7)
-        for z in range(0, stop = 10.0, length = 7)
+for x in range(0, stop = 9.99, length = 7)
+    for y in range(0, stop = 9.99, length = 7)
+        for z in range(0, stop = 9.99, length = 7)
             add_agent!((x, y, z), continuous_model, (0.8, 0.7, 1.3), 6.5, false)
         end
     end
@@ -212,8 +212,6 @@ end
 a = continuous_model[139]
 pos = (7.07, 8.10, 6.58)
 SUITE["continuous"]["move"]["update"] = @benchmarkable move_agent!($a, $continuous_model)
-#SUITE["continuous"]["move"]["vel"] =
-#    @benchmarkable move_agent!($a, $continuous_model, (1.2, 0.0, 0.7))
 
 SUITE["continuous"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $continuous_model, 5) setup =

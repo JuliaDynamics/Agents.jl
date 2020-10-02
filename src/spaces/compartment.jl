@@ -12,10 +12,10 @@ defvel2(a, m) = nothing
 
 """
     CompartmentSpace(extent::NTuple{D,Real}, spacing; kwargs...)
-Create a `CompartmentSpace` in range 0 to extent and with `spacing` divisions.
-For maximum performance, choose `spacing` such that there is approximately
-one agent per cell.
-In this case, your agent positions (field `pos`) should be of type `NTuple{D, F}`
+Create a `CompartmentSpace` in range 0 to (but not including) `extent` and with `spacing`
+divisions. All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
+fractional remainder).
+Your agent positions (field `pos`) should be of type `NTuple{D, F}`
 where `F <: AbstractFloat`.
 In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
 the agent's velocity to use [`move_agent!`](@ref).
@@ -45,6 +45,7 @@ function CompartmentSpace(
     update_vel! = defvel2,
     periodic = true,
 ) where {D}
+    @assert all(d/spacing==floor(d/spacing) for d in extent) "All dimensions in `extent` must be completly divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
     return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
