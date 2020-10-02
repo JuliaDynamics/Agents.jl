@@ -126,7 +126,7 @@ end
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
 
-  space3 = CompartmentSpace((1,1), 0.1, periodic = false)
+  space3 = CompartmentSpace((10,10), 1.0, periodic = false)
   model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
   for i in 1:10
     add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
@@ -170,7 +170,7 @@ end
   @test (a.id, b.id) == (1,2)
 end
 
-@testset "nearest neighbor" begin 
+@testset "nearest neighbor" begin
   space = CompartmentSpace((1,1), 0.1; periodic = true)
   model = ABM(Agent9, space)
   pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
