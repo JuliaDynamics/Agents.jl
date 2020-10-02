@@ -41,7 +41,7 @@ as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function CompartmentSpace(extent::NTuple{D,Real}, spacing;
     update_vel! = defvel2, periodic = true) where {D}
-    s = GridSpace(ceil.(Int, extent ./ spacing), periodic=periodic, metric=:euclidean)
+    s = GridSpace(floor.(Int, extent ./ spacing).+1, periodic=periodic, metric=:euclidean)
     return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
@@ -49,7 +49,7 @@ function random_position(model::ABM{A, <:CompartmentSpace{D}}) where {A,D}
     pos = Tuple(rand(D) .* model.space.extent)
 end
 
-pos2cell(pos::Tuple, model) = ceil.(Int, pos ./ model.space.spacing)
+pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing).+1
 pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
 function add_agent_to_space!(a::A, model::ABM{A,<:CompartmentSpace}) where
@@ -135,7 +135,7 @@ If an agent is given instead of a position `pos`, the id of the agent is exclude
 # Keywords
 * `exact=false` checks for exact distance rather than returing the ids of all
 agents in a circle within `r` when true. If false, returns all the cells in a square with
-side equals 2(ceil(r)) and the pos at its center. `exact=false` is faster.
+side equals 2(floor(r)) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace{D}}, r=1; exact=false) where {D}
     if exact
@@ -159,7 +159,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
-        grid_r = r+δ > model.space.spacing ?  ceil(Int, (r+δ)  / model.space.spacing) : 1
+        grid_r = r+δ > model.space.spacing ? ceil(Int, (r+δ)  / model.space.spacing) : 1
         return nearby_ids_cell(pos, model, grid_r)
     end
 end
