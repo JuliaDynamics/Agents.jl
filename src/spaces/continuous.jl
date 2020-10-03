@@ -20,19 +20,14 @@ where `F <: AbstractFloat`.
 In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
 the agent's velocity to use [`move_agent!`](@ref).
 
-The optional argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
+The keyword argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
 the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
 You can of course change the agents' velocities
-during the agent interaction, the `update_vel!` functionality targets arbitrary force
-fields acting on the agents (e.g. some magnetic field).
+during the agent interaction, the `update_vel!` functionality targets spatial force
+fields acting on the agents individually (e.g. some magnetic field).
 By default no update is done this way.
 
-Notice that if you need to write your own custom `move_agent` function, call
-[`update_space!`](@ref) at the end, like in e.g. the [Bacterial Growth](@ref) example.
-
-## Keywords
-* `periodic = true` : whether continuous space is periodic or not
-* `update_vel! = defvel` : see above.
+The keyword `periodic = true` configures whether the space is periodic or not.
 
 **Note:** if your model requires linear algebra operations for which tuples are not supported,
 a performant solution is to convert between Tuple and SVector using
@@ -45,7 +40,7 @@ function ContinuousSpace(
         update_vel! = defvel,
         periodic = true,
     ) where {D}
-    @assert all(d/spacing==floor(d/spacing) for d in extent) "All dimensions in `extent` must be completely divisible by `spacing`"
+    @assert all(extent./spacing==floor(extent./spacing)) "All dimensions in `extent` must be completely divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
     return ContinuousSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
