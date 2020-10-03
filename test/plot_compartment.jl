@@ -31,7 +31,7 @@ function circleShape(h, k, r)
 end
 
 # %% --- INEXACT ---
-# agentid = rand(1:800)
+agentid = rand(1:800)
 a = model[agentid]
 δ = Agents.distance_from_cell_center(a.pos, Agents.cell_center(a.pos, model))
 grid_r = r+δ > s.spacing ? ceil(Int, (r+δ)  / s.spacing) : 1

@@ -136,7 +136,7 @@ function nearby_ids(
             return Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, all_ids)
         end
     else
-        δ = distance_from_cell_center(pos, cell_center(pos, model))
+        δ = distance_from_cell_center(pos, cell_center(pos, model))*sqrt(D)
         return nearby_ids_cell(pos, model, (r+δ) / model.space.spacing)
     end
 end
