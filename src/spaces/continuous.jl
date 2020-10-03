@@ -127,7 +127,7 @@ function nearby_ids(
     ) where {D,periodic,T}
     if exact
         grid_r_max = r < model.space.spacing ? T(1) : r / model.space.spacing + T(1)
-        grid_r_certain = grid_r_max - T(1.5)*sqrt(D)
+        grid_r_certain = grid_r_max - T(1.2)*sqrt(D)
         focal_cell = CartesianIndex(pos2cell(pos, model))
         allcells = grid_space_neighborhood(focal_cell, model, grid_r_max)
         distance = periodic ? euclidean_periodic : euclidean_straight

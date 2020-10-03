@@ -83,7 +83,7 @@ allcells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, gri
 search_region = [(a .* s.spacing) .- (s.spacing/2) for a in allcells]
 scatter!(p, search_region; markershape=:square, markersize=8, markerstrokewidth = 0, markeralpha = 0.2, markercolor=:grey)
 
-grid_r_certain = grid_r_max - 1.5*sqrt(2)
+grid_r_certain = grid_r_max - 1.2*sqrt(2)
 certain_cells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_certain)
 search_region = [(a .* s.spacing) .- (s.spacing/2) for a in certain_cells]
 scatter!(p, search_region; markershape=:diamond, markersize=8, markerstrokewidth = 0, markeralpha = 0.8, markercolor=:green)
