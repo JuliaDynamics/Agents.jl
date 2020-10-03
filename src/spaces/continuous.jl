@@ -1,17 +1,17 @@
 export ContinuousSpace
 
-struct ContinuousSpace{D,P,F,T,X<:Union{T, NTuple{D,T}}} <: AbstractSpace
+struct ContinuousSpace{D,P,F,T<:Real,X<:Union{T, NTuple{D,T}}} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
-    spacing::X
+    spacing::T
     extent::NTuple{D,T}
 end
 
 defvel(a, m) = nothing
 
 """
-    ContinuousSpace(extent::NTuple{D, <:Real}, spacing; kwargs...)
+    ContinuousSpace(extent::NTuple{D, <:Real}, spacing = min(extent)/10; kwargs...)
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
 `spacing` configures the compartment spacing that the space is divided in, in order to
 accelerate nearest neighbor functions like [`nearby_ids`](@ref).
@@ -36,7 +36,7 @@ as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function ContinuousSpace(
         extent::NTuple{D,X},
-        spacing;
+        spacing = min(extent)/10.0;
         update_vel! = defvel,
         periodic = true,
     ) where {D, X<:Real}
@@ -119,7 +119,7 @@ function nearby_ids(
         focal_cell = pos2cell(pos, model)
         sqrtD = sqrt(D)
         allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
-        distance = periodic ? periodic_distance : euclidean_distance
+        distance = periodic ? euclidean_periodic : euclidean_straight
         if grid_r_max >= 1
             certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
             certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
@@ -142,8 +142,9 @@ function nearby_ids(
     end
 end
 
-euclidean_distance(p1, p2, space_dims) = sqrt(sum(abs2.(p1 .- p2)))
-function periodic_distance(p1, p2, space_dims)
+euclidean_straight(p1, p2, space_dims) = sqrt(sum(abs2.(p1 .- p2)))
+
+function euclidean_periodic(p1, p2, space_dims)
     total = 0
     for (i, (a, b)) in enumerate(zip(p1, p2))
         delta = abs(b - a)
