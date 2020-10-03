@@ -1,13 +1,13 @@
 export ContinuousSpace
 
-struct ContinuousSpace{D,P,F,T<:Real,X<:Union{T, NTuple{D,T}}} <: AbstractSpace
+struct ContinuousSpace{D,P,F,T<:AbstractFloat} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
     spacing::T
     extent::NTuple{D,T}
 end
-
+Base.eltype(s::ContinuousSpace{D,P,F,T}) where {D,P,F,T} = T
 defvel(a, m) = nothing
 
 """
@@ -42,7 +42,8 @@ function ContinuousSpace(
     ) where {D, X<:Real}
     @assert all(extent./spacing .== floor.(extent./spacing)) "All dimensions in `extent` must be completely divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
-    return ContinuousSpace(s, update_vel!, size(s), spacing, extent)
+    Z = X <: AbstractFloat ? X : Float64
+    return ContinuousSpace(s, update_vel!, size(s), Z(spacing), Z.(extent))
 end
 
 function random_position(model::ABM{A,<:ContinuousSpace}) where {A}
@@ -111,7 +112,7 @@ end
 function nearby_ids(
         pos::ValidPos,
         model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
-        r = 1;
+        r = 1.0;
         exact = false,
     ) where {D,periodic}
     if exact
@@ -156,18 +157,8 @@ function euclidean_periodic(p1, p2, space_dims)
     sqrt(total)
 end
 
-function nearby_ids(
-        a::A,
-        model::ABM{A,<:ContinuousSpace},
-        r = 1;
-        exact = false,
-    ) where {A<:AbstractAgent}
-    ids = nearby_ids(a.pos, model, r, exact = exact)
-    Iterators.filter(x -> x != a.id, ids)
-end
-
 grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
-    grid_space_neighborhood(α, model.space.grid, r)
+grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids_cell(
         pos::ValidPos,
@@ -217,8 +208,8 @@ end
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
 """
-    nearest_neighbor(agent, model, r) → nearest
-Return the agent that has the closest distance to given `agent`. Valid only in continuous space.
+    nearest_neighbor(agent, model::ABM{<: ContinuousSpace}, r) → nearest
+Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(
@@ -261,7 +252,7 @@ function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
-    length(v1) != 2 && error("This function works only for two dimensions.")
+    length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2
     r2 = x2 .- x1
     m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
