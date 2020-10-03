@@ -1,14 +1,14 @@
 @testset "Continuous space" begin
 
   # Basic model initialization
-  space1 = CompartmentSpace((1, 1), 0.1; periodic = true)
-  space2 = CompartmentSpace((1, 1), 0.1; periodic = false)
-  space3 = CompartmentSpace((2, 1), 0.1; periodic = true)
-  space4 = CompartmentSpace((1, 2), 0.1; periodic = true)
-  space5 = CompartmentSpace((2, 2), 0.1; periodic = true)
-  space6 = CompartmentSpace((1, ), 0.1; periodic = true)
-  space7 = CompartmentSpace((1, 1, 1), 0.1; periodic = true)
-  space8 = CompartmentSpace((1, 1, 1), 0.1; periodic = false)
+  space1 = ContinuousSpace((1, 1), 0.1; periodic = true)
+  space2 = ContinuousSpace((1, 1), 0.1; periodic = false)
+  space3 = ContinuousSpace((2, 1), 0.1; periodic = true)
+  space4 = ContinuousSpace((1, 2), 0.1; periodic = true)
+  space5 = ContinuousSpace((2, 2), 0.1; periodic = true)
+  space6 = ContinuousSpace((1, ), 0.1; periodic = true)
+  space7 = ContinuousSpace((1, 1, 1), 0.1; periodic = true)
+  space8 = ContinuousSpace((1, 1, 1), 0.1; periodic = false)
 
   @test length(space1.dims) == 2
   @test length(space2.dims) == 2
@@ -19,9 +19,9 @@
   @test length(space7.dims) == 3
   @test length(space8.dims) == 3
 
-  @test_throws ArgumentError CompartmentSpace((-1,1), 0.1) # Cannot have negative extent
-  @test_throws MethodError CompartmentSpace([1,1], 0.1) # Must be a tuple
-  @test_throws MethodError CompartmentSpace(("one",1.0), 0.1) # Must contain reals
+  @test_throws ArgumentError ContinuousSpace((-1,1), 0.1) # Cannot have negative extent
+  @test_throws MethodError ContinuousSpace([1,1], 0.1) # Must be a tuple
+  @test_throws MethodError ContinuousSpace(("one",1.0), 0.1) # Must contain reals
 
   model1 = ABM(Agent6, space1)
   model2 = ABM(Agent6, space2)
@@ -86,7 +86,7 @@ function ignore_six(model::ABM{A,S,F,P}) where {A,S,F,P}
 end
 
 @testset "Interacting pairs" begin
-  space = CompartmentSpace((10, 10), 0.2, periodic = false)
+  space = ContinuousSpace((10, 10), 0.2, periodic = false)
   model = ABM(Agent6, space; scheduler = model -> sort!(collect(keys(model.agents));rev=true))
   pos = [
     (7.074386436066224, 4.963014649338054)
@@ -110,7 +110,7 @@ end
   @test length(pairs) == 5
   @test (3, 6) ∉ pairs
 
-  space2 = CompartmentSpace((10, 10), 0.1,periodic = false)
+  space2 = ContinuousSpace((10, 10), 0.1,periodic = false)
   model2 = ABM(Agent6, space2; scheduler = by_id)
   for i in 1:4
     add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
@@ -126,7 +126,7 @@ end
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
 
-  space3 = CompartmentSpace((10,10), 1.0, periodic = false)
+  space3 = ContinuousSpace((10,10), 1.0, periodic = false)
   model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
   for i in 1:10
     add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
@@ -152,7 +152,7 @@ end
   @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
 
   # Fix #288
-  space = CompartmentSpace((1,1), 0.1; periodic = true)
+  space = ContinuousSpace((1,1), 0.1; periodic = true)
   model = ABM(Agent6, space)
   pos = [(0.01, 0.01),(0.2,0.2),(0.5,0.5)]
   for i in pos
@@ -171,7 +171,7 @@ end
 end
 
 @testset "nearest neighbor" begin
-  space = CompartmentSpace((1,1), 0.1; periodic = true)
+  space = ContinuousSpace((1,1), 0.1; periodic = true)
   model = ABM(Agent9, space)
   pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
   for i in pos

@@ -1,4 +1,4 @@
-# Visually inspect CompartmentSpace `nearby_ids`
+# Visually inspect ContinuousSpace `nearby_ids`
 using Agents
 using AgentsPlots
 
@@ -7,7 +7,7 @@ mutable struct Ag <: AbstractAgent
     pos::NTuple{2,Float64}
 end
 
-s = CompartmentSpace((10, 10), 1.0)
+s = ContinuousSpace((10, 10), 1.0)
 model = ABM(Ag, s)
 for i in 1:800
     add_agent!(model)

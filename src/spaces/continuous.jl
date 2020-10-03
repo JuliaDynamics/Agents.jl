@@ -1,6 +1,6 @@
-export CompartmentSpace
+export ContinuousSpace
 
-struct CompartmentSpace{D,P,F} <: AbstractSpace
+struct ContinuousSpace{D,P,F} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
@@ -11,8 +11,8 @@ end
 defvel2(a, m) = nothing
 
 """
-    CompartmentSpace(extent::NTuple{D,Real}, spacing; kwargs...)
-Create a `CompartmentSpace` in range 0 to (but not including) `extent` and with `spacing`
+    ContinuousSpace(extent::NTuple{D,Real}, spacing; kwargs...)
+Create a `ContinuousSpace` in range 0 to (but not including) `extent` and with `spacing`
 divisions. All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
 fractional remainder).
 Your agent positions (field `pos`) should be of type `NTuple{D, F}`
@@ -39,7 +39,7 @@ a performant solution is to convert between Tuple and SVector using
 [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
-function CompartmentSpace(
+function ContinuousSpace(
     extent::NTuple{D,Real},
     spacing;
     update_vel! = defvel2,
@@ -47,10 +47,10 @@ function CompartmentSpace(
 ) where {D}
     @assert all(d/spacing==floor(d/spacing) for d in extent) "All dimensions in `extent` must be completly divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
-    return CompartmentSpace(s, update_vel!, size(s), spacing, Float64.(extent))
+    return ContinuousSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
-function random_position(model::ABM{A,<:CompartmentSpace{D}}) where {A,D}
+function random_position(model::ABM{A,<:ContinuousSpace{D}}) where {A,D}
     map(dim->rand()*dim, model.space.extent)
 end
 
@@ -59,7 +59,7 @@ pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
 function add_agent_to_space!(
     a::A,
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
 ) where {A<:AbstractAgent}
     push!(model.space.grid.s[pos2cell(a, model)...], a.id)
     return a
@@ -67,7 +67,7 @@ end
 
 function remove_agent_from_space!(
     a::A,
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
 ) where {A<:AbstractAgent}
     prev = model.space.grid.s[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
@@ -78,7 +78,7 @@ end
 function move_agent!(
     a::A,
     pos::Tuple,
-    model::ABM{A,<:CompartmentSpace{D,periodic}},
+    model::ABM{A,<:ContinuousSpace{D,periodic}},
 ) where {A<:AbstractAgent,D,periodic}
     remove_agent_from_space!(a, model)
     if periodic
@@ -89,9 +89,9 @@ function move_agent!(
 end
 
 """
-move_agent!(agent::A, model::ABM{A, CompartmentSpace}, dt = 1.0)
+move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
 Propagate the agent forwards one step according to its velocity,
-_after_ updating the agent's velocity (see [`CompartmentSpace`](@ref)).
+_after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
 Also take care of periodic boundary conditions.
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
@@ -103,7 +103,7 @@ Notice that if you want the agent to instantly move to a specified position, do
 """
 function move_agent!(
     agent::A,
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     dt::Real = 1.0,
 ) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
@@ -116,12 +116,12 @@ end
 # %% Neighbors and stuff
 #######################################################################################
 
-grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r) =
+grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
     grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids_cell(
     pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:CompartmentSpace},
+    model::ABM{<:AbstractAgent,<:ContinuousSpace},
     r = 1,
 )
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
@@ -131,19 +131,19 @@ end
 
 function nearby_positions(
     pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:CompartmentSpace},
+    model::ABM{<:AbstractAgent,<:ContinuousSpace},
     r = 1,
 )
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
 
-function positions(model::ABM{<:AbstractAgent,<:CompartmentSpace})
+function positions(model::ABM{<:AbstractAgent,<:ContinuousSpace})
     x = CartesianIndices(model.space.grid.s)
     return (Tuple(y) for y in x)
 end
 
-function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace})
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace})
     return model.space.grid.s[pos...]
 end
 
@@ -152,9 +152,9 @@ cell_center(pos, model) =
 distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
 
 """
-        nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:CompartmentSpace}, r=1; exact=false) → ids
+        nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r=1; exact=false) → ids
 
-Return an iterable of the ids of the agents within "radius" `r` of the given `position` in `CompartmentSpace`.
+Return an iterable of the ids of the agents within "radius" `r` of the given `position` in `ContinuousSpace`.
 
 If an agent is given instead of a position `pos`, the id of the agent is excluded.
 
@@ -165,7 +165,7 @@ side equals 2(floor(r)+1) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(
     pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:CompartmentSpace{D,periodic}},
+    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
     r = 1;
     exact = false,
 ) where {D,periodic}
@@ -212,7 +212,7 @@ end
 
 function nearby_ids(
     a::A,
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r = 1;
     exact = false,
 ) where {A<:AbstractAgent}
@@ -222,7 +222,7 @@ end
 ################################################################################
 ### Pretty printing
 ################################################################################
-function Base.show(io::IO, space::CompartmentSpace{D,P}) where {D,P}
+function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
     space.update_vel! ≠ defvel && (s *= " with velocity updates")
     print(io, s)
@@ -240,7 +240,7 @@ Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(
     agent::A,
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r;
     exact = false,
 ) where {A}
@@ -340,7 +340,7 @@ The argument `method` provides three pairing scenarios
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
 function interacting_pairs(
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r::Real,
     method;
     scheduler = model.scheduler,
@@ -362,7 +362,7 @@ end
 
 function scheduler_pairs!(
     pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r::Real,
     scheduler,
 ) where {A}
@@ -381,7 +381,7 @@ end
 
 function all_pairs!(
     pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r::Real;
     exact = true,
 ) where {A}
@@ -396,7 +396,7 @@ end
 
 function true_pairs!(
     pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r::Real,
 ) where {A}
     distances = Vector{Float64}(undef, 0)
@@ -426,7 +426,7 @@ end
 
 function type_pairs!(
     pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:CompartmentSpace},
+    model::ABM{A,<:ContinuousSpace},
     r::Real,
     scheduler;
     exact = true,

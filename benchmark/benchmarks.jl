@@ -177,14 +177,14 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
 
-continuous_model = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 0.5))
+continuous_model = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0), 0.5))
 continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
-# For tuning, this is actually impossible. So until CompartmentSpace is implemented, we drop these tests.
+# For tuning, this is actually impossible. So until ContinuousSpace is implemented, we drop these tests.
 SUITE["continuous"]["add"]["agent_pos"] =
     @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
-        (cmodel = ABM(ContinuousAgent, CompartmentSpace((10.0, 10.0, 10.0), 0.5))) samples =
+        (cmodel = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0), 0.5))) samples =
         100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
@@ -197,7 +197,7 @@ SUITE["continuous"]["add_union"]["agent_pos"] =
                 ContinuousAgentFour,
                 ContinuousAgentFive,
             },
-            CompartmentSpace((10.0, 10.0, 10.0), 0.5);
+            ContinuousSpace((10.0, 10.0, 10.0), 0.5);
             warn = false,
         )
     ) samples = 100
@@ -232,7 +232,7 @@ SUITE["continuous"]["neighbors"]["nearest"] =
 
 # Benchmark takes too long to be reasonable, even with a small sample.
 # This needs to be looked at in the future, but it's being ignored for the moment
-# (until CompartmentSpace is implemented)
+# (until ContinuousSpace is implemented)
 #genocide!(continuous_model, 50)
 #SUITE["continuous"]["neighbors"]["interacting"] =
 #@benchmarkable interacting_pairs($continuous_model, 3, :all) samples=5 seconds=60

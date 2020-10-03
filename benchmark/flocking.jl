@@ -42,7 +42,7 @@ function flocking(;
     spacing = 5.0/1.5
     )
 
-    space2d = CompartmentSpace(dims, spacing; periodic = true)
+    space2d = ContinuousSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
@@ -113,8 +113,8 @@ end
 
 
 
-# %% COMPARTMENT VERSION
-println("\n\nTimes of COMPARTMENT space")
+# %% Continuous VERSION
+println("\n\nTimes of Continuous space")
 println("Full model stepping")
 @btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = flocking())
 
