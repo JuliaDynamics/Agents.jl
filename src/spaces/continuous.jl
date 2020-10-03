@@ -35,14 +35,14 @@ a performant solution is to convert between Tuple and SVector using
 as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function ContinuousSpace(
-        extent::NTuple{D,Real},
+        extent::NTuple{D,X},
         spacing;
         update_vel! = defvel,
         periodic = true,
-    ) where {D}
-    @assert all(extent./spacing==floor(extent./spacing)) "All dimensions in `extent` must be completely divisible by `spacing`"
+    ) where {D, X<:Real}
+    @assert all(extent./spacing .== floor.(extent./spacing)) "All dimensions in `extent` must be completely divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
-    return ContinuousSpace(s, update_vel!, size(s), spacing, Float64.(extent))
+    return ContinuousSpace(s, update_vel!, size(s), spacing, extent)
 end
 
 function random_position(model::ABM{A,<:ContinuousSpace}) where {A}

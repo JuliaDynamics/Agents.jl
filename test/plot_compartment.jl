@@ -37,6 +37,7 @@ focal_cell = Agents.pos2cell(a.pos, model)
 allcells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r)
 search_region = [(a .* s.spacing) .- (s.spacing/2) for a in allcells]
 
+# %% --- INEXACT ---
 p = plotabm(model, as=4, ac=ac, grid = (:both, :dot, 1, 0.9), xticks=(0:s.spacing:s.extent[1]), yticks=(0:s.spacing:s.extent[2]), size=(1000, 1000))
 scatter!(search_region; markershape=:square, markersize=8, markerstrokewidth = 0, markeralpha = 0.2, markercolor=:grey)
 plot!(p, circleShape(a.pos[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
@@ -57,9 +58,10 @@ plot!(p, circleShape(a.pos[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw
 # Truncate view
 xlims!(0, s.extent[1])
 ylims!(0, s.extent[2])
+title!(p, "inexact")
 
 
-# --- EXACT ---
+# %% --- EXACT ---
 function act(a)
     if a.id == agentid
         return :red
@@ -88,5 +90,4 @@ plot!(p, circleShape(a.pos[1], a.pos[2]+s.extent[2], r), seriestype = :shape, lw
 # Truncate view
 xlims!(0, s.extent[1])
 ylims!(0, s.extent[2])
-
-
+title!(p, "exact")
