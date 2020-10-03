@@ -7,7 +7,8 @@ mutable struct Ag <: AbstractAgent
     pos::NTuple{2,Float64}
 end
 
-s = ContinuousSpace((10, 10), 1.0)
+ε = 0.5
+s = ContinuousSpace((10, 10), ε)
 model = ABM(Ag, s)
 for i in 1:800
     add_agent!(model)
@@ -30,7 +31,7 @@ function circleShape(h, k, r)
 end
 
 # %% --- INEXACT ---
-agentid = rand(1:800)
+# agentid = rand(1:800)
 a = model[agentid]
 δ = Agents.distance_from_cell_center(a.pos, Agents.cell_center(a.pos, model))
 grid_r = r+δ > s.spacing ? ceil(Int, (r+δ)  / s.spacing) : 1
