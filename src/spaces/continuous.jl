@@ -108,17 +108,6 @@ end
 #######################################################################################
 # %% Neighbors and stuff
 #######################################################################################
-"""
-    nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r=1; exact=false) → ids
-
-Return an iterable of the ids of the agents within "radius" `r` of the given `position` in `ContinuousSpace`.
-If an agent is given instead of a position `pos`, the id of the agent is excluded.
-
-# Keywords
-* `exact=false` checks for exact distance rather than returing the ids of all
-agents in a circle within `r` when true. If false, returns all the cells in a square with
-side equals 2(floor(r)+1) and the pos at its center. `exact=false` is faster.
-"""
 function nearby_ids(
         pos::ValidPos,
         model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
