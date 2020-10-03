@@ -1,13 +1,13 @@
 export ContinuousSpace
 
-struct ContinuousSpace{D,P,F,T<:AbstractFloat} <: AbstractSpace
+struct ContinuousSpace{D,P,T<:AbstractFloat, F} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
     spacing::T
     extent::NTuple{D,T}
 end
-Base.eltype(s::ContinuousSpace{D,P,F,T}) where {D,P,F,T} = T
+Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 defvel(a, m) = nothing
 
 """
@@ -121,18 +121,18 @@ end
 #######################################################################################
 function nearby_ids(
         pos::ValidPos,
-        model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
+        model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic,T}},
         r = 1;
         exact = false,
-    ) where {D,periodic}
+    ) where {D,periodic,T}
     if exact
-        grid_r_max = r < model.space.spacing ? r : floor.(Int, r ./ model.space.spacing)
-        focal_cell = pos2cell(pos, model)
-        sqrtD = sqrt(D)
-        allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
-        distance = periodic ? periodic_distance : euclidean_distance
+        grid_r_max = r < model.space.spacing ? T(1) : r / model.space.spacing + T(1)
+        grid_r_certain = grid_r_max - T(1.5)*sqrt(D)
+        focal_cell = CartesianIndex(pos2cell(pos, model))
+        allcells = grid_space_neighborhood(focal_cell, model, grid_r_max)
+        distance = periodic ? euclidean_periodic : euclidean_straight
         if grid_r_max >= 1
-            certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
+            certain_cells = grid_space_neighborhood(focal_cell, model, grid_r_certain)
             certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
 
             uncertain_cells = setdiff(allcells, certain_cells) # This allocates, but not sure if there's a better way.

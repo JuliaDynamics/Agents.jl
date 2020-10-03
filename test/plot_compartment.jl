@@ -1,6 +1,7 @@
 # Visually inspect ContinuousSpace `nearby_ids`
 using Agents
 using AgentsPlots
+AgentsPlots.Plots.pyplot()
 
 mutable struct Ag <: AbstractAgent
     id::Int
@@ -75,6 +76,18 @@ function act(a)
     end
 end
 p = plotabm(model, as=4, ac=act, grid = (:both, :dot, 1, 0.9), xticks=(0:s.spacing:s.extent[1]), yticks=(0:s.spacing:s.extent[2]), size=(1000, 1000))
+
+focal_cell = Agents.pos2cell(a.pos, model)
+grid_r_max = r < model.space.spacing ? 1.0 : r / model.space.spacing + 1
+allcells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max)
+search_region = [(a .* s.spacing) .- (s.spacing/2) for a in allcells]
+scatter!(p, search_region; markershape=:square, markersize=8, markerstrokewidth = 0, markeralpha = 0.2, markercolor=:grey)
+
+grid_r_certain = grid_r_max - 1.5*sqrt(2)
+certain_cells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_certain)
+search_region = [(a .* s.spacing) .- (s.spacing/2) for a in certain_cells]
+scatter!(p, search_region; markershape=:diamond, markersize=8, markerstrokewidth = 0, markeralpha = 0.8, markercolor=:green)
+
 plot!(p, circleShape(a.pos[1], a.pos[2], r), seriestype = :shape, lw = 0.5,
       c = :blue, linecolor = :black, legend = false, fillalpha = 0.2, aspect_ratio=1)
 # Add all possible mirrors
