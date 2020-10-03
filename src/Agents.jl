@@ -17,8 +17,7 @@ include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")
 include("spaces/discrete.jl")
-include("spaces/continuous_space.jl")
-include("spaces/compartment.jl")
+include("spaces/continuous.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")
