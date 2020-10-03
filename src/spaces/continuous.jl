@@ -11,14 +11,13 @@ end
 defvel(a, m) = nothing
 
 """
-    ContinuousSpace(extent::NTuple{D,Real}, spacing; kwargs...)
-Create a `ContinuousSpace` in range 0 to (but not including) `extent` and with `spacing`
-divisions. All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
+    ContinuousSpace(extent::NTuple{D, <:Real}, spacing; kwargs...)
+Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
+`spacing` configures the compartment spacing that the space is divided in, in order to
+accelerate nearest neighbor functions like [`nearby_ids`](@ref).
+All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
 fractional remainder).
-Your agent positions (field `pos`) should be of type `NTuple{D, F}`
-where `F <: AbstractFloat`.
-In addition, the agent type should have a third field `vel::NTuple{D, F}` representing
-the agent's velocity to use [`move_agent!`](@ref).
+Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`.
 
 The keyword argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
 the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
@@ -26,6 +25,7 @@ You can of course change the agents' velocities
 during the agent interaction, the `update_vel!` functionality targets spatial force
 fields acting on the agents individually (e.g. some magnetic field).
 By default no update is done this way.
+If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
 
 The keyword `periodic = true` configures whether the space is periodic or not.
 
@@ -108,47 +108,10 @@ end
 #######################################################################################
 # %% Neighbors and stuff
 #######################################################################################
-
-grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
-    grid_space_neighborhood(α, model.space.grid, r)
-
-function nearby_ids_cell(
-        pos::ValidPos,
-        model::ABM{<:AbstractAgent,<:ContinuousSpace},
-        r = 1,
-    )
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-    s = model.space.grid.s
-    Iterators.flatten((s[i...] for i in nn))
-end
-
-function nearby_positions(
-        pos::ValidPos,
-        model::ABM{<:AbstractAgent,<:ContinuousSpace},
-        r = 1,
-    )
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-    Iterators.filter(!isequal(pos), nn)
-end
-
-function positions(model::ABM{<:AbstractAgent,<:ContinuousSpace})
-    x = CartesianIndices(model.space.grid.s)
-    return (Tuple(y) for y in x)
-end
-
-function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace})
-    return model.space.grid.s[pos...]
-end
-
-cell_center(pos, model) =
-    ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing / 2
-distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
-
 """
-        nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r=1; exact=false) → ids
+    nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r=1; exact=false) → ids
 
 Return an iterable of the ids of the agents within "radius" `r` of the given `position` in `ContinuousSpace`.
-
 If an agent is given instead of a position `pos`, the id of the agent is excluded.
 
 # Keywords
@@ -212,6 +175,43 @@ function nearby_ids(
     ids = nearby_ids(a.pos, model, r, exact = exact)
     Iterators.filter(x -> x != a.id, ids)
 end
+
+grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
+    grid_space_neighborhood(α, model.space.grid, r)
+
+function nearby_ids_cell(
+        pos::ValidPos,
+        model::ABM{<:AbstractAgent,<:ContinuousSpace},
+        r = 1,
+    )
+    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
+    s = model.space.grid.s
+    Iterators.flatten((s[i...] for i in nn))
+end
+
+function nearby_positions(
+        pos::ValidPos,
+        model::ABM{<:AbstractAgent,<:ContinuousSpace},
+        r = 1,
+    )
+    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
+    Iterators.filter(!isequal(pos), nn)
+end
+
+function positions(model::ABM{<:AbstractAgent,<:ContinuousSpace})
+    x = CartesianIndices(model.space.grid.s)
+    return (Tuple(y) for y in x)
+end
+
+function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace})
+    return model.space.grid.s[pos...]
+end
+
+cell_center(pos, model) =
+    ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing / 2
+distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
+
+
 ################################################################################
 ### Pretty printing
 ################################################################################
