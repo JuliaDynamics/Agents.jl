@@ -148,7 +148,7 @@ is a trivial Euler scheme with `dt` the step size, i.e. the agent position is up
 as `agent.pos += agent.vel * dt`.
 
 Notice that if you want the agent to instantly move to a specified position, do
-`agent.pos = pos` and then `update_space!(agent, model)`.
+`agent.pos = pos` and then `update_space!(model, agent)`.
 """
 function move_agent!(agent::A, model::ABM{A, <: ContinuousSpace}, dt::Real = 1.0) where {A <: AbstractAgent}
   model.space.update_vel!(agent, model)

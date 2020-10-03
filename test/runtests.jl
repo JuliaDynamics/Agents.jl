@@ -75,5 +75,6 @@ end
     include("continuousSpace_tests.jl")
     include("compartmentSpace_tests.jl")
     include("collisions_tests.jl")
+    include("graph_tests.jl")
 
 end
