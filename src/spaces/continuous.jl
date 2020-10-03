@@ -147,8 +147,7 @@ function nearby_ids(
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
-        grid_r =
-            r + δ > model.space.spacing ? floor(Int, (r + δ) / model.space.spacing) + 1 : 1
+        grid_r = (r+δ)/model.space.spacing
         return nearby_ids_cell(pos, model, grid_r)
     end
 end
