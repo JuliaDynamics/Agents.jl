@@ -53,17 +53,13 @@ end
 pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos ./ model.space.spacing) .+ 1
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
 function cell_center(pos::NTuple{D, F}, model) where {D, F}
-    (pos2cell(pos, model) .- F(0.5)) .* model.space.spacing
+    ε = model.space.spacing
+    (pos2cell(pos, model) .- 1) .* ε .+ ε/2
 end
-distance_from_cell_center(pos, model::ABM) = distance_from_cell_center(pos, model.space.spacing)
-function distance_from_cell_center(pos::NTuple{D, F}, ε::Real) where {D, F}
-    x = F(0)
-    @inbounds for i in 1:D
-        c = floor(Int, pos[i]/ε) + 0.5
-        dx = c - x
-        x += dx*dx
-    end
-    return sqrt(x)
+distance_from_cell_center(pos, model::ABM) =
+distance_from_cell_center(pos, cell_center(pos, model))
+function distance_from_cell_center(pos::Tuple, center::Tuple)
+    sqrt(sum(abs2.(pos .- center)))
 end
 
 
@@ -126,7 +122,7 @@ end
 function nearby_ids(
         pos::ValidPos,
         model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
-        r = 1.0;
+        r = 1;
         exact = false,
     ) where {D,periodic}
     if exact
@@ -134,7 +130,7 @@ function nearby_ids(
         focal_cell = pos2cell(pos, model)
         sqrtD = sqrt(D)
         allcells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max + sqrtD)
-        distance = periodic ? euclidean_periodic : euclidean_straight
+        distance = periodic ? periodic_distance : euclidean_distance
         if grid_r_max >= 1
             certain_cells = grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r_max - sqrtD)
             certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
@@ -150,10 +146,13 @@ function nearby_ids(
             return Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, all_ids)
         end
     else
-        δ = distance_from_cell_center(pos, model)
-        return nearby_ids_cell(pos, model, (r+δ) / model.space.spacing)
+        δ = distance_from_cell_center(pos, cell_center(pos, model))
+        grid_r =
+            r + δ > model.space.spacing ? floor(Int, (r + δ) / model.space.spacing) + 1 : 1
+        return nearby_ids_cell(pos, model, grid_r)
     end
 end
+
 
 euclidean_straight(p1, p2, space_dims) = sqrt(sum(abs2.(p1 .- p2)))
 
