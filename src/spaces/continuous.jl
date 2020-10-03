@@ -1,10 +1,10 @@
 export ContinuousSpace
 
-struct ContinuousSpace{D,P,F,T} <: AbstractSpace
+struct ContinuousSpace{D,P,F,T,X<:Union{T, NTuple{D,T}}} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
-    spacing::T
+    spacing::X
     extent::NTuple{D,T}
 end
 
@@ -89,17 +89,15 @@ function move_agent!(
 end
 
 """
-    move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
+    move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt::Real = 1.0)
 Propagate the agent forwards one step according to its velocity,
-_after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
+_after_ updating the agent's velocity (if configured, see [`ContinuousSpace`](@ref)).
 Also take care of periodic boundary conditions.
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
-as `agent.pos += agent.vel * dt`.
-
-Notice that if you want the agent to instantly move to a specified position, do
-    `move_agent!(agent, pos, model)`.
+as `agent.pos += agent.vel * dt`. If you want to move the agent to a specified position, do
+`move_agent!(agent, pos, model)`.
 """
 function move_agent!(
         agent::A,
