@@ -50,8 +50,22 @@ function random_position(model::ABM{A,<:ContinuousSpace}) where {A}
     map(dim->rand()*dim, model.space.extent)
 end
 
-pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing) .+ 1
-pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
+pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos ./ model.space.spacing) .+ 1
+pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
+function cell_center(pos::NTuple{D, F}, model) where {D, F}
+    (pos2cell(pos, model) .- F(0.5)) .* model.space.spacing
+end
+distance_from_cell_center(pos, model::ABM) = distance_from_cell_center(pos, model.space.spacing)
+function distance_from_cell_center(pos::NTuple{D, F}, ε::Real) where {D, F}
+    x = F(0)
+    @inbounds for i in 1:D
+        c = floor(Int, pos[i]/ε) + 0.5
+        dx = c - x
+        x += dx*dx
+    end
+    return sqrt(x)
+end
+
 
 function add_agent_to_space!(
         a::A,
@@ -136,7 +150,7 @@ function nearby_ids(
             return Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, all_ids)
         end
     else
-        δ = distance_from_cell_center(pos, cell_center(pos, model))*sqrt(D)
+        δ = distance_from_cell_center(pos, model)
         return nearby_ids_cell(pos, model, (r+δ) / model.space.spacing)
     end
 end
@@ -185,11 +199,6 @@ end
 function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:ContinuousSpace})
     return model.space.grid.s[pos...]
 end
-
-cell_center(pos, model) =
-    ((pos2cell(pos, model) .- 1) .* model.space.spacing) .+ model.space.spacing / 2
-distance_from_cell_center(pos::Tuple, center) = sqrt(sum(abs2.(pos .- center)))
-
 
 ################################################################################
 ### Pretty printing

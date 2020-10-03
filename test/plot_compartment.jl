@@ -16,9 +16,10 @@ end
 
 r = 2
 function ac(a)
+    nids = nearby_ids(model[agentid], model, r, exact=false)
     if a.id == agentid
         return :red
-    elseif a.id in nearby_ids(model[agentid], model, r, exact=false)
+ elseif a.id in nids
         return :blue
     else
         return :yellow
@@ -33,7 +34,7 @@ end
 # %% --- INEXACT ---
 agentid = rand(1:800)
 a = model[agentid]
-δ = Agents.distance_from_cell_center(a.pos, Agents.cell_center(a.pos, model))
+δ = Agents.distance_from_cell_center(a.pos, model)
 grid_r = r+δ > s.spacing ? ceil(Int, (r+δ)  / s.spacing) : 1
 focal_cell = Agents.pos2cell(a.pos, model)
 allcells = Agents.grid_space_neighborhood(CartesianIndex(focal_cell), model, grid_r)
