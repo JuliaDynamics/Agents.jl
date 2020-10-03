@@ -1,14 +1,14 @@
 export ContinuousSpace
 
-struct ContinuousSpace{D,P,F} <: AbstractSpace
+struct ContinuousSpace{D,P,F,T} <: AbstractSpace
     grid::GridSpace{D,P}
     update_vel!::F
     dims::NTuple{D,Int}
-    spacing::Float64
-    extent::NTuple{D,Float64}
+    spacing::T
+    extent::NTuple{D,T}
 end
 
-defvel2(a, m) = nothing
+defvel(a, m) = nothing
 
 """
     ContinuousSpace(extent::NTuple{D,Real}, spacing; kwargs...)
@@ -32,7 +32,7 @@ Notice that if you need to write your own custom `move_agent` function, call
 
 ## Keywords
 * `periodic = true` : whether continuous space is periodic or not
-* `update_vel! = defvel2` : see above.
+* `update_vel! = defvel` : see above.
 
 **Note:** if your model requires linear algebra operations for which tuples are not supported,
 a performant solution is to convert between Tuple and SVector using
@@ -40,17 +40,17 @@ a performant solution is to convert between Tuple and SVector using
 as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function ContinuousSpace(
-    extent::NTuple{D,Real},
-    spacing;
-    update_vel! = defvel2,
-    periodic = true,
-) where {D}
-    @assert all(d/spacing==floor(d/spacing) for d in extent) "All dimensions in `extent` must be completly divisible by `spacing`"
+        extent::NTuple{D,Real},
+        spacing;
+        update_vel! = defvel,
+        periodic = true,
+    ) where {D}
+    @assert all(d/spacing==floor(d/spacing) for d in extent) "All dimensions in `extent` must be completely divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
     return ContinuousSpace(s, update_vel!, size(s), spacing, Float64.(extent))
 end
 
-function random_position(model::ABM{A,<:ContinuousSpace{D}}) where {A,D}
+function random_position(model::ABM{A,<:ContinuousSpace}) where {A}
     map(dim->rand()*dim, model.space.extent)
 end
 
@@ -58,17 +58,17 @@ pos2cell(pos::Tuple, model) = floor.(Int, pos ./ model.space.spacing) .+ 1
 pos2cell(a::AbstractAgent, model) = pos2cell(a.pos, model)
 
 function add_agent_to_space!(
-    a::A,
-    model::ABM{A,<:ContinuousSpace},
-) where {A<:AbstractAgent}
+        a::A,
+        model::ABM{A,<:ContinuousSpace},
+    ) where {A<:AbstractAgent}
     push!(model.space.grid.s[pos2cell(a, model)...], a.id)
     return a
 end
 
 function remove_agent_from_space!(
-    a::A,
-    model::ABM{A,<:ContinuousSpace},
-) where {A<:AbstractAgent}
+        a::A,
+        model::ABM{A,<:ContinuousSpace},
+    ) where {A<:AbstractAgent}
     prev = model.space.grid.s[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
@@ -76,10 +76,10 @@ function remove_agent_from_space!(
 end
 
 function move_agent!(
-    a::A,
-    pos::Tuple,
-    model::ABM{A,<:ContinuousSpace{D,periodic}},
-) where {A<:AbstractAgent,D,periodic}
+        a::A,
+        pos::Tuple,
+        model::ABM{A,<:ContinuousSpace{D,periodic}},
+    ) where {A<:AbstractAgent,D,periodic}
     remove_agent_from_space!(a, model)
     if periodic
         pos = mod.(pos, model.space.extent)
@@ -89,7 +89,7 @@ function move_agent!(
 end
 
 """
-move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
+    move_agent!(agent::A, model::ABM{A, ContinuousSpace}, dt = 1.0)
 Propagate the agent forwards one step according to its velocity,
 _after_ updating the agent's velocity (see [`ContinuousSpace`](@ref)).
 Also take care of periodic boundary conditions.
@@ -102,10 +102,10 @@ Notice that if you want the agent to instantly move to a specified position, do
     `move_agent!(agent, pos, model)`.
 """
 function move_agent!(
-    agent::A,
-    model::ABM{A,<:ContinuousSpace},
-    dt::Real = 1.0,
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{A,<:ContinuousSpace},
+        dt::Real = 1.0,
+    ) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
     pos = agent.pos .+ dt .* agent.vel
     move_agent!(agent, pos, model)
@@ -120,20 +120,20 @@ grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
     grid_space_neighborhood(α, model.space.grid, r)
 
 function nearby_ids_cell(
-    pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:ContinuousSpace},
-    r = 1,
-)
+        pos::ValidPos,
+        model::ABM{<:AbstractAgent,<:ContinuousSpace},
+        r = 1,
+    )
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     s = model.space.grid.s
     Iterators.flatten((s[i...] for i in nn))
 end
 
 function nearby_positions(
-    pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:ContinuousSpace},
-    r = 1,
-)
+        pos::ValidPos,
+        model::ABM{<:AbstractAgent,<:ContinuousSpace},
+        r = 1,
+    )
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
@@ -164,11 +164,11 @@ agents in a circle within `r` when true. If false, returns all the cells in a sq
 side equals 2(floor(r)+1) and the pos at its center. `exact=false` is faster.
 """
 function nearby_ids(
-    pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
-    r = 1;
-    exact = false,
-) where {D,periodic}
+        pos::ValidPos,
+        model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic}},
+        r = 1;
+        exact = false,
+    ) where {D,periodic}
     if exact
         grid_r_max = r < model.space.spacing ? r : floor.(Int, r ./ model.space.spacing)
         focal_cell = pos2cell(pos, model)
@@ -211,11 +211,11 @@ function periodic_distance(p1, p2, space_dims)
 end
 
 function nearby_ids(
-    a::A,
-    model::ABM{A,<:ContinuousSpace},
-    r = 1;
-    exact = false,
-) where {A<:AbstractAgent}
+        a::A,
+        model::ABM{A,<:ContinuousSpace},
+        r = 1;
+        exact = false,
+    ) where {A<:AbstractAgent}
     ids = nearby_ids(a.pos, model, r, exact = exact)
     Iterators.filter(x -> x != a.id, ids)
 end
@@ -239,11 +239,11 @@ Return the agent that has the closest distance to given `agent`. Valid only in c
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(
-    agent::A,
-    model::ABM{A,<:ContinuousSpace},
-    r;
-    exact = false,
-) where {A}
+        agent::A,
+        model::ABM{A,<:ContinuousSpace},
+        r;
+        exact = false,
+    ) where {A}
     n = collect(nearby_ids(agent, model, r; exact = exact))
     length(n) == 0 && return nothing
     d, j = Inf, 1
@@ -340,12 +340,12 @@ The argument `method` provides three pairing scenarios
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
 """
 function interacting_pairs(
-    model::ABM{A,<:ContinuousSpace},
-    r::Real,
-    method;
-    scheduler = model.scheduler,
-    exact = true,
-) where {A}
+        model::ABM{A,<:ContinuousSpace},
+        r::Real,
+        method;
+        scheduler = model.scheduler,
+        exact = true,
+    ) where {A}
     @assert method ∈ (:scheduler, :nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
@@ -361,11 +361,11 @@ function interacting_pairs(
 end
 
 function scheduler_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:ContinuousSpace},
-    r::Real,
-    scheduler,
-) where {A}
+        pairs::Vector{Tuple{Int,Int}},
+        model::ABM{A,<:ContinuousSpace},
+        r::Real,
+        scheduler,
+    ) where {A}
     #TODO: This can be optimized further I assume
     for id in scheduler(model)
         # Skip already checked agents
@@ -380,11 +380,11 @@ function scheduler_pairs!(
 end
 
 function all_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:ContinuousSpace},
-    r::Real;
-    exact = true,
-) where {A}
+        pairs::Vector{Tuple{Int,Int}},
+        model::ABM{A,<:ContinuousSpace},
+        r::Real;
+        exact = true,
+    ) where {A}
     for a in allagents(model)
         for nid in nearby_ids(a, model, r; exact = exact)
             # Sort the pair to overcome any uniqueness issues
@@ -395,10 +395,10 @@ function all_pairs!(
 end
 
 function true_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:ContinuousSpace},
-    r::Real,
-) where {A}
+        pairs::Vector{Tuple{Int,Int}},
+        model::ABM{A,<:ContinuousSpace},
+        r::Real,
+    ) where {A}
     distances = Vector{Float64}(undef, 0)
     for a in allagents(model)
         nn = nearest_neighbor(a, model, r)
@@ -425,12 +425,12 @@ function true_pairs!(
 end
 
 function type_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{A,<:ContinuousSpace},
-    r::Real,
-    scheduler;
-    exact = true,
-) where {A}
+        pairs::Vector{Tuple{Int,Int}},
+        model::ABM{A,<:ContinuousSpace},
+        r::Real,
+        scheduler;
+        exact = true,
+    ) where {A}
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
