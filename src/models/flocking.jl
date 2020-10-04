@@ -23,6 +23,7 @@ flocking(;
     match_factor = 0.01,
     visual_distance = 5.0,
     dims = (100, 100),
+    spacing = visual_distance / 1.5
 )
 ```
 Same as in [Flock model](@ref).
@@ -36,9 +37,10 @@ function flocking(;
         match_factor = 0.01,
         visual_distance = 5.0,
         dims = (100, 100),
+        spacing = visual_distance / 1.5
     )
 
-    space2d = ContinuousSpace(2; periodic = true, extend = dims)
+    space2d = ContinuousSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
@@ -53,7 +55,6 @@ function flocking(;
             visual_distance,
         )
     end
-    index!(model)
     return model, flocking_agent_step!, dummystep
 end
 

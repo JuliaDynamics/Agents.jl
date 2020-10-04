@@ -47,6 +47,7 @@ function social_distancing(;
         seed = 42,
         βmin = 0.4,
         βmax = 0.8,
+        spacing = 0.02
     )
 
     properties = Dict(
@@ -57,7 +58,7 @@ function social_distancing(;
         :interaction_radius => interaction_radius,
         :dt => dt,
     )
-    space = ContinuousSpace(2)
+    space = ContinuousSpace((1, 1), spacing; periodic = true)
     model = ABM(SocietyMember, space, properties = properties)
 
     Random.seed!(seed)
@@ -71,7 +72,6 @@ function social_distancing(;
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
-    Agents.index!(model)
     return model, social_distancing_agent_step!, social_distancing_model_step!
 end
 
