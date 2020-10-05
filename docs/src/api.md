@@ -94,7 +94,6 @@ isempty(::Integer, ::ABM)
 interacting_pairs
 nearest_neighbor
 elastic_collision!
-update_space!
 ```
 
 ## Parameter scanning
