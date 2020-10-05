@@ -18,6 +18,7 @@
 # It is also available from the `Models` module as [`Models.growing_bacteria`](@ref).
 
 using Agents, LinearAlgebra
+using Random # hide
 cd(@__DIR__) #src
 
 mutable struct SimpleCell <: AbstractAgent
@@ -92,12 +93,12 @@ nothing # hide
 # valid for small length scales, where viscous forces dominate over inertia.
 function agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-    agent.pos = agent.pos .+ model.dt * model.mobility .* fsym
+    new_pos = agent.pos .+ model.dt * model.mobility .* fsym
+    move_agent!(agent, new_pos, model)
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
     agent.growthprog += model.dt * agent.growthrate
     update_nodes!(agent)
-    update_space!(model, agent)
     return agent.pos
 end
 nothing # hide
@@ -140,7 +141,7 @@ nothing # hide
 
 # Okay, we can now initialize a model and see what it does.
 
-space = ContinuousSpace(2, extend = (12, 12), periodic = false, metric = :euclidean)
+space = ContinuousSpace((14, 9), 1.0)
 model = ABM(
     SimpleCell,
     space,
@@ -149,8 +150,8 @@ model = ABM(
 
 # Let's start with just two agents.
 
-add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
-add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
+add_agent!((6.5, 4.0), model, 0.0, 0.3, 0.0, 0.1)
+add_agent!((7.5, 4.0), model, 0.0, 0.0, 0.0, 0.1)
 nothing # hide
 
 # The model has several parameters, and some of them are of interest.
@@ -194,7 +195,8 @@ nothing # hide
 
 # and proceed with the animation
 
-e = model.space.extend
+Random.seed!(1680)
+e = model.space.extent
 anim = @animate for i in 0:50:5000
     step!(model, agent_step!, model_step!, 100)
     p1 = plotabm(

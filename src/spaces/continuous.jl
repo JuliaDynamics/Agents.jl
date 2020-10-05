@@ -27,7 +27,8 @@ fields acting on the agents individually (e.g. some magnetic field).
 By default no update is done this way.
 If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
 
-The keyword `periodic = true` configures whether the space is periodic or not.
+The keyword `periodic = true` configures whether the space is periodic or not. If set to
+`false` an error will occur if an agent's position exceeds the boundary.
 
 **Note:** if your model requires linear algebra operations for which tuples are not supported,
 a performant solution is to convert between Tuple and SVector using
