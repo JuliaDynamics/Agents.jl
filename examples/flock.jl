@@ -48,10 +48,10 @@ function initialize_model(;
     separate_factor = 0.25,
     match_factor = 0.01,
     visual_distance = 5.0,
-    dims = (100, 100),
+    extent = (100, 100),
     spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(dims, spacing; periodic = true)
+    space2d = ContinuousSpace(extent, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
