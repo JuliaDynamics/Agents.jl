@@ -26,7 +26,7 @@ growing_bacteria()
 Same as in [Bacterial Growth](@ref).
 """
 function growing_bacteria()
-    space = ContinuousSpace((14, 9), 1.0)
+    space = ContinuousSpace((14, 9), 1.0; periodic = false)
     model = ABM(
         SimpleCell,
         space,

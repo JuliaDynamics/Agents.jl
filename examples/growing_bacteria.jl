@@ -141,7 +141,7 @@ nothing # hide
 
 # Okay, we can now initialize a model and see what it does.
 
-space = ContinuousSpace((14, 9), 1.0)
+space = ContinuousSpace((14, 9), 1.0; periodic = false)
 model = ABM(
     SimpleCell,
     space,

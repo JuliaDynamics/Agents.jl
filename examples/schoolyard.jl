@@ -52,7 +52,7 @@ function schoolyard(;
 )
     model = ABM(
         Student,
-        ContinuousSpace((100, 100), spacing);
+        ContinuousSpace((100, 100), spacing; periodic = false);
         properties = Dict(
             :teacher_attractor => teacher_attractor,
             :noise => noise,

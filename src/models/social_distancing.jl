@@ -58,7 +58,7 @@ function social_distancing(;
         :interaction_radius => interaction_radius,
         :dt => dt,
     )
-    space = ContinuousSpace((1, 1), spacing; periodic = true)
+    space = ContinuousSpace((1, 1), spacing)
     model = ABM(SocietyMember, space, properties = properties)
 
     Random.seed!(seed)

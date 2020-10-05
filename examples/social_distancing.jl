@@ -37,7 +37,7 @@ end
 
 # Let's also initialize a trivial model with continuous space
 function ball_model(; speed = 0.002)
-    space2d = ContinuousSpace((1, 1), 0.02; periodic = true)
+    space2d = ContinuousSpace((1, 1), 0.02)
     model = ABM(Agent, space2d, properties = Dict(:dt => 1.0))
 
     ## And add some agents to the model
@@ -212,7 +212,7 @@ function sir_initiation(;
         interaction_radius,
         dt,
     )
-    space = ContinuousSpace((1,1), 0.02; periodic = true)
+    space = ContinuousSpace((1,1), 0.02)
     model = ABM(PoorSoul, space, properties = properties)
 
     ## Add initial individuals
