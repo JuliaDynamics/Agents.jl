@@ -66,7 +66,6 @@ function initialize_model(;
             visual_distance,
         )
     end
-    index!(model)
     return model
 end
 nothing # hide
