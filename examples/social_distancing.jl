@@ -47,7 +47,6 @@ function ball_model(; speed = 0.002)
         vel = sincos(2π * rand()) .* speed
         add_agent!(pos, model, vel, 1.0)
     end
-    index!(model)
     return model
 end
 
@@ -55,7 +54,6 @@ model = ball_model()
 
 # We took advantage of the functionality of [`add_agent!`](@ref) that creates the
 # agents automatically. For now all agents have the same absolute `speed`, and `mass`.
-# We `index!` the model, to make finding nearby agents faster.
 
 # The agent step function for now is trivial. It is just [`move_agent!`](@ref) in
 # continuous space
@@ -230,7 +228,6 @@ function sir_initiation(;
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
-    Agents.index!(model)
     return model
 end
 nothing # hide
