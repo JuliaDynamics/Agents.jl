@@ -36,6 +36,7 @@ sample!
 ```@docs
 nearby_ids
 nearby_positions
+euclidean
 ```
 
 ### WARNING: Iteration

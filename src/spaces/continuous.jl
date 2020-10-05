@@ -41,7 +41,7 @@ function ContinuousSpace(
         update_vel! = defvel,
         periodic = true,
     ) where {D, X<:Real}
-    @assert all(extent./spacing .== floor.(extent./spacing)) "All dimensions in `extent` must be completely divisible by `spacing`"
+    @assert extent./spacing == floor.(extent./spacing) "All dimensions in `extent` must be completely divisible by `spacing`"
     s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
     Z = X <: AbstractFloat ? X : Float64
     return ContinuousSpace(s, update_vel!, size(s), Z(spacing), Z.(extent))
@@ -122,16 +122,15 @@ end
 #######################################################################################
 function nearby_ids(
         pos::ValidPos,
-        model::ABM{<:AbstractAgent,<:ContinuousSpace{D,periodic,T}},
+        model::ABM{<:AbstractAgent,<:ContinuousSpace{D,P,T}},
         r = 1;
         exact = false,
-    ) where {D,periodic,T}
+    ) where {D,P,T}
     if exact
         grid_r_max = r < model.space.spacing ? T(1) : r / model.space.spacing + T(1)
         grid_r_certain = grid_r_max - T(1.2)*sqrt(D)
         focal_cell = CartesianIndex(pos2cell(pos, model))
         allcells = grid_space_neighborhood(focal_cell, model, grid_r_max)
-        distance = periodic ? euclidean_periodic : euclidean_straight
         if grid_r_max >= 1
             certain_cells = grid_space_neighborhood(focal_cell, model, grid_r_certain)
             certain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
@@ -139,33 +138,18 @@ function nearby_ids(
             uncertain_cells = setdiff(allcells, certain_cells) # This allocates, but not sure if there's a better way.
             uncertain_ids = Iterators.flatten(ids_in_position(cell, model) for cell in uncertain_cells)
 
-            additional_ids = Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, uncertain_ids)
+            additional_ids = Iterators.filter(i->euclidean(pos, model[i].pos, model) ≤ r, uncertain_ids)
 
             return Iterators.flatten((certain_ids, additional_ids))
         else
             all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
-            return Iterators.filter(i->distance(pos, model[i].pos, model.space.dims) ≤ r, all_ids)
+            return Iterators.filter(i->euclidean(pos, model[i].pos, model) ≤ r, all_ids)
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
         grid_r = (r+δ)/model.space.spacing
         return nearby_ids_cell(pos, model, grid_r)
     end
-end
-
-
-euclidean_straight(p1, p2, space_dims) = sqrt(sum(abs2.(p1 .- p2)))
-
-function euclidean_periodic(p1, p2, space_dims)
-    total = 0
-    for (i, (a, b)) in enumerate(zip(p1, p2))
-        delta = abs(b - a)
-        if delta > space_dims[i] - delta
-            delta = space_dims[i] - delta
-        end
-        total += delta^2
-    end
-    sqrt(total)
 end
 
 grid_space_neighborhood(α, model::ABM{<:AbstractAgent,<:ContinuousSpace}, r) =
@@ -228,7 +212,7 @@ function nearest_neighbor(
     length(n) == 0 && return nothing
     d, j = Inf, 1
     for i in 1:length(n)
-        @inbounds dnew = sqrt(sum(abs2.(agent.pos .- model[n[i]].pos)))
+        @inbounds dnew = euclidean(agent.pos, model[n[i]].pos, model)
         if dnew < d
             d, j = dnew, i
         end
@@ -389,7 +373,7 @@ function true_pairs!(
             # We also need to check if our current pair is closer to each
             # other than any pair using our first id already in the list,
             # so we keep track of nn distances.
-            dist = pair_distance(a.pos, model[nn.id].pos)
+            dist = euclidean(a.pos, nn.pos, model)
 
             idx = findfirst(x -> first(new_pair) == x, first.(pairs))
             if idx == nothing
@@ -423,10 +407,6 @@ function type_pairs!(
             end
         end
     end
-end
-
-function pair_distance(pos1, pos2)
-    sqrt(sum(abs2.(pos1 .- pos2)))
 end
 
 struct PairIterator{A}

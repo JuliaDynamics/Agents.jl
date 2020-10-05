@@ -87,6 +87,33 @@ end
     @test_throws ErrorException positions(model, :notreal)
 end
 
+@testset "Euclidean Distance" begin
+    model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic=true))
+    a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
+    b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
+    @test euclidean(a, b, model) ≈ 2.82842712
+
+    model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic=false))
+    a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
+    b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
+    @test euclidean(a, b, model) ≈ 10.198039
+
+    model = ABM(Agent3, GridSpace((12, 10); periodic=true))
+    a = add_agent!((1.0, 6.0), model, 2.0)
+    b = add_agent!((11.0, 4.0), model, 3.0)
+    @test euclidean(a, b, model) ≈ 2.82842712
+
+    model = ABM(Agent3, GridSpace((12, 10); periodic=false))
+    a = add_agent!((1.0, 6.0), model, 2.0)
+    b = add_agent!((11.0, 4.0), model, 3.0)
+    @test euclidean(a, b, model) ≈ 10.198039
+
+    model = ABM(Agent5, GraphSpace(path_graph(5)))
+    a = add_agent!(1, model, rand())
+    b = add_agent!(2, model, rand())
+    @test_throws MethodError euclidean(a, b, model)
+end
+
 @testset "Nearby Agents" begin
     undirected = ABM(Agent5, GraphSpace(path_graph(5)))
     @test nearby_positions(3, undirected) == [2, 4]
