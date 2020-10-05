@@ -25,10 +25,6 @@
 
   model1 = ABM(Agent6, space1)
   model2 = ABM(Agent6, space2)
-  model3 = ABM(Agent6, space3)
-  model4 = ABM(Agent6, space4)
-  model5 = ABM(Agent6, space5)
-  model6 = ABM(Agent6, space6)
 
   @test nagents(model1) == 0
   @test model1.agents == Dict()
@@ -37,35 +33,35 @@
   pos = (0.5, 0.5)
   vel = (0.2, 0.1)
   dia = 0.01
-  add_agent!(pos, model1, vel, dia)
-  @test collect(keys(model1.agents)) == [1]
-  @test model1[1].pos == (0.5, 0.5)
+  add_agent!(pos, model2, vel, dia)
+  @test collect(keys(model2.agents)) == [1]
+  @test model2[1].pos == (0.5, 0.5)
 
   # move_agent! without provided update_vel! function
-  move_agent!(model1[1], model1)
-  @test model1[1].pos == (0.7, 0.6)
+  move_agent!(model2[1], model2)
+  @test model2[1].pos == (0.7, 0.6)
 
-  kill_agent!(model1.agents[1], model1)
-  @test length(model1.agents) == 0
+  kill_agent!(model2.agents[1], model2)
+  @test length(model2.agents) == 0
 
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
-  add_agent!(agent, model1)
-  @test Agents.defvel(agent, model1) == nothing
-  @test collect(keys(model1.agents)) == [2]
+  add_agent!(agent, model2)
+  @test Agents.defvel(agent, model2) == nothing
+  @test collect(keys(model2.agents)) == [2]
 
   # agents within some range are found correctly
-  agent2 = model1[2]
-  new_pos = mod.(agent2.pos .+ 0.005, model1.space.extent)
+  agent2 = model2[2]
+  new_pos = min.(agent2.pos .+ 0.005, model2.space.extent.-0.0001)
   agent3 = Agent6(3, new_pos, vel, dia)
-  add_agent_pos!(agent3, model1)
-  n_ids = collect(nearby_ids(agent2, model1, agent2.weight, exact=true))
+  add_agent_pos!(agent3, model2)
+  n_ids = collect(nearby_ids(agent2, model2, agent2.weight, exact=true))
   @test n_ids == [3]
-  n_ids = collect(nearby_ids(agent2, model1, agent2.weight/2, exact=true))
+  n_ids = collect(nearby_ids(agent2, model2, agent2.weight/2, exact=true))
   @test n_ids == []
 
   # test that it finds both
-  n_ids = collect(nearby_ids(agent2.pos, model1, agent2.weight))
+  n_ids = collect(nearby_ids(agent2.pos, model2, agent2.weight))
   @test sort!(n_ids) == [2, 3]
 
 end
