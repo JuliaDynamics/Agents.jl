@@ -48,18 +48,18 @@ end
     agent = Agent3(1, (1,1), 5.3)
     @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)))
     # Cannot use Agent3 in a continuous space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(Agent3, ContinuousSpace(2))
-    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
+    @test_throws ArgumentError ABM(Agent3, ContinuousSpace((1,1), 0.1))
+    @test_throws ArgumentError ABM(agent, ContinuousSpace((1,1), 0.1))
     # Cannot use Agent4 in a continuous space context since it has no `vel` field
-    @test_throws ArgumentError ABM(Agent4, ContinuousSpace(2))
+    @test_throws ArgumentError ABM(Agent4, ContinuousSpace((1,1), 0.1))
     agent = Agent4(1, (1,1), 5)
-    @test_throws ArgumentError ABM(agent, ContinuousSpace(2))
+    @test_throws ArgumentError ABM(agent, ContinuousSpace((1,1), 0.1))
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
-    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(DiscreteVelocity, ContinuousSpace(2))
+    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(DiscreteVelocity, ContinuousSpace((1,1), 0.1))
     agent = DiscreteVelocity(1, (1,1), (2,3), 2.4)
-    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(agent, ContinuousSpace(2))
+    @test_logs (:warn, "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.") ABM(agent, ContinuousSpace((1,1), 0.1))
     # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(agent, ContinuousSpace(2); warn=false)) <: AbstractAgent
+    @test Agents.agenttype(ABM(agent, ContinuousSpace((1,1), 0.1); warn=false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
     @test_logs (:warn, "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.") ABM(ParametricAgent, GridSpace((1,1)))
     # Warning is suppressed if flag is set
@@ -165,7 +165,7 @@ end
 
 @testset "add_agent! (continuous)" begin
   properties = Dict(:x1=>1)
-  space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
+  space2d = ContinuousSpace((1,1), 0.1; periodic=true)
   model = ABM(Agent8, space2d; properties=properties)
   attributes = (f1=true,f2=1)
   add_agent!(model, attributes...)
@@ -217,12 +217,10 @@ end
   @test agent2.pos == (1,1)
 
   # ContinuousSpace
-  model = ABM(Agent6, ContinuousSpace(2))
+  model = ABM(Agent6, ContinuousSpace((1,1), 0.1))
   agent = add_agent!((0.0, 0.0), model, (0.5, 0.0), 1.0)
   move_agent!(agent, model)
   @test agent.pos == (0.5, 0.0)
-  move_agent!(agent, model, (0.1, 0.5))
-  @test agent.pos == (0.6, 0.5)
 end
 
 @testset "kill_agent!" begin
@@ -253,7 +251,7 @@ end
   end
   @test nagents(model) == 1
   # ContinuousSpace
-  model = ABM(Agent6, ContinuousSpace(2))
+  model = ABM(Agent6, ContinuousSpace((1,1), 0.1))
   add_agent!((0.7,0.1), model, (15,20), 5.0)
   add_agent!((0.2,0.9), model, (8,35), 1.7)
   @test nagents(model) == 2
@@ -330,7 +328,7 @@ end
   genocide!(model, complex_logic)
   @test nagents(model) < N
 
-  space2d = ContinuousSpace(2; periodic=true, extend=(1, 1))
+  space2d = ContinuousSpace((1,1), 0.1; periodic=true)
   model = ABM(Agent8, space2d)
   attributes = (f1=true,f2=1)
   for _ in 1:10 add_agent!(model, attributes...) end

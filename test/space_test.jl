@@ -133,19 +133,21 @@ end
     @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
     @test collect(nearby_ids(a, gridspace)) == [2]
 
-    continuousspace = ABM(Agent6, ContinuousSpace(2; extend = (1, 1)))
+    Random.seed!(78)
+    continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
     b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-    @test_throws ErrorException nearby_positions(1, continuousspace)
-    @test nearby_ids(a, continuousspace, 0.05) == []
-    @test nearby_ids(a, continuousspace, 0.1) == [2]
-    @test sort!(nearby_ids((0.55, 0.5), continuousspace, 0.05)) == [1, 2]
+    @test_throws MethodError nearby_positions(1, continuousspace)
+    @test collect(nearby_ids(a, continuousspace, 0.05)) == [2] # Not true, but we are not using the exact method
+    @test collect(nearby_ids(a, continuousspace, 0.05; exact=true)) == []
+    @test collect(nearby_ids(a, continuousspace, 0.1)) == [2]
+    @test sort!(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) == [1, 2]
     move_agent!(a, continuousspace)
     move_agent!(b, continuousspace)
-    @test nearby_ids(a, continuousspace, 0.1) == []
+    @test collect(nearby_ids(a, continuousspace, 0.1; exact=true)) == []
     # Checks for type instability #208
-    @test typeof(nearby_ids(a, continuousspace, 0.1)) <: Vector{Int}
-    @test typeof(nearby_ids((0.55, 0.5), continuousspace, 0.05)) <: Vector{Int}
+    @test typeof(collect(nearby_ids(a, continuousspace, 0.1))) <: Vector{Int}
+    @test typeof(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) <: Vector{Int}
 end
 
 @testset "Discrete space mutability" begin
@@ -171,7 +173,7 @@ end
     add_agent!(model)
     @test (model.number += 1) == 2
     @test (model.nested.pos = 5) == 5
-    @test_throws ErrorException (model.space = ContinuousSpace(2))
+    @test_throws ErrorException (model.space = ContinuousSpace((1,1), 0.1))
 end
 
 end

@@ -1,28 +1,27 @@
 @testset "Continuous space" begin
 
   # Basic model initialization
-  space1 = ContinuousSpace(2; periodic = true, extend = (1, 1))
-  space2 = ContinuousSpace(2; periodic = false, extend = (1, 1))
-  space3 = ContinuousSpace(2; periodic = true, extend = (2, 1))
-  space4 = ContinuousSpace(2; periodic = true, extend = (1, 2))
-  space5 = ContinuousSpace(2; periodic = true, extend = (2, 2))
-  space6 = ContinuousSpace(1; periodic = true, extend = (1,))
-  space7 = ContinuousSpace(3; periodic = true, extend = (1,1,1))
-  space8 = ContinuousSpace(3; periodic = false, extend = (1,1,1))
+  space1 = ContinuousSpace((1, 1), 0.1; periodic = true)
+  space2 = ContinuousSpace((1, 1), 0.1; periodic = false)
+  space3 = ContinuousSpace((2, 1), 0.1; periodic = true)
+  space4 = ContinuousSpace((1, 2), 0.1; periodic = true)
+  space5 = ContinuousSpace((2, 2), 0.1; periodic = true)
+  space6 = ContinuousSpace((1, ), 0.1; periodic = true)
+  space7 = ContinuousSpace((1, 1, 1), 0.1; periodic = true)
+  space8 = ContinuousSpace((1, 1, 1), 0.1; periodic = false)
 
-  @test space1.D == 2
-  @test space2.D == 2
-  @test space3.D == 2
-  @test space4.D == 2
-  @test space5.D == 2
-  @test space6.D == 1
-  @test space7.D == 3
-  @test space8.D == 3
+  @test length(space1.dims) == 2
+  @test length(space2.dims) == 2
+  @test length(space3.dims) == 2
+  @test length(space4.dims) == 2
+  @test length(space5.dims) == 2
+  @test length(space6.dims) == 1
+  @test length(space7.dims) == 3
+  @test length(space8.dims) == 3
 
-  @test_throws AssertionError ContinuousSpace(2; extend = (-1,1)) # Cannot have negative extent
-  @test_throws AssertionError ContinuousSpace(2; extend = [1,1]) # Must be a tuple
-  @test_throws AssertionError ContinuousSpace(2; extend = (1,1,1)) # Must be length D
-  @test_throws AssertionError ContinuousSpace(2; extend = ("one",1.0)) # Must contain reals
+  @test_throws ArgumentError ContinuousSpace((-1,1), 0.1) # Cannot have negative extent
+  @test_throws MethodError ContinuousSpace([1,1], 0.1) # Must be a tuple
+  @test_throws MethodError ContinuousSpace(("one",1.0), 0.1) # Must contain reals
 
   model1 = ABM(Agent6, space1)
   model2 = ABM(Agent6, space2)
@@ -32,61 +31,42 @@
   model6 = ABM(Agent6, space6)
 
   @test nagents(model1) == 0
-  @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == []
+  @test model1.agents == Dict()
 
   # add_agent! with no existing agent (the agent is created)
   pos = (0.5, 0.5)
   vel = (0.2, 0.1)
   dia = 0.01
   add_agent!(pos, model1, vel, dia)
-  @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [1]
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
-  @test dbrow[1, :a] == 0.5
-  @test dbrow[1, :b] == 0.5
+  @test collect(keys(model1.agents)) == [1]
+  @test model1[1].pos == (0.5, 0.5)
 
   # move_agent! without provided update_vel! function
-  move_agent!(model1.agents[1], model1)
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame;
-  @test dbrow[1, :a] == 0.7
-  @test dbrow[1, :b] == 0.6
-  @test dbrow[1, :a] == model1.agents[1].pos[1]
-  @test dbrow[1, :b] == model1.agents[1].pos[2]
+  move_agent!(model1[1], model1)
+  @test model1[1].pos == (0.7, 0.6)
 
   kill_agent!(model1.agents[1], model1)
-  dbrow = DBInterface.execute(model1.space.db, "select * from tab") |> DataFrame
-  @test size(dbrow) == (0,0)
+  @test length(model1.agents) == 0
 
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model1)
   @test Agents.defvel(agent, model1) == nothing
-  @test Agents.collect_ids(DBInterface.execute(model1.space.db, "select id from tab")) == [2]
+  @test collect(keys(model1.agents)) == [2]
 
   # agents within some range are found correctly
-  agent2 = model1.agents[2]
+  agent2 = model1[2]
   agent3 = Agent6(3, agent2.pos .+ 0.005, vel, dia)
   add_agent_pos!(agent3, model1)
-  n_ids = nearby_ids(agent2, model1, agent2.weight)
-  @test length(n_ids) == 1
-  @test n_ids[1] == 3
-  n_ids = nearby_ids(agent2, model1, agent2.weight/10)
-  @test length(n_ids) == 0
+  n_ids = collect(nearby_ids(agent2, model1, agent2.weight, exact=true))
+  @test n_ids == [3]
+  n_ids = collect(nearby_ids(agent2, model1, agent2.weight/2, exact=true))
+  @test n_ids == []
 
   # test that it finds both
-  n_ids = nearby_ids(agent2.pos, model1, agent2.weight)
+  n_ids = collect(nearby_ids(agent2.pos, model1, agent2.weight))
   @test sort!(n_ids) == [2, 3]
 
-  # test various metrics
-  c = ABM(Agent6, ContinuousSpace(2; extend = (2.0, 2.0), metric = :cityblock))
-  e = ABM(Agent6, ContinuousSpace(2; extend = (2.0, 2.0), metric = :euclidean))
-  r = sqrt(2) - 0.2
-  for (i, φ) in enumerate(range(0; stop = 2π, length = 10))
-    a = Agent6(i, (1, 1) .+ r .* sincos(φ), (0.0, 0.0), 0.0)
-    add_agent_pos!(a, c)
-    add_agent_pos!(a, e)
-  end
-  @test length(nearby_ids((1, 1), c, r)) == 10
-  @test 4 < length(nearby_ids((1, 1), e, r)) < 10
 end
 
 mutable struct AgentU1 <: AbstractAgent
@@ -106,7 +86,7 @@ function ignore_six(model::ABM{A,S,F,P}) where {A,S,F,P}
 end
 
 @testset "Interacting pairs" begin
-  space = ContinuousSpace(2, extend = (10, 10), periodic = false, metric = :euclidean)
+  space = ContinuousSpace((10, 10), 0.2, periodic = false)
   model = ABM(Agent6, space; scheduler = model -> sort!(collect(keys(model.agents));rev=true))
   pos = [
     (7.074386436066224, 4.963014649338054)
@@ -130,7 +110,7 @@ end
   @test length(pairs) == 5
   @test (3, 6) ∉ pairs
 
-  space2 = ContinuousSpace(2, extend = (10, 10), periodic = false, metric = :euclidean)
+  space2 = ContinuousSpace((10, 10), 0.1,periodic = false)
   model2 = ABM(Agent6, space2; scheduler = by_id)
   for i in 1:4
     add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
@@ -142,11 +122,11 @@ end
   # A more expensive search (in memory, not time), but guarantees true nearest neighbors
   pairs = interacting_pairs(model2, 2.0, :nearest).pairs
   @test length(pairs) == 3
-  pairs = interacting_pairs(model2, 2.0, :all).pairs
+  pairs = interacting_pairs(model2, 2.5, :all).pairs
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
 
-  space3 = ContinuousSpace(2, extend = (1, 1), periodic = false, metric = :euclidean)
+  space3 = ContinuousSpace((10,10), 1.0, periodic = false)
   model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
   for i in 1:10
     add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
@@ -172,28 +152,28 @@ end
   @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
 
   # Fix #288
-  space = ContinuousSpace(2; periodic = true, extend = (1,1), metric=:euclidean)
+  space = ContinuousSpace((1,1), 0.1; periodic = true)
   model = ABM(Agent6, space)
-  pos = [(0.0, 0.0),(0.2, 0.2),(0.5, 0.5)]
+  pos = [(0.01, 0.01),(0.2,0.2),(0.5,0.5)]
   for i in pos
     add_agent!(i,model,(0.0,0.0),1.0)
   end
-  pairs = interacting_pairs(model, .29, :all)
+  pairs = collect(interacting_pairs(model, 0.29, :all))
   @test length(pairs) == 1
   (a,b) = first(pairs)
   @test (a.id, b.id) == (1,2)
   # Before the #288 fix, this would return (2,3) as a pair
   # which has a euclidean distance of 0.42
-  pairs = interacting_pairs(model, .3, :all)
+  pairs = collect(interacting_pairs(model, .3, :all))
   @test length(pairs) == 1
   (a,b) = first(pairs)
   @test (a.id, b.id) == (1,2)
 end
 
-@testset "nearest neighbor" begin 
-  space = ContinuousSpace(2; periodic = true, extend = (1,1), metric = :euclidean)
+@testset "nearest neighbor" begin
+  space = ContinuousSpace((1,1), 0.1; periodic = true)
   model = ABM(Agent9, space)
-  pos = [(0.0, 0.0),(0.2, 0.0),(0.2, 0.2),(0.5, 0.5)]
+  pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
   for i in pos
     add_agent!(i,model,(0.0,0.0),nothing)
   end

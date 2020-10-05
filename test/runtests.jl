@@ -73,7 +73,6 @@ end
     include("space_test.jl")
     include("collect_tests.jl")
     include("continuousSpace_tests.jl")
-    include("ContinuousSpace_tests.jl")
     include("collisions_tests.jl")
     include("graph_tests.jl")
 

@@ -4,7 +4,7 @@ speed = 0.002
 dt = 1.0
 diameter = 0.1
 function model_initiation()
-  space = ContinuousSpace(2; periodic = true, extend = (1.0, 1.0))
+  space = ContinuousSpace((10,10), 0.1; periodic = true)
   model = ABM(Agent6, space; properties = Dict(:c => 0));
 
   ## Add initial individuals
