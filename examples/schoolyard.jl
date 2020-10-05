@@ -113,7 +113,8 @@ function agent_step!(student, model)
     end
 
     ## Add all forces together to assign the students next position
-    move_agent!(student, student.pos .+ noise .+ teacher .+ network_force, model)
+    new_pos = student.pos .+ noise .+ teacher .+ network_force
+    move_agent!(student, new_pos, model)
 end
 
 # Applying the rules for movement is relatively simple. For the network specifically,

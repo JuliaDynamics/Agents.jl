@@ -77,7 +77,8 @@ end
 
 function growing_bacteria_agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-    move_agent!(agent, agent.pos .+ model.dt * model.mobility .* fsym, model)
+    new_pos = agent.pos .+ model.dt * model.mobility .* fsym
+    move_agent!(agent, new_pos, model)
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
     agent.growthprog += model.dt * agent.growthrate
