@@ -7,6 +7,8 @@ be implemented for every space have only documentation strings here and an
 error message.
 
 In short: IMPLEMENT ALL FUNCTIONS IN SECTION "IMPLEMENT", WITH SAME ARGUMENTS!
+
+TODO: do_checks needs to be updated for each new space type
 =#
 export move_agent!,
     add_agent!,
@@ -66,10 +68,11 @@ Return an iterable of the ids of the agents within "radius" `r` of the given `po
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: `r` means the degree of neighbors in the graph and is an integer.
+- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer).
   For example, for `r=2` include first and second degree neighbors.
-- `GridSpace, ContinuousSpace`: Standard distance implementation according to the
-  underlying space metric.
+- `GridSpace, ContinuousSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
+  in the space of cartesian indices.
+- `ContinuousSpace`: Euclidean distance.
 
 ## Keywords
 Keyword arguments are space-specific.
@@ -80,6 +83,10 @@ neighbors depending on the underlying graph directionality type.
 - `:all` returns both `:in` and `:out` neighbors.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
+
+For `ContinuousSpace`, the keyword `exact=false` controls whether the found neighbors are
+exactly accurate or approximate (with approximate always being a strict over-estimation),
+see [`ContinuousSpace`](@ref).
 """
 nearby_ids(position, model, r=1) = notimplemented(model)
 

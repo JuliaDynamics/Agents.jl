@@ -2,6 +2,7 @@
 **Major new release!**
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
+- `ContinuousSpace` has been re-written from scratch! It is now at least 3 times faster!
 - Agents.jl now defines a clear API for new spaces types. To create a fundamentally different type of space you have to define the space structure and extend only 5 methods.
 - `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord` and `coord2vertex`.
 - Many things have been renamed to have clearer name that indicates their meaning
@@ -11,9 +12,10 @@
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 
 ## Breaking changes
-All changes in this section (besides changes to default values) are deprecated and
+Most changes in this section (besides changes to default values) are deprecated and
 therefore are not "truly breaking".
 
+- New `ContinuousSpace` now only supports Euclidean metric.
 - Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
 - Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allow performance updates in the future that may change internals but not lead to breaking changes.

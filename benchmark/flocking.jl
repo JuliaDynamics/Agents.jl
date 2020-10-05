@@ -1,3 +1,5 @@
+using Agents
+using BenchmarkTools
 using LinearAlgebra
 
 mutable struct Bird <: AbstractAgent
@@ -15,6 +17,20 @@ end
 """
 ```julia
 flocking(;
+n_birds = 100,
+speed = 1.0,
+cohere_factor = 0.25,
+separation = 4.0,
+separate_factor = 0.25,
+match_factor = 0.01,
+visual_distance = 5.0,
+dims = (100, 100),
+spacing = 1
+)
+```
+Same as in [Flock model](@ref).
+"""
+function flocking(;
     n_birds = 100,
     speed = 1.0,
     cohere_factor = 0.25,
@@ -22,37 +38,23 @@ flocking(;
     separate_factor = 0.25,
     match_factor = 0.01,
     visual_distance = 5.0,
-    extent = (100, 100),
-    spacing = visual_distance / 1.5
-)
-```
-Same as in [Flock model](@ref).
-"""
-function flocking(;
-        n_birds = 100,
-        speed = 1.0,
-        cohere_factor = 0.25,
-        separation = 4.0,
-        separate_factor = 0.25,
-        match_factor = 0.01,
-        visual_distance = 5.0,
-        extent = (100, 100),
-        spacing = visual_distance / 1.5
+    dims = (10, 10),
+    spacing = 5.0/1.5
     )
 
-    space2d = ContinuousSpace(extent, spacing)
+    space2d = ContinuousSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
         add_agent!(
-            model,
-            vel,
-            speed,
-            cohere_factor,
-            separation,
-            separate_factor,
-            match_factor,
-            visual_distance,
+        model,
+        vel,
+        speed,
+        cohere_factor,
+        separation,
+        separate_factor,
+        match_factor,
+        visual_distance,
         )
     end
     return model, flocking_agent_step!, dummystep
@@ -63,16 +65,16 @@ function flocking_agent_step!(bird, model)
     ids = collect(nearby_ids(bird, model, bird.visual_distance))
     ## Compute velocity based on rules defined above
     bird.vel =
-        (
-            bird.vel .+ cohere(bird, model, ids) .+ separate(bird, model, ids) .+
-            match(bird, model, ids)
-        ) ./ 2
+    (
+    bird.vel .+ cohere(bird, model, ids) .+ separate(bird, model, ids) .+
+    match(bird, model, ids)
+    ) ./ 2
     bird.vel = bird.vel ./ norm(bird.vel)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
 
-distance(a1, a2) = sqrt(sum((a1.pos .- a2.pos) .^ 2))
+distance(a1, a2) = sqrt(sum(abs2.(a1.pos .- a2.pos)))
 
 get_heading(a1, a2) = a1.pos .- a2.pos
 
@@ -108,3 +110,29 @@ function match(bird, model, ids)
     end
     return match_vector ./ N .* bird.match_factor
 end
+
+
+
+# %% Continuous VERSION
+println("\n\nTimes of Continuous space")
+println("Full model stepping")
+@btime step!(model, agent_step!, model_step!, 500) setup=((model, agent_step!, model_step!) = flocking())
+
+model, agent_step!, model_step! = flocking()
+step!(model, agent_step!, model_step!, 1)
+a = random_agent(model)
+aa = [random_agent(model) for i in 1:100]
+sleep(1e-9)
+
+println("Nearby Agents - exact = false")
+@btime nearby_ids($a, $model, 1);
+println("Nearby Agents - exact = true")
+@btime nearby_ids($a, $model, 1, exact=true);
+println("nearby positions")
+@btime nearby_positions($a.pos, $model);
+
+
+println("Move agent")
+@btime move_agent!($a, $model);
+println("Add agent")
+@btime add_agent!($model, (-0.9670145669689216, 0.2547210773962555), 1.0, 0.25, 4.0, 0.25, 0.01, 5.0)

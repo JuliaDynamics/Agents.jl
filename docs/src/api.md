@@ -36,6 +36,7 @@ sample!
 ```@docs
 nearby_ids
 nearby_positions
+edistance
 ```
 
 ### WARNING: Iteration
@@ -94,8 +95,6 @@ isempty(::Integer, ::ABM)
 interacting_pairs
 nearest_neighbor
 elastic_collision!
-index!
-update_space!
 ```
 
 ## Parameter scanning

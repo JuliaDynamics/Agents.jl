@@ -26,15 +26,15 @@ growing_bacteria()
 Same as in [Bacterial Growth](@ref).
 """
 function growing_bacteria()
-    space = ContinuousSpace(2, extend = (12, 12), periodic = false, metric = :euclidean)
+    space = ContinuousSpace((14, 9), 1.0; periodic = false)
     model = ABM(
         SimpleCell,
         space,
         properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
     )
 
-    add_agent!((5.0, 5.0), model, 0.0, 0.3, 0.0, 0.1)
-    add_agent!((6.0, 5.0), model, 0.0, 0.0, 0.0, 0.1)
+    add_agent!((6.5, 4.0), model, 0.0, 0.3, 0.0, 0.1)
+    add_agent!((7.5, 4.0), model, 0.0, 0.0, 0.0, 0.1)
 
     return model, growing_bacteria_agent_step!, growing_bacteria_model_step!
 end
@@ -77,12 +77,12 @@ end
 
 function growing_bacteria_agent_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-    agent.pos = agent.pos .+ model.dt * model.mobility .* fsym
+    new_pos = agent.pos .+ model.dt * model.mobility .* fsym
+    move_agent!(agent, new_pos, model)
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
     agent.growthprog += model.dt * agent.growthrate
     update_nodes!(agent)
-    update_space!(model, agent)
     return agent.pos
 end
 
