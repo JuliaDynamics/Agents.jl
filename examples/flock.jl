@@ -49,8 +49,9 @@ function initialize_model(;
     match_factor = 0.01,
     visual_distance = 5.0,
     dims = (100, 100),
+    spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(2; periodic = true, extend = dims)
+    space2d = ContinuousSpace(dims, spacing; periodic = true)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
@@ -156,7 +157,7 @@ gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src
 model = initialize_model()
-e = model.space.extend
+e = model.space.extent
 anim = @animate for i in 0:100
     i > 0 && step!(model, agent_step!, 1)
     p1 = plotabm(

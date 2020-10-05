@@ -37,7 +37,7 @@ end
 
 # Let's also initialize a trivial model with continuous space
 function ball_model(; speed = 0.002)
-    space2d = ContinuousSpace(2; periodic = true, extend = (1, 1))
+    space2d = ContinuousSpace((1, 1), 0.02; periodic = true)
     model = ABM(Agent, space2d, properties = Dict(:dt => 1.0))
 
     ## And add some agents to the model
@@ -65,7 +65,7 @@ nothing # hide
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 
-e = model.space.extend
+e = model.space.extent
 anim = @animate for i in 1:2:100
     p1 = plotabm(
         model,
@@ -101,7 +101,7 @@ end
 
 model2 = ball_model()
 
-e = model.space.extend
+e = model.space.extent
 anim = @animate for i in 1:2:100
     p1 = plotabm(
         model2,
@@ -146,7 +146,7 @@ end
 
 # let's animate this again
 
-e = model.space.extend
+e = model.space.extent
 anim = @animate for i in 1:2:100
     p1 = plotabm(
         model3,
@@ -212,7 +212,7 @@ function sir_initiation(;
         interaction_radius,
         dt,
     )
-    space = ContinuousSpace(2)
+    space = ContinuousSpace((1,1), 0.02; periodic = true)
     model = ABM(PoorSoul, space, properties = properties)
 
     ## Add initial individuals
@@ -246,7 +246,7 @@ sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-e = sir_model.space.extend
+e = sir_model.space.extent
 plotabm(
     sir_model;
     ac = sir_colors,
@@ -316,7 +316,7 @@ nothing # hide
 
 sir_model = sir_initiation()
 
-e = sir_model.space.extend
+e = sir_model.space.extent
 anim = @animate for i in 1:2:100
     p1 = plotabm(
         sir_model;
@@ -382,7 +382,7 @@ p
 
 sir_model = sir_initiation(isolated = 0.8)
 
-e = sir_model.space.extend
+e = sir_model.space.extent
 anim = @animate for i in 0:2:1000
     p1 = plotabm(
         sir_model;

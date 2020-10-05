@@ -48,10 +48,11 @@ function schoolyard(;
     teacher_attractor = 0.2,
     noise = 0.1,
     max_force = 1.5,
+    spacing = 4.0,
 )
     model = ABM(
         Student,
-        ContinuousSpace(2; extend = (100, 100));
+        ContinuousSpace((100, 100), spacing);
         properties = Dict(
             :teacher_attractor => teacher_attractor,
             :noise => noise,
@@ -61,7 +62,7 @@ function schoolyard(;
     )
     for student in 1:numStudents
         ## Students begin near the school building
-        add_agent!(model.space.extend .* 0.5 .+ Tuple(rand(2)) .- 0.5, model)
+        add_agent!(model.space.extent .* 0.5 .+ Tuple(rand(2)) .- 0.5, model)
 
         ## Add one friend and one foe to the social network
         friend = rand(filter(s -> s != student, 1:numStudents))
@@ -83,7 +84,7 @@ scale(L, force) = (L / distance(force)) .* force
 
 function agent_step!(student, model)
     ## place a teacher in the center of the yard, so we don’t go too far away
-    teacher = (model.space.extend .* 0.5 .- student.pos) .* model.teacher_attractor
+    teacher = (model.space.extent .* 0.5 .- student.pos) .* model.teacher_attractor
 
     ## add a bit of randomness
     noise = model.noise .* (Tuple(rand(2)) .- 0.5)
