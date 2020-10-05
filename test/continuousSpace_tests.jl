@@ -61,7 +61,7 @@
   @test n_ids == []
 
   # test that it finds both
-  n_ids = collect(nearby_ids(agent2.pos, model2, agent2.weight))
+  n_ids = collect(nearby_ids(agent2.pos, model2, agent2.weight), exact=true)
   @test sort!(n_ids) == [2, 3]
 
 end
