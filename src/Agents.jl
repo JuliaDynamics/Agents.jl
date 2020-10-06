@@ -4,8 +4,6 @@ using Distributed
 using LightGraphs
 using DataFrames
 using Random
-import Base.Iterators.product
-import Base.iterate
 import Base.length
 
 # Core structures of Agents.jl
