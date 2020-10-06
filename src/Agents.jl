@@ -4,6 +4,7 @@ using Distributed
 using LightGraphs
 using DataFrames
 using Random
+using OpenStreetMapX
 import Base.Iterators.product
 import Base.iterate
 import Base.length
@@ -18,6 +19,7 @@ include("spaces/graph.jl")
 include("spaces/grid.jl")
 include("spaces/discrete.jl")
 include("spaces/continuous.jl")
+include("spaces/openstreetmap.jl")
 include("spaces/utilities.jl")
 
 # Stepping and data collection functionality

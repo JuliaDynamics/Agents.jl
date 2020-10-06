@@ -28,19 +28,6 @@ function GraphSpace(graph::G) where {G<:AbstractGraph}
     return GraphSpace{G}(graph, agent_positions)
 end
 
-"""
-    nv(model::ABM)
-Return the number of positions (vertices) in the `model` space.
-"""
-LightGraphs.nv(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.nv(abm.space.graph)
-LightGraphs.nv(abm::GraphSpace) = LightGraphs.nv(space.graph)
-
-"""
-    ne(model::ABM)
-Return the number of edges in the `model` space.
-"""
-LightGraphs.ne(abm::ABM{<:Any,<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
-
 function Base.show(io::IO, s::GraphSpace)
     print(
         io,

@@ -53,3 +53,17 @@ function edistance(p1::ValidPos, p2::ValidPos, model::ABM{A,<:GridSpace{D,true}}
     sqrt(total)
 end
 
+
+"""
+    nv(model::ABM)
+Return the number of positions (vertices) in the `model` space.
+"""
+LightGraphs.nv(abm::ABM{<:Any,<:Union{GraphSpace, OpenStreetMapSpace}}) = LightGraphs.nv(abm.space.graph)
+LightGraphs.nv(space::S) where {S<:Union{GraphSpace,OpenStreetMapSpace}} = LightGraphs.nv(space.graph)
+
+"""
+    ne(model::ABM)
+Return the number of edges in the `model` space.
+"""
+LightGraphs.ne(abm::ABM{<:Any,<:Union{GraphSpace, OpenStreetMapSpace}}) = LightGraphs.ne(abm.space.graph)
+
