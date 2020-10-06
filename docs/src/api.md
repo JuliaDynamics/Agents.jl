@@ -144,6 +144,7 @@ The schedulers of Agents.jl have a very simple interface.
 All schedulers are functions, that take as an input the ABM and return an iterator over agent IDs.
 Notice that this iterator can be a "true" iterator (non-allocated) or can be just a standard vector of IDs.
 You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
+You can also use the function `schedule(model)` to obtain the scheduled ID list, if you prefer to write your own `step!`-like loop.
 
 Also notice that you can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define

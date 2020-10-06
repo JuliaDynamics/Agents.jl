@@ -1,9 +1,14 @@
+export schedule
+export random_activation, by_id, fastest, partial_activation, property_activation, by_type
+"""
+    schedule(model)
+Return an iterator over the scheduled IDs using the model's scheduler.
+"""
+schedule(model::ABM) = model.scheduler(model)
+
 ####################################
 # Schedulers
 ####################################
-
-export random_activation, by_id, fastest, partial_activation, property_activation, by_type
-
 """
     fastest
 Activate all agents once per step in the order dictated by the agent's container,
