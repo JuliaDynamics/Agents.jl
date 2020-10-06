@@ -3,11 +3,11 @@
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
 - `ContinuousSpace` has been re-written from scratch! It is now at least 3 times faster!
+- `GraphSpace` now allows to dynamically mutate the underlying graph via `add_node!`, `rem_node!`.
 - Agents.jl now defines a clear API for new spaces types. To create a fundamentally different type of space you have to define the space structure and extend only 5 methods.
 - `GraphSpace` and `GridSpace` are completely separated entities, reducing complexity of source code dramatically, and removing unnecessary functions like `vertex2coord` and `coord2vertex`.
 - Many things have been renamed to have clearer name that indicates their meaning
   (see Breaking changes).
-- `GraphSpace` now allows to dynamically mutate the underlying graph via `add_node!`, `rem_node!`.
 - Performance increase of finding neighbors in GraphSpace with r > 1.
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 

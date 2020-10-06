@@ -97,6 +97,13 @@ nearest_neighbor
 elastic_collision!
 ```
 
+## Graph space exclusives
+```@docs
+add_edge!
+add_node!
+rem_node!
+```
+
 ## Parameter scanning
 ```@docs
 paramscan

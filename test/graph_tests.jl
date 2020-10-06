@@ -28,4 +28,12 @@ a = add_agent!(n, abm, rand())
 ids = nearby_ids(a, abm)
 @test ids == 21:25
 
+model = ABM(Agent5, GraphSpace(SimpleGraph()))
+@test_throws ArgumentError add_agent!(model, rand())
+add_node!(model)
+@test nv(model) == 1
+@test add_edge!(model, 1, 2) == false
+add_node!(model)
+@test add_edge!(model, 1, 2) == true
+
 end
