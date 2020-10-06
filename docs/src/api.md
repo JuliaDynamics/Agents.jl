@@ -36,6 +36,7 @@ sample!
 ```@docs
 nearby_ids
 nearby_positions
+edistance
 ```
 
 ### WARNING: Iteration
@@ -94,8 +95,11 @@ isempty(::Integer, ::ABM)
 interacting_pairs
 nearest_neighbor
 elastic_collision!
-index!
-update_space!
+```
+
+## Parameter scanning
+```@docs
+paramscan
 ```
 
 ## Data collection
@@ -107,9 +111,7 @@ collect_agent_data!
 init_model_dataframe
 collect_model_data!
 aggname
-paramscan
 ```
-
 For example, the core loop of `run!` is just
 ```julia
 df_agent = init_agent_dataframe(model, adata)

@@ -48,9 +48,10 @@ function initialize_model(;
     separate_factor = 0.25,
     match_factor = 0.01,
     visual_distance = 5.0,
-    dims = (100, 100),
+    extent = (100, 100),
+    spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(2; periodic = true, extend = dims)
+    space2d = ContinuousSpace(extent, spacing)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
         vel = Tuple(rand(2) * 2 .- 1)
@@ -65,7 +66,6 @@ function initialize_model(;
             visual_distance,
         )
     end
-    index!(model)
     return model
 end
 nothing # hide
@@ -75,7 +75,7 @@ nothing # hide
 # according to the three rules defined above.
 function agent_step!(bird, model)
     ## Obtain the ids of neighbors within the bird's visual distance
-    ids = nearby_ids(bird, model, bird.visual_distance)
+    ids = collect(nearby_ids(bird, model, bird.visual_distance))
     ## Compute velocity based on rules defined above
     bird.vel =
         (
@@ -156,7 +156,7 @@ gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src
 model = initialize_model()
-e = model.space.extend
+e = model.space.extent
 anim = @animate for i in 0:100
     i > 0 && step!(model, agent_step!, 1)
     p1 = plotabm(

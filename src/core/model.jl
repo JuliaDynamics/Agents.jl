@@ -252,7 +252,7 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
             throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
             throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
-        elseif space_type <: ContinuousSpace
+        elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
             if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
@@ -282,3 +282,4 @@ function Base.show(io::IO, abm::ABM{A}) where {A}
 end
 schedulername(x::Union{Function, DataType}) = nameof(x)
 schedulername(x) = string(x)
+Base.show(io, s::AbstractSpace) = print(io, nameof(typeof(s)))
