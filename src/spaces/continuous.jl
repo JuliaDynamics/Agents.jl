@@ -30,6 +30,11 @@ If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Rea
 The keyword `periodic = true` configures whether the space is periodic or not. If set to
 `false` an error will occur if an agent's position exceeds the boundary.
 
+There is no "best" choice for the value of `spacing`. If you need optimal performance it's
+advised to set up a benchmark over a range of choices. The value matters most when searching
+for neighbors. In [`Models.flocking`](@ref) for example, an optimal value for `spacing` is
+66% of the search distance.
+
 **Note:** if your model requires linear algebra operations for which tuples are not supported,
 a performant solution is to convert between Tuple and SVector using
 [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
