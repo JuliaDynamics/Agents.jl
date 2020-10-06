@@ -9,3 +9,4 @@ Manifest.toml
 /benchmark/*.json
 !/benchmark/tune.json
 /.benchmarkci
+.*.tmp.nlogo

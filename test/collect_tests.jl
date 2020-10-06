@@ -272,60 +272,58 @@ end
 @testset "Parameter scan" begin
     n = 10
     parameters = Dict(
-        :f => [0.05, 0.07],
-        :d => [0.6, 0.7, 0.8],
-        :p => 0.01,
+        :density => [0.6, 0.7, 0.8],
         :griddims => (20, 20),
-        :seed => 2,
     )
 
     forest, agent_step!, forest_step! = Models.forest_fire()
     forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
+    burnt(a) = a.status == :burnt
+    unburnt(a) = a.status == :green
     @testset "Standard Scan" begin
-        adata = [(:status, length), (:status, count)]
+        adata = [(unburnt, count), (burnt, count)]
         data, _ = paramscan(
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = dummystep,
+            agent_step! = agent_step!,
             model_step! = forest_step!,
             adata = adata,
             progress = false,
         )
-        # 6 is the number of combinations of changing params
-        @test size(data) == ((n + 1) * 6, 5)
+        # 3 is the number of combinations of changing params
+        @test size(data) == ((n + 1) * 3, 4)
         data, _ = paramscan(
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = dummystep,
+            agent_step! = agent_step!,
             model_step! = forest_step!,
             include_constants = true,
             adata = adata,
             progress = false,
         )
-        # 6 is the number of combinations of changing params,
-        # 8 is 5+3, where 3 is the number of constant parameters
-        @test size(data) == ((n + 1) * 6, 8)
+        # 3 is the number of combinations of changing params,
+        # 5 is 3+2, where 2 is the number of constant parameters
+        @test size(data) == ((n + 1) * 3, 5)
 
         adata = [:status]
         data, _ = paramscan(
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = dummystep,
+            agent_step! = agent_step!,
             model_step! = forest_step!,
             adata = adata,
             progress = false,
         )
         @test unique(data.step) == 0:10
-        @test unique(data.f) == [0.05, 0.07]
-        @test unique(data.d) == [0.6, 0.7, 0.8]
+        @test unique(data.density) == [0.6, 0.7, 0.8]
     end
 
     @testset "Scan with replicates" begin
-        adata = [(:status, length), (:status, count)]
+        adata = [(unburnt, count), (burnt, count)]
         data, _ = paramscan(
             parameters,
             forest_initiation;
@@ -336,8 +334,8 @@ end
             adata = adata,
             progress = false,
         )
-        # the first 6 is the number of combinations of changing params
-        @test size(data) == (((n + 1) * 6) * 3, 6)
+        # the first 3 is the number of combinations of changing params
+        @test size(data) == (((n + 1) * 3) * 3, 5)
     end
 end
 
