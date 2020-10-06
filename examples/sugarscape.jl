@@ -17,8 +17,6 @@
 
 # The environment is a 50×50 grid that wraps around forming a torus. Grid positions have both a sugar level and a sugar capacity c. A cell's sugar level is the number of units of sugar in the cell (potentially none), and its sugar capacity c is the maximum value the sugar level can take on that cell. Sugar capacity is fixed for each individual cell and may be different for different cells. The spatial distribution of sugar capacities depicts a sugar topography consisting of two peaks (with sugar capacity c = 4) separated by a valley, and surrounded by a desert region of sugarless cells (see Figure 1) - note, however, that the grid wraps around in both directions–.
 
-# ![Fig. 1: Spatial distribution of sugar capacities in the Sugarscape. Cells are coloured according to their sugar capacity.](capacities.jpg)
-
 # The Sugarscape obbeys the following rule:
 
 # Sugarscape growback rule G$\alpha$:
