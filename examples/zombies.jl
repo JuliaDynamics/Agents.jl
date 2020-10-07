@@ -6,7 +6,7 @@ gr()
 
 mutable struct Zombie <: AbstractAgent
     id::Int
-    pos::Int
+    pos::Tuple{Int, Int, Float64}
     infected::Bool
 end
 

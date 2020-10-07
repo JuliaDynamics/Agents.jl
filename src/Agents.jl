@@ -2,6 +2,7 @@ module Agents
 
 using Distributed
 using LightGraphs
+using SimpleWeightedGraphs
 using DataFrames
 using Random
 using OpenStreetMapX
