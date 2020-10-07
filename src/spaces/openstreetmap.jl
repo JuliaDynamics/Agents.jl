@@ -2,15 +2,20 @@ export OpenStreetMapSpace
 
 struct OpenStreetMapSpace <: DiscreteSpace
     m::OpenStreetMapX.MapData
-    graph::SimpleWeightedDiGraph
-    s::Vector{Vector{Int}}
+    edges::Vector{SimpleWeightedEdge{Int,Float64}}
+    s::Vector{Vector{Tuple{Int,Float64}}}
 end
 
 function OpenStreetMapSpace(path::AbstractString)
-    m = get_map_data(path, use_cache=false, trim_to_connected_graph=true)
+    m = get_map_data(path, use_cache = false, trim_to_connected_graph = true)
     graph = SimpleWeightedDiGraph(m.w)
-    agent_positions = [Int[] for i in 1:ne(graph)]
-    return OpenStreetMapSpace(m, graph, agent_positions)
+    # Store an array of edges so we don't constantly collect them
+    es = collect(edges(graph))
+    # Each edge stores the id of each agent, and its position along the edge.
+    # Since the graph is weighted, we know the direction. Speed is not considered
+    # in the space
+    agent_positions = [Tuple{Int,Float64}[] for i in 1:ne(graph)]
+    return OpenStreetMapSpace(m, es, agent_positions)
 end
 
 function Base.show(io::IO, s::OpenStreetMapSpace)
@@ -20,86 +25,36 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
-#src(edge) # start
-#dst(edge) # end
-#graph.weights[1,2] 
+pos2edge(pos::Tuple{Int,Int,Float64}) = SimpleWeightedEdge(pos...)
+
+function edge_id(pos::Tuple{Int,Int,Float64}, model)
+    edge = pos2edge(pos)
+    eidx = findfirst(e -> e == edge, model.space.edges)
+    isnothing(eidx) && error("Invalid position for OpenStreetMapSpace")
+    eidx
+end
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
 
-random_position(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) = rand(1:nv(model))
-#
-#
-#function remove_agent_from_space!(
-#        agent::A,
-#        model::ABM{A,<:OpenStreetMapSpace},
-#    ) where {A<:AbstractAgent}
-#    agentpos = agent.pos
-#    ids = ids_in_position(agentpos, model)
-#    splice!(ids, findfirst(a -> a == agent.id, ids))
-#    return model
-#end
-#
-#function move_agent!(
-#        agent::A,
-#        pos::ValidPos,
-#        model::ABM{A,<:OpenStreetMapSpace},
-#    ) where {A<:AbstractAgent}
-#    oldpos = agent.pos
-#    ids = ids_in_position(oldpos, model)
-#    splice!(ids, findfirst(a -> a == agent.id, ids))
-#    agent.pos = pos
-#    push!(ids_in_position(agent.pos, model), agent.id)
-#    return agent
-#end
-#
-#ids_in_position(n::Integer, model::ABM{A,<:OpenStreetMapSpace}) where {A} = model.space.s[n]
-## NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
-#
-#positions(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) = 1:nv(model)
-#
-#
-#function nearby_ids(pos::Int, model::ABM{A,<:OpenStreetMapSpace}, args...; kwargs...) where {A}
-#    np = nearby_positions(pos, model, args...; kwargs...)
-#    # This call is faster than reduce(vcat, ..), or Iterators.flatten
-#    vcat(model.space.s[pos], model.space.s[np]...)
-#end
-#
-#function nearby_ids(agent::A, model::ABM{A,<:OpenStreetMapSpace}, args...; kwargs...) where {A<:AbstractAgent}
-#    all = nearby_ids(agent.pos, model, args...; kwargs...)
-#    filter!(i -> i ≠ agent.id, all)
-#end
-#
-#function nearby_positions(
-#        position::Integer,
-#        model::ABM{A,<:OpenStreetMapSpace};
-#        neighbor_type::Symbol = :default,
-#    ) where {A}
-#    @assert neighbor_type ∈ (:default, :all, :in, :out)
-#    neighborfn = if neighbor_type == :default
-#        LightGraphs.neighbors
-#    elseif neighbor_type == :in
-#        LightGraphs.inneighbors
-#    elseif neighbor_type == :out
-#        LightGraphs.outneighbors
-#    else
-#        LightGraphs.all_neighbors
-#    end
-#    neighborfn(model.space.graph, position)
-#end
-#
-#function nearby_positions(
-#        position::Integer,
-#        model::ABM{A,<:OpenStreetMapSpace},
-#        radius::Integer;
-#        kwargs...,
-#    ) where {A}
-#    output = copy(nearby_positions(position, model; kwargs...))
-#    for _ in 2:radius
-#        newnps = (nearby_positions(np, model; kwargs...) for np in output)
-#        append!(output, reduce(vcat, newnps))
-#        unique!(output)
-#    end
-#    filter!(i -> i != position, output)
-#end
+function random_position(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
+    e = model.space.edges[rand(keys(model.space.edges))]
+    (src(e), dst(e), rand() * weight(e))
+end
+
+function add_agent_to_space!(
+    agent::A,
+    model::ABM{A,<:OpenStreetMapSpace},
+) where {A<:AbstractAgent}
+    eidx = edge_id(agent.pos, model)
+    push!(model.space.s[eidx], (agent.id, agent.pos[3]))
+    return agent
+end
+
+function remove_agent_from_space!(a::A, model::ABM{A,<:OpenStreetMapSpace}) where {A<:AbstractAgent}
+    prev = model.space.s[edge_id(a.pos, model)]
+    ai = findfirst(i -> i[1] == a.id, prev)
+    deleteat!(prev, ai)
+    return a
+end
