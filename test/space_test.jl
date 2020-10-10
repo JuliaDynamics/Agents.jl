@@ -213,11 +213,11 @@ end
     agent.path[agent.pos.node1] = next_node_id
 	agent.path_distances[agent.pos.node1] = m.w[agent.pos.node1, next_node_id]
     move_agent!(agent, model,5.0)
-    @assert agent.pos.node2 == next_node_id	
-    @assert agent.pos.trav ≈ 5.0 / agent.path_distances[agent.pos.node1]
-    move_agent!(agent, model, 100.0)
-    @assert agent.pos.node1 == next_node_id
-    @assert agent.pos.trav == 0.0
+    @test agent.pos.node2 == next_node_id	
+    @test agent.pos.trav ≈ 5.0 / agent.path_distances[agent.pos.node1]
+    move_agent!(agent, model, 2000.0)
+    @test agent.pos.node1 == next_node_id
+    @test agent.pos.trav == 0.0
 end
 
 
