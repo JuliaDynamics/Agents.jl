@@ -95,7 +95,7 @@ nearby_ids(position, model, r=1) = notimplemented(model)
 
 Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
-The `position` must match type with the spatial structure of the `model`).
+The `position` must match type with the spatial structure of the `model`.
 
 The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
