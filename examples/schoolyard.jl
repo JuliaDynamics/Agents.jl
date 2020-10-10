@@ -45,9 +45,9 @@ end
 
 function schoolyard(;
     numStudents = 50,
-    teacher_attractor = 0.2,
+    teacher_attractor = 0.15,
     noise = 0.1,
-    max_force = 1.5,
+    max_force = 1.7,
     spacing = 4.0,
 )
     model = ABM(
@@ -56,7 +56,7 @@ function schoolyard(;
         properties = Dict(
             :teacher_attractor => teacher_attractor,
             :noise => noise,
-            :buddies => SimpleWeightedGraph(numStudents),
+            :buddies => SimpleWeightedDiGraph(numStudents),
             :max_force => max_force,
         ),
     )
