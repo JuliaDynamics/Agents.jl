@@ -4,6 +4,8 @@ using Distributed
 using LightGraphs
 using DataFrames
 using Random
+using OpenStreetMapX
+using Parameters
 import Base.length
 
 # Core structures of Agents.jl
@@ -17,6 +19,7 @@ include("spaces/grid.jl")
 include("spaces/discrete.jl")
 include("spaces/continuous.jl")
 include("spaces/utilities.jl")
+include("spaces/openstreetmapx.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")

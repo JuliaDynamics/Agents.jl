@@ -1,4 +1,4 @@
-using Test, Agents, Random, LightGraphs, DataFrames
+using Test, Agents, Random, LightGraphs, DataFrames, OpenStreetMapX
 using StatsBase: mean
 
 mutable struct Agent0 <: AbstractAgent

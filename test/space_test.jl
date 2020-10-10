@@ -203,4 +203,22 @@ end
     @test_throws ErrorException (model.space = ContinuousSpace((1,1), 0.1))
 end
 
+@testset "OpenStreetMapXSpace" begin
+    m = get_map_data(joinpath(dirname(pathof(OpenStreetMapX)),"..","test/data/reno_east3.osm"),
+                      use_cache=false, trim_to_connected_graph=true );
+    model = ABM(OSMXAgent{Nothing},OpenStreetMapXSpace(m),properties=Dict());
+    agent = OSMXAgent(id=1, pos=OSMXPos(10), props=nothing)
+    add_agent!(agent, model)
+    next_node_id = Agents.nearby_ids(model.space, agent.pos.node1)[1]
+    agent.path[agent.pos.node1] = next_node_id
+	agent.path_distances[agent.pos.node1] = m.w[agent.pos.node1, next_node_id]
+    move_agent!(agent, model,5.0)
+    @assert agent.pos.node2 == next_node_id	
+    @assert agent.pos.trav ≈ 5.0 / agent.path_distances[agent.pos.node1]
+    move_agent!(agent, model, 100.0)
+    @assert agent.pos.node1 == next_node_id
+    @assert agent.pos.trav == 0.0
+end
+
+
 end
