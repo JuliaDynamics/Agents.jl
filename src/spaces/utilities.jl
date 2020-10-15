@@ -58,12 +58,32 @@ end
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-LightGraphs.nv(abm::ABM{<:Any,<:Union{GraphSpace, OpenStreetMapSpace}}) = LightGraphs.nv(abm.space.graph)
-LightGraphs.nv(space::S) where {S<:Union{GraphSpace,OpenStreetMapSpace}} = LightGraphs.nv(space.graph)
+LightGraphs.nv(abm::ABM{A,<:Union{GraphSpace, OpenStreetMapSpace}}) where {A} = LightGraphs.nv(abm.space)
+LightGraphs.nv(space::S) where {S<:GraphSpace} = LightGraphs.nv(space.graph)
+LightGraphs.nv(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.nv(space.m.g)
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.ne(abm::ABM{<:Any,<:Union{GraphSpace, OpenStreetMapSpace}}) = LightGraphs.ne(abm.space.graph)
+LightGraphs.ne(abm::ABM{A,<:Union{GraphSpace, OpenStreetMapSpace}}) where {A} = LightGraphs.ne(abm.space)
+LightGraphs.ne(space::S) where {S<:GraphSpace} = LightGraphs.ne(space.graph)
+LightGraphs.ne(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.ne(space.m.g)
 
+
+positions(model::ABM{<:AbstractAgent,<:Union{GraphSpace, OpenStreetMapSpace}}) = 1:nv(model)
+
+function nearby_positions(
+        position::Integer,
+        model::ABM{A,<:Union{GraphSpace,OpenStreetMapSpace}},
+        radius::Integer;
+        kwargs...,
+    ) where {A}
+    output = copy(nearby_positions(position, model; kwargs...))
+    for _ in 2:radius
+        newnps = (nearby_positions(np, model; kwargs...) for np in output)
+        append!(output, reduce(vcat, newnps))
+        unique!(output)
+    end
+    filter!(i -> i != position, output)
+end

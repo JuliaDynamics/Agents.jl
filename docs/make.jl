@@ -82,7 +82,8 @@ pages = [
         "Daisyworld" => "examples/daisyworld.md",
         "Predator-Prey" => "examples/predator_prey.md",
         "Bacteria Growth" => "examples/growing_bacteria.md",
-        "Opinion spread" => "examples/opinion_spread.md"
+        "Opinion spread" => "examples/opinion_spread.md",
+        "Zombie Outbreak" => "examples/zombies.md",
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",

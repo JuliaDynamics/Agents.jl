@@ -97,6 +97,14 @@ nearest_neighbor
 elastic_collision!
 ```
 
+## OpenStreetMap space exclusives
+```@docs
+random_direction
+plan_route
+road_length
+map_coordinates
+```
+
 ## Graph space exclusives
 ```@docs
 add_edge!

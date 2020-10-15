@@ -6,8 +6,7 @@ using SimpleWeightedGraphs
 using DataFrames
 using Random
 using OpenStreetMapX
-import Base.Iterators.product
-import Base.iterate
+import OpenStreetMapX.SparseArrays: findnz
 import Base.length
 
 # Core structures of Agents.jl

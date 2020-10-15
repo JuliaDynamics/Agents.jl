@@ -75,8 +75,6 @@ end
 ids_in_position(n::Integer, model::ABM{A,<:GraphSpace}) where {A} = model.space.s[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
-positions(model::ABM{<:AbstractAgent,<:GraphSpace}) = 1:nv(model)
-
 #######################################################################################
 # Neighbors
 #######################################################################################
@@ -107,21 +105,6 @@ function nearby_positions(
         LightGraphs.all_neighbors
     end
     neighborfn(model.space.graph, position)
-end
-
-function nearby_positions(
-        position::Integer,
-        model::ABM{A,<:GraphSpace},
-        radius::Integer;
-        kwargs...,
-    ) where {A}
-    output = copy(nearby_positions(position, model; kwargs...))
-    for _ in 2:radius
-        newnps = (nearby_positions(np, model; kwargs...) for np in output)
-        append!(output, reduce(vcat, newnps))
-        unique!(output)
-    end
-    filter!(i -> i != position, output)
 end
 
 #######################################################################################

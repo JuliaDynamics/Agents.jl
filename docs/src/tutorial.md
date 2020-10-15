@@ -35,6 +35,7 @@ GridSpace
 ### Continuous spaces
 ```@docs
 ContinuousSpace
+OpenStreetMapSpace
 ```
 
 ## 3. The agent
