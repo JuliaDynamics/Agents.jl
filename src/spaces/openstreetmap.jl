@@ -355,6 +355,9 @@ function nearby_ids(
     filter!(i -> i ≠ agent.id, all)
 end
 
+#TODO: this gives us 'nearby' intersections based on the connectivity graph.
+#We could extend this using a `r`adius, and filter the list so that it returns
+#"nearby intersections within radius `r`"
 nearby_positions(pos::OSMPos, model, args...; kwargs...) =
     nearby_positions(pos[1], model, args...; kwargs...)
 
