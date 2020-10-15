@@ -2,11 +2,9 @@ module Agents
 
 using Distributed
 using LightGraphs
-using SimpleWeightedGraphs
 using DataFrames
 using Random
 using OpenStreetMapX
-import OpenStreetMapX.SparseArrays: findnz
 import Base.length
 
 # Core structures of Agents.jl
