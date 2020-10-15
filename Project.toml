@@ -9,9 +9,7 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OpenStreetMapX = "86cd37e6-c0ff-550b-95fe-21d72c8d4fc9"
-OpenStreetMapXPlot = "d3d4fdd0-c191-11e8-3358-a3629b56487d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
