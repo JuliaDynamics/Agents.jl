@@ -52,20 +52,20 @@ end
 # for city commuting.
 
 function agent_step!(agent, model)
-    # Each agent will progress 25 meters along their route
+    ## Each agent will progress 25 meters along their route
     move_agent!(agent, model, 25)
 
     if agent.pos[1] == agent.pos[2] && length(agent.route) == 0 && rand() < 0.1
-        # When stationary, give the agent a 10% chance of going somwhere else
+        ## When stationary, give the agent a 10% chance of going somwhere else
         agent.route = plan_route(agent.pos[1], random_position(model)[1], model)
-        # Drop current position
+        ## Drop current position
         popfirst!(agent.route)
-        # Start on new route
+        ## Start on new route
         move_agent!(agent, OSMPos(agent.pos[1], popfirst!(agent.route)), model)
     end
 
     if agent.infected
-        # Agents will be infected if they get within 50 meters of a zombie.
+        ## Agents will be infected if they get within 50 meters of a zombie.
         map(i -> model[i].infected = true, nearby_ids(agent, model, 50))
     end
 end
