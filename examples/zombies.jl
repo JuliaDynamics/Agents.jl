@@ -1,7 +1,7 @@
 # # Zombie Outbreak
 # ![](outbreak.gif)
 #
-# This model showcases an ABM running on a map, using [`OpenStreetMapSpace`](@gif).
+# This model showcases an ABM running on a map, using [`OpenStreetMapSpace`](@ref).
 #
 # ## Constructing the end of days
 using Agents

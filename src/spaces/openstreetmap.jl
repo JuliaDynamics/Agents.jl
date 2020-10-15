@@ -7,6 +7,22 @@ struct OpenStreetMapSpace <: DiscreteSpace
     s::Vector{Vector{Int}}
 end
 
+"""
+    OpenStreetMapSpace(path::AbstractString; kwargs...)
+Create a space residing on the Open Street Map (OSM) file provided via `path`.
+
+The abbreviation `OSMSpace` may be used interchangably.
+
+Much of the functionality of this space is provided by interfacing with
+[OpenStreetMapX](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
+keyword arguments `use_cache = false` and `trim_to_connected_graph = true` are
+passed into the
+[`get_map_data`](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.get_map_data-Tuple{String,Union{Nothing,%20String}})
+function.
+
+For details on how to obtain an OSM file for your use case, consult the
+[OpenStreetMapX Readme](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.get_map_data-Tuple{String,Union{Nothing,%20String}})
+"""
 function OpenStreetMapSpace(
     path::AbstractString;
     use_cache = false,
@@ -30,7 +46,13 @@ end
 
 const OSMSpace = OpenStreetMapSpace
 const OSMPos = Tuple{Int,Int,Float64}
+"""
+    OSMPos(start::Int, finish::Int)
+    OSMPos(finish::Int)
 
+A helper to provide the correct `pos` format for [`AbstractAgent`](@ref) structs which
+are used in conjuction with [`OpenStreetMapSpace`](@ref).
+"""
 OSMPos(src::Int, dst::Int) = (src, dst, 0.0)
 OSMPos(dst::Int) = OSMPos(dst, dst)
 
