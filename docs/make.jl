@@ -90,11 +90,11 @@ pages = [
     "Interactive application" => "interact.md",
     "Ecosystem Integration" => [
         "LightGraphs" => "examples/schoolyard.md",
-        "DifferentialEquations.jl" => "examples/diffeq.md",
+        "DifferentialEquations" => "examples/diffeq.md",
         "BlackBoxOptim" => "examples/optim.md"
         ],
     "ABM Framework Comparison" => "comparison.md",
-    "Developer docs" => "devdocs.md"
+    "Developer Docs" => "devdocs.md"
     ],
 )
 

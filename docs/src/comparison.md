@@ -18,13 +18,13 @@ For LOC, we use the following convention: code is formatted using standard pract
 |---|---|---|---|---|
 |Wolf Sheep Grass|1|7.1x|2.1x|NA|
 |(LOC)|139|273|137 (871)| . |
-|Flocking|1|29.7x|10.3x|2.1x|
+|Flocking|1|29.7x|10.3xᕯ|2.1x|
 |(LOC)|66|120|82 (689)|369|
 |Forest Fire|1|29.1x|4.1x|NA|
 |(LOC)|27|61|43 (545)|.|
 |Schelling|1|31.5x|8.0x|14.3x|
 |(LOC)|34|63|68 (732)|248|
 
-\* Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
+ᕯ Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
 
 The results clearly speak for themselves. Across all four models, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.

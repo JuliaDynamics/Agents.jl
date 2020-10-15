@@ -276,7 +276,7 @@ _, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata
 
 plot(resultsdeq.stock; legend = false, ylabel = "Stock", xlabel = "Year")
 
-# The small complexity addition yields us a generous speed up of around 6x.
+# The small complexity addition yields us a generous speed up of around 4.5x.
 
 Random.seed!(6549) #hide
 @btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup =

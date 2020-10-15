@@ -132,9 +132,9 @@ function rem_node!(model::ABM{<:AbstractAgent, <: GraphSpace}, n::Int)
 end
 
 """
-    add_node!(model::ABM{A, <: GraphSpace}) → n
+    add_node!(model::ABM{A, <: GraphSpace})
 Add a new node (i.e. possible position) to the model's graph and return it.
-You can connect this new node with existing ones using `add_edge!(model, n, m)`.
+You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
 function add_node!(model::ABM{<:AbstractAgent, <: GraphSpace})
     add_vertex!(model.space.graph)
@@ -142,4 +142,9 @@ function add_node!(model::ABM{<:AbstractAgent, <: GraphSpace})
     return nv(model)
 end
 
+"""
+    add_edge!(model::ABM{A, <: GraphSpace}, n::Int, m::Int)
+Add a new edge (relationship between two positions) to the graph.
+Returns a boolean, true if the operation was succesful.
+"""
 LightGraphs.add_edge!(model, n, m) = add_edge!(model.space.graph, n, m)

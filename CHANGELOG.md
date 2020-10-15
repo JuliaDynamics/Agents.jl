@@ -10,6 +10,7 @@
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
+- New public `schedule` function for writing custom loops.
 
 ## Breaking changes
 Most changes in this section (besides changes to default values) are deprecated and
