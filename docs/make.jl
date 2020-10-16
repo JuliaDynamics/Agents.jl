@@ -90,7 +90,8 @@ pages = [
     "Ecosystem Integration" => [
         "LightGraphs" => "examples/schoolyard.md",
         "DifferentialEquations" => "examples/diffeq.md",
-        "BlackBoxOptim" => "examples/optim.md"
+        "BlackBoxOptim" => "examples/optim.md",
+        "Measurements" => "examples/measurements.md",
         ],
     "ABM Framework Comparison" => "comparison.md",
     "Developer Docs" => "devdocs.md"
