@@ -3,7 +3,7 @@
 # [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl) provides automatic
 # error propagation, and integrates seamlessly with much of the Julia ecosystem.
 #
-# Here, we'll slightly modify the [Daisyworld](@ref), to simulate some measurement
+# Here, we'll slightly modify the [Daisyworld](@ref) example, to simulate some measurement
 # uncertainty in our world's parameters.
 #
 # ## Setup
