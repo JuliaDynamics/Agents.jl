@@ -88,9 +88,10 @@ pages = [
     "API" => "api.md",
     "Interactive application" => "interact.md",
     "Ecosystem Integration" => [
-        "LightGraphs" => "examples/schoolyard.md",
-        "DifferentialEquations" => "examples/diffeq.md",
-        "BlackBoxOptim" => "examples/optim.md"
+        "BlackBoxOptim.jl" => "examples/optim.md",
+        "DifferentialEquations.jl" => "examples/diffeq.md",
+        "LightGraphs.jl" => "examples/schoolyard.md",
+        "Measurements.jl" => "examples/measurements.md"
         ],
     "ABM Framework Comparison" => "comparison.md",
     "Developer Docs" => "devdocs.md"
