@@ -7,7 +7,7 @@ end
 """
 ``` julia
 forest_fire(;
-    density = 0.8,
+    density = 0.7,
     griddims = (100, 100)
 )
 ```
