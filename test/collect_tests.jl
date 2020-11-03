@@ -225,6 +225,116 @@
         step!(model, agent_step!, model_step!, 1, false)
     end
 
+    @testset "Mixed-ABM collections" begin
+        model = ABM(Union{Agent3, Agent4}, GridSpace((10,10)); warn = false)
+        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
+        add_agent_pos!(Agent4(2, (10,7), 5),model)
+
+        # Expect position type (both agents have it)
+        props = [:pos]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 4)
+        @test propertynames(df) == [:step, :id, :agent_type, :pos]
+        @test df[1, :pos] == model[1].pos
+        @test df[2, :pos] == model[2].pos
+
+        # Expect weight for Agent3, but missing for Agent4
+        props = [:weight]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 4)
+        @test df[1, :weight] == model[1].weight
+        @test ismissing(df[2, :weight])
+
+        # Expect similar output, but using functions
+        wpos(a) = a.pos[1] + a.weight
+        props = [wpos]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 4)
+        @test df[1, :wpos] == model[1].pos[1] + model[1].weight
+        @test ismissing(df[2, :wpos])
+
+        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
+        add_agent_pos!(Agent4(4, (4,1), 3),model)
+
+        # Expect something completely unknown to return Missing
+        props = [:pos, :weight, :p, wpos, :UNKNOWN]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (4, 8)
+        @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
+        @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.p) <: Vector{Union{Missing, Int}}
+        @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.UNKNOWN) <: Vector{Missing}
+
+        # Aggregates should behave in a similiar fashion
+        pos1(a) = a.pos[1]
+        props = [(:pos, length), (pos1, sum)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (1, 3)
+        @test typeof(df.length_pos) <: Vector{Int}
+        @test df[1, :length_pos] == 4
+        @test typeof(df.sum_pos1) <: Vector{Int}
+        @test df[1, :sum_pos1] == 22
+
+        # Expect aggregate to filter out Agent4's
+        a3(a) = a isa Agent3
+        props = [(pos1, sum, a3)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (1, 2)
+        @test typeof(df.sum_pos1_a3) <: Vector{Int}
+        @test df[1, :sum_pos1_a3] == 8
+
+        # When aggregating, missing data must be handled explicitly.
+        props = [(:weight, sum)]
+        df = init_agent_dataframe(model, props)
+        @test_throws ErrorException collect_agent_data!(df, model, props)
+
+        # Filtering out missings makes this work.
+        props = [(:weight, sum, a3)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (1, 2)
+        @test typeof(df.sum_weight_a3) <: Vector{Float64}
+        @test df[1, :sum_weight_a3] ≈ 74.46
+
+        # Handle missmatches
+        # In this example, weight exists in both agents, but they have different types
+        mutable struct Agent3Int <: AbstractAgent
+            id::Int
+            pos::Tuple{Int,Int}
+            weight::Int
+        end
+        model = ABM(Union{Agent3, Agent3Int}, GridSpace((10,10)); warn = false)
+        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
+        add_agent_pos!(Agent3Int(2, (10,7), 5),model)
+        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
+        add_agent_pos!(Agent3Int(4, (4,1), 3),model)
+
+        props = [:weight]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (4, 4)
+        @test typeof(df.weight) <: Vector{Union{Float64, Int}}
+
+        # Expect a1.weight <: Float64, a2.weight <: Int64 to fail in aggregate
+        props = [(:weight, sum)]
+        @test_throws ErrorException init_agent_dataframe(model, props)
+
+        # Promotion is the fix in this case
+        fweight(a) = Float64(a.weight)
+        props = [(fweight, sum)]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (1, 2)
+        @test df[1, :sum_fweight] ≈ 82.46
+    end
+
     @testset "Observers" begin
         model = initialize()
         model_props = [:container]
