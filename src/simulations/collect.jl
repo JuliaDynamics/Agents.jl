@@ -58,9 +58,20 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   If you remove agents during model run, you should modify the aggregating functions.
   *E.g.* instead of passing `mean`, pass `mymean(a) = isempty(a) ? 0.0 : mean(a)`.
 
-  For mixed-models, an additional column `agent_type` will be placed in the output
-  dataframe. In the case that data is needed for one agent type that does not exist
-  in a second agent type, `missing` values will be added to the dataframe.
+* `mdata::Vector` means "model data to collect" and works exactly like `adata`.
+  For the model, no aggregation is possible (nothing to aggregate over).
+
+By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
+
+## Mixed-Models
+
+  For mixed-models, the `adata` keyword has some additional options & properties.
+  An additional column `agent_type` will be placed in the output
+  dataframe.
+
+  In the case that data is needed for one agent type that does not exist
+  in a second agent type, `missing` values will be added to the dataframe. *Note:
+  there is a performance hit when chosing this option.*
 
   Aggregate functions will fail if `missing` values are not handled explicitly.
   If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
@@ -71,11 +82,6 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   and `a2.weight::Int64` with `adata = [(:weight, mean)]`. To achive this, it's best to
   make a promote function: `fweight(a) = Float64(a.weight)`, then use
   `adata = [(fweight, mean)]`.
-
-* `mdata::Vector` means "model data to collect" and works exactly like `adata`.
-  For the model, no aggregation is possible (nothing to aggregate over).
-
-By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 
 ### Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
@@ -215,6 +221,7 @@ function init_agent_dataframe(model::ABM{A}, properties::AbstractArray) where {A
             end
             unique!(current_types)
             if length(current_types) == 1
+                current_types[1] <: Missing && error("$(k) does not yield a valid agent property.")
                 types[i+std_headers] = current_types[1][]
             else
                 types[i+std_headers] = Union{current_types...}[]
@@ -235,24 +242,30 @@ function init_agent_dataframe(model::ABM{A}, properties::AbstractArray) where {A
     DataFrame(types, headers)
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Int=0; obtainer = identity)
+function collect_agent_data!(df, model, properties::Vector, step::Int=0; kwargs...)
     alla = sort!(collect(values(model.agents)), by = a -> a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a -> a.id, alla)
-
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
-        data_collect = get_data_missing
-    else
-        data_collect = get_data
     end
+
     for fn in properties
-        dd[!, Symbol(fn)] = collect(data_collect(a, fn, obtainer) for a in alla)
+        _add_col_data!(dd, eltype(df[!, Symbol(fn)]), fn, alla; kwargs...)
     end
     append!(df, dd)
     return df
 end
+
+function _add_col_data!(dd::DataFrame, col::Type{T}, property, agent_iter; obtainer = identity) where {T}
+    dd[!, Symbol(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
+end
+
+function _add_col_data!(dd::DataFrame, col::Type{T}, property, agent_iter; obtainer = identity) where {T>:Missing}
+    dd[!, Symbol(property)] = collect(get_data_missing(a, property, obtainer) for a in agent_iter)
+end
+
 
 # Aggregating version
 function init_agent_dataframe(model::ABM{A}, properties::Vector{<:Tuple}) where {A<:AbstractAgent}
@@ -292,10 +305,14 @@ function init_agent_dataframe(model::ABM{A}, properties::Vector{<:Tuple}) where 
                 push!(current_types, current_type)
             end
             unique!(current_types)
-            filter!(t -> !(t <: Missing), current_types) # Ignore missings
-            length(current_types) == 1 ||
-            error("Multiple types found for aggregate function $(agg) on key $(k).")
-            types[i+1] = current_types[1][]
+            filter!(t -> !(t <: Missing), current_types) # Ignore missings here
+            if length(current_types) == 1
+                types[i+1] = current_types[1][]
+            elseif length(current_types) > 1
+                error("Multiple types found for aggregate function $(agg) on key $(k).")
+            else
+                error("No possible aggregation for $(k) using $(agg)")
+            end
         end
     else
         for (i, property) in enumerate(properties)
@@ -345,24 +362,10 @@ function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter
     push!(col, res)
 end
 
-function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A}, agent_iter; obtainer = identity) where {T>:Missing,K,A}
-    k, agg = property
-    res::T = agg(skipmissing(get_data_missing(a, k, obtainer) for a in agent_iter))
-    push!(col, res)
-end
-
 # Conditional aggregates
 function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter; obtainer = identity) where {T,K,A,C}
     k, agg, condition = property
     res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
-    push!(col, res)
-end
-
-function _add_col_data!(col::AbstractVector{T}, property::Tuple{K,A,C}, agent_iter; obtainer = identity) where {T>:Missing,K,A,C}
-    k, agg, condition = property
-    res::T = agg(skipmissing(
-        get_data_missing(a, k, obtainer) for a in Iterators.filter(condition, agent_iter)
-    ))
     push!(col, res)
 end
 

@@ -59,6 +59,8 @@
             "text/csv",
             describe(init_model_dataframe(model, props), :eltype),
         ) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
+
+        @test_throws ErrorException init_agent_dataframe(model, [:UNKNOWN])
     end
 
     @testset "aggname" begin
@@ -259,16 +261,18 @@
         add_agent_pos!(Agent3(3, (2,4), 19.81),model)
         add_agent_pos!(Agent4(4, (4,1), 3),model)
 
-        # Expect something completely unknown to return Missing
-        props = [:pos, :weight, :p, wpos, :UNKNOWN]
+        props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
-        @test size(df) == (4, 8)
+        @test size(df) == (4, 7)
         @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
         @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
         @test typeof(df.p) <: Vector{Union{Missing, Int}}
         @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
-        @test typeof(df.UNKNOWN) <: Vector{Missing}
+
+        # Expect something completely unknown to fail
+        props = [:UNKNOWN]
+        @test_throws ErrorException init_agent_dataframe(model, props)
 
         # Aggregates should behave in a similiar fashion
         pos1(a) = a.pos[1]
