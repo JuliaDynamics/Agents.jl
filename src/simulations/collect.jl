@@ -70,8 +70,11 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   dataframe.
 
   In the case that data is needed for one agent type that does not exist
-  in a second agent type, `missing` values will be added to the dataframe. *Note:
-  there is a performance hit when chosing this option.*
+  in a second agent type, `missing` values will be added to the dataframe.
+
+  **Warning:** Since this option is inherently type unstable, try to avoid this
+  in a performance critical situation. Performance will depend on specifics, but benchmarks
+  see a 10x slowdown when using `Symbol` matching and 26x for `Function` properties.
 
   Aggregate functions will fail if `missing` values are not handled explicitly.
   If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
