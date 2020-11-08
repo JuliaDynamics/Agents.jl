@@ -189,10 +189,23 @@ function Base.setproperty!(m::ABM{A, S, F, P}, s::Symbol, x) where {A, S, F, P}
 end
 
 """
-    random_agent(model)
+    random_agent(model) → agent
 Return a random agent from the model.
 """
 random_agent(model) = model[rand(keys(model.agents))]
+
+"""
+    random_agent(model, condition) → agent
+Return a random agent from the model that satisfies `condition(agent) == true`.
+"""
+function random_agent(model, condition)
+    k = keys(model.agents)
+    a = model[rand(k)]
+    while !condition(a)
+        a = model[rand(k)]
+    end
+    return a
+end
 
 """
     nagents(model::ABM)
