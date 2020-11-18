@@ -1,4 +1,4 @@
-# v4.0
+# v4.0 (not yet released, in master branch)
 **Major new release!**
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
