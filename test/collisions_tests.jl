@@ -24,7 +24,7 @@ function model_initiation()
   return model
 end
 
-agent_step!(agent, model) =  move_agent!(agent, model, dt)
+agent_step!(agent, model) = move_agent!(agent, model, dt)
 
 function model_step!(model)
   ipairs = interacting_pairs(model, diameter, :scheduler)
