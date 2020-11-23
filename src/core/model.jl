@@ -197,12 +197,17 @@ random_agent(model) = model[rand(keys(model.agents))]
 """
     random_agent(model, condition) → agent
 Return a random agent from the model that satisfies `condition(agent) == true`.
+The function generates a random permutation of agent IDs and iterates through them.
+If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    k = keys(model.agents)
-    a = model[rand(k)]
+    ids = shuffle!(collect(keys(model.agents))
+    i, L = 1, length(ids)
+    a = model[ids[1]]
     while !condition(a)
-        a = model[rand(k)]
+        i += 1
+        i > L && return nothing
+        a = model[ids[i]]
     end
     return a
 end
