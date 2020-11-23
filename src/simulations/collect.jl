@@ -73,18 +73,11 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   in a second agent type, `missing` values will be added to the dataframe.
 
   **Warning:** Since this option is inherently type unstable, try to avoid this
-  in a performance critical situation. Performance will depend on specifics, but benchmarks
-  see a 10x slowdown when using `Symbol` matching and 26x for `Function` properties.
+  in a performance critical situation.
 
   Aggregate functions will fail if `missing` values are not handled explicitly.
   If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
-
-  Data collection will fail if two agent types a property with the same name but different
-  subtypes, and are expected to aggregate with each other. For example `a1.weight::Float64`
-  and `a2.weight::Int64` with `adata = [(:weight, mean)]`. To achive this, it's best to
-  make a promote function: `fweight(a) = Float64(a.weight)`, then use
-  `adata = [(fweight, mean)]`.
 
 ### Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
@@ -200,49 +193,57 @@ function init_agent_dataframe(model::ABM{A}, properties::AbstractArray) where {A
 
     if std_headers == 3
         headers[3] = :agent_type
-        types[3] = Symbol[]
-
-        for (i, k) in enumerate(properties)
-            current_types = DataType[]
-            for atype in utypes
-                a = first(Iterators.filter(a -> a isa atype, allagents(model)))
-                if k isa Symbol
-                    current_type =
-                        hasproperty(a, k) ? typeof(get_data(a, k, identity)) : Missing
-                else
-                    current_type = try
-                        typeof(get_data(a, k, identity))
-                    catch
-                        Missing
-                    end
-                end
-                isconcretetype(current_type) || warn(
-                    "Type is not concrete when using $(k) " *
-                    "on $(atype) agents. Consider narrowning the type signature of $(k).",
-                )
-                push!(current_types, current_type)
-            end
-            unique!(current_types)
-            if length(current_types) == 1
-                current_types[1] <: Missing && error("$(k) does not yield a valid agent property.")
-                types[i+std_headers] = current_types[1][]
-            else
-                types[i+std_headers] = Union{current_types...}[]
-            end
-        end
+        multi_agent_types!(types, utypes, model, properties)
     else
-        a = random_agent(model)
-        for (i, k) in enumerate(properties)
-            current_type = typeof(get_data(a, k, identity))
-            isconcretetype(current_type) || warn(
-                "Type is not concrete when using $(k) " *
-                "on agents. Consider narrowning the type signature of $(k).",
-            )
-            types[i+std_headers] = current_type[]
-        end
+        single_agent_types!(types, model, properties)
     end
 
     DataFrame(types, headers)
+end
+
+function single_agent_types!(types::Vector{Vector{T} where T}, model::ABM, properties::AbstractArray)
+    a = random_agent(model)
+    for (i, k) in enumerate(properties)
+        current_type = typeof(get_data(a, k, identity))
+        isconcretetype(current_type) || warn(
+            "Type is not concrete when using $(k) " *
+            "on agents. Consider narrowning the type signature of $(k).",
+        )
+        types[i+2] = current_type[]
+    end
+end
+
+function multi_agent_types!(types::Vector{Vector{T} where T}, utypes::Tuple, model::ABM, properties::AbstractArray)
+    types[3] = Symbol[]
+
+    for (i, k) in enumerate(properties)
+        current_types = DataType[]
+        for atype in utypes
+            a = first(Iterators.filter(a -> a isa atype, allagents(model)))
+            if k isa Symbol
+                current_type =
+                    hasproperty(a, k) ? typeof(get_data(a, k, identity)) : Missing
+            else
+                current_type = try
+                    typeof(get_data(a, k, identity))
+                catch
+                    Missing
+                end
+            end
+            isconcretetype(current_type) || warn(
+                "Type is not concrete when using $(k) " *
+                "on $(atype) agents. Consider narrowning the type signature of $(k).",
+            )
+            push!(current_types, current_type)
+        end
+        unique!(current_types)
+        if length(current_types) == 1
+            current_types[1] <: Missing && error("$(k) does not yield a valid agent property.")
+            types[i+3] = current_types[1][]
+        else
+            types[i+3] = Union{current_types...}[]
+        end
+    end
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0; kwargs...)
@@ -277,7 +278,6 @@ function init_agent_dataframe(model::ABM{A}, properties::Vector{<:Tuple}) where 
     ))
     headers = Vector{String}(undef, 1 + length(properties))
     types = Vector{Vector}(undef, 1 + length(properties))
-    alla = allagents(model)
 
     utypes = union_types(A)
 
@@ -285,53 +285,61 @@ function init_agent_dataframe(model::ABM{A}, properties::Vector{<:Tuple}) where 
     types[1] = Int[]
 
     if length(utypes) > 1
-        for (i, property) in enumerate(properties)
-            k, agg = property
-            headers[i+1] = aggname(property)
-            current_types = DataType[]
-            for atype in utypes
-                a = first(Iterators.filter(a -> a isa atype, allagents(model)))
-                if k isa Symbol
-                    current_type =
-                        hasproperty(a, k) ? typeof(agg(get_data(a, k, identity))) : Missing
-                else
-                    current_type = try
-                        typeof(agg(get_data(a, k, identity)))
-                    catch
-                        Missing
-                    end
-                end
-                isconcretetype(current_type) || warn(
-                    "Type is not concrete when using function $(agg) " *
-                    "on key $(k) for $(atype) agents. Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
-                )
-                push!(current_types, current_type)
-            end
-            unique!(current_types)
-            filter!(t -> !(t <: Missing), current_types) # Ignore missings here
-            if length(current_types) == 1
-                types[i+1] = current_types[1][]
-            elseif length(current_types) > 1
-                error("Multiple types found for aggregate function $(agg) on key $(k).")
-            else
-                error("No possible aggregation for $(k) using $(agg)")
-            end
-        end
+        multi_agent_agg_types!(types, utypes, headers, model, properties)
     else
-        for (i, property) in enumerate(properties)
-            k, agg = property
-            headers[i+1] = aggname(property)
-            # This line assumes that `agg` can work with iterators directly
-            current_type =
-                typeof(agg(get_data(a, k, identity) for a in Iterators.take(alla, 1)))
-            isconcretetype(current_type) || warn(
-                "Type is not concrete when using function $(agg) " *
-                "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
-            )
-            types[i+1] = current_type[]
-        end
+        single_agent_agg_types!(types, headers, model, properties)
     end
     DataFrame(types, headers)
+end
+
+function single_agent_agg_types!(types::Vector{Vector{T} where T}, headers::Vector{String}, model::ABM, properties::AbstractArray)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = aggname(property)
+        # This line assumes that `agg` can work with iterators directly
+        current_type =
+            typeof(agg(get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)))
+        isconcretetype(current_type) || warn(
+            "Type is not concrete when using function $(agg) " *
+            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+        )
+        types[i+1] = current_type[]
+    end
+end
+
+function multi_agent_agg_types!(types::Vector{Vector{T} where T}, utypes::Tuple, headers::Vector{String}, model::ABM, properties::AbstractArray)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = aggname(property)
+        current_types = DataType[]
+        for atype in utypes
+            a = first(Iterators.filter(a -> a isa atype, allagents(model)))
+            if k isa Symbol
+                current_type =
+                    hasproperty(a, k) ? typeof(agg(get_data(a, k, identity))) : Missing
+            else
+                current_type = try
+                    typeof(agg(get_data(a, k, identity)))
+                catch
+                    Missing
+                end
+            end
+            isconcretetype(current_type) || warn(
+                "Type is not concrete when using function $(agg) " *
+                "on key $(k) for $(atype) agents. Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+            )
+            push!(current_types, current_type)
+        end
+        unique!(current_types)
+        filter!(t -> !(t <: Missing), current_types) # Ignore missings here
+        if length(current_types) == 1
+            types[i+1] = current_types[1][]
+        elseif length(current_types) > 1
+            error("Multiple types found for aggregate function $(agg) on key $(k).")
+        else
+            error("No possible aggregation for $(k) using $(agg)")
+        end
+    end
 end
 
 """

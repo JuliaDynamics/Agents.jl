@@ -1,4 +1,4 @@
-# v4.0
+# v4.0 (not yet released, in master branch)
 **Major new release!**
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
@@ -12,6 +12,7 @@
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
 - New public `schedule` function for writing custom loops.
 - Mixed models are supported in data collection methods.
+- `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.
 
 ## Breaking changes
 Most changes in this section (besides changes to default values) are deprecated and
