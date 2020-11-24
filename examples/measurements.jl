@@ -184,13 +184,13 @@ end
 #
 # First, some helper functions
 
-black(y) = count(x -> x == :black, y)
-white(y) = count(x -> x == :white, y)
-breed(a) = a isa Daisy ? a.breed : :land
+black(a) = a.breed == :black
+white(a) = a.breed == :white
+daisies(a) = a isa Daisy
 
-gettemperature(a) = a.temperature
-island(a) = a isa Land
-adata = [(breed, black), (breed, white), (gettemperature, mean, island)]
+land(a) = a isa Land
+adata = [(black, count, daisies), (white, count, daisies), (:temperature, mean, land)]
+
 mdata = [:solar_luminosity]
 
 # And now the simulation
@@ -200,8 +200,13 @@ model = daisyworld(scenario = :ramp)
 agent_df, model_df =
     run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
 
-p1 = plot(agent_df.step, agent_df.black_breed, label = "black", ylabel = "Daisy count")
-plot!(p1, agent_df.step, agent_df.white_breed, label = "white")
+p1 = plot(
+    agent_df.step,
+    agent_df.count_black_daisies,
+    label = "black",
+    ylabel = "Daisy count",
+)
+plot!(p1, agent_df.step, agent_df.count_white_daisies, label = "white")
 
 p2 = plot(
     agent_df.step,
