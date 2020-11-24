@@ -331,8 +331,7 @@ plot!(p; xlabel = "tick", ylabel = "daisy count")
 # and would be nice to plot solar luminosity as well.
 # Thus, we define in addition
 land(a) = a isa Land
-temperature(a) = a.temperature
-adata = [(black, count, daisies), (white, count, daisies), (temperature, mean, land)]
+adata = [(black, count, daisies), (white, count, daisies), (:temperature, mean, land)]
 
 # And, to have it as reference, we also record the solar luminosity value
 mdata = [:solar_luminosity]

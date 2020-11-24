@@ -188,9 +188,8 @@ black(a) = a.breed == :black
 white(a) = a.breed == :white
 daisies(a) = a isa Daisy
 
-temperature(a) = a.temperature
 land(a) = a isa Land
-adata = [(black, count, daisies), (white, count, daisies), (temperature, mean, land)]
+adata = [(black, count, daisies), (white, count, daisies), (:temperature, mean, land)]
 
 mdata = [:solar_luminosity]
 
