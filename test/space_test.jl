@@ -160,6 +160,20 @@ end
     @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
     @test collect(nearby_ids(a, gridspace)) == [2]
 
+    # Make sure directions always make sense when periodic
+    model = ABM(Agent3, GridSpace((3, 3); metric = :euclidean))
+    centre = add_agent!((2,2), model, rand())
+    offset = add_agent!((1,1), model, rand())
+    # S, W, N, E
+    @test collect(nearby_positions(centre, model)) == [(2, 1), (1, 2), (3, 2), (2, 3)]
+    @test collect(nearby_positions(offset, model)) == [(1, 3), (3, 1), (1, 2), (2, 1)] # Currently S,W,E,N
+
+    # SW, S, SE, W, E, NW, N, NE
+    model = ABM(Agent3, GridSpace((3, 3)))
+    centre = add_agent!((2,2), model, rand())# == [(1, 1), (2, 1), (3, 1), (1, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    # Currently SW, W, SE, S, E, NW, N, NE
+    offset = add_agent!((1,1), model, rand())# == [(3, 3), (1, 3), (2, 3), (3, 1), (2, 1), (3, 2), (1, 2), (2, 2)]
+
     Random.seed!(78)
     continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
     a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
