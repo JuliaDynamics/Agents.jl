@@ -5,6 +5,7 @@
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/dev)
 [![status](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580/status.svg)](http://joss.theoj.org/papers/11ec21a6bb0a6e9992c07f26a601d580)
+[![CI](https://github.com/JuliaDynamics/Agents.jl/workflows/CI/badge.svg)](https://github.com/JuliaDynamics/Agents.jl/actions)
 [![Build Status](https://travis-ci.org/JuliaDynamics/Agents.jl.svg?branch=master)](https://travis-ci.org/JuliaDynamics/Agents.jl)
 [![codecov](https://codecov.io/gh/JuliaDynamics/Agents.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaDynamics/Agents.jl)
 
