@@ -68,6 +68,15 @@ struct SouthWest <: Direction end
 struct NorthEast <: Direction end
 struct SouthEast <: Direction end
 
+unitvector(d::Type{North}) = (0, 1)
+unitvector(d::Type{South}) = (0, -1)
+unitvector(d::Type{East}) = (1, 0)
+unitvector(d::Type{West}) = (-1, 0)
+unitvector(d::Type{NorthEast}) = (1, 1)
+unitvector(d::Type{NorthWest}) = (-1, 1)
+unitvector(d::Type{SouthEast}) = (1, -1)
+unitvector(d::Type{SouthWest}) = (-1, -1)
+
 """
     walk!(agent, direction, model, distance=1)
 
@@ -82,170 +91,27 @@ Possible directions are `North`, `South`, `East`, `West`, as well as `NorthEast`
 # Periodic
 function walk!(
     agent::AbstractAgent,
-    direction::Type{East},
+    direction::Type{<:Direction},
     model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
     distance::Int = 1,
 )
-    agent.pos = (mod1(agent.pos[1] + distance, size(model.space)[1]), agent.pos[2])
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{West},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (mod1(agent.pos[1] - distance, size(model.space)[1]), agent.pos[2])
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{North},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (agent.pos[1], mod1(agent.pos[2] + distance, size(model.space)[2]))
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{South},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (agent.pos[1], mod1(agent.pos[2] - distance, size(model.space)[2]))
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{NorthEast},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
+    (h, v) = unitvector(direction) .* distance
     agent.pos = (
-        mod1(agent.pos[1] + distance, size(model.space)[1]),
-        mod1(agent.pos[2] + distance, size(model.space)[2]),
-    )
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{NorthWest},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (
-        mod1(agent.pos[1] - distance, size(model.space)[1]),
-        mod1(agent.pos[2] + distance, size(model.space)[2]),
-    )
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{SouthEast},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (
-        mod1(agent.pos[1] + distance, size(model.space)[1]),
-        mod1(agent.pos[2] - distance, size(model.space)[2]),
-    )
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{SouthWest},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    agent.pos = (
-        mod1(agent.pos[1] - distance, size(model.space)[1]),
-        mod1(agent.pos[2] - distance, size(model.space)[2]),
+        mod1(agent.pos[1] + h, size(model.space)[1]),
+        mod1(agent.pos[2] + v, size(model.space)[2]),
     )
 end
 
 # Non-Periodic
 function walk!(
     agent::AbstractAgent,
-    direction::Type{East},
+    direction::Type{<:Direction},
     model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
     distance::Int = 1,
 )
-    step = min(agent.pos[1] + distance, size(model.space)[1])
-    agent.pos = (step, agent.pos[2])
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{West},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-
-    step = max(agent.pos[1] - distance, 1)
-    agent.pos = (step, agent.pos[2])
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{North},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    step = min(agent.pos[2] + distance, size(model.space)[2])
-    agent.pos = (agent.pos[1], step)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{South},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    step = max(agent.pos[2] - distance, 1)
-    agent.pos = (agent.pos[1], step)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{NorthEast},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    horiz = min(agent.pos[1] + distance, size(model.space)[1])
-    vert = min(agent.pos[2] + distance, size(model.space)[2])
-    agent.pos = (horiz, vert)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{NorthWest},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    horiz = max(agent.pos[1] - distance, 1)
-    vert = min(agent.pos[2] + distance, size(model.space)[2])
-    agent.pos = (horiz, vert)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{SouthEast},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    horiz = min(agent.pos[1] + distance, size(model.space)[1])
-    vert = max(agent.pos[2] - distance, 1)
-    agent.pos = (horiz, vert)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::Type{SouthWest},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    horiz = max(agent.pos[1] - distance, 1)
-    vert = max(agent.pos[2] - distance, 1)
-    agent.pos = (horiz, vert)
+    (h, v) = unitvector(direction) .* distance
+    agent.pos = (
+        min(max(agent.pos[1] + h, 1), size(model.space)[1]),
+        min(max(agent.pos[2] + v, 1), size(model.space)[2]),
+    )
 end
