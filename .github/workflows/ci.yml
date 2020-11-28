@@ -20,6 +20,14 @@ jobs:
         arch:
           - x64
     steps:
+      # Cancel ongoing CI test runs if pushing to branch again before the previous tests
+      # have finished
+      - name: Cancel ongoing test runs for previous commits
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      # Do tests
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
@@ -45,6 +53,14 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
+      # Cancel ongoing documentation build if pushing to branch again before the previous
+      # build is finished.
+      - name: Cancel ongoing documentation builds for previous commits
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      # Build docs
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
