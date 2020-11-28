@@ -81,6 +81,7 @@ sort!(collect(nearby_agents(a, model)))
 positions
 ids_in_position
 agents_in_position
+walk!
 fill_space!
 has_empty_positions
 empty_positions
