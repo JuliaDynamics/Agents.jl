@@ -87,8 +87,6 @@ walk to, but not exceed the boundary value.
 Possible directions are `North`, `South`, `East`, `West`, as well as `NorthEast`,
 `SouthEast`, `SouthWest` and `NorthWest`.
 """
-
-# Periodic
 function walk!(
     agent::AbstractAgent,
     direction::Type{<:Direction},
