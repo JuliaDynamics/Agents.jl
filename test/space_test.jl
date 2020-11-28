@@ -203,4 +203,58 @@ end
     @test_throws ErrorException (model.space = ContinuousSpace((1,1), 0.1))
 end
 
+mutable struct Agent3D <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Int}
+    weight::Float64
+end
+
+@testset "Walk" begin
+    # Periodic
+    model = ABM(Agent3, GridSpace((3, 3)))
+    a = add_agent!((1, 1), model, rand())
+    walk!(a, North, model)
+    @test a.pos == (1, 2)
+    walk!(a, NorthEast, model)
+    @test a.pos == (2, 3)
+    walk!(a, East, model)
+    @test a.pos == (3, 3)
+    walk!(a, East, model, 2) # PBC
+    @test a.pos == (2, 3)
+    walk!(a, SouthEast, model)
+    @test a.pos == (3, 2)
+    walk!(a, South, model)
+    @test a.pos == (3, 1)
+    walk!(a, SouthWest, model) # PBC
+    @test a.pos == (2, 3)
+    walk!(a, West, model)
+    @test a.pos == (1, 3)
+    walk!(a, South, model, 8) # Round the world
+    @test a.pos == (1, 1)
+
+    # Non-Periodic
+    model = ABM(Agent3, GridSpace((3, 3); periodic = false))
+    a = add_agent!((1, 1), model, rand())
+    walk!(a, North, model)
+    @test a.pos == (1, 2)
+    walk!(a, NorthEast, model)
+    @test a.pos == (2, 3)
+    walk!(a, East, model)
+    @test a.pos == (3, 3)
+    walk!(a, East, model) # Boundary
+    @test a.pos == (3, 3)
+    walk!(a, West, model, 5) # Boundary
+    @test a.pos == (1, 3)
+    walk!(a, SouthWest, model) # Boundary in one direction, not in the other
+    @test a.pos == (1, 2)
+
+    # Not 2D
+    model = ABM(Agent3D, GridSpace((3, 3, 3)))
+    a = add_agent!((1, 1, 1), model, rand())
+    @test_throws MethodError walk!(a, North, model)
+    # Not Grid
+    model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
+    a = add_agent!(model, (0, 0), rand())
+    @test_throws MethodError walk!(a, North, model)
+end
 end
