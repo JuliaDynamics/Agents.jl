@@ -30,9 +30,9 @@ The following keywords modify the `paramscan` function:
 
 The following keywords are propagated into [`run!`](@ref):
 ```julia
-agent_step!, model_step!, n, when, step0, parallel, replicates, adata, mdata
+model_step!, agent_step!, n, when, step0, parallel, replicates, adata, mdata
 ```
-`agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
+`model_step!, agent_step!, n` and at least one of `adata, mdata` are mandatory.
 
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
@@ -80,11 +80,11 @@ function paramscan(parameters::Dict{Symbol,}, initialize;
   counter = 0
   d, rest = Iterators.peel(combs)
   model = initialize(; d...)
-  df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
+  df_agent, df_model = run!(model, model_step!, agent_step!, n; kwargs...)
   addparams!(df_agent, df_model, d, changing_params)
   for d in rest
     model = initialize(; d...)
-    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
+    df_agentTemp, df_modelTemp = run!(model, model_step!, agent_step!, n; kwargs...)
     addparams!(df_agentTemp, df_modelTemp, d, changing_params)
     append!(df_agent, df_agentTemp)
     append!(df_model, df_modelTemp)
