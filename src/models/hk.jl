@@ -9,12 +9,14 @@ end
 
 """
 ``` julia
-hk(; 
-    numagents = 100, 
+hk(;
+    numagents = 100,
     ϵ = 0.2
 )
 ```
 Same as in [HK (Hegselmann and Krause) opinion dynamics model](@ref).
+**Note**: this model includes a termination function, so call
+`model, model_step!, agent_step!, terminate = hk()` to envoke it.
 """
 function hk(; numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))
@@ -22,7 +24,7 @@ function hk(; numagents = 100, ϵ = 0.2)
         o = rand()
         add_agent!(model, o, o, -1)
     end
-    return model, hk_agent_step!, hk_model_step!, terminate
+    return model, hk_model_step!, hk_agent_step!, terminate
 end
 
 function boundfilter(agent, model)

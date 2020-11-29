@@ -1,10 +1,10 @@
 # Predefined Models
-Predefined agent based models exist in the `Models` submodule in the form of functions that return `model, agent_step!, model_step!` when called.
+Predefined agent based models exist in the `Models` submodule in the form of functions that return `model, model_step!, agent_step!` when called.
 
 They are accessed like:
 ```julia
 using Agents
-model, agent_step!, model_step! = Models.flocking(; kwargs...)
+model, model_step!, agent_step! = Models.flocking(; kwargs...)
 ```
 
 The Examples section of the docs outline how to use and interact with each model.

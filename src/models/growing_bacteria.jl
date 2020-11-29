@@ -36,7 +36,7 @@ function growing_bacteria()
     add_agent!((6.5, 4.0), model, 0.0, 0.3, 0.0, 0.1)
     add_agent!((7.5, 4.0), model, 0.0, 0.0, 0.0, 0.1)
 
-    return model, growing_bacteria_agent_step!, growing_bacteria_model_step!
+    return model, growing_bacteria_model_step!, growing_bacteria_agent_step!
 end
 
 function update_nodes!(a::SimpleCell)

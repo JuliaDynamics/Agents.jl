@@ -17,8 +17,8 @@ function wright_fisher(; numagents = 100, selection = true)
     for i in 1:numagents
         add_agent!(model, rand())
     end
-    !selection && return model, dummystep, wright_fisher_model_step_neutral!
-    return model, dummystep, wright_fisher_model_step_selection!
+    !selection && return model, wright_fisher_model_step_neutral!, dummystep
+    return model, wright_fisher_model_step_selection!, dummystep
 end
 
 wright_fisher_model_step_neutral!(model::ABM) = sample!(model, nagents(model))

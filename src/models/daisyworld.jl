@@ -89,7 +89,7 @@ function daisyworld(;
         add_agent_pos!(wd, model)
     end
 
-    return model, daisyworld_agent_step!, daisyworld_model_step!
+    return model, daisyworld_model_step!, daisyworld_agent_step!
 end
 
 function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)

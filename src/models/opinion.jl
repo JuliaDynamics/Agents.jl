@@ -31,7 +31,7 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
             rand(1:levels_per_opinion, nopinions),
         )
     end
-    return model, opinion_agent_step!, dummystep
+    return model, dummystep, opinion_agent_step!
 end
 
 function adopt!(agent, model)

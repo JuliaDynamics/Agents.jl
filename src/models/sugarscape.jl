@@ -86,7 +86,7 @@ function sugarscape(;
             rand(w0_dist[1]:w0_dist[2]),
         )
     end
-    return model, sugarscape_agent_step!, sugarscape_env!
+    return model, sugarscape_env!, sugarscape_agent_step!
 end
 
 function sugarscape_env!(model)

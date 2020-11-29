@@ -22,7 +22,7 @@ function forest_fire(; density = 0.7, griddims = (100, 100))
             add_agent!(position, forest, state)
         end
     end
-    return forest, forest_agent_step!, dummystep
+    return forest, dummystep, forest_agent_step!
 end
 
 function forest_agent_step!(tree, forest)

@@ -20,7 +20,7 @@ function wealth_distribution(; dims = (25, 25), wealth = 1, M = 1000)
     for i in 1:M # add agents in random positions
         add_agent!(model, wealth)
     end
-    return model, wealth_distribution_agent_step!, dummystep
+    return model, dummystep, wealth_distribution_agent_step!
 end
 
 function wealth_distribution_agent_step!(agent, model)

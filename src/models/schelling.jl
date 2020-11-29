@@ -25,7 +25,7 @@ function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
-    return model, schelling_agent_step!, dummystep
+    return model, dummystep, schelling_agent_step!
 end
 
 function schelling_agent_step!(agent, model)

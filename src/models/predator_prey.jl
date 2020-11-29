@@ -84,7 +84,7 @@ function predator_prey(;
         grass = Grass(id, (0, 0), fully_grown, countdown)
         add_agent!(grass, p, model)
     end
-    return model, predator_prey_agent_step!, dummystep
+    return model, dummystep, predator_prey_agent_step!
 end
 
 function predator_prey_agent_step!(sheep::Sheep, model)

@@ -72,7 +72,7 @@ function social_distancing(;
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
-    return model, social_distancing_agent_step!, social_distancing_model_step!
+    return model, social_distancing_model_step!, social_distancing_agent_step!
 end
 
 

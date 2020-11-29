@@ -54,7 +54,7 @@ function flocking(;
             visual_distance,
         )
     end
-    return model, flocking_agent_step!, dummystep
+    return model, dummystep, flocking_agent_step!
 end
 
 function flocking_agent_step!(bird, model)
