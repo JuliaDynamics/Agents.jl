@@ -139,8 +139,8 @@
         six_months(model, step) = step % 182 == 0
         agent_data, model_data = run!(
             model,
-            agent_step!,
             model_step!,
+            agent_step!,
             365 * 5;
             when_model = each_year,
             when = six_months,
@@ -158,8 +158,8 @@
 
         agent_data, model_data = run!(
             model,
-            agent_step!,
             model_step!,
+            agent_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -171,8 +171,8 @@
 
         _, model_data = run!(
             model,
-            agent_step!,
             model_step!,
+            agent_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -197,7 +197,7 @@
 
         for year in 1:5
             for day in 1:365
-                step!(model, agent_step!, model_step!, 1)
+                step!(model, model_step!, agent_step!, 1)
                 collect_model_data!(daily_model_data, model, model_props, day * year)
                 collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
             end
@@ -219,12 +219,12 @@
         @test dummystep(model) == nothing
         @test dummystep(model[1], model) == nothing
         tick = model.tick
-        step!(model, agent_step!, 1)
+        step!(model, dummystep, 1)
         @test tick == model.tick
         stop(m, s) = m.year == 6
-        step!(model, agent_step!, model_step!, stop)
+        step!(model, model_step!, agent_step!, stop)
         @test model.tick == 365 * 6
-        step!(model, agent_step!, model_step!, 1, false)
+        step!(model, model_step!, agent_step!, 1, false)
     end
 
     @testset "Mixed-ABM collections" begin
@@ -369,8 +369,8 @@
         model = initialize()
         agent_data, model_data = run!(
             model,
-            agent_step!,
             model_step!,
+            agent_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -390,7 +390,7 @@ end
         :griddims => (20, 20),
     )
 
-    forest, agent_step!, forest_step! = Models.forest_fire()
+    forest, forest_step!, agent_step! = Models.forest_fire()
     forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
     burnt(a) = a.status == :burnt
@@ -401,8 +401,8 @@ end
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = agent_step!,
             model_step! = forest_step!,
+            agent_step! = agent_step!,
             adata = adata,
             progress = false,
         )
@@ -412,8 +412,8 @@ end
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = agent_step!,
             model_step! = forest_step!,
+            agent_step! = agent_step!,
             include_constants = true,
             adata = adata,
             progress = false,
@@ -427,8 +427,8 @@ end
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = agent_step!,
             model_step! = forest_step!,
+            agent_step! = agent_step!,
             adata = adata,
             progress = false,
         )
@@ -442,8 +442,8 @@ end
             parameters,
             forest_initiation;
             n = n,
-            agent_step! = dummystep,
             model_step! = forest_step!,
+            agent_step! = dummystep,
             replicates = 3,
             adata = adata,
             progress = false,

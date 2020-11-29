@@ -23,8 +23,8 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
-    run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
+    run!(model, model_step! [, agent_step!], n::Integer; kwargs...) → agent_df,  model_df
+    run!(model, model_step!, agent_step!, n::Function; kwargs...) → agent_df, model_df
 
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
@@ -97,21 +97,21 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 """
 function run! end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+run!(model::ABM, model_step!, n::Int = 1; kwargs...) =
+run!(model::ABM, model_step!, dummystep, n; kwargs...)
 
-function run!(model::ABM, agent_step!, model_step!, n;
+function run!(model::ABM, model_step!, agent_step!, n;
   replicates::Int=0, parallel::Bool=false, kwargs...)
 
   r = replicates
   if r > 0
     if parallel
-      return parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+      return parallel_replicates(model, model_step!, agent_step!, n, r; kwargs...)
     else
-      return series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+      return series_replicates(model, model_step!, agent_step!, n, r; kwargs...)
     end
   else
-    return _run!(model, agent_step!, model_step!, n; kwargs...)
+    return _run!(model, model_step!, agent_step!, n; kwargs...)
   end
 end
 
@@ -119,10 +119,10 @@ end
 # Core data collection loop
 ###################################################
 """
-  _run!(model, agent_step!, model_step!, n; kwargs...)
+  _run!(model, model_step!, agent_step!, n; kwargs...)
 Core function that loops over stepping a model and collecting data at each step.
 """
-function _run!(model, agent_step!, model_step!, n;
+function _run!(model, model_step!, agent_step!, n;
                when = true, when_model = when,
                mdata=nothing, adata=nothing, obtainer = identity,
                agents_first=true)
@@ -142,7 +142,7 @@ function _run!(model, agent_step!, model_step!, n;
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer = obtainer)
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, model_step!, agent_step!, 1, agents_first)
         s += 1
     end
     if should_we_collect(s, model, when)
@@ -431,14 +431,14 @@ function replicate_col!(df, rep)
 end
 
 "Run replicates of the same simulation"
-function series_replicates(model, agent_step!, model_step!, n, replicates; kwargs...)
+function series_replicates(model, model_step!, agent_step!, n, replicates; kwargs...)
 
-  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
+  df_agent, df_model = _run!(deepcopy(model), model_step!, agent_step!, n; kwargs...)
   replicate_col!(df_agent, 1)
   replicate_col!(df_model, 1)
 
   for rep in 2:replicates
-    df_agentTemp, df_modelTemp = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
+    df_agentTemp, df_modelTemp = _run!(deepcopy(model), model_step!, agent_step!, n; kwargs...)
     replicate_col!(df_agentTemp, rep)
     replicate_col!(df_modelTemp, rep)
 
@@ -449,9 +449,9 @@ function series_replicates(model, agent_step!, model_step!, n, replicates; kwarg
 end
 
 "Run replicates of the same simulation in parallel"
-function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates; kwargs...)
+function parallel_replicates(model::ABM, model_step!, agent_step!, n, replicates; kwargs...)
 
-  all_data = pmap(j -> _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...),
+  all_data = pmap(j -> _run!(deepcopy(model), model_step!, agent_step!, n; kwargs...),
                   1:replicates)
 
   df_agent = DataFrame()

@@ -416,7 +416,7 @@ end
         for i in 1:100
             add_agent!(model, rand())
         end
-        step!(model, agent_step!, model_step!, 1, bool)
+        step!(model, model_step!, agent_step!, 1, bool)
         if bool
             @test model.count == 100
         else
