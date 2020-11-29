@@ -24,6 +24,7 @@ therefore are not "truly breaking".
 - Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allow performance updates in the future that may change internals but not lead to breaking changes.
 - `vertex2coord, coord2vertex` do not exist anymore because they are unnecessary in the new design.
+- **`step!` and `run!` argument order has changed**. Now call `step!(model, model_step!, agent_step!, 1)`.
 - API simplification and renaming:
   - `space_neighbors` -> `nearby_ids`
   - `node_neighbors` -> `nearby_positions`
