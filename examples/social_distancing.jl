@@ -75,7 +75,7 @@ anim = @animate for i in 1:2:100
     )
 
     title!(p1, "step $(i)")
-    step!(model, agent_step!, 2)
+    step!(model, agent_step!, dummystep, 2)
 end
 gif(anim, "socialdist1.gif", fps = 25)
 

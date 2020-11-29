@@ -23,7 +23,7 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
+    run!(model, [agent_step!, ] model_step!, n::Integer; kwargs...) → agent_df, model_df
     run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
 
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
@@ -97,8 +97,8 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 """
 function run! end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+run!(model::ABM, model_step!, n::Int = 1; kwargs...) =
+run!(model::ABM, dummystep, model_step!, n; kwargs...)
 
 function run!(model::ABM, agent_step!, model_step!, n;
   replicates::Int=0, parallel::Bool=false, kwargs...)

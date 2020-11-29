@@ -15,6 +15,8 @@ hk(;
 )
 ```
 Same as in [HK (Hegselmann and Krause) opinion dynamics model](@ref).
+**Note**: this model includes a termination function, so call
+`model, agent_step!, model_step!, terminate = hk()` to envoke it.
 """
 function hk(; numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))

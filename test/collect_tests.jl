@@ -219,7 +219,7 @@
         @test dummystep(model) == nothing
         @test dummystep(model[1], model) == nothing
         tick = model.tick
-        step!(model, agent_step!, 1)
+        step!(model, dummystep, 1)
         @test tick == model.tick
         stop(m, s) = m.year == 6
         step!(model, agent_step!, model_step!, stop)

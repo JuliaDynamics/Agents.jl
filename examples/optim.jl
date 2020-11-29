@@ -36,6 +36,7 @@ function cost(x)
     _, data = run!(
         model,
         agent_step!,
+        dummystep,
         50;
         mdata = [infected_fraction],
         when_model = [50],
@@ -112,7 +113,7 @@ model = model_initiation(;
 )
 
 _, data =
-    run!(model, agent_step!, 50; mdata = [nagents], when_model = [50], replicates = 10)
+    run!(model, agent_step!, dummystep, 50; mdata = [nagents], when_model = [50], replicates = 10)
 
 mean(data.nagents)
 
@@ -141,6 +142,7 @@ function cost_multi(x)
     _, data = run!(
         model,
         agent_step!,
+        dummystep,
         50;
         mdata = [infected_fraction, n_fraction],
         when_model = [50],

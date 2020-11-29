@@ -343,7 +343,7 @@ import DiffEqCallbacks
 function fish!(integrator, model)
     integrator.p[2] = integrator.u[1] > model.min_threshold ?
         sum(a.yearly_catch for a in allagents(model)) : 0.0
-    Agents.step!(model, agent_cb_step!, 1)
+    Agents.step!(model, agent_cb_step!, dummystep, 1)
 end
 
 function fish_stock!(ds, s, p, t)

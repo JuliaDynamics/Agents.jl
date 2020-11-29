@@ -126,7 +126,7 @@ cd(@__DIR__) #src
 model = initialize_model()
 e = model.space.extent
 anim = @animate for i in 0:100
-    i > 0 && step!(model, agent_step!, 1)
+    i > 0 && step!(model, agent_step!, dummystep, 1)
     p1 = plotabm(
         model;
         am = bird_triangle,

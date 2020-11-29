@@ -45,11 +45,10 @@ nothing # hide
 modelstep_neutral!(model::ABM) = sample!(model, nagents(model))
 nothing # hide
 
-# We can now run the model and collect data. We use `dummystep` for the agent-step
-# function (as the agents perform no actions).
+# We can now run the model and collect data.
 using Statistics: mean
 
-data, _ = run!(model, dummystep, modelstep_neutral!, 20; adata = [(:trait, mean)])
+data, _ = run!(model, modelstep_neutral!, 20; adata = [(:trait, mean)])
 data
 
 # As expected, the average value of the "trait" remains around 0.5.
@@ -66,7 +65,7 @@ end
 
 modelstep_selection!(model::ABM) = sample!(model, nagents(model), :trait)
 
-data, _ = run!(model, dummystep, modelstep_selection!, 20; adata = [(:trait, mean)])
+data, _ = run!(model, modelstep_selection!, 20; adata = [(:trait, mean)])
 data
 
 # Here we see that as time progresses, the trait becomes closer and closer to 1,

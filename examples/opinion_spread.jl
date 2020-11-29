@@ -110,7 +110,7 @@ levels_per_opinion = 3
 ac(agent) = RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 anim = @animate for sp in 1:500
-    step!(model, agent_step!)
+    step!(model, agent_step!, dummystep)
     p = plotabm(model, ac = ac, as = 12, am = :square)
     title!(p, "Step $(sp)")
     if rununtil(model, 1)

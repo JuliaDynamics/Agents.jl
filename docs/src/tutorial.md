@@ -52,14 +52,16 @@ For more functions visit the [API](@ref) page.
 ## 4. Evolving the model
 
 Any ABM model should have at least one and at most two step functions.
-An _agent step function_ is required by default.
-Such an agent step function defines what happens to an agent when it activates.
-Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
-
-An agent step function should only accept two arguments: first, an agent object, and second, a model object.
-
+A _model step function_ is required by default.
 The model step function should accept only one argument, that is the model object.
-To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function.
+
+Optionally, we can also provide an _agent step function_, which defines what happens to
+an agent when it activates. An agent step function should only accept two arguments:
+first, an agent object, and second, a model object.
+
+Sometimes models are simple enough that changing agent properties is all that's required.
+In these cases, users can use the built-in [`dummystep`](@ref) as the model step
+function, to ignore any dynamics here.
 
 After you have defined these two functions, you evolve your model with `step!`:
 ```@docs

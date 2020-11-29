@@ -266,7 +266,7 @@ nothing # hide
 model = model_initiation(; params...)
 
 anim = @animate for i in 0:30
-    i > 0 && step!(model, agent_step!, 1)
+    i > 0 && step!(model, agent_step!, dummystep, 1)
     p1 = plotabm(model; ac = infected_fraction, plotargs...)
     title!(p1, "Day $(i)")
 end
@@ -288,7 +288,7 @@ nothing # hide
 model = model_initiation(; params...)
 
 to_collect = [(:status, f) for f in (infected, recovered, length)]
-data, _ = run!(model, agent_step!, 100; adata = to_collect)
+data, _ = run!(model, agent_step!, dummystep, 100; adata = to_collect)
 data[1:10, :]
 
 # We now plot how quantities evolved in time to show
