@@ -75,7 +75,7 @@ anim = @animate for i in 1:2:100
     )
 
     title!(p1, "step $(i)")
-    step!(model, agent_step!, 2)
+    step!(model, dummystep, agent_step!, 2)
 end
 gif(anim, "socialdist1.gif", fps = 25)
 
@@ -110,7 +110,7 @@ anim = @animate for i in 1:2:100
         ylims = (0, e[2]),
     )
     title!(p1, "step $(i)")
-    step!(model2, agent_step!, model_step!, 2)
+    step!(model2, model_step!, agent_step!, 2)
 end
 gif(anim, "socialdist2.gif", fps = 25)
 
@@ -155,7 +155,7 @@ anim = @animate for i in 1:2:100
         ylims = (0, e[2]),
     )
     title!(p1, "step $(i)")
-    step!(model3, agent_step!, model_step!, 2)
+    step!(model3, model_step!, agent_step!, 2)
 end
 gif(anim, "socialdist3.gif", fps = 25)
 
@@ -326,7 +326,7 @@ anim = @animate for i in 1:2:100
         ylims = (0, e[2]),
     )
     title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
+    step!(sir_model, sir_model_step!, sir_agent_step!, 2)
 end
 gif(anim, "socialdist4.gif", fps = 25)
 
@@ -348,9 +348,9 @@ sir_model1 = sir_initiation(reinfection_probability = r1, βmin = β1)
 sir_model2 = sir_initiation(reinfection_probability = r2, βmin = β1)
 sir_model3 = sir_initiation(reinfection_probability = r1, βmin = β2)
 
-data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata = adata)
-data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata = adata)
-data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data1, _ = run!(sir_model1, sir_model_step!, sir_agent_step!, 2000; adata = adata)
+data2, _ = run!(sir_model2, sir_model_step!, sir_agent_step!, 2000; adata = adata)
+data3, _ = run!(sir_model3, sir_model_step!, sir_agent_step!, 2000; adata = adata)
 
 data1[(end - 10):end, :]
 
@@ -392,7 +392,7 @@ anim = @animate for i in 0:2:1000
         ylims = (0, e[2]),
     )
     title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
+    step!(sir_model, sir_model_step!, sir_agent_step!, 2)
 end
 gif(anim, "socialdist5.gif", fps = 25)
 
@@ -406,7 +406,7 @@ gif(anim, "socialdist5.gif", fps = 25)
 r4 = 0.04
 sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated = 0.8)
 
-data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data4, _ = run!(sir_model4, sir_model_step!, sir_agent_step!, 2000; adata = adata)
 
 plot!(p, data4[:, aggname(:status, infected)], label = "r=$r4, social distancing")
 p

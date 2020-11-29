@@ -103,7 +103,7 @@ nothing #hide
 Random.seed!(6549) #hide
 
 model = initialise()
-_, results = run!(model, agent_step!, model_step!, 20; mdata = [:stock])
+_, results = run!(model, model_step!, agent_step!, 20; mdata = [:stock])
 
 plot(results.stock; legend = false, ylabel = "Stock", xlabel = "Year")
 
@@ -168,7 +168,7 @@ Random.seed!(6549) #hide
 model = initialise()
 yearly(model, s) = s % 365 == 0
 _, results =
-    run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
+    run!(model, model_step!, agent_step!, 20 * 365; mdata = [:stock], when = yearly)
 
 plot(results.stock; legend = false, ylabel = "Stock", xlabel = "Year")
 
@@ -179,7 +179,7 @@ plot(results.stock; legend = false, ylabel = "Stock", xlabel = "Year")
 using BenchmarkTools
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_step!, model_step!, 20 * 365) setup =
+@btime Agents.step!(model, model_step!, agent_step!, 20 * 365) setup =
     (model = initialise())
 
 # So this is fairly quick since the model is a simple one, but it's certainly not as efficient
@@ -272,14 +272,14 @@ nothing #hide
 
 Random.seed!(6549) #hide
 modeldeq = initialise_diffeq()
-_, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
+_, resultsdeq = run!(modeldeq, model_diffeq_step!, agent_diffeq_step!, 20; mdata = [:stock])
 
 plot(resultsdeq.stock; legend = false, ylabel = "Stock", xlabel = "Year")
 
 # The small complexity addition yields us a generous speed up of around 4.5x.
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup =
+@btime Agents.step!(model, model_diffeq_step!, agent_diffeq_step!, 20) setup =
     (model = initialise_diffeq())
 
 # Digging into the results a little more, we can see that the `DifferentialEquations`
@@ -343,7 +343,7 @@ import DiffEqCallbacks
 function fish!(integrator, model)
     integrator.p[2] = integrator.u[1] > model.min_threshold ?
         sum(a.yearly_catch for a in allagents(model)) : 0.0
-    Agents.step!(model, agent_cb_step!, 1)
+    Agents.step!(model, dummystep, agent_cb_step!, 1)
 end
 
 function fish_stock!(ds, s, p, t)

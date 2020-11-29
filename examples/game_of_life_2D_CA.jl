@@ -95,7 +95,7 @@ end
 cd(@__DIR__) #src
 ac(x) = x.status == true ? :black : :white
 anim = @animate for i in 0:100
-    i > 0 && step!(model, dummystep, ca_step!, 1)
+    i > 0 && step!(model, ca_step!, 1)
     p1 = plotabm(model; ac = ac, as = 3, am = :square, showaxis = false)
 end
 nothing # hide

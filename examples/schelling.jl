@@ -142,10 +142,10 @@ nothing # hide
 model = initialize()
 
 # We can advance the model one step
-step!(model, agent_step!)
+step!(model, dummystep, agent_step!)
 
 # Or for three steps
-step!(model, agent_step!, 3)
+step!(model, dummystep, agent_step!, 3)
 
 # ## Running the model and collecting data
 
@@ -157,14 +157,14 @@ step!(model, agent_step!, 3)
 adata = [:pos, :mood, :group]
 
 model = initialize()
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, dummystep, agent_step!, 5; adata = adata)
 data[1:10, :] # print only a few rows
 
 # We could also use functions in `adata`, for example we can define
 x(agent) = agent.pos[1]
 model = initialize()
 adata = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, dummystep, agent_step!, 5; adata = adata)
 data[1:10, :]
 
 # With the above `adata` vector, we collected all agent's data.
@@ -174,7 +174,7 @@ data[1:10, :]
 
 model = initialize();
 adata = [(:mood, sum), (x, maximum)]
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, dummystep, agent_step!, 5; adata = adata)
 data
 
 # Other examples in the documentation are more realistic, with a much more meaningful
@@ -199,7 +199,7 @@ model = initialize();
 anim = @animate for i in 0:10
     p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
     title!(p1, "step $(i)")
-    step!(model, agent_step!, 1)
+    step!(model, dummystep, agent_step!, 1)
 end
 
 gif(anim, "schelling.gif", fps = 2)
@@ -210,7 +210,7 @@ gif(anim, "schelling.gif", fps = 2)
 # To that end, we only need to specify `replicates` in the `run!` function:
 
 model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
-data, _ = run!(model, agent_step!, 5; adata = adata, replicates = 3)
+data, _ = run!(model, dummystep, agent_step!, 5; adata = adata, replicates = 3)
 data[(end - 10):end, :]
 
 # It is possible to run the replicates in parallel.
@@ -234,7 +234,7 @@ data[(end - 10):end, :]
 # Then we can tell the `run!` function to run replicates in parallel:
 
 # ```julia
-# data, _ = run!(model, agent_step!, 2, adata=adata,
+# data, _ = run!(model, dummystep, agent_step!, 2, adata=adata,
 #                replicates=5, parallel=true)
 # ```
 
@@ -318,7 +318,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 
 # ```julia
 # scene, adf, modeldf =
-# interactive_abm(model, agent_step!, dummystep, parange;
+# interactive_abm(model, dummystep, agent_step!, parange;
 #                 ac = groupcolor, am = groupmarker, as = 1,
 #                 adata = adata, alabels = alabels)
 # ```

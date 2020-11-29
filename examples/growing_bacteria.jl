@@ -198,7 +198,7 @@ nothing # hide
 Random.seed!(1680)
 e = model.space.extent
 anim = @animate for i in 0:50:5000
-    step!(model, agent_step!, model_step!, 100)
+    step!(model, model_step!, agent_step!, 100)
     p1 = plotabm(
         model,
         am = cassini_oval,

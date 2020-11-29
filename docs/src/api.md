@@ -133,7 +133,7 @@ while until(s, n, model)
   if should_we_collect(s, model, when_model)
       collect_model_data!(df_model, model, mdata, s)
   end
-  step!(model, agent_step!, model_step!, 1)
+  step!(model, model_step!, agent_step!, 1)
   s += 1
 end
 return df_agent, df_model
@@ -173,7 +173,7 @@ end
 and pass it to e.g. `step!` by initializing it
 ```julia
 ms = MyScheduler(100, 0.5)
-run!(model, agentstep, modelstep, 100; scheduler = ms)
+run!(model, modelstep, agentstep, 100; scheduler = ms)
 ```
 
 ### Predefined schedulers

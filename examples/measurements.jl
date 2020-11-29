@@ -198,7 +198,7 @@ mdata = [:solar_luminosity]
 Random.seed!(19) # hide
 model = daisyworld(scenario = :ramp)
 agent_df, model_df =
-    run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+    run!(model, model_step!, agent_step!, 1000; adata = adata, mdata = mdata)
 
 p1 = plot(
     agent_df.step,

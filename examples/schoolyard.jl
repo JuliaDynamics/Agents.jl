@@ -135,7 +135,7 @@ end
 Random.seed!(6548) #hide
 model = schoolyard()
 anim = @animate for i in 0:30
-    i > 0 && step!(model, agent_step!, 1)
+    i > 0 && step!(model, dummystep, agent_step!, 1)
     p1 = plotabm(model; xlims = (0, 100), ylims = (0, 100), as = 7)
     scatter!(p1, [50], [50]; color = :red, legend = false) # Show position of teacher
     title!(p1, "step $(i)")

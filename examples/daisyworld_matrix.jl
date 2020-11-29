@@ -217,7 +217,7 @@ nothing # hide
 cd(@__DIR__) #src
 Random.seed!(165) # hide
 model = daisyworld(scenario = :ours)
-step!(model, agent_step!, model_step!, 100)
+step!(model, model_step!, agent_step!, 100)
 daisycolor(a) = a.breed
 plotabm(model; ac = daisycolor, as = 5)
 
@@ -259,7 +259,7 @@ nothing # hide
 # Now we can evolve our model and observe what happens
 
 anim = @animate for t in 1:900
-    step!(model, agent_step!, model_step!, 1)
+    step!(model, model_step!, agent_step!, 1)
     collect_model_data!(model_df, model, mdata, t)
     collect_agent_data!(agent_df, model, adata, t)
     heatmap(

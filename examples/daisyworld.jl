@@ -289,7 +289,7 @@ plotkwargs = (
 p = plotabm(model; plotkwargs...)
 
 # And after a couple of steps
-step!(model, agent_step!, model_step!, 5)
+step!(model, model_step!, agent_step!, 5)
 p = plotabm(model; plotkwargs...)
 
 # Let's do some animation now
@@ -298,7 +298,7 @@ model = daisyworld()
 anim = @animate for i in 0:30
     p = plotabm(model; plotkwargs...)
     title!(p, "step $(i)")
-    step!(model, agent_step!, model_step!)
+    step!(model, model_step!, agent_step!)
 end
 gif(anim, "daisyworld.gif", fps = 3)
 
@@ -317,7 +317,7 @@ adata = [(black, count, daisies), (white, count, daisies)]
 Random.seed!(165) # hide
 model = daisyworld(; solar_luminosity = 1.0)
 
-agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata)
+agent_df, model_df = run!(model, model_step!, agent_step!, 1000; adata = adata)
 
 p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
 plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")
@@ -340,7 +340,7 @@ mdata = [:solar_luminosity]
 Random.seed!(165) # hide
 model = daisyworld(solar_luminosity = 1.0, scenario = :ramp)
 agent_df, model_df =
-    run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+    run!(model, model_step!, agent_step!, 1000; adata = adata, mdata = mdata)
 
 p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
 plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")
@@ -410,7 +410,7 @@ plot(p, p2, p3, layout = (3, 1), size = (600, 700))
 # landfirst = by_type((Land, Daisy), false)
 #
 # scene, agent_df, model_def = interactive_abm(
-#     model, agent_step!, model_step!, params;
+#     model, model_step!, agent_step!, params;
 #     ac = daisycolor, am = daisyshape, as = daisysize,
 #     mdata = mdata, adata = adata, alabels = alabels, mlabels = mlabels,
 #     scheduler = landfirst # crucial to change model scheduler!

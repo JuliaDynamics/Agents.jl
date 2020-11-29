@@ -86,7 +86,7 @@ model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 "run the model until all agents stabilize"
 rununtil(model, s) = count(a->a.stabilized, allagents(model)) == length(positions(model))
 
-agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabilized, count)])
+agentdata, _ = run!(model, dummystep, agent_step!, rununtil, adata = [(:stabilized, count)])
 
 # ## Plotting
 
@@ -110,7 +110,7 @@ levels_per_opinion = 3
 ac(agent) = RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 anim = @animate for sp in 1:500
-    step!(model, agent_step!)
+    step!(model, dummystep, agent_step!)
     p = plotabm(model, ac = ac, as = 12, am = :square)
     title!(p, "Step $(sp)")
     if rununtil(model, 1)

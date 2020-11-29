@@ -24,7 +24,7 @@ using Agents, Random
 using Makie
 using InteractiveChaos
 
-model, agent_step!, model_step! = Models.forest_fire()
+model, model_step!, agent_step! = Models.forest_fire()
 
 alive(model) = count(a.status for a in allagents(model))
 burning(model) = count(!a.status for a in allagents(model))
@@ -39,6 +39,6 @@ params = Dict(
 ac(a) = a.status ? "#1f851a" : "#67091b"
 am = :rect
 
-p1 = interactive_abm(model, agent_step!, model_step!, params;
+p1 = interactive_abm(model, model_step!, agent_step!, params;
 ac = ac, as = 1, am = am, mdata = mdata, mlabels=mlabels)
 ```

@@ -221,7 +221,7 @@ end
 # The following animation shows the emergent unequal distribution of agents on resourceful areas.
 
 anim = @animate for i in 1:50
-    step!(model, agent_step!, env!, 1)
+    step!(model, env!, agent_step!, 1)
     p1 = heatmap(model.sugar_values)
     p2 = plotabm(model, as = 3, am = :square, ac = :blue)
     title!(p1, "Sugar levels")
@@ -233,7 +233,7 @@ gif(anim, "sugar.gif", fps = 8)
 # ### Distribution of wealth across individuals
 
 model2 = sugarscape()
-adata, _ = run!(model2, agent_step!, env!, 20, adata = [:wealth])
+adata, _ = run!(model2, env!, agent_step!, 20, adata = [:wealth])
 
 anim2 = @animate for i in 0:20
     histogram(

@@ -112,14 +112,14 @@ function terminate(model, s)
     end
 end
 
-step!(model, agent_step!, model_step!, terminate)
+step!(model, model_step!, agent_step!, terminate)
 model[1]
 
 # Alright, let's wrap everything in a function and do some data collection using [`run!`](@ref).
 
 function model_run(; kwargs...)
     model = hk_model(; kwargs...)
-    agent_data, _ = run!(model, agent_step!, model_step!, terminate; adata = [:new_opinion])
+    agent_data, _ = run!(model, model_step!, agent_step!, terminate; adata = [:new_opinion])
     return agent_data
 end
 
@@ -133,8 +133,8 @@ data[(end - 19):end, :]
 model = hk_model()
 agent_data, _ = run!(
     model,
-    agent_step!,
     model_step!,
+    agent_step!,
     terminate;
     adata = [:new_opinion],
     when = terminate,
