@@ -20,6 +20,7 @@ struct GridSpace{D,P} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
+    hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
 end
 
 
@@ -119,6 +120,16 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     return hood
 end
 
+function initialize_neighborhood!(space::GridSpace{D}, r::NTuple{D,Real}) where {D}
+    @assert space.metric == :chebyshev "Cannot use tuple based neighbor search with the Euclidean metric."
+    d = size(space.s)
+    r0 = (floor(Int, i) for i in r)
+    βs = vec([CartesianIndex(a) for a in Iterators.product([(-r_0):r_0 for r_0 in r0]...)])
+    whole = Region(map(one, d), d)
+    hood = Hood{D}(whole, βs)
+    push!(space.hoods_tuple, float.(r) => hood)
+    return hood
+end
 
 """
     grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
