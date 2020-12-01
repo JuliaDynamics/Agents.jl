@@ -66,7 +66,9 @@ Possible on both `GridSpace` and `ContinuousSpace`s.
 
 The dimensionality of `direction` must be the same as the space. `GridSpace` asks for
 `Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
-each direction. Velocity is ignored for this opreation in `ContinuousSpace`.
+each direction. `direction = (2, -3)` is an example of a valid direction on a
+`GridSpace`, which moves the agent to the right 2 positions and down 3 positions.
+Velocity is ignored for this opreation in `ContinuousSpace`.
 
 ## Keywords
 - `ifempty` will check that the target position is unnocupied and only move if that's
