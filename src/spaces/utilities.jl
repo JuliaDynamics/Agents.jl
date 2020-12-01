@@ -1,5 +1,4 @@
-export edistance,
-    walk!, North, South, East, West, NorthEast, NorthWest, SouthEast, SouthWest
+export edistance, walk!
 
 #######################################################################################
 # %% (Mostly) space agnostic helper functions
@@ -58,58 +57,86 @@ function edistance(
     sqrt(total)
 end
 
-abstract type Direction end
-struct North <: Direction end
-struct South <: Direction end
-struct East <: Direction end
-struct West <: Direction end
-struct NorthWest <: Direction end
-struct SouthWest <: Direction end
-struct NorthEast <: Direction end
-struct SouthEast <: Direction end
-
-unitvector(d::Type{North}) = (0, 1)
-unitvector(d::Type{South}) = (0, -1)
-unitvector(d::Type{East}) = (1, 0)
-unitvector(d::Type{West}) = (-1, 0)
-unitvector(d::Type{NorthEast}) = (1, 1)
-unitvector(d::Type{NorthWest}) = (-1, 1)
-unitvector(d::Type{SouthEast}) = (1, -1)
-unitvector(d::Type{SouthWest}) = (-1, -1)
-
 """
-    walk!(agent, direction, model, distance=1)
+    walk!(agent, direction::NTuple, model; ifempty = false)
 
-Move agent in the given `direction` one grid position (by default). Only possible on a 2D
-`GridSpace`, respects periodic boundary conditions. If `periodic = false`, agents will
-walk to, but not exceed the boundary value.
+Move agent in the given `direction` respecting periodic boundary conditions.
+If `periodic = false`, agents will walk to, but not exceed the boundary value.
+Possible on both `GridSpace` and `ContinuousSpace`s.
 
-Possible directions are `North`, `South`, `East`, `West`, as well as `NorthEast`,
-`SouthEast`, `SouthWest` and `NorthWest`.
+The dimensionality of `direction` must be the same as the space. `GridSpace` asks for
+`Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
+each direction. Velocity is ignored for this opreation in `ContinuousSpace`.
+
+## Keywords
+- `ifempty` will check that the target position is unnocupied and only move if that's
+true. Available only on `GridSpace`.
 """
 function walk!(
     agent::AbstractAgent,
-    direction::Type{<:Direction},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,true}},
-    distance::Int = 1,
-)
-    (h, v) = unitvector(direction) .* distance
-    agent.pos = (
-        mod1(agent.pos[1] + h, size(model.space)[1]),
-        mod1(agent.pos[2] + v, size(model.space)[2]),
-    )
+    direction::NTuple{D,Int},
+    model::ABM{<:AbstractAgent,<:GridSpace{D,true}};
+    kwargs...,
+) where {D}
+    target = mod1.(agent.pos .+ direction, size(model.space))
+    walk_if_empty!(agent, target, model; kwargs...)
 end
 
-# Non-Periodic
 function walk!(
     agent::AbstractAgent,
-    direction::Type{<:Direction},
-    model::ABM{<:AbstractAgent,<:GridSpace{2,false}},
-    distance::Int = 1,
-)
-    (h, v) = unitvector(direction) .* distance
-    agent.pos = (
-        min(max(agent.pos[1] + h, 1), size(model.space)[1]),
-        min(max(agent.pos[2] + v, 1), size(model.space)[2]),
-    )
+    direction::NTuple{D,Int},
+    model::ABM{<:AbstractAgent,<:GridSpace{D,false}};
+    kwargs...,
+) where {D}
+    target = min.(max.(agent.pos .+ direction, 1), size(model.space))
+    walk_if_empty!(agent, target, model; kwargs...)
 end
+
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,true}};
+    kwargs...,
+) where {D}
+    target = mod1.(agent.pos .+ direction, model.space.extent)
+    move_agent!(agent, target, model)
+end
+
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,false}};
+    kwargs...,
+) where {D}
+    target = min.(max.(agent.pos .+ direction, 0.0), model.space.extent .- 1e-15)
+    move_agent!(agent, target, model)
+end
+
+function walk_if_empty!(agent, target, model; ifempty::Bool = false)
+    if ifempty
+        isempty(target, model) && move_agent!(agent, target, model)
+    else
+        move_agent!(agent, target, model)
+    end
+end
+
+"""
+    walk!(agent, rand, model)
+
+Invoke a random walk by providing the `rand` function in place of
+`distance`. For `GridSpace`, the walk will cover ±1 positions in all directions,
+`ContinuousSpace` will reside within [-1, 1].
+"""
+walk!(
+    agent,
+    ::typeof(rand),
+    model::ABM{<:AbstractAgent,<:GridSpace{D}};
+    kwargs...,
+) where {D} = walk!(agent, Tuple(rand(-1:1) for _ in 1:D), model; kwargs...)
+
+walk!(
+    agent,
+    ::typeof(rand),
+    model::ABM{<:AbstractAgent,<:ContinuousSpace{D}};
+    kwargs...,
+) where {D} = walk!(agent, Tuple(2.0 * rand() - 1.0 for _ in 1:D), model; kwargs...)
