@@ -13,7 +13,7 @@
 - New public `schedule` function for writing custom loops.
 - Mixed models are supported in data collection methods.
 - `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.
-- A walk! utility for 2D `GridSpace`s, providing turtle-like agent movement.
+- A walk! utility for `GridSpace` and `ContinuousSpace`s, providing turtle-like agent movement and random walks.
 
 ## Breaking changes
 Most changes in this section (besides changes to default values) are deprecated and
