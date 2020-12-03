@@ -10,6 +10,7 @@
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
+- Positions and neighbors on `GridSpace` can now be searched in each direction separately by accepting `r` as a tuple.
 - New public `schedule` function for writing custom loops.
 - Mixed models are supported in data collection methods.
 - `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.

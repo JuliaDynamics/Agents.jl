@@ -23,7 +23,6 @@ struct GridSpace{D,P} <: DiscreteSpace
     hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
 end
 
-
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
@@ -41,11 +40,11 @@ cartesian indices have Euclidean distance `≤ r` from the cartesian index of th
 position.
 """
 function GridSpace(
-        d::NTuple{D,Int};
-        periodic::Bool = true,
-        metric::Symbol = :chebyshev,
-        moore = nothing
-    ) where {D}
+    d::NTuple{D,Int};
+    periodic::Bool = true,
+    metric::Symbol = :chebyshev,
+    moore = nothing,
+) where {D}
     s = Array{Vector{Int},D}(undef, d)
     if moore ≠ nothing
         @warn "Keyword `moore` is deprecated, use `metric` instead."
@@ -54,7 +53,12 @@ function GridSpace(
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,periodic}(s, metric, Dict{Float64,Hood{D}}())
+    return GridSpace{D,periodic}(
+        s,
+        metric,
+        Dict{Float64,Hood{D}}(),
+        Dict{NTuple{D,Float64},Hood{D}}(),
+    )
 end
 
 #######################################################################################
@@ -124,7 +128,7 @@ function initialize_neighborhood!(space::GridSpace{D}, r::NTuple{D,Real}) where 
     @assert space.metric == :chebyshev "Cannot use tuple based neighbor search with the Euclidean metric."
     d = size(space.s)
     r0 = (floor(Int, i) for i in r)
-    βs = vec([CartesianIndex(a) for a in Iterators.product([(-r_0):r_0 for r_0 in r0]...)])
+    βs = vec([CartesianIndex(a) for a in Iterators.product([(-ri):ri for ri in r0]...)])
     whole = Region(map(one, d), d)
     hood = Hood{D}(whole, βs)
     push!(space.hoods_tuple, float.(r) => hood)
@@ -154,19 +158,39 @@ function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
     _grid_space_neighborhood(α, space, hood)
 end
 
+"""
+    grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::NTuple)
+
+Return an iterator over all positions within distances of the tuple `r`, from `α`
+according to the `space`. `r` must have as many elements as `space` has dimensions.
+For example, with a `GridSpace((10, 10, 10))` : `r = (1, 7, 9)`.
+"""
+function grid_space_neighborhood(
+    α::CartesianIndex,
+    space::GridSpace{D},
+    r::NTuple{D,Real},
+) where {D}
+    hood = if haskey(space.hoods_tuple, r)
+        space.hoods_tuple[r]
+    else
+        initialize_neighborhood!(space, r)
+    end
+    _grid_space_neighborhood(α, space, hood)
+end
+
 function _grid_space_neighborhood(
-        α::CartesianIndex,
-        space::GridSpace{D,true},
-        hood,
-    ) where {D}
+    α::CartesianIndex,
+    space::GridSpace{D,true},
+    hood,
+) where {D}
     return ((mod1.(Tuple(α + β), hood.whole.maxi)) for β in hood.βs)
 end
 
 function _grid_space_neighborhood(
-        α::CartesianIndex,
-        space::GridSpace{D,false},
-        hood,
-    ) where {D}
+    α::CartesianIndex,
+    space::GridSpace{D,false},
+    hood,
+) where {D}
     return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 end
 
@@ -202,7 +226,7 @@ end
 # %% pretty printing
 ###################################################################
 Base.size(space::GridSpace) = size(space.s)
-function Base.show(io::IO, space::GridSpace{D, P}) where {D, P}
+function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
     s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$(P)"
     print(io, s)
 end
