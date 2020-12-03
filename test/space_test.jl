@@ -1,5 +1,4 @@
 @testset "Space" begin
-
     @testset "1D grids" begin
         a = GridSpace((5,))
         @test size(a) == (5,)
@@ -243,52 +242,94 @@
         weight::Float64
     end
 
+    mutable struct Agent63 <: AbstractAgent
+        id::Int
+        pos::NTuple{3,Float64}
+        vel::NTuple{3,Float64}
+        weight::Float64
+    end
+
     @testset "Walk" begin
         # Periodic
         model = ABM(Agent3, GridSpace((3, 3)))
         a = add_agent!((1, 1), model, rand())
-        walk!(a, North, model)
+        walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
-        walk!(a, NorthEast, model)
+        walk!(a, (1, 1), model) # North east
         @test a.pos == (2, 3)
-        walk!(a, East, model)
+        walk!(a, (1, 0), model) # East
         @test a.pos == (3, 3)
-        walk!(a, East, model, 2) # PBC
+        walk!(a, (2, 0), model) # PBC, East two steps
         @test a.pos == (2, 3)
-        walk!(a, SouthEast, model)
+        walk!(a, (1, -1), model) # South east
         @test a.pos == (3, 2)
-        walk!(a, South, model)
+        walk!(a, (0, -1), model) # South
         @test a.pos == (3, 1)
-        walk!(a, SouthWest, model) # PBC
+        walk!(a, (-1, -1), model) # PBC, South west
         @test a.pos == (2, 3)
-        walk!(a, West, model)
+        walk!(a, (-1, 0), model) # West
         @test a.pos == (1, 3)
-        walk!(a, South, model, 8) # Round the world
+        walk!(a, (0, -8), model) # Round the world, South eight steps
         @test a.pos == (1, 1)
 
-        # Non-Periodic
         model = ABM(Agent3, GridSpace((3, 3); periodic = false))
         a = add_agent!((1, 1), model, rand())
-        walk!(a, North, model)
+        walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
-        walk!(a, NorthEast, model)
+        walk!(a, (1, 1), model) # North east
         @test a.pos == (2, 3)
-        walk!(a, East, model)
+        walk!(a, (1, 0), model) # East
         @test a.pos == (3, 3)
-        walk!(a, East, model) # Boundary
+        walk!(a, (1, 0), model) # Boundary, attempt East
         @test a.pos == (3, 3)
-        walk!(a, West, model, 5) # Boundary
+        walk!(a, (-5, 0), model) # Boundary, attempt West five steps
         @test a.pos == (1, 3)
-        walk!(a, SouthWest, model) # Boundary in one direction, not in the other
+        walk!(a, (-1, -1), model) # Boundary in one direction, not in the other, attempt South west
         @test a.pos == (1, 2)
 
-        # Not 2D
-        model = ABM(Agent3D, GridSpace((3, 3, 3)))
+        @test_throws MethodError walk!(a, (1.0, 1.5), model) # Must use Int for gridspace
+
+        # Higher dimensions also possible and behave the same.
+        model = ABM(Agent3D, GridSpace((3, 3, 2)))
         a = add_agent!((1, 1, 1), model, rand())
-        @test_throws MethodError walk!(a, North, model)
-        # Not Grid
+        walk!(a, (1, 1, 1), model)
+        @test a.pos == (2, 2, 2)
+        walk!(a, (-1, 1, 1), model)
+        @test a.pos == (1, 3, 1)
+
+        # ContinuousSpace
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
-        a = add_agent!(model, (0, 0), rand())
-        @test_throws MethodError walk!(a, North, model)
+        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand())
+        walk!(a, (1.0, 1.0), model)
+        @test a.pos == (1.0, 1.0)
+        walk!(a, (15.0, 1.0), model)
+        @test a.pos == (12.0 - 1e-15, 2.0)
+
+        model = ABM(Agent63, ContinuousSpace((12, 10, 5), 0.2))
+        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0), rand())
+        walk!(a, (1.0, 1.0, 1.0), model)
+        @test a.pos == (1.0, 1.0, 1.0)
+        walk!(a, (15.0, 1.2, 3.9), model)
+        @test a.pos == (4.0, 2.2, 4.9)
+
+        @test_throws MethodError walk!(a, (1, 1, 5), model) # Must use Float64 for continuousspace
+
+        # Random Walks
+        Random.seed!(65)
+        model = ABM(Agent3, GridSpace((5, 5)))
+        a = add_agent!((3, 3), model, rand())
+        walk!(a, rand, model)
+        @test a.pos == (4, 3)
+        walk!(a, rand, model)
+        @test a.pos == (3, 4)
+        walk!(a, rand, model)
+        @test a.pos == (4, 5)
+
+        Random.seed!(65)
+        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2))
+        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand())
+        walk!(a, rand, model)
+        @test a.pos[1] ≈ 7.6625082546
+        @test a.pos[2] ≈ 4.6722771144
     end
 end

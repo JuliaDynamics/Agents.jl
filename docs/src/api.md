@@ -37,6 +37,7 @@ sample!
 nearby_ids
 nearby_positions
 edistance
+walk!
 ```
 
 ### WARNING: Iteration
@@ -81,7 +82,6 @@ sort!(collect(nearby_agents(a, model)))
 positions
 ids_in_position
 agents_in_position
-walk!
 fill_space!
 has_empty_positions
 empty_positions
