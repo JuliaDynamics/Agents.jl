@@ -72,7 +72,9 @@ What the "radius" means depends on the space type:
   For example, for `r=2` include first and second degree neighbors.
 - `GridSpace, ContinuousSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
   in the space of cartesian indices.
-- `ContinuousSpace`: Euclidean distance.
+- `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
+extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
+spaces.
 
 ## Keywords
 Keyword arguments are space-specific.

@@ -164,6 +164,31 @@
         @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
         @test collect(nearby_ids(a, gridspace)) == [2]
 
+        @test_throws AssertionError nearby_positions((2, 2), gridspace, (1, 2))
+
+        model = ABM(Agent3, GridSpace((10, 5); periodic = false))
+        nearby_positions((5, 5), model, (1, 2))
+        @test collect(nearby_positions((5, 5), model, (1, 2))) ==
+              [(4, 3), (5, 3), (6, 3), (4, 4), (5, 4), (6, 4), (4, 5), (6, 5)]
+
+        model = ABM(Agent3, GridSpace((10, 5)))
+        @test collect(nearby_positions((5, 5), model, (1, 2))) == [
+            (4, 3),
+            (5, 3),
+            (6, 3),
+            (4, 4),
+            (5, 4),
+            (6, 4),
+            (4, 5),
+            (6, 5),
+            (4, 1),
+            (5, 1),
+            (6, 1),
+            (4, 2),
+            (5, 2),
+            (6, 2),
+        ]
+
         Random.seed!(78)
         continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
         a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
