@@ -75,6 +75,29 @@ dummystep
     An example can be seen in the `model_step!` function of [Daisyworld](@ref),
     where a `tick` is increased at each step.
 
+### Advanced stepping
+The interface of [`step!`](@ref), which allows the option of both `agent_step!` and `model_step!` is driven mostly by convenience. In principle, the `model_step!` function by itself can perform all operations related with stepping the ABM.
+However, for many models, this simplified approach offers the benefit of not having to write an explicit loop over existing agents inside the `model_step!`.
+Most of the examples in our documentation can be expressed using an independent `agent_step!` and `model_step!` function.
+
+On the other hand, more advanced models require special handling for scheduling, or many need to schedule several times and act on different subsets of agents with different functions.
+In such a scenario, it is more sensible to provide only a `model_step!` function (and use `dummystep` as `agent_step!`), where all configuration is contained within.
+For example
+```julia
+function complex_step!(model)
+    for a in scheduler1(model)
+        agent_step1!(a, model)
+    end
+    intermediate_model_action!(model)
+    for a in scheduler2(model)
+        agent_step2!(a, model)
+    end
+    final_model_action!(model)
+end
+
+step!(model, dummystep, complex_step!, n)
+```
+
 ## 5. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
 
