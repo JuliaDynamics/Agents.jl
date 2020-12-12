@@ -147,7 +147,22 @@ Notice that this iterator can be a "true" iterator (non-allocated) or can be jus
 You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
 You can also use the function `schedule(model)` to obtain the scheduled ID list, if you prefer to write your own `step!`-like loop.
 
-Also notice that you can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
+Notice that schedulers can be given directly to model creation, and thus become the "default" scheduler a model uses, but they can just as easily be incorporated in a `model_step!` function as shown in [Advanced stepping](@ref).
+
+
+### Predefined schedulers
+Some useful schedulers are available below as part of the Agents.jl public API:
+```@docs
+fastest
+by_id
+random_activation
+partial_activation
+property_activation
+by_type
+```
+
+### Advanced scheduling
+You can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
 ```julia
 mutable struct MyScheduler
@@ -161,7 +176,7 @@ function (ms::MyScheduler)(model::ABM)
     ms.n += 1 # increment internal counter by 1 each time its called
               # be careful to use a *new* instance of this scheduler when plotting!
     if ms.n < 10
-        return allids(model)) # order doesn't matter in this case
+        return allids(model) # order doesn't matter in this case
     else
         ids = collect(allids(model))
         # filter all ids whose agents have `w` less than some amount
@@ -173,19 +188,9 @@ end
 and pass it to e.g. `step!` by initializing it
 ```julia
 ms = MyScheduler(100, 0.5)
-run!(model, agentstep, modelstep, 100; scheduler = ms)
+step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
-### Predefined schedulers
-Some useful schedulers are available below as part of the Agents.jl public API:
-```@docs
-fastest
-by_id
-random_activation
-partial_activation
-property_activation
-by_type
-```
 
 ## Plotting
 Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need to install both `AgentsPlots`, as well as a plotting backend (we use GR) to use the following functions.
