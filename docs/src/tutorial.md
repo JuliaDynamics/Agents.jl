@@ -98,6 +98,8 @@ end
 step!(model, dummystep, complex_step!, n)
 ```
 
+For defining your own scheduler, see [Schedulers](@ref).
+
 ## 5. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
 

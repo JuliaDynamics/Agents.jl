@@ -172,7 +172,7 @@ end
 and pass it to e.g. `step!` by initializing it
 ```julia
 ms = MyScheduler(100, 0.5)
-run!(model, agentstep, modelstep, 100; scheduler = ms)
+step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
 ### Predefined schedulers
