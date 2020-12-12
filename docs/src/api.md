@@ -160,7 +160,7 @@ function (ms::MyScheduler)(model::ABM)
     ms.n += 1 # increment internal counter by 1 each time its called
               # be careful to use a *new* instance of this scheduler when plotting!
     if ms.n < 10
-        return allids(model)) # order doesn't matter in this case
+        return allids(model) # order doesn't matter in this case
     else
         ids = collect(allids(model))
         # filter all ids whose agents have `w` less than some amount
