@@ -80,7 +80,7 @@ The interface of [`step!`](@ref), which allows the option of both `agent_step!` 
 However, for many models, this simplified approach offers the benefit of not having to write an explicit loop over existing agents inside the `model_step!`.
 Most of the examples in our documentation can be expressed using an independent `agent_step!` and `model_step!` function.
 
-On the other hand, more advanced models require special handling for scheduling, or many need to schedule several times and act on different subsets of agents with different functions.
+On the other hand, more advanced models require special handling for scheduling, or may need to schedule several times and act on different subsets of agents with different functions.
 In such a scenario, it is more sensible to provide only a `model_step!` function (and use `dummystep` as `agent_step!`), where all configuration is contained within.
 For example
 ```julia
