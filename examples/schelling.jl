@@ -48,7 +48,7 @@ space = GridSpace((10, 10), periodic = false)
 # We also want to include a property `min_to_be_happy` in our model, and so we have:
 
 properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; properties = properties)
+schelling = ABM(SchellingAgent, space; properties)
 
 
 # Here we used the default scheduler (which is also the fastest one) to create
@@ -157,14 +157,14 @@ step!(model, agent_step!, 3)
 adata = [:pos, :mood, :group]
 
 model = initialize()
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, agent_step!, 5; adata)
 data[1:10, :] # print only a few rows
 
 # We could also use functions in `adata`, for example we can define
 x(agent) = agent.pos[1]
 model = initialize()
 adata = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, agent_step!, 5; adata)
 data[1:10, :]
 
 # With the above `adata` vector, we collected all agent's data.
@@ -174,7 +174,7 @@ data[1:10, :]
 
 model = initialize();
 adata = [(:mood, sum), (x, maximum)]
-data, _ = run!(model, agent_step!, 5; adata = adata)
+data, _ = run!(model, agent_step!, 5; adata)
 data
 
 # Other examples in the documentation are more realistic, with a much more meaningful

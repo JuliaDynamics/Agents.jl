@@ -317,7 +317,7 @@ adata = [(black, count, daisies), (white, count, daisies)]
 Random.seed!(165) # hide
 model = daisyworld(; solar_luminosity = 1.0)
 
-agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata)
+agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
 
 p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
 plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")

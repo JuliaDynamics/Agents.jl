@@ -131,7 +131,7 @@ function daisyworld(;
         :scenario => scenario,
         :tick => 0,
     )
-    model = ABM(Daisy, space; properties = properties)
+    model = ABM(Daisy, space; properties)
     for _ in 1:(init_white * nv(space) / 100)
         add_agent_single!(model, :white, rand(0:max_age), albedo_white)
     end

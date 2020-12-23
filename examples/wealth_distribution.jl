@@ -54,7 +54,7 @@ N = 5
 M = 2000
 adata = [:wealth]
 model = wealth_model(numagents = M)
-data, _ = run!(model, agent_step!, N; adata = adata)
+data, _ = run!(model, agent_step!, N; adata)
 data[(end - 20):end, :]
 
 # What we mostly care about is the distribution of wealth,
