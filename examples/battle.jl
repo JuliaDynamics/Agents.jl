@@ -13,20 +13,30 @@
 #
 # For this battle ground to exist, the following rules must be followed:
 # - Agents have an experience level, starting at level 1 up to a maximum of 10.
-# - Agents will walk randomly to search for opponents when none are nearby.
-# - Once opponents are found, agents will (in this explicit order)
-#   1. Approach the nearest worthy opponent (one with equal or ±1 experience level)
-#   2. Chase down a weak opponent (with experience level -2 or fewer)
-#   3. Run from a tougher opponent (with experience level +2 or higher)
-# - If a strong opponent captures a weak one, they will taunt it before killing it.
-# During this taunting the weaker opponent calls for help. If heard, other agents may
-# choose to temporarily team up and fight the tougher opponent together for a larger
-# experience boost.
-# - Battles are one by weighted chance - a higher level gives an agent a larger chance of
+# - Agents will search for the nearest worthy opponent (one with equal or ±1 experience
+# level) and move towards them to attack, so long as something more important doesn't
+# happen
+#   - A tougher opponent (with experience level +2 or higher) is nearby: Run!
+#   - There are no worthy opponents available, but there are weak ones (with experience
+#   level -2 or lower): chase them down.
+#   - Capture and taunt a weaker opponent, then kill them.
+#   - Notice a tough opponent is occupied, sneak up and kill them
+#   - There is no-one worthy to fight, but also no-one left to taunt. All bets are off:
+#   THERE CAN BE ONLY ONE.
+
+# Battles are won by weighted chance - a higher level gives an agent a larger chance of
 # winning, but does not guarantee it. When a victor is chosen
 #   - The difference in experience between opponents is swapped.
 #   - If an agents experience reaches 0, they die.
 #
+# Captured opponents will be killed once taunted. The captor will gain half of their
+# experience. If an opportunist manages to take the captor by surprise, they can gain
+# up to half of the captor's experience. This means a level 1 agent may eliminate a
+# level 10 captor and jump straight to level 6.
+#
+# Once all rules of engagement have been exhausted, the final showdown begins. Opponents
+# fight their closest adversary regardless of experience level. Winner takes all.
+
 # ## Model Setup
 
 cd(@__DIR__) #src
@@ -40,14 +50,18 @@ mutable struct Fighter <: AbstractAgent
     pos::Tuple{Int,Int,Int}
     has_prisoner::Bool
     capture_time::Int
-    shape::Symbol #Drop this. Solely for identifying what the agent is doing at this point in time for debugging purposes
+    shape::Symbol # For plotting
 end
 
-# As you can see, the properties of out agent are very simple.
+# As you can see, the properties of out agent are very simple and contain only two
+# parameters that are needed to store context from one time step to the next. All
+# other properties needed are stored in the space. `shape` is used solely for
+# plotting (well, used once just for convenience).
 
+# Now let's set up the battle field:
 Random.seed!(6547) # hide
 model =
-    ABM(Fighter, GridSpace((100, 100, 10); periodic = false); scheduler = random_activation) #NOTE: moved to non-periodic since I didn't want qualitative wrapping.
+    ABM(Fighter, GridSpace((100, 100, 10); periodic = false); scheduler = random_activation)
 
 n = 0
 while n != 50
@@ -58,18 +72,14 @@ while n != 50
     end
 end
 
-function closest_target(agent::Fighter, ids::Vector{Int}, model::ABM)
-    if length(ids) == 1
-        closest = ids[1]
-    else
-        close_id = argmin(map(id -> edistance(space(agent), space(model[id]), model), ids))
-        closest = ids[close_id]
-    end
-    return model[closest]
-end
+# 50 opponents positioned randomly on a 100x100 grid, with no escape
+# (`periodic = false`).
 
-# Lets say captured targets are killed after 5 cycles. Captor gains 50% of their experience.
-# Captors are venerable for those 5 cycles, so anyone else can kill them and gain UP TO 50% of their experience.
+# ## Game Dynamics
+#
+# To implement the rules of engagement, only an `agent_step!` function is required,
+# along with a few helper functions.
+
 function agent_step!(agent, model)
     if agent.capture_time > 0
         agent.capture_time += 1
@@ -149,7 +159,6 @@ function agent_step!(agent, model)
                         nearby_ids(agent, model, (10, 10, 4)),
                     ))
                     if !isempty(weak_ids)
-                        # Chase down nearest
                         prisoner = closest_target(agent, weak_ids, model)
                         target = space(prisoner)
                         if origin == target
@@ -159,6 +168,7 @@ function agent_step!(agent, model)
                             prisoner.capture_time += 1
                             prisoner.shape = :hline
                         else
+                            # Chase down nearest (can move 2 steps at a time!)
                             agent.shape = :star4
                             walk!(agent, (2 .* sign.(target .- origin)..., 0), model)
                         end
@@ -178,7 +188,6 @@ function agent_step!(agent, model)
                                 opponent.shape = :square
                                 showdown!(agent, opponent, model)
                             else
-                                # Move towards opponent
                                 walk!(agent, (sign.(target .- origin)..., 0), model)
                             end
                         end
@@ -192,10 +201,25 @@ function agent_step!(agent, model)
 end
 
 # We use a helper function `space` which allows us to invoke a number of helpful
-# utilities but only operate on our spatial dimensions.
+# utilities but only operate on our spatial dimensions,
 
 space(agent) = agent.pos[1:2]
+
+# as well as a simple `level` wrapper to access the agent's experience easily.
 level(agent) = agent.pos[3]
+
+# Nearest agents that satisfy our search criteria can be identified via Euclidean
+# distance solely on the spatial dimensions of our `GridSpace`.
+
+function closest_target(agent::Fighter, ids::Vector{Int}, model::ABM)
+    if length(ids) == 1
+        closest = ids[1]
+    else
+        close_id = argmin(map(id -> edistance(space(agent), space(model[id]), model), ids))
+        closest = ids[close_id]
+    end
+    return model[closest]
+end
 
 # Since our battles are only between opponents with equal, or as much as one level apart,
 # the odds can be set explicitly. Stronger opponents have twice the capacity of winning a
@@ -228,6 +252,7 @@ end
 
 # When there are only few fighters standing, the stakes are higher. Prior experience is
 # paramount since there is no gain, and fights are to the death.
+
 function showdown!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
         # Odds are equivalent
@@ -244,6 +269,9 @@ function showdown!(one::Fighter, two::Fighter, model)
 end
 
 # ## Let the Battle Begin
+# Plotting is relatively straightforward. `AgentsPlots` cannot be used explicitly (yet)
+# since it expects our categorical dimension is actually a third spatial one.
+
 clr(agent) = cgrad(:tab10)[level(agent)]
 anim = @animate for i in 0:225
     posn = [space(model[id]) for id in by_id(model)]
@@ -265,7 +293,7 @@ anim = @animate for i in 0:225
 end
 gif(anim, "battle.gif", fps = 10)
 
-# Some interesting behaviours. Sometimes you see a group of diamonds chasing one triangle.
+# Some interesting behaviour emerges: sometimes you see a group of diamonds chasing one triangle.
 # What ends up happening here is usually a close pair that wishes to fight gets caught
 # out by the weaker one of the two running away from an even stronger opponent. Problem
 # is that this stronger opponent is chasing the stronger of the pair, but since the
