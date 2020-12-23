@@ -53,7 +53,7 @@ function adopt!(agent, model)
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     if nmatches < model.nopinions && rand() < nmatches / model.nopinions
-        switchId = rand(findall(x -> x == false, matches))
+        switchId = rand(findall(!, matches))
         agent.opinion[switchId] = model[neighbor].opinion[switchId]
     end
 end
