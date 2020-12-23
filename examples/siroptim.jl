@@ -51,7 +51,7 @@ function model_initiation(;
         C,
     )
     space = GraphSpace(complete_digraph(C))
-    model = ABM(PoorSoul, space; properties = properties)
+    model = ABM(PoorSoul, space; properties)
 
     # Add initial individuals
     for city in 1:C, n in 1:Ns[city]

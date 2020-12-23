@@ -86,7 +86,7 @@ forest = forest_fire(griddims = (20, 20))
 burnt_percentage(m) = count(t->t.status == :burnt, allagents(m)) / length(positions(m))
 mdata = [burnt_percentage]
 
-_, data = run!(forest, tree_step!, 10; mdata = mdata)
+_, data = run!(forest, tree_step!, 10; mdata)
 data
 
 # Now let's plot the model. We use green for unburnt trees, red for burning and a

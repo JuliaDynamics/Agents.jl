@@ -38,9 +38,9 @@ end
 # This function creates a model where all cells are "off".
 
 function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev)
-    space = GridSpace(dims; metric = metric)
+    space = GridSpace(dims; metric)
     properties = Dict(:rules => rules)
-    model = ABM(Cell, space; properties = properties)
+    model = ABM(Cell, space; properties)
     idx = 1
     for x in 1:dims[1]
         for y in 1:dims[2]
