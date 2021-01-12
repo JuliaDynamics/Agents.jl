@@ -205,6 +205,18 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 
     Iterators.flatten((s[i...] for i in nn))
 end
 
+function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
+    dims = first.(r)
+    vidx = []
+    for d in 1:ndims(model.space.s)
+        idx = findall(dim->dim==d, dims)
+        dim_range = isempty(idx) ? Colon() : pos[d] .+ last(r[only(idx)])
+        push!(vidx, dim_range)
+    end
+    s = view(model.space.s, vidx...)
+    Iterators.flatten(s)
+end
+
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
