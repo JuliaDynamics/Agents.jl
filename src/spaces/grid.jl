@@ -205,11 +205,23 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 
     Iterators.flatten((s[i...] for i in nn))
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
+"""
+    nearby_ids(pos, model::ABM{<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
+
+Return an iterator of ids over specified dimensions of `space` with fine grained control
+of distances from `pos` using each value of `r` via the (dimension, range) pattern.
+
+Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -5:5), (3, 0:2)]`.
+"""
+function nearby_ids(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:GridSpace},
+    r::Vector{Tuple{Int,UnitRange{Int}}},
+)
     dims = first.(r)
     vidx = []
     for d in 1:ndims(model.space.s)
-        idx = findall(dim->dim==d, dims)
+        idx = findall(dim -> dim == d, dims)
         dim_range = isempty(idx) ? Colon() : pos[d] .+ last(r[only(idx)])
         push!(vidx, dim_range)
     end
