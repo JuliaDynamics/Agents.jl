@@ -213,7 +213,7 @@ of distances from `pos` using each value of `r` via the (dimension, range) patte
 
 Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -5:5), (3, 0:2)]`.
 
-**Note:** Only available for use with non-periodic grids.
+**Note:** Only available for use with non-periodic chebyshev grids.
 """
 function nearby_ids(
     pos::ValidPos,
