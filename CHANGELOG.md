@@ -35,6 +35,9 @@ therefore are not "truly breaking".
   - `has_empty_nodes` -> `has_empty_positions`
   - `nodes` -> `positions`
 
+## Non-breaking changes
+- `GridSpace` agents now use `Dims` rather than `Tuple{N,Int}` for their `pos`ition in all examples and pre-defined models.
+
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.
 # v3.6
