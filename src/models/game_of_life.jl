@@ -1,6 +1,6 @@
 mutable struct Cell <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     status::Bool
 end
 

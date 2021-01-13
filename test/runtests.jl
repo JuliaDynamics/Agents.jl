@@ -7,7 +7,7 @@ end
 
 mutable struct Agent1 <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
 end
 
 mutable struct Agent2 <: AbstractAgent
@@ -17,13 +17,13 @@ end
 
 mutable struct Agent3 <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     weight::Float64
 end
 
 mutable struct Agent4 <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     p::Int
 end
 

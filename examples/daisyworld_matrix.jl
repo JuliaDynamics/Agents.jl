@@ -42,7 +42,7 @@ gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     breed::Symbol
     age::Int
     albedo::Float64 # 0-1 fraction
@@ -53,7 +53,7 @@ end
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
 
-function suface_temperature!(pos::Tuple{Int,Int}, model::ABM{Daisy})
+function suface_temperature!(pos::Dims{2}, model::ABM{Daisy})
     ids = ids_in_position(pos, model)
     absorbed_luminosity = if isempty(ids)
         ## Set luminosity via surface albedo
@@ -153,7 +153,7 @@ nothing # hide
 # daisies compete for land and attempt to spawn a new plant of their `breed` in locations
 # close to them.
 
-function propagate!(pos::Tuple{Int,Int}, model::ABM{Daisy})
+function propagate!(pos::Dims{2}, model::ABM{Daisy})
     agents = collect(agents_in_position(pos, model))
     if !isempty(agents)
         agent = agents[1]

@@ -311,7 +311,7 @@
         # In this example, weight exists in both agents, but they have different types
         mutable struct Agent3Int <: AbstractAgent
             id::Int
-            pos::Tuple{Int,Int}
+            pos::Dims{2}
             weight::Int
         end
         model = ABM(Union{Agent3, Agent3Int}, GridSpace((10,10)); warn = false)

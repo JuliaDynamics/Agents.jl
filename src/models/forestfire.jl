@@ -1,6 +1,6 @@
 mutable struct Tree <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     status::Symbol  #:green, :burning, :burnt
 end
 
