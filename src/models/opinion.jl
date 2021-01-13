@@ -2,7 +2,7 @@ using Random
 
 mutable struct Citizen <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     stabilized::Bool
     opinion::Array{Int,1}
     prev_opinion::Array{Int,1}

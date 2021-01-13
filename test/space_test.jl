@@ -238,7 +238,7 @@
 
     mutable struct Agent3D <: AbstractAgent
         id::Int
-        pos::Tuple{Int,Int,Int}
+        pos::Dims{3}
         weight::Float64
     end
 

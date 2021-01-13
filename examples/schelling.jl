@@ -24,13 +24,13 @@ gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
-    pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
+    pos::Dims{2} # The x, y location of the agent on a 2D grid
     mood::Bool # whether the agent is happy in its position. (true = happy)
     group::Int # The group of the agent,  determines mood as it interacts with neighbors
 end
 
-# Notice that the position of this Agent type is a `Tuple{Int,Int}` because
-# we will use a `GridSpace`.
+# Notice that the position of this Agent type is a `Dims{2}`, equivalent to
+# `Tuple{Int,Int}`, because we will use a `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`

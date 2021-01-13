@@ -343,12 +343,12 @@ end
 
 mutable struct Daisy <: AbstractAgent
   id::Int
-  pos::Tuple{Int, Int}
+  pos::Dims{2}
   breed::String
 end
 mutable struct Land <: AbstractAgent
   id::Int
-  pos::Tuple{Int, Int}
+  pos::Dims{2}
   temperature::Float64
 end
 @testset "fill space" begin

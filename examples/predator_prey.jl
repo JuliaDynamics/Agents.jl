@@ -35,7 +35,7 @@ pyplot() # hide
 
 mutable struct Sheep <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
@@ -43,7 +43,7 @@ end
 
 mutable struct Wolf <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
@@ -51,7 +51,7 @@ end
 
 mutable struct Grass <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     fully_grown::Bool
     regrowth_time::Int
     countdown::Int

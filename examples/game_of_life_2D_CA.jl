@@ -26,11 +26,11 @@ nothing # hide
 
 mutable struct Cell <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     status::Bool
 end
 
-# The following function builds a 2D cellular automaton. `rules` is of type `Tuple{Int,Int,Int, Int}` representing DSRO.
+# The following function builds a 2D cellular automaton. `rules` is of type `Tuple{Int,Int,Int,Int}` representing DSRO.
 
 # `dims` is a tuple of integers determining the width and height of the grid environment.
 # `metric` specifies whether cells connect to their diagonal neighbors.
