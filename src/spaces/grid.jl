@@ -150,7 +150,7 @@ reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
 function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
-    hood = get(_ -> initialize_neighborhood!(space, r), space.hoods, r)
+    hood = get(space.hoods, r, initialize_neighborhood!(space, r))
     _grid_space_neighborhood(α, space, hood)
 end
 
@@ -166,7 +166,7 @@ function grid_space_neighborhood(
     space::GridSpace{D},
     r::NTuple{D,Real},
 ) where {D}
-    hood = get(_ -> initialize_neighborhood!(space, r), space.hoods_tuple, r)
+    hood = get(space.hoods_tuple, r, initialize_neighborhood!(space, r))
     _grid_space_neighborhood(α, space, hood)
 end
 
