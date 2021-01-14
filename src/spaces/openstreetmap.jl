@@ -48,12 +48,12 @@ struct OSMPos
 end
 
 """
-    OSMPos(start::Int, finish::Int = start, p::Float64 = 0)
+    OSMPos(start::Int, finish::Int = start, road::Float64 = 0)
 
 A helper to provide the correct `pos` format for [`AbstractAgent`](@ref) structs which
 are used in conjuction with [`OpenStreetMapSpace`](@ref).
 It represents the position of the agent on a road connecting the two nodes of the map
-`start, finish` with percentage `p ∈ [0, 1]` along this road.
+`start, finish` having already covered `road` meters along the road.
 """
 OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos(start, finish, p)
 
@@ -65,7 +65,7 @@ OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos(start, finish, 
 """
     osm_random_direction(model::ABM{A,OpenStreetMapSpace})
 
-Similar to `random_position`, but rather than providing only inetersections, this method
+Similar to `random_position`, but rather than providing only intersections, this method
 returns a location somewhere on a road heading in a random direction.
 """
 function osm_random_direction(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
@@ -74,7 +74,7 @@ function osm_random_direction(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
 end
 
 """
-    osm_plan_route(start, finish, model)
+    osm_plan_route(start, finish, model::ABM{A,OpenStreetMapSpace})
 
 Generate a list of intersections between the `start` and `finish` positions on the map.
 """

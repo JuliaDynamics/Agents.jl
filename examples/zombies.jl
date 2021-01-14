@@ -56,7 +56,7 @@ function agent_step!(agent, model)
     move_agent!(agent, model, 25)
 
     if agent.pos[1] == agent.pos[2] && length(agent.route) == 0 && rand() < 0.1
-        ## When stationary, give the agent a 10% chance of going somwhere else
+        ## When stationary, give the agent a 10% chance of going somewhere else
         agent.route = osm_plan_route(agent.pos[1], random_position(model)[1], model)
         ## Drop current position
         popfirst!(agent.route)
@@ -115,4 +115,3 @@ frames = @animate for i in 0:200
 end
 
 gif(frames, "outbreak.gif", fps = 15)
-
