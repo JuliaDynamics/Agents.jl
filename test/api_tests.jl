@@ -343,12 +343,12 @@ end
 
 mutable struct Daisy <: AbstractAgent
   id::Int
-  pos::Tuple{Int, Int}
+  pos::Dims{2}
   breed::String
 end
 mutable struct Land <: AbstractAgent
   id::Int
-  pos::Tuple{Int, Int}
+  pos::Dims{2}
   temperature::Float64
 end
 @testset "fill space" begin
@@ -379,6 +379,24 @@ end
     @test a.temperature == a.pos[1]/10
   end
 
+end
+
+@testset "random agent" begin
+    space = GridSpace((10, 10))
+    model = ABM(Union{Daisy, Land}, space; warn = false)
+    fill_space!(Daisy, model, "black")
+    add_agent!(Land(999, (1, 1), 999), model)
+
+    a = random_agent(model)
+    @test typeof(a) <: Union{Daisy, Land}
+
+    c1(a) = a isa Land
+    a = random_agent(model, c1)
+    @test a.id == 999
+
+    c2(a) = a isa Float64
+    a = random_agent(model, c2)
+    @test isnothing(a)
 end
 
 @testset "model step order" begin

@@ -1,4 +1,4 @@
-# v4.0
+# v4.0 (not yet released, in master branch)
 **Major new release!**
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
@@ -10,7 +10,13 @@
   (see Breaking changes).
 - Performance increase of finding neighbors in GraphSpace with r > 1.
 - New wrapping function `nearby_agents` that returns an iterable of neighboring agents.
+- Positions and neighbors on `GridSpace` can now be searched in each direction separately by accepting `r` as a tuple.
+- Neighbors on non-periodic chebyshev spaces can also be searched per dimension over a specific range.
 - New public `schedule` function for writing custom loops.
+- Mixed models are supported in data collection methods.
+- `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.
+- A walk! utility for `GridSpace` and `ContinuousSpace`s, providing turtle-like agent movement and random walks.
+- The Battle Royal example explores using categorical neighbor searching in a high dimensional `GridSpace`.
 
 ## Breaking changes
 Most changes in this section (besides changes to default values) are deprecated and
@@ -30,6 +36,9 @@ therefore are not "truly breaking".
   - `find_empty_nodes` -> `empty_positions`
   - `has_empty_nodes` -> `has_empty_positions`
   - `nodes` -> `positions`
+
+## Non-breaking changes
+- `GridSpace` agents now use `Dims` rather than `Tuple{N,Int}` for their `pos`ition in all examples and pre-defined models.
 
 # v3.7
 - Add the ability to decide whether the agent step or the model step should be performed first using the `agents_first` argument.

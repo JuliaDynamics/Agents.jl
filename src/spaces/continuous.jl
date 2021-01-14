@@ -213,7 +213,7 @@ function nearest_neighbor(
         r;
         exact = false,
     ) where {A}
-    n = collect(nearby_ids(agent, model, r; exact = exact))
+    n = collect(nearby_ids(agent, model, r; exact))
     length(n) == 0 && return nothing
     d, j = Inf, 1
     for i in 1:length(n)
@@ -355,7 +355,7 @@ function all_pairs!(
         exact = true,
     ) where {A}
     for a in allagents(model)
-        for nid in nearby_ids(a, model, r; exact = exact)
+        for nid in nearby_ids(a, model, r; exact)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)

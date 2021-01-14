@@ -18,5 +18,6 @@ include("growing_bacteria.jl")
 include("game_of_life.jl")
 include("opinion.jl")
 include("sugarscape.jl")
+include("battle.jl")
 
 end

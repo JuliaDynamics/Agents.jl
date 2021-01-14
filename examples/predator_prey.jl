@@ -35,7 +35,7 @@ pyplot() # hide
 
 mutable struct Sheep <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
@@ -43,7 +43,7 @@ end
 
 mutable struct Wolf <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
@@ -51,7 +51,7 @@ end
 
 mutable struct Grass <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     fully_grown::Bool
     regrowth_time::Int
     countdown::Int
@@ -239,7 +239,7 @@ sheep(a) = typeof(a) == Sheep
 wolves(a) = typeof(a) == Wolf
 grass(a) = typeof(a) == Grass && a.fully_grown
 adata = [(sheep, count), (wolves, count), (grass, count)]
-results, _ = run!(model, agent_step!, n_steps; adata = adata)
+results, _ = run!(model, agent_step!, n_steps; adata)
 
 # The plot shows the population dynamics over time. Initially, wolves become extinct because they
 # consume the sheep too quickly. The few remaining sheep reproduce and gradually reach an
@@ -267,7 +267,7 @@ model = initialize_model(
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
 )
-results, _ = run!(model, agent_step!, n_steps; adata = adata)
+results, _ = run!(model, agent_step!, n_steps; adata)
 @df results plot(
     :step,
     :count_sheep,

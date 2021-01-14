@@ -84,14 +84,16 @@ pages = [
         "Bacteria Growth" => "examples/growing_bacteria.md",
         "Opinion spread" => "examples/opinion_spread.md",
         "Zombie Outbreak" => "examples/zombies.md",
+        "Battle Royal" => "examples/battle.md"
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
     "Interactive application" => "interact.md",
     "Ecosystem Integration" => [
-        "LightGraphs" => "examples/schoolyard.md",
-        "DifferentialEquations" => "examples/diffeq.md",
-        "BlackBoxOptim" => "examples/optim.md"
+        "BlackBoxOptim.jl" => "examples/optim.md",
+        "DifferentialEquations.jl" => "examples/diffeq.md",
+        "LightGraphs.jl" => "examples/schoolyard.md",
+        "Measurements.jl" => "examples/measurements.md"
         ],
     "ABM Framework Comparison" => "comparison.md",
     "Developer Docs" => "devdocs.md"

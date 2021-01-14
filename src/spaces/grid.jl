@@ -20,16 +20,17 @@ struct GridSpace{D,P} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
+    hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
 end
-
 
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid positions have indices
-in the range `1:d[i]` for the `i`th dimension.
+The position type for this space is `NTuple{D, Int}`. In our examples we use the
+[`Dims{D}`](https://docs.julialang.org/en/v1/base/arrays/#Base.Dims) shorthand.
+Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
 
 `:chebyshev` metric means that the `r`-neighborhood of a position are all
 positions within the hypercube having side length of `2*floor(r)` and being centered in
@@ -40,11 +41,11 @@ cartesian indices have Euclidean distance `≤ r` from the cartesian index of th
 position.
 """
 function GridSpace(
-        d::NTuple{D,Int};
-        periodic::Bool = true,
-        metric::Symbol = :chebyshev,
-        moore = nothing
-    ) where {D}
+    d::NTuple{D,Int};
+    periodic::Bool = true,
+    metric::Symbol = :chebyshev,
+    moore = nothing,
+) where {D}
     s = Array{Vector{Int},D}(undef, d)
     if moore ≠ nothing
         @warn "Keyword `moore` is deprecated, use `metric` instead."
@@ -53,7 +54,12 @@ function GridSpace(
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,periodic}(s, metric, Dict{Float64,Hood{D}}())
+    return GridSpace{D,periodic}(
+        s,
+        metric,
+        Dict{Float64,Hood{D}}(),
+        Dict{NTuple{D,Float64},Hood{D}}(),
+    )
 end
 
 #######################################################################################
@@ -119,6 +125,16 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     return hood
 end
 
+function initialize_neighborhood!(space::GridSpace{D}, r::NTuple{D,Real}) where {D}
+    @assert space.metric == :chebyshev "Cannot use tuple based neighbor search with the Euclidean metric."
+    d = size(space.s)
+    r0 = (floor(Int, i) for i in r)
+    βs = vec([CartesianIndex(a) for a in Iterators.product([(-ri):ri for ri in r0]...)])
+    whole = Region(map(one, d), d)
+    hood = Hood{D}(whole, βs)
+    push!(space.hoods_tuple, float.(r) => hood)
+    return hood
+end
 
 """
     grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
@@ -135,27 +151,39 @@ reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
 function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
-    hood = if haskey(space.hoods, r)
-        space.hoods[r]
-    else
-        initialize_neighborhood!(space, r)
-    end
+    hood = get(space.hoods, r, initialize_neighborhood!(space, r))
+    _grid_space_neighborhood(α, space, hood)
+end
+
+"""
+    grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::NTuple)
+
+Return an iterator over all positions within distances of the tuple `r`, from `α`
+according to the `space`. `r` must have as many elements as `space` has dimensions.
+For example, with a `GridSpace((10, 10, 10))` : `r = (1, 7, 9)`.
+"""
+function grid_space_neighborhood(
+    α::CartesianIndex,
+    space::GridSpace{D},
+    r::NTuple{D,Real},
+) where {D}
+    hood = get(space.hoods_tuple, r, initialize_neighborhood!(space, r))
     _grid_space_neighborhood(α, space, hood)
 end
 
 function _grid_space_neighborhood(
-        α::CartesianIndex,
-        space::GridSpace{D,true},
-        hood,
-    ) where {D}
+    α::CartesianIndex,
+    space::GridSpace{D,true},
+    hood,
+) where {D}
     return ((mod1.(Tuple(α + β), hood.whole.maxi)) for β in hood.βs)
 end
 
 function _grid_space_neighborhood(
-        α::CartesianIndex,
-        space::GridSpace{D,false},
-        hood,
-    ) where {D}
+    α::CartesianIndex,
+    space::GridSpace{D,false},
+    hood,
+) where {D}
     return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
 end
 
@@ -168,6 +196,41 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
+end
+
+"""
+    nearby_ids(pos, model::ABM{<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
+
+Return an iterable of ids over specified dimensions of `space` with fine grained control
+of distances from `pos` using each value of `r` via the (dimension, range) pattern.
+
+**Note:** Only available for use with non-periodic chebyshev grids.
+
+Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -1:1), (3, 1:2)]` searches
+dimension 1 one step either side of the current position (as well as the current
+position) and the third dimension searches two positions above current.
+
+For a complete tutorial on how to use this method, see [Battle Royale](@ref).
+"""
+function nearby_ids(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:GridSpace},
+    r::Vector{Tuple{Int,UnitRange{Int}}},
+)
+    dims = first.(r)
+    vidx = []
+    for d in 1:ndims(model.space.s)
+        idx = findall(dim -> dim == d, dims)
+        dim_range = isempty(idx) ? Colon() :
+            bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
+        push!(vidx, dim_range)
+    end
+    s = view(model.space.s, vidx...)
+    Iterators.flatten(s)
+end
+
+function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
+    return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
@@ -191,7 +254,7 @@ end
 # %% pretty printing
 ###################################################################
 Base.size(space::GridSpace) = size(space.s)
-function Base.show(io::IO, space::GridSpace{D, P}) where {D, P}
+function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
     s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$(P)"
     print(io, s)
 end
