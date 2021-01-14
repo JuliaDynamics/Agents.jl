@@ -19,8 +19,7 @@
 # level) and move towards them to attack, so long as something more important doesn't
 # happen, which could be
 #   - A tougher opponent (with experience level +2 or higher) is nearby: run!
-#   - There are no worthy opponents available, but there are weak ones (with experience
-#   level -2 or lower): chase them down.
+#   - There are no worthy opponents available, but there are weak ones (with experience level -2 or lower): chase them down.
 #   - Capture and taunt a weaker opponent, then kill them.
 #   - Notice a tough opponent is occupied, sneak up and kill them.
 #   - There is no-one worthy to fight, but also no-one left to taunt. All bets are off: THERE CAN BE ONLY ONE.
