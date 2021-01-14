@@ -15,9 +15,7 @@
 #
 # For this battle ground to exist, the following rules must be followed:
 # - Agents have an experience level, starting at level 1 up to a maximum of 10.
-# - Agents will search for the nearest worthy opponent (one with equal or ±1 experience
-# level) and move towards them to attack, so long as something more important doesn't
-# happen, which could be
+# - Agents will search for the nearest worthy opponent (one with equal or ±1 experience level) and move towards them to attack, so long as something more important doesn't happen, which could be
 #   - A tougher opponent (with experience level +2 or higher) is nearby: run!
 #   - There are no worthy opponents available, but there are weak ones (with experience level -2 or lower): chase them down.
 #   - Capture and taunt a weaker opponent, then kill them.
