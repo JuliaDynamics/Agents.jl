@@ -40,7 +40,7 @@ edistance
 walk!
 ```
 
-### WARNING: Iteration
+## A note on iteration
 
 Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
 
@@ -63,7 +63,7 @@ end
 collect(allids(model))
 ```
 You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
-To avoid problems like these, you need to `copy` the iterator to have a non dynamic version.
+To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
 A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
