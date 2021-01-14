@@ -348,9 +348,9 @@ sir_model1 = sir_initiation(reinfection_probability = r1, βmin = β1)
 sir_model2 = sir_initiation(reinfection_probability = r2, βmin = β1)
 sir_model3 = sir_initiation(reinfection_probability = r1, βmin = β2)
 
-data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata = adata)
-data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata = adata)
-data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata)
+data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata)
+data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata)
 
 data1[(end - 10):end, :]
 
@@ -406,7 +406,7 @@ gif(anim, "socialdist5.gif", fps = 25)
 r4 = 0.04
 sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated = 0.8)
 
-data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata = adata)
+data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata)
 
 plot!(p, data4[:, aggname(:status, infected)], label = "r=$r4, social distancing")
 p

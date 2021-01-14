@@ -1,6 +1,6 @@
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
-    pos::Tuple{Int,Int} # The x, y location of the agent on a 2D grid
+    pos::Dims{2} # The x, y location of the agent on a 2D grid
     mood::Bool # whether the agent is happy in its position. (true = happy)
     group::Int # The group of the agent,  determines mood as it interacts with neighbors
 end

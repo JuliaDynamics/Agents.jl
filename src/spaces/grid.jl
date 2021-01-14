@@ -28,8 +28,9 @@ end
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
-The position type for this space is `NTuple{D, Int}` and valid positions have indices
-in the range `1:d[i]` for the `i`th dimension.
+The position type for this space is `NTuple{D, Int}`. In our examples we use the
+[`Dims{D}`](https://docs.julialang.org/en/v1/base/arrays/#Base.Dims) shorthand.
+Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
 
 `:chebyshev` metric means that the `r`-neighborhood of a position are all
 positions within the hypercube having side length of `2*floor(r)` and being centered in
@@ -150,11 +151,7 @@ reducing the amount of computations necessary (i.e. we don't "find" new indices,
 we only add a pre-determined amount of indices to `α`).
 """
 function grid_space_neighborhood(α::CartesianIndex, space::GridSpace, r::Real)
-    hood = if haskey(space.hoods, r)
-        space.hoods[r]
-    else
-        initialize_neighborhood!(space, r)
-    end
+    hood = get(space.hoods, r, initialize_neighborhood!(space, r))
     _grid_space_neighborhood(α, space, hood)
 end
 
@@ -170,11 +167,7 @@ function grid_space_neighborhood(
     space::GridSpace{D},
     r::NTuple{D,Real},
 ) where {D}
-    hood = if haskey(space.hoods_tuple, r)
-        space.hoods_tuple[r]
-    else
-        initialize_neighborhood!(space, r)
-    end
+    hood = get(space.hoods_tuple, r, initialize_neighborhood!(space, r))
     _grid_space_neighborhood(α, space, hood)
 end
 
@@ -203,6 +196,37 @@ function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
+end
+
+"""
+    nearby_ids(pos, model::ABM{<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
+
+Return an iterator of ids over specified dimensions of `space` with fine grained control
+of distances from `pos` using each value of `r` via the (dimension, range) pattern.
+
+Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -5:5), (3, 0:2)]`.
+
+**Note:** Only available for use with non-periodic chebyshev grids.
+"""
+function nearby_ids(
+    pos::ValidPos,
+    model::ABM{<:AbstractAgent,<:GridSpace},
+    r::Vector{Tuple{Int,UnitRange{Int}}},
+)
+    dims = first.(r)
+    vidx = []
+    for d in 1:ndims(model.space.s)
+        idx = findall(dim -> dim == d, dims)
+        dim_range = isempty(idx) ? Colon() :
+            bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
+        push!(vidx, dim_range)
+    end
+    s = view(model.space.s, vidx...)
+    Iterators.flatten(s)
+end
+
+function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
+    return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)

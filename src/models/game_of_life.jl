@@ -1,6 +1,6 @@
 mutable struct Cell <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     status::Bool
 end
 
@@ -19,9 +19,9 @@ function game_of_life(;
     dims = (100, 100),
     metric = :chebyshev
 )
-    space = GridSpace(dims; metric = metric)
+    space = GridSpace(dims; metric)
     properties = Dict(:rules => rules)
-    model = ABM(Cell, space; properties = properties)
+    model = ABM(Cell, space; properties)
     idx = 1
     for x in 1:dims[1]
         for y in 1:dims[2]

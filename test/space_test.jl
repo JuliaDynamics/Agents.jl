@@ -171,6 +171,24 @@
         @test collect(nearby_positions((5, 5), model, (1, 2))) ==
               [(4, 3), (5, 3), (6, 3), (4, 4), (5, 4), (6, 4), (4, 5), (6, 5)]
 
+        add_agent!((3, 2), model, rand())
+        add_agent!((3, 4), model, rand())
+        add_agent!((2, 4), model, rand())
+        add_agent!((2, 2), model, rand())
+        @test sort!(collect(nearby_ids((3, 2), model, (2, 1)))) == [1, 4]
+        @test sort!(collect(nearby_ids((3, 2), model, (2, 2)))) == [1, 2, 3, 4]
+        @test sort!(collect(nearby_ids((3, 2), model, (0, 2)))) == [1, 2]
+
+        @test sort!(collect(nearby_ids((3, 2), model, (2, 2)))) ==
+              sort!(collect(nearby_ids((3, 2), model, 2)))
+        @test sort!(collect(nearby_ids((3, 2), model, (2, 2)))) ==
+              sort!(collect(nearby_ids((3, 2), model, [(1, -2:2), (2, -2:2)])))
+        @test sort!(collect(nearby_ids((3, 2), model, (2, 2)))) ==
+              sort!(collect(nearby_ids((3, 2), model, [(1, -1:0), (2, -2:2)])))
+
+        @test sort!(collect(nearby_ids((3, 2), model, [(2, -2:-1)]))) == []
+        @test sort!(collect(nearby_ids((3, 2), model, [(2, 0:2)]))) == [1, 2, 3, 4]
+
         model = ABM(Agent3, GridSpace((10, 5)))
         @test collect(nearby_positions((5, 5), model, (1, 2))) == [
             (4, 3),
@@ -238,7 +256,7 @@
 
     mutable struct Agent3D <: AbstractAgent
         id::Int
-        pos::Tuple{Int,Int,Int}
+        pos::Dims{3}
         weight::Float64
     end
 

@@ -137,19 +137,19 @@ function _run!(model, agent_step!, model_step!, n;
     s = 0
     while until(s, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer = obtainer)
+            collect_agent_data!(df_agent, model, adata, s; obtainer)
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer = obtainer)
+            collect_model_data!(df_model, model, mdata, s; obtainer)
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
     end
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer = obtainer)
+        collect_agent_data!(df_agent, model, adata, s; obtainer)
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer = obtainer)
+        collect_model_data!(df_model, model, mdata, s; obtainer)
     end
     return df_agent, df_model
 end

@@ -137,12 +137,12 @@ models where the agent constructor cannot be deduced (since it is a union).
 using Agents
 mutable struct Daisy <: AbstractAgent
     id::Int
-    pos::Tuple{Int, Int}
+    pos::Dims{2}
     breed::String
 end
 mutable struct Land <: AbstractAgent
     id::Int
-    pos::Tuple{Int, Int}
+    pos::Dims{2}
     temperature::Float64
 end
 space = GridSpace((10, 10))

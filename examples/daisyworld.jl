@@ -56,7 +56,7 @@ gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     breed::Symbol
     age::Int
     albedo::Float64 # 0-1 fraction
@@ -64,7 +64,7 @@ end
 
 mutable struct Land <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     temperature::Float64
 end
 
@@ -75,7 +75,7 @@ const DaisyWorld = ABM{Union{Daisy,Land}};
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
 
-function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
     ## All grid positions have at least one agent (the land)
     absorbed_luminosity = if length(ids) == 1
@@ -96,7 +96,7 @@ end
 nothing # hide
 
 # In addition, temperature diffuses over time
-function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function diffuse_temperature!(pos::Dims{2}, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5) # diffusion ratio
     ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land) / 8
@@ -115,7 +115,7 @@ nothing # hide
 # daisies compete for land and attempt to spawn a new plant of their `breed` in locations
 # close to them.
 
-function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function propagate!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
     if length(ids) > 1
         daisy = model[ids[2]]
@@ -317,7 +317,7 @@ adata = [(black, count, daisies), (white, count, daisies)]
 Random.seed!(165) # hide
 model = daisyworld(; solar_luminosity = 1.0)
 
-agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata)
+agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
 
 p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
 plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")

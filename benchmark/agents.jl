@@ -27,29 +27,29 @@ end
 
 mutable struct GridAgent <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     one::Float64
     two::Bool
 end
 
 mutable struct GridAgentTwo <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
 end
 
 mutable struct GridAgentThree <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
 end
 
 mutable struct GridAgentFour <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
 end
 
 mutable struct GridAgentFive <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
 end
 
 mutable struct ContinuousAgent <: AbstractAgent

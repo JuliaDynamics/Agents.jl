@@ -26,11 +26,11 @@ nothing # hide
 
 mutable struct Cell <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     status::Bool
 end
 
-# The following function builds a 2D cellular automaton. `rules` is of type `Tuple{Int,Int,Int, Int}` representing DSRO.
+# The following function builds a 2D cellular automaton. `rules` is of type `Tuple{Int,Int,Int,Int}` representing DSRO.
 
 # `dims` is a tuple of integers determining the width and height of the grid environment.
 # `metric` specifies whether cells connect to their diagonal neighbors.
@@ -38,9 +38,9 @@ end
 # This function creates a model where all cells are "off".
 
 function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev)
-    space = GridSpace(dims; metric = metric)
+    space = GridSpace(dims; metric)
     properties = Dict(:rules => rules)
-    model = ABM(Cell, space; properties = properties)
+    model = ABM(Cell, space; properties)
     idx = 1
     for x in 1:dims[1]
         for y in 1:dims[2]

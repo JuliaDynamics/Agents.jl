@@ -71,7 +71,7 @@ using Random
 
 mutable struct SugarSeeker <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     vision::Int
     metabolic_rate::Int
     age::Int

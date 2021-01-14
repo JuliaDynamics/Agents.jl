@@ -15,7 +15,7 @@ using Measurements
 
 mutable struct Daisy <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     breed::Symbol
     age::Int
     albedo::AbstractFloat # Allow Measurements
@@ -23,7 +23,7 @@ end
 
 mutable struct Land <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int}
+    pos::Dims{2}
     temperature::AbstractFloat # Allow Measurements
 end
 
@@ -46,7 +46,7 @@ using Random # hide
 
 const DaisyWorld = ABM{Union{Daisy,Land}}
 
-function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
     absorbed_luminosity = if length(ids) == 1
         (1 - model.surface_albedo) * model.solar_luminosity
@@ -58,7 +58,7 @@ function update_surface_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
     model[ids[1]].temperature = (T0 + local_heating) / 2
 end
 
-function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function diffuse_temperature!(pos::Dims{2}, model::DaisyWorld)
     ratio = get(model.properties, :ratio, 0.5)
     ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land) / 8
@@ -66,7 +66,7 @@ function diffuse_temperature!(pos::Tuple{Int,Int}, model::DaisyWorld)
     land.temperature = (1 - ratio) * land.temperature + ratio * meantemp
 end
 
-function propagate!(pos::Tuple{Int,Int}, model::DaisyWorld)
+function propagate!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
     if length(ids) > 1
         daisy = model[ids[2]]
