@@ -62,18 +62,27 @@ end
 # their level. `shape` is used solely for plotting (well, used once just for convenience).
 
 # Now let's set up the battle field:
-Random.seed!(6547) # hide
-model =
-    ABM(Fighter, GridSpace((100, 100, 10); periodic = false); scheduler = random_activation)
+function battle(; fighters = 50)
+    model = ABM(
+        Fighter,
+        GridSpace((100, 100, 10); periodic = false);
+        scheduler = random_activation,
+    )
 
-n = 0
-while n != 50
-    pos = (rand(1:100, 2)..., 1) # Start at level 1
-    if isempty(pos, model)
-        add_agent!(pos, model, false, 0, :diamond)
-        n += 1
+    n = 0
+    while n != fighters
+        pos = (rand(1:100, 2)..., 1) # Start at level 1
+        if isempty(pos, model)
+            add_agent!(pos, model, false, 0, :diamond)
+            n += 1
+        end
     end
+
+    return model
 end
+
+Random.seed!(6547) # hide
+model = battle()
 
 # 50 opponents positioned randomly on a 100x100 grid, with no escape
 # (`periodic = false`). To leverage categorical dimensions fully, non-periodic chebyshev
