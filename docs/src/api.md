@@ -24,9 +24,14 @@ nextid
 random_position
 ```
 
-### Moving and killing agents
+### Moving agents
 ```@docs
 move_agent!
+walk!
+```
+
+### Removing agents
+```@docs
 kill_agent!
 genocide!
 sample!
@@ -37,7 +42,6 @@ sample!
 nearby_ids
 nearby_positions
 edistance
-walk!
 ```
 
 ## A note on iteration
