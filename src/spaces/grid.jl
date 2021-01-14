@@ -210,7 +210,7 @@ Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -1:1), (3, 1:2)]` searche
 dimension 1 one step either side of the current position (as well as the current
 position) and the third dimension searches two positions above current.
 
-For a complete tutorial on how to use this method, see [Battle Royal](@ref).
+For a complete tutorial on how to use this method, see [Battle Royale](@ref).
 """
 function nearby_ids(
     pos::ValidPos,

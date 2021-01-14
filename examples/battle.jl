@@ -1,4 +1,4 @@
-# # Battle Royal
+# # Battle Royale
 # ![](battle.gif)
 #
 # This example illustrates how to leverage higher dimensions of a `GridSpace` to identify
@@ -23,8 +23,7 @@
 #   level -2 or lower): chase them down.
 #   - Capture and taunt a weaker opponent, then kill them.
 #   - Notice a tough opponent is occupied, sneak up and kill them.
-#   - There is no-one worthy to fight, but also no-one left to taunt. All bets are off:
-#   THERE CAN BE ONLY ONE.
+#   - There is no-one worthy to fight, but also no-one left to taunt. All bets are off: THERE CAN BE ONLY ONE.
 
 # Battles are won by weighted chance - a higher level gives an agent a larger chance of
 # winning, but does not guarantee it. When a victor is chosen
