@@ -42,10 +42,9 @@ end
 const OSMSpace = OpenStreetMapSpace
 
 struct OSMPos
-    start::Int
-    finish::Int
-    p::Float64
+    p::Tuple{Int, Int, Float64}
 end
+Base.getindex(o::OSMPos, i::Int) = o.p[i]
 
 """
     OSMPos(start::Int, finish::Int = start, road::Float64 = 0)
@@ -55,7 +54,7 @@ are used in conjuction with [`OpenStreetMapSpace`](@ref).
 It represents the position of the agent on a road connecting the two nodes of the map
 `start, finish` having already covered `road` meters along the road.
 """
-OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos(start, finish, p)
+OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos((start, finish, p))
 
 #######################################################################################
 # Custom functions for OSMSpace
@@ -70,7 +69,7 @@ returns a location somewhere on a road heading in a random direction.
 """
 function osm_random_direction(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
     edge = rand(model.space.edges)
-    (edge.I..., rand() * model.space.m.w[edge])
+    OSMPos(edge.I..., rand() * model.space.m.w[edge])
 end
 
 """
