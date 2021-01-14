@@ -119,13 +119,13 @@ end
 
 function battle!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
-        # Odds are equivalent
+        ## Odds are equivalent
         one_winner = rand() < 0.5
     elseif level(one) > level(two)
-        # Odds are in favor of one
+        ## Odds are in favor of one
         one_winner = 2 * rand() > rand()
     else
-        # Odds are in favor of two
+        ## Odds are in favor of two
         one_winner = rand() > 2 * rand()
     end
 
@@ -153,7 +153,7 @@ end
 function captor_behavior!(agent, model)
     close_ids = collect(nearby_ids(agent, model, (0, 0, 10)))
     if length(close_ids) == 1
-        # Taunt prisoner or kill it
+        ## Taunt prisoner or kill it
         prisoner = model[close_ids[1]]
         if prisoner.capture_time > 10
             agent.shape = :square
@@ -164,7 +164,7 @@ function captor_behavior!(agent, model)
             move_agent!(agent, (space(agent)..., new_lvl), model)
         end
     else
-        # Someone is here to kill the captor. Could be more than one opponent
+        ## Someone is here to kill the captor. Could be more than one opponent
         prisoner = [model[id] for id in close_ids if model[id].capture_time > 0][1]
         exploiter = rand([
             model[id]
@@ -177,7 +177,7 @@ function captor_behavior!(agent, model)
         new_lvl = min(level(agent) + rand(1:gain), 10)
         kill_agent!(agent, model)
         move_agent!(exploiter, (space(exploiter)..., new_lvl), model)
-        # Prisoner runs away in the commotion
+        ## Prisoner runs away in the commotion
         prisoner.shape = :utriangle
         prisoner.capture_time = 0
         walk!(prisoner, (rand(-1:1, 2)..., 0), model)
@@ -198,7 +198,7 @@ function endgame!(agent, model)
         opponent = closest_target(agent, end_ids, model)
         target = space(opponent)
         if origin == target
-            # Battle
+            ## Battle
             agent.shape = :square
             opponent.shape = :square
             showdown!(agent, opponent, model)
@@ -210,13 +210,13 @@ end
 
 function showdown!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
-        # Odds are equivalent
+        ## Odds are equivalent
         one_winner = rand() < 0.5
     elseif level(one) > level(two)
-        # Odds are in favor of one
+        ## Odds are in favor of one
         one_winner = level(one) - level(two) * rand() > rand()
     else
-        # Odds are in favor of two
+        ## Odds are in favor of two
         one_winner = rand() > level(two) - level(one) * rand()
     end
 
@@ -242,49 +242,49 @@ end
 
 function agent_step!(agent, model)
     if agent.capture_time > 0
-        # Captured agents are powerless, but we need to keep track of how long
-        # they have been in this state
+        ## Captured agents are powerless, but we need to keep track of how long
+        ## they have been in this state
         agent.capture_time += 1
     elseif agent.has_prisoner
         captor_behavior!(agent, model)
     else
         origin = space(agent)
-        # Find agents that have captives, they are not focused
+        ## Find agents that have captives, they are not focused
         occupied_ids = collect(Iterators.filter(
             id -> model[id].has_prisoner,
             nearby_ids(agent, model, (7, 7, 10)),
         ))
         if !isempty(occupied_ids)
-            # Sneak up behind them
+            ## Sneak up behind them
             target = space(closest_target(agent, occupied_ids, model))
             agent.shape = :pentagon
             walk!(agent, (sign.(target .- origin)..., 0), model)
         else
-            # Opponents that are greatly higher in rank that the current agent
+            ## Opponents that are greatly higher in rank that the current agent
             strong_ids = collect(nearby_ids(agent, model, [(1, -5:5), (2, -5:5), (3, 2:4)]))
             if !isempty(strong_ids)
-                # Run away from nearest
+                ## Run away from nearest
                 target = space(closest_target(agent, strong_ids, model))
                 agent.shape = :utriangle
                 walk!(agent, (sign.(origin .- target)..., 0), model)
             else
-                # There are no distractions. Search for the closest worthy opponent
+                ## There are no distractions. Search for the closest worthy opponent
                 worthy_ids = collect(nearby_ids(agent, model, [(3, -1:1)]))
                 if !isempty(worthy_ids)
                     opponent = closest_target(agent, worthy_ids, model)
                     target = space(opponent)
                     if origin == target
-                        # Battle
+                        ## Battle
                         agent.shape = :square
                         opponent.shape = :square
                         battle!(agent, opponent, model)
                     else
-                        # Move towards worthy opponent
+                        ## Move towards worthy opponent
                         agent.shape = :diamond
                         walk!(agent, (sign.(target .- origin)..., 0), model)
                     end
                 else
-                    # Find any weak targets in the vicinity
+                    ## Find any weak targets in the vicinity
                     weak_ids = collect(nearby_ids(
                         agent,
                         model,
@@ -294,18 +294,18 @@ function agent_step!(agent, model)
                         prisoner = closest_target(agent, weak_ids, model)
                         target = space(prisoner)
                         if origin == target
-                            #Capture and taunt target
+                            ## Capture and taunt target
                             agent.has_prisoner = true
                             agent.shape = :vline
                             prisoner.capture_time += 1
                             prisoner.shape = :hline
                         else
-                            # Chase down nearest (can move 2 steps at a time!)
+                            ## Chase down nearest (can move 2 steps at a time!)
                             agent.shape = :star4
                             walk!(agent, (2 .* sign.(target .- origin)..., 0), model)
                         end
                     else
-                        # Abandon honour. This is the end
+                        ## Abandon honour. This is the end
                         endgame!(agent, model)
                     end
                 end
