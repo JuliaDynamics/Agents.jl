@@ -201,12 +201,16 @@ end
 """
     nearby_ids(pos, model::ABM{<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
 
-Return an iterator of ids over specified dimensions of `space` with fine grained control
+Return an iterable of ids over specified dimensions of `space` with fine grained control
 of distances from `pos` using each value of `r` via the (dimension, range) pattern.
 
-Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -5:5), (3, 0:2)]`.
-
 **Note:** Only available for use with non-periodic chebyshev grids.
+
+Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -1:1), (3, 1:2)]` searches
+dimension 1 one step either side of the current position (as well as the current
+position) and the third dimension searches two positions above current.
+
+For a complete tutorial on how to use this method, see [Battle Royal](@ref).
 """
 function nearby_ids(
     pos::ValidPos,
