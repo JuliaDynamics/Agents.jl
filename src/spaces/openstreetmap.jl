@@ -1,9 +1,9 @@
 export OpenStreetMapSpace, OSMPos, OSMSpace
-export random_direction, plan_route, map_coordinates, road_length
+export osm_random_direction, osm_plan_route, osm_map_coordinates, osm_road_length
 
 struct OpenStreetMapSpace <: DiscreteSpace
     m::OpenStreetMapX.MapData
-    edges::Vector{CartesianIndex{2}} #So far, only helpful for random_direction
+    edges::Vector{CartesianIndex{2}} #So far, only helpful for osm_random_direction
     s::Vector{Vector{Int}}
 end
 
@@ -14,14 +14,11 @@ Create a space residing on the Open Street Map (OSM) file provided via `path`.
 The abbreviation `OSMSpace` may be used interchangably.
 
 Much of the functionality of this space is provided by interfacing with
-[OpenStreetMapX](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
+[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
 keyword arguments `use_cache = false` and `trim_to_connected_graph = true` are
-passed into the
-[`get_map_data`](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.get_map_data-Tuple{String,Union{Nothing,%20String}})
-function.
-
-For details on how to obtain an OSM file for your use case, consult the
-[OpenStreetMapX Readme](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.get_map_data-Tuple{String,Union{Nothing,%20String}})
+passed into the [`OpenStreetMapX.get_map_data`](@ref) function.
+For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
+Readme.
 """
 function OpenStreetMapSpace(
     path::AbstractString;
@@ -29,9 +26,7 @@ function OpenStreetMapSpace(
     trim_to_connected_graph = true,
 )
     m = get_map_data(
-        path;
-        use_cache = use_cache,
-        trim_to_connected_graph = trim_to_connected_graph,
+        path; use_cache, trim_to_connected_graph,
     )
     agent_positions = [Int[] for i in 1:nv(m.g)]
     return OpenStreetMapSpace(m, findall(!iszero, m.w), agent_positions)
@@ -45,16 +40,22 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
 end
 
 const OSMSpace = OpenStreetMapSpace
-const OSMPos = Tuple{Int,Int,Float64}
+
+struct OSMPos
+    start::Int
+    finish::Int
+    p::Float64
+end
+
 """
-    OSMPos(start::Int, finish::Int)
-    OSMPos(finish::Int)
+    OSMPos(start::Int, finish::Int = start, p::Float64 = 0)
 
 A helper to provide the correct `pos` format for [`AbstractAgent`](@ref) structs which
 are used in conjuction with [`OpenStreetMapSpace`](@ref).
+It represents the position of the agent on a road connecting the two nodes of the map
+`start, finish` with percentage `p ∈ [0, 1]` along this road.
 """
-OSMPos(src::Int, dst::Int) = (src, dst, 0.0)
-OSMPos(dst::Int) = OSMPos(dst, dst)
+OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos(start, finish, p)
 
 #######################################################################################
 # Custom functions for OSMSpace
@@ -62,22 +63,22 @@ OSMPos(dst::Int) = OSMPos(dst, dst)
 
 # EXPORTED
 """
-    random_direction(model::ABM{A,OpenStreetMapSpace})
+    osm_random_direction(model::ABM{A,OpenStreetMapSpace})
 
 Similar to `random_position`, but rather than providing only inetersections, this method
 returns a location somewhere on a road heading in a random direction.
 """
-function random_direction(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
+function osm_random_direction(model::ABM{<:AbstractAgent,<:OpenStreetMapSpace})
     edge = rand(model.space.edges)
     (edge.I..., rand() * model.space.m.w[edge])
 end
 
 """
-    plan_route(start, finish, model)
+    osm_plan_route(start, finish, model)
 
 Generate a list of intersections between the `start` and `finish` positions on the map.
 """
-function plan_route(start::Int, finish::Int, model::ABM{A,OpenStreetMapSpace}) where {A}
+function osm_plan_route(start::Int, finish::Int, model::ABM{A,OpenStreetMapSpace}) where {A}
     #TODO: Expand to allow 'fastest_route' as well
     route =
         shortest_route(model.space.m, model.space.m.n[start], model.space.m.n[finish])[1]
@@ -85,15 +86,15 @@ function plan_route(start::Int, finish::Int, model::ABM{A,OpenStreetMapSpace}) w
 end
 
 """
-    map_coordinates(agent, model::ABM{A,OpenStreetMapSpace})
+    osm_map_coordinates(agent, model::ABM{A,OpenStreetMapSpace})
 
 Return a set of coordinates for an agent on the underlying map. Useful for plotting.
 """
-function map_coordinates(agent, model)
+function osm_map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
         start = get_ENU(agent.pos[1], model)
         finish = get_ENU(agent.pos[2], model)
-        travelled = agent.pos[3] / Agents.road_length(agent.pos, model)
+        travelled = agent.pos[3] / Agents.osm_road_length(agent.pos, model)
         (
             getX(start) * (1 - travelled) + getX(finish) * travelled,
             getY(start) * (1 - travelled) + getY(finish) * travelled,
@@ -105,14 +106,14 @@ function map_coordinates(agent, model)
 end
 
 """
-    road_length(pos::OSMPos, model)
-    road_length(start::Int, finish::Int, model)
+    osm_road_length(pos::OSMPos, model)
+    osm_road_length(start::Int, finish::Int, model)
 
 Returns the distance travelled between two intersections.
 """
-road_length(pos::OSMPos, model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) =
-    road_length(pos[1], pos[2], model)
-road_length(p1::Int, p2::Int, model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) =
+osm_road_length(pos::OSMPos, model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) =
+    osm_road_length(pos[1], pos[2], model)
+osm_road_length(p1::Int, p2::Int, model::ABM{<:AbstractAgent,<:OpenStreetMapSpace}) =
     model.space.m.w[p1, p2]
 
 #HELPERS, NOT EXPORTED
@@ -167,7 +168,7 @@ function move_agent!(
         return nothing
     end
 
-    dist_to_intersection = road_length(agent.pos, model) - agent.pos[3]
+    dist_to_intersection = osm_road_length(agent.pos, model) - agent.pos[3]
 
     if distance >= dist_to_intersection
         if length(agent.route) > 0
@@ -193,7 +194,7 @@ end
 function travel!(start, finish, distance, agent, model)
     #assumes we have just reached the intersection of `start` and `finish`,
     #and have `distance` left to travel.
-    edge_distance = road_length(start, finish, model)
+    edge_distance = osm_road_length(start, finish, model)
     if edge_distance <= distance
         if length(agent.route) > 0
             return travel!(
@@ -223,7 +224,7 @@ function nearby_ids(
     args...;
     kwargs...,
 ) where {A}
-    current_road = road_length(pos, model)
+    current_road = osm_road_length(pos, model)
     nearby = Int[]
 
     close = ids_on_road(pos[1], pos[2], model)
@@ -272,7 +273,7 @@ function ids_on_road(
     model::ABM{A,<:OpenStreetMapSpace},
     reverse = false,
 ) where {A}
-    distance = road_length(pos1, pos2, model)
+    distance = osm_road_length(pos1, pos2, model)
     dist_front(d) = reverse ? distance - d : d
     dist_back(d) = reverse ? d : distance - d
     # Agents listed in the current position, filtered to current road
@@ -305,7 +306,7 @@ function search_outward_ids!(
     # find all intersections the current end position connects to
     outgoing = filter(i -> i != pos1, nearby_positions(pos2, model))
     # Distances for each road
-    outdist = [road_length(pos2, o, model) for o in outgoing]
+    outdist = [osm_road_length(pos2, o, model) for o in outgoing]
     # Identify roads that are shorter than the search distance
     go_deeper = findall(i -> i < distance, outdist)
     # Those in the `go_deeper` category are completely covered by the distance search.
@@ -341,7 +342,7 @@ function search_inward_ids!(
     # find all intersections the current start position connects to
     incoming = filter(i -> i != pos2, nearby_positions(pos1, model; neighbor_type = :in))
     # Distances for each road
-    indist = [road_length(i, pos1, model) for i in incoming]
+    indist = [osm_road_length(i, pos1, model) for i in incoming]
     # Identify roads that are shorter than the search distance
     go_deeper = findall(i -> i < distance, indist)
     # Those in the `go_deeper` category are completely covered by the distance search.
@@ -400,4 +401,3 @@ function nearby_positions(
     end
     neighborfn(model.space.m.g, position)
 end
-

@@ -104,10 +104,12 @@ elastic_collision!
 
 ## OpenStreetMap space exclusives
 ```@docs
-random_direction
-plan_route
-road_length
-map_coordinates
+OSMPos
+osm_random_direction
+osm_plan_route
+osm_road_length
+osm_map_coordinates
+OpenStreetMapX.get_map_data
 ```
 
 ## Graph space exclusives

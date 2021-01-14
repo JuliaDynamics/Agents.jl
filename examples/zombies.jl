@@ -27,11 +27,11 @@ function initialise(; map_path = "test/data/reno_east3.osm")
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for _ in 1:100
-        start = random_direction(model) # Somewhere on a road
+        start = osm_random_direction(model) # Somewhere on a road
         finish = random_position(model) # At an intersection
 
         ## We already have our start and finish edges, so we identify the in-between
-        path = plan_route(start[2], finish[1], model)
+        path = osm_plan_route(start[2], finish[1], model)
         ## Since we start on an edge, there are two possibilities here.
         ## 1. The route wants us to turn around, thus next id en-route will
         ## be pos[1]. That's fine.
@@ -57,7 +57,7 @@ function agent_step!(agent, model)
 
     if agent.pos[1] == agent.pos[2] && length(agent.route) == 0 && rand() < 0.1
         ## When stationary, give the agent a 10% chance of going somwhere else
-        agent.route = plan_route(agent.pos[1], random_position(model)[1], model)
+        agent.route = osm_plan_route(agent.pos[1], random_position(model)[1], model)
         ## Drop current position
         popfirst!(agent.route)
         ## Start on new route
@@ -89,7 +89,7 @@ function plotagents(model)
     colors = [ac(model[i]) for i in ids]
     sizes = [as(model[i]) for i in ids]
     markers = :circle
-    pos = [map_coordinates(model[i], model) for i in ids]
+    pos = [osm_map_coordinates(model[i], model) for i in ids]
 
     scatter!(
         pos;

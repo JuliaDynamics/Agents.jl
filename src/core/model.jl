@@ -35,12 +35,12 @@ end
 ```
 where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in continuous
 space.
-[`OpenStreetMapSpace`](@ref) agents require a position type `Tuple{Int,Int,Float64}`,
+
+[`OpenStreetMapSpace`](@ref) agents require a position type [`OSMPos`](@ref),
 representing the agent's position on a road between two intersections. The `Int` values
 indicate the intersection ids and the number is the distance travelled from the starting point.
 [`OSMPos`](@ref) is a shorthand for this type.
-
-In addition to this, a `route` is required for every agent.
+In addition to this, a `route::Vector{Int}` is required for every agent.
 ```julia
 mutable struct ExampleAgent <: AbstractAgent
     id::Int

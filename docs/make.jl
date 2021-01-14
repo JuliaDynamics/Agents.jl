@@ -15,6 +15,8 @@ println("Literate...")
 import Literate
 println("InteractiveChaos...")
 import InteractiveChaos
+println("OpenStreetMapX...")
+import OpenStreetMapX
 
 println("Setting up Environment")
 # Initialise pyplot to squash build output bleeding into docs.
