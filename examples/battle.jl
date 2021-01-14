@@ -5,6 +5,8 @@
 # the distance from neighbors not just spatially, but also categorically. We'll also use
 # the [`walk!`](@ref) function extensively.
 
+# The `Models` module includes this example as [`Models.battle`](@ref).
+
 # ## Rules of Engagement
 # Agents wander around the map looking for opponents. When a grid space is occupied by
 # two or more agents there will be a battle. With experience gained from the fight, the
