@@ -14,22 +14,22 @@ sense: currently `GridSpace` and `ContinuousSpace`.
 edistance(
     a::A,
     b::B,
-    model::ABM{C,<:Union{ContinuousSpace,GridSpace}},
-) where {A<:AbstractAgent,B<:AbstractAgent,C} = edistance(a.pos, b.pos, model)
+    model::ABM{<:Union{ContinuousSpace,GridSpace}},
+) where {A<:AbstractAgent,B<:AbstractAgent} = edistance(a.pos, b.pos, model)
 
 function edistance(
     a::ValidPos,
     b::ValidPos,
-    model::ABM{A,<:Union{ContinuousSpace{D,false},GridSpace{D,false}}},
-) where {A,D}
+    model::ABM{<:Union{ContinuousSpace{D,false},GridSpace{D,false}}},
+) where {D}
     sqrt(sum(abs2.(a .- b)))
 end
 
 function edistance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{A,<:ContinuousSpace{D,true}},
-) where {A,D}
+    model::ABM{<:ContinuousSpace{D,true}},
+) where {D}
     total = 0.0
     for (a, b, d) in zip(p1, p2, model.space.extent)
         delta = abs(b - a)
@@ -41,11 +41,7 @@ function edistance(
     sqrt(total)
 end
 
-function edistance(
-    p1::ValidPos,
-    p2::ValidPos,
-    model::ABM{A,<:GridSpace{D,true}},
-) where {A,D}
+function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) where {D}
     total = 0.0
     for (a, b, d) in zip(p1, p2, size(model.space))
         delta = abs(b - a)
@@ -61,7 +57,7 @@ end
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-LightGraphs.nv(abm::ABM{A,<:Union{GraphSpace, OpenStreetMapSpace}}) where {A} = LightGraphs.nv(abm.space)
+LightGraphs.nv(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.nv(abm.space)
 LightGraphs.nv(space::S) where {S<:GraphSpace} = LightGraphs.nv(space.graph)
 LightGraphs.nv(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.nv(space.m.g)
 
@@ -69,19 +65,18 @@ LightGraphs.nv(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.nv(space.m.
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.ne(abm::ABM{A,<:Union{GraphSpace, OpenStreetMapSpace}}) where {A} = LightGraphs.ne(abm.space)
+LightGraphs.ne(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.ne(abm.space)
 LightGraphs.ne(space::S) where {S<:GraphSpace} = LightGraphs.ne(space.graph)
 LightGraphs.ne(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.ne(space.m.g)
 
-
-positions(model::ABM{<:AbstractAgent,<:Union{GraphSpace, OpenStreetMapSpace}}) = 1:nv(model)
+positions(model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = 1:nv(model)
 
 function nearby_positions(
-        position::Integer,
-        model::ABM{A,<:Union{GraphSpace,OpenStreetMapSpace}},
-        radius::Integer;
-        kwargs...,
-    ) where {A}
+    position::Integer,
+    model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}},
+    radius::Integer;
+    kwargs...,
+)
     output = copy(nearby_positions(position, model; kwargs...))
     for _ in 2:radius
         newnps = (nearby_positions(np, model; kwargs...) for np in output)
@@ -111,7 +106,7 @@ true. Available only on `GridSpace`.
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
-    model::ABM{<:AbstractAgent,<:GridSpace{D,true}};
+    model::ABM{<:GridSpace{D,true}};
     kwargs...,
 ) where {D}
     target = mod1.(agent.pos .+ direction, size(model.space))
@@ -121,7 +116,7 @@ end
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
-    model::ABM{<:AbstractAgent,<:GridSpace{D,false}};
+    model::ABM{<:GridSpace{D,false}};
     kwargs...,
 ) where {D}
     target = min.(max.(agent.pos .+ direction, 1), size(model.space))
@@ -131,7 +126,7 @@ end
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Float64},
-    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,true}};
+    model::ABM{<:ContinuousSpace{D,true}};
     kwargs...,
 ) where {D}
     target = mod1.(agent.pos .+ direction, model.space.extent)
@@ -141,7 +136,7 @@ end
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Float64},
-    model::ABM{<:AbstractAgent,<:ContinuousSpace{D,false}};
+    model::ABM{<:ContinuousSpace{D,false}};
     kwargs...,
 ) where {D}
     target = min.(max.(agent.pos .+ direction, 0.0), model.space.extent .- 1e-15)
@@ -163,16 +158,8 @@ Invoke a random walk by providing the `rand` function in place of
 `distance`. For `GridSpace`, the walk will cover ±1 positions in all directions,
 `ContinuousSpace` will reside within [-1, 1].
 """
-walk!(
-    agent,
-    ::typeof(rand),
-    model::ABM{<:AbstractAgent,<:GridSpace{D}};
-    kwargs...,
-) where {D} = walk!(agent, Tuple(rand(-1:1) for _ in 1:D), model; kwargs...)
+walk!(agent, ::typeof(rand), model::ABM{<:GridSpace{D}}; kwargs...) where {D} =
+    walk!(agent, Tuple(rand(-1:1) for _ in 1:D), model; kwargs...)
 
-walk!(
-    agent,
-    ::typeof(rand),
-    model::ABM{<:AbstractAgent,<:ContinuousSpace{D}};
-    kwargs...,
-) where {D} = walk!(agent, Tuple(2.0 * rand() - 1.0 for _ in 1:D), model; kwargs...)
+walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}; kwargs...) where {D} =
+    walk!(agent, Tuple(2.0 * rand() - 1.0 for _ in 1:D), model; kwargs...)

@@ -17,6 +17,7 @@
 - `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.
 - A walk! utility for `GridSpace` and `ContinuousSpace`s, providing turtle-like agent movement and random walks.
 - The Battle Royal example explores using categorical neighbor searching in a high dimensional `GridSpace`.
+- An `@agent` macro provides a quick way of creating agent structs for any space.
 
 ## Breaking changes
 Most changes in this section (besides changes to default values) are deprecated and

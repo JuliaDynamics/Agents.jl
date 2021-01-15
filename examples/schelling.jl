@@ -30,11 +30,20 @@ mutable struct SchellingAgent <: AbstractAgent
 end
 
 # Notice that the position of this Agent type is a `Dims{2}`, equivalent to
-# `Tuple{Int,Int}`, because we will use a `GridSpace`.
+# `NTuple{2,Int}`, because we will use a 2-dimensional `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
 # field which stores `0` or `1` representing two groups.
+
+# Notice also that we could have taken advantage of the macro [`@agent`](@ref) (and in
+# fact, this is recommended), and defined the same agent as:
+# ```julia
+# @agent SchellingAgent GridAgent{2}
+#     mood::Bool
+#     group::Int
+# end
+# ```
 
 # ## Creating a space
 

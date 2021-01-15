@@ -44,7 +44,7 @@ import DrWatson: @dict
 import StatsBase
 using Random # hide
 
-const DaisyWorld = ABM{Union{Daisy,Land}}
+const DaisyWorld = ABM{<:GridSpace,Union{Daisy,Land}}
 
 function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)

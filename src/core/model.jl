@@ -1,57 +1,8 @@
-export AbstractAgent, ABM, AgentBasedModel
+export ABM, AgentBasedModel
 
 #######################################################################################
 # %% Fundamental type definitions
 #######################################################################################
-"""
-All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** the `id` field as first field.
-Depending on the space structure there might be a `pos` field of appropriate type
-and a `vel` field of appropriate type.
-
-Your agent type may have other additional fields relevant to your system,
-for example variable quantities like "status" or other "counters".
-
-## Examples
-Imagine agents who have extra properties `weight, happy`. For a [`GraphSpace`](@ref)
-we would define them like
-```julia
-mutable struct ExampleAgent <: AbstractAgent
-    id::Int
-    pos::Int
-    weight::Float64
-    happy::Bool
-end
-```
-while for e.g. a [`ContinuousSpace`](@ref) we would use
-```julia
-mutable struct ExampleAgent <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Float64}
-    vel::NTuple{2, Float64}
-    weight::Float64
-    happy::Bool
-end
-```
-where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in continuous
-space.
-
-[`OpenStreetMapSpace`](@ref) agents require a position type [`OSMPos`](@ref),
-representing the agent's position on a road between two intersections. The `Int` values
-indicate the intersection ids and the number is the distance travelled from the starting point.
-[`OSMPos`](@ref) is a shorthand for this type.
-In addition to this, a `route::Vector{Int}` is required for every agent.
-```julia
-mutable struct ExampleAgent <: AbstractAgent
-    id::Int
-    pos::OSMPos
-    route::Vector{Int}
-    weight::Float64
-    happy::Bool
-end
-```
-"""
-abstract type AbstractAgent end
 
 abstract type AbstractSpace end
 SpaceType=Union{Nothing, AbstractSpace}
@@ -61,7 +12,7 @@ abstract type DiscreteSpace <: AbstractSpace end
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}, Tuple{Int, Int, Float64}} where {N, M}
 
-struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
+struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, F, P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
@@ -71,8 +22,8 @@ end
 
 const ABM = AgentBasedModel
 
-agenttype(::ABM{A}) where {A} = A
-spacetype(::ABM{A, S}) where {A, S} = S
+agenttype(::ABM{S, A}) where {S, A} = A
+spacetype(::ABM{S}) where {S} = S
 
 """
     union_types(U)
@@ -123,7 +74,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties, Ref(0))
+    return ABM{S, A, F, P}(agents, space, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -176,7 +127,7 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
+function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -194,7 +145,7 @@ function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
     end
 end
 
-function Base.setproperty!(m::ABM{A, S, F, P}, s::Symbol, x) where {A, S, F, P}
+function Base.setproperty!(m::ABM{S, A, F, P}, s::Symbol, x) where {S, A, F, P}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
@@ -299,7 +250,7 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-function Base.show(io::IO, abm::ABM{A}) where {A}
+function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
     if abm.space == nothing
