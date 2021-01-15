@@ -73,6 +73,13 @@ end
     @test Agents.agenttype(ABM(Union{Agent0,Agent1}; warn=false)) <: AbstractAgent
     @test_logs (:warn, "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.") ABM(Union{Agent0,Agent1})
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn=false)
+    # Test @agent macro
+    @agent A3 GridAgent{2} begin
+        weight::Float64
+    end
+    @test A3 <: AbstractAgent
+    @test fieldnames(A3) == fieldnames(Agent3)
+    @test A3.types == Agent3.types
 end
 
 @testset "sample!" begin

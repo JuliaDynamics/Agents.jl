@@ -17,7 +17,13 @@ Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `ex
 accelerate nearest neighbor functions like [`nearby_ids`](@ref).
 All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
 fractional remainder).
-Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`.
+Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
+use [`ContinuousAgent`](@ref) for convenience.
+In addition it is useful for agents to have a field `vel::NTuple{D, <:Real}` to use
+in conjunction with [`move_agent!`](@ref).
+
+The keyword `periodic = true` configures whether the space is periodic or not. If set to
+`false` an error will occur if an agent's position exceeds the boundary.
 
 The keyword argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
 the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
@@ -27,18 +33,10 @@ fields acting on the agents individually (e.g. some magnetic field).
 By default no update is done this way.
 If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
 
-The keyword `periodic = true` configures whether the space is periodic or not. If set to
-`false` an error will occur if an agent's position exceeds the boundary.
-
 There is no "best" choice for the value of `spacing`. If you need optimal performance it's
 advised to set up a benchmark over a range of choices. The value matters most when searching
 for neighbors. In [`Models.flocking`](@ref) for example, an optimal value for `spacing` is
 66% of the search distance.
-
-**Note:** if your model requires linear algebra operations for which tuples are not supported,
-a performant solution is to convert between Tuple and SVector using
-[StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
-as follows: `s = SVector(t)` and back with `t = Tuple(s)`.
 """
 function ContinuousSpace(
     extent::NTuple{D,X},

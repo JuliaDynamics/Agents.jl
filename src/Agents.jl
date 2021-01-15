@@ -8,6 +8,7 @@ import Base.length
 import LinearAlgebra
 
 # Core structures of Agents.jl
+include("core/agents.jl")
 include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
