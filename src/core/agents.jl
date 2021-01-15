@@ -9,6 +9,9 @@ and a `vel` field of appropriate type.
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
 
+It is best to use the [`@agent`](@ref) macro to create agent structs rather than doing
+so manually.
+
 ## Examples
 Imagine agents who have extra properties `weight, happy`. For a [`GraphSpace`](@ref)
 we would define them like
