@@ -1,25 +1,4 @@
-export GraphAgent, GraphSpace
-
-"""
-    @agent Person GraphAgent begin
-        age::Int
-    end
-
-Create an agent with the ability to operate on a [`GraphSpace`](@ref). Used in
-conjunction with [`@agent`](@ref) the example above produces
-
-```julia
-mutable struct Person <: AbstractAgent
-    id::Int
-    pos::Int
-    age::Int
-end
-```
-"""
-mutable struct GraphAgent <: AbstractAgent
-    id::Int
-    pos::Int
-end
+export GraphSpace
 
 #######################################################################################
 # Basic space definition

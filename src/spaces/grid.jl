@@ -1,26 +1,4 @@
-export GridAgent, GridSpace
-
-"""
-    @agent Person GridAgent{2} begin
-        age::Int
-    end
-
-Create an agent with the ability to operate on a [`GridSpace`](@ref). The supplied
-integer value tells the agent the dimensionality of the grid.
-Used in conjunction with [`@agent`](@ref) the example above produces
-
-```julia
-mutable struct Person <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    age::Int
-end
-```
-"""
-mutable struct GridAgent{D} <: AbstractAgent
-    id::Int
-    pos::Dims{D}
-end
+export GridSpace
 
 struct Region{D}
     mini::NTuple{D,Int}

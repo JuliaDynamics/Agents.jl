@@ -7,6 +7,7 @@ using Random
 import Base.length
 
 # Core structures of Agents.jl
+include("core/agents.jl")
 include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")

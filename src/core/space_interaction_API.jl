@@ -9,7 +9,7 @@ error message.
 In short: IMPLEMENT ALL FUNCTIONS IN SECTION "IMPLEMENT", WITH SAME ARGUMENTS!
 
 In addition to the required functions, a minimal `AbstractAgent` struct with REQUIRED
-fields should be supplied. See the top of src/spaces/continuous.jl for a complete example.
+fields should be supplied. See the top of src/core/agents.jl for examples.
 
 TODO: do_checks needs to be updated for each new space type
 =#
