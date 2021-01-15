@@ -41,9 +41,13 @@ ContinuousSpace
 
 ```@docs
 AbstractAgent
+@agent
+GraphAgent
+GridAgent
+ContinuousAgent
 ```
 
-The agent type **must** be mutable. Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
+Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
 Then, the agent can interact with the model and the space further by using
 e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
 

@@ -1,4 +1,4 @@
-export AbstractAgent, ABM, AgentBasedModel
+export AbstractAgent, ABM, AgentBasedModel, @agent
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -37,6 +37,27 @@ where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in cont
 space.
 """
 abstract type AbstractAgent end
+
+"""
+    @agent Person GraphAgent begin
+        age::Int
+    end
+
+Creates a struct for your agent which includes the mandatory fields required to operate
+in a particular space.
+
+Refer to the specific agent constructors below for more details.
+"""
+macro agent(name, base, fields)
+    base_type = Core.eval(@__MODULE__, base)
+    base_fieldnames = fieldnames(base_type)
+    base_types = [t for t in base_type.types]
+    base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_types)]
+    res = :(mutable struct $name <: AbstractAgent end)
+    push!(res.args[end].args, base_fields...)
+    push!(res.args[end].args, fields.args...)
+    return res
+end
 
 abstract type AbstractSpace end
 SpaceType=Union{Nothing, AbstractSpace}

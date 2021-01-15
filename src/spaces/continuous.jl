@@ -1,4 +1,31 @@
-export ContinuousSpace
+export ContinuousAgent, ContinuousSpace
+
+"""
+    @agent Person ContinuousAgent{2} begin
+        vel::NTuple{2,Float64}
+        age::Int
+    end
+
+Create an agent with the ability to operate on a [`ContinuousSpace`](@ref).
+The supplied integer value tells the agent the dimensionality of the grid.
+Used in conjunction with [`@agent`](@ref) the example above produces
+
+```julia
+mutable struct Person <: AbstractAgent
+    id::Int
+    pos::NTuple{2,Float64}
+    vel::NTuple{2,Float64}
+    age::Int
+end
+```
+
+Note that `vel`ocity is not a *required* property in `ContinuousSpace`s, although it is
+used extensively. The above example showcases how best to add this property.
+"""
+mutable struct ContinuousAgent{D} <: AbstractAgent
+    id::Int
+    pos::NTuple{D,Float64}
+end
 
 struct ContinuousSpace{D,P,T<:AbstractFloat, F} <: AbstractSpace
     grid::GridSpace{D,P}
