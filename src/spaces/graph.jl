@@ -12,8 +12,7 @@ end
     GraphSpace(graph::AbstractGraph)
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl).
-The position type for this space is `Int`.
-
+The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
 The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
 `GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary

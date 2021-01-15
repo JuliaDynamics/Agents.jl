@@ -1,20 +1,20 @@
 export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent
 
 """
+    AbstractAgent
 All agents must be a mutable subtype of `AbstractAgent`.
 Your agent type **must have** the `id` field as first field.
 Depending on the space structure there might be a `pos` field of appropriate type
 and a `vel` field of appropriate type.
+Each space structure quantifies precicely what extra fields (if any) are necessary,
+however we recommend to use the [`@agent`] macro to help you create the agent type.
 
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
 
-It is best to use the [`@agent`](@ref) macro to create agent structs rather than doing
-so manually.
-
 ## Examples
-Imagine agents who have extra properties `weight, happy`. For a [`GraphSpace`](@ref)
-we would define them like
+As an example, a [`GraphSpace`](@ref) requires an `id::Int` field and a `pos::Int` field.
+To make an agent with two additional properties, `weight, happy`, we'd write
 ```julia
 mutable struct ExampleAgent <: AbstractAgent
     id::Int
@@ -23,30 +23,38 @@ mutable struct ExampleAgent <: AbstractAgent
     happy::Bool
 end
 ```
-while for e.g. a [`ContinuousSpace`](@ref) we would use
-```julia
-mutable struct ExampleAgent <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Float64}
-    vel::NTuple{2, Float64}
-    weight::Float64
-    happy::Bool
-end
-```
-where `vel` is optional, useful if you want to use [`move_agent!`](@ref) in continuous
-space.
 """
 abstract type AbstractAgent end
 
 """
-    @agent Person GraphAgent begin
-        age::Int
+    @agent YourAgentType{X, Y} AgentSupertype begin
+        some_property::X
+        other_extra_property::Y
+        # etc...
     end
 
-Creates a struct for your agent which includes the mandatory fields required to operate
-in a particular space.
+Create a struct for your agents which includes the mandatory fields required to operate
+in a particular space. Depending on the space of your model, the `AgentSupertype` is
+chosen appropriately from [`GraphAgent`](@ref), [`GridAgent`](@ref),
+[`ContinuousAgent`](@ref).
 
-Refer to the specific agent constructors below for more details.
+## Example
+Using
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int
+    moneyz::T
+end
+```
+will in fact create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
+```julia
+mutable struct Person{T} <: AbstractAgent
+    id::Int
+    pos::NTuple{2, Int}
+    age::Int
+    moneyz::T
+end
+```
 """
 macro agent(name, base, fields)
     base_type = Core.eval(@__MODULE__, base)
@@ -60,20 +68,9 @@ macro agent(name, base, fields)
 end
 
 """
-    @agent Person GraphAgent begin
-        age::Int
-    end
-
-Create an agent with the ability to operate on a [`GraphSpace`](@ref). Used in
-conjunction with [`@agent`](@ref) the example above produces
-
-```julia
-mutable struct Person <: AbstractAgent
-    id::Int
-    pos::Int
-    age::Int
-end
-```
+    GraphAgent
+Combine with [`@agent`](@ref) to create an agent type for [`GraphSpace`](@ref).
+It attributes the fields `id::Int, pos::Int` to the start of the agent type.
 """
 mutable struct GraphAgent <: AbstractAgent
     id::Int
@@ -81,21 +78,10 @@ mutable struct GraphAgent <: AbstractAgent
 end
 
 """
-    @agent Person GridAgent{2} begin
-        age::Int
-    end
-
-Create an agent with the ability to operate on a [`GridSpace`](@ref). The supplied
-integer value tells the agent the dimensionality of the grid.
-Used in conjunction with [`@agent`](@ref) the example above produces
-
-```julia
-mutable struct Person <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    age::Int
-end
-```
+    GridAgent{D}
+Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
+[`GraphSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D, Int}`
+to the start of the agent type.
 """
 mutable struct GridAgent{D} <: AbstractAgent
     id::Int
@@ -103,29 +89,14 @@ mutable struct GridAgent{D} <: AbstractAgent
 end
 
 """
-    @agent Person ContinuousAgent{2} begin
-        vel::NTuple{2,Float64}
-        age::Int
-    end
-
-Create an agent with the ability to operate on a [`ContinuousSpace`](@ref).
-The supplied integer value tells the agent the dimensionality of the grid.
-Used in conjunction with [`@agent`](@ref) the example above produces
-
-```julia
-mutable struct Person <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
-    age::Int
-end
-```
-
-Note that `vel`ocity is not a *required* property in `ContinuousSpace`s, although it is
-used extensively. The above example showcases how best to add this property.
+    ContinuousAgent{D}
+Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
+[`ContinuousSpace`](@ref). It attributes the fields
+`id::Int, pos::NTuple{D, Float64}, vel::NTuple{D, Float64}`
+to the start of the agent type.
 """
 mutable struct ContinuousAgent{D} <: AbstractAgent
     id::Int
     pos::NTuple{D,Float64}
+    vel::NTuple{D,Float64}
 end
-

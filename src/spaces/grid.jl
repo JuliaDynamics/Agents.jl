@@ -28,8 +28,8 @@ end
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
-The position type for this space is `NTuple{D, Int}`. In our examples we use the
-[`Dims{D}`](https://docs.julialang.org/en/v1/base/arrays/#Base.Dims) shorthand.
+The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
+In our examples we typically use `Dims{D}` instead of `NTuple{D, Int}` (they are equivalent).
 Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
 
 `:chebyshev` metric means that the `r`-neighborhood of a position are all

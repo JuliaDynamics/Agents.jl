@@ -13,6 +13,8 @@ To run simulations and collect data, the following are also necessary
 4. Stepping functions that controls how the agents and the model evolve.
 5. Specifying which data should be collected from the agents and/or the model.
 
+So, in order to set up and run an ABM simulation with Agents.jl, you typically need to define a structure, function, or parameter collection for steps 1-3, define the rules of the agent evolution for step 4, and then declare which parameters of the model and the agents should be collected as data during step 5.
+
 ## 1. The model
 
 ```@docs
