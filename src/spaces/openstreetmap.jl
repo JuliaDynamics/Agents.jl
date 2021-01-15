@@ -48,6 +48,7 @@ struct OSMPos
     p::Tuple{Int, Int, Float64}
 end
 Base.getindex(o::OSMPos, i::Int) = o.p[i]
+Base.convert(::Type{OSMPos}, x::Tuple{Int,Int,Float64}) = OSMPos(x)
 
 """
     OSMPos(start::Int, finish::Int = start, road::Float64 = 0)
@@ -57,7 +58,7 @@ are used in conjuction with [`OpenStreetMapSpace`](@ref).
 It represents the position of the agent on a road connecting the two nodes of the map
 `start, finish` having already covered `road` meters along the road.
 """
-OSMPos(start::Int, finish::Int = src, p::Float64 = 0.0) = OSMPos((start, finish, p))
+OSMPos(start::Int, finish::Int = start, p::Float64 = 0.0) = OSMPos((start, finish, p))
 
 #######################################################################################
 # Custom functions for OSMSpace
@@ -137,6 +138,10 @@ function add_agent_to_space!(
     return agent
 end
 
+function add_agent!(pos::OSMPos, model, properties...; kwargs...)
+    add_agent!(pos.p, model, properties...; kwargs...)
+end
+
 function remove_agent_from_space!(
     agent::A,
     model::ABM{A,<:OpenStreetMapSpace},
@@ -190,7 +195,7 @@ function move_agent!(
         pos = (agent.pos[1], agent.pos[2], agent.pos[3] + distance)
     end
 
-    move_agent!(agent, pos, model)
+    move_agent!(agent, OSMPos(pos), model)
 end
 
 function travel!(start, finish, distance, agent, model)
