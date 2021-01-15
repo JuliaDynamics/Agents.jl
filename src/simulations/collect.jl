@@ -171,7 +171,7 @@ is not known.
 """
 collect_agent_data!(df, model, properties::Nothing, step::Int=0; kwargs...) = df
 
-function init_agent_dataframe(model::ABM{A}, properties::AbstractArray) where {A<:AbstractAgent}
+function init_agent_dataframe(model::ABM{S,A}, properties::AbstractArray) where {S,A<:AbstractAgent}
     nagents(model) < 1 && throw(ArgumentError(
         "Model must have at least one agent to initialize data collection",
     ))
@@ -272,7 +272,7 @@ end
 
 
 # Aggregating version
-function init_agent_dataframe(model::ABM{A}, properties::Vector{<:Tuple}) where {A<:AbstractAgent}
+function init_agent_dataframe(model::ABM{S,A}, properties::Vector{<:Tuple}) where {S,A<:AbstractAgent}
     nagents(model) < 1 && throw(ArgumentError(
         "Model must have at least one agent to " * "initialize data collection",
     ))

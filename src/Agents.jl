@@ -5,6 +5,7 @@ using LightGraphs
 using DataFrames
 using Random
 import Base.length
+import LinearAlgebra
 
 # Core structures of Agents.jl
 include("core/model.jl")

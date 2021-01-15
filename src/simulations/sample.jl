@@ -19,33 +19,38 @@ be chosen more than once.
 
 See the Wright-Fisher example in the documentation for an application of `sample!`.
 """
-function sample!(model::ABM{A, S}, n::Int, weight=nothing; replace=true,
-  rng::AbstractRNG=Random.GLOBAL_RNG) where{A, S}
-  nagents(model) > 0 || return
-  org_ids = collect(keys(model.agents))
-  if weight != nothing
-    weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
-    newids = sample(rng, org_ids, weights, n, replace=replace)
-  else
-    newids = sample(rng, org_ids, n, replace=replace)
-  end
-  add_newids!(model, org_ids, newids)
+function sample!(
+    model::ABM,
+    n::Int,
+    weight = nothing;
+    replace = true,
+    rng::AbstractRNG = Random.GLOBAL_RNG,
+)
+    nagents(model) > 0 || return
+    org_ids = collect(keys(model.agents))
+    if weight != nothing
+        weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
+        newids = sample(rng, org_ids, weights, n, replace = replace)
+    else
+        newids = sample(rng, org_ids, n, replace = replace)
+    end
+    add_newids!(model, org_ids, newids)
 end
 
 "Used in sample!"
 function add_newids!(model, org_ids, newids)
-  n = nextid(model)
-  for id in org_ids
-    if !in(id, newids)
-      kill_agent!(model.agents[id], model)
-    else
-      noccurances = count(x->x==id, newids)
-      for t in 2:noccurances
-        newagent = deepcopy(model.agents[id])
-        newagent.id = n
-        add_agent_pos!(newagent, model)
-        n += 1
-      end
+    n = nextid(model)
+    for id in org_ids
+        if !in(id, newids)
+            kill_agent!(model.agents[id], model)
+        else
+            noccurances = count(x -> x == id, newids)
+            for t in 2:noccurances
+                newagent = deepcopy(model.agents[id])
+                newagent.id = n
+                add_agent_pos!(newagent, model)
+                n += 1
+            end
+        end
     end
-  end
 end
