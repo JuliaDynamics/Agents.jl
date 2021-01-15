@@ -23,7 +23,7 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; map_path = "test/data/reno_east3.osm")
+function initialise(; map_path = TEST_MAP)
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for _ in 1:100

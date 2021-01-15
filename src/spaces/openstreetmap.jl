@@ -1,4 +1,4 @@
-export OpenStreetMapSpace, OSMPos, OSMSpace
+export OpenStreetMapSpace, OSMPos, OSMSpace, TEST_MAP
 export osm_random_direction, osm_plan_route, osm_map_coordinates, osm_road_length
 
 struct OpenStreetMapSpace <: DiscreteSpace
@@ -17,8 +17,9 @@ Much of the functionality of this space is provided by interfacing with
 [OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
 keyword arguments `use_cache = false` and `trim_to_connected_graph = true` are
 passed into the [`OpenStreetMapX.get_map_data`](@ref) function.
+
 For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-Readme.
+Readme. We provide a variable `TEST_MAP` to use as a `path` for testing.
 """
 function OpenStreetMapSpace(
     path::AbstractString;
@@ -40,6 +41,8 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
 end
 
 const OSMSpace = OpenStreetMapSpace
+
+const TEST_MAP = joinpath(dirname(pathof(OpenStreetMapX)),"..","test","data","reno_east3.osm")
 
 struct OSMPos
     p::Tuple{Int, Int, Float64}
