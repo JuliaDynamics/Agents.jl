@@ -78,7 +78,7 @@ mutable struct AgentU2 <: AbstractAgent
   vel::NTuple{2,Float64}
 end
 
-function ignore_six(model::ABM{A,S,F,P}) where {A,S,F,P}
+function ignore_six(model::ABM)
   [a.id for a in allagents(model) if !(typeof(a) <: Agent6)]
 end
 

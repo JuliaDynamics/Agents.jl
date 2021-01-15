@@ -21,7 +21,8 @@ export move_agent!,
     nearby_ids,
     nearby_agents
 
-notimplemented(model) = error("Not implemented for space type $(nameof(typeof(model.space)))")
+notimplemented(model) =
+    error("Not implemented for space type $(nameof(typeof(model.space)))")
 
 #######################################################################################
 # %% IMPLEMENT
@@ -90,7 +91,7 @@ For `ContinuousSpace`, the keyword `exact=false` controls whether the found neig
 exactly accurate or approximate (with approximate always being a strict over-estimation),
 see [`ContinuousSpace`](@ref).
 """
-nearby_ids(position, model, r=1) = notimplemented(model)
+nearby_ids(position, model, r = 1) = notimplemented(model)
 
 """
     nearby_positions(position, model::ABM, r=1; kwargs...) → positions
@@ -101,9 +102,7 @@ The `position` must match type with the spatial structure of the `model`.
 
 The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_positions(position, model, r=1) = notimplemented(model)
-
-
+nearby_positions(position, model, r = 1) = notimplemented(model)
 
 #######################################################################################
 # %% Space agnostic killing and moving
@@ -118,6 +117,7 @@ function kill_agent!(a::AbstractAgent, model::ABM)
     delete!(model.agents, a.id)
     remove_agent_from_space!(a, model)
 end
+
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
@@ -197,6 +197,7 @@ function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
     add_agent_pos!(agent, model)
 end
+
 function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
     agent.pos = pos
     add_agent_pos!(agent, model)
@@ -237,18 +238,31 @@ add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
+function add_agent!(model::ABM{S,A}, properties...; kwargs...) where {S,A<:AbstractAgent}
     add_agent!(A, model, properties...; kwargs...)
 end
+
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
-function add_agent!(pos::ValidPos, model::ABM{A}, properties...; kwargs...) where {A<:AbstractAgent}
+
+function add_agent!(
+    pos::ValidPos,
+    model::ABM{S,A},
+    properties...;
+    kwargs...,
+) where {S,A<:AbstractAgent}
     add_agent!(pos, A, model, properties...; kwargs...)
 end
 
 # lowest level:
-function add_agent!(pos::ValidPos, A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
+function add_agent!(
+    pos::ValidPos,
+    A::Type{<:AbstractAgent},
+    model::ABM,
+    properties...;
+    kwargs...,
+)
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)
@@ -263,7 +277,12 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+function nearby_ids(
+    agent::A,
+    model::ABM{S,A},
+    args...;
+    kwargs...,
+) where {S,A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, args...; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
@@ -273,7 +292,12 @@ end
 
 Same as `nearby_positions(agent.pos, model, r)`.
 """
-function nearby_positions(agent::A, model::ABM{A}, args...; kwargs...) where {A<:AbstractAgent}
+function nearby_positions(
+    agent::A,
+    model::ABM{S,A},
+    args...;
+    kwargs...,
+) where {S,A<:AbstractAgent}
     nearby_positions(agent.pos, model, args...; kwargs...)
 end
 
@@ -284,4 +308,5 @@ Return an iterable of the agents near the position of the given `agent`.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_agents(a, model, args...; kwargs...) = (model[id] for id in nearby_ids(a, model, args...; kwargs...))
+nearby_agents(a, model, args...; kwargs...) =
+    (model[id] for id in nearby_ids(a, model, args...; kwargs...))

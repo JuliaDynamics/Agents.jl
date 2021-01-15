@@ -53,7 +53,7 @@ end
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
 
-function suface_temperature!(pos::Dims{2}, model::ABM{Daisy})
+function suface_temperature!(pos::Dims{2}, model::ABM)
     ids = ids_in_position(pos, model)
     absorbed_luminosity = if isempty(ids)
         ## Set luminosity via surface albedo
@@ -73,7 +73,7 @@ function suface_temperature!(pos::Dims{2}, model::ABM{Daisy})
     model.temperature[pos] = (model.temperature[pos] + local_heating) / 2
 end
 
-function diffuse_temperature!(pos::Int, model::ABM{Daisy}; ratio = 0.5)
+function diffuse_temperature!(pos::Int, model::ABM; ratio = 0.5)
     neighbors = nearby_positions(pos, model)
     model.temperature[pos] =
         (1 - ratio) * model.temperature[pos] +
@@ -153,7 +153,7 @@ nothing # hide
 # daisies compete for land and attempt to spawn a new plant of their `breed` in locations
 # close to them.
 
-function propagate!(pos::Dims{2}, model::ABM{Daisy})
+function propagate!(pos::Dims{2}, model::ABM)
     agents = collect(agents_in_position(pos, model))
     if !isempty(agents)
         agent = agents[1]
@@ -183,7 +183,7 @@ nothing # hide
 # Daisyworld's dynamics. Since we have constructed a number of helper functions,
 # these methods are quite straightforward.
 
-function solar_activity!(model::ABM{Daisy})
+function solar_activity!(model::ABM)
     if model.scenario == :ramp
         if model.tick > 200 && model.tick <= 400
             model.solar_luminosity += 0.005
@@ -194,7 +194,7 @@ function solar_activity!(model::ABM{Daisy})
     end
 end
 
-function model_step!(model::ABM{Daisy})
+function model_step!(model::ABM)
     for p in positions(model)
         suface_temperature!(p, model)
         diffuse_temperature!(p, model)
@@ -204,7 +204,7 @@ function model_step!(model::ABM{Daisy})
     solar_activity!(model)
 end
 
-function agent_step!(agent::Daisy, model::ABM{Daisy})
+function agent_step!(agent::Daisy, model::ABM)
     agent.age += 1
     agent.age >= model.max_age && kill_agent!(agent, model)
 end

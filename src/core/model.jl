@@ -46,7 +46,7 @@ abstract type DiscreteSpace <: AbstractSpace end
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}} where {N, M}
 
-struct AgentBasedModel{A<:AbstractAgent, S<:SpaceType, F, P}
+struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, F, P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
@@ -56,8 +56,8 @@ end
 
 const ABM = AgentBasedModel
 
-agenttype(::ABM{A}) where {A} = A
-spacetype(::ABM{A, S}) where {A, S} = S
+agenttype(::ABM{S, A}) where {S, A} = A
+spacetype(::ABM{S}) where {S} = S
 
 """
     union_types(U)
@@ -108,7 +108,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int, A}()
-    return ABM{A, S, F, P}(agents, space, scheduler, properties, Ref(0))
+    return ABM{S, A, F, P}(agents, space, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -161,7 +161,7 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
+function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -179,7 +179,7 @@ function Base.getproperty(m::ABM{A, S, F, P}, s::Symbol) where {A, S, F, P}
     end
 end
 
-function Base.setproperty!(m::ABM{A, S, F, P}, s::Symbol, x) where {A, S, F, P}
+function Base.setproperty!(m::ABM{S, A, F, P}, s::Symbol, x) where {S, A, F, P}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
@@ -284,7 +284,7 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-function Base.show(io::IO, abm::ABM{A}) where {A}
+function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
     if abm.space == nothing

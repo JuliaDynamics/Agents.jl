@@ -42,7 +42,7 @@ end
 At each step, activate only `p` percentage of randomly chosen agents.
 """
 function partial_activation(p::Real)
-    function partial(model::ABM{A,S,F,P}) where {A,S,F,P}
+    function partial(model::ABM)
         ids = collect(keys(model.agents))
         return randsubseq(ids, p)
     end
@@ -56,7 +56,7 @@ with agents with greater `property` acting first. `property` is a `Symbol`, whic
 just dictates which field the agents to compare.
 """
 function property_activation(p::Symbol)
-    function by_property(model::ABM{A,S,F,P}) where {A,S,F,P}
+    function by_property(model::ABM)
         ids = collect(keys(model.agents))
         properties = [getproperty(model.agents[id], p) for id in ids]
         s = sortperm(properties)
@@ -73,7 +73,7 @@ Otherwise returns agents grouped in order of appearance in the `Union`.
 the default order of the container (equivalent to [`fastest`](@ref)).
 """
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
-    function by_union(model::ABM{A,S,F,P}) where {A,S,F,P}
+    function by_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
@@ -91,8 +91,8 @@ end
 Activate agents by type in specified order (since `Union`s are not order preserving).
 `shuffle_agents = true` randomizes the order of agents within each group.
 """
-function by_type(order::Tuple{Type, Vararg{Type}}, shuffle_agents::Bool)
-    function by_ordered_union(model::ABM{A,S,F,P}) where {A,S,F,P}
+function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+    function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         if order != nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"

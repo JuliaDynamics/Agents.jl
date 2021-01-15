@@ -65,23 +65,23 @@ end
 #######################################################################################
 # %% Implementation of space API
 #######################################################################################
-function random_position(model::ABM{<:AbstractAgent,<:GridSpace})
+function random_position(model::ABM{<:GridSpace})
     Tuple(rand(CartesianIndices(model.space.s)))
 end
 
-function add_agent_to_space!(a::A, model::ABM{A,<:GridSpace}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
     push!(model.space.s[a.pos...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{A,<:GridSpace}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
     prev = model.space.s[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
 end
 
-function move_agent!(a::A, pos::Tuple, model::ABM{A,<:GridSpace}) where {A<:AbstractAgent}
+function move_agent!(a::A, pos::Tuple, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
     remove_agent_from_space!(a, model)
     a.pos = pos
     add_agent_to_space!(a, model)
@@ -96,6 +96,7 @@ end
 # of given radious and metric type are stored and re-used for each search.
 
 Base.length(r::Region{D}) where {D} = prod(r.maxi .- r.mini .+ 1)
+
 function Base.in(idx, r::Region{D}) where {D}
     @inbounds for φ in 1:D
         r.mini[φ] <= idx[φ] <= r.maxi[φ] || return false
@@ -105,7 +106,6 @@ end
 
 # This function initializes the standard cartesian indices that needs to be added to some
 # index `α` to obtain its neighborhood
-import LinearAlgebra
 function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     d = size(space.s)
     r0 = floor(Int, r)
@@ -192,7 +192,7 @@ grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.s
 ##########################################################################################
 # %% Extend neighbors API for spaces
 ##########################################################################################
-function nearby_ids(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     s = model.space.s
     Iterators.flatten((s[i...] for i in nn))
@@ -214,7 +214,7 @@ For a complete tutorial on how to use this method, see [Battle Royale](@ref).
 """
 function nearby_ids(
     pos::ValidPos,
-    model::ABM{<:AbstractAgent,<:GridSpace},
+    model::ABM{<:GridSpace},
     r::Vector{Tuple{Int,UnitRange{Int}}},
 )
     dims = first.(r)
@@ -233,7 +233,7 @@ function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
     return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
 end
 
-function nearby_positions(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace}, r = 1)
+function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
     Iterators.filter(!isequal(pos), nn)
 end
@@ -241,12 +241,12 @@ end
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
-function positions(model::ABM{<:AbstractAgent,<:GridSpace})
+function positions(model::ABM{<:GridSpace})
     x = CartesianIndices(model.space.s)
     return (Tuple(y) for y in x)
 end
 
-function ids_in_position(pos::ValidPos, model::ABM{<:AbstractAgent,<:GridSpace})
+function ids_in_position(pos::ValidPos, model::ABM{<:GridSpace})
     return model.space.s[pos...]
 end
 
@@ -254,6 +254,7 @@ end
 # %% pretty printing
 ###################################################################
 Base.size(space::GridSpace) = size(space.s)
+
 function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
     s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$(P)"
     print(io, s)
