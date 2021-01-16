@@ -8,7 +8,7 @@
 
 # It is also available from the `Models` module as [`Models.wright_fisher`](@ref).
 
-# ## A neutral model
+# ## [A neutral model](@id nutral)
 
 # * Imagine a population of `n` haploid individuals.
 # * At each generation, `n` offsprings replace the parents.
