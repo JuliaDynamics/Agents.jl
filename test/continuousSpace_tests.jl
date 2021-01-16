@@ -10,6 +10,7 @@
   space7 = ContinuousSpace((1, 1, 1), 0.1; periodic = true)
   space8 = ContinuousSpace((1, 1, 1), 0.1; periodic = false)
 
+  @test eltype(space1) == Float64
   @test length(space1.dims) == 2
   @test length(space2.dims) == 2
   @test length(space3.dims) == 2
@@ -183,4 +184,9 @@ end
   @test model.agents[2].f1 == 1
   @test model.agents[3].f1 == 2
   @test model.agents[4].f1 == 3
+
+  @test size(collect(positions(model))) == (10, 10)
+  @test ids_in_position((3, 3), model) == [3]
+  @test sort!(collect(nearby_ids(model[3].pos, model, 0.2))) == [2, 3]
+  @test Agents.distance_from_cell_center((0.22, 0.22), model) ≈ 0.04242640687
 end
