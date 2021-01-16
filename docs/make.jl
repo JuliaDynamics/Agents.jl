@@ -70,6 +70,7 @@ pages = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
+        "Overview" => "examples.md",
         "Schelling's segregation model" => "examples/schelling.md",
         "Sugarscape" => "examples/sugarscape.md",
         "SIR model for the spread of COVID-19" => "examples/sir.md",
