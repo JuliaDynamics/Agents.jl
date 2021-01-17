@@ -19,7 +19,7 @@ interesting, yet more complicated dynamics.
 There are many things to learn in the ABM space. Here are some of the more common ones
 Agents.jl covers.
 
-### Space
+### Spaces
 
 Choosing what kind of space your agents occupy is a fundamental aspect of model creation.
 Agents.jl provides a number of solutions, and the ability to
@@ -38,7 +38,7 @@ A more complex, but far more powerful space type is something we call
 and interact in a far smoother manner than grid based models. The [Flock model](@ref)
 is perhaps the most famous example of bottom-up emergent phenomena. Something quite
 topical at present is our
-[Social Distancing](@ref Continuous space social distancing for COVID-19) example.
+[Continuous space social distancing for COVID-19](@ref) example.
 Finally, an excellent example of what can be done in a continuous space:
 [Bacterial Growth](@ref).
 

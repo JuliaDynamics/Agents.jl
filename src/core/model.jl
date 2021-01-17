@@ -181,9 +181,6 @@ end
 """
     nagents(model::ABM)
 Return the number of agents in the `model`.
-
-Example usage in:
-- [Wright-Fisher model of evolution](@ref): [A neutral model](@ref)
 """
 nagents(model::ABM) = length(model.agents)
 
