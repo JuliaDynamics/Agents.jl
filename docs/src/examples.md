@@ -37,7 +37,8 @@ A more complex, but far more powerful space type is something we call
 [`ContinuousSpace`](@ref). In this space, agents generally move with a given velocity
 and interact in a far smoother manner than grid based models. The [Flock model](@ref)
 is perhaps the most famous example of bottom-up emergent phenomena. Something quite
-topical at present is our [Continuous space social distancing for COVID-19](@ref).
+topical at present is our
+[Social Distancing](@ref Continuous space social distancing for COVID-19) example.
 Finally, an excellent example of what can be done in a continuous space:
 [Bacterial Growth](@ref).
 
@@ -56,7 +57,7 @@ to find closely related agents not just in space, but also in property.
 
 ### Synchronous agent updates
 
-Most of the time, using the [`agent_step!`](@rep) loop then the [`model_step!`](@rep) is
+Most of the time, using the [`agent_step!`](@ref) loop then the [`model_step!`](@ref) is
 sufficient to evolve a model. What if there's a more complicated set of dynamics you need
 to employ? Take a look at the [HK (Hegselmann and Krause) opinion dynamics model](@ref):
 it shows us how to make a second agent loop within `model_step!` to synchronise changes
