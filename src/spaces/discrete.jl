@@ -130,24 +130,7 @@ applying `f` where `pos` is each position (tuple for grid, index for graph).
 An optional first argument is an agent **type** to be created, and targets mixed agent
 models where the agent constructor cannot be deduced (since it is a union).
 
-## Example
-```julia
-using Agents
-mutable struct Daisy <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    breed::String
-end
-mutable struct Land <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    temperature::Float64
-end
-space = GridSpace((10, 10))
-model = ABM(Union{Daisy, Land}, space)
-temperature(pos) = (pos[1]/10, ) # must be Tuple!
-fill_space!(Land, model, temperature)
-```
+Example usage in [Daisyworld](@ref).
 """
 fill_space!(model::ABM{S,A}, args...; kwargs...) where {S,A<:AbstractAgent} =
     fill_space!(A, model, args...; kwargs...)

@@ -233,6 +233,8 @@ to weight the two agents for the collision. By default no weighting happens.
 One of the two agents can have infinite "mass", and then acts as an immovable object
 that specularly reflects the other agent. In this case of course momentum is not
 conserved, but kinetic energy is still conserved.
+
+Example usage in [Continuous space social distancing for COVID-19](@ref).
 """
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
@@ -298,6 +300,8 @@ The argument `method` provides three pairing scenarios
   agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
+
+Example usage in [Bacterial Growth](@ref).
 """
 function interacting_pairs(
     model::ABM{<:ContinuousSpace},

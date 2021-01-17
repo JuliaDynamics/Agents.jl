@@ -1,4 +1,10 @@
 @testset "Space" begin
+    @testset "Graphs" begin
+        model = ABM(Agent5, GraphSpace(path_graph(5)))
+        @test Agents.nv(model.space) == 5
+        @test Agents.ne(model) == 4
+    end
+
     @testset "1D grids" begin
         a = GridSpace((5,))
         @test size(a) == (5,)
@@ -121,13 +127,16 @@
         @test nearby_positions(3, undirected) == [2, 4]
         @test nearby_positions(1, undirected) == [2]
         @test nearby_positions(5, undirected) == [4]
+        @test sort!(nearby_positions(5, undirected, 2)) == [3, 4]
+        @test sort!(nearby_positions(3, undirected, 2)) == [1, 2, 4, 5]
         @test nearby_positions(3, undirected; neighbor_type = :out) ==
               nearby_positions(3, undirected; neighbor_type = :in) ==
               nearby_positions(3, undirected; neighbor_type = :all) ==
               nearby_positions(3, undirected; neighbor_type = :default)
         add_agent!(1, undirected, rand())
-        add_agent!(2, undirected, rand())
+        agent = add_agent!(2, undirected, rand())
         add_agent!(3, undirected, rand())
+        @test sort!(nearby_positions(agent, undirected)) == [1, 3]
         # We expect id 2 to be included for a grid based search
         @test sort!(collect(nearby_ids(2, undirected))) == [1, 2, 3]
         # But to be excluded if we are looking around it.
@@ -172,7 +181,7 @@
               [(4, 3), (5, 3), (6, 3), (4, 4), (5, 4), (6, 4), (4, 5), (6, 5)]
 
         add_agent!((3, 2), model, rand())
-        add_agent!((3, 4), model, rand())
+        agent = add_agent!((3, 4), model, rand())
         add_agent!((2, 4), model, rand())
         add_agent!((2, 2), model, rand())
         @test sort!(collect(nearby_ids((3, 2), model, (2, 1)))) == [1, 4]
@@ -188,6 +197,11 @@
 
         @test sort!(collect(nearby_ids((3, 2), model, [(2, -2:-1)]))) == []
         @test sort!(collect(nearby_ids((3, 2), model, [(2, 0:2)]))) == [1, 2, 3, 4]
+
+        @test ids_in_position(agent, model) == [2]
+        @test only(agents_in_position(agent.pos, model)) == agent
+        @test only(agents_in_position(agent, model)) == agent
+        @test isempty((3,3), model)
 
         model = ABM(Agent3, GridSpace((10, 5)))
         @test collect(nearby_positions((5, 5), model, (1, 2))) == [
@@ -206,6 +220,11 @@
             (5, 2),
             (6, 2),
         ]
+
+        region = Agents.Region((1, 1), (10, 10))
+        @test length(region) == 100
+        @test (5, 5) ∈ region
+        @test (50, 50) ∉ region
 
         Random.seed!(78)
         continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
@@ -289,6 +308,14 @@
         @test a.pos == (1, 3)
         walk!(a, (0, -8), model) # Round the world, South eight steps
         @test a.pos == (1, 1)
+
+        model = ABM(Agent3, GridSpace((3, 3)))
+        a = add_agent!((1, 1), model, rand())
+        add_agent!((2, 2), model, rand())
+        walk!(a, (1, 1), model; ifempty = true)
+        @test a.pos == (1, 1)
+        walk!(a, (1, 0), model; ifempty = true)
+        @test a.pos == (2, 1)
 
         model = ABM(Agent3, GridSpace((3, 3); periodic = false))
         a = add_agent!((1, 1), model, rand())

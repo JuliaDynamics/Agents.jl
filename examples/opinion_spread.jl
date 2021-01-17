@@ -80,13 +80,16 @@ end
 
 # ## Running the model
 
-levels_per_opinion = 4
-model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
+# First, we create a stopping condition, which runs the model until all agents stabilize.
 
-"run the model until all agents stabilize"
 rununtil(model, s) = count(a->a.stabilized, allagents(model)) == length(positions(model))
 
+# Then we create our model, run it and collect some information
+
+model = create_model(nopinions = 3, levels_per_opinion = 4)
+
 agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabilized, count)])
+agentdata
 
 # ## Plotting
 
