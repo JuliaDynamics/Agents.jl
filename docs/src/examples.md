@@ -57,7 +57,7 @@ to find closely related agents not just in space, but also in property.
 
 ### Synchronous agent updates
 
-Most of the time, using the [`agent_step!`](@ref) loop then the [`model_step!`](@ref) is
+Most of the time, using the `agent_step!` loop then the `model_step!` is
 sufficient to evolve a model. What if there's a more complicated set of dynamics you need
 to employ? Take a look at the [HK (Hegselmann and Krause) opinion dynamics model](@ref):
 it shows us how to make a second agent loop within `model_step!` to synchronise changes
