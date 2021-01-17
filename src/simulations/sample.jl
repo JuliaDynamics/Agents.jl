@@ -17,7 +17,7 @@ this agent will be chosen in the new sampling.
 be chosen more than once.
 * `rng = GLOBAL_RNG` : a random number generator to perform the sampling with.
 
-See the Wright-Fisher example in the documentation for an application of `sample!`.
+Example usage in [Wright-Fisher model of evolution](@ref).
 """
 function sample!(
     model::ABM,

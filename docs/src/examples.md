@@ -85,4 +85,9 @@ interactions between a pack of Wolves, a heard of Sheep and meadows of Grass.
 [Daisyworld](@ref) is an example of how a model property (in this case temperature) can
 be elevated to an agent type.
 
+## Advanced Topics
 
+One major difference between Agents.jl and other ABM frameworks is how integrated it is
+to the greater ecosystem of the Julia language and by extension the tools one can apply
+in their models. Take a look at some of the more advanced walkthroughs in the *Ecosystem Integration*
+page of this documentation for details.
