@@ -105,11 +105,12 @@ end
     OSMAgent
 Combine with [`@agent`](@ref) to create an agent type [`OSMSpace`](@ref).
 It attributes the fields
-`id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}`
+`id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}, destination::Tuple{Int,Int,Float64}`
 to the start of the agent type.
 """
 mutable struct OSMAgent <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int,Float64}
     route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
 end

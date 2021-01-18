@@ -1,9 +1,14 @@
 export OpenStreetMapSpace, OSMSpace, TEST_MAP
-export osm_random_direction, osm_plan_route, osm_map_coordinates, osm_road_length
+export osm_random_road_position,
+    osm_plan_route,
+    osm_map_coordinates,
+    osm_road_length,
+    osm_is_stationary,
+    osm_random_route!
 
 struct OpenStreetMapSpace <: DiscreteSpace
     m::OpenStreetMapX.MapData
-    edges::Vector{CartesianIndex{2}} #So far, only helpful for osm_random_direction
+    edges::Vector{CartesianIndex{2}}
     s::Vector{Vector{Int}}
 end
 
@@ -49,79 +54,125 @@ const TEST_MAP =
 
 # EXPORTED
 """
-    osm_random_direction(model::ABM{OpenStreetMapSpace})
+    osm_random_road_position(model::ABM{OpenStreetMapSpace})
 
 Similar to `random_position`, but rather than providing only intersections, this method
 returns a location somewhere on a road heading in a random direction.
 """
-function osm_random_direction(model::ABM{<:OpenStreetMapSpace})
+function osm_random_road_position(model::ABM{<:OpenStreetMapSpace})
     edge = rand(model.space.edges)
     return (edge.I..., rand() * model.space.m.w[edge])
 end
 
 """
-    osm_plan_route(start, finish, model::ABM{OpenStreetMapSpace}; by = :shortest, kwargs...)
+    osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
+
+Selects a random destination and plans a route from the agent's current position. Will
+overwrite any current route.
+"""
+function osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
+    agent.destination = osm_random_road_position(model)
+    agent.route = osm_plan_route(agent.pos, agent.destination, model)
+    return nothing
+end
+
+"""
+    osm_plan_route(start, finish, model::ABM{<:OpenStreetMapSpace}; by = :shortest, return_trip = false, kwargs...)
 
 Generate a list of intersections between `start` and `finish` points on the map.
 `start` and `finish` can either be intersections (`Int`) or positions
 (`Tuple{Int,Int,Float64}`).
 
+When either point is a position, the associated intersection index will be removed from
+the route to avoid double counting.
+
 Route is planned via the shortest path by default (`by = :shortest`), but can also be
 planned `by = :fastest`. Road speeds are needed for this method which can be passed in via
 extra keyword arguments. Consult the OpenStreetMapX documentation for more details.
+
+If `return_trip = true`, a route will be planned from start -> finish -> start.
 """
 function osm_plan_route(
     start::Int,
     finish::Int,
     model::ABM{<:OpenStreetMapSpace};
     by = :shortest,
+    return_trip = false,
     kwargs...,
 )
     @assert by ∈ (:shortest, :fastest) "Can only plan route by :shortest or :fastest"
     planner = by == :shortest ? shortest_route : fastest_route
-    route =
+    route = if return_trip
+        planner(
+            model.space.m,
+            model.space.m.n[start],
+            model.space.m.n[finish],
+            model.space.m.n[start];
+            kwargs...,
+        )[1]
+    else
         planner(model.space.m, model.space.m.n[start], model.space.m.n[finish]; kwargs...)[1]
+    end
     map(p -> getindex(model.space.m.v, p), route)
-end
-
-osm_plan_route(
-    start::Int,
-    finish::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace};
-    kwargs...,
-) = osm_plan_route(start, finish[1], model; kwargs...)
-
-function osm_plan_route(
-    start::Tuple{Int,Int,Float64},
-    finish::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace};
-    kwargs...,
-)
-    path = osm_plan_route(start[2], finish[1], model; kwargs...)
-    ## Since we start on an edge, there are two possibilities here.
-    ## 1. The route wants us to turn around, thus next id en-route will
-    ## be pos[1]. That's fine.
-    ## 2. The route wants us to move on, but start will be in the list,
-    ## so we need to drop that.
-    path[1] == start[2] && popfirst!(path)
-    return path
 end
 
 function osm_plan_route(
     start::Tuple{Int,Int,Float64},
     finish::Int,
     model::ABM{<:OpenStreetMapSpace};
+    return_trip = false,
     kwargs...,
 )
-    path = osm_plan_route(start[2], finish, model; kwargs...)
-    path[1] == start[2] && popfirst!(path)
+    path = if return_trip
+        plan_return_route(start[2], finish, start[1], model; kwargs...)
+    else
+        osm_plan_route(start[2], finish, model; kwargs...)
+    end
+    ## Since we start on an edge, there are two possibilities here.
+    ## 1. The route wants us to turn around, thus next id en-route will
+    ## be pos[1]. That's fine.
+    ## 2. The route wants us to move on, but start will be in the list,
+    ## so we need to drop that.
+    if !isempty(path) && path[1] == start[2]
+        popfirst!(path)
+    end
     return path
+end
+
+function osm_plan_route(
+    start,
+    finish::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace};
+    kwargs...,
+)
+    path = osm_plan_route(start, finish[1], model; kwargs...)
+    isempty(path) || pop!(path)
+    return path
+end
+
+function plan_return_route(
+    start::Int,
+    middle::Int,
+    finish::Int,
+    model::ABM{<:OpenStreetMapSpace};
+    by = :shortest,
+    kwargs...,
+)
+    planner = by == :shortest ? shortest_route : fastest_route
+    route = planner(
+        model.space.m,
+        model.space.m.n[start],
+        model.space.m.n[middle],
+        model.space.m.n[finish];
+        kwargs...,
+    )[1]
+    map(p -> getindex(model.space.m.v, p), route)
 end
 
 """
     osm_map_coordinates(agent, model::ABM{OpenStreetMapSpace})
 
-Return a set of coordinates for an agent on the underlying map. Useful for plotting.
+Return a set of coordinates for an agent on the underlying map. Useful for printlnting.
 """
 function osm_map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
@@ -142,19 +193,28 @@ end
     osm_road_length(start::Int, finish::Int, model)
     osm_road_length(pos::Tuple{Int,Int,Float64}, model)
 
-Returns the distance in meters between two intersections given by intersection ids.
+Return the road length (in meters) between two intersections given by intersection ids.
 """
 osm_road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     osm_road_length(pos[1], pos[2], model)
 osm_road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
     model.space.m.w[p1, p2]
 
+"""
+    osm_is_stationary(agent)
+
+Return `true` if agent has no route left to follow and is therefore standing still.
+"""
+function osm_is_stationary(agent::A) where {A<:AbstractAgent}
+    return agent.pos == agent.destination && isempty(agent.route)
+end
+
 #HELPERS, NOT EXPORTED
 
 """
     get_EastNorthUp_coordinate(pos::Int, model)
 
-Returns an East-North-Up coordinate value for index `pos`.
+Return an East-North-Up coordinate value for index `pos`.
 """
 get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.n[pos]]
 
@@ -196,9 +256,30 @@ function move_agent!(
 end
 
 """
+    add_agent!(start::Tuple{Int,Int,Float64}, finish::Tuple{Int,Int,Float64}, model::ABM{<:OSMSpace}, args...; kwargs...)
+
+Add an agent to an [`OpenStreetMapSpace`](@ref) model without needing to provide a
+pre-calculated route. A `:shortest` path route will be initialised.
+
+Accepts the `return_trip` keyword to be given to [`osm_plan_route`](@ref).
+"""
+function add_agent!(
+    start::Tuple{Int,Int,Float64},
+    finish::Tuple{Int,Int,Float64},
+    model::ABM{<:OSMSpace},
+    args...;
+    return_trip = false,
+    kwargs...,
+)
+    path = osm_plan_route(start, finish, model; return_trip = return_trip)
+    destination = return_trip ? start : finish
+    add_agent!(start, model, path, destination, args...; kwargs...)
+end
+
+"""
     move_agent!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
 
-`distance` travelled in meters along an agents current route.
+Move an agent by `distance` in meters along its planned route.
 """
 function move_agent!(
     agent::A,
@@ -206,16 +287,22 @@ function move_agent!(
     distance::Real,
 ) where {A<:AbstractAgent}
 
-    #TODO: Assumption that an agent can only end its route on an intersection.
-    #It cannot pull up to someone's house, or park on the side of the road at present.
-    if agent.pos[1] == agent.pos[2] && length(agent.route) > 0
+    if osm_is_stationary(agent)
         return nothing
     end
 
     dist_to_intersection = osm_road_length(agent.pos, model) - agent.pos[3]
 
-    if distance >= dist_to_intersection
-        if length(agent.route) > 0
+    if isempty(agent.route) && agent.pos[1:2] == agent.destination[1:2]
+        # Last one or two moves before destination
+        to_travel = agent.destination[3] - agent.pos[3]
+        if distance >= to_travel
+            pos = agent.destination
+        else
+            pos = (agent.destination[1:2]..., agent.pos[3] + distance)
+        end
+    elseif distance >= dist_to_intersection
+        if !isempty(agent.route)
             pos = travel!(
                 agent.pos[2],
                 popfirst!(agent.route),
@@ -224,8 +311,8 @@ function move_agent!(
                 model,
             )
         else
-            # arrive at destination
-            pos = (agent.pos[2], agent.pos[2], 0.0)
+            # Now moving to the final destination
+            pos = park(distance - dist_to_intersection, agent, model)
         end
     else
         # move up current path
@@ -236,11 +323,11 @@ function move_agent!(
 end
 
 function travel!(start, finish, distance, agent, model)
-    #assumes we have just reached the intersection of `start` and `finish`,
-    #and have `distance` left to travel.
+    # Assumes we have just reached the intersection of `start` and `finish`,
+    # and have `distance` left to travel.
     edge_distance = osm_road_length(start, finish, model)
     if edge_distance <= distance
-        if length(agent.route) > 0
+        if !isempty(agent.route)
             return travel!(
                 finish,
                 popfirst!(agent.route),
@@ -256,11 +343,39 @@ function travel!(start, finish, distance, agent, model)
     end
 end
 
+function park(distance, agent, model)
+    # We have no route left but have not quite yet arrived at our destination.
+    # Assumes that when this is called, we have just completed the current leg
+    # in `agent.pos`, and we have `distance` left to travel.
+    if agent.pos[2] != agent.destination[1]
+        # At the end of the route, we must travel
+        last_distance = osm_road_length(agent.pos[2], agent.destination[1], model)
+        if distance >= last_distance + agent.destination[3]
+            # We reach the destination
+            return agent.destination
+        elseif distance >= last_distance
+            # We reach the final road, but not the destination
+            return (agent.destination[1:2]..., distance - last_distance)
+        else
+            # We travel the final leg
+            return (agent.pos[2], agent.destination[1], distance)
+        end
+    else
+        # Reached final road
+        if distance >= agent.destination[3]
+            return agent.destination
+        else
+            return (agent.destination[1:2]..., distance)
+        end
+    end
+end
+
 # Nearby positions must be intersections, since edges imply a direction.
 # nearby agents/ids can be on an intersection or on a road X m away.
 # We cannot simply use nearby_positions to collect nearby ids then.
 
-#TODO: Default is backwards and forwards. I assume it would be useful to turn off one or the other at some point
+# Default is searching both backwards and forwards.
+# I assume it would be useful to turn off one or the other at some point.
 function nearby_ids(
     pos::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace},
@@ -422,9 +537,6 @@ function nearby_ids(
     filter!(i -> i ≠ agent.id, all)
 end
 
-#TODO: this gives us 'nearby' intersections based on the connectivity graph.
-#We could extend this using a `r`adius, and filter the list so that it returns
-#"nearby intersections within radius `r`"
 nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) =
     nearby_positions(pos[1], model, args...; kwargs...)
 

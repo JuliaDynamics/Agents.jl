@@ -8,9 +8,9 @@ using Agents
 using Random # hide
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
-# satisfies the OSMSpace conditions of having a position of type `Tuple{Int,Int,Float64}`
-# and a `route` vector. For simplicity though we shall build this with the
-# [`@agent`](@ref) macro.
+# satisfies the OSMSpace conditions of having a `pos`ition of type
+# `Tuple{Int,Int,Float64}`, a `route` vector and a `destination` with the same type as
+# `pos`. For simplicity though we shall build this with the [`@agent`](@ref) macro.
 
 @agent Zombie OSMAgent begin
     infected::Bool
@@ -25,12 +25,10 @@ function initialise(; map_path = TEST_MAP)
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for _ in 1:100
-        start = osm_random_direction(model) # Somewhere on a road
-        finish = random_position(model) # At an intersection
+        start = random_position(model) # At an intersection
+        finish = osm_random_road_position(model) # Somewhere on a road
 
-        path = osm_plan_route(start, finish, model)
-
-        add_agent!(start, model, path, false)
+        add_agent!(start, finish, model, false)
     end
 
     patient_zero = random_agent(model)
@@ -46,13 +44,11 @@ function agent_step!(agent, model)
     ## Each agent will progress 25 meters along their route
     move_agent!(agent, model, 25)
 
-    if agent.pos[1] == agent.pos[2] && length(agent.route) == 0 && rand() < 0.1
+    if osm_is_stationary(agent) && rand() < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
-        agent.route = osm_plan_route(agent.pos[1], random_position(model)[1], model)
-        ## Drop current position
-        popfirst!(agent.route)
+        osm_random_route!(agent, model)
         ## Start on new route
-        move_agent!(agent, (agent.pos[1], popfirst!(agent.route), 0.0), model)
+        move_agent!(agent, model, 25)
     end
 
     if agent.infected
@@ -96,7 +92,7 @@ end
 
 # Let's see how this plays out!
 
-Random.seed!(2490) # hide
+Random.seed!(35) # hide
 model = initialise()
 
 frames = @animate for i in 0:200
