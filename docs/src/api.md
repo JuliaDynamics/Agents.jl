@@ -104,7 +104,6 @@ elastic_collision!
 
 ## OpenStreetMap space exclusives
 ```@docs
-OSMPos
 osm_random_direction
 osm_plan_route
 osm_road_length

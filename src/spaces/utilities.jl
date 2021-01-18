@@ -10,6 +10,8 @@ export edistance, walk!
 Return the euclidean distance between `a` and `b` (either agents or agent positions),
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `GridSpace` and `ContinuousSpace`.
+
+Example usage in the [Flock model](@ref).
 """
 edistance(
     a::A,
@@ -100,8 +102,9 @@ each direction. `direction = (2, -3)` is an example of a valid direction on a
 Velocity is ignored for this opreation in `ContinuousSpace`.
 
 ## Keywords
-- `ifempty` will check that the target position is unnocupied and only move if that's
-true. Available only on `GridSpace`.
+- `ifempty` will check that the target position is unnocupied and only move if that's true. Available only on `GridSpace`.
+
+Example usage in [Battle Royale](@ref).
 """
 function walk!(
     agent::AbstractAgent,

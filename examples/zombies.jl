@@ -8,14 +8,12 @@ using Agents
 using Random # hide
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
-# satisfies the OSMSpace conditions of having a position of type [`OSMPos`](@ref) and
-# a `route` vector.
+# satisfies the OSMSpace conditions of having a position of type `Tuple{Int,Int,Float64}`
+# and a `route` vector. For simplicity though we shall build this with the
+# [`@agent`](@ref) macro.
 
-mutable struct Zombie <: AbstractAgent
-    id::Int # Required
-    pos::OSMPos # Required
-    route::Vector{Int} # Required
-    infected::Bool # User added
+@agent Zombie OSMAgent begin
+    infected::Bool
 end
 
 # The model constructor we build consists of a map, and 100 agents scattered randomly
@@ -61,7 +59,7 @@ function agent_step!(agent, model)
         ## Drop current position
         popfirst!(agent.route)
         ## Start on new route
-        move_agent!(agent, OSMPos(agent.pos[1], popfirst!(agent.route)), model)
+        move_agent!(agent, (agent.pos[1], popfirst!(agent.route), 0.0), model)
     end
 
     if agent.infected

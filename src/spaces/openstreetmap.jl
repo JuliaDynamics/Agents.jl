@@ -1,4 +1,4 @@
-export OpenStreetMapSpace, OSMPos, OSMSpace, TEST_MAP
+export OpenStreetMapSpace, OSMSpace, TEST_MAP
 export osm_random_direction, osm_plan_route, osm_map_coordinates, osm_road_length
 
 struct OpenStreetMapSpace <: DiscreteSpace
@@ -43,22 +43,6 @@ const OSMSpace = OpenStreetMapSpace
 const TEST_MAP =
     joinpath(dirname(pathof(OpenStreetMapX)), "..", "test", "data", "reno_east3.osm")
 
-struct OSMPos
-    p::Tuple{Int,Int,Float64}
-end
-Base.getindex(o::OSMPos, i::Int) = o.p[i]
-Base.convert(::Type{OSMPos}, x::Tuple{Int,Int,Float64}) = OSMPos(x)
-
-"""
-    OSMPos(start::Int, finish::Int = start, road::Float64 = 0)
-
-A helper to provide the correct `pos` format for [`AbstractAgent`](@ref) structs which
-are used in conjuction with [`OpenStreetMapSpace`](@ref).
-It represents the position of the agent on a road connecting the two nodes of the map
-`start, finish` having already covered `road` meters along the road.
-"""
-OSMPos(start::Int, finish::Int = start, p::Float64 = 0.0) = OSMPos((start, finish, p))
-
 #######################################################################################
 # Custom functions for OSMSpace
 #######################################################################################
@@ -72,7 +56,7 @@ returns a location somewhere on a road heading in a random direction.
 """
 function osm_random_direction(model::ABM{<:OpenStreetMapSpace})
     edge = rand(model.space.edges)
-    OSMPos(edge.I..., rand() * model.space.m.w[edge])
+    return (edge.I..., rand() * model.space.m.w[edge])
 end
 
 """
@@ -108,12 +92,12 @@ function osm_map_coordinates(agent, model)
 end
 
 """
-    osm_road_length(pos::OSMPos, model)
     osm_road_length(start::Int, finish::Int, model)
+    osm_road_length(pos::Tuple{Int,Int,Float64}, model)
 
-Returns the distance travelled between two intersections.
+Returns the distance in meters between two intersections given by intersection ids.
 """
-osm_road_length(pos::OSMPos, model::ABM{<:OpenStreetMapSpace}) =
+osm_road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     osm_road_length(pos[1], pos[2], model)
 osm_road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
     model.space.m.w[p1, p2]
@@ -126,7 +110,10 @@ get_ENU(pos::Int, model) = model.space.m.nodes[model.space.m.n[pos]]
 # Agents.jl space API
 #######################################################################################
 
-random_position(model::ABM{<:OpenStreetMapSpace}) = OSMPos(rand(1:nv(model)))
+function random_position(model::ABM{<:OpenStreetMapSpace})
+    intersection = rand(1:nv(model))
+    return (intersection, intersection, 0.0)
+end
 
 function add_agent_to_space!(
     agent::A,
@@ -134,10 +121,6 @@ function add_agent_to_space!(
 ) where {A<:AbstractAgent}
     push!(model.space.s[agent.pos[1]], agent.id)
     return agent
-end
-
-function add_agent!(pos::OSMPos, model, properties...; kwargs...)
-    add_agent!(pos.p, model, properties...; kwargs...)
 end
 
 function remove_agent_from_space!(
@@ -150,7 +133,7 @@ function remove_agent_from_space!(
     return agent
 end
 
-function move_agent!(agent::A, pos::OSMPos, model::ABM{<:OpenStreetMapSpace,A}) where {A}
+function move_agent!(agent::A, pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace,A}) where {A}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -186,14 +169,14 @@ function move_agent!(
             )
         else
             # arrive at destination
-            pos = OSMPos(agent.pos[2])
+            pos = (agent.pos[2], agent.pos[2], 0.0)
         end
     else
         # move up current path
         pos = (agent.pos[1], agent.pos[2], agent.pos[3] + distance)
     end
 
-    move_agent!(agent, OSMPos(pos), model)
+    move_agent!(agent, pos, model)
 end
 
 function travel!(start, finish, distance, agent, model)
@@ -223,7 +206,7 @@ end
 
 #TODO: Default is backwards and forwards. I assume it would be useful to turn off one or the other at some point
 function nearby_ids(
-    pos::OSMPos,
+    pos::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace},
     distance::Real,
     args...;
@@ -386,7 +369,7 @@ end
 #TODO: this gives us 'nearby' intersections based on the connectivity graph.
 #We could extend this using a `r`adius, and filter the list so that it returns
 #"nearby intersections within radius `r`"
-nearby_positions(pos::OSMPos, model, args...; kwargs...) =
+nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) =
     nearby_positions(pos[1], model, args...; kwargs...)
 
 function nearby_positions(

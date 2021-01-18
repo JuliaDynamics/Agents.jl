@@ -265,5 +265,3 @@ function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
     end
 end
 schedulername(x::Union{Function, DataType}) = nameof(x)
-schedulername(x) = string(x)
-Base.show(io, s::AbstractSpace) = print(io, nameof(typeof(s)))
