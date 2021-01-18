@@ -60,15 +60,62 @@ function osm_random_direction(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    osm_plan_route(start, finish, model::ABM{OpenStreetMapSpace})
+    osm_plan_route(start, finish, model::ABM{OpenStreetMapSpace}; by = :shortest, kwargs...)
 
-Generate a list of intersections between the `start` and `finish` positions on the map.
+Generate a list of intersections between `start` and `finish` points on the map.
+`start` and `finish` can either be intersections (`Int`) or positions
+(`Tuple{Int,Int,Float64}`).
+
+Route is planned via the shortest path by default (`by = :shortest`), but can also be
+planned `by = :fastest`. Road speeds are needed for this method which can be passed in via
+extra keyword arguments. Consult the OpenStreetMapX documentation for more details.
 """
-function osm_plan_route(start::Int, finish::Int, model::ABM{<:OpenStreetMapSpace})
-    #TODO: Expand to allow 'fastest_route' as well
+function osm_plan_route(
+    start::Int,
+    finish::Int,
+    model::ABM{<:OpenStreetMapSpace};
+    by = :shortest,
+    kwargs...,
+)
+    @assert by ∈ (:shortest, :fastest) "Can only plan route by :shortest or :fastest"
+    planner = by == :shortest ? shortest_route : fastest_route
     route =
-        shortest_route(model.space.m, model.space.m.n[start], model.space.m.n[finish])[1]
+        planner(model.space.m, model.space.m.n[start], model.space.m.n[finish]; kwargs...)[1]
     map(p -> getindex(model.space.m.v, p), route)
+end
+
+osm_plan_route(
+    start::Int,
+    finish::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace};
+    kwargs...,
+) = osm_plan_route(start, finish[1], model; kwargs...)
+
+function osm_plan_route(
+    start::Tuple{Int,Int,Float64},
+    finish::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace};
+    kwargs...,
+)
+    path = osm_plan_route(start[2], finish[1], model; kwargs...)
+    ## Since we start on an edge, there are two possibilities here.
+    ## 1. The route wants us to turn around, thus next id en-route will
+    ## be pos[1]. That's fine.
+    ## 2. The route wants us to move on, but start will be in the list,
+    ## so we need to drop that.
+    path[1] == start[2] && popfirst!(path)
+    return path
+end
+
+function osm_plan_route(
+    start::Tuple{Int,Int,Float64},
+    finish::Int,
+    model::ABM{<:OpenStreetMapSpace};
+    kwargs...,
+)
+    path = osm_plan_route(start[2], finish, model; kwargs...)
+    path[1] == start[2] && popfirst!(path)
+    return path
 end
 
 """
@@ -78,15 +125,15 @@ Return a set of coordinates for an agent on the underlying map. Useful for plott
 """
 function osm_map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
-        start = get_ENU(agent.pos[1], model)
-        finish = get_ENU(agent.pos[2], model)
+        start = get_EastNorthUp_coordinate(agent.pos[1], model)
+        finish = get_EastNorthUp_coordinate(agent.pos[2], model)
         travelled = agent.pos[3] / Agents.osm_road_length(agent.pos, model)
         (
             getX(start) * (1 - travelled) + getX(finish) * travelled,
             getY(start) * (1 - travelled) + getY(finish) * travelled,
         )
     else
-        position = get_ENU(agent.pos[1], model)
+        position = get_EastNorthUp_coordinate(agent.pos[1], model)
         (getX(position), getY(position))
     end
 end
@@ -104,7 +151,12 @@ osm_road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
 
 #HELPERS, NOT EXPORTED
 
-get_ENU(pos::Int, model) = model.space.m.nodes[model.space.m.n[pos]]
+"""
+    get_EastNorthUp_coordinate(pos::Int, model)
+
+Returns an East-North-Up coordinate value for index `pos`.
+"""
+get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.n[pos]]
 
 #######################################################################################
 # Agents.jl space API
@@ -133,7 +185,11 @@ function remove_agent_from_space!(
     return agent
 end
 
-function move_agent!(agent::A, pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace,A}) where {A}
+function move_agent!(
+    agent::A,
+    pos::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace,A},
+) where {A}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)

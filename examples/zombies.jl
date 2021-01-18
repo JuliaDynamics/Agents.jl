@@ -28,14 +28,7 @@ function initialise(; map_path = TEST_MAP)
         start = osm_random_direction(model) # Somewhere on a road
         finish = random_position(model) # At an intersection
 
-        ## We already have our start and finish edges, so we identify the in-between
-        path = osm_plan_route(start[2], finish[1], model)
-        ## Since we start on an edge, there are two possibilities here.
-        ## 1. The route wants us to turn around, thus next id en-route will
-        ## be pos[1]. That's fine.
-        ## 2. The route wants us to move on, but start will be in the list,
-        ## so we need to drop that.
-        path[1] == start[2] && popfirst!(path)
+        path = osm_plan_route(start, finish, model)
 
         add_agent!(start, model, path, false)
     end
