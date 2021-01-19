@@ -9,10 +9,19 @@ import Agents.OpenStreetMapX
     Random.seed!(689)
     model = ABM(Agent10, space)
 
-    start = OpenStreetMapX.generate_point_in_bounds(model.space.m)
-    @test start == (39.534773980413505, -119.78937575923226)
-    idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(start, model.space.m))
-    @test idx == 434
+    start_latlon = OpenStreetMapX.generate_point_in_bounds(model.space.m)
+    @test start_latlon == (39.534773980413505, -119.78937575923226)
+    finish_latlon = OpenStreetMapX.generate_point_in_bounds(model.space.m)
+    @test finish_latlon == (39.52530416953533, -119.76949287425508)
+    # None of this is reproducable
+    start_idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(start_latlon, model.space.m))
+    finish_idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(finish_latlon, model.space.m))
+    start = (start_idx, start_idx, 0.0)
+    finish = (finish_idx, finish_idx, 0.0)
+    route = osm_plan_route(start, finish, model)
+    @test route == [1030, 1031, 1396, 1397, 1633, 296, 297, 1700, 1450, 865, 1279, 1752, 524, 330, 493, 494, 1312, 1313, 1218, 1219, 27]
+    # But I hope this is.
+    @test length(route) == 21
 
     @test osm_random_road_position(model) != osm_random_road_position(model)
     intersection = random_position(model)
