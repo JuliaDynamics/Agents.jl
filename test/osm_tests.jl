@@ -1,3 +1,4 @@
+import Agents.OpenStreetMapX
 @testset "OpenStreetMap space" begin
     space = OpenStreetMapSpace(TEST_MAP)
     @test length(space.edges) == 3983
@@ -5,7 +6,13 @@
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 1456 roadways and 1799 intersections"
 
+    Random.seed!(689)
     model = ABM(Agent10, space)
+
+    start = OpenStreetMapX.generate_point_in_bounds(model.space.m)
+    @test start == (39.534773980413505, -119.78937575923226)
+    idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(start, model.space.m))
+    @test idx == 434
 
     @test osm_random_road_position(model) != osm_random_road_position(model)
     intersection = random_position(model)
@@ -62,7 +69,6 @@
     #@test sort!(nearby_ids(model[5], model, 500)) == [3, 4, 6, 7] # Currently failing...
 end
 
-import Agents.OpenStreetMapX
 @testset "OSMX" begin
     start = 1315
     finish = 1374
