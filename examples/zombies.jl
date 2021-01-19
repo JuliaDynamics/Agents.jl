@@ -31,8 +31,11 @@ function initialise(; map_path = TEST_MAP)
         add_agent!(start, model, route, finish, false)
     end
 
-    patient_zero = random_agent(model)
-    patient_zero.infected = true
+    ## We'll add patient zero at a specific (latitude, longitude)
+    start = osm_road((39.534773980413505, -119.78937575923226), model)
+    finish = osm_intersection((39.52530416953533, -119.76949287425508), model)
+    route = osm_plan_route(start, finish, model)
+    add_agent!(start, model, route, finish, true)
     return model
 end
 
@@ -92,7 +95,7 @@ end
 
 # Let's see how this plays out!
 
-Random.seed!(72) # hide
+Random.seed!(105) # hide
 model = initialise()
 
 frames = @animate for i in 0:200

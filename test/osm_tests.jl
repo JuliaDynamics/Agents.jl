@@ -1,4 +1,3 @@
-import Agents.OpenStreetMapX
 @testset "OpenStreetMap space" begin
     space = OpenStreetMapSpace(TEST_MAP)
     @test length(space.edges) == 3983
@@ -9,94 +8,60 @@ import Agents.OpenStreetMapX
     Random.seed!(689)
     model = ABM(Agent10, space)
 
-    start_latlon = OpenStreetMapX.generate_point_in_bounds(model.space.m)
-    @test start_latlon == (39.534773980413505, -119.78937575923226)
-    finish_latlon = OpenStreetMapX.generate_point_in_bounds(model.space.m)
-    @test finish_latlon == (39.52530416953533, -119.76949287425508)
-    # None of this is reproducable
-    start_idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(start_latlon, model.space.m))
-    finish_idx = getindex(model.space.m.v, OpenStreetMapX.point_to_nodes(finish_latlon, model.space.m))
-    start = (start_idx, start_idx, 0.0)
-    finish = (finish_idx, finish_idx, 0.0)
-    route = osm_plan_route(start, finish, model)
-    @test route == [1030, 1031, 1396, 1397, 1633, 296, 297, 1700, 1450, 865, 1279, 1752, 524, 330, 493, 494, 1312, 1313, 1218, 1219, 27]
-    # But I hope this is.
-    @test length(route) == 21
-
     @test osm_random_road_position(model) != osm_random_road_position(model)
     intersection = random_position(model)
     @test intersection[1] == intersection[2]
     @test intersection[3] == 0.0
+    ll = osm_latlon(intersection, model)
+    @test intersection == osm_intersection(ll, model)
 
-    start = (1314, 1315, 102.01607779515982)
-    finish = (1374, 1374, 0.0)
+    start_latlon = (39.534773980413505, -119.78937575923226)
+    start_i = osm_intersection(start_latlon, model)
+    i_diff = sum(abs.(osm_latlon(start_i, model) .- start_latlon))
+    start_r = osm_road(start_latlon, model)
+    r_diff = sum(abs.(osm_latlon(start_r, model) .- start_latlon))
+    @test i_diff > r_diff
 
-    route = osm_plan_route(start, finish, model)
-    add_agent!(start, model, route, finish)
-    @test model[1].route == [1314, 176, 1089]
+    finish_latlon = (39.52530416953533, -119.76949287425508)
+    finish_i = osm_intersection(finish_latlon, model)
+    finish_r = osm_road(finish_latlon, model)
 
-    osm_random_route!(model[1], model)
-    @test model[1].destination != finish
+    route = osm_plan_route(start_r, finish_r, model)
+    @test length(route) == 20
+    add_agent!(start_r, model, route, finish_r)
+    add_agent!(finish_i, model, [], finish_i)
+
+    @test osm_road_length(model[1].pos, model) ≈ 106.49016546202557
+    @test osm_road_length(finish_r[1], finish_r[2], model) ≈ 395.8120895006937
+
+    @test length(osm_plan_route(start_r[2], finish_r[1], model)) == 22
+    @test length(osm_plan_route(start_r, finish_r[1], model)) == 21
+    @test length(osm_plan_route(start_r[2], finish_r, model)) == 21
+    @test osm_plan_route(start_r, finish_r[1], model) !=
+          osm_plan_route(start_r[2], finish_r, model)
+    @test length(osm_plan_route(start_r, finish_r, model)) == 20
+
+    @test osm_map_coordinates(model[1], model) == (-2904.337825035879, 1444.5549163962387)
+    @test osm_map_coordinates(model[2], model) == (-1475.8022717621393, 461.34058791100955)
 
     @test !osm_is_stationary(model[1])
-    add_agent!(finish, model, [], finish)
+    move_agent!(model[1], model, 403.2)
+    @test length(model[1].route) == 16
     @test osm_is_stationary(model[2])
     @test move_agent!(model[2], model, 50) == nothing
 
-    @test model.space.edges[20] == CartesianIndex(7, 8)
-    @test osm_road_length(model.space.edges[20].I..., model) ≈ 72.39903731753334
-    @test osm_road_length(model[1].pos, model) ≈ 186.0177111664528
+    add_agent!(start_r, model, route, finish_r)
+    osm_random_route!(model[3], model)
+    @test model[3].destination != finish_r
 
-    @test osm_plan_route(87, 396, model) == [87, 150, 1348, 270, 271, 1210, 1254, 396]
-    @test osm_plan_route((1303, 87, 5.3), 396, model) ==
-          [150, 1348, 270, 271, 1210, 1254, 396]
-    @test osm_plan_route(87, (396, 395, 57.8), model) ==
-          [87, 150, 1348, 270, 271, 1210, 1254]
-    @test osm_plan_route((1303, 87, 5.3), (396, 395, 57.8), model) ==
-          [150, 1348, 270, 271, 1210, 1254]
+    # TODO: nearby_ids
+    #  for i in 1:5
+    #      s = (start[1:2]..., start[3] - i)
+    #      route = osm_plan_route(s, finish, model)
+    #      add_agent!(s, model, route, finish)
+    #  end
 
-    @test osm_map_coordinates(model[1], model) == (-3879.1636699579667, -986.5761399749067)
-    @test osm_map_coordinates(model[2], model) == (-4091.47751959424, -775.3195065318789)
-
-    model = ABM(Agent10, OpenStreetMapSpace(TEST_MAP))
-    start = (1314, 1315, 102.01607779515982)
-    finish = (1374, 1374, 0.0)
-
-    route = osm_plan_route(start, finish, model)
-    add_agent!(start, model, route, finish)
-    @test model[1].pos[1] == 1314
-    move_agent!(model[1], model, 403.2)
-    @test model[1].pos[1] == 176
-
-    for i in 1:5
-        s = (start[1:2]..., start[3] - i)
-        route = osm_plan_route(s, finish, model)
-        add_agent!(s, model, route, finish)
-    end
-
-    @test sort!(nearby_ids(model[5], model, 3)) == [2, 3, 4, 6]
+    #  @test sort!(nearby_ids(model[5], model, 3)) == [2, 3, 4, 6]
     #@test sort!(nearby_ids(model[5], model, 500)) == [3, 4, 6, 7] # Currently failing...
 end
 
-@testset "OSMX" begin
-    start = 1315
-    finish = 1374
-
-    start_idx = 3625688657
-    finish_idx = 2985292255
-
-    map_one = OpenStreetMapX.get_map_data(TEST_MAP, use_cache = false)
-    map_two = OpenStreetMapX.get_map_data(TEST_MAP, use_cache = false)
-
-    @test start_idx == map_one.n[start]
-    @test start_idx == map_two.n[start]
-    @test finish_idx == map_one.n[finish]
-    @test finish_idx == map_two.n[finish]
-
-    route_one =
-        OpenStreetMapX.shortest_route(map_one, map_one.n[start], map_one.n[finish])[1]
-    route_two =
-        OpenStreetMapX.shortest_route(map_two, map_two.n[start], map_two.n[finish])[1]
-    @test route_one == route_two
-    @test map(p -> getindex(map_one.v, p), route_one) == map(p -> getindex(map_two.v, p), route_two)
-end

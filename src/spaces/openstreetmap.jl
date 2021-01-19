@@ -4,7 +4,10 @@ export osm_random_road_position,
     osm_map_coordinates,
     osm_road_length,
     osm_is_stationary,
-    osm_random_route!
+    osm_random_route!,
+    osm_latlon,
+    osm_intersection,
+    osm_road
 
 struct OpenStreetMapSpace <: DiscreteSpace
     m::OpenStreetMapX.MapData
@@ -204,6 +207,98 @@ function plan_return_route(
 end
 
 """
+    osm_latlon(pos, model)
+    osm_latlon(agent, model)
+
+Return (latitude, longitude) of current road or intersection position.
+"""
+osm_latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = latlon(model.space.m, pos)
+
+function osm_latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    if pos[1] != pos[2]
+        start = get_EastNorthUp_coordinate(pos[1], model)
+        finish = get_EastNorthUp_coordinate(pos[2], model)
+        travelled = pos[3] / osm_road_length(pos, model)
+        enu_coord = ENU(
+            getX(start) * (1 - travelled) + getX(finish) * travelled,
+            getY(start) * (1 - travelled) + getY(finish) * travelled,
+            getZ(start) * (1 - travelled) + getZ(finish) * travelled,
+        )
+        lla = LLA(enu_coord, model.space.m.bounds)
+        return (lla.lat, lla.lon)
+    else
+        return latlon(model.space.m, pos[1])
+    end
+end
+
+osm_latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+    osm_latlon(agent.pos, model)
+
+"""
+    osm_intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Returns the nearest intersection position to (latitude, longitude).
+Quicker, but less precise than [`osm_road`](@ref).
+"""
+function osm_intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    idx = getindex(model.space.m.v, point_to_nodes(ll, model.space.m))
+    return (idx, idx, 0.0)
+end
+
+"""
+    osm_road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Returns a location on a road nearest to (latitude, longitude).
+Slower, but more precise than [`osm_intersection`](@ref).
+"""
+function osm_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    ll_enu = ENU(LLA(ll...), model.space.m.bounds)
+    P = (ll_enu.east, ll_enu.north, ll_enu.up)
+
+    # This is one index, close to the position.
+    idx = getindex(model.space.m.v, point_to_nodes(ll, model.space.m))
+    idx_enu = get_EastNorthUp_coordinate(idx, model)
+
+    candidates = Tuple{Tuple{Int,Int,Float64},Float64}[]
+    # This separation is only useful for one-way street situations.
+    # In case of two way streets, either side may be returned with
+    # little penalty.
+    if abs(ll_enu.east - idx_enu.east) > abs(ll_enu.north - idx_enu.north)
+        # idx is the first position
+        nps = nearby_positions(idx, model; neighbor_type = :out)
+        isempty(nps) && return (idx, idx, 0.0)
+        np_enus = map(np -> get_EastNorthUp_coordinate(np, model), nps)
+        A = (idx_enu.east, idx_enu.north, idx_enu.up)
+        for (np_enu, np) in zip(np_enus, nps)
+            B = (np_enu.east, np_enu.north, np_enu.up)
+            closest = orthognonal_projection(A, B, P)
+            candidate = (idx, np, distance(np_enu, ENU(closest...)))
+            push!(candidates, (candidate, sum(abs.(osm_latlon(candidate, model) .- ll))))
+        end
+    else
+        # idx is the second position
+        nps = nearby_positions(idx, model; neighbor_type = :in)
+        isempty(nps) && return (idx, idx, 0.0)
+        np_enus = map(np -> get_EastNorthUp_coordinate(np, model), nps)
+        B = (idx_enu.east, idx_enu.north, idx_enu.up)
+        for (np_enu, np) in zip(np_enus, nps)
+            A = (np_enu.east, np_enu.north, np_enu.up)
+            closest = orthognonal_projection(A, B, P)
+            candidate = (np, idx, distance(np_enu, ENU(closest...)))
+            push!(candidates, (candidate, sum(abs.(osm_latlon(candidate, model) .- ll))))
+        end
+    end
+    bestidx = findmin(last.(candidates))[2]
+    return first(candidates[bestidx])
+end
+
+function orthognonal_projection(A, B, P)
+    M = B .- A
+    t0 = dot(M, P .- A) / dot(M, M)
+    return A .+ t0 .* M
+end
+
+"""
     osm_map_coordinates(agent, model::ABM{OpenStreetMapSpace})
 
 Return a set of coordinates for an agent on the underlying map. Useful for plotting.
@@ -212,7 +307,7 @@ function osm_map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
         start = get_EastNorthUp_coordinate(agent.pos[1], model)
         finish = get_EastNorthUp_coordinate(agent.pos[2], model)
-        travelled = agent.pos[3] / Agents.osm_road_length(agent.pos, model)
+        travelled = agent.pos[3] / osm_road_length(agent.pos, model)
         (
             getX(start) * (1 - travelled) + getX(finish) * travelled,
             getY(start) * (1 - travelled) + getY(finish) * travelled,
