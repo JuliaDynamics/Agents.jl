@@ -206,7 +206,7 @@ using InteractiveChaos
 import CairoMakie # choosing a plotting backend
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
-abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 
 # ## Animating the evolution
 
@@ -227,6 +227,37 @@ abm_video(
 # <source src="schelling.mp4" type="video/mp4">
 # </video>
 # ```
+
+# ## Launching the interactive application
+# Given the definitions we have already created for a normally plotting or animating the ABM
+# it is almost trivial to launch an interactive application for it, through the function
+# [`abm_data_exploration`](@ref).
+
+# We define a dictionary that maps some model-level parameters to a range of potential
+# values, so that we can interactively change them.
+parange = Dict(:min_to_be_happy => 0:8)
+
+# We also define the data we want to collect and interactively explore, and also
+# some labels for them, for shorter names (since the defaults can get large)
+adata = [(:mood, sum), (x, mean)]
+alabels = ["happy", "avg. x"]
+
+model = initialize(; numagents = 300) # fresh model, noone happy
+
+# ```julia
+# figure, adf, mdf = abm_data_exploration(
+#     model, agent_step!, dummystep, parange;
+#     ac = groupcolor, am = groupmarker, as = 10,
+#     adata, alabels
+# )
+# ```
+#
+# ```@raw html
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
+
 
 # ## Replicates and parallel computing
 
@@ -312,43 +343,3 @@ select!(data_mean, Not(:replicate_mean))
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
-
-# ## Launching the interactive application
-# Given the definitions we have already created for a normal study of the Schelling model,
-# it is almost trivial to launch an interactive application for it.
-# First, we load `InteractiveChaos` to access `interactive_abm`
-# %% #src
-# ```julia
-# using InteractiveChaos
-# using GLMakie # we choose OpenGL as plotting backend
-# ```
-
-# Then, we define a dictionary that maps some model-level parameters to a range of potential
-# values, so that we can interactively change them.
-parange = Dict(:min_to_be_happy => 0:8)
-
-# Due to the different plotting backend (Plots.jl vs Makie.jl) we redefine some of the
-# plotting functions (in the near future this won't be necessary, as everything will be Makie.jl based)
-
-groupcolor(a) = a.group == 1 ? :blue : :orange
-groupmarker(a) = a.group == 1 ? :circle : :rect
-
-# We define the `alabels` so that we can simple see the plotted timeseries with a
-# shorter name (since the defaults can get large)
-adata = [(:mood, sum), (x, mean)]
-alabels = ["happy", "avg. x"]
-
-model = initialize(; numagents = 300) # fresh model, noone happy
-
-# ```julia
-# scene, adf, modeldf =
-# interactive_abm(model, agent_step!, dummystep, parange;
-#                 ac = groupcolor, am = groupmarker, as = 1,
-#                 adata = adata, alabels = alabels)
-# ```
-#
-# ```@raw html
-# <video width="100%" height="auto" controls autoplay loop>
-# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
-# </video>
-# ```
