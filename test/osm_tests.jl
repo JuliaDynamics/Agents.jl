@@ -13,7 +13,8 @@
     finish = random_position(model)
     @test finish == (732, 732, 0.0)
 
-    add_agent!(start, finish, model)
+    route = osm_plan_route(start, finish, model)
+    add_agent!(start, model, route, finish)
     @test model[1].route ==
           [1037, 183, 951, 31, 30, 169, 1290, 1392, 562, 502, 373, 880, 839, 838, 1161, 731]
 
@@ -46,7 +47,8 @@
     for _ in 3:100
         start = osm_random_road_position(model)
         finish = osm_random_road_position(model)
-        add_agent!(start, finish, model)
+        route = osm_plan_route(start, finish, model)
+        add_agent!(start, model, route, finish)
     end
 
     @test nearby_ids(model[5], model, 50) == [33]
