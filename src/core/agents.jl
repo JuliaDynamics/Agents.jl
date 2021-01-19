@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent
+export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent, OSMAgent
 
 """
     AbstractAgent
@@ -103,7 +103,7 @@ end
 
 """
     OSMAgent
-Combine with [`@agent`](@ref) to create an agent type [`OSMSpace`](@ref).
+Combine with [`@agent`](@ref) to create an agent type for [`OpenStreetMapSpace`](@ref).
 It attributes the fields
 `id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}, destination::Tuple{Int,Int,Float64}`
 to the start of the agent type.

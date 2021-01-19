@@ -16,15 +16,47 @@ end
     OpenStreetMapSpace(path::AbstractString; kwargs...)
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
 
-The abbreviation `OSMSpace` may be used interchangably.
+The abbreviation `OSMSpace` may be used interchangeably.
 
 Much of the functionality of this space is provided by interfacing with
 [OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
-keyword arguments `use_cache = false` and `trim_to_connected_graph = true` are
+keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
 passed into the [`OpenStreetMapX.get_map_data`](@ref) function.
 
 For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-Readme. We provide a variable `TEST_MAP` to use as a `path` for testing.
+README. We provide a variable `TEST_MAP` to use as a `path` for testing.
+
+This space represents the underlying map as a *continuous* entity choosing accuracy over
+performance. If your solution can tolerate routes to and from intersections only, a
+faster implementation can be achieved by using the
+[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
+of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
+integration example: [Social networks with LightGraphs.jl](@ref).
+
+## The OSMAgent
+
+The base properties for an agent residing on an `OSMSpace` are as follows:
+```julia
+mutable struct OSMAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
+end
+```
+
+Current `pos`ition and `destination` tuples are represented as
+`(start intersection index, finish intersection index, distance travelled in meters)`.
+The `route` is an ordered list of intersections, providing a path to reach `destination`.
+
+Further details can be found in [`OSMAgent`](@ref).
+
+## Routing
+
+There are three ways to generate a route, depending on the situation.
+1. Using [`add_agent!`](@ref)`(start, finish, model)`, which will calculate a route automatically for a new agent.
+2. [`osm_plan_route`](@ref), which provides `:shortest` and `:fastest` paths (with the option of a `return_trip`) between intersections or positions.
+3. [`osm_random_route!`](@ref), choses a new `destination` an plans a new path to it; overriding the current route (if any).
 """
 function OpenStreetMapSpace(
     path::AbstractString;
@@ -172,7 +204,7 @@ end
 """
     osm_map_coordinates(agent, model::ABM{OpenStreetMapSpace})
 
-Return a set of coordinates for an agent on the underlying map. Useful for printlnting.
+Return a set of coordinates for an agent on the underlying map. Useful for plotting.
 """
 function osm_map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
