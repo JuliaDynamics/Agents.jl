@@ -495,15 +495,14 @@ function nearby_ids(
     nearby = Int[]
 
     close = ids_on_road(pos[1], pos[2], model)
+    pos_search = pos[3] + distance
     if distance > current_road - pos[3]
         # Local search distance
-        pos_search = current_road - pos[3]
+        pos_search = current_road
 
         # Check outgoing
-        search_distance = distance - pos_search
+        search_distance = distance - (current_road - pos[3])
         search_outward_ids!(nearby, search_distance, pos[1], pos[2], model)
-    else
-        pos_search = pos[3] + distance
     end
     # Check anyone close in the forward direction
     if !isempty(close)
@@ -513,15 +512,14 @@ function nearby_ids(
             end
         end
     end
-    if pos[3] - distance < 0
+    rev_search = pos[3] - distance
+    if rev_search < 0
         # Local search distance
-        rev_search = pos[3]
+        rev_search = 0.0
 
         # Check incoming
         search_distance = distance - pos[3]
         search_inward_ids!(nearby, search_distance, pos[1], pos[2], model)
-    else
-        rev_search = pos[3] - distance
     end
     # Check anyone close in the reverse direction
     if !isempty(close)
@@ -571,7 +569,7 @@ function search_outward_ids!(
     model,
 )
     # find all intersections the current end position connects to
-    outgoing = filter(i -> i != pos1, nearby_positions(pos2, model))
+    outgoing = filter(i -> i != pos1, nearby_positions(pos2, model; neighbor_type = :out))
     # Distances for each road
     outdist = [osm_road_length(pos2, o, model) for o in outgoing]
     # Identify roads that are shorter than the search distance

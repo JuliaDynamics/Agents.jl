@@ -54,14 +54,13 @@
     osm_random_route!(model[3], model)
     @test model[3].destination != finish_r
 
-    # TODO: nearby_ids
-    #  for i in 1:5
-    #      s = (start[1:2]..., start[3] - i)
-    #      route = osm_plan_route(s, finish, model)
-    #      add_agent!(s, model, route, finish)
-    #  end
+    for i in 1:5
+        s = (start_r[1:2]..., start_r[3] - i)
+        route = osm_plan_route(s, finish_r, model)
+        add_agent!(s, model, route, finish_r)
+    end
 
-    #  @test sort!(nearby_ids(model[5], model, 3)) == [2, 3, 4, 6]
-    #@test sort!(nearby_ids(model[5], model, 500)) == [3, 4, 6, 7] # Currently failing...
+    @test sort!(nearby_ids(model[6], model, 2)) == [4, 5, 7, 8]
+    @test sort!(nearby_ids(model[6], model, 500)) == [1, 3, 4, 5, 7, 8]
 end
 
