@@ -436,7 +436,7 @@ function nearby_ids(
             end
         end
     end
-    nearby
+    return unique!(nearby)
 end
 
 function ids_on_road(
