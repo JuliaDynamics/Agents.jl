@@ -25,7 +25,7 @@ AgentBasedModel
 Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
-Spaces are separated into `DisreteSpace`s (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
+Spaces are separated into disrete spaces (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
 Thus, it is common for a specific position to contain several agents.
 
 ### Discrete spaces
