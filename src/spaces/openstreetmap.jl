@@ -24,7 +24,7 @@ The abbreviation `OSMSpace` may be used interchangeably.
 Much of the functionality of this space is provided by interfacing with
 [OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
 keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
-passed into the [`OpenStreetMapX.get_map_data`](@ref) function.
+passed into the `OpenStreetMapX.get_map_data` function.
 
 For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
 README. We provide a variable `TEST_MAP` to use as a `path` for testing.
