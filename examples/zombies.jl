@@ -27,8 +27,8 @@ function initialise(; map_path = TEST_MAP)
     for _ in 1:100
         start = random_position(model) # At an intersection
         finish = osm_random_road_position(model) # Somewhere on a road
-
-        add_agent!(start, finish, model, false)
+        route = osm_plan_route(start, finish, model)
+        add_agent!(start, model, route, finish, false)
     end
 
     patient_zero = random_agent(model)
@@ -36,7 +36,7 @@ function initialise(; map_path = TEST_MAP)
     return model
 end
 
-# In our model, agents are seemingly oblivious to the problem, they keep going about their
+# In our model, zombies are seemingly oblivious to their state, since they keep going about their
 # business, but start eating people along the way. Perhaps they can finally express their distaste
 # for city commuting.
 

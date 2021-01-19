@@ -27,7 +27,9 @@ For details on how to obtain an OSM file for your use case, consult the OpenStre
 README. We provide a variable `TEST_MAP` to use as a `path` for testing.
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. If your solution can tolerate routes to and from intersections only, a
+performance. An example of its usage can be found in [Zombie Outbreak](@ref).
+
+If your solution can tolerate routes to and from intersections only, a
 faster implementation can be achieved by using the
 [graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
 of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
@@ -53,10 +55,9 @@ Further details can be found in [`OSMAgent`](@ref).
 
 ## Routing
 
-There are three ways to generate a route, depending on the situation.
-1. Using [`add_agent!`](@ref)`(start, finish, model)`, which will calculate a route automatically for a new agent.
-2. [`osm_plan_route`](@ref), which provides `:shortest` and `:fastest` paths (with the option of a `return_trip`) between intersections or positions.
-3. [`osm_random_route!`](@ref), choses a new `destination` an plans a new path to it; overriding the current route (if any).
+There are two ways to generate a route, depending on the situation.
+1. [`osm_plan_route`](@ref), which provides `:shortest` and `:fastest` paths (with the option of a `return_trip`) between intersections or positions.
+2. [`osm_random_route!`](@ref), choses a new `destination` an plans a new path to it; overriding the current route (if any).
 """
 function OpenStreetMapSpace(
     path::AbstractString;
@@ -109,7 +110,8 @@ function osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    osm_plan_route(start, finish, model::ABM{<:OpenStreetMapSpace}; by = :shortest, return_trip = false, kwargs...)
+    osm_plan_route(start, finish, model::ABM{<:OpenStreetMapSpace};
+                   by = :shortest, return_trip = false, kwargs...)
 
 Generate a list of intersections between `start` and `finish` points on the map.
 `start` and `finish` can either be intersections (`Int`) or positions
@@ -285,27 +287,6 @@ function move_agent!(
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
-end
-
-"""
-    add_agent!(start::Tuple{Int,Int,Float64}, finish::Tuple{Int,Int,Float64}, model::ABM{<:OSMSpace}, args...; kwargs...)
-
-Add an agent to an [`OpenStreetMapSpace`](@ref) model without needing to provide a
-pre-calculated route. A `:shortest` path route will be initialised.
-
-Accepts the `return_trip` keyword to be given to [`osm_plan_route`](@ref).
-"""
-function add_agent!(
-    start::Tuple{Int,Int,Float64},
-    finish::Tuple{Int,Int,Float64},
-    model::ABM{<:OSMSpace},
-    args...;
-    return_trip = false,
-    kwargs...,
-)
-    path = osm_plan_route(start, finish, model; return_trip = return_trip)
-    destination = return_trip ? start : finish
-    add_agent!(start, model, path, destination, args...; kwargs...)
 end
 
 """
