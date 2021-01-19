@@ -5,9 +5,9 @@
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 1456 roadways and 1799 intersections"
 
+    Random.seed!(648)
     model = ABM(Agent10, space)
 
-    Random.seed!(648)
     start = osm_random_road_position(model)
     @test start == (160, 425, 16.39512622825462)
     finish = random_position(model)
