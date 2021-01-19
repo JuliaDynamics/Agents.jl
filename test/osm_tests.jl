@@ -8,10 +8,13 @@
     Random.seed!(678)
     model = ABM(Agent10, space)
 
-    start = osm_random_road_position(model)
-    @test start == (1314, 1315, 102.01607779515982)
-    finish = random_position(model)
-    @test finish == (1374, 1374, 0.0)
+    @test osm_random_road_position(model) != osm_random_road_position(model)
+    intersection = random_position(model)
+    @test intersection[1] == intersection[2]
+    @test intersection[3] == 0.0
+
+    start = (1314, 1315, 102.01607779515982)
+    finish = (1374, 1374, 0.0)
 
     route = osm_plan_route(start, finish, model)
     add_agent!(start, model, route, finish)
@@ -19,7 +22,7 @@
             [1314, 176, 1089]
 
     osm_random_route!(model[1], model)
-    @test model[1].destination == (1421, 399, 44.14795349153319)
+    @test model[1].destination != finish
 
     @test !osm_is_stationary(model[1])
     add_agent!(finish, model, [], finish)
@@ -41,14 +44,13 @@
     @test model[1].pos[1] == 625
     @test move_agent!(model[2], model, 50) == nothing
 
-    for _ in 3:100
-        start = osm_random_road_position(model)
-        finish = osm_random_road_position(model)
-        route = osm_plan_route(start, finish, model)
-        add_agent!(start, model, route, finish)
+    for i in 1:5
+        s = (start[1:2]..., start[3] - i)
+        route = osm_plan_route(s, finish, model)
+        add_agent!(s, model, route, finish)
     end
 
-    @test sort!(nearby_ids(model[81], model, 400)) == [33, 65]
-    @test sort!(nearby_ids(model[81], model, 600)) == [15, 33, 54, 65, 75, 98]
+    @test sort!(nearby_ids(model[5], model, 3)) == [3, 4, 6, 7]
+    @test sort!(nearby_ids(model[5], model, 500)) == [3, 4, 6, 7] # Currently failing...
 end
 
