@@ -46,15 +46,14 @@ You can provide an agent _instance_ instead of type, and the type will be deduce
 The agents are stored in a dictionary that maps unique ids (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
-`space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
-[`ContinuousSpace`](@ref).
+`space` is an instance of the available [Spaces](@ref Space) of Agents.jl.
 If it is ommited then all agents are virtually in one position and have no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
 
 `properties = nothing` is additional model-level properties (typically a dictionary)
-that can be accessed as `model.properties`. However, if `properties` is a dictionary with
+that can be accessed as `model.properties`. If `properties` is a dictionary with
 key type `Symbol`, or of it is a struct, then the syntax
 `model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
 for structs).

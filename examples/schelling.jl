@@ -1,6 +1,10 @@
 # # Schelling's segregation model
 
-# ![](schelling.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="schelling.mp4" type="video/mp4">
+# </video>
+# ```
 
 # In this introductory example we demonstrate Agents.jl's architecture and
 # features through building
@@ -19,8 +23,7 @@
 
 # ## Defining the agent type
 
-using Agents, AgentsPlots
-gr() # hide
+using Agents
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
@@ -84,14 +87,15 @@ schelling2 = ABM(
 # We also change the scheduler to [`random_activation`](@ref).
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
-
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+using Random # for reproducibility
+function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
                 properties = properties, scheduler = random_activation)
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
+    Random.seed!(seed)
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
@@ -192,26 +196,37 @@ data
 
 # ## Visualizing the data
 
-# We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
+# We can use the [`abm_plot`](@ref) function to plot the distribution of agents on a
 # 2D grid at every generation, via the
-# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl) package.
+# [InteractiveChaos.jl](https://juliadynamics.github.io/InteractiveChaos.jl/dev/) package
+# and the [Makie.jl](http://makie.juliaplots.org/stable/) plotting ecosystem.
+
 # Let's color the two groups orange and blue and make one a square and the other a circle.
+using InteractiveChaos
+import CairoMakie # choosing a plotting backend
 groupcolor(a) = a.group == 1 ? :blue : :orange
-groupmarker(a) = a.group == 1 ? :circle : :square
-plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
+groupmarker(a) = a.group == 1 ? :circle : :rect
+abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 
 # ## Animating the evolution
 
-# The function [`plotabm`](@ref) can be used to make your own animations
+# The function [`abm_video`](@ref) can be used to save an animation of the ABM into a
+# video. You could of course also explicitly use `abm_plot` in a `record` loop for
+# finer control over additional plot elements.
 cd(@__DIR__) #src
 model = initialize();
-anim = @animate for i in 0:10
-    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
-    title!(p1, "step $(i)")
-    step!(model, agent_step!, 1)
-end
+abm_video(
+    "schelling.mp4", model, agent_step!;
+    ac = groupcolor, am = groupmarker, as = 10,
+    framerate = 4, frames = 20,
+    title = "Schelling's segregation model"
+)
 
-gif(anim, "schelling.gif", fps = 2)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="schelling.mp4" type="video/mp4">
+# </video>
+# ```
 
 # ## Replicates and parallel computing
 
