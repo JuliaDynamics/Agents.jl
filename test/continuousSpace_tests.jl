@@ -53,7 +53,7 @@
 
   # agents within some range are found correctly
   agent2 = model2[2]
-  new_pos = min.(agent2.pos .+ 0.005, model2.space.extent.-0.0001)
+  new_pos = min.(agent2.pos .+ 0.0051, model2.space.extent.-0.0001)
   agent3 = Agent6(3, new_pos, vel, dia)
   add_agent_pos!(agent3, model2)
   n_ids = collect(nearby_ids(agent2, model2, agent2.weight, exact=true))

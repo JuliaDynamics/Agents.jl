@@ -39,6 +39,8 @@ the origin position.
 `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
+
+An example using `GridSpace` is the [Forest fire model](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};

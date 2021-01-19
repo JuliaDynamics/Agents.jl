@@ -16,6 +16,8 @@ println("Literate...")
 import Literate
 println("InteractiveChaos...")
 import InteractiveChaos
+println("OpenStreetMapX...")
+import OpenStreetMapX
 
 println("Setting up Environment")
 # Initialise pyplot to squash build output bleeding into docs.
@@ -85,7 +87,8 @@ pages = [
         "Predator-Prey" => "examples/predator_prey.md",
         "Bacteria Growth" => "examples/growing_bacteria.md",
         "Opinion spread" => "examples/opinion_spread.md",
-        "Battle Royale" => "examples/battle.md"
+        "Battle Royale" => "examples/battle.md",
+        "Zombie Outbreak" => "examples/zombies.md"
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",

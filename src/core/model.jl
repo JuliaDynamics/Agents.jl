@@ -10,7 +10,7 @@ SpaceType=Union{Nothing, AbstractSpace}
 abstract type DiscreteSpace <: AbstractSpace end
 
 # This is a collection of valid position types, sometimes used for ambiguity resolution
-ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}} where {N, M}
+ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}, Tuple{Int, Int, Float64}} where {N, M}
 
 struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, F, P}
     agents::Dict{Int,A}

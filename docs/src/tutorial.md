@@ -37,6 +37,7 @@ GridSpace
 ### Continuous spaces
 ```@docs
 ContinuousSpace
+OpenStreetMapSpace
 ```
 
 ## 3. The agent
@@ -47,6 +48,7 @@ AbstractAgent
 GraphAgent
 GridAgent
 ContinuousAgent
+OSMAgent
 ```
 
 Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
