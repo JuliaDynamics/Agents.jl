@@ -13,6 +13,8 @@ println("InteractiveChaos...")
 using InteractiveChaos
 println("CairoMakie...")
 import CairoMakie
+println("OpenStreetMapX...")
+import OpenStreetMapX
 
 # %% Literate convertion
 println("Converting Examples")

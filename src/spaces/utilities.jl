@@ -56,6 +56,39 @@ function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) 
 end
 
 """
+    nv(model::ABM)
+Return the number of positions (vertices) in the `model` space.
+"""
+LightGraphs.nv(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.nv(abm.space)
+LightGraphs.nv(space::S) where {S<:GraphSpace} = LightGraphs.nv(space.graph)
+LightGraphs.nv(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.nv(space.m.g)
+
+"""
+    ne(model::ABM)
+Return the number of edges in the `model` space.
+"""
+LightGraphs.ne(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.ne(abm.space)
+LightGraphs.ne(space::S) where {S<:GraphSpace} = LightGraphs.ne(space.graph)
+LightGraphs.ne(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.ne(space.m.g)
+
+positions(model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = 1:nv(model)
+
+function nearby_positions(
+    position::Integer,
+    model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}},
+    radius::Integer;
+    kwargs...,
+)
+    output = copy(nearby_positions(position, model; kwargs...))
+    for _ in 2:radius
+        newnps = (nearby_positions(np, model; kwargs...) for np in output)
+        append!(output, reduce(vcat, newnps))
+        unique!(output)
+    end
+    filter!(i -> i != position, output)
+end
+
+"""
     walk!(agent, direction::NTuple, model; ifempty = false)
 
 Move agent in the given `direction` respecting periodic boundary conditions.

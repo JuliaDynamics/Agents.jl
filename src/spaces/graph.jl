@@ -17,6 +17,7 @@ The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](
 
 `GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
 amount of agents, and each agent can move between the nodes of the graph.
+An example of its usage can be found in [SIR model for the spread of COVID-19](@ref).
 If you want to model social networks, where each agent is equivalent with a node of
 a graph, you're better of using `nothing` (or other spaces) as the model space, and using
 a graph from LightGraphs.jl directly in the model parameters, as shown in the
@@ -26,19 +27,6 @@ function GraphSpace(graph::G) where {G<:AbstractGraph}
     agent_positions = [Int[] for i in 1:LightGraphs.nv(graph)]
     return GraphSpace{G}(graph, agent_positions)
 end
-
-"""
-    nv(model::ABM)
-Return the number of positions (vertices) in the `model` space.
-"""
-LightGraphs.nv(abm::ABM{<:GraphSpace}) = LightGraphs.nv(abm.space.graph)
-LightGraphs.nv(space::GraphSpace) = LightGraphs.nv(space.graph)
-
-"""
-    ne(model::ABM)
-Return the number of edges in the `model` space.
-"""
-LightGraphs.ne(abm::ABM{<:GraphSpace}) = LightGraphs.ne(abm.space.graph)
 
 function Base.show(io::IO, s::GraphSpace)
     print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
@@ -84,8 +72,6 @@ end
 ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
-positions(model::ABM{<:GraphSpace}) = 1:nv(model)
-
 #######################################################################################
 # Neighbors
 #######################################################################################
@@ -116,21 +102,6 @@ function nearby_positions(
         LightGraphs.all_neighbors
     end
     neighborfn(model.space.graph, position)
-end
-
-function nearby_positions(
-    position::Integer,
-    model::ABM{<:GraphSpace},
-    radius::Integer;
-    kwargs...,
-)
-    output = copy(nearby_positions(position, model; kwargs...))
-    for _ in 2:radius
-        newnps = (nearby_positions(np, model; kwargs...) for np in output)
-        append!(output, reduce(vcat, newnps))
-        unique!(output)
-    end
-    filter!(i -> i != position, output)
 end
 
 #######################################################################################

@@ -10,3 +10,4 @@ Manifest.toml
 !/benchmark/tune.json
 /.benchmarkci
 .*.tmp.nlogo
+*.osm.cache

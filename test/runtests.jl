@@ -65,6 +65,13 @@ mutable struct Agent9 <: AbstractAgent
     f1::Union{Int,Nothing}
 end
 
+mutable struct Agent10 <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
+end
+
 @testset "Agents.jl Tests" begin
 
     include("api_tests.jl")
@@ -73,6 +80,7 @@ end
     include("space_test.jl")
     include("collect_tests.jl")
     include("continuousSpace_tests.jl")
+    include("osm_tests.jl")
     include("collisions_tests.jl")
     include("graph_tests.jl")
 

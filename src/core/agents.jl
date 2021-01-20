@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent
+export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent, OSMAgent
 
 """
     AbstractAgent
@@ -80,7 +80,7 @@ end
 """
     GridAgent{D}
 Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`GraphSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D, Int}`
+[`GraphSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D,Int}`
 to the start of the agent type.
 """
 mutable struct GridAgent{D} <: AbstractAgent
@@ -92,11 +92,25 @@ end
     ContinuousAgent{D}
 Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
 [`ContinuousSpace`](@ref). It attributes the fields
-`id::Int, pos::NTuple{D, Float64}, vel::NTuple{D, Float64}`
+`id::Int, pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`
 to the start of the agent type.
 """
 mutable struct ContinuousAgent{D} <: AbstractAgent
     id::Int
     pos::NTuple{D,Float64}
     vel::NTuple{D,Float64}
+end
+
+"""
+    OSMAgent
+Combine with [`@agent`](@ref) to create an agent type for [`OpenStreetMapSpace`](@ref).
+It attributes the fields
+`id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}, destination::Tuple{Int,Int,Float64}`
+to the start of the agent type.
+"""
+mutable struct OSMAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
 end
