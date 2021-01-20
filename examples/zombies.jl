@@ -60,48 +60,14 @@ function agent_step!(agent, model)
     end
 end
 
-# ## Visualising the fall of humanity
-#
-# Plotting this space in a seemless manner is a work in progress. For now we
-# use [OpenStreetMapXPlot](https://github.com/pszufe/OpenStreetMapXPlot.jl) and
-# a custom routine.
-
-using OpenStreetMapXPlot
-using Plots
-gr()
-
-ac(agent) = agent.infected ? :green : :black
-as(agent) = agent.infected ? 6 : 5
-
-function plotagents(model)
-    ## Essentially a cut down version on plotabm
-    ids = model.scheduler(model)
-    colors = [ac(model[i]) for i in ids]
-    sizes = [as(model[i]) for i in ids]
-    markers = :circle
-    pos = [osm_map_coordinates(model[i], model) for i in ids]
-
-    scatter!(
-        pos;
-        markercolor = colors,
-        markersize = sizes,
-        markershapes = markers,
-        label = "",
-        markerstrokewidth = 0.5,
-        markerstrokecolor = :black,
-        markeralpha = 0.7,
-    )
+res = []
+for i in 1:100
+    Random.seed!(i) # hide 279, 31
+    model = initialise()
+    step!(model, agent_step!, 200)
+    num = count(a -> a.infected, allagents(model))
+    push!(res, (i, num))
 end
+bestidx = findmin(last.(res))[2]
+first(candidates[bestidx])
 
-# Let's see how this plays out!
-
-Random.seed!(105) # hide
-model = initialise()
-
-frames = @animate for i in 0:200
-    i > 0 && step!(model, agent_step!, 1)
-    plotmap(model.space.m)
-    plotagents(model)
-end
-
-gif(frames, "outbreak.gif", fps = 15)
