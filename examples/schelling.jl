@@ -23,6 +23,7 @@
 
 # ## Defining the agent type
 
+cd(@__DIR__) #src
 using Agents
 using StatsBase: mean
 
@@ -63,7 +64,6 @@ space = GridSpace((10, 10), periodic = false)
 properties = Dict(:min_to_be_happy => 3)
 schelling = ABM(SchellingAgent, space; properties)
 
-
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
 # property `:group`, so that all agents of group 1 act first.
@@ -88,6 +88,7 @@ schelling2 = ABM(
 # We also change the scheduler to [`random_activation`](@ref).
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
+
 using Random # for reproducibility
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpace(griddims, periodic = false)
@@ -205,6 +206,7 @@ data
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 using InteractiveChaos
 import CairoMakie # choosing a plotting backend
+
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
 figure = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
@@ -214,6 +216,11 @@ figure = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 # The function [`abm_video`](@ref) can be used to save an animation of the ABM into a
 # video. You could of course also explicitly use `abm_plot` in a `record` loop for
 # finer control over additional plot elements.
+
+pwd()
+
+# Debug
+
 model = initialize();
 abm_video(
     "schelling.mp4", model, agent_step!;
