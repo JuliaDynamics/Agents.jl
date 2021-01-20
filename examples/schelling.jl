@@ -24,6 +24,7 @@
 # ## Defining the agent type
 
 using Agents
+using StatsBase: mean
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int # The identifier number of the agent
@@ -213,7 +214,6 @@ figure = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 # The function [`abm_video`](@ref) can be used to save an animation of the ABM into a
 # video. You could of course also explicitly use `abm_plot` in a `record` loop for
 # finer control over additional plot elements.
-cd(@__DIR__) #src
 model = initialize();
 abm_video(
     "schelling.mp4", model, agent_step!;
@@ -221,7 +221,7 @@ abm_video(
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
 )
-
+nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="schelling.mp4" type="video/mp4">
