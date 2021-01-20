@@ -1,6 +1,10 @@
 # # Forest fire model
 
-# ![](forest.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../forest.mp4" type="video/mp4">
+# </video>
+# ```
 
 # The forest fire model is defined as a cellular automaton on a grid.
 # A position can be empty or occupied by a tree which is ok, burning or burnt.
@@ -18,8 +22,9 @@
 # ## Defining the core structures
 
 # We start by defining the agent type
-using Agents, Random, AgentsPlots
-gr() # hide
+using Agents, Random
+using InteractiveChaos
+import CairoMakie
 
 mutable struct Tree <: AbstractAgent
     id::Int
@@ -104,15 +109,19 @@ function treecolor(a)
     color
 end
 
-plotabm(forest; ac = treecolor, ms = 5, msw = 0)
+figure = abm_plot(forest; ac = treecolor, as = 8)
 
 # or animate it
-cd(@__DIR__) #src
 forest = forest_fire(density = 0.6)
-anim = @animate for i in 0:10
-    i > 0 && step!(forest, tree_step!, 5)
-    p1 = plotabm(forest; ac = treecolor, ms = 5, msw = 0)
-    title!(p1, "step $(i)")
-end
-
-gif(anim, "forest.gif", fps = 2)
+abm_video(
+    "forest.mp4", forest, tree_step!;
+    ac = treecolor, as = 8,
+    framerate = 2, frames = 10, spf = 5,
+    title = "Forest Fire"
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schelling.mp4" type="video/mp4">
+# </video>
+# ```

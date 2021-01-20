@@ -118,7 +118,7 @@ function bird_triangle(b::Bird)
     φ = atan(b.vel[2], b.vel[1])
     xs = [(i ∈ (0, 3) ? 2 : 1) * cos(i * 2π / 3 + φ) for i in 0:3]
     ys = [(i ∈ (0, 3) ? 2 : 1) * sin(i * 2π / 3 + φ) for i in 0:3]
-    Shape(xs, ys)
+    Point2f0.(xs,ys)
 end
 nothing # hide
 
@@ -131,7 +131,7 @@ abm_video(
     "flock.mp4",
     model,
     agent_step!;
-    am = :star4, #bird_triangle,
+    am = '▲', #bird_triangle,
     as = 20,
     framerate = 25,
     frames = 100,
