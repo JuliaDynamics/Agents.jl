@@ -68,6 +68,6 @@ for i in 1:100
     num = count(a -> a.infected, allagents(model))
     push!(res, (i, num))
 end
-bestidx = findmin(last.(res))[2]
-first(candidates[bestidx])
+bestidx = findmax(last.(res))[2]
+first(res[bestidx])
 
