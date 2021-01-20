@@ -101,7 +101,7 @@ agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabiliz
 # don't change from one step to the next. Note that the number of stable agents can
 # fluctuate before the final convergence.
 
-f = Figure(resolution = (800, 600))
+f = Figure(resolution = (600, 400))
 ax =
     f[1, 1] = Axis(
         f,
