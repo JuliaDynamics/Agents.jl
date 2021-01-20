@@ -95,7 +95,7 @@ end
 
 # Let's see how this plays out!
 
-Random.seed!(105) # hide
+Random.seed!(10) # hide
 model = initialise()
 
 frames = @animate for i in 0:200
