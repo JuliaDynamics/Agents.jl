@@ -15,7 +15,6 @@
 # They are more likely to adopt their neighbors opinion if the share more opinions with each other.
 
 using Agents
-using Random
 using InteractiveChaos # plotting agents
 using AbstractPlotting # plotting data
 import CairoMakie # for static plotting
@@ -111,6 +110,7 @@ ax =
         title = "Population Stability",
     )
 lines!(ax, 1:size(agentdata, 1), agentdata.count_stabilized, linewidth = 2, color = :blue)
+f
 
 # ### Animation
 
