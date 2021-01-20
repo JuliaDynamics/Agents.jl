@@ -2,7 +2,7 @@
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="schelling.mp4" type="video/mp4">
+# <source src="../schelling.mp4" type="video/mp4">
 # </video>
 # ```
 
@@ -23,7 +23,6 @@
 
 # ## Defining the agent type
 
-cd(@__DIR__) #src
 using Agents
 using StatsBase: mean
 
@@ -217,10 +216,6 @@ figure = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 # video. You could of course also explicitly use `abm_plot` in a `record` loop for
 # finer control over additional plot elements.
 
-pwd()
-
-# Debug
-
 model = initialize();
 abm_video(
     "schelling.mp4", model, agent_step!;
@@ -231,7 +226,7 @@ abm_video(
 nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="schelling.mp4" type="video/mp4">
+# <source src="../schelling.mp4" type="video/mp4">
 # </video>
 # ```
 
