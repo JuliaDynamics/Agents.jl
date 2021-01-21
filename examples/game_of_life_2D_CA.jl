@@ -1,6 +1,10 @@
 # # Conway's game of life
 
-# ![](game_of_life.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../game of life.mp4" type="video/mp4">
+# </video>
+# ```
 
 # [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
@@ -101,3 +105,8 @@ abm_video(
     am = am, framerate=5
 )
 nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../game of life.mp4" type="video/mp4">
+# </video>
+# ```

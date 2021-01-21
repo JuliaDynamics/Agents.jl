@@ -31,7 +31,6 @@
 
 using Agents
 using Random # hide
-# pyplot() # hide
 
 mutable struct Sheep <: AbstractAgent
     id::Int
@@ -204,8 +203,7 @@ nothing # hide
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
-using InteractiveChaos, GLMakie
-using Makie # hide
+using InteractiveChaos, CairoMakie, AbstractPlotting
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
@@ -233,7 +231,7 @@ figure = abm_plot(
     # showaxis = false,
     equalaspect = true
 )
-Makie.save("predator-prey.png", figure) # hide
+figure
 # Now, lets run the simulation and collect some data.
 
 sheep(a) = typeof(a) == Sheep
@@ -251,7 +249,7 @@ sheepl = lines!(ax, results.step, results.count_sheep, color=:blue)
 wolfl = lines!(ax, results.step, results.count_wolves, color=:orange)
 grassl = lines!(ax, results.step, results.count_grass, color=:green)
 figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
-Makie.save("predator-prey-plot1.png", figure) # hide
+figure
 
 # Altering the input conditions, we now see a landscape where all three agents find an
 # equilibrium.
@@ -272,4 +270,4 @@ sheepl = lines!(ax, results.step, results.count_sheep, color=:blue)
 wolfl = lines!(ax, results.step, results.count_wolves, color=:orange)
 grassl = lines!(ax, results.step, results.count_grass, color=:green)
 figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
-Makie.save("predator-prey-plot2.png", figure) # hide
+figure

@@ -1,5 +1,9 @@
 # # Daisyworld
-# ![](daisyworld.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../daisyworld.mp4" type="video/mp4">
+# </video>
+# ```
 #
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
@@ -52,7 +56,6 @@
 using Agents
 using Statistics: mean
 using Random # hide
-# gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
@@ -255,8 +258,8 @@ nothing # hide
 
 cd(@__DIR__) #src
 Random.seed!(165) # hide
-using InteractiveChaos, CairoMakie
-using Makie # hide
+using InteractiveChaos, CairoMakie, AbstractPlotting
+
 model = daisyworld()
 
 # To visualize we need to define the necessary functions for [`abm_plot`](@ref).
@@ -298,7 +301,12 @@ abm_video(
     "daisyworld.mp4", model, agent_step!, model_step!;
     title="Daisy World", plotkwargs...
 )
-
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../daisyworld.mp4" type="video/mp4">
+# </video>
+# ```
 # Running this animation for longer hints that this world achieves quasi-equilibrium
 # for some input parameters, where one `breed` does not totally dominate the other.
 # Of course we can check this easily through data collection.
@@ -320,7 +328,7 @@ ax = figure[1, 1] = Axis(figure, xlabel="tick", ylabel="daisy count")
 blackl = lines!(ax, agent_df[!, :step], agent_df[!, :count_black_daisies], color=:red)
 whitel = lines!(ax, agent_df[!, :step], agent_df[!, :count_white_daisies], color=:blue)
 figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize=12)
-Makie.save("figure1.png", figure) # hide
+figure
 # ## Time dependent dynamics
 # %% #src
 
@@ -358,7 +366,7 @@ lines!(ax3,
     model_df[!, :solar_luminosity],
     color=:red
 )
-Makie.save("figure2.png", figure) # hide
+figure
 # ## Interactive scientific research
 # Julia is an interactive language, and thus everything that you do with Agents.jl can be
 # considered interactive. However, we can do even better by using our interactive application.
@@ -378,7 +386,6 @@ Makie.save("figure2.png", figure) # hide
 # container for surface albedo and for the rate of change of solar luminosity, and add some labels for clarity.
 
 # ```julia
-#
 # figure = abm_play(
 #     model, agent_step!, model_step!; plotkwargs...
 # )

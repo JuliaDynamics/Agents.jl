@@ -142,9 +142,9 @@ agent_data, _ = run!(
 agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
-using DataFrames, CairoMakie
-using Makie # hide
+using DataFrames, CairoMakie, AbstractPlotting
 using Random # hide
+Random.seed!(42) # hide
 
 const cmap = cgrad(:lightrainbow)
 plotsim(ax, data, ϵ) = map(groupby(data, :id)) do grp
@@ -152,12 +152,9 @@ plotsim(ax, data, ϵ) = map(groupby(data, :id)) do grp
         ax,
         grp.step,
         grp.new_opinion,
-        # leg = false,
         color = cmap[grp.id[1]/100],
     )
 end
-
-Random.seed!(42) # hide
 
 eps = [0.05, 0.15, 0.3]
 figure = Figure()
@@ -166,5 +163,4 @@ for (i, e) in enumerate(eps)
     e_data = model_run(ϵ = e)
     plotsim(ax, e_data, e)
 end
-
-Makie.save("hk.png", figure) # hide
+figure
