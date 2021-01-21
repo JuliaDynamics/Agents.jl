@@ -112,6 +112,7 @@ end
 figure = abm_plot(forest; ac = treecolor, as = 8)
 
 # or animate it
+Random.seed!(10)
 forest = forest_fire(density = 0.6)
 abm_video(
     "forest.mp4", forest, tree_step!;
@@ -122,6 +123,6 @@ abm_video(
 nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="../schelling.mp4" type="video/mp4">
+# <source src="../forest.mp4" type="video/mp4">
 # </video>
 # ```
