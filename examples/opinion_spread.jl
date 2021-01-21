@@ -18,6 +18,7 @@ using Agents
 using InteractiveChaos # plotting agents
 using AbstractPlotting # plotting data
 import CairoMakie # for static plotting
+using Random # hide
 
 # ## Building the model
 # ### 1. Model creation
@@ -116,6 +117,7 @@ f
 
 # Here is an animation that shows change of agent opinions over time.
 # The first three opinions of an agent determines its color in RGB.
+Random.seed!(648) # hide
 levels_per_opinion = 3
 ac(agent) = CairoMakie.RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
@@ -128,7 +130,7 @@ abm_video(
     am = '■',
     as = 20,
     framerate = 20,
-    frames = 330,
+    frames = 265,
     title = "Opinion Spread",
 )
 nothing # hide
