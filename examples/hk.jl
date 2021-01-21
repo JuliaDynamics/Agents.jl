@@ -142,22 +142,29 @@ agent_data, _ = run!(
 agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
-using Plots
+using DataFrames, CairoMakie
+using Makie # hide
 using Random # hide
-gr() # hide
 
-plotsim(data, ϵ) = plot(
-    data.step,
-    data.new_opinion,
-    leg = false,
-    group = data.id,
-    title = "epsilon = $(ϵ)",
-)
+const cmap = cgrad(:lightrainbow)
+plotsim(ax, data, ϵ) = map(groupby(data, :id)) do grp
+    lines!(
+        ax,
+        grp.step,
+        grp.new_opinion,
+        # leg = false,
+        color = cmap[grp.id[1]/100],
+    )
+end
 
 Random.seed!(42) # hide
 
-plt001, plt015, plt03 =
-    map(e -> (model_run(ϵ = e), e) |> t -> plotsim(t[1], t[2]), [0.05, 0.15, 0.3])
+eps = [0.05, 0.15, 0.3]
+figure = Figure()
+for (i, e) in enumerate(eps)
+    ax = figure[i, 1] = Axis(figure; title="epsilon = $e")
+    e_data = model_run(ϵ = e)
+    plotsim(ax, e_data, e)
+end
 
-plot(plt001, plt015, plt03, layout = (3, 1))
-
+Makie.save("hk.png", figure) # hide
