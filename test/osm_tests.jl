@@ -1,6 +1,5 @@
 @testset "OpenStreetMap space" begin
     space = OpenStreetMapSpace(TEST_MAP)
-    @test length(space.edges) == 3983
     @test length(space.s) == 1799
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 1456 roadways and 1799 intersections"
@@ -30,6 +29,11 @@
     @test length(route) == 20
     add_agent!(start_r, model, route, finish_r)
     add_agent!(finish_i, model, [], finish_i)
+
+    rand_road = osm_random_road_position(model)
+    rand_intersection = random_position(model)
+    rand_route = osm_plan_route(rand_road, rand_intersection, model; return_trip = true)
+    @test length(rand_route) == 18
 
     @test osm_road_length(model[1].pos, model) ≈ 106.49016546202557
     @test osm_road_length(finish_r[1], finish_r[2], model) ≈ 395.8120895006937
