@@ -11,7 +11,6 @@ export osm_random_road_position,
 
 struct OpenStreetMapSpace <: DiscreteSpace
     m::OpenStreetMapX.MapData
-    edges::Vector{CartesianIndex{2}}
     s::Vector{Vector{Int}}
 end
 
@@ -69,7 +68,7 @@ function OpenStreetMapSpace(
 )
     m = get_map_data(path; use_cache, trim_to_connected_graph)
     agent_positions = [Int[] for i in 1:nv(m.g)]
-    return OpenStreetMapSpace(m, findall(!iszero, m.w), agent_positions)
+    return OpenStreetMapSpace(m, agent_positions)
 end
 
 function Base.show(io::IO, s::OpenStreetMapSpace)
@@ -96,8 +95,8 @@ Similar to `random_position`, but rather than providing only intersections, this
 returns a location somewhere on a road heading in a random direction.
 """
 function osm_random_road_position(model::ABM{<:OpenStreetMapSpace})
-    edge = rand(model.space.edges)
-    return (edge.I..., rand() * model.space.m.w[edge])
+    ll = generate_point_in_bounds(model.space.m)
+    return osm_road(ll, model)
 end
 
 """
@@ -352,8 +351,8 @@ get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.
 #######################################################################################
 
 function random_position(model::ABM{<:OpenStreetMapSpace})
-    intersection = rand(1:nv(model))
-    return (intersection, intersection, 0.0)
+    ll = generate_point_in_bounds(model.space.m)
+    return osm_intersection(ll, model)
 end
 
 function add_agent_to_space!(
