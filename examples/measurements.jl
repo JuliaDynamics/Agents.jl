@@ -38,7 +38,8 @@ end
 # each of these functions do, see the [Daisyworld](@ref) example, as they are copied directly
 # from there.
 
-using Plots
+using AbstractPlotting
+import CairoMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase
@@ -200,33 +201,34 @@ model = daisyworld(scenario = :ramp)
 agent_df, model_df =
     run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
 
-p1 = plot(
-    agent_df.step,
-    agent_df.count_black_daisies,
-    label = "black",
-    ylabel = "Daisy count",
-)
-plot!(p1, agent_df.step, agent_df.count_white_daisies, label = "white")
+f = Figure(resolution = (600, 800))
+ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
+lb = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :blue)
+lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
+leg = f[1, 1] = Legend(f, [lb, lw], ["black", "white"], tellheight = false,
+        tellwidth = false, halign = :right, valign = :top,  margin = (10, 10, 10, 10))
 
-p2 = plot(
+ax2 = f[2, 1] = Axis(f, ylabel = "Temperature")
+highband = Measurements.value.(agent_df[!, aggname(adata[3])])+Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+lowband = Measurements.value.(agent_df[!, aggname(adata[3])])-Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+band!(ax2, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
+lines!(
+    ax2,
     agent_df.step,
     Measurements.value.(agent_df[!, aggname(adata[3])]),
-    ribbon = Measurements.uncertainty.(agent_df[!, aggname(adata[3])]),
-    ylabel = "Temperature",
-    legend = false,
+    linewidth = 2,
+    color = :blue,
 )
 
-p3 = plot(
-    model_df.step,
+ax3 = f[3, 1] = Axis(f, ylabel = "Luminosity")
+highband = Measurements.value.(model_df.solar_luminosity)+Measurements.uncertainty.(model_df.solar_luminosity)
+lowband = Measurements.value.(model_df.solar_luminosity)-Measurements.uncertainty.(model_df.solar_luminosity)
+band!(ax3, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
+lines!(
+    ax3,
+    agent_df.step,
     Measurements.value.(model_df.solar_luminosity),
-    ribbon = Measurements.uncertainty.(model_df.solar_luminosity),
-    ylabel = "Luminosity",
-    xlabel = "Years",
-    legend = false,
+    linewidth = 2,
+    color = :blue,
 )
-
-plot(p1, p2, p3, layout = (3, 1), size = (600, 700))
-
-# [Plots.jl](https://github.com/JuliaPlots/Plots.jl) automatically adds error bars onto series that
-# have `Measurement{Float64}` types. However, we use `ribbon`s above to display the uncertainty since
-# we have so many points. Notice that the error has automatically propagated throughout the model.
+f

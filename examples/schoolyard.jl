@@ -1,6 +1,10 @@
 # # Social networks with LightGraphs.jl
 
-# ![](play.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schoolyard.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Many ABM frameworks provide graph infrastructure for analysing network properties of agents.
 # Agents.jl is no different in that aspect, we have [`GraphSpace`](@ref) for when spatial structure
@@ -17,8 +21,9 @@
 
 # To begin, we load in some dependencies
 
-using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, AgentsPlots, Random
-gr() # hide
+using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
+using InteractiveChaos
+import CairoMakie
 
 # And create a very simple agent.
 
@@ -134,10 +139,15 @@ end
 
 Random.seed!(6548) #hide
 model = schoolyard()
-anim = @animate for i in 0:30
-    i > 0 && step!(model, agent_step!, 1)
-    p1 = plotabm(model; xlims = (0, 100), ylims = (0, 100), as = 7)
-    scatter!(p1, [50], [50]; color = :red, legend = false) # Show position of teacher
-    title!(p1, "step $(i)")
-end
-gif(anim, "play.gif", fps = 20)
+abm_video(
+    "schoolyard.mp4", model, agent_step!;
+    as = 15, scatterkwargs = (xlims = (0, 100), ylims = (0, 100)),
+    framerate = 20, frames = 30,
+    title = "Playgound Dynamics"
+)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schoolyard.mp4" type="video/mp4">
+# </video>
+# ```
+#TODO: Include: `scatter!(p1, [50], [50]; color = :red, legend = false) # Show position of teacher`

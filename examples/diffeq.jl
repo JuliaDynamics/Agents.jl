@@ -32,8 +32,8 @@
 
 using Agents
 using Distributions
-using Plots
-gr() #hide
+using AbstractPlotting
+import CairoMakie
 using Random #hide
 
 mutable struct Fisher <: AbstractAgent
@@ -105,7 +105,16 @@ Random.seed!(6549) #hide
 model = initialise()
 _, results = run!(model, agent_step!, model_step!, 20; mdata = [:stock])
 
-plot(results.stock; legend = false, ylabel = "Stock", xlabel = "Year")
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lines!(ax, results.stock, linewidth = 2, color = :blue)
+f
 
 # ### Add in some bureaucracy
 #
@@ -170,7 +179,16 @@ yearly(model, s) = s % 365 == 0
 _, results =
     run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
 
-plot(results.stock; legend = false, ylabel = "Stock", xlabel = "Year")
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lines!(ax, results.stock, linewidth = 2, color = :blue)
+f
 
 # ### Baseline benchmark
 #
@@ -274,7 +292,16 @@ Random.seed!(6549) #hide
 modeldeq = initialise_diffeq()
 _, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
 
-plot(resultsdeq.stock; legend = false, ylabel = "Stock", xlabel = "Year")
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lines!(ax, resultsdeq.stock, linewidth = 2, color = :blue)
+f
 
 # The small complexity addition yields us a generous speed up of around 4.5x.
 
@@ -300,8 +327,18 @@ length(modeldeq.i.sol.t)
 # Compare our two results directly, both start with the same random seed and evolve in
 # precisely the same manner:
 
-plot(results.stock, label = "Euler", ylabel = "Stock", xlabel = "Year")
-plot!(resultsdeq.stock, label = "TSit5")
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lineE = lines!(ax, results.stock, linewidth = 2, color = :blue)
+lineTS = lines!(ax, resultsdeq.stock, linewidth = 2, color = :red)
+leg = f[1, end+1] = Legend(f, [lineE, lineTS], ["Euler", "TSit5"])
+f
 
 # That's an average discrepancy of 30 fish! Optimising the step size in the Euler method
 # can close this gap, but this is yet more analysis overhead we'd prefer to avoid by using
@@ -368,13 +405,16 @@ sol = OrdinaryDiffEq.solve(
     callback = OrdinaryDiffEq.CallbackSet(fish, reset),
 )
 
-plot(
-    sol(0:365:(365 * 20)),
-    xticks = (0:(365 * 2):(365 * 20), 0:2:20),
-    legend = false,
-    ylabel = "Stock",
-    xlabel = "Year",
-)
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lines!(ax, sol(0:365:(365 * 20)), xticks = (0:(365 * 2):(365 * 20), 0:2:20), linewidth = 2, color = :blue)
+f
 
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.

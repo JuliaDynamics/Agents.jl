@@ -25,7 +25,7 @@ mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
-    file ∉ ("schelling.jl", "opinion_spread.jl", "flock.jl", "forest_fire.jl") && continue
+    file ∉ ("schelling.jl", "opinion_spread.jl", "flock.jl", "forest_fire.jl", "optim.jl", "diffeq.jl", "schoolyard.jl", "measurements.jl") && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -84,12 +84,12 @@ pages = [
     "Predefined Models" => "models.md",
     "API" => "api.md",
     "Interactive application" => "interact.md",
-    # "Ecosystem Integration" => [
-    #     "BlackBoxOptim.jl" => "examples/optim.md",
-    #     "DifferentialEquations.jl" => "examples/diffeq.md",
-    #     "LightGraphs.jl" => "examples/schoolyard.md",
-    #     "Measurements.jl" => "examples/measurements.md"
-    #     ],
+    "Ecosystem Integration" => [
+        "BlackBoxOptim.jl" => "examples/optim.md",
+        "DifferentialEquations.jl" => "examples/diffeq.md",
+        "LightGraphs.jl" => "examples/schoolyard.md",
+        "Measurements.jl" => "examples/measurements.md"
+        ],
     "ABM Framework Comparison" => "comparison.md",
     "Developer Docs" => "devdocs.md"
     ],
