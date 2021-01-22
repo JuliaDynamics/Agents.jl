@@ -404,7 +404,7 @@ sol = OrdinaryDiffEq.solve(
     OrdinaryDiffEq.Tsit5();
     callback = OrdinaryDiffEq.CallbackSet(fish, reset),
 )
-
+discrete = reshape(sol(0:365:(365 * 20))[:,:], 21)
 f = Figure(resolution = (600, 400))
 ax =
     f[1, 1] = Axis(
@@ -413,7 +413,7 @@ ax =
         ylabel = "Stock",
         title = "Fishery Inventory",
     )
-lines!(ax, sol(0:365:(365 * 20)), xticks = (0:(365 * 2):(365 * 20), 0:2:20), linewidth = 2, color = :blue)
+lines!(ax, discrete, linewidth = 2, color = :blue)
 f
 
 # The results are different here, since the construction of this version and the one
