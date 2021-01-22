@@ -232,7 +232,8 @@ nothing # hide
 # were given in days).
 
 # To visualize this model, we will use black color for the susceptible, red for
-# the infected infected and green for the recovered, leveraging [`plotabm`](@ref).
+# the infected infected and green for the recovered, leveraging
+# [`InteractiveChaos.abm_plot`](@ref).
 
 sir_model = sir_initiation()
 

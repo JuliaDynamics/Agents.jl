@@ -227,8 +227,6 @@ figure = abm_plot(
     as = 22,
     ac = mcolor,
     scheduler = by_type((Grass, Sheep, Wolf), false),
-    # grid = false,
-    # showaxis = false,
     equalaspect = true
 )
 figure

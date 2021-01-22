@@ -15,7 +15,9 @@ Here is an example application
 the application is made with the following function:
 
 ```@docs
-InteractiveChaos.interactive_abm
+InteractiveChaos.abm_plot
+InteractiveChaos.abm_video
+InteractiveChaos.abm_play
 ```
 
 The animation at the start of this page was done with:

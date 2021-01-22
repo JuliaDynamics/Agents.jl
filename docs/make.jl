@@ -25,7 +25,7 @@ mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
-    file ∈ ("battle.jl", "growing_bacteria.jl", "sir.jl") && continue
+    file ∈ ("zombies.jl", "battle.jl", "growing_bacteria.jl", "sir.jl") && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
