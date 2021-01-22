@@ -1,14 +1,17 @@
 # # Conway's game of life
 
-# ![](game_of_life.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../game of life.mp4" type="video/mp4">
+# </video>
+# ```
 
 # [Game of life on wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
 # It is also available from the `Models` module as [`Models.game_of_life`](@ref).
 
-using Agents, AgentsPlots
+using Agents
 using Random # hide
-gr(); # hide
 nothing # hide
 
 # ## 1. Define the rules
@@ -90,17 +93,20 @@ end
 
 # ## 3. Animate the model
 
-# We use the `plotabm` function from `AgentsPlots.jl` package for creating an animation.
+# We use the `abm_video` function from `InteractiveChaos.jl` package for creating an animation and saving it to an mp4
 
 cd(@__DIR__) #src
+using InteractiveChaos, CairoMakie
 ac(x) = x.status == true ? :black : :white
-anim = @animate for i in 0:100
-    i > 0 && step!(model, dummystep, ca_step!, 1)
-    p1 = plotabm(model; ac = ac, as = 3, am = :square, showaxis = false)
-end
+am(x) = x.status == true ? '■' : '□'
+abm_video(
+    "game of life.mp4", model, dummystep, ca_step!;
+    title="Game of Life", ac=:black, as=12,
+    am = am, framerate=5
+)
 nothing # hide
-
-# We can now save the animation to a gif.
-
-gif(anim, "game_of_life.gif", fps = 5)
-
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../game of life.mp4" type="video/mp4">
+# </video>
+# ```

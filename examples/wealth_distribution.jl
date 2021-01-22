@@ -17,6 +17,9 @@
 # ## Core structures: space-less
 # We start by defining the Agent type and initializing the model.
 using Agents
+using Random # hide
+Random.seed!(5) # hide
+
 mutable struct WealthAgent <: AbstractAgent
     id::Int
     wealth::Int
@@ -65,8 +68,13 @@ wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 # and then we can make a histogram of the result.
 # With a simple visualization we immediately see the power-law distribution:
 
-using UnicodePlots
-UnicodePlots.histogram(wealths)
+using CairoMakie, AbstractPlotting
+hist(
+    wealths;
+    bins=collect(0:9), width=1,
+    color=cgrad(:viridis)[28:28:256],
+    figure=(resolution=(600, 800),)
+)
 
 # ## Core structures: with space
 # We now expand this model to (in this case) a 2D grid. The rules are the same
@@ -112,8 +120,6 @@ end
 nothing # hide
 
 # ## Running the model with space
-using Random # hide
-Random.seed!(5) # hide
 init_wealth = 4
 model = wealth_model_2D(; wealth = init_wealth)
 adata = [:wealth, :pos]
@@ -122,8 +128,6 @@ data[(end - 20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
-using Plots
-gr() # hide
 
 function wealth_distr(data, model, n)
     W = zeros(Int, size(model.space))
@@ -133,18 +137,23 @@ function wealth_distr(data, model, n)
     return W
 end
 
-W1 = wealth_distr(data, model2D, 1)
-Plots.heatmap(W1)
+function make_heatmap(W)
+    figure = Figure(; resolution=(800, 600))
+    hmap_l = figure[1, 1] = Axis(figure)
+    hmap = heatmap!(hmap_l, W; colormap=cgrad(:default))
+    cbar = figure[1, 2] = Colorbar(figure, hmap; width=30)
+    return figure
+end
 
+W1 = wealth_distr(data, model2D, 1)
+make_heatmap(W1)
 #
 
 W5 = wealth_distr(data, model2D, 5)
-Plots.heatmap(W5)
-
+make_heatmap(W5)
 #
 
 W10 = wealth_distr(data, model2D, 9)
-Plots.heatmap(W10)
+make_heatmap(W10)
 
 # What we see is that wealth gets more and more localized.
-

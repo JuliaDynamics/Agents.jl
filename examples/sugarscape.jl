@@ -1,7 +1,16 @@
 # # Sugarscape
 # **Growing Artificial Societies**
 
-# ![](sugar.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sugaragents.mp4" type="video/mp4">
+# </video>
+# ```
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sugarheatmap.mp4" type="video/mp4">
+# </video>
+# ```
 
 # (Descriptions below are from [this page](http://jasss.soc.surrey.ac.uk/12/1/6/appendixB/EpsteinAxtell1996.html))
 
@@ -66,8 +75,8 @@
 # | Agents' maximum age max-age distribution | U[60,100]    |
 
 using Agents
-using AgentsPlots
-using Random
+using Random # hide
+Random.seed!(42) # hide
 
 mutable struct SugarSeeker <: AbstractAgent
     id::Int
@@ -151,7 +160,13 @@ model = sugarscape()
 
 # Fig. 1: Spatial distribution of sugar capacities in the Sugarscape. Cells are coloured according to their sugar capacity.
 
-heatmap(model.sugar_capacities)
+using CairoMakie, AbstractPlotting
+
+figure = Figure()
+ax = figure[1, 1] = Axis(figure)
+hmap = heatmap!(ax, model.sugar_capacities; colormap=cgrad(:thermal))
+figure[1, 2] = Colorbar(figure, hmap; width=30)
+figure
 
 #
 
@@ -162,6 +177,7 @@ function env!(model)
         1:length(positions(model)),
     )
     model.sugar_values[togrow] .+= model.growth_rate
+    push!(sugar_values, copy(model.sugar_values)) ## keep track of sugar levels for plotting
 end
 
 function movement!(agent, model)
@@ -219,36 +235,58 @@ function agent_step!(agent, model)
 end
 
 # The following animation shows the emergent unequal distribution of agents on resourceful areas.
+using InteractiveChaos
 
-anim = @animate for i in 1:50
-    step!(model, agent_step!, env!, 1)
-    p1 = heatmap(model.sugar_values)
-    p2 = plotabm(model, as = 3, am = :square, ac = :blue)
-    title!(p1, "Sugar levels")
-    title!(p2, "Agents\n Step $i")
-    p = plot(p1, p2)
+sugar_values = Array{Matrix{Int64}, 1}(undef, 0)
+abm_video(
+    "sugaragents.mp4", model, agent_step!, env!;
+    as=10, am='■', ac=:blue, framerate=8, frames=50, resolution=(600, 600)
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sugaragents.mp4" type="video/mp4">
+# </video>
+# ```
+
+figure = Figure(resolution=(600, 600))
+ax = figure[1, 1] = Axis(figure)
+data = Observable(sugar_values[1])
+hmap = heatmap!(ax, data; colormap=cgrad(:thermal))
+figure[1, 2] = Colorbar(figure, hmap; width=30)
+record(figure, "sugarheatmap.mp4", 1:50; framerate=9) do i
+    data[] = sugar_values[i]
 end
-gif(anim, "sugar.gif", fps = 8)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sugarheatmap.mp4" type="video/mp4">
+# </video>
+# ```
 
 # ### Distribution of wealth across individuals
 
 model2 = sugarscape()
 adata, _ = run!(model2, agent_step!, env!, 20, adata = [:wealth])
 
-anim2 = @animate for i in 0:20
-    histogram(
-        adata[adata.step .== i, :wealth],
-        legend = false,
-        color = :black,
-        nbins = 15,
-        title = "step $i",
-    )
+figure = Figure()
+ax = figure[1, 1] = Axis(figure)
+histdata = Observable(adata[adata.step .== 20, :wealth])
+hist!(ax, histdata; colormap=cgrad(:viridis), bar_position=:step)
+record(figure, "sugarhist.mp4", 0:20; framerate=3) do i
+    histdata[] = adata[adata.step .== i, :wealth]
+    xlims!(ax, (0, max(histdata[]...)))
+    ylims!(ax, (0, 50))
 end
 nothing # hide
 
 # We see that the distribution of wealth shifts from a more or less uniform distribution to a skewed distribution.
 
-gif(anim2, fps = 3)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sugarhist.mp4" type="video/mp4">
+# </video>
+# ```
 
 # ## References
 
@@ -259,4 +297,3 @@ gif(anim2, fps = 3)
 # EPSTEIN J M & Axtell R L (1996) Growing Artificial Societies: Social Science from the Bottom Up. The MIT Press.
 
 # FLENTGE F, Polani D & Uthmann T (2001) Modelling the emergence of possession norms using memes. Journal of Artificial Societies and Social Simulation 4(4)3. http://jasss.soc.surrey.ac.uk/4/4/3.html.
-
