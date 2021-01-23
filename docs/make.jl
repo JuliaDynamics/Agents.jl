@@ -21,6 +21,8 @@ println("CairoMakie...")
 import CairoMakie
 println("OpenStreetMapX...")
 import OpenStreetMapX
+println("OpenStreetMapXPlot...")
+import OpenStreetMapXPlot
 
 # %% Literate convertion
 println("Converting Examples")
