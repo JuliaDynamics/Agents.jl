@@ -44,6 +44,7 @@
 
 using Random # hide
 using Agents
+using InteractiveChaos
 using AbstractPlotting
 import CairoMakie
 
@@ -334,9 +335,21 @@ group_action = [
 group_level = [
     PolyElement(color = color, strokecolor = :transparent) for color in cgrad(:tab10)[1:10]
 ]
+nothing #hide
+
+# And some complex internals that will be hidden away in the near future
+
 e = size(model.space.s)[1:2] .+ 2
 o = zero.(e) .- 2
 clr(agent) = cgrad(:tab10)[level(agent)]
+mkr(a) = a.shape
+colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
+markers = Observable([mkr(model[id]) for id in by_id(model)])
+pos = Observable([model[id].pos for id in by_id(model)])
+stepper = InteractiveChaos.ABMStepper(clr, mkr, 15, nothing, by_id, pos, colors, Observable(15), markers)
+nothing #hide
+
+# Finally, the plot:
 
 f = Figure(resolution = (600, 700))
 ax = f[1, 1] = Axis(f, title = "Battle Royale")
@@ -354,14 +367,14 @@ f[2, 1] = Legend(
     nbanks = 5,
 )
 
-colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
-markers = Observable([model[id].shape for id in by_id(model)])
-pos = Observable([model[id].pos for id in by_id(model)])
+
 scatter!(ax, pos; color = colors, markersize = 15, marker = markers, strokewidth = 0.0)
 xlims!(ax, o[1], e[1])
 ylims!(ax, o[2], e[2])
-f
-
+record(f, "battle.mp4", 0:225; framerate=10) do i
+    Agents.step!(stepper, model, agent_step!, dummystep, 1)
+end
+nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../battle.mp4" type="video/mp4">

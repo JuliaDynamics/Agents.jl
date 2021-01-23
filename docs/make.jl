@@ -11,10 +11,12 @@ println("Plots...")
 using Plots
 println("AgentsPlots...")
 Pkg.add(PackageSpec(name="AgentsPlots", rev="master"))
+using AgentsPlots
 println("Literate...")
 import Literate
 println("InteractiveChaos...")
 Pkg.add(PackageSpec(name="InteractiveChaos", rev="stepping_abm"))
+using InteractiveChaos
 println("CairoMakie...")
 import CairoMakie
 println("OpenStreetMapX...")
