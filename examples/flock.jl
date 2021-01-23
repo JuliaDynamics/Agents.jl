@@ -1,9 +1,5 @@
 # # Flock model
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../flock.mp4" type="video/mp4">
-# </video>
-# ```
+# ![](flock.gif)
 #
 # The flock model illustrates how flocking behavior can emerge when each bird follows three simple rules:
 #
@@ -91,7 +87,7 @@ function agent_step!(bird, model)
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
         if edistance(bird.pos, neighbor, model) < bird.separation
-            ## `separate` repels the bird away from neighboring birds
+        ## `separate` repels the bird away from neighboring birds
             separate = separate .- heading
         end
         ## `match` computes the average trajectory of neighboring birds
@@ -118,28 +114,28 @@ function bird_triangle(b::Bird)
     φ = atan(b.vel[2], b.vel[1])
     xs = [(i ∈ (0, 3) ? 2 : 1) * cos(i * 2π / 3 + φ) for i in 0:3]
     ys = [(i ∈ (0, 3) ? 2 : 1) * sin(i * 2π / 3 + φ) for i in 0:3]
-    Point2f0.(xs,ys)
+    Shape(xs, ys)
 end
 nothing # hide
 
 # And here is the animation
-using InteractiveChaos
-import CairoMakie
+using AgentsPlots
+gr() # hide
 Random.seed!(23182) # hide
+cd(@__DIR__) #src
 model = initialize_model()
-abm_video(
-    "flock.mp4",
-    model,
-    agent_step!;
-    am = '▲', #bird_triangle,
-    as = 20,
-    framerate = 25,
-    frames = 100,
-    title = "Flocking",
-)
-nothing # hide
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../flock.mp4" type="video/mp4">
-# </video>
-# ```
+e = model.space.extent
+anim = @animate for i in 0:100
+    i > 0 && step!(model, agent_step!, 1)
+    p1 = plotabm(
+        model;
+        am = bird_triangle,
+        as = 7,
+        showaxis = false,
+        grid = false,
+        xlims = (0, e[1]),
+        ylims = (0, e[2]),
+    )
+    title!(p1, "step $(i)")
+end
+gif(anim, "flock.gif", fps = 30)

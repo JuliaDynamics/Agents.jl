@@ -25,7 +25,6 @@ mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
-    file ∈ ("zombies.jl", "growing_bacteria.jl", "sir.jl") && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -67,7 +66,7 @@ pages = [
         "Overview" => "examples.md",
         "Schelling's segregation model" => "examples/schelling.md",
         "Sugarscape" => "examples/sugarscape.md",
-        # "SIR model for the spread of COVID-19" => "examples/sir.md",
+        "SIR model for the spread of COVID-19" => "examples/sir.md",
         "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
         "Wealth distribution" => "examples/wealth_distribution.md",
         "Forest fire" => "examples/forest_fire.md",
@@ -77,9 +76,10 @@ pages = [
         "Flocking" => "examples/flock.md",
         "Daisyworld" => "examples/daisyworld.md",
         "Predator-Prey" => "examples/predator_prey.md",
-        # "Bacteria Growth" => "examples/growing_bacteria.md",
+        "Bacteria Growth" => "examples/growing_bacteria.md",
         "Opinion spread" => "examples/opinion_spread.md",
-        "Battle Royale" => "examples/battle.md"
+        "Battle Royale" => "examples/battle.md",
+        "Zombie Outbreak" => "examples/zombies.md"
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
