@@ -7,10 +7,14 @@ println("Documenter...")
 using Documenter
 println("Agents...")
 using Agents
+println("Plots...")
+using Plots
+println("AgentsPlots...")
+Pkg.add(PackageSpec(name="AgentsPlots", rev="master"))
 println("Literate...")
 import Literate
 println("InteractiveChaos...")
-using InteractiveChaos
+Pkg.add(PackageSpec(name="InteractiveChaos", rev="stepping_abm"))
 println("CairoMakie...")
 import CairoMakie
 println("OpenStreetMapX...")
