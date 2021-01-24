@@ -62,7 +62,7 @@ end
 
 # ## Visualising the fall of humanity
 #
-# Plotting this space in a seemless manner is a work in progress. For now we
+# Plotting this space in a seamless manner is a work in progress. For now we
 # use [OpenStreetMapXPlot](https://github.com/pszufe/OpenStreetMapXPlot.jl) and
 # a custom routine.
 
@@ -74,7 +74,6 @@ ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
 
 function plotagents(model)
-    ## Essentially a cut down version on plotabm
     ids = model.scheduler(model)
     colors = [ac(model[i]) for i in ids]
     sizes = [as(model[i]) for i in ids]

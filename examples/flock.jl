@@ -123,6 +123,13 @@ using AgentsPlots
 gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src
+
+!!! note
+    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now depreciated
+    in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
+    This example has not yet been transferred to the new paradigm, but will do so in the
+    near future.
+
 model = initialize_model()
 e = model.space.extent
 anim = @animate for i in 0:100

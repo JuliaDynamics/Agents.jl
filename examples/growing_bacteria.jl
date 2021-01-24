@@ -163,10 +163,16 @@ nothing # hide
 # and then [`run!`](@ref) the model. But we'll animate the model directly.
 
 # Here we once again use the huge flexibility provided by [`plotabm`](@ref) to
-# plot the becteria cells. We define a function that creates a custom `Shape` based
+# plot the bacteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
 using AgentsPlots
 gr() # hide
+
+!!! note
+    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now depreciated
+    in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
+    This example has not yet been transferred to the new paradigm, but will do so in the
+    near future.
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)
