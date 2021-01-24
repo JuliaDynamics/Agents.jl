@@ -75,7 +75,8 @@ end
 
 function nlive_neighbors(agent, model)
     neighbor_positions = nearby_positions(agent, model)
-    all_neighbors = Iterators.flatten(ids_in_position(np,model) for np in neighbor_positions)
+    all_neighbors =
+        Iterators.flatten(ids_in_position(np, model) for np in neighbor_positions)
     sum(model[i].status == true for i in all_neighbors)
 end
 nothing # hide
@@ -93,16 +94,22 @@ end
 
 # ## 3. Animate the model
 
-# We use the `abm_video` function from `InteractiveChaos.jl` package for creating an animation and saving it to an mp4
+# We use the [`InteractiveChaos.abm_video`](@ref) for creating an animation and saving it to an mp4
 
-cd(@__DIR__) #src
-using InteractiveChaos, CairoMakie
+using InteractiveChaos
+import CairoMakie
 ac(x) = x.status == true ? :black : :white
 am(x) = x.status == true ? '■' : '□'
 abm_video(
-    "game of life.mp4", model, dummystep, ca_step!;
-    title="Game of Life", ac=:black, as=12,
-    am = am, framerate=5
+    "game of life.mp4",
+    model,
+    dummystep,
+    ca_step!;
+    title = "Game of Life",
+    ac = :black,
+    as = 12,
+    am = am,
+    framerate = 5,
 )
 nothing # hide
 # ```@raw html

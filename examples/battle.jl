@@ -346,7 +346,17 @@ mkr(a) = a.shape
 colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
 markers = Observable([mkr(model[id]) for id in by_id(model)])
 pos = Observable([model[id].pos for id in by_id(model)])
-stepper = InteractiveChaos.ABMStepper(clr, mkr, 15, nothing, by_id, pos, colors, Observable(15), markers)
+stepper = InteractiveChaos.ABMStepper(
+    clr,
+    mkr,
+    15,
+    nothing,
+    by_id,
+    pos,
+    colors,
+    Observable(15),
+    markers,
+)
 nothing #hide
 
 # Finally, the plot:
@@ -367,11 +377,10 @@ f[2, 1] = Legend(
     nbanks = 5,
 )
 
-
 scatter!(ax, pos; color = colors, markersize = 15, marker = markers, strokewidth = 0.0)
 xlims!(ax, o[1], e[1])
 ylims!(ax, o[2], e[2])
-record(f, "battle.mp4", 0:225; framerate=10) do i
+record(f, "battle.mp4", 0:225; framerate = 10) do i
     Agents.step!(stepper, model, agent_step!, dummystep, 1)
 end
 nothing # hide

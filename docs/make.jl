@@ -17,8 +17,11 @@ import Literate
 println("InteractiveChaos...")
 Pkg.add(PackageSpec(name="InteractiveChaos", rev="stepping_abm"))
 using InteractiveChaos
+println("AbstractPlotting...")
+using AbstractPlotting
 println("CairoMakie...")
 import CairoMakie
+f = Figure() # Build an intial plot so that font cache warnings don't spill out into docs
 println("OpenStreetMapX...")
 import OpenStreetMapX
 println("OpenStreetMapXPlot...")

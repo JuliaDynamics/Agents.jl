@@ -87,7 +87,7 @@ function agent_step!(bird, model)
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
         if edistance(bird.pos, neighbor, model) < bird.separation
-        ## `separate` repels the bird away from neighboring birds
+            ## `separate` repels the bird away from neighboring birds
             separate = separate .- heading
         end
         ## `match` computes the average trajectory of neighboring birds
@@ -123,6 +123,7 @@ using AgentsPlots
 gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src
+nothing # hide
 
 # !!! info "AgentsPlots no longer supported"
 #     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated

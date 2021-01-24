@@ -124,7 +124,7 @@ function model_run(; kwargs...)
 end
 
 data = model_run(numagents = 100)
-data[(end - 19):end, :]
+data[(end-19):end, :]
 
 # Notice that here we didn't speciy when to collect data, so this is done at every step.
 # Instead, we could collect data only at the final step, by re-using the same
@@ -147,19 +147,15 @@ using Random # hide
 Random.seed!(42) # hide
 
 const cmap = cgrad(:lightrainbow)
-plotsim(ax, data, ϵ) = map(groupby(data, :id)) do grp
-    lines!(
-        ax,
-        grp.step,
-        grp.new_opinion,
-        color = cmap[grp.id[1]/100],
-    )
-end
+plotsim(ax, data, ϵ) =
+    map(groupby(data, :id)) do grp
+        lines!(ax, grp.step, grp.new_opinion, color = cmap[grp.id[1]/100])
+    end
 
 eps = [0.05, 0.15, 0.3]
-figure = Figure()
+figure = Figure(resolution = (600, 450))
 for (i, e) in enumerate(eps)
-    ax = figure[i, 1] = Axis(figure; title="epsilon = $e")
+    ax = figure[i, 1] = Axis(figure; title = "epsilon = $e")
     e_data = model_run(ϵ = e)
     plotsim(ax, e_data, e)
 end

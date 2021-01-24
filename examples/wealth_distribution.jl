@@ -58,7 +58,7 @@ M = 2000
 adata = [:wealth]
 model = wealth_model(numagents = M)
 data, _ = run!(model, agent_step!, N; adata)
-data[(end - 20):end, :]
+data[(end-20):end, :]
 
 # What we mostly care about is the distribution of wealth,
 # which we can obtain for example by doing the following query:
@@ -71,9 +71,10 @@ wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 using CairoMakie, AbstractPlotting
 hist(
     wealths;
-    bins=collect(0:9), width=1,
-    color=cgrad(:viridis)[28:28:256],
-    figure=(resolution=(600, 800),)
+    bins = collect(0:9),
+    width = 1,
+    color = cgrad(:viridis)[28:28:256],
+    figure = (resolution = (600, 800),),
 )
 
 # ## Core structures: with space
@@ -124,7 +125,7 @@ init_wealth = 4
 model = wealth_model_2D(; wealth = init_wealth)
 adata = [:wealth, :pos]
 data, _ = run!(model, agent_step!, 10; adata = adata, when = [1, 5, 9])
-data[(end - 20):end, :]
+data[(end-20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
 # That is actually straightforward:
@@ -138,10 +139,10 @@ function wealth_distr(data, model, n)
 end
 
 function make_heatmap(W)
-    figure = Figure(; resolution=(800, 600))
+    figure = Figure(; resolution = (600, 450))
     hmap_l = figure[1, 1] = Axis(figure)
-    hmap = heatmap!(hmap_l, W; colormap=cgrad(:default))
-    cbar = figure[1, 2] = Colorbar(figure, hmap; width=30)
+    hmap = heatmap!(hmap_l, W; colormap = cgrad(:default))
+    cbar = figure[1, 2] = Colorbar(figure, hmap; width = 30)
     return figure
 end
 

@@ -80,7 +80,7 @@ function initialize_model(;
     id = 0
     for _ in 1:n_sheep
         id += 1
-        energy = rand(1:(Δenergy_sheep * 2)) - 1
+        energy = rand(1:(Δenergy_sheep*2)) - 1
         ## Note that we must instantiate agents before adding them in a mixed-ABM
         ## to confirm their type.
         sheep = Sheep(id, (0, 0), energy, sheep_reproduce, Δenergy_sheep)
@@ -88,7 +88,7 @@ function initialize_model(;
     end
     for _ in 1:n_wolves
         id += 1
-        energy = rand(1:(Δenergy_wolf * 2)) - 1
+        energy = rand(1:(Δenergy_wolf*2)) - 1
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
@@ -218,7 +218,7 @@ mshape(a::Wolf) = '▲'
 mshape(a::Grass) = '■'
 mcolor(a::Sheep) = RGBAf0(1.0, 1.0, 1.0, 0.5)
 mcolor(a::Wolf) = RGBAf0(0.2, 0.2, 0.2, 0.7)
-mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown / a.regrowth_time]
+mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown/a.regrowth_time]
 figure = abm_plot(
     model;
     resolution = (800, 600),
@@ -227,7 +227,7 @@ figure = abm_plot(
     as = 22,
     ac = mcolor,
     scheduler = by_type((Grass, Sheep, Wolf), false),
-    equalaspect = true
+    equalaspect = true,
 )
 figure
 # Now, lets run the simulation and collect some data.
@@ -241,11 +241,11 @@ results, _ = run!(model, agent_step!, n_steps; adata)
 # The plot shows the population dynamics over time. Initially, wolves become extinct because they
 # consume the sheep too quickly. The few remaining sheep reproduce and gradually reach an
 # equilibrium that can be supported by the amount of available grass.
-figure = Figure()
-ax = figure[1, 1] = Axis(figure; xlabel="Step", ylabel="Population")
-sheepl = lines!(ax, results.step, results.count_sheep, color=:blue)
-wolfl = lines!(ax, results.step, results.count_wolves, color=:orange)
-grassl = lines!(ax, results.step, results.count_grass, color=:green)
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
+sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
+wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
+grassl = lines!(ax, results.step, results.count_grass, color = :green)
 figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
 figure
 
@@ -262,10 +262,10 @@ model = initialize_model(
 )
 results, _ = run!(model, agent_step!, n_steps; adata)
 
-figure = Figure()
-ax = figure[1, 1] = Axis(figure, xlabel="Step", ylabel = "Population")
-sheepl = lines!(ax, results.step, results.count_sheep, color=:blue)
-wolfl = lines!(ax, results.step, results.count_wolves, color=:orange)
-grassl = lines!(ax, results.step, results.count_grass, color=:green)
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure, xlabel = "Step", ylabel = "Population")
+sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
+wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
+grassl = lines!(ax, results.step, results.count_grass, color = :green)
 figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
 figure

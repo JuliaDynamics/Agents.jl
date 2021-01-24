@@ -256,7 +256,6 @@ nothing # hide
 # %% #src
 # Lets run the model with constant solar isolation and visualize the result
 
-cd(@__DIR__) #src
 Random.seed!(165) # hide
 using InteractiveChaos, CairoMakie, AbstractPlotting
 
@@ -281,12 +280,7 @@ nothing # hide
 # Notice that we want to ensure that the `Land` patches are always plotted first.
 plotsched = by_type((Land, Daisy), false)
 
-plotkwargs = (
-    ac = daisycolor,
-    am = daisyshape,
-    as = daisysize,
-    scheduler = plotsched,
-)
+plotkwargs = (ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
 
 p = abm_plot(model; plotkwargs...)
 
@@ -298,8 +292,12 @@ p = abm_plot(model; plotkwargs...)
 Random.seed!(165) # hide
 model = daisyworld()
 abm_video(
-    "daisyworld.mp4", model, agent_step!, model_step!;
-    title="Daisy World", plotkwargs...
+    "daisyworld.mp4",
+    model,
+    agent_step!,
+    model_step!;
+    title = "Daisy World",
+    plotkwargs...,
 )
 nothing # hide
 # ```@raw html
@@ -323,11 +321,11 @@ Random.seed!(165) # hide
 model = daisyworld(; solar_luminosity = 1.0)
 
 agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
-figure = Figure()
-ax = figure[1, 1] = Axis(figure, xlabel="tick", ylabel="daisy count")
-blackl = lines!(ax, agent_df[!, :step], agent_df[!, :count_black_daisies], color=:red)
-whitel = lines!(ax, agent_df[!, :step], agent_df[!, :count_white_daisies], color=:blue)
-figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize=12)
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure, xlabel = "tick", ylabel = "daisy count")
+blackl = lines!(ax, agent_df[!, :step], agent_df[!, :count_black_daisies], color = :red)
+whitel = lines!(ax, agent_df[!, :step], agent_df[!, :count_white_daisies], color = :blue)
+figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize = 12)
 figure
 # ## Time dependent dynamics
 # %% #src
@@ -348,24 +346,16 @@ model = daisyworld(solar_luminosity = 1.0, scenario = :ramp)
 agent_df, model_df =
     run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
 
-figure = Figure(resolution=(1200, 1200))
-ax1 = figure[1, 1] = Axis(figure, ylabel = "daisy count", textsize=12)
-blackl = lines!(ax1, agent_df[!, :step], agent_df[!, :count_black_daisies], color=:red)
-whitel = lines!(ax1, agent_df[!, :step], agent_df[!, :count_white_daisies], color=:blue)
-figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize=12)
+figure = Figure(resolution = (600, 1200))
+ax1 = figure[1, 1] = Axis(figure, ylabel = "daisy count", textsize = 12)
+blackl = lines!(ax1, agent_df[!, :step], agent_df[!, :count_black_daisies], color = :red)
+whitel = lines!(ax1, agent_df[!, :step], agent_df[!, :count_white_daisies], color = :blue)
+figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize = 12)
 
-ax2 = figure[2, 1] = Axis(figure, ylabel = "temperature", textsize=12)
-ax3 = figure[3, 1] = Axis(figure, xlabel = "tick", ylabel = "L", textsize=12)
-lines!(ax2,
-    agent_df[!, :step],
-    agent_df[!, :mean_temperature_land],
-    color=:red
-)
-lines!(ax3,
-    model_df[!, :step],
-    model_df[!, :solar_luminosity],
-    color=:red
-)
+ax2 = figure[2, 1] = Axis(figure, ylabel = "temperature", textsize = 12)
+ax3 = figure[3, 1] = Axis(figure, xlabel = "tick", ylabel = "L", textsize = 12)
+lines!(ax2, agent_df[!, :step], agent_df[!, :mean_temperature_land], color = :red)
+lines!(ax3, model_df[!, :step], model_df[!, :solar_luminosity], color = :red)
 figure
 # ## Interactive scientific research
 # Julia is an interactive language, and thus everything that you do with Agents.jl can be

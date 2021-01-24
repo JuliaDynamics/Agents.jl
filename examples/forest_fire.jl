@@ -77,18 +77,18 @@ nothing # hide
 # ## Running the model
 
 step!(forest, tree_step!, 1)
-count(t->t.status == :burnt, allagents(forest))
+count(t -> t.status == :burnt, allagents(forest))
 
 #
 
 step!(forest, tree_step!, 10)
-count(t->t.status == :burnt, allagents(forest))
+count(t -> t.status == :burnt, allagents(forest))
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
 Random.seed!(2)
 forest = forest_fire(griddims = (20, 20))
-burnt_percentage(m) = count(t->t.status == :burnt, allagents(m)) / length(positions(m))
+burnt_percentage(m) = count(t -> t.status == :burnt, allagents(m)) / length(positions(m))
 mdata = [burnt_percentage]
 
 _, data = run!(forest, tree_step!, 10; mdata)
@@ -115,10 +115,15 @@ figure = abm_plot(forest; ac = treecolor, as = 8)
 Random.seed!(10)
 forest = forest_fire(density = 0.6)
 abm_video(
-    "forest.mp4", forest, tree_step!;
-    ac = treecolor, as = 8,
-    framerate = 2, frames = 10, spf = 5,
-    title = "Forest Fire"
+    "forest.mp4",
+    forest,
+    tree_step!;
+    ac = treecolor,
+    as = 8,
+    framerate = 2,
+    frames = 10,
+    spf = 5,
+    title = "Forest Fire",
 )
 nothing # hide
 # ```@raw html

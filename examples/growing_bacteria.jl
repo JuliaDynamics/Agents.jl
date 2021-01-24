@@ -167,6 +167,7 @@ nothing # hide
 # on the agent:
 using AgentsPlots
 gr() # hide
+nothing # hide
 
 # !!! info "AgentsPlots no longer supported"
 #     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
