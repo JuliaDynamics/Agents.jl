@@ -288,18 +288,14 @@ The argument `method` provides three pairing scenarios
 - `:nearest`: agents are only paired with their true nearest neighbor
   (existing within radius `r`).
   Each agent can only belong to one pair, therefore if two agents share the same nearest
-  neighbor only one of them (sorted by id) will be paired.
-- `:scheduler`: agents are scanned according to the given keyword `scheduler`
-  (by default the model's scheduler), and each scanned
-  agent is paired to its nearest neighbor. Similar to `:nearest`, each agent can belong
-  to only one pair. This functionality is useful e.g. when you want some agents to be
-  paired "guaranteed", even if some other agents might be nearest to each other.
+  neighbor only one of them (sorted by distance, then by next id in `scheduler`) will be
+  paired.
 - `:types`: For mixed agent models only. Return every pair of agents within radius `r`
   (similar to `:all`), only capturing pairs of differing types. For example, a model of
   `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
   agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
-  types, *i.e.*: `scheduler = [a.id for a in allagents(model) of !(a isa Grass)]`.
+  types, *i.e.*: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
 
 Example usage in [Bacterial Growth](@ref).
 """
@@ -310,36 +306,16 @@ function interacting_pairs(
     scheduler = model.scheduler,
     exact = true,
 )
-    @assert method ∈ (:scheduler, :nearest, :all, :types)
+    @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
-        true_pairs!(pairs, model, r)
-    elseif method == :scheduler
-        scheduler_pairs!(pairs, model, r, scheduler)
+        true_pairs!(pairs, model, r, scheduler)
     elseif method == :all
         all_pairs!(pairs, model, r, exact = exact)
     elseif method == :types
         type_pairs!(pairs, model, r, scheduler, exact = exact)
     end
     return PairIterator(pairs, model.agents)
-end
-
-function scheduler_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{<:ContinuousSpace},
-    r::Real,
-    scheduler,
-)
-    for id in scheduler(model)
-        # Skip already checked agents
-        any(isequal(id), p[2] for p in pairs) && continue
-        a1 = model[id]
-        a2 = nearest_neighbor(a1, model, r)
-        # This line ensures each neighbor exists in only one pair:
-        if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
-            push!(pairs, (id, a2.id))
-        end
-    end
 end
 
 function all_pairs!(
@@ -357,9 +333,9 @@ function all_pairs!(
     end
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace}, r::Real)
+function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace}, r::Real, scheduler)
     distances = Vector{Float64}(undef, 0)
-    for a in allagents(model)
+    for a in (model[id] for id in scheduler(model))
         nn = nearest_neighbor(a, model, r)
         nn == nothing && continue
         # Sort the pair to overcome any uniqueness issues
@@ -381,6 +357,24 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
             end
         end
     end
+    to_remove = Int[]
+    for doubles in symdiff(unique(Iterators.flatten(pairs)), collect(Iterators.flatten(pairs)))
+        # This list is the set of pairs that have two distances in the pair list.
+        # The one with the largest distance value must be dropped.
+        fidx = findfirst(isequal(doubles), first.(pairs))
+        if fidx != nothing
+            lidx = findfirst(isequal(doubles), last.(pairs))
+            largest = distances[fidx] <= distances[lidx] ? lidx : fidx
+            push!(to_remove, largest)
+        else
+            # doubles are not from first sorted, there could be more than one.
+            idxs = findall(isequal(doubles), last.(pairs))
+            to_keep = findmin(map(i->distances[i], idxs))[2]
+            deleteat!(idxs, to_keep)
+            append!(to_remove, idxs)
+        end
+    end
+    deleteat!(pairs, unique!(sort!(to_remove)))
 end
 
 function type_pairs!(
