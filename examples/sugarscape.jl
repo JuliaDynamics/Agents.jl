@@ -236,9 +236,13 @@ lay = figure[1, 0] = GridLayout()
 ax = lay[1, 1] = Axis(figure)
 hmap = heatmap!(ax, hmap_data; colormap=cgrad(:thermal))
 lay[1, 2] = Colorbar(figure, hmap; width=20)
+figure[0, 1] = Label(figure, "Sugar levels"; textsize=30, tellwidth=false)
+title_text = Observable("Agents\nstep 1")
+figure[1, 2] = Label(figure, title_text; textsize=30, tellwidth=false)
 record(figure, "sugarvis.mp4", 1:50; framerate=9) do i
     Agents.step!(abmstepper, model, agent_step!, env!, 1)
     hmap_data[] = model.sugar_values
+    title_text[] = "Agents\nstep $i"
 end
 nothing # hide
 # ```@raw html
@@ -252,11 +256,14 @@ model2 = sugarscape()
 adata, _ = run!(model2, agent_step!, env!, 20, adata = [:wealth])
 
 figure = Figure()
-ax = figure[1, 1] = Axis(figure)
+title_text = Observable("Wealth distribution of individuals\nStep 1")
+figure[1, 1] = Label(figure, title_text; textsize=30, tellwidth=false)
+ax = figure[2, 1] = Axis(figure; xlabel="Wealth", ylabel="Number of agents")
 histdata = Observable(adata[adata.step .== 20, :wealth])
 hist!(ax, histdata; colormap=cgrad(:viridis), bar_position=:step)
 record(figure, "sugarhist.mp4", 0:20; framerate=3) do i
     histdata[] = adata[adata.step .== i, :wealth]
+    title_text[] = "Wealth distribution of individuals\nStep $i"
     xlims!(ax, (0, max(histdata[]...)))
     ylims!(ax, (0, 50))
 end
