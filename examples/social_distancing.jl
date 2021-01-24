@@ -69,9 +69,14 @@ nothing # hide
 using InteractiveChaos, CairoMakie, AbstractPlotting
 
 abm_video(
-    "socialdist1.mp4", model, agent_step!;
-    title="Social Distancing", frames=50, as=10, spf=2,
-    framerate=25
+    "socialdist1.mp4",
+    model,
+    agent_step!;
+    title = "Ball Model",
+    frames = 50,
+    as = 10,
+    spf = 2,
+    framerate = 25,
 )
 nothing # hide
 # ```@raw html
@@ -79,7 +84,6 @@ nothing # hide
 # <source src="../socialdist1.mp4" type="video/mp4">
 # </video>
 # ```
-
 
 # As you can see the agents move in a straight line in periodic space.
 # There is no interaction yet. Let's change that.
@@ -102,9 +106,15 @@ end
 model2 = ball_model()
 
 abm_video(
-    "socialdist2.mp4", model2, agent_step!, model_step!;
-    title="Social Distancing", frames=50, as=10, spf=2,
-    framerate=25
+    "socialdist2.mp4",
+    model2,
+    agent_step!,
+    model_step!;
+    title = "Billiard-like",
+    frames = 50,
+    as = 10,
+    spf = 2,
+    framerate = 25,
 )
 nothing # hide
 # ```@raw html
@@ -143,9 +153,15 @@ end
 
 # let's animate this again
 abm_video(
-    "socialdist3.mp4", model3, agent_step!, model_step!;
-    title="Social Distancing", frames=50, as=10, spf=2,
-    framerate=25
+    "socialdist3.mp4",
+    model3,
+    agent_step!,
+    model_step!;
+    title = "Billiard-like with stationary agents",
+    frames = 50,
+    as = 10,
+    spf = 2,
+    framerate = 25,
 )
 nothing # hide
 # ```@raw html
@@ -205,7 +221,7 @@ function sir_initiation(;
         interaction_radius,
         dt,
     )
-    space = ContinuousSpace((1,1), 0.02)
+    space = ContinuousSpace((1, 1), 0.02)
     model = ABM(PoorSoul, space, properties = properties)
 
     ## Add initial individuals
@@ -239,7 +255,8 @@ sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-abm_plot(sir_model; ac = sir_colors, as=10)
+f = abm_plot(sir_model; ac = sir_colors, as = 10)
+display(f)
 
 # We have increased the size of the model 10-fold (for more realistic further analysis)
 
@@ -300,10 +317,16 @@ nothing # hide
 sir_model = sir_initiation()
 
 abm_video(
-    "socialdist4.mp4", sir_model,
-    sir_agent_step!, sir_model_step!;
-    title="Social Distancing", frames=100,
-    ac = sir_colors, as=10, spf=1, framerate=25
+    "socialdist4.mp4",
+    sir_model,
+    sir_agent_step!,
+    sir_model_step!;
+    title = "SIR model",
+    frames = 100,
+    ac = sir_colors,
+    as = 10,
+    spf = 1,
+    framerate = 25,
 )
 nothing # hide
 # ```@raw html
@@ -334,15 +357,16 @@ data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata)
 data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata)
 data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata)
 
-data1[(end - 10):end, :]
+data1[(end-10):end, :]
 
 # Now, we can plot the number of infected versus time
 figure = Figure()
-ax = figure[1, 1] = Axis(figure; ylabel="Infected")
-l1 = lines!(ax, data1[:, aggname(:status, infected)], color=:orange)
-l2 = lines!(ax, data2[:, aggname(:status, infected)], color=:blue)
-l3 = lines!(ax, data3[:, aggname(:status, infected)], color=:green)
-figure[1, 2] = Legend(figure, [l1, l2, l3], ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2"])
+ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
+l1 = lines!(ax, data1[:, aggname(:status, infected)], color = :orange)
+l2 = lines!(ax, data2[:, aggname(:status, infected)], color = :blue)
+l3 = lines!(ax, data3[:, aggname(:status, infected)], color = :green)
+figure[1, 2] =
+    Legend(figure, [l1, l2, l3], ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2"])
 figure
 
 # Exponential growth is evident in all cases.
@@ -359,9 +383,16 @@ figure
 
 sir_model = sir_initiation(isolated = 0.8)
 abm_video(
-    "socialdist5.mp4", sir_model, sir_agent_step!, sir_model_step!;
-    title="Social Distancing", frames=50, as=10, spf=2,
-    framerate=25
+    "socialdist5.mp4",
+    sir_model,
+    sir_agent_step!,
+    sir_model_step!;
+    title = "Social Distancing",
+    frames = 50,
+    as = 10,
+    spf = 2,
+    ac = sir_colors,
+    framerate = 25,
 )
 nothing # hide
 # ```@raw html
@@ -382,8 +413,12 @@ sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated 
 
 data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata)
 
-l4 = lines!(ax, data4[:, aggname(:status, infected)], color=:red)
-figure[1, 2] = Legend(figure, [l1, l2, l3, l4], ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2", "r=$r4, social distancing"])
+l4 = lines!(ax, data4[:, aggname(:status, infected)], color = :red)
+figure[1, 2] = Legend(
+    figure,
+    [l1, l2, l3, l4],
+    ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2", "r=$r4, social distancing"],
+)
 figure
 
 # Here you can see the characteristic "flattening the curve" phrase you hear all over the
