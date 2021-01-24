@@ -289,11 +289,6 @@ The argument `method` provides three pairing scenarios
   (existing within radius `r`).
   Each agent can only belong to one pair, therefore if two agents share the same nearest
   neighbor only one of them (sorted by id) will be paired.
-- `:scheduler`: agents are scanned according to the given keyword `scheduler`
-  (by default the model's scheduler), and each scanned
-  agent is paired to its nearest neighbor. Similar to `:nearest`, each agent can belong
-  to only one pair. This functionality is useful e.g. when you want some agents to be
-  paired "guaranteed", even if some other agents might be nearest to each other.
 - `:types`: For mixed agent models only. Return every pair of agents within radius `r`
   (similar to `:all`), only capturing pairs of differing types. For example, a model of
   `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
@@ -310,36 +305,16 @@ function interacting_pairs(
     scheduler = model.scheduler,
     exact = true,
 )
-    @assert method ∈ (:scheduler, :nearest, :all, :types)
+    @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r)
-    elseif method == :scheduler
-        scheduler_pairs!(pairs, model, r, scheduler)
     elseif method == :all
         all_pairs!(pairs, model, r, exact = exact)
     elseif method == :types
         type_pairs!(pairs, model, r, scheduler, exact = exact)
     end
     return PairIterator(pairs, model.agents)
-end
-
-function scheduler_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{<:ContinuousSpace},
-    r::Real,
-    scheduler,
-)
-    for id in scheduler(model)
-        # Skip already checked agents
-        any(isequal(id), p[2] for p in pairs) && continue
-        a1 = model[id]
-        a2 = nearest_neighbor(a1, model, r)
-        # This line ensures each neighbor exists in only one pair:
-        if a2 ≠ nothing && !any(isequal(a2.id), p[2] for p in pairs)
-            push!(pairs, (id, a2.id))
-        end
-    end
 end
 
 function all_pairs!(

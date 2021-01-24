@@ -95,15 +95,6 @@ end
   for i in 1:4
     add_agent_pos!(Agent6(i+2, pos[i], (0.0, 0.0), 0), model)
   end
-  pairs = interacting_pairs(model, 2.0, :scheduler).pairs
-  @test length(pairs) == 2
-  fi = [p[1] for p in pairs]
-  se = [p[2] for p in pairs]
-  @test fi == unique(fi)
-  @test se == unique(se)
-  for id in fi
-    @test id ∉ se
-  end
   pairs = interacting_pairs(model, 2.0, :all).pairs
   @test length(pairs) == 5
   @test (3, 6) ∉ pairs
@@ -113,11 +104,6 @@ end
   for i in 1:4
     add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
   end
-  # Note that length here is not the same as the test above with the same function
-  # call. This is due to the `scheduler` order of operation
-  pairs = interacting_pairs(model2, 2.0, :scheduler).pairs
-  @test length(pairs) == 2
-  # A more expensive search (in memory, not time), but guarantees true nearest neighbors
   pairs = interacting_pairs(model2, 2.0, :nearest).pairs
   @test length(pairs) == 3
   pairs = interacting_pairs(model2, 2.5, :all).pairs
