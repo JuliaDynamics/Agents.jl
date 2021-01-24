@@ -127,9 +127,3 @@ Each of the examples listed within this documentation are designed to showcase d
 If you are not sure about how to use a particular function, most likely one of the examples can show you how to interact with it.
 
 For a quick reference concerning the main concepts of agent based modelling, and how the Agents.jl examples implement each one, take a look at the [Overview of Examples](@ref) page.
-
-
-Example usage in:
-- [Wright-Fisher model of evolution](@ref): [A neutral model](@ref)
-Example usage in:
-- [Wright-Fisher model of evolution](@ref): [A neutral model](@ref)

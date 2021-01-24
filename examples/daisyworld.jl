@@ -364,7 +364,7 @@ figure
 # hand, we use the interactive application, to control by ourselves, in real time, how
 # much solar forcing is delivered to daisyworld.
 
-# So, let's use `abm_play` from the [Interactive application](@ref) page!
+# So, let's use `abm_data_exploration` from the [Interactive application](@ref) page!
 
 # ```julia
 # using InteractiveChaos, GLMakie, Random
