@@ -3,12 +3,7 @@
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="../sugaragents.mp4" type="video/mp4">
-# </video>
-# ```
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../sugarheatmap.mp4" type="video/mp4">
+# <source src="../sugarvis.mp4" type="video/mp4">
 # </video>
 # ```
 
@@ -162,11 +157,11 @@ model = sugarscape()
 
 using CairoMakie, AbstractPlotting
 
-figure = Figure()
-ax = figure[1, 1] = Axis(figure)
+fig = Figure()
+ax = fig[1, 1] = Axis(fig)
 hmap = heatmap!(ax, model.sugar_capacities; colormap=cgrad(:thermal))
-figure[1, 2] = Colorbar(figure, hmap; width=30)
-figure
+fig[1, 2] = Colorbar(fig, hmap; width=30)
+fig
 
 #
 
@@ -177,7 +172,6 @@ function env!(model)
         1:length(positions(model)),
     )
     model.sugar_values[togrow] .+= model.growth_rate
-    push!(sugar_values, copy(model.sugar_values)) ## keep track of sugar levels for plotting
 end
 
 function movement!(agent, model)
@@ -236,34 +230,22 @@ end
 
 # The following animation shows the emergent unequal distribution of agents on resourceful areas.
 using InteractiveChaos
-
-sugar_values = Array{Matrix{Int64}, 1}(undef, 0)
-abm_video(
-    "sugaragents.mp4", model, agent_step!, env!;
-    as=10, am='■', ac=:blue, framerate=8, frames=50, resolution=(600, 600)
-)
-nothing # hide
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../sugaragents.mp4" type="video/mp4">
-# </video>
-# ```
-
-figure = Figure(resolution=(600, 600))
-ax = figure[1, 1] = Axis(figure)
-data = Observable(sugar_values[1])
-hmap = heatmap!(ax, data; colormap=cgrad(:thermal))
-figure[1, 2] = Colorbar(figure, hmap; width=30)
-record(figure, "sugarheatmap.mp4", 1:50; framerate=9) do i
-    data[] = sugar_values[i]
+figure, abmstepper = abm_plot(model; resolution=(1200, 600), as=10, am='■', ac=:blue, equalaspect=false)
+hmap_data = Observable(model.sugar_values)
+lay = figure[1, 0] = GridLayout()
+ax = lay[1, 1] = Axis(figure)
+hmap = heatmap!(ax, hmap_data; colormap=cgrad(:thermal))
+lay[1, 2] = Colorbar(figure, hmap; width=20)
+record(figure, "sugarvis.mp4", 1:50; framerate=9) do i
+    Agents.step!(abmstepper, model, agent_step!, env!, 1)
+    hmap_data[] = model.sugar_values
 end
 nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="../sugarheatmap.mp4" type="video/mp4">
+# <source src="../sugarvis.mp4" type="video/mp4">
 # </video>
 # ```
-
 # ### Distribution of wealth across individuals
 
 model2 = sugarscape()
