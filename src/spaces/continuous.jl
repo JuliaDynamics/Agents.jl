@@ -374,7 +374,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
             append!(to_remove, idxs)
         end
     end
-    deleteat!(pairs, sort!(to_remove))
+    deleteat!(pairs, unique!(sort!(to_remove)))
 end
 
 function type_pairs!(
