@@ -301,7 +301,7 @@ select!(data_mean, Not(:replicate_mean))
 # ## Launching the interactive application
 # Given the definitions we have already created for a normal study of the Schelling model,
 # it is almost trivial to launch an interactive application for it.
-# First, we load `InteractiveChaos` to access `interactive_abm`
+# First, we load `InteractiveChaos` to access `abm_data_exploration`
 # %% #src
 # ```julia
 # using InteractiveChaos
@@ -327,7 +327,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 
 # ```julia
 # scene, adf, modeldf =
-# interactive_abm(model, agent_step!, dummystep, parange;
+# abm_data_exploration(model, agent_step!, dummystep, parange;
 #                 ac = groupcolor, am = groupmarker, as = 1,
 #                 adata = adata, alabels = alabels)
 # ```
