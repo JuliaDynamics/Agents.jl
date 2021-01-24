@@ -28,7 +28,6 @@
 
 using Agents, Random
 
-cd(@__DIR__) #src
 mutable struct Agent <: AbstractAgent
     id::Int
     pos::NTuple{2,Float64}
