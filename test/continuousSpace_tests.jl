@@ -105,7 +105,7 @@ end
     add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
   end
   pairs = interacting_pairs(model2, 2.0, :nearest).pairs
-  @test length(pairs) == 3
+  @test length(pairs) == 1
   pairs = interacting_pairs(model2, 2.5, :all).pairs
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
