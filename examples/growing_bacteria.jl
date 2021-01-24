@@ -168,11 +168,11 @@ nothing # hide
 using AgentsPlots
 gr() # hide
 
-!!! info "AgentsPlots no longer supported"
-    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
-    in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
-    This example has not yet been transferred to the new paradigm, but will do so in the
-    near future.
+# !!! info "AgentsPlots no longer supported"
+#     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
+#     in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
+#     This example has not yet been transferred to the new paradigm, but will do so in the
+#     near future.
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)

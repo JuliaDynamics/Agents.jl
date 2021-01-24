@@ -173,11 +173,11 @@ model = model_initiation(; params...)
 
 using AgentsPlots
 
-!!! info "AgentsPlots no longer supported"
-    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
-    in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
-    This example has not yet been transferred to the new paradigm, but will do so in the
-    near future.
+# !!! info "AgentsPlots no longer supported"
+#     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
+#     in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
+#     This example has not yet been transferred to the new paradigm, but will do so in the
+#     near future.
 
 plotargs = (node_size = 0.2, method = :circular, linealpha = 0.4)
 
