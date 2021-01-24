@@ -23,6 +23,7 @@
 
 using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
 using InteractiveChaos
+using AbstractPlotting
 import CairoMakie
 
 # And create a very simple agent.
@@ -139,15 +140,22 @@ end
 
 Random.seed!(6548) #hide
 model = schoolyard()
-abm_video(
-    "schoolyard.mp4", model, agent_step!;
-    as = 15, scatterkwargs = (xlims = (0, 100), ylims = (0, 100)),
-    framerate = 20, frames = 30,
-    title = "Playgound Dynamics"
-)
+
+s = Observable(0) # counter of current step
+t = lift(x -> "Playgound Dynamics, step = "*string(x), s)
+f, abmstepper = abm_plot(model, as = 15)
+ax = contents(f[1, 1])[1]
+## ax.title = t[]
+scatter!([50 50]; color = :red) # Show position of teacher
+limits!(ax, 0, 100, 0, 100)
+hidedecorations!(ax)
+record(f, "schoolyard.mp4", 1:40; framerate = 15) do i
+    Agents.step!(abmstepper, model, agent_step!, dummystep, 1)
+    s[] = i; s[] = s[]
+    ## ax.title = t[]
+end
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../schoolyard.mp4" type="video/mp4">
 # </video>
 # ```
-#TODO: Include: `scatter!(p1, [50], [50]; color = :red, legend = false) # Show position of teacher`
