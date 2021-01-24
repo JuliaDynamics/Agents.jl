@@ -22,7 +22,7 @@ To get started, please read the [Tutorial](@ref) page.
 * Interactive applications for any agent based model (in continuous or grid space), which are created with only 5 lines of code and look like this:
 
 ```@raw html
-<video width="100%" height="auto" controls autoplay loop>
+<video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
 </video>
 ```
