@@ -65,7 +65,7 @@ nothing # hide
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
-using InteractiveChaos, CairoMakie, AbstractPlotting
+using InteractiveChaos, CairoMakie
 
 abm_video(
     "socialdist1.mp4",
@@ -73,7 +73,6 @@ abm_video(
     agent_step!;
     title = "Ball Model",
     frames = 50,
-    as = 10,
     spf = 2,
     framerate = 25,
 )
@@ -111,7 +110,6 @@ abm_video(
     model_step!;
     title = "Billiard-like",
     frames = 50,
-    as = 10,
     spf = 2,
     framerate = 25,
 )
@@ -158,7 +156,6 @@ abm_video(
     model_step!;
     title = "Billiard-like with stationary agents",
     frames = 50,
-    as = 10,
     spf = 2,
     framerate = 25,
 )
@@ -254,8 +251,8 @@ sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-f = abm_plot(sir_model; ac = sir_colors, as = 10)
-display(f)
+fig, abmstepper = abm_plot(sir_model; ac = sir_colors)
+display(fig)
 
 # We have increased the size of the model 10-fold (for more realistic further analysis)
 
@@ -325,7 +322,7 @@ abm_video(
     ac = sir_colors,
     as = 10,
     spf = 1,
-    framerate = 25,
+    framerate = 20,
 )
 nothing # hide
 # ```@raw html
@@ -387,11 +384,10 @@ abm_video(
     sir_agent_step!,
     sir_model_step!;
     title = "Social Distancing",
-    frames = 50,
-    as = 10,
+    frames = 100,
     spf = 2,
     ac = sir_colors,
-    framerate = 25,
+    framerate = 20,
 )
 nothing # hide
 # ```@raw html
