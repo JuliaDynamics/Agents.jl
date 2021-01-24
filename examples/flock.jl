@@ -125,7 +125,7 @@ Random.seed!(23182) # hide
 cd(@__DIR__) #src
 
 !!! note
-    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now depreciated
+    [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
     in favor of [InteractiveChaos.jl](https://github.com/JuliaDynamics/InteractiveChaos.jl).
     This example has not yet been transferred to the new paradigm, but will do so in the
     near future.
