@@ -209,7 +209,6 @@ import CairoMakie # choosing a plotting backend
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
-figure
 
 # ## Animating the evolution
 
