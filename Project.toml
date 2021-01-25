@@ -1,6 +1,6 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
-authors = ["George Datseris", "Ali Vahdati", "Tim DuBois"]
+authors = ["Tim DuBois", "George Datseris", "Ali Vahdati"]
 version = "4.0.0"
 
 [deps]
