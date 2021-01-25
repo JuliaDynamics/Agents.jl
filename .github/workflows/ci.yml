@@ -67,10 +67,11 @@ jobs:
           version: '1'
       - name: Instantiate and install dependencies
         run: |
-          rm docs/Manifest.toml
           julia --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.update()
+            Pkg.resolve()
             Pkg.instantiate()
             ENV["PYTHON"] = ""
             Pkg.build("PyCall")
