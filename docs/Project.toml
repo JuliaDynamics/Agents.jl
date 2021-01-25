@@ -1,5 +1,6 @@
 [deps]
 Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+AgentsPlots = "7820620d-95fb-4739-93b3-b0a14dd83f9a"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
