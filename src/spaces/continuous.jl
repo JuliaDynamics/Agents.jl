@@ -11,7 +11,7 @@ Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 defvel(a, m) = nothing
 
 """
-    ContinuousSpace(extent::NTuple{D, <:Real}, spacing = min(extent)/10; kwargs...)
+    ContinuousSpace(extent::NTuple{D, <:Real}, spacing = min(extent...)/10; kwargs...)
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
 `spacing` configures the compartment spacing that the space is divided in, in order to
 accelerate nearest neighbor functions like [`nearby_ids`](@ref).
@@ -40,7 +40,7 @@ for neighbors. In [`Models.flocking`](@ref) for example, an optimal value for `s
 """
 function ContinuousSpace(
     extent::NTuple{D,X},
-    spacing = min(extent) / 10.0;
+    spacing = min(extent...) / 10.0;
     update_vel! = defvel,
     periodic = true,
 ) where {D,X<:Real}

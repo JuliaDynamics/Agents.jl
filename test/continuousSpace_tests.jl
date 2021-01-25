@@ -24,6 +24,8 @@
   @test_throws MethodError ContinuousSpace([1,1], 0.1) # Must be a tuple
   @test_throws MethodError ContinuousSpace(("one",1.0), 0.1) # Must contain reals
 
+  @test space1.dims == ContinuousSpace((1,1)).dims
+  @test space1.extent == ContinuousSpace((1,1)).extent
   model1 = ABM(Agent6, space1)
   model2 = ABM(Agent6, space2)
 
