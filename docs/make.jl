@@ -9,8 +9,8 @@ println("Agents...")
 using Agents
 println("Plots...")
 using Plots
-println("AgentsPlots...")
-using AgentsPlots
+#println("AgentsPlots...")
+#using AgentsPlots
 println("Literate...")
 import Literate
 println("InteractiveChaos...")
