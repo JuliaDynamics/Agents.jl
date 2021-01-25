@@ -10,6 +10,7 @@ using Agents
 println("Plots...")
 using Plots
 println("AgentsPlots...")
+Pkg.add(PackageSpec(url="https://github.com/JuliaDynamics/AgentsPlots.jl", rev="master"))
 using AgentsPlots
 println("Literate...")
 import Literate
