@@ -28,3 +28,11 @@ For LOC, we use the following convention: code is formatted using standard pract
 ᕯ Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
 
 The results clearly speak for themselves. Across all four models, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.
+
+## An in-depth comparison of four frameworks
+
+In an upcoming scientific paper discussing Agents.jl, the authors compile a large list of features and metrics from the four frameworks discussed above.
+Further details will be made available once the peer review process has been completed; but for now, here is an overview of the comparison.
+
+![Table 1](assets/table1.png)
+![Table 1 continued](assets/table2.png)
