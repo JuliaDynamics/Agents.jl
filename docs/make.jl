@@ -9,9 +9,8 @@ println("Agents...")
 using Agents
 println("Plots...")
 using Plots
-println("AgentsPlots...")
-Pkg.add(PackageSpec(name="AgentsPlots", rev="master"))
-using AgentsPlots
+#println("AgentsPlots...")
+#using AgentsPlots
 println("Literate...")
 import Literate
 println("InteractiveChaos...")
