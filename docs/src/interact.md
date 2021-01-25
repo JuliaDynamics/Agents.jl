@@ -1,18 +1,16 @@
-# Interactive application
+# [Interactive application](@id Interact)
 The interactive application of Agents.jl is _model-agnostic_.
 This means that provided that the space of the model is one of the supported types (currently only 2D `GridSpace` or `ContinuousSpace`), the application does not care about the model dynamics or agent properties.
 
 The app is based on [`InteractiveChaos`](https://juliadynamics.github.io/InteractiveChaos.jl/dev/), another package of JuliaDynamics.
 
-Here is an example application
+Here is an example application made with [`InteractiveChaos.abm_data_exploration`](@ref).
 
 ```@raw html
 <video width="100%" height="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
 </video>
 ```
-
-the application is made with [`InteractiveChaos.abm_data_exploration`](@ref)
 
 The animation at the start of this page was done with:
 ```julia
