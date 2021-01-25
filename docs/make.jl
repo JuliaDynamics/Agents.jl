@@ -58,7 +58,7 @@ println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(modules = [Agents,AgentsPlots,InteractiveChaos],
 sitename= "Agents.jl",
-authors = "Ali R. Vahdati, George Datseris, Tim DuBois and contributors.",
+authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
 doctest = false,
 format = Documenter.HTML(
     prettyurls = CI,
