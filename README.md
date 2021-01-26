@@ -22,5 +22,13 @@ Any contribution to Agents.jl is welcome! For example you can:
 ## Citation
 
 If you use this package in a publication, please cite the paper below:
-
-> R. Vahdati, Ali (2019). Agents.jl: agent-based modeling framework in Julia. Journal of Open Source Software, 4(42), 1611, https://doi.org/10.21105/joss.01611
+```
+@misc{Agents.jl,
+      title={Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity}, 
+      author={George Datseris and Ali R. Vahdati and Timothy C. DuBois},
+      year={2021},
+      eprint={2101.10072},
+      archivePrefix={arXiv},
+      primaryClass={cs.MA}
+}
+```
