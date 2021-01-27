@@ -313,7 +313,7 @@ function agent_step!(agent, model)
 end
 
 # ## Let the Battle Begin
-# Plotting is relatively straightforward. `AgentsPlots` cannot be used explicitly (yet)
+# Plotting is relatively straightforward. [`plotabm`](@ref) cannot be used explicitly (yet)
 # since it expects our categorical dimension is actually a third spatial one.
 # We start with some custom legends to easier understand the dynamics.
 

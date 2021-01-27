@@ -18,7 +18,7 @@
 # ## Defining the core structures
 
 # We start by defining the agent type
-using Agents, Random, AgentsPlots
+using Agents, Random, Plots
 gr() # hide
 
 mutable struct Tree <: AbstractAgent

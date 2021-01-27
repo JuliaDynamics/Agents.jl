@@ -66,7 +66,7 @@
 # | Agents' maximum age max-age distribution | U[60,100]    |
 
 using Agents
-using AgentsPlots
+using Plots
 using Random
 
 mutable struct SugarSeeker <: AbstractAgent

@@ -119,7 +119,7 @@ end
 nothing # hide
 
 # And here is the animation
-using AgentsPlots
+using Plots
 gr() # hide
 Random.seed!(23182) # hide
 cd(@__DIR__) #src

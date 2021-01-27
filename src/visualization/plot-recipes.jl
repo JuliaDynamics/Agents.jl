@@ -7,7 +7,41 @@ mutable struct PlotABM{AbstractSpace}
     args::Any
 end
 
+"""
+    plotabm(model::ABM{<: ContinuousSpace}; ac, as, am, kwargs...)
+    plotabm(model::ABM{<: DiscreteSpace}; ac, as, am, kwargs...)
+
+Plot the `model` as a `scatter`-plot, by configuring the agent shape, color and size
+via the keywords `ac, as, am`.
+These keywords can be constants, or they can be functions, each accepting an agent
+and outputting a valid value for color/shape/size.
+
+The keyword `scheduler = model.scheduler` decides the plotting order of agents
+(which matters only if there is overlap).
+
+The keyword `offset` is a function with argument `offest(a::Agent)`.
+It targets scenarios where multiple agents existin within
+a grid cell as it adds an offset (same type as `agent.pos`) to the plotted agent position.
+
+All other keywords are propagated into `Plots.scatter` and the plot is returned.
+
+    plotabm(model::ABM{<: GraphSpace}; ac, as, am, kwargs...)
+This function is the same as `plotabm` for `ContinuousSpace`, but here the three key
+functions `ac, as, am` do not get an agent as an input but a vector of agents at
+each node of the graph. Their output is the same.
+
+Here `as` defaults to `length`. Internally, the `graphplot` recipe is used, and
+all other `kwargs...` are propagated there.
+"""
 plotabm(args...; kw...) = RecipesBase.plot(PlotABM{typeof(args[1].space)}(args); kw...)
+
+"""
+    plotabm!(model)
+    plotabm!(plt, model)
+
+Functionally the same as [`plotabm`](@ref), however this method appends to the active
+plot, or one identified as `plt`.
+"""
 plotabm!(args...; kw...) = RecipesBase.plot!(PlotABM{typeof(args[1].space)}(args); kw...)
 plotabm!(plt::RecipesBase.AbstractPlot, args...; kw...) =
     RecipesBase.plot!(plt, PlotABM{typeof(args[1].space)}(args); kw...)
