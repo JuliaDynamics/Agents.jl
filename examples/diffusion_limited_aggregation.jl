@@ -29,11 +29,13 @@ properties = Dict(
     :twist => 0.55,   # absolute tangential velocity
     :clockwise_fraction => 0.0,
     :spawn_count => 0,
-    :particle_radius => 1.0,
+    :min_radius => 1.0,
+    :max_radius => 2.0,
 )
 
 rand_circle() = (θ = rand(0.0:0.1:359.9); (cos(θ), sin(θ)))
-
+particle_radius(min_radius::Float64, max_radius::Float64) = min_radius <= max_radius ?
+rand(min_radius:0.01:max_radius) : min_radius
 function agent_step!(agent::Particle, model)
     if agent.is_stuck
         return
@@ -49,8 +51,8 @@ function agent_step!(agent::Particle, model)
     radial = radial ./ norm(radial)
     tangent = Tuple(cross([radial..., 0.0], agent.twist_axis)[1:2])
     agent.vel =
-        radial .* model.attraction .+ tangent .* model.twist .+
-        rand_circle() .* model.wiggle
+        (radial .* model.attraction .+ tangent .* model.twist .+
+        rand_circle() .* model.wiggle) ./ (agent.radius ^ 2.)
     move_agent!(agent, model, model.speed)
 end
 
@@ -58,7 +60,7 @@ function model_step!(model)
     while model.spawn_count > 0
         particle = Particle(
             nextid(model),
-            model.particle_radius,
+            particle_radius(model.min_radius, model.max_radius),
             rand() < model.clockwise_fraction;
             pos = (rand_circle() .+ 1.0) .* model.space.extent .* 0.49,
         )
@@ -76,13 +78,16 @@ function initialize_model(;
     model = ABM(Particle, space; properties)
     center = space_extents ./ 2.0
     for i = 1:initial_particles
-        particle =
-            Particle(i, properties[:particle_radius], rand() < model.clockwise_fraction)
+        particle = Particle(
+            i,
+            particle_radius(model.min_radius, model.max_radius),
+            rand() < model.clockwise_fraction,
+        )
         add_agent!(particle, model)
     end
     particle = Particle(
         initial_particles + 1,
-        properties[:particle_radius],
+        particle_radius(model.min_radius, model.max_radius),
         true;
         pos = center,
         is_stuck = true,
@@ -96,12 +101,15 @@ model = initialize_model()
 using InteractiveChaos, GLMakie
 
 particle_color(a::Particle) = a.is_stuck ? :red : :blue
-params = Dict(
+particle_size(a::Particle) = 3.4 * a.radius
+params = (
     :attraction => 0.0:0.01:2.0,
     :speed => 0.0:0.01:2.0,
     :wiggle => 0.0:0.01:2.0,
     :twist => 0.0:0.01:2.0,
     :clockwise_fraction => 0.0:0.01:1.0,
+    :min_radius => 0.5:0.01:3.,
+    :max_radius => 0.5:0.01:3.,
 )
 
 interactive_abm(
@@ -110,6 +118,6 @@ interactive_abm(
     model_step!,
     params;
     ac = particle_color,
-    as = 3.4,
+    as = particle_size,
     am = '⚪',
 )
