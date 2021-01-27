@@ -62,7 +62,7 @@ end
 
 # ## Visualising the fall of humanity
 #
-# Plotting this space in a seemless manner is a work in progress. For now we
+# Plotting this space in a seamless manner is a work in progress. For now we
 # use [OpenStreetMapXPlot](https://github.com/pszufe/OpenStreetMapXPlot.jl) and
 # a custom routine.
 

@@ -6,7 +6,7 @@
 
 # It is also available from the `Models` module as [`Models.game_of_life`](@ref).
 
-using Agents, AgentsPlots
+using Agents, Plots
 using Random # hide
 gr(); # hide
 nothing # hide
@@ -90,7 +90,7 @@ end
 
 # ## 3. Animate the model
 
-# We use the `plotabm` function from `AgentsPlots.jl` package for creating an animation.
+# We use the [`plotabm`](@ref) function to create an animation.
 
 cd(@__DIR__) #src
 ac(x) = x.status == true ? :black : :white

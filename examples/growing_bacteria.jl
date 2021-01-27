@@ -165,7 +165,7 @@ nothing # hide
 # Here we once again use the huge flexibility provided by [`plotabm`](@ref) to
 # plot the becteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
-using AgentsPlots
+using Plots
 gr() # hide
 
 function cassini_oval(agent)

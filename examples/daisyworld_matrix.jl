@@ -35,7 +35,7 @@
 # `id` and `pos` for an agent that lives on a [`GridSpace`](@ref). Each daisy has an `age`,
 # confined later by a maximum age set by the user, a `breed` (either `:black` or `:white`)
 # and an associated `albedo` value, again set by the user.
-using Agents, AgentsPlots, Plots
+using Agents, Plots
 using Statistics: mean
 using Random # hide
 gr() # hide
@@ -227,14 +227,6 @@ plotabm(model; ac = daisycolor, as = 5)
 sum(map(a -> [a.breed == :white, a.breed == :black], allagents(model)))
 
 # ---
-
-# Now we'll take a look at some of the complex dynamics this world can manifest.
-# Some of these methods are, for the moment, not implemented in
-# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl), although this does
-# give us an opportunity to test out some of the new data collection features in
-# Agents.jl v3.0. *Think you have a nice recipe for a plot that would help others?*
-# [Send us a pull request](https://github.com/JuliaDynamics/AgentsPlots.jl/pulls)
-# or [open an issue](https://github.com/JuliaDynamics/AgentsPlots.jl/issues).
 
 # First, our fluctuating solar luminosity scenario.
 

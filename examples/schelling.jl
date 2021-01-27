@@ -19,7 +19,7 @@
 
 # ## Defining the agent type
 
-using Agents, AgentsPlots
+using Agents, Plots
 gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
@@ -193,8 +193,7 @@ data
 # ## Visualizing the data
 
 # We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
-# 2D grid at every generation, via the
-# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl) package.
+# 2D grid at every generation.
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :square

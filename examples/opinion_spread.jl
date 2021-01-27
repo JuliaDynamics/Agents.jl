@@ -11,7 +11,7 @@
 # They are more likely to adopt their neighbors opinion if the share more opinions with each other.
 
 using Agents
-using AgentsPlots
+using Plots
 using Random
 
 # ## Building the model

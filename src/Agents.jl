@@ -29,6 +29,9 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
+# Plot recipes
+include("visualization/plot-recipes.jl")
+
 # 4.0 Depreciations
 @deprecate space_neighbors nearby_ids
 @deprecate node_neighbors nearby_positions

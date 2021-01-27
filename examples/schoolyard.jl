@@ -17,7 +17,7 @@
 
 # To begin, we load in some dependencies
 
-using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, AgentsPlots, Random
+using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Plots, Random
 gr() # hide
 
 # And create a very simple agent.
