@@ -1,22 +1,26 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["Tim DuBois", "George Datseris", "Ali Vahdati"]
-version = "4.0.1"
+version = "4.0.2"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OpenStreetMapX = "86cd37e6-c0ff-550b-95fe-21d72c8d4fc9"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 DataFrames = "0.21, 0.22, 1"
+GraphRecipes = "0.5"
 LightGraphs = "1"
-StatsBase = "0.32, 0.33"
 OpenStreetMapX = "0.2"
+RecipesBase = "1"
+StatsBase = "0.32, 0.33"
 julia = "1.5"
 
 [extras]
