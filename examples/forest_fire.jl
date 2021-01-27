@@ -104,7 +104,7 @@ function treecolor(a)
     color
 end
 
-plotabm(forest; ac = treecolor, ms = 5, msw = 0)
+plotabm(forest; ac = treecolor, ms = 5)
 
 # or animate it
 cd(@__DIR__) #src
