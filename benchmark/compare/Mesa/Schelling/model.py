@@ -3,7 +3,6 @@ import random
 from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import SingleGrid
-from mesa.datacollection import DataCollector
 
 
 class SchellingAgent(Agent):
@@ -54,11 +53,6 @@ class SchellingModel(Model):
         self.grid = SingleGrid(height, width, torus=True)
 
         self.happy = 0
-        self.datacollector = DataCollector(
-            {"happy": lambda m: m.happy},  # Model-level count of happy agents
-            # For testing purposes, agent's individual x and y
-            {"x": lambda a: a.pos[0], "y": lambda a: a.pos[1]})
-
         self.running = True
 
         # Set up agents
@@ -84,4 +78,3 @@ class SchellingModel(Model):
         '''
         self.happy = 0  # Reset counter of happy agents
         self.schedule.step()
-        self.datacollector.collect(self)
