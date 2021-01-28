@@ -1,6 +1,5 @@
 from mesa import Model
 from mesa import Agent
-from mesa.datacollection import DataCollector
 from mesa.space import Grid
 from mesa.time import RandomActivation
 
@@ -60,14 +59,6 @@ class ForestFire(Model):
         self.schedule = RandomActivation(self)
         self.grid = Grid(height, width, torus=False)
 
-        self.datacollector = DataCollector(
-            {
-                "Fine": lambda m: self.count_type(m, "Fine"),
-                "On Fire": lambda m: self.count_type(m, "On Fire"),
-                "Burned Out": lambda m: self.count_type(m, "Burned Out"),
-            }
-        )
-
         # Place a tree in each cell with Prob = density
         for (contents, x, y) in self.grid.coord_iter():
             if self.random.random() < self.density:
@@ -80,23 +71,9 @@ class ForestFire(Model):
                 self.schedule.add(new_tree)
 
         self.running = True
-        self.datacollector.collect(self)
 
     def step(self):
         """
         Advance the model by one step.
         """
         self.schedule.step()
-        # collect data
-        self.datacollector.collect(self)
-
-    @staticmethod
-    def count_type(model, tree_condition):
-        """
-        Helper method to count trees in a given condition in a given model.
-        """
-        count = 0
-        for tree in model.schedule.agents:
-            if tree.condition == tree_condition:
-                count += 1
-        return count
