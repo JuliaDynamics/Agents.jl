@@ -70,8 +70,6 @@ class ForestFire(Model):
                 self.grid._place_agent((x, y), new_tree)
                 self.schedule.add(new_tree)
 
-        self.running = True
-
     def step(self):
         """
         Advance the model by one step.
