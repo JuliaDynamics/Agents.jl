@@ -11,7 +11,6 @@ Replication of the model found in NetLogo:
 
 from mesa import Model
 from mesa.space import MultiGrid
-from mesa.datacollection import DataCollector
 
 from agents import Sheep, Wolf, GrassPatch
 from schedule import RandomActivationByBreed
@@ -85,12 +84,6 @@ class WolfSheep(Model):
 
         self.schedule = RandomActivationByBreed(self)
         self.grid = MultiGrid(self.height, self.width, torus=True)
-        self.datacollector = DataCollector(
-            {
-                "Wolves": lambda m: m.schedule.get_breed_count(Wolf),
-                "Sheep": lambda m: m.schedule.get_breed_count(Sheep),
-            }
-        )
 
         # Create sheep:
         for i in range(self.initial_sheep):
@@ -126,12 +119,9 @@ class WolfSheep(Model):
                 self.schedule.add(patch)
 
         self.running = True
-        self.datacollector.collect(self)
 
     def step(self):
         self.schedule.step()
-        # collect data
-        self.datacollector.collect(self)
         if self.verbose:
             print(
                 [
