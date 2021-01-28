@@ -36,8 +36,6 @@ class WolfSheep(Model):
     grass_regrowth_time = 20
     sheep_gain_from_food = 5
 
-    verbose = False  # Print-monitoring
-
     description = (
         "A model for simulating wolf and sheep (predator-prey) ecosystem modelling."
     )
@@ -118,29 +116,6 @@ class WolfSheep(Model):
                 self.grid.place_agent(patch, (x, y))
                 self.schedule.add(patch)
 
-        self.running = True
-
     def step(self):
         self.schedule.step()
-        if self.verbose:
-            print(
-                [
-                    self.schedule.time,
-                    self.schedule.get_breed_count(Wolf),
-                    self.schedule.get_breed_count(Sheep),
-                ]
-            )
 
-    def run_model(self, step_count=500):
-
-        if self.verbose:
-            print("Initial number wolves: ", self.schedule.get_breed_count(Wolf))
-            print("Initial number sheep: ", self.schedule.get_breed_count(Sheep))
-
-        for i in range(step_count):
-            self.step()
-
-        if self.verbose:
-            print("")
-            print("Final number wolves: ", self.schedule.get_breed_count(Wolf))
-            print("Final number sheep: ", self.schedule.get_breed_count(Sheep))
