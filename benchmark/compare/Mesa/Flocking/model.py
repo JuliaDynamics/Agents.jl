@@ -51,7 +51,6 @@ class BoidFlockers(Model):
         self.space = ContinuousSpace(width, height, True)
         self.factors = dict(cohere=cohere, separate=separate, match=match)
         self.make_agents()
-        self.running = True
 
     def make_agents(self):
         """
