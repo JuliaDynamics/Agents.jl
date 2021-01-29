@@ -11,8 +11,8 @@ println("Plots...")
 using Plots
 println("Literate...")
 import Literate
-println("InteractiveChaos...")
-import InteractiveChaos
+println("InteractiveDynamics...")
+import InteractiveDynamics
 println("OpenStreetMapX...")
 import OpenStreetMapX
 
@@ -54,7 +54,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,InteractiveChaos],
+makedocs(modules = [Agents,InteractiveDynamics],
 sitename= "Agents.jl",
 authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
 doctest = false,
