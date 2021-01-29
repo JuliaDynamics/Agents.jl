@@ -6,7 +6,7 @@
     end
     @test model.scheduler == fastest
     @test typeof(model.agents) <: Dict
-    @test model.space == nothing
+    @test model.space === nothing
     @test model.properties == Dict(:a => 2, :b => "test")
     a = model[1]
     @test a isa Agent0

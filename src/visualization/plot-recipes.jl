@@ -59,7 +59,7 @@ plotabm!(plt::RecipesBase.AbstractPlot, args...; kw...) =
     end
 
     model = h.args[1]
-    if scheduler == nothing
+    if scheduler === nothing
         scheduler = model.scheduler
     end
 
@@ -68,7 +68,7 @@ plotabm!(plt::RecipesBase.AbstractPlot, args...; kw...) =
     sizes = typeof(as) <: Function ? [as(model[i]) for i in ids] : as
     markers = typeof(am) <: Function ? [am(model[i]) for i in ids] : am
 
-    if offset == nothing
+    if offset === nothing
         pos = [model[i].pos for i in ids]
     else
         pos = [model[i].pos .+ offset(model[i]) for i in ids]

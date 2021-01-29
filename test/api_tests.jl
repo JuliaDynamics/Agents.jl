@@ -124,8 +124,8 @@ end
     for i in 1:20
         add_agent_single!(Agent3(i, (1, 1), rand() / rand()), model2)
     end
-    @test sample!(model2, 10) == nothing
-    @test sample!(model2, 10, :weight) == nothing
+    @test sample!(model2, 10) === nothing
+    @test sample!(model2, 10, :weight) === nothing
     allweights = [i.weight for i in values(model2.agents)]
     mean_weights = sum(allweights) / length(allweights)
     sample!(model2, 12, :weight)
