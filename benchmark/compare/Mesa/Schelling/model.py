@@ -53,7 +53,6 @@ class SchellingModel(Model):
         self.grid = SingleGrid(height, width, torus=True)
 
         self.happy = 0
-        self.running = True
 
         # Set up agents
         # We use a grid iterator that returns
