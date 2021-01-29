@@ -372,14 +372,14 @@ plot(p, p2, p3, layout = (3, 1), size = (600, 700))
 # So, let's use `abm_data_exploration` from the [Interactive application](@ref Interact) page!
 
 # ```julia
-# using InteractiveChaos, Makie, Random
+# using InteractiveDynamics, GLMakie, Random
 # Random.seed!(165)
 # model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 # ```
 
 # Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
 # color/shape/size functions, and we can re-use them for the interactive application.
-# Because `InteractiveChaos` uses a different plotting package, Makie.jl, the plotting
+# Because `InteractiveDynamics` uses a different plotting ecosystem, Makie.jl, the plotting
 # functions we have defined for [`plotabm`](@ref) need to be slightly adjusted.
 
 # ```julia

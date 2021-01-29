@@ -218,8 +218,8 @@ plotabm!
 ```
 
 ## Interactive application
-You need to be using `InteractiveChaos` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
+You need to be using `InteractiveDynamics` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
 
 ```@docs
-InteractiveChaos.abm_data_exploration
+InteractiveDynamics.abm_data_exploration
 ```

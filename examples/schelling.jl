@@ -300,10 +300,10 @@ select!(data_mean, Not(:replicate_mean))
 # ## Launching the interactive application
 # Given the definitions we have already created for a normal study of the Schelling model,
 # it is almost trivial to launch an interactive application for it.
-# First, we load `InteractiveChaos` to access `abm_data_exploration`
+# First, we load `InteractiveDynamics` to access `abm_data_exploration`
 # %% #src
 # ```julia
-# using InteractiveChaos
+# using InteractiveDynamics
 # using GLMakie # we choose OpenGL as plotting backend
 # ```
 
