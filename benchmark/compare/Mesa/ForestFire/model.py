@@ -1,7 +1,7 @@
 from mesa import Model
 from mesa import Agent
 from mesa.space import Grid
-from mesa.time import RandomActivation
+from mesa.time import BaseScheduler
 
 class TreeCell(Agent):
     """
@@ -48,7 +48,7 @@ class ForestFire(Model):
             density: What fraction of grid cells have a tree in them.
         """
         # Set up model objects
-        self.schedule = RandomActivation(self)
+        self.schedule = BaseScheduler(self)
         self.grid = Grid(height, width, torus=False)
 
         # Place a tree in each cell with Prob = density
