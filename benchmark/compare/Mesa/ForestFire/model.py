@@ -35,9 +35,6 @@ class TreeCell(Agent):
                     neighbor.condition = "On Fire"
             self.condition = "Burned Out"
 
-    def get_pos(self):
-        return self.pos
-
 class ForestFire(Model):
     """
     Simple Forest Fire model.
