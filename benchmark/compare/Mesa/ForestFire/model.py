@@ -1,3 +1,6 @@
+# This example deviates from Mesa's ForestFire in that it uses BaseScheduler
+# instead of RandomActivation.
+
 from mesa import Model
 from mesa import Agent
 from mesa.space import Grid

@@ -1,3 +1,6 @@
+# This example deviates from Mesa's Schelling in that it uses BaseScheduler
+# instead of RandomActivation.
+
 import random
 
 from mesa import Model, Agent
