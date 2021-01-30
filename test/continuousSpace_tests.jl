@@ -50,7 +50,7 @@
   # add_agent! with an existing agent
   agent = Agent6(2, pos, vel, dia)
   add_agent!(agent, model2)
-  @test Agents.defvel(agent, model2) == nothing
+  @test Agents.defvel(agent, model2) === nothing
   @test collect(keys(model2.agents)) == [2]
 
   # agents within some range are found correctly

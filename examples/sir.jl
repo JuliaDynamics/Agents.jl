@@ -171,7 +171,7 @@ model = model_initiation(; params...)
 # Alright, let's plot the cities as a graph to get an idea how the model "looks like",
 # using the function [`plotabm`](@ref).
 
-using AgentsPlots
+using Plots
 
 plotargs = (node_size = 0.2, method = :circular, linealpha = 0.4)
 

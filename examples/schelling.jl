@@ -19,7 +19,7 @@
 
 # ## Defining the agent type
 
-using Agents, AgentsPlots
+using Agents, Plots
 gr() # hide
 
 mutable struct SchellingAgent <: AbstractAgent
@@ -193,8 +193,7 @@ data
 # ## Visualizing the data
 
 # We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
-# 2D grid at every generation, via the
-# [AgentsPlots](https://github.com/JuliaDynamics/AgentsPlots.jl) package.
+# 2D grid at every generation.
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :square
@@ -301,10 +300,10 @@ select!(data_mean, Not(:replicate_mean))
 # ## Launching the interactive application
 # Given the definitions we have already created for a normal study of the Schelling model,
 # it is almost trivial to launch an interactive application for it.
-# First, we load `InteractiveChaos` to access `abm_data_exploration`
+# First, we load `InteractiveDynamics` to access `abm_data_exploration`
 # %% #src
 # ```julia
-# using InteractiveChaos
+# using InteractiveDynamics
 # using GLMakie # we choose OpenGL as plotting backend
 # ```
 

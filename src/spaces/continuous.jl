@@ -243,7 +243,7 @@ function elastic_collision!(a, b, f = nothing)
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2
     r2 = x2 .- x1
-    m1, m2 = f == nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
+    m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
     if m1 == Inf
@@ -337,7 +337,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
     distances = Vector{Float64}(undef, 0)
     for a in (model[id] for id in scheduler(model))
         nn = nearest_neighbor(a, model, r)
-        nn == nothing && continue
+        nn === nothing && continue
         # Sort the pair to overcome any uniqueness issues
         new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
         if new_pair ∉ pairs
@@ -347,10 +347,10 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
             dist = edistance(a.pos, nn.pos, model)
 
             idx = findfirst(x -> first(new_pair) == x, first.(pairs))
-            if idx == nothing
+            if idx === nothing
                 push!(pairs, new_pair)
                 push!(distances, dist)
-            elseif idx != nothing && distances[idx] > dist
+            elseif idx !== nothing && distances[idx] > dist
                 # Replace this pair, it is not the true neighbor
                 pairs[idx] = new_pair
                 distances[idx] = dist
@@ -362,7 +362,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
         # This list is the set of pairs that have two distances in the pair list.
         # The one with the largest distance value must be dropped.
         fidx = findfirst(isequal(doubles), first.(pairs))
-        if fidx != nothing
+        if fidx !== nothing
             lidx = findfirst(isequal(doubles), last.(pairs))
             largest = distances[fidx] <= distances[lidx] ? lidx : fidx
             push!(to_remove, largest)

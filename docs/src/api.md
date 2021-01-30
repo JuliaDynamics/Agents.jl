@@ -210,21 +210,16 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 
 
 ## Plotting
-Plotting functionality comes from `AgentsPlots`, which uses Plots.jl. You need to install both `AgentsPlots`, as well as a plotting backend (we use GR) to use the following functions.
-
-The version of `AgentsPlots` is:
-```@example versions
-using Pkg
-Pkg.status("AgentsPlots")
-```
+Plotting functionality comes Plots.jl. You need to install a plotting backend (we use GR and pyplot) to use the following functions.
 
 ```@docs
 plotabm
+plotabm!
 ```
 
 ## Interactive application
-You need to be using `InteractiveChaos` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
+You need to be using `InteractiveDynamics` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
 
 ```@docs
-InteractiveChaos.abm_data_exploration
+InteractiveDynamics.abm_data_exploration
 ```

@@ -28,7 +28,7 @@ function sample!(
 )
     nagents(model) > 0 || return
     org_ids = collect(keys(model.agents))
-    if weight != nothing
+    if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
         newids = sample(rng, org_ids, weights, n, replace = replace)
     else

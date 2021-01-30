@@ -14,9 +14,13 @@ from agents import Sheep, Wolf, GrassPatch
 from schedule import RandomActivationByBreed
 from model import WolfSheep
 
-wolfsheepmodel = WolfSheep()
+def runthemodel(wolfsheep):
+    for i in range(0, 500):
+      wolfsheep.step()
+
+wolfsheep = WolfSheep()
 """
 
-tt = timeit.Timer('wolfsheepmodel.run_model()', setup=setup)
+tt = timeit.Timer('runthemodel(wolfsheep)', setup=setup)
 a = min(tt.repeat(100, 1))
 print("Mesa WolfSheep (ms):", a*1e3)

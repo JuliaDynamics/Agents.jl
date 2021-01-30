@@ -22,7 +22,7 @@
 # We need to create agents that comply with [`ContinuousSpace`](@ref), i.e.
 # they have a `pos` and `vel` fields, both of which are tuples of float numbers.
 
-using Agents, Random, AgentsPlots, Plots
+using Agents, Random, Plots
 gr() # hide
 cd(@__DIR__) #src
 mutable struct Agent <: AbstractAgent

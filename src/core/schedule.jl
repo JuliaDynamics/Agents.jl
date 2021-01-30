@@ -94,7 +94,7 @@ Activate agents by type in specified order (since `Union`s are not order preserv
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
-        if order != nothing
+        if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"
             types = order
         end

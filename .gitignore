@@ -11,3 +11,4 @@ Manifest.toml
 /.benchmarkci
 .*.tmp.nlogo
 *.osm.cache
+src/update_*

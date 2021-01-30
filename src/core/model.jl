@@ -227,7 +227,7 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
-    if space != nothing
+    if space !== nothing
         (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
@@ -253,7 +253,7 @@ end
 function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
-    if abm.space == nothing
+    if abm.space === nothing
         s*= "\n no space"
     else
         s*= "\n space: $(sprint(show, abm.space))"

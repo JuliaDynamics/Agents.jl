@@ -216,8 +216,8 @@
         @test propertynames(yearly_agent_data) == [:step, :id, :weight]
         @test maximum(yearly_agent_data[!, :step]) == 5
 
-        @test dummystep(model) == nothing
-        @test dummystep(model[1], model) == nothing
+        @test dummystep(model) === nothing
+        @test dummystep(model[1], model) === nothing
         tick = model.tick
         step!(model, agent_step!, 1)
         @test tick == model.tick

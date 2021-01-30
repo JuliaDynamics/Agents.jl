@@ -18,7 +18,7 @@
 # ## Defining the core structures
 
 # We start by defining the agent type
-using Agents, Random, AgentsPlots
+using Agents, Random, Plots
 gr() # hide
 
 mutable struct Tree <: AbstractAgent
@@ -104,7 +104,7 @@ function treecolor(a)
     color
 end
 
-plotabm(forest; ac = treecolor, ms = 5, msw = 0)
+plotabm(forest; ac = treecolor, ms = 5)
 
 # or animate it
 cd(@__DIR__) #src

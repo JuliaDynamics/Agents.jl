@@ -67,7 +67,7 @@
     @test osm_is_stationary(model[1])
 
     @test osm_is_stationary(model[2])
-    @test move_agent!(model[2], model, 50) == nothing
+    @test move_agent!(model[2], model, 50) === nothing
 
     add_agent!(start_r, model, route, finish_r)
     osm_random_route!(model[3], model)
