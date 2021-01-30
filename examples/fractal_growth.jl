@@ -4,45 +4,39 @@
 # It is a kinetic process that consists of randomly diffusing particles giving rise to fractal-like structures
 # resembling those observed naturally.
 
-# The environment is a two dimensional continuous space world. Agents are particles that diffuse and aggregate to form
+# The environment is a two dimensional, continuous space world. Agents are particles that diffuse and aggregate to form
 # fractals. Initially, there are particles of random size distributed across the space, and one static particle in the center
 # that forms the seed for the fractal growth. As moving particles collide with the seed, or any particle that previously
-# collided with the seed, it is stuck and contributes to the fractal. As a particle gets stuck, another one is created at a
-# circular border around the center to continue fractal growth.
+# collided with the seed, it gets stuck and contributes to the fractal. As a particle gets stuck, another one is created at a
+# circular border around the center to feed the growth.
 using Agents, LinearAlgebra
 using Random # hide
 Random.seed!(42) # hide
 
-# We use the `@agent` macro to conveniently define a `Particle` agent. Each agent
+# We use the [`@agent`](@ref) macro to conveniently define a `Particle` agent. Each agent
 # has a radius, representing the particle size, a boolean to define whether it is stuck and part of the fractal,
-# and an axis around which it spins (elaborated on later). In addition, the `@agent` macro also provides each
-# agent with fields for `id`, `pos` (its position in space) and `vel` (its velocity).
+# and an axis around which it spins (elaborated on later). In addition, since we use the [`ContinuousAgent`](@ref)
+# type, the [`@agent`](@ref) macro also provides each agent with fields for `id`, `pos` (its position in space) and
+# `vel` (its velocity).
 @agent Particle ContinuousAgent{2} begin
     radius::Float64
     is_stuck::Bool
     spin_axis::Array{Float64,1}
 end
 
-# A custom contructor allows convenient creation of agents.
+# A custom constructor allows convenient creation of agents.
 Particle(
     id::Int,
     radius::Float64,
     spin_clockwise::Bool;
     pos = (0.0, 0.0),
     is_stuck = false,
-) = Particle(
-    id,
-    pos,
-    (0.0, 0.0),
-    radius,
-    is_stuck,
-    [0.0, 0.0, spin_clockwise ? -1.0 : 1.0],
-)
+) = Particle(id, pos, (0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
 
-# We also define a couple utility functions for ease of implementation.
+# We also define a few utility functions for ease of implementation.
 # `rand_circle` returns a random point on the unit circle. `particle_radius`
 # generates a random radius for a particle, within given range defined by `min_radius`
-# and `max_radius`. If `max_radius < min_radius`. this returns `min_radius`, allowing
+# and `max_radius`. If `max_radius < min_radius`, it returns `min_radius`: allowing
 # a fixed particle size to be specified.
 rand_circle() = (θ = rand(0.0:0.1:359.9); (cos(θ), sin(θ)))
 particle_radius(min_radius::Float64, max_radius::Float64) =
@@ -57,9 +51,9 @@ function initialize_model(;
     vibration = 0.55,   ## amplitude of particle vibration
     attraction = 0.45,  ## velocity of particles towards the center
     spin = 0.55, ## tangential velocity with which particles orbit the center
-    clockwise_fraction = 0.,    ## fraction of particles orbiting clockwise. The rest are anticlockwise
-    min_radius = 1.,    ## minimum radius of any particle
-    max_radius = 2.,    ## maximum radius of any particle
+    clockwise_fraction = 0.0,    ## fraction of particles orbiting clockwise. The rest are anticlockwise
+    min_radius = 1.0,    ## minimum radius of any particle
+    max_radius = 2.0,    ## maximum radius of any particle
 )
     properties = Dict(
         :speed => speed,
@@ -75,7 +69,7 @@ function initialize_model(;
     space = ContinuousSpace(space_extents, 1.0; periodic = true)
     model = ABM(Particle, space; properties)
     center = space_extents ./ 2.0
-    for i = 1:initial_particles
+    for i in 1:initial_particles
         particle = Particle(
             i,
             particle_radius(min_radius, max_radius),
@@ -84,7 +78,7 @@ function initialize_model(;
         ## `add_agent!` automatically gives the particle a random position in the space
         add_agent!(particle, model)
     end
-    ## create the seed particld
+    ## create the seed particle
     particle = Particle(
         initial_particles + 1,
         particle_radius(min_radius, max_radius),
@@ -98,9 +92,9 @@ function initialize_model(;
     return model
 end
 
-# The `agent_step!` function simulates particles moving around in space. Stuck particles
-# are not simulated. For each particle, we first perform a crude distance check to all other
-# particles. If the current particle intersects any particle in the fractal, it also becomes
+# The `agent_step!` function simulates particle motion for those who are not yet `stuck`.
+# For each particle, we first perform a crude distance check to all other particles. 
+# If the current particle intersects any particle in the fractal, it also becomes
 # part of the fractal and is not simulated further. Agent velocity has a radial component that
 # attracts it towards the center, a tangential component that makes it orbit around the center,
 # and a random component that simulates vibration of the particle. The velocity is scaled
@@ -151,7 +145,7 @@ end
 
 # We run the model using the `InteractiveDynamics` package with `GLMakie` backend so
 # the fractal growth can be visualised as it happens, and simulation parameters can be tweaked
-# dynamically. This makes use of the `abm_data_exploration` function.
+# dynamically. This makes use of the [`abm_data_exploration`](@ref) function.
 model = initialize_model()
 
 using InteractiveDynamics, GLMakie
@@ -182,3 +176,4 @@ abm_data_exploration(
     as = particle_size,
     am = '⚪',
 )
+
