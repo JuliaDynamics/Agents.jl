@@ -88,7 +88,8 @@ pages = [
         "Bacteria Growth" => "examples/growing_bacteria.md",
         "Opinion spread" => "examples/opinion_spread.md",
         "Battle Royale" => "examples/battle.md",
-        "Zombie Outbreak" => "examples/zombies.md"
+        "Zombie Outbreak" => "examples/zombies.md",
+        "Fractal Growth" => "examples/fractal_growth.md",
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
