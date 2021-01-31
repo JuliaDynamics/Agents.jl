@@ -65,8 +65,6 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
-      - name: Diagnose Fontconfig Issue
-        run: dpkg -l | grep fontconfig
       - name: Instantiate and install dependencies
         run: |
           julia --project=docs -e '
