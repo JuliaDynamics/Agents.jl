@@ -1,3 +1,6 @@
+# v4.1 (UNRELEASED)
+- A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
+
 # v4.0, Major new release!
 
 This new release brings not only a lot of new features but also a lot of performance improvements and quality of life improvements. Worth seeing is also the new [Comparison](https://juliadynamics.github.io/Agents.jl/dev/comparison/) section of our docs, which compares Agents.jl with other existing software, showing that Agents.jl outmatches all current standards.
