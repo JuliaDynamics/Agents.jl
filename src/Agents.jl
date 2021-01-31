@@ -1,5 +1,6 @@
 module Agents
 
+using Requires
 using Distributed
 using LightGraphs
 using DataFrames
@@ -29,8 +30,12 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
-# Plot recipes
-include("visualization/plot-recipes.jl")
+function __init__()
+    # Plot recipes
+    @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
+        include("visualization/plot-recipes.jl")
+    end
+end
 
 # 4.0 Depreciations
 @deprecate space_neighbors nearby_ids
@@ -52,23 +57,26 @@ version_number = "4.0"
 update_name = "update_v$(version_number)"
 
 if display_update
-if !isfile(joinpath(@__DIR__, update_name))
-printstyled(stdout,
-"""
-\nUpdate message: Agents v$(version_number)
+    if !isfile(joinpath(@__DIR__, update_name))
+        printstyled(
+            stdout,
+            """
+            \nUpdate message: Agents v$(version_number)
 
-Agents new release v$(version_number) is a massive one!
-Notable features:
-* Overhauled all spaces for more extendability, better performance, and more features
-* New space type based on Open Street Map
-* Renaming most of the API towards more intuitive names (deprecations exist!)
-and more! See the full changelog online for a list of new features and breaking changes!
+            Agents new release v$(version_number) is a massive one!
+            Notable features:
+            * Overhauled all spaces for more extendability, better performance, and more features
+            * New space type based on Open Street Map
+            * Renaming most of the API towards more intuitive names (deprecations exist!)
+            and more! See the full changelog online for a list of new features and breaking changes!
 
-https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md
+            https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md
 
-"""; color = :light_magenta)
-touch(joinpath(@__DIR__, update_name))
-end
+            """;
+            color = :light_magenta,
+        )
+        touch(joinpath(@__DIR__, update_name))
+    end
 end
 
 end # module
