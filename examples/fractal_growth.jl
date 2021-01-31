@@ -1,4 +1,4 @@
-# # Model of Fractal Growth
+# # Fractal Growth
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -154,8 +154,7 @@ end
 # # Running the model
 
 # We run the model using the `InteractiveDynamics` package with `GLMakie` backend so
-# the fractal growth can be visualised as it happens. `InteractiveDynamics` provides the ['abm_video'](@ref)
-# function to easily record a video of the simulation running.
+# the fractal growth can be visualised as it happens. `InteractiveDynamics` provides the `abm_video` function to easily record a video of the simulation running.
 model = initialize_model()
 
 using InteractiveDynamics
@@ -187,7 +186,7 @@ nothing # hide
 # ```
 
 # Using `InteractiveDynamics` simulation parameters can also be tweaked
-# dynamically. This makes use of the [`abm_data_exploration`](@ref) function.
+# dynamically. This makes use of the [`InteractiveDynamics.abm_data_exploration`](@ref) function.
 
 # ```julia
 # using InteractiveDynamics
