@@ -60,10 +60,10 @@ function fractal_growth(;
         is_stuck = true,
     )
     add_agent_pos!(particle, model)
-    return model
+    return model, fractal_agent_step!, fractal_model_step!
 end
 
-function agent_step!(agent::Particle, model)
+function fractal_agent_step!(agent::Particle, model)
     agent.is_stuck && return
 
     for id in nearby_ids(agent.pos, model, agent.radius)
@@ -85,7 +85,7 @@ function agent_step!(agent::Particle, model)
     move_agent!(agent, model, model.speed)
 end
 
-function model_step!(model)
+function fractal_model_step!(model)
     while model.spawn_count > 0
         particle = Particle(
             nextid(model),
