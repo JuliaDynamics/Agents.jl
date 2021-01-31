@@ -65,6 +65,8 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
+      - name: Fix Fontconfig
+        run: sudo apt install fontconfig --reinstall
       - name: Instantiate and install dependencies
         run: |
           julia --project=docs -e '
