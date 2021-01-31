@@ -14,8 +14,6 @@ import Literate
 println("InteractiveDynamics...")
 import InteractiveDynamics
 import CairoMakie
-println("OpenStreetMapX...")
-import OpenStreetMapX
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
