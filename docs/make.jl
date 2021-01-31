@@ -13,13 +13,15 @@ println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 import InteractiveDynamics
+import CairoMakie
 println("OpenStreetMapX...")
 import OpenStreetMapX
 
 println("Setting up Environment")
-# Initialise pyplot to squash build output bleeding into docs.
+# Initialise plotting environments to squash build output bleeding into docs.
 pyplot()
 plot([1,1])
+f = InteractiveDynamics.AbstractPlotting.Figure()
 
 ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")

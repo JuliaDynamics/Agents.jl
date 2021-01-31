@@ -21,7 +21,6 @@
 # It is also available from the `Models` module as [`Models.fractal_growth`](@ref).
 using Agents, LinearAlgebra
 using Random # hide
-Random.seed!(42) # hide
 
 # We use the [`@agent`](@ref) macro to conveniently define a `Particle` agent. Each agent
 # has a radius, representing the particle size, a boolean to define whether it is stuck and part of the fractal,
@@ -55,15 +54,17 @@ particle_radius(min_radius::Float64, max_radius::Float64) =
 # The `initialize_model` function returns a new model containing particles placed
 # randomly in the given space and one seed particle at the center.
 function initialize_model(;
-    initial_particles::Int = 100,   ## initial particles in the model, not including the seed
-    space_extents::NTuple{2,Float64} = (150.0, 150.0), ## size of the space in which particles exist
-    speed = 0.5,    ## speed of particle movement
-    vibration = 0.55,   ## amplitude of particle vibration
-    attraction = 0.45,  ## velocity of particles towards the center
-    spin = 0.55, ## tangential velocity with which particles orbit the center
-    clockwise_fraction = 0.0,    ## fraction of particles orbiting clockwise. The rest are anticlockwise
-    min_radius = 1.0,    ## minimum radius of any particle
-    max_radius = 2.0,    ## maximum radius of any particle
+    initial_particles::Int = 100, # initial particles in the model, not including the seed
+    ## size of the space in which particles exist
+    space_extents::NTuple{2,Float64} = (150.0, 150.0),
+    speed = 0.5, # speed of particle movement
+    vibration = 0.55, # amplitude of particle vibration
+    attraction = 0.45, # velocity of particles towards the center
+    spin = 0.55, # tangential velocity with which particles orbit the center
+    ## fraction of particles orbiting clockwise. The rest are anticlockwise
+    clockwise_fraction = 0.0,
+    min_radius = 1.0, # minimum radius of any particle
+    max_radius = 2.0, # maximum radius of any particle
 )
     properties = Dict(
         :speed => speed,
@@ -155,6 +156,7 @@ end
 
 # We run the model using the `InteractiveDynamics` package with `GLMakie` backend so
 # the fractal growth can be visualised as it happens. `InteractiveDynamics` provides the `abm_video` function to easily record a video of the simulation running.
+Random.seed!(42) # hide
 model = initialize_model()
 
 using InteractiveDynamics
@@ -220,7 +222,7 @@ nothing # hide
 # ```
 #
 # ```@raw html
-# <video width="100%" height="auto" controls autoplay loop>
+# <video width="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/fractal_interact.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
