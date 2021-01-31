@@ -1,5 +1,9 @@
 # # Zombie Outbreak
-# ![](outbreak.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
 #
 # This model showcases an ABM running on a map, using [`OpenStreetMapSpace`](@ref).
 #
