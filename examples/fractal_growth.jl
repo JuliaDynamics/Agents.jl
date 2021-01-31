@@ -1,8 +1,15 @@
 # # Model of Fractal Growth
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../fractal.mp4" type="video/mp4">
+# </video>
+# ```
+
 # This model follows the process known as diffusion-limited aggregation to simulate the growth of fractals.
 # It is a kinetic process that consists of randomly diffusing particles giving rise to fractal-like structures
-# resembling those observed naturally.
+# resembling those observed naturally. This is based off of the ["Particularly Stuck" example](https://www.complexity-explorables.org/explorables/particularly-stuck/).
+# in Complexity Explorables.
 
 # The environment is a two dimensional, continuous space world. Agents are particles that diffuse and aggregate to form
 # fractals. Initially, there are particles of random size distributed across the space, and one static particle in the center
@@ -93,7 +100,7 @@ function initialize_model(;
 end
 
 # The `agent_step!` function simulates particle motion for those who are not yet `stuck`.
-# For each particle, we first perform a crude distance check to all other particles. 
+# For each particle, we first perform a crude distance check to all other particles.
 # If the current particle intersects any particle in the fractal, it also becomes
 # part of the fractal and is not simulated further. Agent velocity has a radial component that
 # attracts it towards the center, a tangential component that makes it orbit around the center,
@@ -144,8 +151,8 @@ end
 # # Running the model
 
 # We run the model using the `InteractiveDynamics` package with `GLMakie` backend so
-# the fractal growth can be visualised as it happens, and simulation parameters can be tweaked
-# dynamically. This makes use of the [`abm_data_exploration`](@ref) function.
+# the fractal growth can be visualised as it happens. `InteractiveDynamics` provides the ['abm_video'](@ref)
+# function to easily record a video of the simulation running.
 model = initialize_model()
 
 using InteractiveDynamics, GLMakie
@@ -154,7 +161,31 @@ particle_color(a::Particle) = a.is_stuck ? :red : :blue
 ## The visual size of particles corresponds to their radius, and has been calculated
 ## for the default value of `space_extents` of the `initialize_model` function. It will
 ## not look accurate on other values.
-particle_size(a::Particle) = 3.8 * a.radius
+particle_size(a::Particle) = 4 * a.radius
+
+abm_video(
+    "fractal.mp4",
+    model,
+    agent_step!,
+    model_step!;
+    ac = particle_color,
+    as = particle_size,
+    am = '⚪',
+    spf=2,
+    frames=2500,
+    framerate=120
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../fractal.mp4" type="video/mp4">
+# </video>
+# ```
+
+# Using `InteractiveDynamics` simulation parameters can also be tweaked
+# dynamically. This makes use of the [`abm_data_exploration`](@ref) function.
+
+model = initialize_model()
 ## `params` defines the range in which different parameter values can be adjusted through
 ## sliders.
 params = (
@@ -176,4 +207,3 @@ abm_data_exploration(
     as = particle_size,
     am = '⚪',
 )
-
