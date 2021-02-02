@@ -53,6 +53,7 @@ function find_path(
         for offset in neighbor_offsets
             nbor = cur.+offset
             all(1 .<= nbor .<= pathfinder.grid_dims) || continue
+            pathfinder.walkable[nbor...] || continue
             nbor in closed_list && continue
 
             new_g_cost = grid[cur...].g + dist_cost(offset)
