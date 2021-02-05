@@ -1,12 +1,17 @@
 const Path{D} = LinkedList{Dims{D}}
 Path() = nil()
 
-mutable struct Pathfinder{D}
+mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
-    periodic::Bool
     walkable::Array{Bool,D}
 end
+
+Pathfinder(
+    model::ABM{<:GridSpace{D,P}};
+    walkable::Array{Bool,D} = fill(true, size(model.space.s)),
+) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable)
+
 
 struct GridCell
     f::Int
@@ -16,15 +21,19 @@ end
 
 GridCell(g::Int, h::Int) = GridCell(g + h, g, h)
 
-function find_path(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D}
+function find_path(
+    pathfinder::Pathfinder{D,periodic},
+    from::Dims{D},
+    to::Dims{D},
+) where {D,periodic}
     # use a DefaultDict instead?
     grid = fill(GridCell(typemax(Int), typemax(Int), typemax(Int)), pathfinder.grid_dims...)
     parent = Array{Union{Nothing,Dims{D}},D}(nothing, pathfinder.grid_dims...)
     border_dists = [Int(floor(10.0 * sqrt(x))) for x = 1:D]
     function dist_cost(a, b)
         delta = collect(
-            pathfinder.periodic ?
-            min.(abs.(a .- b), pathfinder.grid_dims .- abs.(a .- b)) : abs.(a .- b),
+            periodic ? min.(abs.(a .- b), pathfinder.grid_dims .- abs.(a .- b)) :
+            abs.(a .- b),
         )
         sort!(delta)
         carry = 0
@@ -54,7 +63,7 @@ function find_path(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where 
 
         for offset in neighbor_offsets
             nbor = cur .+ offset
-            pathfinder.periodic &&
+            periodic &&
                 (nbor = (nbor .- 1 .+ pathfinder.grid_dims) .% pathfinder.grid_dims .+ 1)
             all(1 .<= nbor .<= pathfinder.grid_dims) || continue
             pathfinder.walkable[nbor...] || continue
