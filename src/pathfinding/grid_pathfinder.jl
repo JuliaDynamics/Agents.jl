@@ -77,3 +77,14 @@ function find_path(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where 
     end
     return agent_path
 end
+
+function set_target(agent, pathfinder::Pathfinder{D}, target::Dims{D}) where {D}
+    pathfinder.agent_paths[agent.id] = find_path(pathfinder, agent.pos, target)
+end
+
+function move_agent!(agent, model::ABM{<:GridSpace{D}}, pathfinder::Pathfinder{D}) where {D}
+    get(pathfinder.agent_paths, agent.id, nil()) == nil() && return
+
+    move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
+    popfirst!(pathfinder.agent_paths[agent.id])
+end
