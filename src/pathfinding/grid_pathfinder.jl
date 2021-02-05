@@ -27,8 +27,8 @@ function find_path(
     to::Dims{D},
 ) where {D,periodic}
     # use a DefaultDict instead?
-    grid = fill(GridCell(typemax(Int), typemax(Int), typemax(Int)), pathfinder.grid_dims...)
-    parent = Array{Union{Nothing,Dims{D}},D}(nothing, pathfinder.grid_dims...)
+    grid = DefaultDict{Dims{D}, GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
+    parent = DefaultDict{Dims{D}, Union{Nothing, Dims{D}}}(nothing)
     border_dists = [Int(floor(10.0 * sqrt(x))) for x = 1:D]
     function dist_cost(a, b)
         delta = collect(
@@ -53,8 +53,8 @@ function find_path(
     open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
     closed_list = Set{Dims{D}}()
 
-    grid[from...] = GridCell(0, dist_cost(from, to))
-    push!(open_list, (grid[from...].f, from))
+    grid[from] = GridCell(0, dist_cost(from, to))
+    push!(open_list, (grid[from].f, from))
 
     while !isempty(open_list)
         _, cur = pop!(open_list)
@@ -68,21 +68,21 @@ function find_path(
             all(1 .<= nbor .<= pathfinder.grid_dims) || continue
             pathfinder.walkable[nbor...] || continue
             nbor in closed_list && continue
-            new_g_cost = grid[cur...].g + dist_cost(cur, nbor)
-            if new_g_cost < grid[nbor...].g
-                parent[nbor...] = cur
-                grid[nbor...] = GridCell(new_g_cost, dist_cost(nbor, to))
+            new_g_cost = grid[cur].g + dist_cost(cur, nbor)
+            if new_g_cost < grid[nbor].g
+                parent[nbor] = cur
+                grid[nbor] = GridCell(new_g_cost, dist_cost(nbor, to))
                 # open list will contain duplicates. Can this be avoided?
-                push!(open_list, (grid[nbor...].f, nbor))
+                push!(open_list, (grid[nbor].f, nbor))
             end
         end
     end
 
     agent_path = Path()
     cur = to
-    while parent[cur...] != nothing
+    while parent[cur] != nothing
         agent_path = cons(cur, agent_path)
-        cur = parent[cur...]
+        cur = parent[cur]
     end
     return agent_path
 end
