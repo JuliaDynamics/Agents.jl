@@ -1,17 +1,54 @@
 const Path{D} = LinkedList{Dims{D}}
 Path() = nil()
 
+abstract type CostMetric{D,P} end
+
+struct DefaultCostMetric{D,P} <: CostMetric{D,P}
+    direction_costs::Array{Int,1}
+end
+
+DefaultCostMetric{D,P}() where {D,P} = DefaultCostMetric{D,P}([Int(floor(10.0 * sqrt(x))) for x = 1:D])
+
+struct HeightMapMetric{D,P} <: CostMetric{D,P}
+    default_metric::DefaultCostMetric{D,P}
+    hmap::Array{Int, D}
+end
+
+HeightMapMetric{D,P}(hmap::Array{Int,D}) where {D,P} = HeightMapMetric{D,P}(DefaultCostMetric{D,P}(), hmap)
+
+function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::DefaultCostMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
+    delta = collect(
+        periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
+        abs.(to .- from),
+    )
+    sort!(delta)
+    carry = 0
+    hdist = 0
+    for i = D:-1:1
+        hdist += metric.direction_costs[i] * (delta[D+1-i] - carry)
+        carry = delta[D+1-i]
+    end
+    return hdist
+end
+
+function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::HeightMapMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
+    return delta_cost(pathfinder, metric.default_metric, from, to)^2 + (metric.hmap[from...]-metric.hmap[to...])^2
+end
+
 mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     walkable::Array{Bool,D}
+    cost_metric::CostMetric{D,P}
 end
 
 Pathfinder(
     model::ABM{<:GridSpace{D,P}};
     walkable::Array{Bool,D} = fill(true, size(model.space.s)),
-) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable)
+    cost_metric::CostMetric{D,P} = DefaultCostMetric{D,P}()
+) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable, cost_metric)
 
+delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = delta_cost(pathfinder, pathfinder.cost_metric, from, to)
 
 struct GridCell
     f::Int
@@ -26,24 +63,8 @@ function find_path(
     from::Dims{D},
     to::Dims{D},
 ) where {D,periodic}
-    # use a DefaultDict instead?
-    grid = DefaultDict{Dims{D}, GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
-    parent = DefaultDict{Dims{D}, Union{Nothing, Dims{D}}}(nothing)
-    border_dists = [Int(floor(10.0 * sqrt(x))) for x = 1:D]
-    function dist_cost(a, b)
-        delta = collect(
-            periodic ? min.(abs.(a .- b), pathfinder.grid_dims .- abs.(a .- b)) :
-            abs.(a .- b),
-        )
-        sort!(delta)
-        carry = 0
-        hdist = 0
-        for i = D:-1:1
-            hdist += border_dists[i] * (delta[D+1-i] - carry)
-            carry = delta[D+1-i]
-        end
-        return hdist
-    end
+    grid = DefaultDict{Dims{D},GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
+    parent = DefaultDict{Dims{D},Union{Nothing,Dims{D}}}(nothing)
 
     neighbor_offsets = [
         Tuple(a)
@@ -53,7 +74,7 @@ function find_path(
     open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
     closed_list = Set{Dims{D}}()
 
-    grid[from] = GridCell(0, dist_cost(from, to))
+    grid[from] = GridCell(0, delta_cost(pathfinder, from, to))
     push!(open_list, (grid[from].f, from))
 
     while !isempty(open_list)
@@ -68,10 +89,10 @@ function find_path(
             all(1 .<= nbor .<= pathfinder.grid_dims) || continue
             pathfinder.walkable[nbor...] || continue
             nbor in closed_list && continue
-            new_g_cost = grid[cur].g + dist_cost(cur, nbor)
+            new_g_cost = grid[cur].g + delta_cost(pathfinder, cur, nbor)
             if new_g_cost < grid[nbor].g
                 parent[nbor] = cur
-                grid[nbor] = GridCell(new_g_cost, dist_cost(nbor, to))
+                grid[nbor] = GridCell(new_g_cost, delta_cost(pathfinder, nbor, to))
                 # open list will contain duplicates. Can this be avoided?
                 push!(open_list, (grid[nbor].f, nbor))
             end
