@@ -1,5 +1,7 @@
-const Path{D} = LinkedList{Dims{D}}
-Path() = nil()
+export DefaultCostMetric, HeightMapMetric, Pathfinder, delta_cost, find_path, set_target, move_agent!, Path
+
+const Path{D} = MutableLinkedList{Dims{D}}
+# Path() = nil()
 
 abstract type CostMetric{D,P} end
 
@@ -45,7 +47,7 @@ function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::DefaultCostMetri
 end
 
 function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::HeightMapMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
-    return delta_cost(pathfinder, metric.default_metric, from, to)^2 + (metric.hmap[from...]-metric.hmap[to...])^2
+    return delta_cost(pathfinder, metric.default_metric, from, to) + abs(metric.hmap[from...]-metric.hmap[to...])
 end
 
 delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = delta_cost(pathfinder, pathfinder.cost_metric, from, to)
@@ -99,10 +101,10 @@ function find_path(
         end
     end
 
-    agent_path = Path()
+    agent_path = Path{D}()
     cur = to
-    while parent[cur] != nothing
-        agent_path = cons(cur, agent_path)
+    while parent[cur] !== nothing
+        pushfirst!(agent_path, cur)
         cur = parent[cur]
     end
     return agent_path
