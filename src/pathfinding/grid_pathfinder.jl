@@ -16,6 +16,19 @@ end
 
 HeightMapMetric{D,P}(hmap::Array{Int,D}) where {D,P} = HeightMapMetric{D,P}(DefaultCostMetric{D,P}(), hmap)
 
+mutable struct Pathfinder{D,P}
+    agent_paths::Dict{Int,Path{D}}
+    grid_dims::Dims{D}
+    walkable::Array{Bool,D}
+    cost_metric::CostMetric{D,P}
+end
+
+Pathfinder(
+    model::ABM{<:GridSpace{D,P}};
+    walkable::Array{Bool,D} = fill(true, size(model.space.s)),
+    cost_metric::CostMetric{D,P} = DefaultCostMetric{D,P}()
+) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable, cost_metric)
+
 function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::DefaultCostMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
     delta = collect(
         periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
@@ -34,19 +47,6 @@ end
 function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::HeightMapMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
     return delta_cost(pathfinder, metric.default_metric, from, to)^2 + (metric.hmap[from...]-metric.hmap[to...])^2
 end
-
-mutable struct Pathfinder{D,P}
-    agent_paths::Dict{Int,Path{D}}
-    grid_dims::Dims{D}
-    walkable::Array{Bool,D}
-    cost_metric::CostMetric{D,P}
-end
-
-Pathfinder(
-    model::ABM{<:GridSpace{D,P}};
-    walkable::Array{Bool,D} = fill(true, size(model.space.s)),
-    cost_metric::CostMetric{D,P} = DefaultCostMetric{D,P}()
-) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable, cost_metric)
 
 delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = delta_cost(pathfinder, pathfinder.cost_metric, from, to)
 
