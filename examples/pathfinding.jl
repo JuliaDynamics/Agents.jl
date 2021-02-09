@@ -8,8 +8,9 @@ heightmap = fill(0, 10, 10)
 heightmap[:, 6] .= 100
 heightmap[1, 6] = 0
 props = Dict(
-    :pathfinder => Pathfinder(Dict{Int, Path{2}}(), (10, 10), fill(true, 10, 10), HeightMapMetric{2, false}(DefaultCostMetric{2, false}(), heightmap)),
-    )
+    :pathfinder => Pathfinder(space; cost_metric=HeightMapMetric(heightmap)),
+)
+
 model = ABM(Union{Person,Wall}, space; properties=props)
 
 add_agent_pos!(Person(1, (1, 1)), model)

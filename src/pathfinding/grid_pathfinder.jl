@@ -1,37 +1,45 @@
-export DefaultCostMetric, HeightMapMetric, Pathfinder, delta_cost, find_path, set_target, move_agent!, Path
+export CostMetric, DefaultCostMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target, move_agent!
 
 const Path{D} = MutableLinkedList{Dims{D}}
-# Path() = nil()
 
-abstract type CostMetric{D,P} end
+abstract type CostMetric{D} end
 
-struct DefaultCostMetric{D,P} <: CostMetric{D,P}
+struct DefaultCostMetric{D} <: CostMetric{D}
     direction_costs::Array{Int,1}
 end
 
-DefaultCostMetric{D,P}() where {D,P} = DefaultCostMetric{D,P}([Int(floor(10.0 * sqrt(x))) for x = 1:D])
+DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([Int(floor(10.0 * sqrt(x))) for x = 1:D])
 
-struct HeightMapMetric{D,P} <: CostMetric{D,P}
-    default_metric::DefaultCostMetric{D,P}
-    hmap::Array{Int, D}
+struct HeightMapMetric{D} <: CostMetric{D}
+    default_metric::DefaultCostMetric{D}
+    hmap::Array{Int,D}
 end
 
-HeightMapMetric{D,P}(hmap::Array{Int,D}) where {D,P} = HeightMapMetric{D,P}(DefaultCostMetric{D,P}(), hmap)
+HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(DefaultCostMetric{D}(), hmap)
+HeightMapMetric(
+    direction_costs::Array{Int,1},
+    hmap::Array{Int,D}
+) where {D} = HeightMapMetric{D}(DefaultCostMetric{D}(direction_costs), hmap)
 
 mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     walkable::Array{Bool,D}
-    cost_metric::CostMetric{D,P}
+    cost_metric::CostMetric{D}
 end
 
 Pathfinder(
-    model::ABM{<:GridSpace{D,P}};
-    walkable::Array{Bool,D} = fill(true, size(model.space.s)),
-    cost_metric::CostMetric{D,P} = DefaultCostMetric{D,P}()
-) where {D,P} = Pathinder{D,P}(Dict{Int,Path{D}}(), size(model.space.s), walkable, cost_metric)
+    space::GridSpace{D,P};
+    walkable::Array{Bool,D}=fill(true, size(space.s)),
+    cost_metric::CostMetric{D}=DefaultCostMetric{D}()
+) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), walkable, cost_metric)
 
-function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::DefaultCostMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
+function delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::DefaultCostMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic}    
     delta = collect(
         periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
         abs.(to .- from),
@@ -40,15 +48,18 @@ function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::DefaultCostMetri
     carry = 0
     hdist = 0
     for i = D:-1:1
-        hdist += metric.direction_costs[i] * (delta[D+1-i] - carry)
-        carry = delta[D+1-i]
+        hdist += metric.direction_costs[i] * (delta[D + 1 - i] - carry)
+        carry = delta[D + 1 - i]
     end
     return hdist
 end
 
-function delta_cost(pathfinder::Pathfinder{D,periodic}, metric::HeightMapMetric{D,periodic}, from::Dims{D}, to::Dims{D}) where {D,periodic}
-    return delta_cost(pathfinder, metric.default_metric, from, to) + abs(metric.hmap[from...]-metric.hmap[to...])
-end
+delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::HeightMapMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic} = delta_cost(pathfinder, metric.default_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
 
 delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = delta_cost(pathfinder, pathfinder.cost_metric, from, to)
 
@@ -70,8 +81,7 @@ function find_path(
 
     neighbor_offsets = [
         Tuple(a)
-        for
-        a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
+        for a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
     ]
     open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
     closed_list = Set{Dims{D}}()
