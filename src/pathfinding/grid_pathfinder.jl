@@ -1,4 +1,4 @@
-export CostMetric, DefaultCostMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target, move_agent!
+export CostMetric, DefaultCostMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 const Path{D} = MutableLinkedList{Dims{D}}
 
@@ -120,7 +120,7 @@ function find_path(
     return agent_path
 end
 
-function set_target(agent, pathfinder::Pathfinder{D}, target::Dims{D}) where {D}
+function set_target!(agent, pathfinder::Pathfinder{D}, target::Dims{D}) where {D}
     pathfinder.agent_paths[agent.id] = find_path(pathfinder, agent.pos, target)
 end
 

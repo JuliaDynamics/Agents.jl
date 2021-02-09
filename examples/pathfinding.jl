@@ -19,7 +19,7 @@ for i in 1:10
         heightmap[i, j] == 100 && add_agent_pos!(Wall(nextid(model), (i, j)), model)
     end
 end
-set_target(model[1], model.pathfinder, (9, 9))
+set_target!(model[1], model.pathfinder, (9, 9))
 agent_step!(agent, model) = move_agent!(agent, model, model.pathfinder)
 
 using InteractiveDynamics, GLMakie
