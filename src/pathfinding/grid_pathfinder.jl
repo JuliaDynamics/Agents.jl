@@ -21,13 +21,13 @@ struct DefaultCostMetric{D} <: CostMetric{D}
 end
 
 """
-    DefaultCostMetric{D}(direction_costs::Array{Int,1}=[Int(floor(10.0√x)) for x in 1:D])
+    DefaultCostMetric{D}(direction_costs::Array{Int,1}=[Int(floor(10.0*√x)) for x in 1:D])
 The default metric [`CostMetric{D}`](@ref). Distance is approximated as the shortest path between
 the two points, ignoring any unwalkable areas. `direction_costs` is an `Array{Int,1}` where 
 `direction_costs[i]` represents the cost of traveling the `i` dimensional diagonal. The default value
 is `10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
 """
-DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([Int(floor(10.0√x)) for x in 1:D])
+DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([Int(floor(10.0*√x)) for x in 1:D])
 
 struct HeightMapMetric{D} <: CostMetric{D}
     default_metric::DefaultCostMetric{D}
