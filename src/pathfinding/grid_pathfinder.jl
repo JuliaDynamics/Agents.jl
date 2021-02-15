@@ -1,4 +1,4 @@
-export CostMetric, DefaultCostMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
+export CostMetric, DefaultCostMetric, NonDiagonalMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 """
     Path{D}
@@ -21,16 +21,27 @@ struct DefaultCostMetric{D} <: CostMetric{D}
 end
 
 """
-    DefaultCostMetric{D}(direction_costs::Array{Int,1}=[Int(floor(10.0*√x)) for x in 1:D])
+    DefaultCostMetric{D}(direction_costs::Array{Int,1}=[floor(Int, 10.0*√x) for x in 1:D])
 The default metric [`CostMetric{D}`](@ref). Distance is approximated as the shortest path between
 the two points, ignoring any unwalkable areas. `direction_costs` is an `Array{Int,1}` where 
 `direction_costs[i]` represents the cost of traveling the `i` dimensional diagonal. The default value
 is `10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
 """
-DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([Int(floor(10.0*√x)) for x in 1:D])
+DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([floor(Int, 10.0 * √x) for x in 1:D])
+
+struct NonDiagonalMetric{D} <: CostMetric{D}
+    border_cost::Int
+end
+
+"""
+    NonDiagonalMetric{D}(border_cost::Int=10)
+Similar to [`DefaultCostMetric{D}`](@ref), except the shortest path does not include any diagonals.
+`border_cost` is the cost of moving from one cell to any other cell it borders.
+"""
+NonDiagonalMetric{D}() where {D} = NonDiagonalMetric{D}(10)
 
 struct HeightMapMetric{D} <: CostMetric{D}
-    default_metric::DefaultCostMetric{D}
+    base_metric::CostMetric{D}
     hmap::Array{Int,D}
 end
 
@@ -38,23 +49,16 @@ end
     HeightMapMetric(hmap::Array{Int,D})
 An alternative [`CostMetric{D}`](@ref). This allows for a `D` dimensional heightmap to be provided as a
 `D` dimensional integer array, of the same size as the corresponding [`GridSpace{D}`](@ref). This metric
-approximates the distance between two positions as the sum of the shortest path between them (as calculated
-by [`DefaultCostMetric{D}`](@ref)) and the absolute difference in heights between the two positions.
+approximates the distance between two positions as the sum of the shortest distance between them and the absolute
+difference in heights between the two positions. The shortest distance is calculated using the underlying
+`base_metric` field, which defaults to [`DefaultCostMetric{D}`](@ref)
 """
 HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(DefaultCostMetric{D}(), hmap)
-"""
-    HeightMapMetric(direction_costs::Array{Int,1}, hmap::Array{Int,D})
-An alternative constructor for [`HeightMapMetric`](@ref) that also allows setting the `direction_costs`
-parameter of the underlying [`DefaultCostMetric{D}`](@ref).
-"""
-HeightMapMetric(
-    direction_costs::Array{Int,1},
-    hmap::Array{Int,D}
-) where {D} = HeightMapMetric{D}(DefaultCostMetric{D}(direction_costs), hmap)
 
 mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
+    allow_diagonals::Bool
     walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
 end
@@ -63,8 +67,10 @@ end
     Pathfinder(space::GridSpace{D,P}; kwargs...)
 Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
 
+The keyword argument `allow_diagonals::Bool=true` specifies if movement along diagonals is allowed.
+
 The keyword argument `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
-the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable
+the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
 
 The keyword argument `cost_metric::CostMetric{D}=DefaultCostMetric{D}()` specifies the metric used to approximate
 the distance between any two walkable points on the grid. This must be a struct with base type [`CostMetric{D}`](@ref)
@@ -72,9 +78,10 @@ and having a corresponding method for [`delta_cost`](@ref). The default value is
 """
 Pathfinder(
     space::GridSpace{D,P};
+    allow_diagonals::Bool=true,
     walkable::Array{Bool,D}=fill(true, size(space.s)),
     cost_metric::CostMetric{D}=DefaultCostMetric{D}()
-) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), walkable, cost_metric)
+) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), allow_diagonals, walkable, cost_metric)
 
 function delta_cost(
     pathfinder::Pathfinder{D,periodic},
@@ -101,7 +108,17 @@ delta_cost(
     metric::HeightMapMetric{D},
     from::Dims{D},
     to::Dims{D}
-) where {D,periodic} = delta_cost(pathfinder, metric.default_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
+) where {D,periodic} = delta_cost(pathfinder, metric.base_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
+
+delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::NonDiagonalMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic} = sum(
+        periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
+        abs.(to .- from),
+    ) * metric.border_cost
 
 """
     delta_cost(pathfinder::Pathfinder{D}, from::NTuple{D, Int}, to::NTuple{D, Int})
@@ -134,10 +151,15 @@ function find_path(
     grid = DefaultDict{Dims{D},GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
     parent = DefaultDict{Dims{D},Union{Nothing,Dims{D}}}(nothing)
 
-    neighbor_offsets = [
-        Tuple(a)
-        for a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
-    ]
+    if pathfinder.allow_diagonals
+        neighbor_offsets = [
+            Tuple(a)
+            for a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
+        ]
+    else
+        neighbor_offsets = [Tuple(i == j ? 1 : 0 for i in 1:D) for j in 1:D]
+        neighbor_offsets = vcat(neighbor_offsets, [.-dir for dir in neighbor_offsets])
+    end
     open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
     closed_list = Set{Dims{D}}()
 
@@ -163,14 +185,14 @@ function find_path(
                 # open list will contain duplicates. Can this be avoided?
                 push!(open_list, (grid[nbor].f, nbor))
             end
-        end
+    end
     end
 
     agent_path = Path{D}()
     cur = to
     while parent[cur] !== nothing
         pushfirst!(agent_path, cur)
-        cur = parent[cur]
+cur = parent[cur]
     end
     return agent_path
 end
