@@ -1,4 +1,4 @@
-export CostMetric, MooreMetric, VonNeumannMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
+export CostMetric, MooreMetric, VonNeumannMetric, EuclideanMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 """
     Path{D}
@@ -41,6 +41,17 @@ Von Neumann neighbors. `border_cost` is the cost of moving from a cell to any of
 Von Neumann neighbors.
 """
 VonNeumannMetric{D}() where {D} = VonNeumannMetric{D}(10)
+
+struct EuclideanMetric{D} <: CostMetric{D}
+    digits_of_precision::Int
+end
+
+"""
+    EuclideanMetric{D}(digits_of_precision::Int=1)
+Distance between two tiles is approximmated as the Euclidean distance between their positions,
+including the first `digits_of_precision` decimal places (multiplying result by 10^`digits_of_precision`).
+"""
+EuclideanMetric{D}() where {D} = EuclideanMetric{D}(1)
 
 struct HeightMapMetric{D} <: CostMetric{D}
     base_metric::CostMetric{D}
@@ -108,13 +119,6 @@ end
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
-    metric::HeightMapMetric{D},
-    from::Dims{D},
-    to::Dims{D}
-) where {D,periodic} = delta_cost(pathfinder, metric.base_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
-
-delta_cost(
-    pathfinder::Pathfinder{D,periodic},
     metric::VonNeumannMetric{D},
     from::Dims{D},
     to::Dims{D}
@@ -122,6 +126,21 @@ delta_cost(
         periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
         abs.(to .- from),
     ) * metric.border_cost
+
+delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::EuclideanMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic} = floor(Int, norm(to .- from) * 10^metric.digits_of_precision)
+
+delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::HeightMapMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic} = delta_cost(pathfinder, metric.base_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
+
 
 """
     delta_cost(pathfinder::Pathfinder{D}, from::NTuple{D, Int}, to::NTuple{D, Int})
