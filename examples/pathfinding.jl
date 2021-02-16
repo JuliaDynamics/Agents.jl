@@ -8,7 +8,7 @@ heightmap = fill(0, 10, 10)
 heightmap[:, 6] .= 100
 heightmap[1, 6] = 0
 props = Dict(
-    :pathfinder => Pathfinder(space; allow_diagonals=false, cost_metric=HeightMapMetric(heightmap)),
+    :pathfinder => Pathfinder(space; moore_neighbors=false, cost_metric=HeightMapMetric(heightmap)),
 )
 
 model = ABM(Union{Person,Wall}, space; properties=props)
