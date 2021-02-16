@@ -1,4 +1,4 @@
-export CostMetric, DefaultCostMetric, NonDiagonalMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
+export CostMetric, MooreMetric, VonNeumannMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 """
     Path{D}
@@ -16,29 +16,31 @@ define a struct with this as its base type and a corresponding method for [`delt
 """
 abstract type CostMetric{D} end
 
-struct DefaultCostMetric{D} <: CostMetric{D}
+struct MooreMetric{D} <: CostMetric{D}
     direction_costs::Array{Int,1}
 end
 
 """
-    DefaultCostMetric{D}(direction_costs::Array{Int,1}=[floor(Int, 10.0*√x) for x in 1:D])
+    MooreMetric{D}(direction_costs::Array{Int,1}=[floor(Int, 10.0*√x) for x in 1:D])
 The default metric [`CostMetric{D}`](@ref). Distance is approximated as the shortest path between
-the two points, ignoring any unwalkable areas. `direction_costs` is an `Array{Int,1}` where 
-`direction_costs[i]` represents the cost of traveling the `i` dimensional diagonal. The default value
-is `10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
+the two points, where from any tile it is possible to step to any of its Moore neighbors.
+`direction_costs` is an `Array{Int,1}` where `direction_costs[i]` represents the cost of
+going from a tile to the neighbording tile on the `i` dimensional diagonal. The default value is 
+`10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
 """
-DefaultCostMetric{D}() where {D} = DefaultCostMetric{D}([floor(Int, 10.0 * √x) for x in 1:D])
+MooreMetric{D}() where {D} = MooreMetric{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
-struct NonDiagonalMetric{D} <: CostMetric{D}
+struct VonNeumannMetric{D} <: CostMetric{D}
     border_cost::Int
 end
 
 """
     NonDiagonalMetric{D}(border_cost::Int=10)
-Similar to [`DefaultCostMetric{D}`](@ref), except the shortest path does not include any diagonals.
-`border_cost` is the cost of moving from one cell to any other cell it borders.
+Similar to [`MooreMetric{D}`](@ref), except from a tile it is only possible to step to its
+Von Neumann neighbors. `border_cost` is the cost of moving from a cell to any of its
+Von Neumann neighbors.
 """
-NonDiagonalMetric{D}() where {D} = NonDiagonalMetric{D}(10)
+VonNeumannMetric{D}() where {D} = VonNeumannMetric{D}(10)
 
 struct HeightMapMetric{D} <: CostMetric{D}
     base_metric::CostMetric{D}
@@ -51,14 +53,14 @@ An alternative [`CostMetric{D}`](@ref). This allows for a `D` dimensional height
 `D` dimensional integer array, of the same size as the corresponding [`GridSpace{D}`](@ref). This metric
 approximates the distance between two positions as the sum of the shortest distance between them and the absolute
 difference in heights between the two positions. The shortest distance is calculated using the underlying
-`base_metric` field, which defaults to [`DefaultCostMetric{D}`](@ref)
+`base_metric` field, which defaults to [`MooreMetric{D}`](@ref)
 """
-HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(DefaultCostMetric{D}(), hmap)
+HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(MooreMetric{D}(), hmap)
 
 mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
-    allow_diagonals::Bool
+    moore_neighbors::Bool
     walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
 end
@@ -67,25 +69,26 @@ end
     Pathfinder(space::GridSpace{D,P}; kwargs...)
 Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
 
-The keyword argument `allow_diagonals::Bool=true` specifies if movement along diagonals is allowed.
+The keyword argument `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
+Von Neumann neighbors.
 
 The keyword argument `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
 the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
 
-The keyword argument `cost_metric::CostMetric{D}=DefaultCostMetric{D}()` specifies the metric used to approximate
+The keyword argument `cost_metric::CostMetric{D}=MooreMetric{D}()` specifies the metric used to approximate
 the distance between any two walkable points on the grid. This must be a struct with base type [`CostMetric{D}`](@ref)
-and having a corresponding method for [`delta_cost`](@ref). The default value is [`DefaultCostMetric{D}`](@ref).
+and having a corresponding method for [`delta_cost`](@ref). The default value is [`MooreMetric{D}`](@ref).
 """
 Pathfinder(
     space::GridSpace{D,P};
-    allow_diagonals::Bool=true,
+    moore_neighbors::Bool=true,
     walkable::Array{Bool,D}=fill(true, size(space.s)),
-    cost_metric::CostMetric{D}=DefaultCostMetric{D}()
-) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), allow_diagonals, walkable, cost_metric)
+    cost_metric::CostMetric{D}=MooreMetric{D}()
+) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), moore_neighbors, walkable, cost_metric)
 
 function delta_cost(
     pathfinder::Pathfinder{D,periodic},
-    metric::DefaultCostMetric{D},
+    metric::MooreMetric{D},
     from::Dims{D},
     to::Dims{D}
 ) where {D,periodic}    
@@ -112,7 +115,7 @@ delta_cost(
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
-    metric::NonDiagonalMetric{D},
+    metric::VonNeumannMetric{D},
     from::Dims{D},
     to::Dims{D}
 ) where {D,periodic} = sum(
@@ -151,7 +154,7 @@ function find_path(
     grid = DefaultDict{Dims{D},GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
     parent = DefaultDict{Dims{D},Union{Nothing,Dims{D}}}(nothing)
 
-    if pathfinder.allow_diagonals
+    if pathfinder.moore_neighbors
         neighbor_offsets = [
             Tuple(a)
             for a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
