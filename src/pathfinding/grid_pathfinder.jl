@@ -1,4 +1,4 @@
-export CostMetric, MooreMetric, VonNeumannMetric, EuclideanMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
+export CostMetric, MooreMetric, VonNeumannMetric, EuclideanMetric, ChebyshevMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 """
     Path{D}
@@ -52,6 +52,14 @@ Distance between two tiles is approximmated as the Euclidean distance between th
 including the first `digits_of_precision` decimal places (multiplying result by 10^`digits_of_precision`).
 """
 EuclideanMetric{D}() where {D} = EuclideanMetric{D}(1)
+
+"""
+    ChebyshevMetric{D}()
+Distance between two tiles is approximated as the Chebyshev distance (maximum of absolute
+difference in coordinates) between them.
+"""
+struct ChebyshevMetric{D} <: CostMetric{D}
+end
 
 struct HeightMapMetric{D} <: CostMetric{D}
     base_metric::CostMetric{D}
@@ -133,6 +141,17 @@ delta_cost(
     from::Dims{D},
     to::Dims{D}
 ) where {D,periodic} = floor(Int, norm(to .- from) * 10^metric.digits_of_precision)
+
+delta_cost(
+    pathfinder::Pathfinder{D,periodic},
+    metric::ChebyshevMetric{D},
+    from::Dims{D},
+    to::Dims{D}
+) where {D,periodic} = max(
+        (periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
+        abs.(to .- from))...
+    )
+
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
