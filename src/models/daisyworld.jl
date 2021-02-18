@@ -55,7 +55,7 @@ function daisyworld(;
     seed = 165,
 )
 
-    Random.seed!(seed)
+    rng = MersenneTwister(seed)
     space = GridSpace(griddims)
     properties = Dict(
         :max_age => max_age,
@@ -71,7 +71,8 @@ function daisyworld(;
         Union{Daisy,Land},
         space;
         scheduler = daisysched,
-        properties = properties,
+        properties,
+        rng,
         warn = false,
     )
 
