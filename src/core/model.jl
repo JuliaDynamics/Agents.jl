@@ -13,12 +13,12 @@ abstract type DiscreteSpace <: AbstractSpace end
 ValidPos =
     Union{Int,NTuple{N,Int},NTuple{M,<:AbstractFloat},Tuple{Int,Int,Float64}} where {N,M}
 
-struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P}
+struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     agents::Dict{Int,A}
     space::S
     scheduler::F
     properties::P
-    rng::AbstractRNG
+    rng::R
     maxid::Base.RefValue{Int64}
 end
 
@@ -79,13 +79,13 @@ function AgentBasedModel(
     space::S = nothing;
     scheduler::F = fastest,
     properties::P = nothing,
-    rng = Random.default_rng(),
+    rng::R = Random.default_rng(),
     warn = true,
-) where {A<:AbstractAgent,S<:SpaceType,F,P}
+) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
-    return ABM{S,A,F,P}(agents, space, scheduler, properties, rng, Ref(0))
+    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
