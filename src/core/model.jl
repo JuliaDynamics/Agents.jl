@@ -181,7 +181,7 @@ The function generates a random permutation of agent IDs and iterates through th
 If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    ids = shuffle!(collect(keys(model.agents)))
+    ids = shuffle!(model.rng, collect(keys(model.agents)))
     i, L = 1, length(ids)
     a = model[ids[1]]
     while !condition(a)

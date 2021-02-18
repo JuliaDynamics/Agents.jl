@@ -25,7 +25,7 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
     itr = reshape(n, length(n))
     if by == :random
-        shuffle!(itr)
+        shuffle!(model.rng, itr)
     elseif by == :population
         sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
