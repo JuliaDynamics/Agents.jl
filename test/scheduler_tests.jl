@@ -41,7 +41,7 @@
     # by property
     model = ABM(Agent2; scheduler = property_activation(:weight))
     for i in 1:N
-        add_agent!(model, rand() / rand())
+        add_agent!(model, rand(model.rng) / rand(model.rng))
     end
 
     Random.seed!(12)

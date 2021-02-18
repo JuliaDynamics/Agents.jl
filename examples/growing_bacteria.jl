@@ -66,8 +66,8 @@ function model_step!(model)
         if a.growthprog ≥ 1
             ## When a cell has matured, it divides into two daughter cells on the
             ## positions of its nodes.
-            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand() + 0.05)
-            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand() + 0.05)
+            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
             kill_agent!(a, model)
         else
             ## The rest lengh of the internal spring grows with time. This causes

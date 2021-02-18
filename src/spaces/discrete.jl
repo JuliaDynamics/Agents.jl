@@ -84,7 +84,7 @@ Return a random position without any agents, or `nothing` if no such positions e
 function random_empty(model::ABM{<:DiscreteSpace})
     empty = empty_positions(model)
     isempty(empty) && return nothing
-    rand(collect(empty))
+    rand(model.rng, collect(empty))
 end
 
 #######################################################################################
@@ -114,7 +114,7 @@ into a position with no other agents (does nothing if no such position exists).
 function add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
     empty = collect(empty_positions(model))
     if length(empty) > 0
-        add_agent!(rand(empty), model, properties...; kwargs...)
+        add_agent!(rand(model.rng, empty), model, properties...; kwargs...)
     end
 end
 
@@ -174,7 +174,7 @@ function move_agent_single!(
 ) where {A<:AbstractAgent}
     empty = collect(empty_positions(model))
     if length(empty) > 0
-        move_agent!(agent, rand(empty), model)
+        move_agent!(agent, rand(model.rng, empty), model)
     end
     return agent
 end

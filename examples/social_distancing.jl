@@ -38,13 +38,12 @@ end
 # Let's also initialize a trivial model with continuous space
 function ball_model(; speed = 0.002)
     space2d = ContinuousSpace((1, 1), 0.02)
-    model = ABM(Agent, space2d, properties = Dict(:dt => 1.0))
+    model = ABM(Agent, space2d, properties = Dict(:dt => 1.0), rng = MersenneTwister(42))
 
     ## And add some agents to the model
-    Random.seed!(42) # hide
     for ind in 1:500
-        pos = Tuple(rand(2))
-        vel = sincos(2π * rand()) .* speed
+        pos = Tuple(rand(model.rng, 2))
+        vel = sincos(2π * rand(model.rng)) .* speed
         add_agent!(pos, model, vel, 1.0)
     end
     return model
@@ -211,20 +210,19 @@ function sir_initiation(;
         dt,
     )
     space = ContinuousSpace((1,1), 0.02)
-    model = ABM(PoorSoul, space, properties = properties)
+    model = ABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
-    Random.seed!(seed)
     for ind in 1:N
-        pos = Tuple(rand(2))
+        pos = Tuple(rand(model.rng, 2))
         status = ind ≤ N - initial_infected ? :S : :I
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
-        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand()) .* speed
+        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
 
         ## very high transmission probability
         ## we are modelling close encounters after all
-        β = (βmax - βmin) * rand() + βmin
+        β = (βmax - βmin) * rand(model.rng) + βmin
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
@@ -265,10 +263,10 @@ function transmit!(a1, a2, rp)
     count(a.status == :I for a in (a1, a2)) ≠ 1 && return
     infected, healthy = a1.status == :I ? (a1, a2) : (a2, a1)
 
-    rand() > infected.β && return
+    rand(model.rng) > infected.β && return
 
     if healthy.status == :R
-        rand() > rp && return
+        rand(model.rng) > rp && return
     end
     healthy.status = :I
 end
@@ -299,7 +297,7 @@ update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand() ≤ model.death_rate
+        if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R

@@ -162,7 +162,7 @@ Invoke a random walk by providing the `rand` function in place of
 `ContinuousSpace` will reside within [-1, 1].
 """
 walk!(agent, ::typeof(rand), model::ABM{<:GridSpace{D}}; kwargs...) where {D} =
-    walk!(agent, Tuple(rand(-1:1) for _ in 1:D), model; kwargs...)
+    walk!(agent, Tuple(rand(model.rng, -1:1) for _ in 1:D), model; kwargs...)
 
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}; kwargs...) where {D} =
-    walk!(agent, Tuple(2.0 * rand() - 1.0 for _ in 1:D), model; kwargs...)
+    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model; kwargs...)
