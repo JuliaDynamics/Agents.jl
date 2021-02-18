@@ -11,7 +11,7 @@ To get started, please read the [Tutorial](@ref) page.
 
 * Intuitive, small, yet powerful and simple-to-learn API for agent based models.
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref)
-* Support for many types of space: arbitrary graphs, regular grids, or continuous space.
+* Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
 - Multi-agent support, for interactions between disparate agent species.
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
 * Automatic data collection in a `DataFrame` at desired intervals
