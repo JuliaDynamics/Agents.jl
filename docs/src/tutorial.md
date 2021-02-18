@@ -25,7 +25,7 @@ AgentBasedModel
 Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
-Spaces are separated into disrete spaces (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
+Spaces are separated into discrete spaces (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
 Thus, it is common for a specific position to contain several agents.
 
 ### Discrete spaces
@@ -119,6 +119,13 @@ The [`run!`](@ref) function has been designed for maximum flexibility: nearly al
 
 This means that [`run!`](@ref) has not been designed for maximum performance (or minimum memory allocation). However, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
 
+## Seeding and Random numbers
+
+Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng`.
+For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)`.
+Other `rand` calls like `rand(Bool)` don't have such a penalty, although we recommend using `rand(model.rng, Bool)` anyway.
+That way you can have deterministic models that can be ran again and yield the same output.
+To do this, call `Random.seed!(6546)` (with any number) before creating your model, or set `rng` in the model directly.
 
 ## An educative example
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.
