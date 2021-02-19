@@ -76,7 +76,7 @@ This is an example of emergent behavior from simple interactions of agents that 
 
 ## Citation
 
-If you use this package in work that lead to a publication, then please cite the paper below:
+If you use this package in work that leads to a publication, then please cite the paper below:
 
 ```
 @misc{Agents.jl,
