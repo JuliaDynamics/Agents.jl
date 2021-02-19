@@ -105,16 +105,23 @@ Pathfinder(
     cost_metric::CostMetric{D}=MooreMetric{D}()
 ) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), moore_neighbors, walkable, cost_metric)
 
+"""
+    position_delta(pathfinder::Pathfinder{D,periodic}, from::NTuple{Int,D}, to::NTuple{Int,D})
+Returns the absolute difference in coordinates between `from` and `to` taking into account periodicity of `pathfinder`.
+"""
+position_delta(
+    pathfinder::Pathfinder{D,periodic},
+    from::Dims{D},
+    to::Dims{D}
+) where {D, periodic} = periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) : abs.(to .- from)
+
 function delta_cost(
     pathfinder::Pathfinder{D,periodic},
     metric::MooreMetric{D},
     from::Dims{D},
     to::Dims{D}
 ) where {D,periodic}    
-    delta = collect(
-        periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
-        abs.(to .- from),
-    )
+    delta = collect(position_delta(pathfinder, from, to))
     sort!(delta)
     carry = 0
     hdist = 0
@@ -130,27 +137,21 @@ delta_cost(
     metric::VonNeumannMetric{D},
     from::Dims{D},
     to::Dims{D}
-) where {D,periodic} = sum(
-        periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
-        abs.(to .- from),
-    ) * metric.border_cost
+) where {D,periodic} = sum(position_delta(pathfinder, from, to)) * metric.border_cost
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
     metric::EuclideanMetric{D},
     from::Dims{D},
     to::Dims{D}
-) where {D,periodic} = floor(Int, norm(to .- from) * 10^metric.digits_of_precision)
+) where {D,periodic} = floor(Int, norm(position_delta(pathfinder, from, to)) * 10^metric.digits_of_precision)
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
     metric::ChebyshevMetric{D},
     from::Dims{D},
     to::Dims{D}
-) where {D,periodic} = max(
-        (periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) :
-        abs.(to .- from))...
-    )
+) where {D,periodic} = max(position_delta(pathfinder, from, to)...)
 
 
 delta_cost(
@@ -171,7 +172,7 @@ delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = de
 
 struct GridCell
     f::Int
-    g::Int
+g::Int
     h::Int
 end
 
@@ -196,7 +197,7 @@ function find_path(
         neighbor_offsets = [
             Tuple(a)
             for a in Iterators.product([(-1):1 for φ = 1:D]...) if a != Tuple(zeros(Int, D))
-        ]
+    ]
     else
         neighbor_offsets = [Tuple(i == j ? 1 : 0 for i in 1:D) for j in 1:D]
         neighbor_offsets = vcat(neighbor_offsets, [.-dir for dir in neighbor_offsets])
@@ -227,7 +228,7 @@ function find_path(
                 push!(open_list, (grid[nbor].f, nbor))
             end
     end
-    end
+end
 
     agent_path = Path{D}()
     cur = to
