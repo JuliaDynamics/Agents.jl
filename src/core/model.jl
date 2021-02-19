@@ -203,63 +203,43 @@ allids(model) = keys(model.agents)
 #######################################################################################
 # %% Higher order collections
 #######################################################################################
-export group_agent_iter, group_id_iter, group_agent_map, group_id_map
+export iter_agent_groups, iter_id_groups, map_agent_groups
 
 """
-    group_id_iter(order::Int, model::ABM)
-
-Return an iterator over all agent IDs of the model, group by order. When `order = 2`, the
-iterator returns agent pairs, and when `order = 3`: agent triples.
-
-See also [`group_agent_iter`](@ref).
+    iter_id_groups(order::Int, model::ABM)
+Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
+iterator returns ID pairs, e.g `(1, 2)` and when `order = 3`: ID triples, e.g.
+`(1, 7, 8)`.
 """
-group_id_iter(order::Int, model::ABM) =
+iter_id_groups(order::Int, model::ABM) =
     Iterators.product((by_id(model) for _ in 1:order)...)
 
 """
-    group_agent_iter(order::Int, model::ABM)
+    iter_agent_groups(order::Int, model::ABM)
 
-Return an iterator over all agents of the model, group by order. When `order = 2`, the
-iterator returns ID pairs, e.g `(1, 2)` and when `order = 3`: ID triples, e.g.
-`(1, 7, 8)`.
-
-See also [`group_id_iter`](@ref).
+Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
+iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
+e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
 """
-group_agent_iter(order::Int, model::ABM) =
+iter_agent_groups(order::Int, model::ABM) =
     Iterators.product((map(i -> model[i], by_id(model)) for _ in 1:order)...)
 
 """
-    group_id_map(order::Int, f::Function, model::ABM)
-    group_id_map(order::Int, f::Function, model::ABM, filter::Function)
+    map_agent_groups(order::Int, f::Function, model::ABM)
+    map_agent_groups(order::Int, f::Function, model::ABM, filter::Function)
 
-Applies function `f` to all grouped agent IDs of a [`group_id_iter`](@ref). `f` must take
-the form `f(model, a, b)`, where the number of arguments (after `model`) is equal to
-`order`.
-Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
-applied to remove unwanted matches from the results.
-
-See also [`group_agent_map`](@ref).
-"""
-group_id_map(order::Int, f::Function, model::ABM) =
-    (f(model, idx...) for idx in group_id_iter(order, model))
-group_id_map(order::Int, f::Function, model::ABM, filter::Function) =
-    (f(model, idx...) for idx in group_id_iter(order, model) if filter(idx))
-
-"""
-    group_agent_map(order::Int, f::Function, model::ABM)
-    group_agent_map(order::Int, f::Function, model::ABM, filter::Function)
-
-Applies function `f` to all grouped agents of a [`group_agent_iter`](@ref). `f` must take
+Applies function `f` to all grouped agents of a [`iter_agent_groups`](@ref). `f` must take
 the form `f(a, b)`, where the number of arguments is equal to `order`.
-Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
-applied to remove unwanted matches from the results.
 
-See also [`group_agent_map`](@ref).
+Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
+applied to remove unwanted matches from the results. **Note:** This option cannot keep
+matrix order, so should be used in conjuction with [`iter_id_groups`](@ref) to associate
+agent ids with the resultant data.
 """
-group_agent_map(order::Int, f::Function, model::ABM) =
-    (f(idx...) for idx in group_agent_iter(order, model))
-group_agent_map(order::Int, f::Function, model::ABM, filter::Function) =
-    (f(idx...) for idx in group_agent_iter(order, model) if filter(idx))
+map_agent_groups(order::Int, f::Function, model::ABM) =
+    (f(idx...) for idx in iter_agent_groups(order, model))
+map_agent_groups(order::Int, f::Function, model::ABM, filter::Function) =
+    (f(idx...) for idx in iter_agent_groups(order, model) if filter(idx))
 
 #######################################################################################
 # %% Model construction validation

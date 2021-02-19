@@ -88,10 +88,9 @@ accounted for across most or all of the model's agent population. The following 
 provide an interface for such calculation.
 
 ```@docs
-group_id_iter
-group_agent_iter
-group_id_map
-group_agent_map
+iter_agent_groups
+iter_id_groups
+map_agent_groups
 ```
 
 ## Discrete space exclusives
