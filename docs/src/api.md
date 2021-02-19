@@ -2,10 +2,11 @@
 
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 
-## Agent/model retrieval
+## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+seed!
 random_agent
 nagents
 allagents

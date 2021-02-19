@@ -100,6 +100,41 @@ end
     @test A3.types == Agent3.types
 end
 
+@testset "Random Pool" begin
+    Random.seed!(54)
+    model = ABM(Agent2)
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.6328988203983412
+
+    Random.seed!(54)
+    model = ABM(Agent2)
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    Random.seed!(64)
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.9626830433141891
+    seed!(model, 75) # Make sure default_rng() is also supported
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.5979499740099241
+    @test typeof(seed!(model)) <: MersenneTwister
+
+    model = ABM(Agent2; rng = MersenneTwister(54))
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    Random.seed!(64) # Should not change since this changes the global seed
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.6328988203983412
+    seed!(model, 64)
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.9626830433141891
+
+    model = ABM(Agent2; rng = RandomDevice())
+    @test_throws MethodError seed!(model, 64)
+    @test typeof(seed!(model)) <: RandomDevice
+end
+
 @testset "sample!" begin
     Random.seed!(6459)
     model = ABM(Agent2)

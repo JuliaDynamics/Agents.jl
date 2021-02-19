@@ -18,7 +18,7 @@ struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     space::S
     scheduler::F
     properties::P
-    rng::R
+    rng::Base.RefValue{R}
     maxid::Base.RefValue{Int64}
 end
 
@@ -66,10 +66,7 @@ which are the fields of `AgentBasedModel`.
 (see e.g. [`by_id`](@ref) and the scheduler API).
 
 `rng = Random.default_rng()` provides random number generation to the model.
-Passing, for example `MersenneTwister(1234)` will initialise with a repeatable random
-seed, and `RandomDevice()` will use the system's entropy source (coupled with hardware
-like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather
-than pseudo-random methods like `MersenneTwister`).
+Accepts any subtype of `AbstractRNG`.
 
 Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate. Use keyword `warn=false` to suppress that.
@@ -85,7 +82,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
-    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, Ref(rng), Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -95,7 +92,7 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-export random_agent, nagents, allagents, allids, nextid
+export random_agent, nagents, allagents, allids, nextid, seed!
 
 """
     model[id]
@@ -139,7 +136,7 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
+function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -149,7 +146,7 @@ function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
     elseif s === :properties
         return getfield(m, :properties)
     elseif s === :rng
-        return getfield(m, :rng)
+        return getfield(m, :rng)[]
     elseif s === :maxid
         return getfield(m, :maxid)
     elseif P <: Dict
@@ -159,13 +156,34 @@ function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
     end
 end
 
-function Base.setproperty!(m::ABM{S,A,F,P}, s::Symbol, x) where {S,A,F,P}
+function Base.setproperty!(m::ABM{S,A,F,P,R}, s::Symbol, x) where {S,A,F,P,R}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
     else
         throw(ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor."))
     end
+end
+
+"""
+    seed!(model)
+
+Reseeds the random number pool of the model.
+"""
+function seed!(model::ABM)
+    rng = getfield(model, :rng)
+    Random.seed!(rng[])
+end
+
+"""
+    seed!(model, seed)
+
+Reseeds the random number pool of the model with a given seed value when using a
+`MersenneTwister`.
+"""
+function seed!(model::ABM{S,A,F,P,<:MersenneTwister}, seed::Int) where {S,A,F,P}
+    rng = getfield(model, :rng)
+    Random.seed!(rng[], seed)
 end
 
 """
