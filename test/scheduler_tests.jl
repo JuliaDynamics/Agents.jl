@@ -20,23 +20,21 @@
     @test sort!(collect(model.scheduler(model))) == 1:N
 
     # random
-    Random.seed!(12)
-    model = ABM(Agent0; scheduler = random_activation)
+    model = ABM(Agent0; scheduler = random_activation, rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
-    @test model.scheduler(model)[1:3] == [913, 522, 637] # reproducibility test
+    @test model.scheduler(model)[1:3] == [64, 500, 785] # reproducibility test
 
     # partial
-    Random.seed!(12)
-    model = ABM(Agent0; scheduler = partial_activation(0.1))
+    model = ABM(Agent0; scheduler = partial_activation(0.1), rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
 
     a = model.scheduler(model)
     @test length(a) < N
-    @test a[1] == 74 # reproducibility test
+    @test a[1] == 831 # reproducibility test
 
     # by property
     model = ABM(Agent2; scheduler = property_activation(:weight))

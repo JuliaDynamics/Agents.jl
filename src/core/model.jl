@@ -179,9 +179,10 @@ end
     seed!(model, seed)
 
 Reseeds the random number pool of the model with a given seed value when using a
-`MersenneTwister`.
+pseudo-random pool like `MersenneTwister`.
 """
-function seed!(model::ABM{S,A,F,P,<:MersenneTwister}, seed::Int) where {S,A,F,P}
+function seed!(model::ABM{S,A,F,P,R}, seed::Int) where {S,A,F,P,R}
+    @assert !(R <: RandomDevice) "Use `seed!(model)` for RandomDevice pools"
     rng = getfield(model, :rng)
     Random.seed!(rng[], seed)
 end

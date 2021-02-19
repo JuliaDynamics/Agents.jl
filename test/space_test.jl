@@ -360,15 +360,14 @@
         @test_throws MethodError walk!(a, (1, 1, 5), model) # Must use Float64 for continuousspace
 
         # Random Walks
-        Random.seed!(65)
-        model = ABM(Agent3, GridSpace((5, 5)))
+        model = ABM(Agent3, GridSpace((5, 5)); rng = StableRNG(65))
         a = add_agent!((3, 3), model, rand(model.rng))
         walk!(a, rand, model)
-        @test a.pos == (4, 3)
+        @test a.pos == (2, 4)
         walk!(a, rand, model)
-        @test a.pos == (3, 4)
+        @test a.pos == (1, 3)
         walk!(a, rand, model)
-        @test a.pos == (4, 5)
+        @test a.pos == (5, 4)
 
         Random.seed!(65)
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2))
