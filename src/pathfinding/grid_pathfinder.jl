@@ -35,7 +35,7 @@ struct VonNeumannMetric{D} <: CostMetric{D}
 end
 
 """
-    NonDiagonalMetric{D}(border_cost::Int=10)
+    VonNeumannMetric{D}(border_cost::Int=10)
 Similar to [`MooreMetric{D}`](@ref), except from a tile it is only possible to step to its
 Von Neumann neighbors. `border_cost` is the cost of moving from a cell to any of its
 Von Neumann neighbors.
