@@ -1,4 +1,4 @@
-export CostMetric, MooreMetric, VonNeumannMetric, EuclideanMetric, ChebyshevMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
+export CostMetric, DirectDistanceMetric, ChebyshevMetric, HeightMapMetric, Pathfinder, Path, delta_cost, find_path, set_target!, move_agent!
 
 """
     Path{D}
@@ -16,42 +16,22 @@ define a struct with this as its base type and a corresponding method for [`delt
 """
 abstract type CostMetric{D} end
 
-struct MooreMetric{D} <: CostMetric{D}
+struct DirectDistanceMetric{D} <: CostMetric{D}
     direction_costs::Vector{Int}
 end
 
 """
-    MooreMetric{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
+    DirectDistanceMetric{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
 The default metric [`CostMetric{D}`](@ref). Distance is approximated as the shortest path between
 the two points, where from any tile it is possible to step to any of its Moore neighbors.
 `direction_costs` is an `Array{Int,1}` where `direction_costs[i]` represents the cost of
 going from a tile to the neighbording tile on the `i` dimensional diagonal. The default value is 
 `10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
-"""
-MooreMetric{D}() where {D} = MooreMetric{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
-struct VonNeumannMetric{D} <: CostMetric{D}
-    border_cost::Int
-end
-
+If `moore_neighbors=false` in the [`Pathfinder`](@ref) struct, then it is only possible to step to
+VonNeumann neighbors.
 """
-    VonNeumannMetric{D}(border_cost::Int=10)
-Similar to [`MooreMetric{D}`](@ref), except from a tile it is only possible to step to its
-Von Neumann neighbors. `border_cost` is the cost of moving from a cell to any of its
-Von Neumann neighbors.
-"""
-VonNeumannMetric{D}() where {D} = VonNeumannMetric{D}(10)
-
-struct EuclideanMetric{D} <: CostMetric{D}
-    digits_of_precision::Int
-end
-
-"""
-    EuclideanMetric{D}(digits_of_precision::Int=1)
-Distance between two tiles is approximmated as the Euclidean distance between their positions,
-including the first `digits_of_precision` decimal places (multiplying result by 10^`digits_of_precision`).
-"""
-EuclideanMetric{D}() where {D} = EuclideanMetric{D}(1)
+DirectDistanceMetric{D}() where {D} = DirectDistanceMetric{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
 """
     ChebyshevMetric{D}()
@@ -74,7 +54,7 @@ approximates the distance between two positions as the sum of the shortest dista
 difference in heights between the two positions. The shortest distance is calculated using the underlying
 `base_metric` field, which defaults to [`MooreMetric{D}`](@ref)
 """
-HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(MooreMetric{D}(), hmap)
+HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(DirectDistanceMetric{D}(), hmap)
 
 mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
@@ -102,7 +82,7 @@ Pathfinder(
     space::GridSpace{D,P};
     moore_neighbors::Bool=true,
     walkable::Array{Bool,D}=fill(true, size(space.s)),
-    cost_metric::CostMetric{D}=MooreMetric{D}()
+    cost_metric::CostMetric{D}=DirectDistanceMetric{D}()
 ) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), moore_neighbors, walkable, cost_metric)
 
 """
@@ -117,11 +97,14 @@ position_delta(
 
 function delta_cost(
     pathfinder::Pathfinder{D,periodic},
-    metric::MooreMetric{D},
+    metric::DirectDistanceMetric{D},
     from::Dims{D},
     to::Dims{D}
 ) where {D,periodic}    
     delta = collect(position_delta(pathfinder, from, to))
+
+    pathfinder.moore_neighbors || return sum(delta)*metric.direction_costs[1]
+
     sort!(delta)
     carry = 0
     hdist = 0
@@ -131,20 +114,6 @@ function delta_cost(
     end
     return hdist
 end
-
-delta_cost(
-    pathfinder::Pathfinder{D,periodic},
-    metric::VonNeumannMetric{D},
-    from::Dims{D},
-    to::Dims{D}
-) where {D,periodic} = sum(position_delta(pathfinder, from, to)) * metric.border_cost
-
-delta_cost(
-    pathfinder::Pathfinder{D,periodic},
-    metric::EuclideanMetric{D},
-    from::Dims{D},
-    to::Dims{D}
-) where {D,periodic} = floor(Int, norm(position_delta(pathfinder, from, to)) * 10^metric.digits_of_precision)
 
 delta_cost(
     pathfinder::Pathfinder{D,periodic},
