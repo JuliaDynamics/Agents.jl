@@ -17,11 +17,11 @@ define a struct with this as its base type and a corresponding method for [`delt
 abstract type CostMetric{D} end
 
 struct MooreMetric{D} <: CostMetric{D}
-    direction_costs::Array{Int,1}
+    direction_costs::Vector{Int}
 end
 
 """
-    MooreMetric{D}(direction_costs::Array{Int,1}=[floor(Int, 10.0*√x) for x in 1:D])
+    MooreMetric{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
 The default metric [`CostMetric{D}`](@ref). Distance is approximated as the shortest path between
 the two points, where from any tile it is possible to step to any of its Moore neighbors.
 `direction_costs` is an `Array{Int,1}` where `direction_costs[i]` represents the cost of
@@ -172,7 +172,7 @@ delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = de
 
 struct GridCell
     f::Int
-g::Int
+    g::Int
     h::Int
 end
 
@@ -240,7 +240,7 @@ cur = parent[cur]
 end
 
 """
-    set_target(agent, pathfinder::Pathfinder{D}, target::NTuple{D,Int})
+    set_target!(agent, pathfinder::Pathfinder{D}, target::NTuple{D,Int})
 This calculates and stores the shortest path to move the agent from its current position to `target`
 using [`find_path`](@ref).
 """
