@@ -89,8 +89,8 @@ provide an interface for such calculation.
 
 ```@docs
 iter_agent_groups
-iter_id_groups
 map_agent_groups
+index_groups_filtered
 ```
 
 ## Discrete space exclusives

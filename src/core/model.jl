@@ -203,16 +203,7 @@ allids(model) = keys(model.agents)
 #######################################################################################
 # %% Higher order collections
 #######################################################################################
-export iter_agent_groups, iter_id_groups, map_agent_groups
-
-"""
-    iter_id_groups(order::Int, model::ABM)
-Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
-iterator returns ID pairs, e.g `(1, 2)` and when `order = 3`: ID triples, e.g.
-`(1, 7, 8)`.
-"""
-iter_id_groups(order::Int, model::ABM) =
-    Iterators.product((by_id(model) for _ in 1:order)...)
+export iter_agent_groups, map_agent_groups, index_groups_filtered
 
 """
     iter_agent_groups(order::Int, model::ABM)
@@ -228,18 +219,27 @@ iter_agent_groups(order::Int, model::ABM) =
     map_agent_groups(order::Int, f::Function, model::ABM)
     map_agent_groups(order::Int, f::Function, model::ABM, filter::Function)
 
-Applies function `f` to all grouped agents of a [`iter_agent_groups`](@ref). `f` must take
-the form `f(a, b)`, where the number of arguments is equal to `order`.
+Applies function `f` to all grouped agents of a [`iter_agent_groups`](@ref). `f` must
+take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to `order`.
 
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
-matrix order, so should be used in conjuction with [`iter_id_groups`](@ref) to associate
-agent ids with the resultant data.
+matrix order, so should be used in conjuction with [`index_groups_filtered`](@ref) to
+associate agent ids with the resultant data.
 """
 map_agent_groups(order::Int, f::Function, model::ABM) =
-    (f(idx...) for idx in iter_agent_groups(order, model))
+    (f(idx) for idx in iter_agent_groups(order, model))
 map_agent_groups(order::Int, f::Function, model::ABM, filter::Function) =
-    (f(idx...) for idx in iter_agent_groups(order, model) if filter(idx))
+    (f(idx) for idx in iter_agent_groups(order, model) if filter(idx))
+
+"""
+    index_groups_filtered(order::Int, model::ABM, filter::Function)
+Return an iterable of agents in the model meeting the criterea of `filter`. Should be
+used in conjuction with [`map_agent_groups`](@ref) when the filter option is in use.
+"""
+index_groups_filtered(order::Int, model::ABM, filter::Function) =
+    Iterators.filter(filter, Iterators.product((by_id(model) for _ in 1:order)...))
+
 
 #######################################################################################
 # %% Model construction validation
