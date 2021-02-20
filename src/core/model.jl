@@ -5,14 +5,15 @@ export ABM, AgentBasedModel
 #######################################################################################
 
 abstract type AbstractSpace end
-SpaceType=Union{Nothing, AbstractSpace}
+SpaceType = Union{Nothing,AbstractSpace}
 
 abstract type DiscreteSpace <: AbstractSpace end
 
 # This is a collection of valid position types, sometimes used for ambiguity resolution
-ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}, Tuple{Int, Int, Float64}} where {N, M}
+ValidPos =
+    Union{Int,NTuple{N,Int},NTuple{M,<:AbstractFloat},Tuple{Int,Int,Float64}} where {N,M}
 
-struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, F, P}
+struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P}
     agents::Dict{Int,A}
     space::S
     scheduler::F
@@ -22,7 +23,7 @@ end
 
 const ABM = AgentBasedModel
 
-agenttype(::ABM{S, A}) where {S, A} = A
+agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
 
 """
@@ -35,7 +36,6 @@ union_types(a::Type, b::Type) = (a, b)
 union_types(x::Type) = (x,)
 # For completness
 union_types(a::Type, b::Union) = (a, union_types(b)...)
-
 
 """
     AgentBasedModel(AgentType [, space]; scheduler, properties) → model
@@ -68,13 +68,16 @@ Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate. Use keyword `warn=false` to supress that.
 """
 function AgentBasedModel(
-        ::Type{A}, space::S = nothing;
-        scheduler::F = fastest, properties::P = nothing, warn = true
-        ) where {A<:AbstractAgent, S<:SpaceType, F, P}
+    ::Type{A},
+    space::S = nothing;
+    scheduler::F = fastest,
+    properties::P = nothing,
+    warn = true,
+) where {A<:AbstractAgent,S<:SpaceType,F,P}
     agent_validator(A, space, warn)
 
-    agents = Dict{Int, A}()
-    return ABM{S, A, F, P}(agents, space, scheduler, properties, Ref(0))
+    agents = Dict{Int,A}()
+    return ABM{S,A,F,P}(agents, space, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -103,7 +106,8 @@ Note this method will return an error if the `id` requested is not equal to `age
 **Internal method**, use [`add_agents!`](@ref) instead to actually add an agent.
 """
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
-    a.id ≠ id && throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
+    a.id ≠ id &&
+    throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
     m.maxid[] < id && (m.maxid[] += 1)
     return a
@@ -127,7 +131,7 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
+function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -145,7 +149,7 @@ function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
     end
 end
 
-function Base.setproperty!(m::ABM{S, A, F, P}, s::Symbol, x) where {S, A, F, P}
+function Base.setproperty!(m::ABM{S,A,F,P}, s::Symbol, x) where {S,A,F,P}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
@@ -190,12 +194,55 @@ Return an iterator over all agents of the model.
 """
 allagents(model) = values(model.agents)
 
-
 """
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
 allids(model) = keys(model.agents)
+
+#######################################################################################
+# %% Higher order collections
+#######################################################################################
+export iter_agent_groups, map_agent_groups, index_groups_filtered
+
+"""
+    iter_agent_groups(order::Int, model::ABM)
+
+Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
+iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
+e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
+
+Index order is provided by the [`by_id`](@ref) scheduler.
+"""
+iter_agent_groups(order::Int, model::ABM) =
+    Iterators.product((map(i -> model[i], by_id(model)) for _ in 1:order)...)
+
+"""
+    map_agent_groups(order::Int, f::Function, model::ABM)
+    map_agent_groups(order::Int, f::Function, model::ABM, filter::Function)
+
+Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
+`f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
+`order`.
+
+Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
+applied to remove unwanted matches from the results. **Note:** This option cannot keep
+matrix order, so should be used in conjuction with [`index_groups_filtered`](@ref) to
+associate agent ids with the resultant data.
+"""
+map_agent_groups(order::Int, f::Function, model::ABM) =
+    (f(idx) for idx in iter_agent_groups(order, model))
+map_agent_groups(order::Int, f::Function, model::ABM, filter::Function) =
+    (f(idx) for idx in iter_agent_groups(order, model) if filter(idx))
+
+"""
+    index_groups_filtered(order::Int, model::ABM, filter::Function)
+Return an iterable of agent ids in the model meeting the criterea of `filter`. Should be
+used in conjuction with [`map_agent_groups`](@ref) when the filter option is in use.
+"""
+index_groups_filtered(order::Int, model::ABM, filter::Function) =
+    Iterators.filter(filter, Iterators.product((by_id(model) for _ in 1:order)...))
+
 
 #######################################################################################
 # %% Model construction validation
@@ -205,12 +252,17 @@ allids(model) = keys(model.agents)
 Validate the user supplied agent (subtype of `AbstractAgent`).
 Checks for mutability and existence and correct types for fields depending on `SpaceType`.
 """
-function agent_validator(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
+function agent_validator(
+    ::Type{A},
+    space::S,
+    warn::Bool,
+) where {A<:AbstractAgent,S<:SpaceType}
     # Check A for required properties & fields
     if isconcretetype(A)
         do_checks(A, space, warn)
     else
-        warn && @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
+        warn &&
+        @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
         for type in union_types(A)
             do_checks(type, space, warn)
         end
@@ -221,26 +273,32 @@ end
     do_checks(agent, space)
 Helper function for `agent_validator`.
 """
-function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
+function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
     if warn
-        isbitstype(A) && @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
+        isbitstype(A) &&
+        @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
     end
-    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) || throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
-    fieldtype(A, :id) <: Integer || throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
+    (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
+    throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
+    fieldtype(A, :id) <: Integer ||
+    throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space !== nothing
-        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) || throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
+        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
+        throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
         if space_type <: GraphSpace && !(pos_type <: Integer)
             throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
-        elseif space_type <: GridSpace && !(pos_type <: NTuple{D, Integer} where {D})
+        elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
             throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
-            if !(pos_type <: NTuple{D, <:AbstractFloat} where {D})
+            if !(pos_type <: NTuple{D,<:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
-            if warn && any(isequal(:vel), fieldnames(A)) && !(fieldtype(A, :vel) <: NTuple{D, <:AbstractFloat} where {D})
+            if warn &&
+               any(isequal(:vel), fieldnames(A)) &&
+               !(fieldtype(A, :vel) <: NTuple{D,<:AbstractFloat} where {D})
                 @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
             end
         end
@@ -250,18 +308,18 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
+function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
     if abm.space === nothing
-        s*= "\n no space"
+        s *= "\n no space"
     else
-        s*= "\n space: $(sprint(show, abm.space))"
+        s *= "\n space: $(sprint(show, abm.space))"
     end
-    s*= "\n scheduler: $(schedulername(abm.scheduler))"
+    s *= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
         print(io, "\n properties: ", abm.properties)
     end
 end
-schedulername(x::Union{Function, DataType}) = nameof(x)
+schedulername(x::Union{Function,DataType}) = nameof(x)

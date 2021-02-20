@@ -1,5 +1,6 @@
 # v4.1 (UNRELEASED)
 - A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
+- Higher-order agent grouping utilities to facilitate complex interactions.
 
 # v4.0, Major new release!
 

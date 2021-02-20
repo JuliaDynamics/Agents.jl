@@ -81,6 +81,18 @@ a = random_agent(model)
 sort!(collect(nearby_agents(a, model)))
 ```
 
+## Higher-order interactions
+
+There may be times when pair-wise, triplet-wise or higher interactions need to be
+accounted for across most or all of the model's agent population. The following methods
+provide an interface for such calculation.
+
+```@docs
+iter_agent_groups
+map_agent_groups
+index_groups_filtered
+```
+
 ## Discrete space exclusives
 ```@docs
 positions
