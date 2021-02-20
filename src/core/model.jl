@@ -221,8 +221,9 @@ iter_agent_groups(order::Int, model::ABM) =
     map_agent_groups(order::Int, f::Function, model::ABM)
     map_agent_groups(order::Int, f::Function, model::ABM, filter::Function)
 
-Applies function `f` to all grouped agents of a [`iter_agent_groups`](@ref). `f` must
-take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to `order`.
+Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
+`f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
+`order`.
 
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
@@ -236,7 +237,7 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function) =
 
 """
     index_groups_filtered(order::Int, model::ABM, filter::Function)
-Return an iterable of agents in the model meeting the criterea of `filter`. Should be
+Return an iterable of agent ids in the model meeting the criterea of `filter`. Should be
 used in conjuction with [`map_agent_groups`](@ref) when the filter option is in use.
 """
 index_groups_filtered(order::Int, model::ABM, filter::Function) =
