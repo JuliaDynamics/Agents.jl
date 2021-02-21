@@ -16,7 +16,8 @@ jobs:
       matrix:
         version:
           - '1'
-        os:  [ubuntu-latest, windows-latest, macos-latest] # adjust according to need, e.g. os: [ubuntu-latest] if testing only on linux
+          - '^1.6.0-0'
+        os:  [ubuntu-latest, windows-latest, macos-latest]
         arch:
           - x64
     steps:

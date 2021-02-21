@@ -119,6 +119,24 @@ The [`run!`](@ref) function has been designed for maximum flexibility: nearly al
 
 This means that [`run!`](@ref) has not been designed for maximum performance (or minimum memory allocation). However, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
 
+As your models become more complex, it may not be advantageous to use lots of helper functions in the global scope to assist with data collection.
+If this is the case in your model, here's a helpful tip to keep things clean:
+
+```julia
+function assets(model)
+    total_savings(model) = model.bank_balance + sum(model.assets)
+    function stategy(model)
+        if model.year == 0
+            return model.initial_strategy
+        else
+            return get_strategy(model)
+        end
+    end
+    return [:age, :details, total_savings, strategy]
+end
+run!(model, agent_step!, model_step!, 10; mdata = assets(model))
+```
+
 ## Seeding and Random numbers
 
 Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng`.
@@ -130,6 +148,7 @@ To do this, call `Random.seed!(6546)` (with any number) before creating your mod
 Passing, for example `MersenneTwister(1234)` will initialise with a repeatable random seed.
 
 Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but have stronger scientific merit since there is no possibility of bias from a 'lucky' random seed.
+
 
 ## An educative example
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.

@@ -502,3 +502,42 @@ end
         end
     end
 end
+
+@testset "Higher order groups" begin
+    model = ABM(Agent3, GridSpace((10, 10)))
+    for i in 1:10
+        add_agent!(model, i)
+    end
+
+    iter_second_ids = map(x -> (x[1].id, x[2].id), iter_agent_groups(2, model))
+    @test size(iter_second_ids) == (10, 10)
+    @test iter_second_ids[1] == (1, 1)
+    @test iter_second_ids[15] == (5, 2)
+    @test iter_second_ids[end] == (10, 10)
+
+    second = collect(map_agent_groups(2, x -> x[1].weight + x[2].weight, model))
+    @test size(second) == (10, 10)
+    @test second[1] == 2.0
+    @test second[15] == 7.0
+    @test second[end] == 20.0
+
+    third =
+        collect(map_agent_groups(3, x -> x[1].weight + x[2].weight + x[3].weight, model))
+    @test size(third) == (10, 10, 10)
+    @test third[1] == 3.0
+    @test third[15] == 8.0
+    @test third[end] == 30.0
+
+    second_filtered =
+        collect(map_agent_groups(2, x -> x[1].weight + x[2].weight, model, allunique))
+    @test size(second_filtered) == (90,)
+    @test second_filtered[1] == 3.0
+    @test second_filtered[15] == 9.0
+    @test second_filtered[end] == 19.0
+
+    idx_second_filtered = collect(index_mapped_groups(2, model, allunique))
+    @test size(idx_second_filtered) == (90,)
+    @test idx_second_filtered[1] == (2, 1)
+    @test idx_second_filtered[15] == (7, 2)
+    @test idx_second_filtered[end] == (9, 10)
+end

@@ -1,6 +1,7 @@
 # v4.1 (UNRELEASED)
 - A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
 - Models now supply a random number generator pool.
+- Higher-order agent grouping utilities to facilitate complex interactions.
 
 # v4.0, Major new release!
 
