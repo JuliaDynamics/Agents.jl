@@ -11,7 +11,7 @@ To get started, please read the [Tutorial](@ref) page.
 
 * Intuitive, small, yet powerful and simple-to-learn API for agent based models.
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref)
-* Support for many types of space: arbitrary graphs, regular grids, or continuous space.
+* Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
 - Multi-agent support, for interactions between disparate agent species.
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
 * Automatic data collection in a `DataFrame` at desired intervals
@@ -90,6 +90,15 @@ This is an example of emergent behavior from simple interactions of agents that 
 
 ## Citation
 
-If you use this package in a publication, please cite the paper below:
+If you use this package in work that leads to a publication, then please cite the paper below:
 
-> R. Vahdati, Ali (2019). Agents.jl: agent-based modeling framework in Julia. Journal of Open Source Software, 4(42), 1611, https://doi.org/10.21105/joss.01611
+```
+@misc{Agents.jl,
+      title={Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity}, 
+      author={George Datseris and Ali R. Vahdati and Timothy C. DuBois},
+      year={2021},
+      eprint={2101.10072},
+      archivePrefix={arXiv},
+      primaryClass={cs.MA}
+}
+```
