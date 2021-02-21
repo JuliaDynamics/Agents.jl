@@ -56,7 +56,7 @@ difference in heights between the two positions. The shortest distance is calcul
 """
 HeightMapMetric(hmap::Array{Int,D}) where {D} = HeightMapMetric{D}(DirectDistanceMetric{D}(), hmap)
 
-mutable struct Pathfinder{D,P}
+struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     moore_neighbors::Bool
@@ -176,7 +176,8 @@ function find_path(
         neighbor_offsets = [Tuple(i == j ? 1 : 0 for i in 1:D) for j in 1:D]
         neighbor_offsets = vcat(neighbor_offsets, [.-dir for dir in neighbor_offsets])
     end
-    open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
+    open_list = MutableBinaryMinHeap{Tuple{Int,Dims{D}}}()
+    open_list_handles = Dict{Dims{D},Int64}()
     closed_list = Set{Dims{D}}()
 
     grid[from] = GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
@@ -198,8 +199,11 @@ function find_path(
             if new_g_cost < grid[nbor].g
                 parent[nbor] = cur
                 grid[nbor] = GridCell(new_g_cost, delta_cost(pathfinder, nbor, to), pathfinder.admissibility)
-                # open list will contain duplicates. Can this be avoided?
-                push!(open_list, (grid[nbor].f, nbor))
+                if haskey(open_list_handles, nbor)
+                    update!(open_list, open_list_handles[nbor], (grid[nbor].f, nbor))
+                else
+                    open_list_handles[nbor] = push!(open_list, (grid[nbor].f, nbor))
+                end
             end
     end
 end
