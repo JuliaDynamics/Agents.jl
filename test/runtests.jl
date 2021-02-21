@@ -73,7 +73,7 @@ mutable struct Agent10 <: AbstractAgent
 end
 
 @testset "Agents.jl Tests" begin
-
+    include("grid_pathfinder_tests.jl")
     include("api_tests.jl")
     include("scheduler_tests.jl")
     include("model_access.jl")
