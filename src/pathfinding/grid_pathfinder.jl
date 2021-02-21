@@ -95,6 +95,12 @@ position_delta(
     to::Dims{D}
 ) where {D, periodic} = periodic ? min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from)) : abs.(to .- from)
 
+"""
+    delta_cost(pathfinder::Pathfinder{D}, from::NTuple{D, Int}, to::NTuple{D, Int})
+Calculates and returns an approximation for the cost of travelling from `from` to `to`. This calls the corresponding
+`delta_cost(pathfinder, pathfinder.cost_metric, from, to)` function. In the case of a custom metric, define a method for
+the latter function.
+"""
 function delta_cost(
     pathfinder::Pathfinder{D,periodic},
     metric::DirectDistanceMetric{D},
@@ -130,13 +136,6 @@ delta_cost(
     to::Dims{D}
 ) where {D,periodic} = delta_cost(pathfinder, metric.base_metric, from, to) + abs(metric.hmap[from...] - metric.hmap[to...])
 
-
-"""
-    delta_cost(pathfinder::Pathfinder{D}, from::NTuple{D, Int}, to::NTuple{D, Int})
-Calculates and returns an approximation for the cost of travelling from `from` to `to`. This calls the corresponding
-`delta_cost(pathfinder, pathfinder.cost_metric, from, to)` function. In the case of a custom metric, define a method for
-the latter function.
-"""
 delta_cost(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where {D} = delta_cost(pathfinder, pathfinder.cost_metric, from, to)
 
 struct GridCell
@@ -223,7 +222,7 @@ Moves the agent along the path to its target set by [`set_target!`](@ref). If th
 not have a precalculated path, or the path is empty, nothing happens.
 """
 function move_agent!(agent, model::ABM{<:GridSpace{D}}, pathfinder::Pathfinder{D}) where {D}
-    get(pathfinder.agent_paths, agent.id, nil()) == nil() && return
+    (get(pathfinder.agent_paths, agent.id, nothing) === nothing || isempty(pathfinder.agent_paths[agent.id])) && return
 
     move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
     popfirst!(pathfinder.agent_paths[agent.id])
