@@ -1,6 +1,6 @@
 ![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents3_logo.gif?raw=true)
 
-Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
+Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
 To get started, please read the [Tutorial](@ref) page.
 
@@ -32,8 +32,22 @@ To get started, please read the [Tutorial](@ref) page.
 The package is in Julia's package list. Install it using this command:
 
 ```
-]add Agents
+using Pkg; Pkg.add("Agents")
 ```
+
+## Design philosophy of Agents.jl
+Agents.jl was designed with the following philosophy in mind:
+
+**Simple to learn and use and extremely extendable, focusing on fast, yet scalable, model creation and evolution.**
+
+(it should be said nevertheless, that when we have to make a choice between a simpler API or a more performant implementation, we tend to lean in favor of simplicity)
+
+There are multiple examples that highligh this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing tremendously the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user 
+
+Many agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see e.g. [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for an outdated review), spanning a varying degree of complexity.
+In the page [TODO ADD CORRECT LINK HERE](@REF) we compare how our design philosophy puts us into comparison with other well accepted ABM software.
+
+We believe that (almost) everything imaginable in ABMs is possible with Agents.jl, whether already part of the existing [API](@ref), or from a user direct implementation.
 
 ## Comparison with existing software
 
@@ -58,7 +72,7 @@ ABMs have been adopted and studied in a variety of research disciplines.
 One reason for their popularity is that they enable a relaxation of many simplifying assumptions usually made by mathematical models.
 Relaxing such assumptions of a "perfect world" can change a model's behavior [[2](http://doi.org/10.1038/460685a)].
 
-Agent-based models are increasingly recognized as *the* approach for studying complex systems [[3](https://link.springer.com/chapter/10.1007/3-7908-1721-X_7),[4](http://www.doi.org/10.1162/106454602753694765),[5](http://www.nature.com/articles/460685a),[6](http://www.doi.org/10.1016/j.jaa.2016.01.009)].
+Agent-based models are increasingly recognized as a useful approach for studying complex systems [[3](https://link.springer.com/chapter/10.1007/3-7908-1721-X_7),[4](http://www.doi.org/10.1162/106454602753694765),[5](http://www.nature.com/articles/460685a),[6](http://www.doi.org/10.1016/j.jaa.2016.01.009)].
 Complex systems cannot be fully understood using traditional mathematical tools which aggregate the behavior of elements in a system.
 The behavior of a complex system depends on both the behavior of and interactions between its elements (agents).
 Small changes in the input to complex systems or the behavior of its agents can lead to large changes in outcome.
