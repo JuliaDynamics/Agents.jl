@@ -60,6 +60,7 @@ mutable struct Pathfinder{D,P}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     moore_neighbors::Bool
+    admissibility::AbstractFloat
     walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
 end
@@ -71,6 +72,10 @@ Stores path data of agents, and relevant pathfinding grid data. The dimensions a
 The keyword argument `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
 Von Neumann neighbors.
 
+The keyword argument `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour
+of faster pathfinding. For an admissibility value of `ε`, a path with atmost `(1+ε)` times the optimal path length
+will be calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
+
 The keyword argument `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
 the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
 
@@ -81,9 +86,10 @@ and having a corresponding method for [`delta_cost`](@ref). The default value is
 Pathfinder(
     space::GridSpace{D,P};
     moore_neighbors::Bool=true,
+    admissibility::AbstractFloat=0.0,
     walkable::Array{Bool,D}=fill(true, size(space.s)),
     cost_metric::CostMetric{D}=DirectDistanceMetric{D}()
-) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), moore_neighbors, walkable, cost_metric)
+) where {D,P} = Pathfinder{D,P}(Dict{Int,Path{D}}(), size(space.s), moore_neighbors, admissibility, walkable, cost_metric)
 
 """
     position_delta(pathfinder::Pathfinder{D,periodic}, from::NTuple{Int,D}, to::NTuple{Int,D})
@@ -144,7 +150,7 @@ struct GridCell
     h::Int
 end
 
-GridCell(g::Int, h::Int) = GridCell(g + h, g, h)
+GridCell(g::Int, h::Int, admissibility::AbstractFloat) = GridCell(round(Int, g + (1+admissibility)*h), g, h)
 
 """
     find_path(pathfinder::Pathfinder{D,periodic}, from::NTuple{D, Int}, to::NTuple{D,Int})
@@ -173,7 +179,7 @@ function find_path(
     open_list = BinaryMinHeap{Tuple{Int,Dims{D}}}()
     closed_list = Set{Dims{D}}()
 
-    grid[from] = GridCell(0, delta_cost(pathfinder, from, to))
+    grid[from] = GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
     push!(open_list, (grid[from].f, from))
 
     while !isempty(open_list)
@@ -191,7 +197,7 @@ function find_path(
             new_g_cost = grid[cur].g + delta_cost(pathfinder, cur, nbor)
             if new_g_cost < grid[nbor].g
                 parent[nbor] = cur
-                grid[nbor] = GridCell(new_g_cost, delta_cost(pathfinder, nbor, to))
+                grid[nbor] = GridCell(new_g_cost, delta_cost(pathfinder, nbor, to), pathfinder.admissibility)
                 # open list will contain duplicates. Can this be avoided?
                 push!(open_list, (grid[nbor].f, nbor))
             end
