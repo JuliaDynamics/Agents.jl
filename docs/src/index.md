@@ -9,8 +9,10 @@ To get started, please read the [Tutorial](@ref) page.
 
 ## Features
 
-* Intuitive, small, yet powerful and simple-to-learn API for agent based models.
+* Intuitive and simple-to-learn software for agent based models.
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref)
+* Powerful, feature-full and extendable [API](@ref).
+* Modular, function-based design.
 * Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
 - Multi-agent support, for interactions between disparate agent species.
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
@@ -38,33 +40,15 @@ using Pkg; Pkg.add("Agents")
 ## Design philosophy of Agents.jl
 Agents.jl was designed with the following philosophy in mind:
 
-**Simple to learn and use and extremely extendable, focusing on fast, yet scalable, model creation and evolution.**
+**Simple to learn and use, yet extendable, focusing on fast and scalable model creation and evolution.**
 
 (it should be said nevertheless, that when we have to make a choice between a simpler API or a more performant implementation, we tend to lean in favor of simplicity)
 
-There are multiple examples that highligh this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing tremendously the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user 
+There are multiple examples that highlight this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user may create an entirely new kind of space (e.g. one representing a planet, or whatever else) by only extending 5 functions, as discussed in our [Creating a new space type](@ref) documentation.
 
-Many agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see e.g. [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for an outdated review), spanning a varying degree of complexity.
-In the page [TODO ADD CORRECT LINK HERE](@REF) we compare how our design philosophy puts us into comparison with other well accepted ABM software.
-
-We believe that (almost) everything imaginable in ABMs is possible with Agents.jl, whether already part of the existing [API](@ref), or from a user direct implementation.
-
-## Comparison with existing software
-
-Many agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for a review).
-Notable examples are [NetLogo](https://ccl.northwestern.edu/netlogo/), [Repast](https://repast.github.io/index.html), [MASON](https://journals.sagepub.com/doi/10.1177/0037549705058073), and [Mesa](https://github.com/projectmesa/mesa).
-
-Implementing an ABM framework in Julia has several advantages:
-1. Using a general purpose programming language instead of a custom scripting language, such as NetLogo's, removes a learning step and provides a single environment for building the models and analyzing their results.
-2. Julia has a rich ecosystem for data analysis and visualization, implemented and maintained independently from Agents.jl.
-3. Julia is easier-to-use than Java (used for Repast and MASON), and provides a REPL (Read-Eval-Print-Loop) environment to build and analyze models interactively.
-4. Unlike Python (used for Mesa), Julia is fast to run. This is a crucial criterion for models that require considerable computations.
-5. Because the direct output of Agents.jl is a `DataFrame`, it makes it easy to use tools such as DataVoyager.jl, which provide an [interactive environment](https://github.com/vega/voyager) to build custom plots from `DataFrame`s. (and of course the `DataFrame` itself is a tabular data format similar to Python's Pandas).
-
-Agents.jl is lightweight and modular.
-It has a short learning curve, and allows one to extend its capabilities and express complicated modeling scenarios.
-Agents.jl was originally inspired by the [Mesa](https://github.com/projectmesa/mesa) framework for Python, but has since then departed in design, leading to a dramatically simpler and cleaner API, besides having obvious performance benefits (more than 30 times better performance than Mesa in some cases, see our [Agents.jl Performance and Complexity Comparison](@ref)).
-
+Many other agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see e.g. [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for an outdated review), spanning a varying degree of complexity.
+In the page [ABM Framework Comparison](@REF) we compare how our design philosophy puts us into comparison with other well accepted ABM software.
+Fascinatingly, even though the main focus of Agents.jl is simplicity and ease of use, it outperforms all software we compared it with.
 
 ## Crash course on agent based modeling
 An agent-based (or individual-based) model is a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules [[1](http://doi.org/10.1016/j.ecolmodel.2006.04.023)].
@@ -94,7 +78,7 @@ If you use this package in work that leads to a publication, then please cite th
 
 ```
 @misc{Agents.jl,
-      title={Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity}, 
+      title={Agents.jl: A performant and feature-full agent based modelling software of minimal code complexity},
       author={George Datseris and Ali R. Vahdati and Timothy C. DuBois},
       year={2021},
       eprint={2101.10072},
