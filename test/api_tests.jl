@@ -500,7 +500,7 @@ end
     @test second_filtered[15] == 9.0
     @test second_filtered[end] == 19.0
 
-    idx_second_filtered = collect(index_groups_filtered(2, model, allunique))
+    idx_second_filtered = collect(index_mapped_groups(2, model, allunique))
     @test size(idx_second_filtered) == (90,)
     @test idx_second_filtered[1] == (2, 1)
     @test idx_second_filtered[15] == (7, 2)

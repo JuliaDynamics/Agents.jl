@@ -203,46 +203,49 @@ allids(model) = keys(model.agents)
 #######################################################################################
 # %% Higher order collections
 #######################################################################################
-export iter_agent_groups, map_agent_groups, index_groups_filtered
+export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
-    iter_agent_groups(order::Int, model::ABM)
+    iter_agent_groups(order::Int, model::ABM; scheduler = by_id)
 
 Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
 iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
 e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
 
-Index order is provided by the [`by_id`](@ref) scheduler.
+Index order is provided by the [`by_id`](@ref) scheduler by default, but can be altered
+with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM) =
-    Iterators.product((map(i -> model[i], by_id(model)) for _ in 1:order)...)
+iter_agent_groups(order::Int, model::ABM; scheduler = by_id) =
+    Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
-    map_agent_groups(order::Int, f::Function, model::ABM)
-    map_agent_groups(order::Int, f::Function, model::ABM, filter::Function)
+    map_agent_groups(order::Int, f::Function, model::ABM; kwargs...)
+    map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...)
 
 Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
+`kwargs` are passed to the iterator method.
 `f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
 `order`.
 
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
-matrix order, so should be used in conjuction with [`index_groups_filtered`](@ref) to
+matrix order, so should be used in conjuction with [`index_mapped_groups`](@ref) to
 associate agent ids with the resultant data.
 """
-map_agent_groups(order::Int, f::Function, model::ABM) =
-    (f(idx) for idx in iter_agent_groups(order, model))
-map_agent_groups(order::Int, f::Function, model::ABM, filter::Function) =
-    (f(idx) for idx in iter_agent_groups(order, model) if filter(idx))
+map_agent_groups(order::Int, f::Function, model::ABM; kwargs...) =
+    (f(idx) for idx in iter_agent_groups(order, model; kwargs...))
+map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...) =
+    (f(idx) for idx in iter_agent_groups(order, model; kwargs...) if filter(idx))
 
 """
-    index_groups_filtered(order::Int, model::ABM, filter::Function)
-Return an iterable of agent ids in the model meeting the criterea of `filter`. Should be
-used in conjuction with [`map_agent_groups`](@ref) when the filter option is in use.
+    index_mapped_groups(order::Int, model::ABM; scheduler = by_id)
+    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id)
+Return an iterable of agent ids in the model, meeting the `filter` criterea if used.
 """
-index_groups_filtered(order::Int, model::ABM, filter::Function) =
-    Iterators.filter(filter, Iterators.product((by_id(model) for _ in 1:order)...))
-
+index_mapped_groups(order::Int, model::ABM; scheduler = by_id) =
+    Iterators.product((scheduler(model) for _ in 1:order)...)
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id) =
+    Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
 # %% Model construction validation

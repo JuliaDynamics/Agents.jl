@@ -90,7 +90,7 @@ provide an interface for such calculation.
 ```@docs
 iter_agent_groups
 map_agent_groups
-index_groups_filtered
+index_mapped_groups
 ```
 
 ## Discrete space exclusives
