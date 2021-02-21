@@ -39,4 +39,13 @@ pfinder_2d_np_m = Pathfinder{2,false}(Dict(), (7, 6), true, 0., wlk, DirectDista
 pfinder_2d_np_nm = Pathfinder{2,false}(Dict(), (7, 6), false, 0., wlk, DirectDistanceMetric{2}())
 pfinder_2d_p_m = Pathfinder{2, true}(Dict(), (7, 6), true, 0., wlk, DirectDistanceMetric{2}())
 pfinder_2d_p_nm = Pathfinder{2, true}(Dict(), (7, 6), false, 0., wlk, DirectDistanceMetric{2}())
+
+p = collect(find_path(pfinder_2d_np_m, (1, 1), (6, 6)))
+@test p == [(1, 2), (1, 3), (1, 4), (1, 5), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
+p = collect(find_path(pfinder_2d_np_nm, (1, 1), (6, 6)))
+@test p == [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
+p = collect(find_path(pfinder_2d_p_m, (1, 1), (6, 6)))
+@test p == [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
+p = collect(find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
+@test p == [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
 end
