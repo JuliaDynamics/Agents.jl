@@ -65,7 +65,7 @@ nothing # hide
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
-using InteractiveChaos, CairoMakie
+using InteractiveDynamics, CairoMakie
 
 abm_video(
     "socialdist1.mp4",
@@ -244,7 +244,7 @@ nothing # hide
 
 # To visualize this model, we will use black color for the susceptible, red for
 # the infected infected and green for the recovered, leveraging
-# [`InteractiveChaos.abm_plot`](@ref).
+# [`InteractiveDynamics.abm_plot`](@ref).
 
 sir_model = sir_initiation()
 

@@ -93,9 +93,9 @@ end
 
 # ## 3. Animate the model
 
-# We use the [`InteractiveChaos.abm_video`](@ref) for creating an animation and saving it to an mp4
+# We use the [`InteractiveDynamics.abm_video`](@ref) for creating an animation and saving it to an mp4
 
-using InteractiveChaos
+using InteractiveDynamics
 import CairoMakie
 ac(x) = x.status == true ? :black : :white
 am(x) = x.status == true ? '■' : '□'

@@ -257,13 +257,13 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 
 
 ## Plotting
-Plotting functionality comes from `InteractiveChaos`, which uses Makie.jl.
-You need to install both `InteractiveChaos`, as well as a plotting backend (we recommend `GLMakie`) to use the following functions.
+Plotting functionality comes from `InteractiveDynamics`, which uses Makie.jl.
+You need to install both `InteractiveDynamics`, as well as a plotting backend (we recommend `GLMakie`) to use the following functions.
 
-The version of `InteractiveChaos` used in the docs is:
+The version of `InteractiveDynamics` used in the docs is:
 ```@example versions
 using Pkg
-Pkg.status("InteractiveChaos")
+Pkg.status("InteractiveDynamics")
 ```
 
 ```@docs

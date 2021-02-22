@@ -15,7 +15,7 @@
 # They are more likely to adopt their neighbors opinion if the share more opinions with each other.
 
 using Agents
-using InteractiveChaos # plotting agents
+using InteractiveDynamics # plotting agents
 using AbstractPlotting # plotting data
 import CairoMakie # for static plotting
 using Random # hide

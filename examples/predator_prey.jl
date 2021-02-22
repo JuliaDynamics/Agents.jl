@@ -203,7 +203,7 @@ nothing # hide
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
-using InteractiveChaos, CairoMakie, AbstractPlotting
+using InteractiveDynamics, CairoMakie, AbstractPlotting
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()

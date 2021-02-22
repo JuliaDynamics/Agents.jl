@@ -15,9 +15,9 @@ Here is an example application made with [`InteractiveDynamics.abm_data_explorat
 the application is made with the following function:
 
 ```@docs
-InteractiveChaos.abm_plot
-InteractiveChaos.abm_video
-InteractiveChaos.abm_play
+InteractiveDynamics.abm_plot
+InteractiveDynamics.abm_video
+InteractiveDynamics.abm_play
 ```
 
 The animation at the start of this page was done with:

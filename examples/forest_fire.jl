@@ -23,7 +23,7 @@
 
 # We start by defining the agent type
 using Agents, Random
-using InteractiveChaos
+using InteractiveDynamics
 import CairoMakie
 
 mutable struct Tree <: AbstractAgent

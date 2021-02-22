@@ -229,7 +229,7 @@ function agent_step!(agent, model)
 end
 
 # The following animation shows the emergent unequal distribution of agents on resourceful areas.
-using InteractiveChaos
+using InteractiveDynamics
 figure, abmstepper = abm_plot(model; resolution=(1200, 600), as=10, am='■', ac=:blue, equalaspect=false)
 hmap_data = Observable(model.sugar_values)
 lay = figure[1, 0] = GridLayout()

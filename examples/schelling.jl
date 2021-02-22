@@ -92,11 +92,14 @@ using Random # for reproducibility
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ABM(SchellingAgent, space;
-                properties = properties, scheduler = random_activation)
+    rng = Random.MersenneTwister(seed)
+    model = ABM(
+        SchellingAgent, space;
+        properties, rng, scheduler = random_activation
+    )
+
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
-    Random.seed!(seed)
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
@@ -199,16 +202,17 @@ data
 
 # We can use the [`abm_plot`](@ref) function to plot the distribution of agents on a
 # 2D grid at every generation, via the
-# [InteractiveChaos.jl](https://juliadynamics.github.io/InteractiveChaos.jl/dev/) package
+# [InteractiveDynamics.jl](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/) package
 # and the [Makie.jl](http://makie.juliaplots.org/stable/) plotting ecosystem.
 
 # Let's color the two groups orange and blue and make one a square and the other a circle.
-using InteractiveChaos
+using InteractiveDynamics
 import CairoMakie # choosing a plotting backend
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure # returning the figure displays it
 
 # ## Animating the evolution
 

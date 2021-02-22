@@ -257,7 +257,7 @@ nothing # hide
 # Lets run the model with constant solar isolation and visualize the result
 
 Random.seed!(165) # hide
-using InteractiveChaos, CairoMakie, AbstractPlotting
+using InteractiveDynamics, CairoMakie, AbstractPlotting
 
 model = daisyworld()
 
@@ -367,7 +367,7 @@ figure
 # So, let's use `abm_data_exploration` from the [Interactive application](@ref Interact) page!
 
 # ```julia
-# using InteractiveChaos, GLMakie, Random
+# using InteractiveDynamics, GLMakie, Random
 # Random.seed!(165)
 # model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 # ```

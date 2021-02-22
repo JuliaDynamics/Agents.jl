@@ -44,7 +44,7 @@
 
 using Random # hide
 using Agents
-using InteractiveChaos
+using InteractiveDynamics
 using AbstractPlotting
 import CairoMakie
 
@@ -350,7 +350,7 @@ mkr(a) = a.shape
 colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
 markers = Observable([mkr(model[id]) for id in by_id(model)])
 pos = Observable([model[id].pos for id in by_id(model)])
-stepper = InteractiveChaos.ABMStepper(
+stepper = InteractiveDynamics.ABMStepper(
     clr,
     mkr,
     15,

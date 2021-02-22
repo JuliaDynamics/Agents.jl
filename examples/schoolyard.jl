@@ -22,7 +22,7 @@
 # To begin, we load in some dependencies
 
 using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
-using InteractiveChaos
+using InteractiveDynamics
 using AbstractPlotting
 import CairoMakie
 
