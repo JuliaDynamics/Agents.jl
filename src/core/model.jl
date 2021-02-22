@@ -100,7 +100,7 @@ function AgentBasedModel(
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true,
-) where {A<:AbstractAgent,S<:AbstractSpace,W,F,P}
+) where {A<:AbstractAgent,S<:AbstractSpace,W,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
