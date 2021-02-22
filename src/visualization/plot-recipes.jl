@@ -80,6 +80,7 @@ plotabm!(plt::RecipesBase.AbstractPlot, args...; kw...) =
     markercolor := colors
     markersize := sizes
     markershape := markers
+    aspect_ratio --> :equal
     legend --> false
     markerstrokewidth --> 0.5
     markerstrokecolor --> :black
