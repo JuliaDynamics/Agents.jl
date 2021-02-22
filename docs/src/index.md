@@ -8,8 +8,8 @@ To get started, please read the [Tutorial](@ref) page.
     Welcome to Agents.jl v4.0! This new release features improved `GridSpace` and `ContinuousSpace` (re-written from scratch), overall performance improvements of Agents.jl of a full order of magnitude (and sometimes more) and re-naming many API functions to make sense (deprecations have been put in place). Have a look at the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
 
 ## Features
-
-* Intuitive and simple-to-learn software for agent based models.
+* Free, open source and extremely transparent.
+* Intuitive and simple-to-learn.
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref)
 * Powerful, feature-full and extendable [API](@ref).
 * Modular, function-based design.
