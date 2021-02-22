@@ -9,12 +9,16 @@ SpaceType=Union{Nothing, AbstractSpace}
 
 abstract type DiscreteSpace <: AbstractSpace end
 
+abstract type AbstractPathfinder end
+PathfinderType = Union{Nothing, AbstractPathfinder}
+
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{Int, NTuple{N, Int}, NTuple{M, <:AbstractFloat}, Tuple{Int, Int, Float64}} where {N, M}
 
-struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, F, P}
+struct AgentBasedModel{S<:SpaceType, A<:AbstractAgent, W<:PathfinderType, F, P}
     agents::Dict{Int,A}
     space::S
+    pathfinder::W
     scheduler::F
     properties::P
     maxid::Base.RefValue{Int64}
@@ -38,7 +42,7 @@ union_types(a::Type, b::Union) = (a, union_types(b)...)
 
 
 """
-    AgentBasedModel(AgentType [, space]; scheduler, properties) → model
+    AgentBasedModel(AgentType [, space, pathfinder]; scheduler, properties) → model
 Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
  `ABM` is equivalent with `AgentBasedModel`.
@@ -52,6 +56,8 @@ If it is ommited then all agents are virtually in one position and have no spati
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
+
+`pathfinder` TODO
 
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. However, if `properties` is a dictionary with
@@ -74,7 +80,17 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int, A}()
-    return ABM{S, A, F, P}(agents, space, scheduler, properties, Ref(0))
+    return ABM{S, A, nothing, F, P}(agents, space, nothing, scheduler, properties, Ref(0))
+end
+
+function AgentBasedModel(
+        ::Type{A}, space::S, pathfinder::W = nothing;
+        scheduler::F = fastest, properties::P = nothing, warn = true
+        ) where {A<:AbstractAgent, S<:AbstractSpace, W, F, P}
+    agent_validator(A, space, warn)
+
+    agents = Dict{Int, A}()
+    return ABM{S, A, W, F, P}(agents, space, pathfinder, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -127,11 +143,13 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
+function Base.getproperty(m::ABM{S, A, W, F, P}, s::Symbol) where {S, A, W, F, P}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
         return getfield(m, :space)
+    elseif s === :pathfinder
+        return getfield(m, :pathfinder)
     elseif s === :scheduler
         return getfield(m, :scheduler)
     elseif s === :properties
@@ -145,7 +163,7 @@ function Base.getproperty(m::ABM{S, A, F, P}, s::Symbol) where {S, A, F, P}
     end
 end
 
-function Base.setproperty!(m::ABM{S, A, F, P}, s::Symbol, x) where {S, A, F, P}
+function Base.setproperty!(m::ABM{S, A, W, F, P}, s::Symbol, x) where {S, A, W, F, P}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
@@ -257,6 +275,11 @@ function Base.show(io::IO, abm::ABM{S, A}) where {S, A}
         s*= "\n no space"
     else
         s*= "\n space: $(sprint(show, abm.space))"
+    end
+    if abm.pathfinder === nothing
+        s*= "\n no pathfinder"
+    else
+        s*= "\n pathfinder: $(sprint(show, abm.pathfinder))"
     end
     s*= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
