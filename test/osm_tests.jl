@@ -82,19 +82,12 @@
 
     @test sort!(nearby_ids(model[6], model, 2)) == [4, 5, 7, 8]
     @test sort!(nearby_ids(model[6], model, 800.0)) == [3, 4, 5, 7, 8]
-    
-    
-    
-    @agent Zombie OSMAgent begin
-        infected::Bool
-    end
-    model = ABM(Zombie, OpenStreetMapSpace(TEST_MAP))
+
+    # Test long moves
     start = random_position(model)
     finish = osm_random_road_position(model)
     route = osm_plan_route(start, finish, model)
-    add_agent!(start, model, route, finish, false)
-    expected_pos=model[1].destination
-    move_agent!(model[1],model,10^5)
-    @test model[1].pos == expected_pos
-    
+    long = add_agent!(start, model, route, finish, false)
+    move_agent!(long, model, 10^5)
+    @test long.pos == long.destination
 end
