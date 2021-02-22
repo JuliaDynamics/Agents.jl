@@ -662,3 +662,69 @@ function nearby_positions(
     end
     neighborfn(model.space.m.g, position)
 end
+
+
+
+#returns sparse matrix with travel times between connected nodes
+function get_travel_times(m::MapData, class_speeds::Dict{Int,Float64} = OpenStreetMapX.SPEED_ROADS_URBAN)::SparseMatrixCSC{Float64,Int64}
+    sparse_times=copy(m.w)
+    @assert length(m.e) == length(m.w.nzval)
+    indices = [(m.v[i],m.v[j]) for (i,j) in m.e]
+    for i = 1:length(m.e)
+        sparse_times[indices[i]...] = 3.6 * (m.w[indices[i]]/class_speeds[m.class[i]])  # t=s/v. 3.6 factor because of physical unit change from km/h to m/s
+    end
+
+    return sparse_times
+end
+
+
+#translate progress between nodes (agent.pos[3]) from distance into time
+function distance_to_time!(agent,sparse_distances,sparse_times) 
+    distance_since_node=agent.pos[3]
+    edge_length=sparse_distances[agent.pos[1:2]]
+    edge_time=sparse_times[agent.pos[1:2]]
+    time_since_node= edge_length != 0 ? distance_since_node*edge_time/edge_length : 0    
+    agent.pos=(agent.pos[1:2]...,time_since_node)
+    
+    return nothing
+end
+
+
+#translate progress between nodes (agent.pos[3]) from time into distance
+function time_to_distance!(agent,sparse_times,sparse_distances) 
+    time_since_node=agent.pos[3]
+    edge_length=sparse_distances[agent.pos[1:2]]
+    edge_time=sparse_times[agent.pos[1:2]]
+    distance_since_node= edge_time != 0 ? time_since_node*edge_length/edge_time : 0
+    agent.pos=(agent.pos[1:2]...,distance_since_node)
+    
+    return nothing
+end
+
+
+#moves a single agent in time, not space
+function move_agent_by_time!(
+    agent::A,
+    model::ABM{<:OpenStreetMapSpace,A},
+    time::Real,
+    sparse_times::SparseMatrixCSC{Float64,Int64}
+) where {A<:AbstractAgent}
+    
+    # make identical model, only difference: node weights by time, not distance
+    sparse_distances=model.space.m.w
+    model.space.m.w=sparse_times
+    
+    # turn pos[3] into time increment rather than distance increment
+    distance_to_time!(agent,sparse_distances,sparse_times) 
+    
+    # perform move with time-weights instead of distance-weights between nodes
+    move_agent!(agent,model,time)
+    
+    # make pos[3] a distance again
+    time_to_distance!(agent,sparse_times,sparse_distances) 
+    
+    # retrieve distance-weights
+    model.space.m.w=sparse_distances
+    
+    return nothing
+end
