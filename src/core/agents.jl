@@ -1,18 +1,20 @@
 export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent, OSMAgent
 
 """
-    AbstractAgent
-All agents must be a mutable subtype of `AbstractAgent`.
-Your agent type **must have** the `id` field as first field.
+    YourAgentType <: AbstractAgent
+Agents participating in Agents.jl simulations are instances of user-defined Types that
+are subtypes of `AbstractAgent`. It is almost always the case that mutable Types make
+for a simpler modellign experience.
+
+Your agent type(s) **must have** the `id` field as first field.
 Depending on the space structure there might be a `pos` field of appropriate type
 and a `vel` field of appropriate type.
 Each space structure quantifies precicely what extra fields (if any) are necessary,
-however we recommend to use the [`@agent`] macro to help you create the agent type.
+however we recommend to use the [`@agent`](@ref) macro to help you create the agent type.
 
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".
 
-## Examples
 As an example, a [`GraphSpace`](@ref) requires an `id::Int` field and a `pos::Int` field.
 To make an agent with two additional properties, `weight, happy`, we'd write
 ```julia

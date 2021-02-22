@@ -79,11 +79,11 @@ function sugarscape(;
     for _ in 1:N
         add_agent_single!(
             model,
-            rand(vision_dist[1]:vision_dist[2]),
-            rand(metabolic_rate_dist[1]:metabolic_rate_dist[2]),
+            rand(model.rng, vision_dist[1]:vision_dist[2]),
+            rand(model.rng, metabolic_rate_dist[1]:metabolic_rate_dist[2]),
             0,
-            rand(max_age_dist[1]:max_age_dist[2]),
-            rand(w0_dist[1]:w0_dist[2]),
+            rand(model.rng, max_age_dist[1]:max_age_dist[2]),
+            rand(model.rng, w0_dist[1]:w0_dist[2]),
         )
     end
     return model, sugarscape_agent_step!, sugarscape_env!
@@ -115,7 +115,7 @@ function movement!(agent, model)
                 np = nearby_positions(agent.pos, model, dia)
                 suitable = intersect(np, sugary_sites)
                 if length(suitable) > 0
-                    newsite = rand(suitable)
+                    newsite = rand(model.rng, suitable)
                     break
                 end
             end
@@ -137,11 +137,11 @@ function replacement!(agent, model)
         # New agent has random attributes
         add_agent_single!(
             model,
-            rand(model.vision_dist[1]:model.vision_dist[2]),
-            rand(model.metabolic_rate_dist[1]:model.metabolic_rate_dist[2]),
+            rand(model.rng, model.vision_dist[1]:model.vision_dist[2]),
+            rand(model.rng, model.metabolic_rate_dist[1]:model.metabolic_rate_dist[2]),
             0,
-            rand(model.max_age_dist[1]:model.max_age_dist[2]),
-            rand(model.w0_dist[1]:model.w0_dist[2]),
+            rand(model.rng, model.max_age_dist[1]:model.max_age_dist[2]),
+            rand(model.rng, model.w0_dist[1]:model.w0_dist[2]),
         )
     end
 end

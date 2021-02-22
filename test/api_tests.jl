@@ -100,11 +100,45 @@ end
     @test A3.types == Agent3.types
 end
 
+@testset "Random Pool" begin
+    Random.seed!(54)
+    model = ABM(Agent2)
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.6328988203983412
+
+    Random.seed!(54)
+    model = ABM(Agent2)
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    Random.seed!(64)
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.9626830433141891
+    seed!(model, 75) # Make sure default_rng() is also supported
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.5979499740099241
+    @test typeof(seed!(model)) <: MersenneTwister
+
+    model = ABM(Agent2; rng = MersenneTwister(54))
+    add_agent!(model, rand(model.rng))
+    @test model[1].weight ≈ 0.5330409816783452
+    Random.seed!(64) # Should not change since this changes the global seed
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.6328988203983412
+    seed!(model, 64)
+    model[1].weight = rand(model.rng)
+    @test model[1].weight ≈ 0.9626830433141891
+
+    model = ABM(Agent2; rng = RandomDevice())
+    @test_throws MethodError seed!(model, 64)
+end
+
 @testset "sample!" begin
     Random.seed!(6459)
     model = ABM(Agent2)
     for i in 1:20
-        add_agent!(model, rand() / rand())
+        add_agent!(model, rand(model.rng) / rand(model.rng))
     end
     allweights = [i.weight for i in values(model.agents)]
     mean_weights = sum(allweights) / length(allweights)
@@ -122,7 +156,7 @@ end
     Random.seed!(6459)
     model2 = ABM(Agent3, GridSpace((10, 10)))
     for i in 1:20
-        add_agent_single!(Agent3(i, (1, 1), rand() / rand()), model2)
+        add_agent_single!(Agent3(i, (1, 1), rand(model2.rng) / rand(model2.rng)), model2)
     end
     @test sample!(model2, 10) === nothing
     @test sample!(model2, 10, :weight) === nothing
@@ -142,7 +176,7 @@ end
     model3 = ABM(Agent2)
     while true
         for i in 1:20
-            add_agent!(model3, rand() / rand())
+            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
         end
         allweights = [i.weight for i in values(model3.agents)]
         allunique(allweights) && break
@@ -155,7 +189,7 @@ end
     model3 = ABM(Agent2)
     while true
         for i in 1:20
-            add_agent!(model3, rand() / rand())
+            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
         end
         allweights = [i.weight for i in values(model3.agents)]
         allunique(allweights) && break
@@ -220,7 +254,7 @@ end
     agent = add_agent!(model, 5.3)
     init_pos = agent.pos
     # Checking specific indexing
-    move_agent!(agent, rand([i for i in 1:6 if i != init_pos]), model)
+    move_agent!(agent, rand(model.rng, [i for i in 1:6 if i != init_pos]), model)
     new_pos = agent.pos
     @test new_pos != init_pos
     # Checking a random move
@@ -320,7 +354,7 @@ end
 
     # Testing genocide!(model::ABM)
     for i in 1:20
-        agent = Agent3(i, (1, 1), rand())
+        agent = Agent3(i, (1, 1), rand(model.rng))
         add_agent_single!(agent, model)
     end
     genocide!(model)
@@ -330,7 +364,7 @@ end
     for i in 1:20
         # Explicitly override agents each time we replenish the population,
         # so we always start the genocide with 20 agents.
-        agent = Agent3(i, (1, 1), rand())
+        agent = Agent3(i, (1, 1), rand(model.rng))
         add_agent_single!(agent, model)
     end
     genocide!(model, 10)
@@ -338,7 +372,7 @@ end
 
     # Testing genocide!(model::ABM, f::Function) with an anonymous function
     for i in 1:20
-        agent = Agent3(i, (1, 1), rand())
+        agent = Agent3(i, (1, 1), rand(model.rng))
         add_agent_single!(agent, model)
     end
     @test nagents(model) == 20
@@ -349,7 +383,7 @@ end
     # Testing genocide!(model::ABM, f::Function) when the function is invalid
     # (i.e. does not return a bool)
     for i in 1:20
-        agent = Agent3(i, (rand(1:10), rand(1:10)), i * 2)
+        agent = Agent3(i, (rand(model.rng, 1:10), rand(model.rng, 1:10)), i * 2)
         add_agent_pos!(agent, model)
     end
     @test_throws TypeError genocide!(model, a -> a.id)
@@ -457,7 +491,7 @@ end
     for bool in (true, false)
         model = ABM(Agent2; properties = Dict(:count => 0))
         for i in 1:100
-            add_agent!(model, rand())
+            add_agent!(model, rand(model.rng))
         end
         step!(model, agent_step!, model_step!, 1, bool)
         if bool

@@ -72,7 +72,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand() < seed_threshold
+        if rand(model.rng) < seed_threshold
             empty_neighbors = Tuple{Int,Int}[]
             neighbors = nearby_positions(pos, model)
             for n in neighbors
@@ -81,7 +81,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
                 end
             end
             if !isempty(empty_neighbors)
-                seeding_place = rand(empty_neighbors)
+                seeding_place = rand(model.rng, empty_neighbors)
                 a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
                 add_agent_pos!(a, model)
             end
@@ -158,14 +158,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(0:max_age), albedo_white)
+        wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(0:max_age), albedo_black)
+        wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 

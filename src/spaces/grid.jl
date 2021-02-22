@@ -68,7 +68,7 @@ end
 # %% Implementation of space API
 #######################################################################################
 function random_position(model::ABM{<:GridSpace})
-    Tuple(rand(CartesianIndices(model.space.s)))
+    Tuple(rand(model.rng, CartesianIndices(model.space.s)))
 end
 
 function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}

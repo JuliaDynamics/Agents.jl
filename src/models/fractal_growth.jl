@@ -44,17 +44,17 @@ function fractal_growth(;
     space = ContinuousSpace(space_extents, 1.0; periodic = true)
     model = ABM(Particle, space; properties)
     center = space_extents ./ 2.0
-    for i = 1:initial_particles
+    for i in 1:initial_particles
         particle = Particle(
             i,
-            particle_radius(min_radius, max_radius),
-            rand() < clockwise_fraction,
+            particle_radius(min_radius, max_radius, model.rng),
+            rand(model.rng) < clockwise_fraction,
         )
         add_agent!(particle, model)
     end
     particle = Particle(
         initial_particles + 1,
-        particle_radius(min_radius, max_radius),
+        particle_radius(min_radius, max_radius, model.rng),
         true;
         pos = center,
         is_stuck = true,
@@ -80,7 +80,7 @@ function fractal_agent_step!(agent::Particle, model)
     agent.vel =
         (
             radial .* model.attraction .+ tangent .* model.spin .+
-            rand_circle() .* model.vibration
+            rand_circle(model.rng) .* model.vibration
         ) ./ (agent.radius^2.0)
     move_agent!(agent, model, model.speed)
 end
@@ -89,15 +89,14 @@ function fractal_model_step!(model)
     while model.spawn_count > 0
         particle = Particle(
             nextid(model),
-            particle_radius(model.min_radius, model.max_radius),
-            rand() < model.clockwise_fraction;
-            pos = (rand_circle() .+ 1.0) .* model.space.extent .* 0.49,
+            particle_radius(model.min_radius, model.max_radius, model.rng),
+            rand(model.rng) < model.clockwise_fraction;
+            pos = (rand_circle(model.rng) .+ 1.0) .* model.space.extent .* 0.49,
         )
         add_agent_pos!(particle, model)
         model.spawn_count -= 1
     end
 end
-
 
 Particle(
     id::Int,
@@ -107,6 +106,6 @@ Particle(
     is_stuck = false,
 ) = Particle(id, pos, (0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
 
-rand_circle() = (θ = rand(0.0:0.1:359.9); (cos(θ), sin(θ)))
-particle_radius(min_radius::Float64, max_radius::Float64) =
-    min_radius <= max_radius ? rand(min_radius:0.01:max_radius) : min_radius
+rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
+particle_radius(min_radius::Float64, max_radius::Float64, rng) =
+    min_radius <= max_radius ? rand(rng, min_radius:0.01:max_radius) : min_radius
