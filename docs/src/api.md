@@ -12,6 +12,21 @@ allagents
 allids
 ```
 
+## Available spaces
+Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see [Creating a new space type](@ref).
+
+### Discrete spaces
+```@docs
+GraphSpace
+GridSpace
+```
+
+### Continuous spaces
+```@docs
+ContinuousSpace
+OpenStreetMapSpace
+```
+
 ## Model-agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).
 Only some specific methods are exclusive to a specific type of space.
@@ -37,9 +52,21 @@ genocide!
 sample!
 ```
 
+### `@agents` macro
+The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+
+```@docs
+@agent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
+```
+
 ## Local area
 ```@docs
 nearby_ids
+nearby_agents
 nearby_positions
 edistance
 ```

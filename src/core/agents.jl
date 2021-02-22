@@ -7,7 +7,7 @@ Your agent type **must have** the `id` field as first field.
 Depending on the space structure there might be a `pos` field of appropriate type
 and a `vel` field of appropriate type.
 Each space structure quantifies precicely what extra fields (if any) are necessary,
-however we recommend to use the [`@agent`] macro to help you create the agent type.
+however we recommend to use the [`@agent`](@ref) macro to help you create the agent type.
 
 Your agent type may have other additional fields relevant to your system,
 for example variable quantities like "status" or other "counters".

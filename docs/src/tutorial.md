@@ -26,29 +26,21 @@ Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
 Spaces are separated into disrete spaces (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
-Thus, it is common for a specific position to contain several agents.
+In discrete spaces it is common for a specific position to contain several agents.
 
-### Discrete spaces
-```@docs
-GraphSpace
-GridSpace
-```
+The available spaces are:
 
-### Continuous spaces
-```@docs
-ContinuousSpace
-OpenStreetMapSpace
-```
+- [`GraphSpace`](@ref)
+- [`GridSpace`](@ref)
+- [`ContinuousSpace`](@ref)
+- [`OpenStreetMapSpace`](@ref)
+
+One simply initializes an instance of a space, e.g. with `grid = GridSpace((10, 10))` and passes that into [`AgentBasedModel`](@ref).
 
 ## 3. The agent
 
 ```@docs
 AbstractAgent
-@agent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
 ```
 
 Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
