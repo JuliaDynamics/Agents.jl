@@ -131,8 +131,7 @@ end
     @test model[1].weight ≈ 0.9626830433141891
 
     model = ABM(Agent2; rng = RandomDevice())
-    @test_throws AssertionError seed!(model, 64)
-    @test typeof(seed!(model)) <: RandomDevice
+    @test_throws MethodError seed!(model, 64)
 end
 
 @testset "sample!" begin

@@ -1,7 +1,8 @@
-# v4.1 (UNRELEASED)
+# v4.1
 - A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
-- Models now supply a random number generator pool.
-- Higher-order agent grouping utilities to facilitate complex interactions.
+- Models now supply a random number generator pool that is used in all random-related functions like `random_position`. Access it with `model.rng` and seed it with `seed!(model, seed)`.
+- Higher-order agent grouping utilities to facilitate complex interactions, see e.g. `iter_agent_groups`.
+- Several documentation improvements targeting newcomers.
 
 # v4.0, Major new release!
 
