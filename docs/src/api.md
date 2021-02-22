@@ -2,6 +2,17 @@
 
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 
+## `@agents` macro
+The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+
+```@docs
+@agent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
+```
+
 ## Agent/model retrieval
 ```@docs
 getindex(::ABM, ::Integer)
@@ -52,16 +63,6 @@ genocide!
 sample!
 ```
 
-### `@agents` macro
-The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
-
-```@docs
-@agent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
-```
 
 ## Local area
 ```@docs
