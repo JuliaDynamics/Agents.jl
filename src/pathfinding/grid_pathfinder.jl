@@ -208,7 +208,7 @@ function find_path(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where 
 
     open_list = MutableBinaryMinHeap{Tuple{Int,Dims{D}}}()
     open_list_handles = Dict{Dims{D},Int64}()
-    closed_list = Dims{D}[]
+    closed_list = Set{Dims{D}}()
 
     grid[from] = GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
     push!(open_list, (grid[from].f, from))
@@ -217,7 +217,6 @@ function find_path(pathfinder::Pathfinder{D}, from::Dims{D}, to::Dims{D}) where 
         _, cur = pop!(open_list)
         cur == to && break
         push!(closed_list, cur)
-        unique!(closed_list)
 
         nbors = get_neighbors(cur, pathfinder)
         for nbor in Iterators.filter(n -> inbounds(n, pathfinder, closed_list), nbors)
