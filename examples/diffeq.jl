@@ -44,7 +44,7 @@ end
 
 function agent_step!(agent, model)
     ## Make sure we sample from the fish distribution
-    agent.yearly_catch = rand(Poisson(agent.competence))
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
 end
 
 function dstock(model)
@@ -89,7 +89,7 @@ function initialise(;
         add_agent!(
             model,
             ## Competence level is a lognormal distribution between 1 and 5
-            floor(rand(truncated(LogNormal(), 1, 6))),
+            floor(rand(model.rng, truncated(LogNormal(), 1, 6))),
             ## Yearly catch can start at 0
             0.0,
         )
@@ -130,7 +130,7 @@ f
 
 function agent_step!(agent, model)
     if model.tick % 365 == 0
-        agent.yearly_catch = rand(Poisson(agent.competence))
+        agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
     end
 end
 
@@ -164,7 +164,7 @@ function initialise(;
         ),
     )
     for _ in 1:nagents
-        add_agent!(model, floor(rand(truncated(LogNormal(), 1, 6))), 0.0)
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
     end
     model
 end
@@ -218,7 +218,7 @@ Random.seed!(6549) #hide
 import OrdinaryDiffEq
 
 function agent_diffeq_step!(agent, model)
-    agent.yearly_catch = rand(Poisson(agent.competence))
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
 end
 
 function model_diffeq_step!(model)
@@ -264,7 +264,7 @@ function initialise_diffeq(;
         ),
     )
     for _ in 1:nagents
-        add_agent!(model, floor(rand(truncated(LogNormal(), 1, 6))), 0.0)
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
     end
     model
 end
@@ -358,14 +358,14 @@ f
 # to handle the agent based aspects of our problem.
 
 function agent_cb_step!(agent, model)
-    agent.yearly_catch = rand(Poisson(agent.competence))
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
 end
 
 function initialise_cb(; min_threshold = 60.0, nagents = 50)
     model = ABM(Fisher; properties = Dict(:min_threshold => min_threshold))
 
     for _ in 1:nagents
-        add_agent!(model, floor(rand(truncated(LogNormal(), 1, 6))), 0.0)
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
     end
     model
 end
@@ -415,6 +415,14 @@ ax =
     )
 lines!(ax, discrete, linewidth = 2, color = :blue)
 f
+
+plot(
+    sol(0:365:(365*20)),
+    xticks = (0:(365*2):(365*20), 0:2:20),
+    legend = false,
+    ylabel = "Stock",
+    xlabel = "Year",
+)
 
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.

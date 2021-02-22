@@ -34,7 +34,7 @@ Activate agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 function random_activation(model::ABM)
-    order = shuffle(collect(keys(model.agents)))
+    order = shuffle(model.rng, collect(keys(model.agents)))
 end
 
 """
@@ -44,7 +44,7 @@ At each step, activate only `p` percentage of randomly chosen agents.
 function partial_activation(p::Real)
     function partial(model::ABM)
         ids = collect(keys(model.agents))
-        return randsubseq(ids, p)
+        return randsubseq(model.rng, ids, p)
     end
     return partial
 end
@@ -80,8 +80,8 @@ function by_type(shuffle_types::Bool, shuffle_agents::Bool)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        shuffle_types && shuffle!(sets)
-        shuffle_agents && [shuffle!(set) for set in sets]
+        shuffle_types && shuffle!(model.rng, sets)
+        shuffle_agents && [shuffle!(model.rng, set) for set in sets]
         vcat(sets...)
     end
 end
@@ -94,7 +94,7 @@ Activate agents by type in specified order (since `Union`s are not order preserv
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
-        if order != nothing
+        if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"
             types = order
         end
@@ -103,7 +103,7 @@ function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        shuffle_agents && [shuffle!(set) for set in sets]
+        shuffle_agents && [shuffle!(model.rng, set) for set in sets]
         vcat(sets...)
     end
 end

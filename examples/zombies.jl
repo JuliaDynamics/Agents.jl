@@ -1,11 +1,14 @@
 # # Zombie Outbreak
-# ![](outbreak.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
 #
 # This model showcases an ABM running on a map, using [`OpenStreetMapSpace`](@ref).
 #
 # ## Constructing the end of days
 using Agents
-using Random # hide
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
 # satisfies the OSMSpace conditions of having a `pos`ition of type
@@ -32,8 +35,8 @@ function initialise(; map_path = TEST_MAP)
     end
 
     ## We'll add patient zero at a specific (latitude, longitude)
-    start = osm_road((39.534773980413505, -119.78937575923226), model)
-    finish = osm_intersection((39.52530416953533, -119.76949287425508), model)
+    start = osm_road((39.52320181536525, -119.78917553184259), model)
+    finish = osm_intersection((39.510773, -119.75916700000002), model)
     route = osm_plan_route(start, finish, model)
     add_agent!(start, model, route, finish, true)
     return model
@@ -47,7 +50,7 @@ function agent_step!(agent, model)
     ## Each agent will progress 25 meters along their route
     move_agent!(agent, model, 25)
 
-    if osm_is_stationary(agent) && rand() < 0.1
+    if osm_is_stationary(agent) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         osm_random_route!(agent, model)
         ## Start on new route
@@ -66,9 +69,11 @@ end
 # use [OpenStreetMapXPlot](https://github.com/pszufe/OpenStreetMapXPlot.jl) and
 # a custom routine.
 
-using OpenStreetMapXPlot
-using Plots
-gr()
+# ```julia
+# using OpenStreetMapXPlot
+# using Plots
+# gr()
+# ```
 
 ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
@@ -93,14 +98,20 @@ function plotagents(model)
 end
 
 # Let's see how this plays out!
-
-Random.seed!(10) # hide
-model = initialise()
-
-frames = @animate for i in 0:200
-    i > 0 && step!(model, agent_step!, 1)
-    plotmap(model.space.m)
-    plotagents(model)
-end
-
-gif(frames, "outbreak.gif", fps = 15)
+# ```julia
+# model = initialise()
+#
+# frames = @animate for i in 0:200
+#     i > 0 && step!(model, agent_step!, 1)
+#     plotmap(model.space.m)
+#     plotagents(model)
+# end
+#
+# gif(frames, "outbreak.gif", fps = 15)
+# ```
+#
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+# </video>
+# ```

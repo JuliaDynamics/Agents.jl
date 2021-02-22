@@ -11,7 +11,6 @@ Replication of the model found in NetLogo:
 
 from mesa import Model
 from mesa.space import MultiGrid
-from mesa.datacollection import DataCollector
 
 from agents import Sheep, Wolf, GrassPatch
 from schedule import RandomActivationByBreed
@@ -36,8 +35,6 @@ class WolfSheep(Model):
     grass = True
     grass_regrowth_time = 20
     sheep_gain_from_food = 5
-
-    verbose = False  # Print-monitoring
 
     description = (
         "A model for simulating wolf and sheep (predator-prey) ecosystem modelling."
@@ -85,12 +82,6 @@ class WolfSheep(Model):
 
         self.schedule = RandomActivationByBreed(self)
         self.grid = MultiGrid(self.height, self.width, torus=True)
-        self.datacollector = DataCollector(
-            {
-                "Wolves": lambda m: m.schedule.get_breed_count(Wolf),
-                "Sheep": lambda m: m.schedule.get_breed_count(Sheep),
-            }
-        )
 
         # Create sheep:
         for i in range(self.initial_sheep):
@@ -125,32 +116,6 @@ class WolfSheep(Model):
                 self.grid.place_agent(patch, (x, y))
                 self.schedule.add(patch)
 
-        self.running = True
-        self.datacollector.collect(self)
-
     def step(self):
         self.schedule.step()
-        # collect data
-        self.datacollector.collect(self)
-        if self.verbose:
-            print(
-                [
-                    self.schedule.time,
-                    self.schedule.get_breed_count(Wolf),
-                    self.schedule.get_breed_count(Sheep),
-                ]
-            )
 
-    def run_model(self, step_count=500):
-
-        if self.verbose:
-            print("Initial number wolves: ", self.schedule.get_breed_count(Wolf))
-            print("Initial number sheep: ", self.schedule.get_breed_count(Sheep))
-
-        for i in range(step_count):
-            self.step()
-
-        if self.verbose:
-            print("")
-            print("Final number wolves: ", self.schedule.get_breed_count(Wolf))
-            print("Final number sheep: ", self.schedule.get_breed_count(Sheep))

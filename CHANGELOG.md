@@ -1,5 +1,13 @@
-# v4.0 (not yet released, in master branch)
-**Major new release!**
+# v4.1
+- A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
+- Models now supply a random number generator pool that is used in all random-related functions like `random_position`. Access it with `model.rng` and seed it with `seed!(model, seed)`.
+- Higher-order agent grouping utilities to facilitate complex interactions, see e.g. `iter_agent_groups`.
+- Several documentation improvements targeting newcomers.
+
+# v4.0, Major new release!
+
+This new release brings not only a lot of new features but also a lot of performance improvements and quality of life improvements. Worth seeing is also the new [Comparison](https://juliadynamics.github.io/Agents.jl/dev/comparison/) section of our docs, which compares Agents.jl with other existing software, showing that Agents.jl outmatches all current standards.
+
 ## New features:
 - `GridSpace` has been re-written from scratch! It now supports **any dimensionality** and is about a **full order of magnitude faster** than the previous version!
 - `ContinuousSpace` has been re-written from scratch! It is now at least 3 times faster!
@@ -16,7 +24,7 @@
 - New public `schedule` function for writing custom loops.
 - Mixed models are supported in data collection methods.
 - `random_agent(model, condition)` allows obtaining random agents that satisfy given condition.
-- A walk! utility for `GridSpace` and `ContinuousSpace`s, providing turtle-like agent movement and random walks.
+- New `walk!` utility function for `GridSpace` and `ContinuousSpace`s, providing turtle-like agent movement and random walks.
 - The Battle Royal example explores using categorical neighbor searching in a high dimensional `GridSpace`.
 - An `@agent` macro provides a quick way of creating agent structs for any space.
 
@@ -26,7 +34,7 @@ therefore are not "truly breaking".
 
 - New `ContinuousSpace` now only supports Euclidean metric.
 - Keyword `moore` of `GridSpace` doesn't exist anymore. Use `metric` instead.
-- Default arguments for `GridSpace` are now `periodc = false, metric = :chebyshev`.
+- Default arguments for `GridSpace` are now `periodic = true, metric = :chebyshev`.
 - Internal structure of the fundamental types like `ABM, GraphSpace`, etc. is now explicitly not part of the public API, and the provided functions like `getindex` and `getproperty` have to be used. This will allow performance updates in the future that may change internals but not lead to breaking changes.
 - `vertex2coord, coord2vertex` do not exist anymore because they are unnecessary in the new design.
 - API simplification and renaming:

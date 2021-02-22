@@ -1,5 +1,6 @@
 module Agents
 
+using Requires
 using Distributed
 using LightGraphs
 using DataFrames
@@ -29,6 +30,13 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
+function __init__()
+    # Plot recipes
+    @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
+        include("visualization/plot-recipes.jl")
+    end
+end
+
 # 4.0 Depreciations
 @deprecate space_neighbors nearby_ids
 @deprecate node_neighbors nearby_positions
@@ -42,5 +50,27 @@ include("simulations/sample.jl")
 # Predefined models
 include("models/Models.jl")
 export Models
+
+# Update message:
+display_update = true
+version_number = "4.1"
+update_name = "update_v$(version_number)"
+
+if display_update
+    if !isfile(joinpath(@__DIR__, update_name))
+        printstyled(
+            stdout,
+            """
+            \nUpdate message: Agents v$(version_number)
+
+            `AgentBasedModel` now explicitly includes a random number generator, enabling
+            reproducible ABM simulations with Agents.jl.
+            Access it with `model.rng` and seed it with `seed!(model, seed)`!
+            """;
+            color = :light_magenta,
+        )
+        touch(joinpath(@__DIR__, update_name))
+    end
+end
 
 end # module

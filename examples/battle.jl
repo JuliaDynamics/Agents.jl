@@ -72,7 +72,7 @@ function battle(; fighters = 50)
 
     n = 0
     while n != fighters
-        pos = (rand(1:100, 2)..., 1) # Start at level 1
+        pos = (rand(model.rng, 1:100, 2)..., 1) # Start at level 1
         if isempty(pos, model)
             add_agent!(pos, model, false, 0, :diamond)
             n += 1
@@ -121,19 +121,20 @@ end
 function battle!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
         ## Odds are equivalent
-        one_winner = rand() < 0.5
+        one_winner = rand(model.rng) < 0.5
     elseif level(one) > level(two)
         ## Odds are in favor of one
-        one_winner = 2 * rand() > rand()
+        one_winner = 2 * rand(model.rng) > rand(model.rng)
     else
         ## Odds are in favor of two
-        one_winner = rand() > 2 * rand()
+        one_winner = rand(model.rng) > 2 * rand(model.rng)
     end
 
     one_winner ? (up = one; down = two) : (up = two; down = one)
 
     new_lvl_up = min(level(up) + 1, 10)
-    new_pos_up = clamp.(rand(-1:1, 2) .+ space(up), [1, 1], size(model.space)[1:2])
+    new_pos_up =
+        clamp.(rand(model.rng, -1:1, 2) .+ space(up), [1, 1], size(model.space)[1:2])
     move_agent!(up, (new_pos_up..., new_lvl_up), model)
     new_lvl_down = level(down) - 1
     if new_lvl_down == 0
@@ -167,21 +168,24 @@ function captor_behavior!(agent, model)
     else
         ## Someone is here to kill the captor. Could be more than one opponent
         prisoner = [model[id] for id in close_ids if model[id].capture_time > 0][1]
-        exploiter = rand([
-            model[id]
-            for
-            id in close_ids if
-            model[id].capture_time == 0 && model[id].has_prisoner == false
-        ])
-        exploiter.shape = :rect
+        exploiter = rand(
+            model.rng,
+            [
+                model[id]
+                for
+                id in close_ids if
+                model[id].capture_time == 0 && model[id].has_prisoner == false
+            ],
+        )
+        exploiter.shape = :square
         gain = ceil(Int, level(agent) / 2)
-        new_lvl = min(level(agent) + rand(1:gain), 10)
+        new_lvl = min(level(agent) + rand(model.rng, 1:gain), 10)
         kill_agent!(agent, model)
         move_agent!(exploiter, (space(exploiter)..., new_lvl), model)
         ## Prisoner runs away in the commotion
         prisoner.shape = :utriangle
         prisoner.capture_time = 0
-        walk!(prisoner, (rand(-1:1, 2)..., 0), model)
+        walk!(prisoner, (rand(model.rng, -1:1, 2)..., 0), model)
     end
 end
 
@@ -212,13 +216,13 @@ end
 function showdown!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
         ## Odds are equivalent
-        one_winner = rand() < 0.5
+        one_winner = rand(model.rng) < 0.5
     elseif level(one) > level(two)
         ## Odds are in favor of one
-        one_winner = level(one) - level(two) * rand() > rand()
+        one_winner = level(one) - level(two) * rand(model.rng) > rand(model.rng)
     else
         ## Odds are in favor of two
-        one_winner = rand() > level(two) - level(one) * rand()
+        one_winner = rand(model.rng) > level(two) - level(one) * rand(model.rng)
     end
 
     one_winner ? kill_agent!(two, model) : kill_agent!(one, model)
@@ -318,8 +322,8 @@ function agent_step!(agent, model)
 end
 
 # ## Let the Battle Begin
-# Plotting is relatively straightforward. `InteractiveChaos` cannot be used explicitly (yet)
-# since it expects that our categorical dimension is actually a third spatial one.
+# Plotting is relatively straightforward. [`plotabm`](@ref) cannot be used explicitly (yet)
+# since it expects our categorical dimension is actually a third spatial one.
 # We start with some custom legends to easier understand the dynamics.
 
 label_action = ["Battle", "Run", "Showdown", "Sneak", "Duel", "Captor", "Prisoner", "Chase"]

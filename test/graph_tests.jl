@@ -4,7 +4,7 @@ g = complete_digraph(5)
 abm = ABM(Agent5, GraphSpace(g))
 for n in 1:5
     for _ in 1:5
-        add_agent!(n, abm, rand())
+        add_agent!(n, abm, rand(abm.rng))
     end
 end
 @test nv(abm) == 5
@@ -24,12 +24,12 @@ n = add_node!(abm)
 add_edge!(abm, n, 2)
 
 
-a = add_agent!(n, abm, rand())
+a = add_agent!(n, abm, rand(abm.rng))
 ids = nearby_ids(a, abm)
 @test ids == 21:25
 
 model = ABM(Agent5, GraphSpace(SimpleGraph()))
-@test_throws ArgumentError add_agent!(model, rand())
+@test_throws ArgumentError add_agent!(model, rand(model.rng))
 add_node!(model)
 @test nv(model) == 1
 @test add_edge!(model, 1, 2) == false

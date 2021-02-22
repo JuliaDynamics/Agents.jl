@@ -1,6 +1,7 @@
 ignore:
   - "examples"   # No need to cover the examples
   - "src/models" # Examples provide integration testing here
+  - "src/visualization" # Plot recipes are soon to be unsupported
   - "test"
   - "docs"
   - "paper"

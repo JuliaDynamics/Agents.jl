@@ -43,7 +43,7 @@ end
 # Notice also that we could have taken advantage of the macro [`@agent`](@ref) (and in
 # fact, this is recommended), and defined the same agent as:
 # ```julia
-# @agent SchellingAgent GridAgent{2}
+# @agent SchellingAgent GridAgent{2} begin
 #     mood::Bool
 #     group::Int
 # end

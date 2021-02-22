@@ -1,20 +1,48 @@
 # API
 
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
+In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## Agent/model retrieval
+## `@agents` macro
+The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+
+```@docs
+@agent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
+```
+
+## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+seed!
 random_agent
 nagents
 allagents
 allids
 ```
 
+## Available spaces
+Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see [Creating a new space type](@ref).
+
+### Discrete spaces
+```@docs
+GraphSpace
+GridSpace
+```
+
+### Continuous spaces
+```@docs
+ContinuousSpace
+OpenStreetMapSpace
+```
+
 ## Model-agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space.
+Only some specific methods are exclusive to a specific type of space, but these are described further below in this page.
 
 ### Adding agents
 ```@docs
@@ -35,50 +63,6 @@ walk!
 kill_agent!
 genocide!
 sample!
-```
-
-## Local area
-```@docs
-nearby_ids
-nearby_positions
-edistance
-```
-
-## A note on iteration
-
-Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
-
-**Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
-Specifically, imagine the scenario
-```@example docs
-using Agents
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::NTuple{4, Int}
-end
-
-model = ABM(Agent, GridSpace((5, 5, 5, 5)))
-add_agent!((1, 1, 1, 1), model)
-add_agent!((1, 1, 1, 1), model)
-add_agent!((2, 1, 1, 1), model)
-for id in ids_in_position((1, 1, 1, 1), model)
-    kill_agent!(id, model)
-end
-collect(allids(model))
-```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
-To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
-
-**Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
-A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
-```julia
-a = random_agent(model)
-sort!(nearby_ids(random_agent(model), model))
-```
-leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
-```@example docs
-a = random_agent(model)
-sort!(collect(nearby_agents(a, model)))
 ```
 
 ## Discrete space exclusives
@@ -122,6 +106,64 @@ add_node!
 rem_node!
 ```
 
+## Local area
+```@docs
+nearby_ids
+nearby_agents
+nearby_positions
+edistance
+```
+
+## A note on iteration
+
+Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for performance reasons.
+
+**Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
+Specifically, imagine the scenario
+```@example docs
+using Agents
+mutable struct Agent <: AbstractAgent
+    id::Int
+    pos::NTuple{4, Int}
+end
+
+model = ABM(Agent, GridSpace((5, 5, 5, 5)))
+add_agent!((1, 1, 1, 1), model)
+add_agent!((1, 1, 1, 1), model)
+add_agent!((2, 1, 1, 1), model)
+for id in ids_in_position((1, 1, 1, 1), model)
+    kill_agent!(id, model)
+end
+collect(allids(model))
+```
+You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
+To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
+
+**Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
+A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
+```julia
+a = random_agent(model)
+sort!(nearby_ids(random_agent(model), model))
+```
+leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
+```@example docs
+a = random_agent(model)
+sort!(collect(nearby_agents(a, model)))
+```
+
+## Higher-order interactions
+
+There may be times when pair-wise, triplet-wise or higher interactions need to be
+accounted for across most or all of the model's agent population. The following methods
+provide an interface for such calculation.
+
+```@docs
+iter_agent_groups
+map_agent_groups
+index_mapped_groups
+```
+
+
 ## Parameter scanning
 ```@docs
 paramscan
@@ -130,13 +172,8 @@ paramscan
 ## Data collection
 The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
-```@docs
-init_agent_dataframe
-collect_agent_data!
-init_model_dataframe
-collect_model_data!
-aggname
-```
+Specifically, these functions aid in making custom data collection loops, instead of using the `run!` function.
+
 For example, the core loop of `run!` is just
 ```julia
 df_agent = init_agent_dataframe(model, adata)
@@ -156,6 +193,16 @@ end
 return df_agent, df_model
 ```
 (here `until` and `should_we_collect` are internal functions)
+
+`run!` uses the following functions:
+
+```@docs
+init_agent_dataframe
+collect_agent_data!
+init_model_dataframe
+collect_model_data!
+aggname
+```
 
 ## [Schedulers](@id Schedulers)
 The schedulers of Agents.jl have a very simple interface.
@@ -220,6 +267,8 @@ Pkg.status("InteractiveChaos")
 ```
 
 ```@docs
+plotabm
+plotabm!
 abm_plot
 abm_play
 abm_video
@@ -227,8 +276,8 @@ abm_data_exploration
 ```
 
 ## Interactive application
-You need to be using `InteractiveChaos` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
+You need to be using `InteractiveDynamics` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
 
 ```@docs
-abm_data_exploration
+InteractiveDynamics.abm_data_exploration
 ```

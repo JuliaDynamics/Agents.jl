@@ -9,24 +9,19 @@ println("Agents...")
 using Agents
 println("Plots...")
 using Plots
-println("AgentsPlots...")
-Pkg.add(PackageSpec(name="AgentsPlots", rev="master"))
-using AgentsPlots
 println("Literate...")
 import Literate
-println("InteractiveChaos...")
-using InteractiveChaos
-println("AbstractPlotting...")
-using AbstractPlotting
-println("CairoMakie...")
+println("InteractiveDynamics...")
+import InteractiveDynamics
 import CairoMakie
-f = Figure() # Build an intial plot so that font cache warnings don't spill out into docs
-println("OpenStreetMapX...")
-import OpenStreetMapX
-println("OpenStreetMapXPlot...")
-import OpenStreetMapXPlot
 
-# %% Literate convertion
+println("Setting up Environment")
+# Initialise plotting environments to squash build output bleeding into docs.
+pyplot()
+plot([1,1])
+f = InteractiveDynamics.AbstractPlotting.Figure()
+
+ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")
 @info "Converting Examples to Docuementation"
 indir = joinpath(@__DIR__, "..", "examples")
@@ -58,9 +53,9 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,InteractiveChaos],
+makedocs(modules = [Agents,InteractiveDynamics],
 sitename= "Agents.jl",
-authors = "Ali R. Vahdati, George Datseris, Tim DuBois and contributors.",
+authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
 doctest = false,
 format = Documenter.HTML(
     prettyurls = CI,
@@ -89,7 +84,8 @@ pages = [
         "Bacteria Growth" => "examples/growing_bacteria.md",
         "Opinion spread" => "examples/opinion_spread.md",
         "Battle Royale" => "examples/battle.md",
-        "Zombie Outbreak" => "examples/zombies.md"
+        "Zombie Outbreak" => "examples/zombies.md",
+        "Fractal Growth" => "examples/fractal_growth.md",
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",

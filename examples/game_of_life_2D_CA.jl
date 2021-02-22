@@ -40,10 +40,10 @@ end
 
 # This function creates a model where all cells are "off".
 
-function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev)
+function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev, seed = 120)
     space = GridSpace(dims; metric)
     properties = Dict(:rules => rules)
-    model = ABM(Cell, space; properties)
+    model = ABM(Cell, space; properties, rng = MersenneTwister(seed))
     idx = 1
     for x in 1:dims[1]
         for y in 1:dims[2]
@@ -82,12 +82,11 @@ end
 nothing # hide
 
 # now we can instantiate the model:
-Random.seed!(120) # hide
 model = build_model(rules = rules, dims = (50, 50))
 
 # Let's make some random cells on
 for i in 1:nagents(model)
-    if rand() < 0.2
+    if rand(model.rng) < 0.2
         model.agents[i].status = true
     end
 end

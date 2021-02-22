@@ -117,8 +117,8 @@
         @test edistance(a, b, model) ≈ 10.198039
 
         model = ABM(Agent5, GraphSpace(path_graph(5)))
-        a = add_agent!(1, model, rand())
-        b = add_agent!(2, model, rand())
+        a = add_agent!(1, model, rand(model.rng))
+        b = add_agent!(2, model, rand(model.rng))
         @test_throws MethodError edistance(a, b, model)
     end
 
@@ -133,9 +133,9 @@
               nearby_positions(3, undirected; neighbor_type = :in) ==
               nearby_positions(3, undirected; neighbor_type = :all) ==
               nearby_positions(3, undirected; neighbor_type = :default)
-        add_agent!(1, undirected, rand())
-        agent = add_agent!(2, undirected, rand())
-        add_agent!(3, undirected, rand())
+        add_agent!(1, undirected, rand(undirected.rng))
+        agent = add_agent!(2, undirected, rand(undirected.rng))
+        add_agent!(3, undirected, rand(undirected.rng))
         @test sort!(nearby_positions(agent, undirected)) == [1, 3]
         # We expect id 2 to be included for a grid based search
         @test sort!(collect(nearby_ids(2, undirected))) == [1, 2, 3]
@@ -151,9 +151,9 @@
         @test nearby_positions(3, directed; neighbor_type = :in) == [2]
         @test nearby_positions(3, directed; neighbor_type = :out) == [4]
         @test sort!(nearby_positions(3, directed; neighbor_type = :all)) == [2, 4]
-        add_agent!(1, directed, rand())
-        add_agent!(2, directed, rand())
-        add_agent!(3, directed, rand())
+        add_agent!(1, directed, rand(directed.rng))
+        add_agent!(2, directed, rand(directed.rng))
+        add_agent!(3, directed, rand(directed.rng))
         @test sort!(nearby_ids(2, directed)) == [2, 3]
         @test sort!(nearby_ids(2, directed; neighbor_type = :in)) == [1, 2]
         @test sort!(nearby_ids(2, directed; neighbor_type = :all)) == [1, 2, 3]
@@ -166,8 +166,8 @@
         @test collect(nearby_positions((2, 2), gridspace)) ==
               [(2, 1), (1, 2), (3, 2), (2, 3)]
         @test collect(nearby_positions((1, 1), gridspace)) == [(2, 1), (1, 2)]
-        a = add_agent!((2, 2), gridspace, rand())
-        add_agent!((3, 2), gridspace, rand())
+        a = add_agent!((2, 2), gridspace, rand(gridspace.rng))
+        add_agent!((3, 2), gridspace, rand(gridspace.rng))
         @test collect(nearby_ids((1, 2), gridspace)) == [1]
         @test sort!(collect(nearby_ids((1, 2), gridspace, 2))) == [1, 2]
         @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
@@ -180,10 +180,10 @@
         @test collect(nearby_positions((5, 5), model, (1, 2))) ==
               [(4, 3), (5, 3), (6, 3), (4, 4), (5, 4), (6, 4), (4, 5), (6, 5)]
 
-        add_agent!((3, 2), model, rand())
-        agent = add_agent!((3, 4), model, rand())
-        add_agent!((2, 4), model, rand())
-        add_agent!((2, 2), model, rand())
+        add_agent!((3, 2), model, rand(model.rng))
+        agent = add_agent!((3, 4), model, rand(model.rng))
+        add_agent!((2, 4), model, rand(model.rng))
+        add_agent!((2, 2), model, rand(model.rng))
         @test sort!(collect(nearby_ids((3, 2), model, (2, 1)))) == [1, 4]
         @test sort!(collect(nearby_ids((3, 2), model, (2, 2)))) == [1, 2, 3, 4]
         @test sort!(collect(nearby_ids((3, 2), model, (0, 2)))) == [1, 2]
@@ -289,7 +289,7 @@
     @testset "Walk" begin
         # Periodic
         model = ABM(Agent3, GridSpace((3, 3)))
-        a = add_agent!((1, 1), model, rand())
+        a = add_agent!((1, 1), model, rand(model.rng))
         walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
         walk!(a, (1, 1), model) # North east
@@ -310,15 +310,15 @@
         @test a.pos == (1, 1)
 
         model = ABM(Agent3, GridSpace((3, 3)))
-        a = add_agent!((1, 1), model, rand())
-        add_agent!((2, 2), model, rand())
+        a = add_agent!((1, 1), model, rand(model.rng))
+        add_agent!((2, 2), model, rand(model.rng))
         walk!(a, (1, 1), model; ifempty = true)
         @test a.pos == (1, 1)
         walk!(a, (1, 0), model; ifempty = true)
         @test a.pos == (2, 1)
 
         model = ABM(Agent3, GridSpace((3, 3); periodic = false))
-        a = add_agent!((1, 1), model, rand())
+        a = add_agent!((1, 1), model, rand(model.rng))
         walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
         walk!(a, (1, 1), model) # North east
@@ -336,7 +336,7 @@
 
         # Higher dimensions also possible and behave the same.
         model = ABM(Agent3D, GridSpace((3, 3, 2)))
-        a = add_agent!((1, 1, 1), model, rand())
+        a = add_agent!((1, 1, 1), model, rand(model.rng))
         walk!(a, (1, 1, 1), model)
         @test a.pos == (2, 2, 2)
         walk!(a, (-1, 1, 1), model)
@@ -344,14 +344,14 @@
 
         # ContinuousSpace
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
-        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand())
+        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand(model.rng))
         walk!(a, (1.0, 1.0), model)
         @test a.pos == (1.0, 1.0)
         walk!(a, (15.0, 1.0), model)
         @test a.pos == (12.0 - 1e-15, 2.0)
 
         model = ABM(Agent63, ContinuousSpace((12, 10, 5), 0.2))
-        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0), rand())
+        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0), rand(model.rng))
         walk!(a, (1.0, 1.0, 1.0), model)
         @test a.pos == (1.0, 1.0, 1.0)
         walk!(a, (15.0, 1.2, 3.9), model)
@@ -360,19 +360,18 @@
         @test_throws MethodError walk!(a, (1, 1, 5), model) # Must use Float64 for continuousspace
 
         # Random Walks
-        Random.seed!(65)
-        model = ABM(Agent3, GridSpace((5, 5)))
-        a = add_agent!((3, 3), model, rand())
+        model = ABM(Agent3, GridSpace((5, 5)); rng = StableRNG(65))
+        a = add_agent!((3, 3), model, rand(model.rng))
         walk!(a, rand, model)
-        @test a.pos == (4, 3)
+        @test a.pos == (2, 4)
         walk!(a, rand, model)
-        @test a.pos == (3, 4)
+        @test a.pos == (1, 3)
         walk!(a, rand, model)
-        @test a.pos == (4, 5)
+        @test a.pos == (5, 4)
 
         Random.seed!(65)
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2))
-        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand())
+        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
         walk!(a, rand, model)
         @test a.pos[1] ≈ 7.6625082546
         @test a.pos[2] ≈ 4.6722771144

@@ -1,7 +1,9 @@
-# Agents.jl Performance and Complexity Comparison
+# ABM Framework Comparison
+Many agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for a review).
+Notable examples are [NetLogo](https://ccl.northwestern.edu/netlogo/), [Repast](https://repast.github.io/index.html), [MASON](https://journals.sagepub.com/doi/10.1177/0037549705058073), and [Mesa](https://github.com/projectmesa/mesa).
 
-Here we compare Agents.jl with three current and popular frameworks: Mesa, Netlogo and Mason, to assess where Agents.jl excels and also may need some future improvement.
-We benchmark four models which showcase as many aspects of ABM simulation as possible.
+In this page we compare Agents.jl with Mesa, Netlogo and Mason, to assess where Agents.jl excels and also may need some future improvement.
+We used the following models for the comparison:
 
 - [Model of predator prey dynamics](@ref) (Wolf Sheep Grass), a [`GridSpace`](@ref) model, which requires agents to be added, removed and moved; as well as identify properties of neighbouring positions.
 - The [Flock model](@ref) (Flocking), a [`ContinuousSpace`](@ref) model, chosen over other models to include a MASON benchmark. Agents must move in accordance with social rules over the space.
@@ -16,15 +18,23 @@ For LOC, we use the following convention: code is formatted using standard pract
 
 | Model/Framework | Agents | Mesa | Netlogo | MASON |
 |---|---|---|---|---|
-|Wolf Sheep Grass|1|7.1x|2.1x|NA|
-|(LOC)|139|273|137 (871)| . |
+|Wolf Sheep Grass|1|6.9x|2.1x|NA|
+|(LOC)|139|238|137 (871)| . |
 |Flocking|1|29.7x|10.3xᕯ|2.1x|
 |(LOC)|66|120|82 (689)|369|
-|Forest Fire|1|29.1x|4.1x|NA|
-|(LOC)|27|61|43 (545)|.|
-|Schelling|1|31.5x|8.0x|14.3x|
-|(LOC)|34|63|68 (732)|248|
+|Forest Fire|1|22.5x|4.1x|NA|
+|(LOC)|27|42|43 (545)|.|
+|Schelling|1|29.6x|8.0x|14.3x|
+|(LOC)|34|57|68 (732)|248|
 
 ᕯ Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
 
 The results clearly speak for themselves. Across all four models, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.
+
+## Table-based comparison
+
+In an our [paper discussing Agents.jl](https://arxiv.org/abs/2101.10072), we compiled a comparison over a large list of features and metrics from the four frameworks discussed above.
+They are shown below in a table-based format:
+
+![Table 1](assets/table1.png)
+![Table 1 continued](assets/table2.png)

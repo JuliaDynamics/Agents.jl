@@ -1,10 +1,10 @@
-# Interactive application
+# [Interactive application](@id Interact)
 The interactive application of Agents.jl is _model-agnostic_.
 This means that provided that the space of the model is one of the supported types (currently only 2D `GridSpace` or `ContinuousSpace`), the application does not care about the model dynamics or agent properties.
 
-The app is based on [`InteractiveChaos`](https://juliadynamics.github.io/InteractiveChaos.jl/dev/), another package of JuliaDynamics.
+The app is based on [`InteractiveDynamics`](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/), another package of JuliaDynamics.
 
-Here is an example application
+Here is an example application made with [`InteractiveDynamics.abm_data_exploration`](@ref).
 
 ```@raw html
 <video width="100%" height="auto" controls autoplay loop>
@@ -23,13 +23,13 @@ InteractiveChaos.abm_play
 The animation at the start of this page was done with:
 ```julia
 using Agents, Random
-using Makie
-using InteractiveChaos
+using InteractiveDynamics
+using GLMakie
 
 model, agent_step!, model_step! = Models.forest_fire()
 
-alive(model) = count(a.status for a in allagents(model))
-burning(model) = count(!a.status for a in allagents(model))
+alive(model) = count(a.status == :green for a in allagents(model))
+burning(model) = count(a.status == :burning for a in allagents(model))
 mdata = [alive, burning, nagents]
 mlabels = ["alive", "burning", "total"]
 
@@ -41,6 +41,6 @@ params = Dict(
 ac(a) = a.status ? "#1f851a" : "#67091b"
 am = :rect
 
-p1 = interactive_abm(model, agent_step!, model_step!, params;
-ac = ac, as = 1, am = am, mdata = mdata, mlabels=mlabels)
+p1 = abm_data_exploration(model, agent_step!, model_step!, params;
+ac = ac, as = 1, am = am, mdata, mlabels)
 ```
