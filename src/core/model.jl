@@ -18,7 +18,7 @@ struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     space::S
     scheduler::F
     properties::P
-    rng::Base.RefValue{R}
+    rng::R
     maxid::Base.RefValue{Int64}
 end
 
@@ -83,7 +83,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
-    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, Ref(rng), Ref(0))
+    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -173,7 +173,7 @@ Reseeds the random number pool of the model.
 """
 function seed!(model::ABM)
     rng = getfield(model, :rng)
-    Random.seed!(rng[])
+    Random.seed!(rng)
 end
 
 """
@@ -185,7 +185,7 @@ pseudo-random pool like `MersenneTwister`.
 function seed!(model::ABM{S,A,F,P,R}, seed::Int) where {S,A,F,P,R}
     @assert !(R <: RandomDevice) "Use `seed!(model)` for RandomDevice pools"
     rng = getfield(model, :rng)
-    Random.seed!(rng[], seed)
+    Random.seed!(rng, seed)
 end
 
 """
