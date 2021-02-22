@@ -41,13 +41,12 @@ union_types(a::Type, b::Union) = (a, union_types(b)...)
     AgentBasedModel(AgentType [, space]; scheduler, properties) → model
 Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
- `ABM` is equivalent with `AgentBasedModel`.
+`ABM` is equivalent with `AgentBasedModel`.
 
 The agents are stored in a dictionary that maps unique ids (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
-`space` is a subtype of `AbstractSpace`: [`GraphSpace`](@ref), [`GridSpace`](@ref) or
-[`ContinuousSpace`](@ref).
+`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is ommited then all agents are virtually in one position and have no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
@@ -63,6 +62,8 @@ which are the fields of `AgentBasedModel`.
 
 `scheduler = fastest` decides the order with which agents are activated
 (see e.g. [`by_id`](@ref) and the scheduler API).
+`scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
+or [`run!`](@ref).
 
 Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate. Use keyword `warn=false` to supress that.
