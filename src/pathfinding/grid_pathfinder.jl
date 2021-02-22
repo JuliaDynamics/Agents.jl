@@ -1,12 +1,5 @@
-export DirectDistance,
-    Chebyshev,
-    HeightMap,
-    AStar,
-    Path,
-    delta_cost,
-    find_path,
-    set_target!,
-    move_agent!
+export CostMetric,
+    DirectDistance, Chebyshev, HeightMap, AStar, delta_cost, find_path, set_target!
 
 """
     Path{D}
@@ -39,8 +32,7 @@ going from a tile to the neighbording tile on the `i` dimensional diagonal. The 
 If `moore_neighbors=false` in the [`AStar`](@ref) struct, then it is only possible to step to
 VonNeumann neighbors.
 """
-DirectDistance{D}() where {D} =
-    DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
+DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
 """
     Chebyshev{D}()
@@ -62,8 +54,7 @@ approximates the distance between two positions as the sum of the shortest dista
 difference in heights between the two positions. The shortest distance is calculated using the underlying
 `base_metric` field, which defaults to [`DirectDistance{D}`](@ref)
 """
-HeightMap(hmap::Array{Int,D}) where {D} =
-    HeightMap{D}(DirectDistance{D}(), hmap)
+HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
 struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
@@ -257,25 +248,33 @@ end
     all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
 
 """
-    set_target!(agent, pathfinder::AStar{D}, target::NTuple{D,Int})
+    set_target!(agent::A, target::NTuple{D,Int}, model::ABM{<:GridSpace,A,<:AStar{D}})
 This calculates and stores the shortest path to move the agent from its current position to `target`
 using [`find_path`](@ref).
 """
-function set_target!(agent, pathfinder::AStar{D}, target::Dims{D}) where {D}
-    pathfinder.agent_paths[agent.id] = find_path(pathfinder, agent.pos, target)
+function set_target!(
+    agent::A,
+    target::Dims{D},
+    model::ABM{<:GridSpace{D},A,<:AStar{D}},
+) where {D,A<:AbstractAgent}
+    model.pathfinder.agent_paths[agent.id] = find_path(model.pathfinder, agent.pos, target)
 end
 
-"""
-    move_agent!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D})
-Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
-not have a precalculated path, or the path is empty, nothing happens.
-"""
-function move_agent!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}) where {D}
-    (
-        get(pathfinder.agent_paths, agent.id, nothing) === nothing ||
-        isempty(pathfinder.agent_paths[agent.id])
-    ) && return
+Base.isempty(id::Int, pathfinder::AStar) =
+    get(pathfinder.agent_paths, id, nothing) === nothing ||
+    isempty(pathfinder.agent_paths[id])
 
-    move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
-    popfirst!(pathfinder.agent_paths[agent.id])
+"""
+    move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
+Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
+not have a precalculated path, or the path is empty, the agent does not move.
+"""
+function move_agent!(
+    agent::A,
+    model::ABM{<:GridSpace{D},A,<:AStar{D}},
+) where {D,A<:AbstractAgent}
+    isempty(agent.id, model.pathfinder) && return
+
+    move_agent!(agent, first(model.pathfinder.agent_paths[agent.id]), model)
+    popfirst!(model.pathfinder.agent_paths[agent.id])
 end
