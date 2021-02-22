@@ -2,6 +2,7 @@ module Agents
 
 using Requires
 using Distributed
+using DataStructures
 using LightGraphs
 using DataFrames
 using Random
@@ -29,6 +30,8 @@ include("simulations/step.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
+
+include("pathfinding/grid_pathfinder.jl")
 
 function __init__()
     # Plot recipes
