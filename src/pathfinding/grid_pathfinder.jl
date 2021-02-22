@@ -189,6 +189,8 @@ end
 GridCell(g::Int, h::Int, admissibility::AbstractFloat) =
     GridCell(round(Int, g + (1 + admissibility) * h), g, h)
 
+GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
+
 """
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
 Using the specified [`AStar`](@ref), calculates and returns the shortest path from `from` to `to` using the A* algorithm.
@@ -197,8 +199,8 @@ Paths are returned as a [`Path{D}`](@ref). If a path does not exist between the 
 and [`move_agent!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
-    grid = DefaultDict{Dims{D},GridCell}(GridCell(typemax(Int), typemax(Int), typemax(Int)))
-    parent = DefaultDict{Dims{D},Union{Nothing,Dims{D}}}(nothing)
+    grid = Dict{Dims{D},GridCell}()
+    parent = Dict{Dims{D},Dims{D}}()
 
     open_list = MutableBinaryMinHeap{Tuple{Int,Dims{D}}}()
     open_list_handles = Dict{Dims{D},Int64}()
@@ -214,8 +216,10 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 
         nbors = get_neighbors(cur, pathfinder)
         for nbor in Iterators.filter(n -> inbounds(n, pathfinder, closed_list), nbors)
+            nbor_cell = get(grid, nbor, GridCell())
             new_g_cost = grid[cur].g + delta_cost(pathfinder, cur, nbor)
-            if new_g_cost < grid[nbor].g
+
+            if new_g_cost < nbor_cell.g
                 parent[nbor] = cur
                 grid[nbor] = GridCell(
                     new_g_cost,
@@ -233,9 +237,9 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 
     agent_path = Path{D}()
     cur = to
-    while parent[cur] !== nothing
+    while get(parent, cur, nothing) !== nothing
         pushfirst!(agent_path, cur)
-        cur = parent[cur]
+        cur = get(parent, cur, nothing)
     end
     return agent_path
 end
