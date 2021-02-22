@@ -13,11 +13,12 @@ abstract type DiscreteSpace <: AbstractSpace end
 ValidPos =
     Union{Int,NTuple{N,Int},NTuple{M,<:AbstractFloat},Tuple{Int,Int,Float64}} where {N,M}
 
-struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P}
+struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     agents::Dict{Int,A}
     space::S
     scheduler::F
     properties::P
+    rng::R
     maxid::Base.RefValue{Int64}
 end
 
@@ -34,7 +35,7 @@ union_types(x::Union) = union_types(x.a, x.b)
 union_types(a::Union, b::Type) = (union_types(a)..., b)
 union_types(a::Type, b::Type) = (a, b)
 union_types(x::Type) = (x,)
-# For completness
+# For completeness
 union_types(a::Type, b::Union) = (a, union_types(b)...)
 
 """
@@ -43,7 +44,7 @@ Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
 
-The agents are stored in a dictionary that maps unique ids (integers)
+The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
@@ -57,7 +58,7 @@ that can be accessed as `model.properties`. However, if `properties` is a dictio
 key type `Symbol`, or of it is a struct, then the syntax
 `model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
 for structs).
-This syntax can't be used for `name` being `agents, space, scheduler, properties`,
+This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
 which are the fields of `AgentBasedModel`.
 
 `scheduler = fastest` decides the order with which agents are activated
@@ -65,20 +66,24 @@ which are the fields of `AgentBasedModel`.
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
 or [`run!`](@ref).
 
+`rng = Random.default_rng()` provides random number generation to the model.
+Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
+
 Type tests for `AgentType` are done, and by default
-warnings are thrown when appropriate. Use keyword `warn=false` to supress that.
+warnings are thrown when appropriate. Use keyword `warn=false` to suppress that.
 """
 function AgentBasedModel(
     ::Type{A},
     space::S = nothing;
     scheduler::F = fastest,
     properties::P = nothing,
+    rng::R = Random.default_rng(),
     warn = true,
-) where {A<:AbstractAgent,S<:SpaceType,F,P}
+) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
-    return ABM{S,A,F,P}(agents, space, scheduler, properties, Ref(0))
+    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -88,7 +93,7 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-export random_agent, nagents, allagents, allids, nextid
+export random_agent, nagents, allagents, allids, nextid, seed!
 
 """
     model[id]
@@ -104,7 +109,7 @@ Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
-**Internal method**, use [`add_agents!`](@ref) instead to actually add an agent.
+**Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id &&
@@ -122,17 +127,17 @@ nextid(model::ABM) = model.maxid[] + 1
 
 """
     model.prop
-    getproperty(model::ABM, prop::Symbol)
+    getproperty(model::ABM, :prop)
 
-Return a property from the current `model`, assuming the model `properties` are either
-a dictionary with key type `Symbol` or a Julia struct.
+Return a property with name `:prop` from the current `model`, assuming the model `properties`
+are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
 
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
+function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -141,6 +146,8 @@ function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
         return getfield(m, :scheduler)
     elseif s === :properties
         return getfield(m, :properties)
+    elseif s === :rng
+        return getfield(m, :rng)
     elseif s === :maxid
         return getfield(m, :maxid)
     elseif P <: Dict
@@ -150,7 +157,7 @@ function Base.getproperty(m::ABM{S,A,F,P}, s::Symbol) where {S,A,F,P}
     end
 end
 
-function Base.setproperty!(m::ABM{S,A,F,P}, s::Symbol, x) where {S,A,F,P}
+function Base.setproperty!(m::ABM{S,A,F,P,R}, s::Symbol, x) where {S,A,F,P,R}
     properties = getfield(m, :properties)
     if properties ≠ nothing && haskey(properties, s)
         properties[s] = x
@@ -160,10 +167,21 @@ function Base.setproperty!(m::ABM{S,A,F,P}, s::Symbol, x) where {S,A,F,P}
 end
 
 """
+    seed!(model [, seed])
+
+Reseed the random number pool of the model with the given seed or a random one,
+when using a pseudo-random number generator like `MersenneTwister`.
+"""
+function seed!(model::ABM{S,A,F,P,R}, args...) where {S,A,F,P,R}
+    rng = getfield(model, :rng)
+    Random.seed!(rng, args...)
+end
+
+"""
     random_agent(model) → agent
 Return a random agent from the model.
 """
-random_agent(model) = model[rand(keys(model.agents))]
+random_agent(model) = model[rand(model.rng, keys(model.agents))]
 
 """
     random_agent(model, condition) → agent
@@ -172,7 +190,7 @@ The function generates a random permutation of agent IDs and iterates through th
 If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    ids = shuffle!(collect(keys(model.agents)))
+    ids = shuffle!(model.rng, collect(keys(model.agents)))
     i, L = 1, length(ids)
     a = model[ids[1]]
     while !condition(a)

@@ -1,5 +1,6 @@
 using Test, Agents, Random, LightGraphs, DataFrames
 using StatsBase: mean
+using StableRNGs
 
 mutable struct Agent0 <: AbstractAgent
     id::Int

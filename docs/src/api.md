@@ -14,10 +14,11 @@ ContinuousAgent
 OSMAgent
 ```
 
-## Agent/model retrieval
+## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+seed!
 random_agent
 nagents
 allagents

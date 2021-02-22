@@ -17,7 +17,7 @@ function forest_fire(; density = 0.7, griddims = (100, 100))
     space = GridSpace(griddims; periodic = false, metric = :euclidean)
     forest = AgentBasedModel(Tree, space)
     for position in positions(forest)
-        if rand() < density
+        if rand(forest.rng) < density
             state = position[1] == 1 ? :burning : :green
             add_agent!(position, forest, state)
         end

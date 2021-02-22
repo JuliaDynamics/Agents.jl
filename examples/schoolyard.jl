@@ -62,13 +62,13 @@ function schoolyard(;
     )
     for student in 1:numStudents
         ## Students begin near the school building
-        add_agent!(model.space.extent .* 0.5 .+ Tuple(rand(2)) .- 0.5, model)
+        add_agent!(model.space.extent .* 0.5 .+ Tuple(rand(model.rng, 2)) .- 0.5, model)
 
         ## Add one friend and one foe to the social network
-        friend = rand(filter(s -> s != student, 1:numStudents))
-        add_edge!(model.buddies, student, friend, rand())
-        foe = rand(filter(s -> s != student, 1:numStudents))
-        add_edge!(model.buddies, student, foe, -rand())
+        friend = rand(model.rng, filter(s -> s != student, 1:numStudents))
+        add_edge!(model.buddies, student, friend, rand(model.rng))
+        foe = rand(model.rng, filter(s -> s != student, 1:numStudents))
+        add_edge!(model.buddies, student, foe, -rand(model.rng))
     end
     model
 end
@@ -87,7 +87,7 @@ function agent_step!(student, model)
     teacher = (model.space.extent .* 0.5 .- student.pos) .* model.teacher_attractor
 
     ## add a bit of randomness
-    noise = model.noise .* (Tuple(rand(2)) .- 0.5)
+    noise = model.noise .* (Tuple(rand(model.rng, 2)) .- 0.5)
 
     ## Adhere to the social network
     network = model.buddies.weights[student.id, :]

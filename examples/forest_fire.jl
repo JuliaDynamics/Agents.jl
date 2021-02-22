@@ -40,7 +40,7 @@ function forest_fire(; density = 0.7, griddims = (100, 100))
     ## create and add trees to each position with a probability
     ## determined by the `density`.
     for position in positions(forest)
-        if rand() < density
+        if rand(forest.rng) < density
             ## Set the trees at position x=1 on fire
             state = position[1] == 1 ? :burning : :green
             add_agent!(position, forest, state)

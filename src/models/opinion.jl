@@ -27,20 +27,20 @@ function opinion(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
             pos,
             model,
             false,
-            rand(1:levels_per_opinion, nopinions),
-            rand(1:levels_per_opinion, nopinions),
+            rand(model.rng, 1:levels_per_opinion, nopinions),
+            rand(model.rng, 1:levels_per_opinion, nopinions),
         )
     end
     return model, opinion_agent_step!, dummystep
 end
 
 function adopt!(agent, model)
-    neighbor = rand(collect(nearby_ids(agent, model)))
+    neighbor = rand(model.rng, collect(nearby_ids(agent, model)))
     matches = model[neighbor].opinion .== agent.opinion
     nmatches = count(matches)
     # Adopt a different opinion w/ calculated probability
-    if nmatches < model.nopinions && rand() < nmatches / model.nopinions
-        switchId = rand(findall(x -> x == false, matches))
+    if nmatches < model.nopinions && rand(model.rng) < nmatches / model.nopinions
+        switchId = rand(model.rng, findall(x -> x == false, matches))
         agent.opinion[switchId] = model[neighbor].opinion[switchId]
     end
 end

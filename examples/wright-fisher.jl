@@ -29,7 +29,7 @@ model = ABM(Haploid)
 
 # Create `n` random individuals:
 for i in 1:numagents
-    add_agent!(model, rand())
+    add_agent!(model, rand(model.rng))
 end
 
 # To create a new generation, we can use the `sample!` function. It chooses
@@ -61,7 +61,7 @@ data
 
 model = ABM(Haploid)
 for i in 1:numagents
-    add_agent!(model, rand())
+    add_agent!(model, rand(model.rng))
 end
 
 modelstep_selection!(model::ABM) = sample!(model, nagents(model), :trait)
