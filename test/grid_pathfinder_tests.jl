@@ -2,56 +2,56 @@ moore = Agents.moore_neighborhood(2)
 vonneumann = Agents.vonneumann_neighborhood(2)
 
 @testset "metrics" begin
-    pfinder_2d_np_m = Pathfinder{2,false,true}(
+    pfinder_2d_np_m = AStar{2,false,true}(
         Dict(),
         (10, 10),
         copy(moore),
         0.0,
         fill(true, 10, 10),
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = Pathfinder{2,false,false}(
+    pfinder_2d_np_nm = AStar{2,false,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
         0.0,
         fill(true, 10, 10),
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_p_m = Pathfinder{2,true,true}(
+    pfinder_2d_p_m = AStar{2,true,true}(
         Dict(),
         (10, 10),
         copy(moore),
         0.0,
         fill(true, 10, 10),
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = Pathfinder{2,true,false}(
+    pfinder_2d_p_nm = AStar{2,true,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
         0.0,
         fill(true, 10, 10),
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
     hmap = fill(0, 10, 10)
     hmap[:, 6] .= 100
     hmap[1, 6] = 0
 
-    @test delta_cost(pfinder_2d_np_m, DirectDistanceMetric{2}(), (1, 1), (4, 6)) == 62
-    @test delta_cost(pfinder_2d_p_m, DirectDistanceMetric{2}(), (1, 1), (8, 6)) == 62
-    @test delta_cost(pfinder_2d_np_nm, DirectDistanceMetric{2}(), (1, 1), (4, 6)) == 80
-    @test delta_cost(pfinder_2d_p_nm, DirectDistanceMetric{2}(), (1, 1), (8, 6)) == 80
+    @test delta_cost(pfinder_2d_np_m, DirectDistance{2}(), (1, 1), (4, 6)) == 62
+    @test delta_cost(pfinder_2d_p_m, DirectDistance{2}(), (1, 1), (8, 6)) == 62
+    @test delta_cost(pfinder_2d_np_nm, DirectDistance{2}(), (1, 1), (4, 6)) == 80
+    @test delta_cost(pfinder_2d_p_nm, DirectDistance{2}(), (1, 1), (8, 6)) == 80
 
-    @test delta_cost(pfinder_2d_np_m, ChebyshevMetric{2}(), (1, 1), (4, 6)) == 5
-    @test delta_cost(pfinder_2d_p_m, ChebyshevMetric{2}(), (1, 1), (8, 6)) == 5
-    @test delta_cost(pfinder_2d_np_nm, ChebyshevMetric{2}(), (1, 1), (4, 6)) == 5
-    @test delta_cost(pfinder_2d_p_nm, ChebyshevMetric{2}(), (1, 1), (8, 6)) == 5
+    @test delta_cost(pfinder_2d_np_m, Chebyshev{2}(), (1, 1), (4, 6)) == 5
+    @test delta_cost(pfinder_2d_p_m, Chebyshev{2}(), (1, 1), (8, 6)) == 5
+    @test delta_cost(pfinder_2d_np_nm, Chebyshev{2}(), (1, 1), (4, 6)) == 5
+    @test delta_cost(pfinder_2d_p_nm, Chebyshev{2}(), (1, 1), (8, 6)) == 5
 
-    @test delta_cost(pfinder_2d_np_m, HeightMapMetric(hmap), (1, 1), (4, 6)) == 162
-    @test delta_cost(pfinder_2d_p_m, HeightMapMetric(hmap), (1, 1), (8, 6)) == 162
-    @test delta_cost(pfinder_2d_np_nm, HeightMapMetric(hmap), (1, 1), (4, 6)) == 180
-    @test delta_cost(pfinder_2d_p_nm, HeightMapMetric(hmap), (1, 1), (8, 6)) == 180
+    @test delta_cost(pfinder_2d_np_m, HeightMap(hmap), (1, 1), (4, 6)) == 162
+    @test delta_cost(pfinder_2d_p_m, HeightMap(hmap), (1, 1), (8, 6)) == 162
+    @test delta_cost(pfinder_2d_np_nm, HeightMap(hmap), (1, 1), (4, 6)) == 180
+    @test delta_cost(pfinder_2d_p_nm, HeightMap(hmap), (1, 1), (8, 6)) == 180
 end
 
 @testset "pathing" begin
@@ -64,37 +64,37 @@ end
     wlk[4, 3] = false
     wlk[5, 3] = false
 
-    pfinder_2d_np_m = Pathfinder{2,false,true}(
+    pfinder_2d_np_m = AStar{2,false,true}(
         Dict(),
         (7, 6),
         copy(moore),
         0.0,
         wlk,
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = Pathfinder{2,false,false}(
+    pfinder_2d_np_nm = AStar{2,false,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
         0.0,
         wlk,
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_p_m = Pathfinder{2,true,true}(
+    pfinder_2d_p_m = AStar{2,true,true}(
         Dict(),
         (7, 6),
         copy(moore),
         0.0,
         wlk,
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = Pathfinder{2,true,false}(
+    pfinder_2d_p_nm = AStar{2,true,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
         0.0,
         wlk,
-        DirectDistanceMetric{2}(),
+        DirectDistance{2}(),
     )
 
     p = collect(find_path(pfinder_2d_np_m, (1, 1), (6, 6)))

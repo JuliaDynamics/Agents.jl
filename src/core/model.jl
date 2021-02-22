@@ -83,7 +83,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = Dict{Int,A}()
-    return ABM{S,A,nothing,F,P}(agents, space, nothing, scheduler, properties, Ref(0))
+    return ABM{S,A,Nothing,F,P}(agents, space, nothing, scheduler, properties, Ref(0))
 end
 
 function AgentBasedModel(
