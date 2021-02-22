@@ -126,16 +126,13 @@ run!(model, agent_step!, model_step!, 10; mdata = assets(model))
 
 ## Seeding and Random numbers
 
-Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng`.
-For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)`.
+Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng` which by default coincides with the global RNG.
+For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)` or `rand(model.rng, 1:10, 100)`, etc.
 
-Other `rand` calls like `rand(Bool)` don't have such a penalty, although we recommend using `rand(model.rng, Bool)` anyway.
-That way you can have deterministic models that can be ran again and yield the same output.
-To do this, call `Random.seed!(6546)` (with any number) before creating your model, or set `rng` in the model directly.
-Passing, for example `MersenneTwister(1234)` will initialise with a repeatable random seed.
+Another benefit of this approach is can have deterministic models that can be ran again and yield the same output.
+To do this, either always pass a specifically seeded RNG to the model creation, e.g. `MersenneTwister(1234)`, or call `seed!(model, 1234)` (with any number) after creating the model but before actually running the simulation.
 
-Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but have stronger scientific merit since there is no possibility of bias from a 'lucky' random seed.
-
+Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but avoid potential biases of pseudo-randomness.
 
 ## An educative example
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.
