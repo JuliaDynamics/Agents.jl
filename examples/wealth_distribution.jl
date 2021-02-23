@@ -74,7 +74,7 @@ hist(
     bins = collect(0:9),
     width = 1,
     color = cgrad(:viridis)[28:28:256],
-    figure = (resolution = (600, 800),),
+    figure = (resolution = (600, 400),),
 )
 
 # ## Core structures: with space

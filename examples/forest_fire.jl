@@ -109,7 +109,8 @@ function treecolor(a)
     color
 end
 
-figure = abm_plot(forest; ac = treecolor, as = 8)
+figure, _ = abm_plot(forest; ac = treecolor, as = 8)
+figure
 
 # or animate it
 Random.seed!(10)
