@@ -112,7 +112,7 @@ function terminate(model, s)
     end
 end
 
-step!(model, agent_step!, model_step!, terminate)
+Agents.step!(model, agent_step!, model_step!, terminate)
 model[1]
 
 # Alright, let's wrap everything in a function and do some data collection using [`run!`](@ref).
@@ -142,7 +142,7 @@ agent_data, _ = run!(
 agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
-using DataFrames, CairoMakie, AbstractPlotting
+using DataFrames, CairoMakie
 using Random # hide
 Random.seed!(42) # hide
 

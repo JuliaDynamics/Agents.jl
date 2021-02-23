@@ -203,7 +203,8 @@ nothing # hide
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
-using InteractiveDynamics, CairoMakie, AbstractPlotting
+using InteractiveDynamics
+import CairoMakie
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
@@ -216,10 +217,10 @@ offset(a::Grass) = (0.0, 0.0)
 mshape(a::Sheep) = '⚫'
 mshape(a::Wolf) = '▲'
 mshape(a::Grass) = '■'
-mcolor(a::Sheep) = RGBAf0(1.0, 1.0, 1.0, 0.5)
-mcolor(a::Wolf) = RGBAf0(0.2, 0.2, 0.2, 0.7)
+mcolor(a::Sheep) = RGBAf0(1.0, 1.0, 1.0, 0.8)
+mcolor(a::Wolf) = RGBAf0(0.2, 0.2, 0.2, 0.8)
 mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown/a.regrowth_time]
-figure = abm_plot(
+figure, = abm_plot(
     model;
     resolution = (800, 600),
     offset = offset,

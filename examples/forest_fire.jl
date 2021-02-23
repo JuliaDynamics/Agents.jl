@@ -76,7 +76,7 @@ nothing # hide
 
 # ## Running the model
 
-step!(forest, tree_step!, 1)
+Agents.step!(forest, tree_step!, 1)
 count(t -> t.status == :burnt, allagents(forest))
 
 #
@@ -97,7 +97,7 @@ data
 # Now let's plot the model. We use green for unburnt trees, red for burning and a
 # dark red for burnt.
 forest = forest_fire()
-step!(forest, tree_step!, 1)
+Agents.step!(forest, tree_step!, 1)
 
 function treecolor(a)
     color = :green
