@@ -69,17 +69,18 @@ end
     AStar(space::GridSpace; kwargs...)
 Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
 
-The keyword argument `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
-Von Neumann neighbors.
+Keyword Arguments:
+- `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
+Von Neumann neighbors. Correspondingly affects how [`DirectDistance{D}`](@ref) is calculated.
 
-The keyword argument `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour
+- `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour
 of faster pathfinding. For an admissibility value of `ε`, a path with at most `(1+ε)` times the optimal path length
 will be calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
 
-The keyword argument `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
+- `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
 the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
 
-The keyword argument `cost_metric::CostMetric{D}=DirectDistance{D}()` specifies the metric used to approximate
+- `cost_metric::CostMetric{D}=DirectDistance{D}()` specifies the metric used to approximate
 the distance between any two walkable points on the grid.
 """
 function AStar(
@@ -195,8 +196,8 @@ GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
 Using the specified [`AStar`](@ref), calculates and returns the shortest path from `from` to `to` using the A* algorithm.
 Paths are returned as a [`Path{D}`](@ref). If a path does not exist between the given positions, this returns an empty
-[`Path{D}`](@ref). This function usually does not need to be called explicitly, instead the use the provided [`set_target!`](@ref)
-and [`move_agent!`](@ref) functions.
+[`Path{D}`](@ref). This function usually does not need to be called explicitly, instead the use the provided
+[`set_target!`](@ref) and [`move_agent!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     grid = Dict{Dims{D},GridCell}()
