@@ -21,6 +21,11 @@ struct DirectDistance{D} <: CostMetric{D}
     direction_costs::Vector{Int}
 end
 
+function Base.show(io::IO, metric::DirectDistance{D}) where {D}
+    s = "DirectDistance metric"
+    print(io, s)
+end
+
 """
     DirectDistance{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
 The default cost metric for [`AStar`](@ref). Distance is approximated as the shortest path between
@@ -41,9 +46,19 @@ difference in coordinates) between them.
 """
 struct Chebyshev{D} <: CostMetric{D} end
 
+function Base.show(io::IO, metric::Chebyshev{D}) where {D}
+    s = "Chebyshev metric"
+    print(io, s)
+end
+
 struct HeightMap{D} <: CostMetric{D}
     base_metric::CostMetric{D}
     hmap::Array{Int,D}
+end
+
+function Base.show(io::IO, metric::HeightMap{D}) where {D}
+    s = "HeightMap metric with base_metric=$(metric.base_metric)"
+    print(io, s)
 end
 
 """
@@ -113,7 +128,7 @@ function vonneumann_neighborhood(D)
 end
 
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
-    s = "A* in $(D) dimensions, periodic=$(P), moore=$(M)"
+    s = "A* in $(D) dimensions\nperiodic=$(P)\nmoore=$(M)\nadmissibility=$(pathfinder.admissibility)\nmetric=$(pathfinder.cost_metric)"
     print(io, s)
 end
 
