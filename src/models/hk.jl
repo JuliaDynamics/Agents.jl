@@ -19,7 +19,7 @@ Same as in [HK (Hegselmann and Krause) opinion dynamics model](@ref).
 function hk(; numagents = 100, ϵ = 0.2)
     model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
-        o = rand()
+        o = rand(model.rng)
         add_agent!(model, o, o, -1)
     end
     return model, hk_agent_step!, hk_model_step!, terminate

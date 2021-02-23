@@ -67,20 +67,20 @@ function predator_prey(;
     id = 0
     for _ in 1:n_sheep
         id += 1
-        energy = rand(1:(Δenergy_sheep*2)) - 1
+        energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
         sheep = Sheep(id, (0, 0), energy)
         add_agent!(sheep, model)
     end
     for _ in 1:n_wolves
         id += 1
-        energy = rand(1:(Δenergy_wolf*2)) - 1
+        energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
         wolf = Wolf(id, (0, 0), energy)
         add_agent!(wolf, model)
     end
     for p in positions(model)
         id += 1
-        fully_grown = rand(Bool)
-        countdown = fully_grown ? regrowth_time : rand(1:regrowth_time) - 1
+        fully_grown = rand(model.rng, Bool)
+        countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
         grass = Grass(id, (0, 0), fully_grown, countdown)
         add_agent!(grass, p, model)
     end
@@ -97,7 +97,7 @@ function predator_prey_agent_step!(sheep::Sheep, model)
         kill_agent!(sheep, model)
         return
     end
-    if rand() <= model.sheep_reproduce
+    if rand(model.rng) <= model.sheep_reproduce
         reproduce!(sheep, model)
     end
 end
@@ -112,7 +112,7 @@ function predator_prey_agent_step!(wolf::Wolf, model)
         kill_agent!(wolf, model)
         return
     end
-    if rand() <= model.wolf_reproduce
+    if rand(model.rng) <= model.wolf_reproduce
         reproduce!(wolf, model)
     end
 end
@@ -130,7 +130,7 @@ end
 
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
-    position = rand(collect(neighbors))
+    position = rand(model.rng, collect(neighbors))
     move_agent!(agent, position, model)
 end
 
@@ -145,7 +145,7 @@ end
 
 function eat!(wolf::Wolf, sheep, model)
     if !isempty(sheep)
-        dinner = rand(sheep)
+        dinner = rand(model.rng, sheep)
         kill_agent!(dinner, model)
         wolf.energy += model.Δenergy_wolf
     end
