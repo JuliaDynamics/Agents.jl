@@ -89,7 +89,7 @@ pages = [
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
-    "Interactive application" => "interact.md",
+    "Plotting and interactive application" => "interact.md",
     "Ecosystem Integration" => [
         "BlackBoxOptim.jl" => "examples/optim.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",

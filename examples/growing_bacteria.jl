@@ -196,8 +196,6 @@ nothing # hide
 
 # and proceed with the animation
 
-
-
 abm_video(
     "bacteria.mp4", model, agent_step!, model_step!;
     am = cassini_oval, ac = bacteria_color,

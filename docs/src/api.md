@@ -254,30 +254,3 @@ and pass it to e.g. `step!` by initializing it
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
-
-
-## Plotting
-Plotting functionality comes from `InteractiveDynamics`, which uses Makie.jl.
-You need to install both `InteractiveDynamics`, as well as a plotting backend (we recommend `GLMakie`) to use the following functions.
-
-The version of `InteractiveDynamics` used in the docs is:
-```@example versions
-using Pkg
-Pkg.status("InteractiveDynamics")
-```
-
-```@docs
-plotabm
-plotabm!
-abm_plot
-abm_play
-abm_video
-abm_data_exploration
-```
-
-## Interactive application
-You need to be using `InteractiveDynamics` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
-
-```@docs
-InteractiveDynamics.abm_data_exploration
-```
