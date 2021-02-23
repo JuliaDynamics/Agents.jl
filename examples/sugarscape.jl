@@ -11,36 +11,70 @@
 
 # ---
 
-# "Growing Artificial Societies" (Epstein & Axtell 1996) is a reference book for scientists interested in agent-based modelling and computer simulation. It represents one of the most paradigmatic and fascinating examples of the so-called generative approach to social science (Epstein 1999). In their book, Epstein & Axtell (1996) present a computational model where a heterogeneous population of autonomous agents compete for renewable resources that are unequally distributed over a 2-dimensional environment. Agents in the model are autonomous in that they are not governed by any central authority and they are heterogeneous in that they differ in their genetic attributes and their initial environmental endowments (e.g. their initial location and wealth). The model grows in complexity through the different chapters of the book as the agents are given the ability to engage in new activities such as sex, cultural exchange, trade, combat, disease transmission, etc. The core of Sugarscape has provided the basis for various extensions to study e.g. norm formation through cultural diffusion (Flentge et al. 2001) and the emergence of communication and cooperation in artificial societies (Buzing et al. 2005). Here we analyse the model described in the second chapter of Epstein & Axtell's (1996) book within the Markov chain framework.
+# "Growing Artificial Societies" (Epstein & Axtell 1996) is a reference book for scientists
+# interested in agent-based modelling and computer simulation. It represents one of the most
+# paradigmatic and fascinating examples of the so-called generative approach to social science
+# (Epstein 1999). In their book, Epstein & Axtell (1996) present a computational model where
+# a heterogeneous population of autonomous agents compete for renewable resources that are
+# unequally distributed over a 2-dimensional environment. Agents in the model are autonomous
+# in that they are not governed by any central authority and they are heterogeneous in that
+# they differ in their genetic attributes and their initial environmental endowments (e.g.
+# their initial location and wealth). The model grows in complexity through the different
+# chapters of the book as the agents are given the ability to engage in new activities such
+# as sex, cultural exchange, trade, combat, disease transmission, etc. The core of Sugarscape
+# has provided the basis for various extensions to study e.g. norm formation through cultural
+# diffusion (Flentge et al. 2001) and the emergence of communication and cooperation in
+# artificial societies (Buzing et al. 2005). Here we analyse the model described in the
+# second chapter of Epstein & Axtell's (1996) book within the Markov chain framework.
 
-# ## Model structure
+# ## Rules of sugarscape
 
-# The first model that Epstein & Axtell (1996) present comprises a finite population of agents who live in an environment. The environment is represented by a two-dimensional grid which contains sugar in some of its cells, hence the name Sugarscape. Agents' role in this first model consists in wandering around the Sugarscape harvesting the greatest amount of sugar they can find.
+# The first model that Epstein & Axtell (1996) present comprises a finite population of
+# agents who live in an environment. The environment is represented by a two-dimensional
+# grid which contains sugar in some of its cells, hence the name Sugarscape. Agents' role
+# in this first model consists in wandering around the Sugarscape harvesting the greatest
+# amount of sugar they can find.
 
 # ### Environment
 
-# The environment is a 50×50 grid that wraps around forming a torus. Grid positions have both a sugar level and a sugar capacity c. A cell's sugar level is the number of units of sugar in the cell (potentially none), and its sugar capacity c is the maximum value the sugar level can take on that cell. Sugar capacity is fixed for each individual cell and may be different for different cells. The spatial distribution of sugar capacities depicts a sugar topography consisting of two peaks (with sugar capacity c = 4) separated by a valley, and surrounded by a desert region of sugarless cells (see Figure 1) - note, however, that the grid wraps around in both directions–.
+# The environment is a 50×50 grid that wraps around forming a torus. Grid positions have
+# both a sugar level and a sugar capacity c. A cell's sugar level is the number of units of
+# sugar in the cell (potentially none), and its sugar capacity c is the maximum value the
+# sugar level can take on that cell. Sugar capacity is fixed for each individual cell and
+# may be different for different cells. The spatial distribution of sugar capacities depicts
+# a sugar topography consisting of two peaks (with sugar capacity c = 4) separated by a
+# valley, and surrounded by a desert region of sugarless cells (see Figure 1). Note,
+# however, that the grid wraps around in both directions.
 
 # The Sugarscape obbeys the following rule:
 
 # Sugarscape growback rule G$\alpha$:
-#     At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
+# At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
 
 # ### Agents
 
-# Every agent is endowed with individual (life-long) characteristics that condition her skills and capacities to survive in the Sugarscape. These individual attributes are:
+# Every agent is endowed with individual (life-long) characteristics that condition her
+# skills and capacities to survive in the Sugarscape. These individual attributes are:
 
-# * A vision _v_, which is the maximum number of positions the agent can see in each of the four principal lattice directions: north, south, east and west.
+# * A vision _v_, which is the maximum number of positions the agent can see in each of
+# the four principal lattice directions: north, south, east and west.
 # * A metabolic rate _m_, which represents the units of sugar the agent burns per time-step.
 # * A maximum age _max-age_, which is the maximum number of time-steps the agent can live.
 
-# Agents also have the capacity to accumulate sugar wealth _w_. An agent's sugar wealth is incremented at the end of each time-step by the sugar collected and decremented by the agent's metabolic rate. __Two agents are not allowed to occupy the same position in the grid.__
+# Agents also have the capacity to accumulate sugar wealth _w_. An agent's sugar wealth
+# is incremented at the end of each time-step by the sugar collected and decremented by the
+# agent's metabolic rate. __Two agents are not allowed to occupy the same position in the grid.__
 
 # The agents' behaviour is determined by the following two rules:
 
 # #### Agent movement rule _M_:
 
-# Consider the set of unoccupied positions within your vision (including the one you are standing on), identify the one(s) with the greatest amount of sugar, select the nearest one (randomly if there is more than one), move there and collect all the sugar in it. At this point, the agent's accumulated sugar wealth is incremented by the sugar collected and decremented by the agent's metabolic rate _m_. If at this moment the agent's sugar wealth is not greater than zero, then the agent dies.
+# Consider the set of unoccupied positions within your vision (including the one you are
+# standing on), identify the one(s) with the greatest amount of sugar, select the nearest one
+# (randomly if there is more than one), move there and collect all the sugar in it.
+# At this point, the agent's accumulated sugar wealth is incremented by the sugar collected
+# and decremented by the agent's metabolic rate _m_. If at this moment the agent's sugar
+# wealth is not greater than zero, then the agent dies.
 
 # #### Agent replacement rule _R_:
 
@@ -69,9 +103,9 @@
 # | Agents' vision v distribution            | U[1,6]       |
 # | Agents' maximum age max-age distribution | U[60,100]    |
 
-using Agents
-using Random # hide
-Random.seed!(42) # hide
+# ## Creating the ABM
+
+using Agents, Random
 
 mutable struct SugarSeeker <: AbstractAgent
     id::Int
@@ -107,7 +141,7 @@ function sugar_caps(dims, sugar_peaks, max_sugar, dia = 4)
     return sugar_capacities
 end
 
-"Start a sugarscape simulation"
+"Create a sugarscape ABM"
 function sugarscape(;
     dims = (50, 50),
     sugar_peaks = ((10, 40), (40, 10)),
@@ -118,6 +152,7 @@ function sugarscape(;
     vision_dist = (1, 6),
     max_age_dist = (60, 100),
     max_sugar = 4,
+    seed = 42
 )
     sugar_capacities = sugar_caps(dims, sugar_peaks, max_sugar, 6)
     sugar_values = deepcopy(sugar_capacities)
@@ -137,6 +172,7 @@ function sugarscape(;
         space,
         scheduler = random_activation,
         properties = properties,
+        rng = MersenneTwister(seed)
     )
     for ag in 1:N
         add_agent_single!(
@@ -153,19 +189,19 @@ end
 
 model = sugarscape()
 
-# Fig. 1: Spatial distribution of sugar capacities in the Sugarscape. Cells are coloured according to their sugar capacity.
-
-using CairoMakie, AbstractPlotting
+# Let's plot the spatial distribution of sugar capacities in the Sugarscape.
+using CairoMakie
 
 fig = Figure()
-ax = fig[1, 1] = Axis(fig)
-hmap = heatmap!(ax, model.sugar_capacities; colormap=cgrad(:thermal))
-fig[1, 2] = Colorbar(fig, hmap; width=30)
+ax, hm = heatmap(fig[1,1], model.sugar_capacities; colormap=cgrad(:thermal))
+Colorbar(fig[1, 2], hm, width = 20)
 fig
 
-#
+# ## Defining stepping functions
 
-function env!(model)
+# Now we define the stepping functions that handle the time evolution of the model
+
+function model_step!(model)
     ## At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
     togrow = findall(
         x -> model.sugar_values[x] < model.sugar_capacities[x],
@@ -228,34 +264,59 @@ function agent_step!(agent, model)
     replacement!(agent, model)
 end
 
-# The following animation shows the emergent unequal distribution of agents on resourceful areas.
+# We can plot the ABM and the sugar distribution side by side using [`abm_plot`](@ref)
+# and standard Makie.jl commands like so
 using InteractiveDynamics
-figure, abmstepper = abm_plot(model; resolution=(1200, 600), as=10, am='■', ac=:blue, equalaspect=false)
-hmap_data = Observable(model.sugar_values)
-lay = figure[1, 0] = GridLayout()
-ax = lay[1, 1] = Axis(figure)
-hmap = heatmap!(ax, hmap_data; colormap=cgrad(:thermal))
-lay[1, 2] = Colorbar(figure, hmap; width=20)
-figure[0, 1] = Label(figure, "Sugar levels"; textsize=30, tellwidth=false)
-title_text = Observable("Agents\nstep 1")
-figure[1, 2] = Label(figure, title_text; textsize=30, tellwidth=false)
-record(figure, "sugarvis.mp4", 1:50; framerate=9) do i
-    Agents.step!(abmstepper, model, agent_step!, env!, 1)
-    hmap_data[] = model.sugar_values
-    title_text[] = "Agents\nstep $i"
+
+fig, abmstepper = abm_plot(model)
+ax, hm = heatmap(fig[1,2], model.sugar_capacities; colormap=cgrad(:thermal))
+ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap
+Colorbar(fig[1, 3], hm, width = 15, tellheight=false)
+fig
+
+
+# To animate them both however, we will use the approach Makie.jl suggests for animations,
+# which is based on `Observables`. We start similarly with a call to `abm_plot`,
+# but now make the plotted heatmap an obsrvable
+fig, abmstepper = abm_plot(model; resolution = (1000, 600))
+obs_heat = Observable(model.sugar_capacities)
+ax, hm = heatmap(fig[1,2], obs_heat; colormap=cgrad(:thermal))
+ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap
+Colorbar(fig[1, 3], hm, width = 15, tellheight=false)
+
+# and also add a title for good measure
+s = Observable(0) # counter of current step, also observable
+t = lift(x -> "Sugarscape, step = $x", s)
+supertitle = Label(fig[0, :], t, textsize = 24, halign = :left)
+fig
+
+# We animate the evolution of both the ABM and the sugar distribution using the following
+# simple loop involving the abm stepper
+record(fig, "sugarvis.mp4"; framerate = 3) do io
+    for j in 0:50 # = total number of frames
+        recordframe!(io) # save current state
+        ## This updates the abm plot:
+        Agents.step!(abmstepper, model, agent_step!, model_step!, 1)
+        ## This updates the heatmap:
+        obs_heat[] = model.sugar_capacities
+        ## This updates the title:
+        s[] = s[] + 1
+    end
 end
-nothing # hide
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../sugarvis.mp4" type="video/mp4">
 # </video>
 # ```
+
+
 # ### Distribution of wealth across individuals
 
 model2 = sugarscape()
-adata, _ = run!(model2, agent_step!, env!, 20, adata = [:wealth])
+adata, _ = run!(model2, agent_step!, model_step!, 20, adata = [:wealth])
 
-figure = Figure()
+figure = Figure(resolution = (800, 600))
 title_text = Observable("Wealth distribution of individuals\nStep 1")
 figure[1, 1] = Label(figure, title_text; textsize=30, tellwidth=false)
 ax = figure[2, 1] = Axis(figure; xlabel="Wealth", ylabel="Number of agents")
