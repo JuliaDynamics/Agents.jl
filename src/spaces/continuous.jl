@@ -445,12 +445,30 @@ function FMP_Update_Vel(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace},
     )
+    
+    # get list of interacting_pairs within some radius
+    agent_iter = interacting_pairs(model, model.FMP_params.r, :all)
+
+    # construct interaction_array which is (num_agents x num_agents)
+    #   array where interaction_array[i,j] = 1 implies that
+    #   agent_i and agent_j are within the specified interaction radius
+    interaction_array = falses( nagents(model), nagents(model))
+    agents = agent_iter.agents
+    for pair in agent_iter.pairs
+
+        i, j = pair
+        if agents[i].type == :A && agents[j].type == :A
+            interaction_array[i, j] = true
+            interaction_array[j, i] = true
+        end
+
+    end
 
     # make a list of agents neighbors
-    Ni = findall(x->x==1, model.FMP_params.interaction_array[agent.id, :])
+    Ni = findall(x->x==1, interaction_array[agent.id, :])
 
     # move_this_agent_to_new_position(i) in FMP paper
-    UpdateVelocity(model, agent.id, Ni, model.FMP_params.agents)
+    UpdateVelocity(model, agent.id, Ni, agents)
     
 end
 
@@ -502,6 +520,7 @@ function FMP_Parameter_Init(;
     FMP_params.c2 = c2
     FMP_params.vmax = vmax
     FMP_params.d = d
+    FMP_params.r = r
     FMP_params.obstacle_list = obstacle_list
     return FMP_params
 end
