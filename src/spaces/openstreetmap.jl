@@ -443,7 +443,36 @@ function travel!(start, finish, distance, agent, model)
                 model,
             )
         else
-            return (finish, finish, 0.0)
+            #######################################
+            # TODO: The code here can be simplified by using the existing `park`.
+            # alright, so here we're in a situation where the agent is imagined to be at 'start' with 'distance left to travel.
+            # the route is empty, but (start,finish) does not equal agent.destination[1:2]
+            # what follows is the srouce code of the function "park", but the 'virtual' agent in it has position
+            # pos=(start,finish,distance-edge_distance)
+            # so I replaced that and nothing else.
+            distance-=edge_distance
+            if finish != agent.destination[1]
+                # At the end of the route, we must travel
+                last_distance = osm_road_length(finish, agent.destination[1], model)
+                if distance >= last_distance + agent.destination[3]
+                    # We reach the destination
+                    return agent.destination
+                elseif distance >= last_distance
+                    # We reach the final road, but not the destination
+                    return (agent.destination[1:2]..., distance - last_distance)
+                else
+                    # We travel the final leg
+                    return (finish, agent.destination[1], distance)
+                end
+            else
+                # Reached final road
+                if distance >= agent.destination[3]
+                    return agent.destination
+                else
+                    return (agent.destination[1:2]..., distance)
+                end
+            end
+            #######################################
         end
     else
         return (start, finish, distance)
