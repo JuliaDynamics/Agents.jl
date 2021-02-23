@@ -4,7 +4,7 @@ The API of Agents.jl is defined on top of the fundamental structures  [`AgentBas
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
 ## `@agents` macro
-The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
 @agent
