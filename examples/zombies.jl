@@ -50,7 +50,7 @@ function agent_step!(agent, model)
     ## Each agent will progress 25 meters along their route
     move_agent!(agent, model, 25)
 
-    if osm_is_stationary(agent) && rand() < 0.1
+    if osm_is_stationary(agent) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         osm_random_route!(agent, model)
         ## Start on new route

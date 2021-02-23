@@ -51,7 +51,7 @@ function ContinuousSpace(
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand() * dim, model.space.extent)
+    map(dim -> rand(model.rng) * dim, model.space.extent)
 end
 
 pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos ./ model.space.spacing) .+ 1

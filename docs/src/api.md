@@ -1,20 +1,48 @@
 # API
 
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
+In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## Agent/model retrieval
+## `@agents` macro
+The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+
+```@docs
+@agent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
+```
+
+## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+seed!
 random_agent
 nagents
 allagents
 allids
 ```
 
+## Available spaces
+Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see [Creating a new space type](@ref).
+
+### Discrete spaces
+```@docs
+GraphSpace
+GridSpace
+```
+
+### Continuous spaces
+```@docs
+ContinuousSpace
+OpenStreetMapSpace
+```
+
 ## Model-agent interaction
 The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space.
+Only some specific methods are exclusive to a specific type of space, but these are described further below in this page.
 
 ### Adding agents
 ```@docs
@@ -37,9 +65,51 @@ genocide!
 sample!
 ```
 
+## Discrete space exclusives
+```@docs
+positions
+ids_in_position
+agents_in_position
+fill_space!
+has_empty_positions
+empty_positions
+random_empty
+add_agent_single!
+move_agent_single!
+isempty(::Integer, ::ABM)
+```
+
+## Continuous space exclusives
+```@docs
+interacting_pairs
+nearest_neighbor
+elastic_collision!
+```
+
+## OpenStreetMap space exclusives
+```@docs
+osm_latlon
+osm_intersection
+osm_road
+osm_random_road_position
+osm_plan_route
+osm_random_route!
+osm_road_length
+osm_is_stationary
+osm_map_coordinates
+```
+
+## Graph space exclusives
+```@docs
+add_edge!
+add_node!
+rem_node!
+```
+
 ## Local area
 ```@docs
 nearby_ids
+nearby_agents
 nearby_positions
 edistance
 ```
@@ -93,46 +163,6 @@ map_agent_groups
 index_mapped_groups
 ```
 
-## Discrete space exclusives
-```@docs
-positions
-ids_in_position
-agents_in_position
-fill_space!
-has_empty_positions
-empty_positions
-random_empty
-add_agent_single!
-move_agent_single!
-isempty(::Integer, ::ABM)
-```
-
-## Continuous space exclusives
-```@docs
-interacting_pairs
-nearest_neighbor
-elastic_collision!
-```
-
-## OpenStreetMap space exclusives
-```@docs
-osm_latlon
-osm_intersection
-osm_road
-osm_random_road_position
-osm_plan_route
-osm_random_route!
-osm_road_length
-osm_is_stationary
-osm_map_coordinates
-```
-
-## Graph space exclusives
-```@docs
-add_edge!
-add_node!
-rem_node!
-```
 
 ## Parameter scanning
 ```@docs
@@ -142,13 +172,8 @@ paramscan
 ## Data collection
 The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
 But there are other functions that are related to simulations listed here.
-```@docs
-init_agent_dataframe
-collect_agent_data!
-init_model_dataframe
-collect_model_data!
-aggname
-```
+Specifically, these functions aid in making custom data collection loops, instead of using the `run!` function.
+
 For example, the core loop of `run!` is just
 ```julia
 df_agent = init_agent_dataframe(model, adata)
@@ -168,6 +193,16 @@ end
 return df_agent, df_model
 ```
 (here `until` and `should_we_collect` are internal functions)
+
+`run!` uses the following functions:
+
+```@docs
+init_agent_dataframe
+collect_agent_data!
+init_model_dataframe
+collect_model_data!
+aggname
+```
 
 ## [Schedulers](@id Schedulers)
 The schedulers of Agents.jl have a very simple interface.

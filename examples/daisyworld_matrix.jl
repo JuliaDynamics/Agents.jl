@@ -133,10 +133,10 @@ function daisyworld(;
     )
     model = ABM(Daisy, space; properties)
     for _ in 1:(init_white * nv(space) / 100)
-        add_agent_single!(model, :white, rand(0:max_age), albedo_white)
+        add_agent_single!(model, :white, rand(model.rng, 0:max_age), albedo_white)
     end
     for _ in 1:(init_black * nv(space) / 100)
-        add_agent_single!(model, :black, rand(0:max_age), albedo_black)
+        add_agent_single!(model, :black, rand(model.rng, 0:max_age), albedo_black)
     end
     for p in positions(model)
         suface_temperature!(p, model)
@@ -160,7 +160,7 @@ function propagate!(pos::Dims{2}, model::ABM)
         temperature = model.temperature[pos]
         ## Set optimum growth rate to 22.5C, with bounds of [5, 40]C
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand() < seed_threshold
+        if rand(model.rng) < seed_threshold
             ## Collect all adjacent position that are empty
             empty_neighbors = Vector{Int}(undef, 0)
             neighbors = nearby_positions(pos, model)
@@ -171,7 +171,7 @@ function propagate!(pos::Dims{2}, model::ABM)
             end
             if !isempty(empty_neighbors)
                 ## Seed a new daisy in one of those position
-                seeding_place = rand(empty_neighbors)
+                seeding_place = rand(model.rng, empty_neighbors)
                 add_agent!(seeding_place, model, agent.breed, 0, agent.albedo)
             end
         end

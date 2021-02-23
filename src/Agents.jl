@@ -56,7 +56,7 @@ export Models
 
 # Update message:
 display_update = true
-version_number = "4.0"
+version_number = "4.1"
 update_name = "update_v$(version_number)"
 
 if display_update
@@ -66,15 +66,9 @@ if display_update
             """
             \nUpdate message: Agents v$(version_number)
 
-            Agents new release v$(version_number) is a massive one!
-            Notable features:
-            * Overhauled all spaces for more extendability, better performance, and more features
-            * New space type based on Open Street Map
-            * Renaming most of the API towards more intuitive names (deprecations exist!)
-            and more! See the full changelog online for a list of new features and breaking changes!
-
-            https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md
-
+            `AgentBasedModel` now explicitly includes a random number generator, enabling
+            reproducible ABM simulations with Agents.jl.
+            Access it with `model.rng` and seed it with `seed!(model, seed)`!
             """;
             color = :light_magenta,
         )

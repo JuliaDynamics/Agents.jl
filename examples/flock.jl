@@ -54,7 +54,7 @@ function initialize_model(;
     space2d = ContinuousSpace(extent, spacing)
     model = ABM(Bird, space2d, scheduler = random_activation)
     for _ in 1:n_birds
-        vel = Tuple(rand(2) * 2 .- 1)
+        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
         add_agent!(
             model,
             vel,
