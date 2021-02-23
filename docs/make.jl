@@ -1,7 +1,7 @@
 cd(@__DIR__)
 using Pkg; Pkg.activate(@__DIR__)
 const CI = get(ENV, "CI", nothing) == "true"
-CI && (ENV["GKSwstype"] = "100")
+CI && (ENV["GKSwstype"] = "nul")
 println("Loading Packages")
 println("Documenter...")
 using Documenter
