@@ -185,7 +185,7 @@ function cassini_oval(agent)
 
     bacteria = R * permutedims([x y])
     coords = [Point2f0(x, y) for (x, y) in zip(bacteria[1, :], bacteria[2, :])]
-    Polygon(coords)
+    scale(Polygon(coords), 0.5)
 end
 nothing # hide
 
@@ -195,10 +195,9 @@ bacteria_color(b) = CairoMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)
 nothing # hide
 
 # and proceed with the animation
-
 abm_video(
     "bacteria.mp4", model, agent_step!, model_step!;
     am = cassini_oval, ac = bacteria_color,
-    spf = 50, framerate = 30, frames = 100,
+    spf = 50, framerate = 30, frames = 200,
     title = "Growing bacteria"
 )
