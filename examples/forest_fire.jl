@@ -1,6 +1,10 @@
 # # Forest fire model
 
-# ![](forest.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../forest.mp4" type="video/mp4">
+# </video>
+# ```
 
 # The forest fire model is defined as a cellular automaton on a grid.
 # A position can be empty or occupied by a tree which is ok, burning or burnt.
@@ -18,8 +22,9 @@
 # ## Defining the core structures
 
 # We start by defining the agent type
-using Agents, Random, Plots
-gr() # hide
+using Agents, Random
+using InteractiveDynamics
+import CairoMakie
 
 mutable struct Tree <: AbstractAgent
     id::Int
@@ -71,19 +76,19 @@ nothing # hide
 
 # ## Running the model
 
-step!(forest, tree_step!, 1)
-count(t->t.status == :burnt, allagents(forest))
+Agents.step!(forest, tree_step!, 1)
+count(t -> t.status == :burnt, allagents(forest))
 
 #
 
 step!(forest, tree_step!, 10)
-count(t->t.status == :burnt, allagents(forest))
+count(t -> t.status == :burnt, allagents(forest))
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
 Random.seed!(2)
 forest = forest_fire(griddims = (20, 20))
-burnt_percentage(m) = count(t->t.status == :burnt, allagents(m)) / length(positions(m))
+burnt_percentage(m) = count(t -> t.status == :burnt, allagents(m)) / length(positions(m))
 mdata = [burnt_percentage]
 
 _, data = run!(forest, tree_step!, 10; mdata)
@@ -92,7 +97,7 @@ data
 # Now let's plot the model. We use green for unburnt trees, red for burning and a
 # dark red for burnt.
 forest = forest_fire()
-step!(forest, tree_step!, 1)
+Agents.step!(forest, tree_step!, 1)
 
 function treecolor(a)
     color = :green
@@ -104,15 +109,26 @@ function treecolor(a)
     color
 end
 
-plotabm(forest; ac = treecolor, ms = 5)
+figure, _ = abm_plot(forest; ac = treecolor, as = 8)
+figure
 
 # or animate it
-cd(@__DIR__) #src
+Random.seed!(10)
 forest = forest_fire(density = 0.6)
-anim = @animate for i in 0:10
-    i > 0 && step!(forest, tree_step!, 5)
-    p1 = plotabm(forest; ac = treecolor, ms = 5, msw = 0)
-    title!(p1, "step $(i)")
-end
-
-gif(anim, "forest.gif", fps = 2)
+abm_video(
+    "forest.mp4",
+    forest,
+    tree_step!;
+    ac = treecolor,
+    as = 8,
+    framerate = 2,
+    frames = 10,
+    spf = 5,
+    title = "Forest Fire",
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../forest.mp4" type="video/mp4">
+# </video>
+# ```

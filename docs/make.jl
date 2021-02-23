@@ -12,7 +12,7 @@ using Plots
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
-import InteractiveDynamics
+using InteractiveDynamics
 import CairoMakie
 
 println("Setting up Environment")
@@ -23,7 +23,6 @@ f = InteractiveDynamics.AbstractPlotting.Figure()
 
 ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")
-# %% Literate convertion
 @info "Converting Examples to Docuementation"
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
@@ -54,7 +53,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,InteractiveDynamics],
+makedocs(modules = [Agents, InteractiveDynamics],
 sitename= "Agents.jl",
 authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
 doctest = false,
@@ -90,7 +89,7 @@ pages = [
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
-    "Interactive application" => "interact.md",
+    "Plotting and interactive application" => "interact.md",
     "Ecosystem Integration" => [
         "BlackBoxOptim.jl" => "examples/optim.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",
