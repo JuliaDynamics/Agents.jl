@@ -192,7 +192,7 @@ model = sugarscape()
 # Let's plot the spatial distribution of sugar capacities in the Sugarscape.
 using CairoMakie
 
-fig = Figure()
+fig = Figure(resolution = (600, 600))
 ax, hm = heatmap(fig[1,1], model.sugar_capacities; colormap=cgrad(:thermal))
 Colorbar(fig[1, 2], hm, width = 20)
 fig
@@ -317,19 +317,21 @@ end
 
 
 # ### Distribution of wealth across individuals
-
+# First we produce some data that include the wealth
 model2 = sugarscape()
 adata, _ = run!(model2, agent_step!, model_step!, 20, adata = [:wealth])
+adata
 
-figure = Figure(resolution = (800, 600))
+# And now we animate the evolution of the distribution of wealth
+figure = Figure(resolution = (600, 600))
 title_text = Observable("Wealth distribution of individuals\nStep 1")
 figure[1, 1] = Label(figure, title_text; textsize=30, tellwidth=false)
 ax = figure[2, 1] = Axis(figure; xlabel="Wealth", ylabel="Number of agents")
 histdata = Observable(adata[adata.step .== 20, :wealth])
-hist!(ax, histdata; colormap=cgrad(:viridis), bar_position=:step)
+hist!(ax, histdata; bar_position=:step)
 record(figure, "sugarhist.mp4", 0:20; framerate=3) do i
     histdata[] = adata[adata.step .== i, :wealth]
-    title_text[] = "Wealth distribution of individuals\nStep $i"
+    title_text[] = "Wealth distribution of individuals, step = $i"
     xlims!(ax, (0, max(histdata[]...)))
     ylims!(ax, (0, 50))
 end
