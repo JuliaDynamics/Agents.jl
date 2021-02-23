@@ -1,6 +1,11 @@
 # # Flock model
-# ![](flock.gif)
-#
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../flocking.mp4" type="video/mp4">
+# </video>
+# ```
+
 # The flock model illustrates how flocking behavior can emerge when each bird follows three simple rules:
 #
 # * maintain a minimum distance from other birds to avoid collision
@@ -135,3 +140,9 @@ abm_video(
     framerate = 20, frames = 100,
     title = "Flocking"
 )
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../flocking.mp4" type="video/mp4">
+# </video>
+# ```

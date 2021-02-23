@@ -1,6 +1,10 @@
 # # Bacterial Growth
 
-# ![](bacteria.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../bacteria.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Bacterial colonies are a prime example for growing active matter, where systems
 # are driven out of equilibrium by proliferation.
@@ -190,7 +194,6 @@ end
 nothing # hide
 
 # set up some nice colors
-
 bacteria_color(b) = CairoMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)
 nothing # hide
 
@@ -201,3 +204,9 @@ abm_video(
     spf = 50, framerate = 30, frames = 200,
     title = "Growing bacteria"
 )
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../bacteria.mp4" type="video/mp4">
+# </video>
+# ```
