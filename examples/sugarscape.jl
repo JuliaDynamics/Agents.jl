@@ -264,14 +264,18 @@ function agent_step!(agent, model)
     replacement!(agent, model)
 end
 
+# ## Plotting & Animating
+
 # We can plot the ABM and the sugar distribution side by side using [`abm_plot`](@ref)
 # and standard Makie.jl commands like so
 using InteractiveDynamics
 
-fig, abmstepper = abm_plot(model)
-ax, hm = heatmap(fig[1,2], model.sugar_capacities; colormap=cgrad(:thermal))
+model = sugarscape()
+fig, abmstepper = abm_plot(model; resolution = (1000, 600))
+ax, hm = heatmap(fig[1,2], model.sugar_values; colormap=cgrad(:thermal), colorrange=(0,4))
 ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap
 Colorbar(fig[1, 3], hm, width = 15, tellheight=false)
+rowsize!(fig.layout, 1, ax.scene.px_area[].widths[2]) # Colorbar height = axis height
 fig
 
 
@@ -279,10 +283,11 @@ fig
 # which is based on `Observables`. We start similarly with a call to `abm_plot`,
 # but now make the plotted heatmap an obsrvable
 fig, abmstepper = abm_plot(model; resolution = (1000, 600))
-obs_heat = Observable(model.sugar_capacities)
-ax, hm = heatmap(fig[1,2], obs_heat; colormap=cgrad(:thermal))
+obs_heat = Observable(model.sugar_values)
+ax, hm = heatmap(fig[1,2], obs_heat; colormap=cgrad(:thermal), colorrange=(0,4))
 ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap
 Colorbar(fig[1, 3], hm, width = 15, tellheight=false)
+rowsize!(fig.layout, 1, ax.scene.px_area[].widths[2]) # Colorbar height = axis height
 
 # and also add a title for good measure
 s = Observable(0) # counter of current step, also observable
@@ -298,7 +303,7 @@ record(fig, "sugarvis.mp4"; framerate = 3) do io
         ## This updates the abm plot:
         Agents.step!(abmstepper, model, agent_step!, model_step!, 1)
         ## This updates the heatmap:
-        obs_heat[] = model.sugar_capacities
+        obs_heat[] = model.sugar_values
         ## This updates the title:
         s[] = s[] + 1
     end
@@ -347,3 +352,10 @@ nothing # hide
 # EPSTEIN J M & Axtell R L (1996) Growing Artificial Societies: Social Science from the Bottom Up. The MIT Press.
 
 # FLENTGE F, Polani D & Uthmann T (2001) Modelling the emergence of possession norms using memes. Journal of Artificial Societies and Social Simulation 4(4)3. http://jasss.soc.surrey.ac.uk/4/4/3.html.
+
+
+# Test
+fig = Figure()
+obs_heat = Observable(rand(50,50))
+ax, hm = heatmap(fig[1,1], obs_heat; colormap=cgrad(:thermal))
+fig
