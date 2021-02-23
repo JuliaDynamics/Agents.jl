@@ -53,10 +53,12 @@ plotabm!(plt::RecipesBase.AbstractPlot, args...; kw...) =
     ac = "#765db4",
     as = 10,
     am = :circle,
+    warn = true,
 )
     if length(h.args) != 1 || !(typeof(h.args[1]) <: ABM)
         error("plotabm should be given a model::ABM.  Got: $(typeof(h.args))")
     end
+    warn && (@warn "Plots.jl recipes have been superseded by InteractiveDynamics.jl")
 
     model = h.args[1]
     if scheduler === nothing
@@ -91,10 +93,13 @@ end
     ac = x -> "#765db4",
     as = length,
     am = x -> :circle,
+    warn = true,
 )
     if length(h.args) != 1 || !(typeof(h.args[1]) <: ABM)
         error("plotabm should be given a model::ABM.  Got: $(typeof(h.args))")
     end
+    warn && (@warn "Plots.jl recipes have been superseded by InteractiveDynamics.jl")
+
     model = h.args[1]
     N = nodes(model)
     ncolor = Vector(undef, length(N))
