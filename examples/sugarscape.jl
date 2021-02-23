@@ -202,7 +202,8 @@ fig
 # Now we define the stepping functions that handle the time evolution of the model
 
 function model_step!(model)
-    ## At each position, sugar grows back at a rate of $\alpha$ units per time-step up to the cell's capacity c.
+    ## At each position, sugar grows back at a rate of $\alpha$ units
+    ## per time-step up to the cell's capacity c.
     togrow = findall(
         x -> model.sugar_values[x] < model.sugar_capacities[x],
         1:length(positions(model)),
@@ -271,7 +272,7 @@ end
 using InteractiveDynamics
 
 model = sugarscape()
-fig, abmstepper = abm_plot(model; resolution = (1000, 600))
+fig, abmstepper = abm_plot(model; resolution = (800, 600))
 ax, hm = heatmap(fig[1,2], model.sugar_values; colormap=cgrad(:thermal), colorrange=(0,4))
 ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap
 Colorbar(fig[1, 3], hm, width = 15, tellheight=false)
@@ -282,7 +283,7 @@ fig
 # To animate them both however, we will use the approach Makie.jl suggests for animations,
 # which is based on `Observables`. We start similarly with a call to `abm_plot`,
 # but now make the plotted heatmap an obsrvable
-fig, abmstepper = abm_plot(model; resolution = (1000, 600))
+fig, abmstepper = abm_plot(model; resolution = (800, 600))
 obs_heat = Observable(model.sugar_values)
 ax, hm = heatmap(fig[1,2], obs_heat; colormap=cgrad(:thermal), colorrange=(0,4))
 ax.aspect = AxisAspect(1) # equal aspect ratio for heatmap

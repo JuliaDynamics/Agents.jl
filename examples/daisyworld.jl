@@ -282,11 +282,13 @@ plotsched = by_type((Land, Daisy), false)
 
 plotkwargs = (ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
 
-p = abm_plot(model; plotkwargs...)
+p, _ = abm_plot(model; plotkwargs...)
+p
 
 # And after a couple of steps
 Agents.step!(model, agent_step!, model_step!, 5)
-p = abm_plot(model; plotkwargs...)
+p, _ = abm_plot(model; plotkwargs...)
+p
 
 # Let's do some animation now
 Random.seed!(165) # hide
