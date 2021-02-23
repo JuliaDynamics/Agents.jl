@@ -321,7 +321,7 @@ end
 # First we produce some data that include the wealth
 model2 = sugarscape()
 adata, _ = run!(model2, agent_step!, model_step!, 20, adata = [:wealth])
-adata
+adata[1:10,:]
 
 # And now we animate the evolution of the distribution of wealth
 figure = Figure(resolution = (600, 600))
@@ -355,10 +355,3 @@ nothing # hide
 # EPSTEIN J M & Axtell R L (1996) Growing Artificial Societies: Social Science from the Bottom Up. The MIT Press.
 
 # FLENTGE F, Polani D & Uthmann T (2001) Modelling the emergence of possession norms using memes. Journal of Artificial Societies and Social Simulation 4(4)3. http://jasss.soc.surrey.ac.uk/4/4/3.html.
-
-
-# Test
-fig = Figure()
-obs_heat = Observable(rand(50,50))
-ax, hm = heatmap(fig[1,1], obs_heat; colormap=cgrad(:thermal))
-fig
