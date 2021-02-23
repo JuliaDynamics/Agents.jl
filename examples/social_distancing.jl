@@ -26,9 +26,8 @@
 # We need to create agents that comply with [`ContinuousSpace`](@ref), i.e.
 # they have a `pos` and `vel` fields, both of which are tuples of float numbers.
 
-using Agents, Random, Plots
-gr() # hide
-cd(@__DIR__) #src
+using Agents, Random
+
 mutable struct Agent <: AbstractAgent
     id::Int
     pos::NTuple{2,Float64}
@@ -65,7 +64,8 @@ nothing # hide
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
-using InteractiveDynamics, CairoMakie
+using InteractiveDynamics
+import CairoMakie
 
 abm_video(
     "socialdist1.mp4",
@@ -251,7 +251,7 @@ sir_model = sir_initiation()
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
 fig, abmstepper = abm_plot(sir_model; ac = sir_colors)
-display(fig)
+fig # display figure
 
 # We have increased the size of the model 10-fold (for more realistic further analysis)
 
@@ -355,6 +355,7 @@ data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata)
 data1[(end-10):end, :]
 
 # Now, we can plot the number of infected versus time
+using CairoMakie
 figure = Figure()
 ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
 l1 = lines!(ax, data1[:, aggname(:status, infected)], color = :orange)

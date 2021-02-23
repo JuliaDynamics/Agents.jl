@@ -23,7 +23,6 @@
 
 using Agents, LinearAlgebra
 using Random # hide
-cd(@__DIR__) #src
 
 mutable struct SimpleCell <: AbstractAgent
     id::Int
