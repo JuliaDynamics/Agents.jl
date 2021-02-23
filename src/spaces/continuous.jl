@@ -416,6 +416,16 @@ end
 #######################################################################################
 export FMP_Update_Vel, FMP_Update_Interacting_Pairs, FMP_Parameters, FMP_Parameter_Init
 
+"""
+BONE DOCUMENT THIS
+    FMP_update_vel(model, FMP_params)
+Implements the [Force Based Motion Planning (FMP) algorithm](https://arxiv.org/abs/1909.05415)
+to handle interagent collisions. 
+
+B
+
+Example usage in [Force Based Motion Planning](@ref).
+"""
 mutable struct FMP_Parameters
     rho::Float64
     rho_obstacle::Float64
@@ -446,29 +456,11 @@ function FMP_Update_Vel(
     model::ABM{<:ContinuousSpace},
     )
     
-    # get list of interacting_pairs within some radius
-    agent_iter = interacting_pairs(model, model.FMP_params.r, :all)
-
-    # construct interaction_array which is (num_agents x num_agents)
-    #   array where interaction_array[i,j] = 1 implies that
-    #   agent_i and agent_j are within the specified interaction radius
-    interaction_array = falses( nagents(model), nagents(model))
-    agents = agent_iter.agents
-    for pair in agent_iter.pairs
-
-        i, j = pair
-        if agents[i].type == :A && agents[j].type == :A
-            interaction_array[i, j] = true
-            interaction_array[j, i] = true
-        end
-
-    end
-
     # make a list of agents neighbors
-    Ni = findall(x->x==1, interaction_array[agent.id, :])
+    Ni = findall(x->x==1, model.FMP_params.interaction_array[agent.id, :])
 
     # move_this_agent_to_new_position(i) in FMP paper
-    UpdateVelocity(model, agent.id, Ni, agents)
+    UpdateVelocity(model, agent.id, Ni, model.FMP_params.agents)
     
 end
 
@@ -498,6 +490,16 @@ function FMP_Update_Interacting_Pairs(
     model.FMP_params.agents = agents
 end
 
+"""
+BONE DOCUMENT THIS
+    FMP_update_vel(model, FMP_params)
+Implements the [Force Based Motion Planning (FMP) algorithm](https://arxiv.org/abs/1909.05415)
+to handle interagent collisions. 
+
+B
+
+Example usage in [Force Based Motion Planning](@ref).
+"""
 function FMP_Parameter_Init(;
     rho = 7.5e6,
     rho_obstacle = 7.5e6,
