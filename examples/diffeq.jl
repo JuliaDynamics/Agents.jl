@@ -416,14 +416,6 @@ ax =
 lines!(ax, discrete, linewidth = 2, color = :blue)
 f
 
-plot(
-    sol(0:365:(365*20)),
-    xticks = (0:(365*2):(365*20), 0:2:20),
-    legend = false,
-    ylabel = "Stock",
-    xlabel = "Year",
-)
-
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.
 #
