@@ -1,7 +1,7 @@
 using RecipesBase
 using GraphRecipes
 
-export plotabm, plotabm!
+export plotabm, plotabm!, abm_plot_on_graph, abm_plot_on_graph!
 
 mutable struct PlotABM{AbstractSpace}
     args::Any
@@ -115,3 +115,20 @@ end
     markerstrokewidth --> 1.5
     model.space.graph
 end
+
+"""
+    abm_plot_on_graph(model::ABM{<: GraphSpace}; ac, as, am, kwargs...)
+This function plots an ABM with a [`GraphSpace`](@ref). It functions similarly
+with [`abm_plot`], but is based on Plots.jl (specifically GraphRecipes.jl).
+
+The three key functions `ac, as, am` do not get an agent as an input but a vector of
+agents at each node of the graph. Their output is the same: the color, size, and marker
+type of the node.
+
+Here `as` defaults to `length`. Internally, the `graphplot` recipe is used, and
+all other `kwargs...` are propagated there.
+"""
+abm_plot_on_graph(args...; kw...) = RecipesBase.plot(PlotABM{typeof(args[1].space)}(args); kw...)
+abm_plot_on_graph!(args...; kw...) = RecipesBase.plot!(PlotABM{typeof(args[1].space)}(args); kw...)
+abm_plot_on_graph!(plt::RecipesBase.AbstractPlot, args...; kw...) =
+    RecipesBase.plot!(plt, PlotABM{typeof(args[1].space)}(args); kw...)

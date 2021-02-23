@@ -1,7 +1,7 @@
 # Plotting and interactive application
 Plotting and interaction functionality comes from [`InteractiveDynamics`](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/), another package of JuliaDynamics, which uses Makie.jl.
 
-Plotting, and the interactive application of Agents.jl, are _model-agnostic_ and _simple to use_. Defining simple functions that map agents to colors, and shapes, is the only thing you need to do. If you have defined already an ABM and functions for stepping the model, you typically need to write an extra couple of lines of code only to get your visualizations going.
+Plotting, and the interactive application of Agents.jl, are _model-agnostic_ and _simple to use_. Defining simple functions that map agents to colors, and shapes, is the only thing you need to do. If you have already defined an ABM and functions for stepping the model, you typically need to write only an extra couple of lines of code to get your visualizations going.
 
 You need to install both `InteractiveDynamics`, as well as a plotting backend (we recommend `GLMakie`) to use the following functions.
 
@@ -17,9 +17,9 @@ Some parts of Agents.jl cannot be plotted yet in Makie.jl, and therefore alterna
 The following functions allow you to plot an ABM, animate it via play/pause buttons, or directly export the time evolution into a video. At the moment these functions support 2D continuous and discrete space.
 
 ```@docs
-abm_plot
-abm_play
-abm_video
+InteractiveDynamics.abm_plot
+InteractiveDynamics.abm_play
+InteractiveDynamics.abm_video
 ```
 
 ## Interactive application
@@ -87,6 +87,10 @@ fig, adf, mdf = abm_data_exploration(
 ```
 
 ## Graph plotting
-To plot agents existing of a [`GraphSpace`](@ref) we can't use `InteractiveDynamics` because Makie.jl does not support plotting on graphs (yet).
+To plot agents existing of a [`GraphSpace`](@ref) we can't use `InteractiveDynamics` because Makie.jl does not support plotting on graphs (yet). We provide the following function in this case, which comes into scope when `using Plots`. See also the [SIR model for the spread of COVID-19](@ref) example for an application.
+```@docs
+abm_plot_on_graph
+```
 
 ## Open Street Map plotting
+Plotting an open street map is also not possible with Makie.jl at the moment, but there is a Julia package that does this kind of plotting, OpenStreetMapXPlots.jl. Its usage is demonstrated in the [Zombie Outbreak](@ref) example page.

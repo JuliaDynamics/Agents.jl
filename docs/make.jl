@@ -12,7 +12,7 @@ using Plots
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
-import InteractiveDynamics
+using InteractiveDynamics
 import CairoMakie
 
 println("Setting up Environment")
@@ -53,7 +53,7 @@ Themes.compile(joinpath(@__DIR__, "juliadynamics-dark.scss"), joinpath(@__DIR__,
 # %%
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
-makedocs(modules = [Agents,InteractiveDynamics],
+makedocs(modules = [Agents, InteractiveDynamics],
 sitename= "Agents.jl",
 authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
 doctest = false,
