@@ -458,8 +458,10 @@ function FMP_Update_Interacting_Pairs(
     # get list of interacting_pairs within some radius
     agent_iter = interacting_pairs(model, model.FMP_params.r, :all)
     for agent_id in keys(model.agents)
-        Ni = [j for (i,j) in agent_iter.pairs if i == agent_id && model.agents[j].type == :A]
-        model.agents[agent_id].Ni = Ni
+        Ni_agentid = [j for (i,j) in agent_iter.pairs if i == agent_id && model.agents[j].type == :A]
+        append!(Ni_agentid, [i for (i,j) in agent_iter.pairs if j == agent_id && model.agents[i].type == :A])
+        Ni_agentpos = [model.agents[j].pos for j in Ni_agentid]
+        model.agents[agent_id].Ni = [id_pos for id_pos in zip(Ni_agentid, Ni_agentpos)]
     end
 
 end
@@ -523,17 +525,16 @@ function FMP_Update_Vel(
     )
 
     # move_this_agent_to_new_position(i) in FMP paper
-
     # compute forces and resultant velocities
-    fiR = RepulsiveForce(model, model.agents, agent.id, agent.Ni)
-    fiGamma = NavigationalFeedback(model, model.agents, agent.id)
-    fiObject = ObstactleFeedback(model, model.agents, agent.id)
+    fiR = RepulsiveForce(model, agent)
+    fiGamma = NavigationalFeedback(model, agent)
+    fiObject = ObstactleFeedback(model, agent)
     ui = fiR .+ fiGamma .+ fiObject
     vi = model.agents[agent.id].vel .+ ui .* model.dt
     vi = CapVelocity(model.FMP_params.vmax, vi)
 
     # update agent velocities
-    model.agents[agent.id].vel = vi
+    agent.vel = vi
     
 end
 
@@ -541,22 +542,24 @@ end
 Function to calculate the resultant velocity vector from the repulsive component of the FMP
 algorithm.
 """
-function RepulsiveForce(model::AgentBasedModel, agents, i, Ni)
+function RepulsiveForce(model::AgentBasedModel, agent)
     # compute repulsive force for each agent
     # note the "." before most math operations, required for component wise tuple math
-    f = ntuple(i->0, length(agents[i].vel))
-    for j in Ni
-        dist = norm(agents[j].pos .- agents[i].pos)
+    f = ntuple(i->0, length(agent.vel))
+    for id_pos in agent.Ni
+        j = id_pos[1]
+        j_pos = id_pos[2]
+        dist = norm(j_pos .- agent.pos)
         if dist < model.FMP_params.r
             force = -model.FMP_params.rho * (dist - model.FMP_params.r)^2
-            distnorm = (agents[j].pos .- agents[i].pos) ./dist
+            distnorm = (j_pos .- agent.pos) ./dist
             f = f .+ (force .* distnorm)
         end
     end
 
     # targets/objects do not experience repulsive feedback
-    if agents[i].type == :O || agents[i].type == :T
-        return  ntuple(i->0, length(agents[i].vel))
+    if agent.type == :O || agent.type == :T
+        return  ntuple(i->0, length(agent.vel))
     else
         return f
     end
@@ -566,12 +569,12 @@ end
 Function to calculate the resultant velocity vector from the navigational component of the FMP
 algorithm.
 """
-function NavigationalFeedback(model::AgentBasedModel, agents, i)
+function NavigationalFeedback(model::AgentBasedModel, agent)
     # compute navigational force for each agent
     # note the "." before most math operations, required for component wise tuple math
-    f = (-model.FMP_params.c1 .* (agents[i].pos .- agents[i].tau)) .+ (- model.FMP_params.c2 .* agents[i].vel)
-    if agents[i].type == :T
-        return  ntuple(i->0, length(agents[i].vel))  # targets to not experience navigational feedback
+    f = (-model.FMP_params.c1 .* (agent.pos .- agent.tau)) .+ (- model.FMP_params.c2 .* agent.vel)
+    if agent.type == :T
+        return  ntuple(i->0, length(agent.vel))  # targets to not experience navigational feedback
     else
         return f
     end
@@ -581,25 +584,25 @@ end
 Function to calculate the resultant velocity vector from the obstacle avoidance component
 of the FMP algorithm.
 """
-function ObstactleFeedback(model::AgentBasedModel, agents, i)
+function ObstactleFeedback(model::AgentBasedModel, agent)
     # determine obstacle avoidance feedback term
     # note the "." before most math operations, required for component wise tuple math
-    f = ntuple(i->0, length(agents[i].vel))
+    f = ntuple(i->0, length(agent.vel))
 
     for id in model.FMP_params.obstacle_list
         # the original paper defines z as p_j-r_j-p_i in equation 17/18
         #   in the paper r_j is treated a vector, however it makes more sense to
         #   treat as a scalar quantity so we take the norm, then subtract the radius
         #   (j is obstacle (id) and i is agent (i))
-        dist = norm(agents[id].pos  .- agents[i].pos) - agents[id].radius
-        if dist < agents[i].radius
-            force = -model.FMP_params.rho_obstacle * (dist - agents[id].radius)^2
-            distnorm = (agents[id].pos .- agents[i].pos) ./ norm(agents[id].pos .- agents[i].pos)
+        dist = norm(model.agents[id].pos  .- agent.pos) - agent.radius
+        if dist < agent.radius
+            force = -model.FMP_params.rho_obstacle * (dist - model.agents[id].radius)^2
+            distnorm = (model.agents[id].pos .- agent.pos) ./ norm(model.agents[id].pos .- agent.pos)
             f = f .+ (force .* distnorm)
         end
     end
-    if agents[i].type == :O || agents[i].type == :T
-        return ntuple(i->0, length(agents[i].vel))
+    if agent.type == :O || agent.type == :T
+        return ntuple(i->0, length(agent.vel))
     else
         return f
     end

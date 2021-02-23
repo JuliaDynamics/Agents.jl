@@ -38,7 +38,7 @@ mutable struct FMP_Agent <: AbstractAgent
     type::Symbol
     radius::Float64
     SSdims::NTuple{2, Float64}  ## include this for plotting
-    Ni::Array{Int64}
+    Ni::Array{Tuple{Int64, NTuple{2, Float64}}} ## array of tuples with agent ids and agent positions
 end
 
 # ## Defining the Model
@@ -61,7 +61,8 @@ function FMP_Model()
                       :step_inc=>2,
                      )
 
-    space2d = ContinuousSpace((1,1); periodic = true, update_vel! = FMP_Update_Vel)
+    #space2d = ContinuousSpace((1,1); periodic = true, update_vel! = FMP_Update_Vel)  #BONE commented this out
+    space2d = ContinuousSpace((1,1); periodic = true)
     model = ABM(FMP_Agent, space2d, properties=properties)
     return model
 end
@@ -226,6 +227,9 @@ anim = @animate for i in step_range
 
     # step model including plot stuff
     FMP_Update_Interacting_Pairs(model)
+    #for agent_id in keys(model.agents)
+    #    FMP_Update_Vel(model.agents[agent_id], model)
+    #end
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
