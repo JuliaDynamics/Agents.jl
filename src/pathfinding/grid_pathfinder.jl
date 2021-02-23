@@ -63,13 +63,16 @@ end
 
 """
     HeightMap(hmap::Array{Int,D})
-An alternative [`CostMetric{D}`](@ref). This allows for a `D` dimensional heightmap to be provided as a
+    HeightMap(hmap::Array{Int,D}, ::Type{<:CostMetric})
+An alternative [`CostMetric`](@ref). This allows for a `D` dimensional heightmap to be provided as a
 `D` dimensional integer array, of the same size as the corresponding [`GridSpace{D}`](@ref). This metric
 approximates the distance between two positions as the sum of the shortest distance between them and the absolute
 difference in heights between the two positions. The shortest distance is calculated using the underlying
-`base_metric` field, which defaults to [`DirectDistance{D}`](@ref)
+`base_metric` field, which defaults to [`DirectDistance`](@ref)
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
+
+HeightMap(hmap::Array{Int,D}, ::Type{M}) where {D,M<:CostMetric} = HeightMap{D}(M{D}(), hmap)
 
 struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
@@ -84,36 +87,39 @@ end
     AStar(space::GridSpace; kwargs...)
 Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
 
-Keyword Arguments:
+## Keywords
 - `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
-Von Neumann neighbors. Correspondingly affects how [`DirectDistance{D}`](@ref) is calculated.
-
+Von Neumann neighbors.
 - `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour
 of faster pathfinding. For an admissibility value of `ε`, a path with at most `(1+ε)` times the optimal path length
 will be calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
-
 - `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
 the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
-
-- `cost_metric::CostMetric{D}=DirectDistance{D}()` specifies the metric used to approximate
-the distance between any two walkable points on the grid.
+- `cost_metric::Union{Type{M},M} where {M<:CostMetric}=DirectDistance`
+specifies the metric used to approximate the distance between any two walkable points on
+the grid.
 """
 function AStar(
     space::GridSpace{D,P};
     moore_neighbors::Bool = true,
     admissibility::AbstractFloat = 0.0,
     walkable::Array{Bool,D} = fill(true, size(space.s)),
-    cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D,P}
+    cost_metric::Union{Type{M}, M} = DirectDistance,
+) where {D,P,M<:CostMetric}
 
     neighborhood = moore_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    if typeof(cost_metric) <: CostMetric
+        metric = cost_metric
+    else
+        metric = cost_metric{D}()
+    end
     return AStar{D,P,moore_neighbors}(
         Dict{Int,Path{D}}(),
         size(space.s),
         neighborhood,
         admissibility,
         walkable,
-        cost_metric,
+        metric,
     )
 end
 

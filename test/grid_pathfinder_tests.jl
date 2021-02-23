@@ -1,5 +1,28 @@
 moore = Agents.moore_neighborhood(2)
 vonneumann = Agents.vonneumann_neighborhood(2)
+@testset "constructors" begin
+    space = GridSpace((5, 5))
+    cost = AStar(space).cost_metric
+    @test typeof(cost) <: DirectDistance{2}
+    @test cost.direction_costs == [10, 14]
+    cost = AStar(space; cost_metric = DirectDistance).cost_metric
+    @test typeof(cost) <: DirectDistance{2}
+    @test cost.direction_costs == [10, 14]
+    cost = AStar(space; cost_metric = Chebyshev).cost_metric
+    @test typeof(cost) <: Chebyshev{2}
+    @test_throws MethodError AStar(space; cost_metric = HeightMap)
+    cost = AStar(space; cost_metric = HeightMap([1 1])).cost_metric
+    @test typeof(cost) <: HeightMap{2}
+    @test typeof(cost.base_metric) <: DirectDistance{2}
+    @test cost.hmap == [1 1]
+    cost = AStar(space; cost_metric = HeightMap([1 1], Chebyshev)).cost_metric
+    @test typeof(cost) <: HeightMap{2}
+    @test typeof(cost.base_metric) <: Chebyshev{2}
+    @test cost.hmap == [1 1]
+    hmap = zeros(Int, 1, 1, 1)
+    @test_throws MethodError AStar(space; cost_metric = HeightMap(hmap))
+end
+
 
 @testset "metrics" begin
     pfinder_2d_np_m = AStar{2,false,true}(
