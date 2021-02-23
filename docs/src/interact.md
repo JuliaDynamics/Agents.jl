@@ -86,7 +86,17 @@ fig, adf, mdf = abm_data_exploration(
 )
 ```
 
+## Plots.jl Recipes
+Whilst the primary method for plotting agents models is through `InteractiveDynamics`, the following Plots recipes can also be used if you prefer the Plots.jl ecosystem.
+
+```@docs
+plotabm
+plotabm!
+```
+
 ## Graph plotting
-To plot agents existing of a [`GraphSpace`](@ref) we can't use `InteractiveDynamics` because Makie.jl does not support plotting on graphs (yet).
+To plot agents existing of a [`GraphSpace`](@ref) we can't use `InteractiveDynamics` because Makie.jl does not support plotting on graphs (yet). It's possible to use [`plotabm`](@ref) however for the time being.
 
 ## Open Street Map plotting
+Is also a work in progress. See the [`Zombie Outbreak`](@ref) for details on a complicated but possible solution.
+
