@@ -444,6 +444,7 @@ function travel!(start, finish, distance, agent, model)
             )
         else
             #######################################
+            # TODO: The code here can be simplified by using the existing `park`.
             # alright, so here we're in a situation where the agent is imagined to be at 'start' with 'distance left to travel.
             # the route is empty, but (start,finish) does not equal agent.destination[1:2]
             # what follows is the srouce code of the function "park", but the 'virtual' agent in it has position
