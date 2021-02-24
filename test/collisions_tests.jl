@@ -71,4 +71,19 @@ K1, p1 = kinetic(model)
 # The following test is valid for non-infinite masses only
 # @test p1[1] ≈ p0[1]
 # @test p1[2] ≈ p0[2]
+
+
+# using Plots
+# model = model_initiation()
+# colors = [a.id for a in allagents(model)]
+# anim = @animate for i ∈ 1:200
+#   xs = [a.pos[1] for a in values(model.agents)];
+#   ys = [a.pos[2] for a in values(model.agents)];
+#   p1 = scatter(xs, ys, label="", marker_z=colors, xlims=[0,1], ylims=[0, 1], colorbar_title = "Agent ID")
+#   title!(p1, "step $(i)")
+#   step!(model, agent_step!, model_step!, round(Int, 1/dt))
+#   println("step $i")
+# end
+# gif(anim, "movement.gif", fps = 45);
+
 end
