@@ -1,5 +1,12 @@
 export CostMetric,
-    DirectDistance, Chebyshev, HeightMap, AStar, delta_cost, find_path, set_target!
+    DirectDistance,
+    Chebyshev,
+    HeightMap,
+    AStar,
+    delta_cost,
+    find_path,
+    set_target!,
+    is_stationary
 
 """
     Path{D}
@@ -72,7 +79,8 @@ difference in heights between the two positions. The shortest distance is calcul
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
-HeightMap(hmap::Array{Int,D}, ::Type{M}) where {D,M<:CostMetric} = HeightMap{D}(M{D}(), hmap)
+HeightMap(hmap::Array{Int,D}, ::Type{M}) where {D,M<:CostMetric} =
+    HeightMap{D}(M{D}(), hmap)
 
 struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
@@ -90,7 +98,7 @@ struct AStar{D,P,M} <: AbstractPathfinder
         walkable::Array{Bool,D},
         cost_metric::CostMetric{D},
     ) where {D,P,M}
-        
+
         @assert typeof(cost_metric) != HeightMap{D} || size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
         new(agent_paths, grid_dims, neighborhood, admissibility, walkable, cost_metric)
     end
@@ -117,7 +125,7 @@ function AStar(
     moore_neighbors::Bool = true,
     admissibility::AbstractFloat = 0.0,
     walkable::Array{Bool,D} = fill(true, size(space.s)),
-    cost_metric::Union{Type{M}, M} = DirectDistance,
+    cost_metric::Union{Type{M},M} = DirectDistance,
 ) where {D,P,M<:CostMetric}
 
     @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
@@ -253,7 +261,7 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 
         nbors = get_neighbors(cur, pathfinder)
         for nbor in Iterators.filter(n -> inbounds(n, pathfinder, closed_list), nbors)
-            nbor_cell = get(grid, nbor, GridCell())
+            nbor_cell = haskey(grid, nbor) ? grid[nbor] : GridCell()
             new_g_cost = grid[cur].g + delta_cost(pathfinder, cur, nbor)
 
             if new_g_cost < nbor_cell.g
@@ -274,9 +282,10 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 
     agent_path = Path{D}()
     cur = to
-    while get(parent, cur, nothing) !== nothing
+    while true
+        haskey(parent, cur) || break
         pushfirst!(agent_path, cur)
-        cur = get(parent, cur, nothing)
+        cur = parent[cur]
     end
     return agent_path
 end
@@ -301,9 +310,14 @@ function set_target!(
     model.pathfinder.agent_paths[agent.id] = find_path(model.pathfinder, agent.pos, target)
 end
 
+"""
+    is_stationary(agent, model::ABM{<:GridSpace,A,<:AStar{D}})
+Return `true` if agent has reached it's target destination, or no path has been set for it.
+"""
+is_stationary(agent, model) = isempty(agent.id, model.pathfinder)
+
 Base.isempty(id::Int, pathfinder::AStar) =
-    get(pathfinder.agent_paths, id, nothing) === nothing ||
-    isempty(pathfinder.agent_paths[id])
+    !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})

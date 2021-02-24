@@ -25,7 +25,9 @@ vonneumann = Agents.vonneumann_neighborhood(2)
 
     model = ABM(Agent3, space, AStar(space))
     a = add_agent!((5, 2), model, 654.5)
+    @test is_stationary(a, model)
     set_target!(a, (1,3), model)
+    @test !is_stationary(a, model)
     @test length(model.pathfinder.agent_paths) == 1
     kill_agent!(a, model)
     @test length(model.pathfinder.agent_paths) == 0
