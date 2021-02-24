@@ -414,9 +414,10 @@ ax =
         title = "Fishery Inventory",
     )
 lines!(ax, discrete, linewidth = 2, color = :blue)
-save("final.svg", f) # hide
+save("final.png", f) # hide
+nothing # hide
 
-# ![](../final.svg)
+# ![](../final.png)
 
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.
