@@ -1,7 +1,6 @@
 # Visually inspect ContinuousSpace `nearby_ids`
 using Agents
-using AgentsPlots
-AgentsPlots.Plots.pyplot()
+using Plots
 
 mutable struct Ag <: AbstractAgent
     id::Int

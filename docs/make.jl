@@ -17,9 +17,9 @@ import CairoMakie
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
-pyplot()
 plot([1,1])
 f = InteractiveDynamics.AbstractPlotting.Figure()
+f
 
 ENV["GKS_ENCODING"]="utf-8"
 println("Converting Examples")

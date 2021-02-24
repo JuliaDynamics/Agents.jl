@@ -74,7 +74,6 @@ K1, p1 = kinetic(model)
 
 
 # using Plots
-# pyplot()
 # model = model_initiation()
 # colors = [a.id for a in allagents(model)]
 # anim = @animate for i ∈ 1:200
