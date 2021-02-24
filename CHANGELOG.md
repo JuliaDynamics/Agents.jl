@@ -1,3 +1,6 @@
+# v4.1.2
+- Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.
+
 # v4.1
 - A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
 - Models now supply a random number generator pool that is used in all random-related functions like `random_position`. Access it with `model.rng` and seed it with `seed!(model, seed)`.

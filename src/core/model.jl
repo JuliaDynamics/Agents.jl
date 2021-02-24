@@ -60,7 +60,7 @@ Create a fresh instance of a space with the same properties if you need to do th
 `pathfinder` TODO
 
 `properties = nothing` is additional model-level properties (typically a dictionary)
-that can be accessed as `model.properties`. However, if `properties` is a dictionary with
+that can be accessed as `model.properties`. If `properties` is a dictionary with
 key type `Symbol`, or of it is a struct, then the syntax
 `model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
 for structs).

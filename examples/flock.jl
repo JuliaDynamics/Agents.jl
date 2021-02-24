@@ -1,6 +1,11 @@
 # # Flock model
-# ![](flock.gif)
-#
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../flocking.mp4" type="video/mp4">
+# </video>
+# ```
+
 # The flock model illustrates how flocking behavior can emerge when each bird follows three simple rules:
 #
 # * maintain a minimum distance from other birds to avoid collision
@@ -87,7 +92,7 @@ function agent_step!(bird, model)
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
         if edistance(bird.pos, neighbor, model) < bird.separation
-        ## `separate` repels the bird away from neighboring birds
+            ## `separate` repels the bird away from neighboring birds
             separate = separate .- heading
         end
         ## `match` computes the average trajectory of neighboring birds
@@ -106,36 +111,38 @@ function agent_step!(bird, model)
 end
 
 # ## Plotting the flock
-# The great thing about [`plotabm`](@ref) is its flexibility. We can incorporate the
-# direction of the birds when plotting them, by making the "marker" function `am`
-# create a `Shape`: a triangle with same orientation as the bird's velocity.
-# It is as simple as defining the following function:
-function bird_triangle(b::Bird)
-    φ = atan(b.vel[2], b.vel[1])
-    xs = [(i ∈ (0, 3) ? 2 : 1) * cos(i * 2π / 3 + φ) for i in 0:3]
-    ys = [(i ∈ (0, 3) ? 2 : 1) * sin(i * 2π / 3 + φ) for i in 0:3]
-    Shape(xs, ys)
-end
-nothing # hide
+using InteractiveDynamics
+import CairoMakie
 
-# And here is the animation
-using Plots
-gr() # hide
-Random.seed!(23182) # hide
-cd(@__DIR__) #src
-model = initialize_model()
-e = model.space.extent
-anim = @animate for i in 0:100
-    i > 0 && step!(model, agent_step!, 1)
-    p1 = plotabm(
-        model;
-        am = bird_triangle,
-        as = 7,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "step $(i)")
+# The great thing about [`abm_plot`](@ref) is its flexibility. We can incorporate the
+# direction of the birds when plotting them, by making the "marker" function `am`
+# create a `Polygon`: a triangle with same orientation as the bird's velocity.
+# It is as simple as defining the following function:
+
+const bird_polygon = Polygon(Point2f0[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
+function bird_marker(b::Bird)
+    φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
+    scale(rotate2D(bird_polygon, φ), 2)
 end
-gif(anim, "flock.gif", fps = 30)
+
+# Where we have used the utility functions `scale` and `rotate2D` to act on a
+# predefined polygon. We now give `bird_marker` to `abm_plot`, and notice how
+# the `as` keyword is meaningless when using polygons as markers.
+
+model = initialize_model()
+figure, = abm_plot(model; am = bird_marker)
+figure
+
+# And let's also do a nice little video for it:
+abm_video(
+    "flocking.mp4", model, agent_step!;
+    am = bird_marker,
+    framerate = 20, frames = 100,
+    title = "Flocking"
+)
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../flocking.mp4" type="video/mp4">
+# </video>
+# ```

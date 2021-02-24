@@ -29,9 +29,8 @@
 
 # It is also available from the `Models` module as [`Models.predator_prey`](@ref).
 
-using Agents, Plots
+using Agents
 using Random # hide
-pyplot() # hide
 
 mutable struct Sheep <: AbstractAgent
     id::Int
@@ -81,7 +80,7 @@ function initialize_model(;
     id = 0
     for _ in 1:n_sheep
         id += 1
-        energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
+        energy = rand(1:(Δenergy_sheep*2)) - 1
         ## Note that we must instantiate agents before adding them in a mixed-ABM
         ## to confirm their type.
         sheep = Sheep(id, (0, 0), energy, sheep_reproduce, Δenergy_sheep)
@@ -89,7 +88,7 @@ function initialize_model(;
     end
     for _ in 1:n_wolves
         id += 1
-        energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
+        energy = rand(1:(Δenergy_wolf*2)) - 1
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
@@ -204,7 +203,9 @@ nothing # hide
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
-
+using InteractiveDynamics
+using AbstractPlotting
+import CairoMakie
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
@@ -214,25 +215,23 @@ model = initialize_model()
 offset(a::Sheep) = (0.2, 0.0)
 offset(a::Wolf) = (-0.2, 0.0)
 offset(a::Grass) = (0.0, 0.0)
-mshape(a::Sheep) = :circle
-mshape(a::Wolf) = :utriangle
-mshape(a::Grass) = :square
-mcolor(a::Sheep) = RGBA(1.0, 1.0, 1.0, 0.6)
-mcolor(a::Wolf) = RGBA(0.6, 0.6, 0.6, 0.8)
+mshape(a::Sheep) = '⚫'
+mshape(a::Wolf) = '▲'
+mshape(a::Grass) = '■'
+mcolor(a::Sheep) = RGBAf0(1.0, 1.0, 1.0, 0.8)
+mcolor(a::Wolf) = RGBAf0(0.2, 0.2, 0.2, 0.8)
 mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown/a.regrowth_time]
-plotabm(
+figure, = abm_plot(
     model;
+    resolution = (800, 600),
     offset = offset,
     am = mshape,
-    as = 15,
+    as = 22,
     ac = mcolor,
     scheduler = by_type((Grass, Sheep, Wolf), false),
-    grid = false,
-    size = (800, 600),
-    showaxis = false,
-    aspect_ratio = :equal,
+    equalaspect = true,
 )
-
+figure
 # Now, lets run the simulation and collect some data.
 
 sheep(a) = typeof(a) == Sheep
@@ -244,17 +243,13 @@ results, _ = run!(model, agent_step!, n_steps; adata)
 # The plot shows the population dynamics over time. Initially, wolves become extinct because they
 # consume the sheep too quickly. The few remaining sheep reproduce and gradually reach an
 # equilibrium that can be supported by the amount of available grass.
-
-plot(
-    results.step,
-    results.count_sheep,
-    grid = false,
-    xlabel = "Step",
-    ylabel = "Population",
-    label = "Sheep",
-)
-plot!(results.step, results.count_wolves, label = "Wolves")
-plot!(results.step, results.count_grass, label = "Grass")
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
+sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
+wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
+grassl = lines!(ax, results.step, results.count_grass, color = :green)
+figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
+figure
 
 # Altering the input conditions, we now see a landscape where all three agents find an
 # equilibrium.
@@ -268,13 +263,11 @@ model = initialize_model(
     wolf_reproduce = 0.08,
 )
 results, _ = run!(model, agent_step!, n_steps; adata)
-plot(
-    results.step,
-    results.count_sheep,
-    grid = false,
-    xlabel = "Step",
-    ylabel = "Population",
-    label = "Sheep",
-)
-plot!(results.step, results.count_wolves, label = "Wolves")
-plot!(results.step, results.count_grass, label = "Grass")
+
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure, xlabel = "Step", ylabel = "Population")
+sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
+wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
+grassl = lines!(ax, results.step, results.count_grass, color = :green)
+figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
+figure

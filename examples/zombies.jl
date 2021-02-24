@@ -79,7 +79,6 @@ ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
 
 function plotagents(model)
-    ## Essentially a cut down version on plotabm
     ids = model.scheduler(model)
     colors = [ac(model[i]) for i in ids]
     sizes = [as(model[i]) for i in ids]

@@ -20,7 +20,7 @@ To get started, please read the [Tutorial](@ref) page.
 * Aggregating collected data during model evolution
 * Distributed computing
 * Batch running and batch data collection
-* Visualize agent distributions on regular grids, arbitrary graphs or continuous space.
+* Visualize agent distributions on regular grids or continuous space.
 * Interactive applications for any agent based model (in continuous or grid space), which are created with only 5 lines of code and look like this:
 
 ```@raw html

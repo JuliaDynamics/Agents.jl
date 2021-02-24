@@ -1,6 +1,10 @@
 # # Opinion spread
 
-# ![](opinion.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../opinion.mp4" type="video/mp4">
+# </video>
+# ```
 
 # This is a simple model of how an opinion spreads through a community.
 # Each individual has a number of opinions as a list of integers.
@@ -11,8 +15,10 @@
 # They are more likely to adopt their neighbors opinion if the share more opinions with each other.
 
 using Agents
-using Plots
-using Random
+using InteractiveDynamics # plotting agents
+using AbstractPlotting # plotting data
+import CairoMakie # for static plotting
+using Random # hide
 
 # ## Building the model
 # ### 1. Model creation
@@ -82,43 +88,54 @@ end
 
 # First, we create a stopping condition, which runs the model until all agents stabilize.
 
-rununtil(model, s) = count(a->a.stabilized, allagents(model)) == length(positions(model))
+rununtil(model, s) = count(a -> a.stabilized, allagents(model)) == length(positions(model))
 
 # Then we create our model, run it and collect some information
 
 model = create_model(nopinions = 3, levels_per_opinion = 4)
 
 agentdata, _ = run!(model, agent_step!, dummystep, rununtil, adata = [(:stabilized, count)])
-agentdata
 
 # ## Plotting
 
 # The plot shows the number of stable agents, that is, number of agents whose opinions
-# don't change from one step to the next. Note that the number of stable agents can 
+# don't change from one step to the next. Note that the number of stable agents can
 # fluctuate before the final convergence.
 
-plot(
-    1:size(agentdata, 1),
-    agentdata.count_stabilized,
-    legend = false,
-    xlabel = "generation",
-    ylabel = "# of stabilized agents",
-)
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Generation",
+        ylabel = "# of stabilized agents",
+        title = "Population Stability",
+    )
+lines!(ax, 1:size(agentdata, 1), agentdata.count_stabilized, linewidth = 2, color = :blue)
+f
 
 # ### Animation
 
 # Here is an animation that shows change of agent opinions over time.
 # The first three opinions of an agent determines its color in RGB.
+Random.seed!(648) # hide
 levels_per_opinion = 3
-ac(agent) = RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
+ac(agent) = CairoMakie.RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
-anim = @animate for sp in 1:500
-    step!(model, agent_step!)
-    p = plotabm(model, ac = ac, as = 12, am = :square)
-    title!(p, "Step $(sp)")
-    if rununtil(model, 1)
-        break
-    end
-end
-gif(anim, "opinion.gif")
 
+abm_video(
+    "opinion.mp4",
+    model,
+    agent_step!;
+    ac = ac,
+    am = '■',
+    as = 20,
+    framerate = 20,
+    frames = 265,
+    title = "Opinion Spread",
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../opinion.mp4" type="video/mp4">
+# </video>
+# ```

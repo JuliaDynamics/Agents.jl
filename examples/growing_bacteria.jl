@@ -1,6 +1,10 @@
 # # Bacterial Growth
 
-# ![](bacteria.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../bacteria.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Bacterial colonies are a prime example for growing active matter, where systems
 # are driven out of equilibrium by proliferation.
@@ -19,7 +23,6 @@
 
 using Agents, LinearAlgebra
 using Random # hide
-cd(@__DIR__) #src
 
 mutable struct SimpleCell <: AbstractAgent
     id::Int
@@ -146,6 +149,7 @@ model = ABM(
     SimpleCell,
     space,
     properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
+    rng = MersenneTwister(1680)
 )
 
 # Let's start with just two agents.
@@ -163,10 +167,10 @@ nothing # hide
 # and then [`run!`](@ref) the model. But we'll animate the model directly.
 
 # Here we once again use the huge flexibility provided by [`plotabm`](@ref) to
-# plot the becteria cells. We define a function that creates a custom `Shape` based
+# plot the bacteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
-using Plots
-gr() # hide
+using InteractiveDynamics
+import CairoMakie # choose plotting backend
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)
@@ -183,34 +187,25 @@ function cassini_oval(agent)
     R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
 
     bacteria = R * permutedims([x y])
-    Shape(bacteria[1, :], bacteria[2, :])
+    coords = [Point2f0(x, y) for (x, y) in zip(bacteria[1, :], bacteria[2, :])]
+    scale(Polygon(coords), 0.5)
 end
 nothing # hide
 
 # set up some nice colors
-
-bacteria_colors(agent) =
-    HSV.(agent.id * 2.718 .% 1, agent.id * 3.14 .% 1, agent.id * 1.618 .% 1)
+bacteria_color(b) = CairoMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)
 nothing # hide
 
 # and proceed with the animation
+abm_video(
+    "bacteria.mp4", model, agent_step!, model_step!;
+    am = cassini_oval, ac = bacteria_color,
+    spf = 50, framerate = 30, frames = 200,
+    title = "Growing bacteria"
+)
 
-Random.seed!(1680)
-e = model.space.extent
-anim = @animate for i in 0:50:5000
-    step!(model, agent_step!, model_step!, 100)
-    p1 = plotabm(
-        model,
-        am = cassini_oval,
-        as = 30,
-        ac = bacteria_colors,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "n = $(i)")
-end
-
-gif(anim, "bacteria.gif", fps = 25)
-
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../bacteria.mp4" type="video/mp4">
+# </video>
+# ```

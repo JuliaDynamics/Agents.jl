@@ -4,7 +4,7 @@ The API of Agents.jl is defined on top of the fundamental structures  [`AgentBas
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
 ## `@agents` macro
-The [`@agents`](@ref) macro makes defining agent types within Agents.jl simple.
+The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
 @agent
@@ -253,20 +253,4 @@ and pass it to e.g. `step!` by initializing it
 ```julia
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
-```
-
-
-## Plotting
-Plotting functionality comes Plots.jl. You need to install a plotting backend (we use GR and pyplot) to use the following functions.
-
-```@docs
-plotabm
-plotabm!
-```
-
-## Interactive application
-You need to be using `InteractiveDynamics` to access this application, as well as `GLMakie` to provide a plotting backend. Then you can use the function `abm_data_exploration` as explained in the [Schelling's segregation model](@ref) example.
-
-```@docs
-InteractiveDynamics.abm_data_exploration
 ```
