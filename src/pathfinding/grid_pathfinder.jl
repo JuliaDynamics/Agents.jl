@@ -107,6 +107,8 @@ function AStar(
     cost_metric::Union{Type{M}, M} = DirectDistance,
 ) where {D,P,M<:CostMetric}
 
+    @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
+
     neighborhood = moore_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     if typeof(cost_metric) <: CostMetric
         metric = cost_metric
