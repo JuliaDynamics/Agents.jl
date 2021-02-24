@@ -458,10 +458,16 @@ function FMP_Update_Interacting_Pairs(
     # get list of interacting_pairs within some radius
     agent_iter = interacting_pairs(model, model.FMP_params.r, :all)
     for agent_id in keys(model.agents)
-        Ni_agentid = [j for (i,j) in agent_iter.pairs if i == agent_id && model.agents[j].type == :A]
-        append!(Ni_agentid, [i for (i,j) in agent_iter.pairs if j == agent_id && model.agents[i].type == :A])
-        Ni_agentpos = [model.agents[j].pos for j in Ni_agentid]
-        model.agents[agent_id].Ni = [id_pos for id_pos in zip(Ni_agentid, Ni_agentpos)]
+        Ni = Int64[]
+        for (i,j) in agent_iter.pairs
+            if i == agent_id && model.agents[j].type == :A
+                append!(Ni, j)
+            elseif j == agent_id && model.agents[i].type == :A
+                append!(Ni, i)
+            end
+        end
+
+        model.agents[agent_id].Ni = Ni
     end
 
 end
@@ -546,13 +552,11 @@ function RepulsiveForce(model::AgentBasedModel, agent)
     # compute repulsive force for each agent
     # note the "." before most math operations, required for component wise tuple math
     f = ntuple(i->0, length(agent.vel))
-    for id_pos in agent.Ni
-        j = id_pos[1]
-        j_pos = id_pos[2]
-        dist = norm(j_pos .- agent.pos)
+    for j in agent.Ni
+        dist = norm(model.agents[j].pos .- agent.pos)
         if dist < model.FMP_params.r
             force = -model.FMP_params.rho * (dist - model.FMP_params.r)^2
-            distnorm = (j_pos .- agent.pos) ./dist
+            distnorm = (model.agents[j].pos .- agent.pos) ./dist
             f = f .+ (force .* distnorm)
         end
     end
@@ -594,7 +598,7 @@ function ObstactleFeedback(model::AgentBasedModel, agent)
         #   in the paper r_j is treated a vector, however it makes more sense to
         #   treat as a scalar quantity so we take the norm, then subtract the radius
         #   (j is obstacle (id) and i is agent (i))
-        dist = norm(model.agents[id].pos  .- agent.pos) - agent.radius
+        dist = norm(model.agents[id].pos  .- agent.pos) - model.agents[id].radius
         if dist < agent.radius
             force = -model.FMP_params.rho_obstacle * (dist - model.agents[id].radius)^2
             distnorm = (model.agents[id].pos .- agent.pos) ./ norm(model.agents[id].pos .- agent.pos)

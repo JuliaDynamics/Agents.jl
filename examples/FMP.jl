@@ -25,6 +25,7 @@
 
 using Agents, Random, Plots, LinearAlgebra, Colors, ProgressMeter
 
+ENV["GKSwstype"]="nul"
 gr()
 cd(@__DIR__)
 
@@ -37,6 +38,7 @@ mutable struct FMP_Agent <: AbstractAgent
     type::Symbol
     radius::Float64
     SSdims::NTuple{2, Float64}  ## include this for plotting
+    Ni::Array{Int64} ## array of tuples with agent ids and agent positions
 end
 
 # ## Defining the Model
@@ -54,12 +56,12 @@ end
 function FMP_Model()
     properties = Dict(:FMP_params=>FMP_Parameter_Init(),
                       :dt => 0.01,
-                      :num_agents=>20,
+                      :num_agents=>30,
                       :num_steps=>1500,
                       :step_inc=>2,
                      )
 
-    space2d = ContinuousSpace((1,1); periodic = true, update_vel! = FMP_Update_Vel)
+    space2d = ContinuousSpace((1,1); periodic = true)
     model = ABM(FMP_Agent, space2d, properties=properties)
     return model
 end
@@ -100,8 +102,8 @@ for i in 1:model.num_agents
     tau = (xitau, yitau)  ## goal is on opposite side of circle
     radius = model.FMP_params.d/2
     agent_color = "nothing for now"
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent)
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
 end
 
 
@@ -112,13 +114,21 @@ end
 # Note that `agent_step!` takes into account our `update_vel` function during
 # simulation at each time step.
 
-# Note the inclusion of the call to `FMP_Update_Interacting_Pairs`. This
+# Note the inclusion of the call to `FMP_Update_Interacting_Pairs` and
+# `FMP_Update_Interacting_Pairs` in the `model_step!` function.. This
 # function occurrs once during each model time step and calls the
 # [`interacting_pairs`](@ref) function to see if agents are within an
 # interactive radius of one another. If they are, they the FMP algorithm
 # computes their attractive/repulsive forces. 
 
 agent_step!(agent, model) = move_agent!(agent, model, model.dt)
+
+function model_step!(model)
+    FMP_Update_Interacting_Pairs(model)
+    for agent_id in keys(model.agents)
+        FMP_Update_Vel(model.agents[agent_id], model)
+    end
+end
 
 ## helpful sim params
 e = model.space.extent
@@ -128,8 +138,6 @@ step_range = 1:model.step_inc:model.num_steps
 p = Progress(round(Int,model.num_steps/model.step_inc))  ## optional
 anim = @animate for i in step_range
     
-    ## step model
-    FMP_Update_Interacting_Pairs(model) ## this is really important
     p1 = plotabm(
         model,
         grid = false,
@@ -140,7 +148,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
     
     ## step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)  ## optional
 end
 gif(anim, "circle_swap_ugly.gif", fps = 100)
@@ -278,15 +286,14 @@ for i in 1:model.num_agents
     tau = (xitau, yitau)  ## goal is on opposite side of circle
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)  ## This is new
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent)
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
 end
 
 p = Progress(round(Int,model.num_steps/model.step_inc))
 anim = @animate for i in step_range
 
     # step model including plot stuff
-    FMP_Update_Interacting_Pairs(model)
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
@@ -302,7 +309,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
 
     # step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)
 end
 gif(anim, "circle_swap_pretty.gif", fps = 100)
@@ -327,7 +334,7 @@ for i in 1:model.num_agents
     tau = pos  ## agent starting position = goal so they initially stay in place
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent)  # add agents
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])  # add agents
 
 end
 # Now that we've added some agents to the state space, lets add an obstacle.
@@ -341,8 +348,8 @@ object_vel = (0,0)
 object_tau = (x-0.1*x, 0.5*y)
 object_radius = 0.1
 agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent)  # add object
-add_agent!(object_tau, model, object_vel, object_tau, agent_color, :T, object_radius, model.space.extent)  # add object target
+add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [])  # add object
+add_agent!(object_tau, model, object_vel, object_tau, agent_color, :T, object_radius, model.space.extent, [])  # add object target
 
 # Now that we've added an obstacle to the state space, we need to take one
 # special step - adding the obstacle to the obstacle list for use by the FMP
@@ -361,7 +368,6 @@ p = Progress(round(Int,model.num_steps/model.step_inc))
 anim = @animate for i in step_range
 
     # step model including plot stuff
-    FMP_Update_Interacting_Pairs(model)
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
@@ -377,7 +383,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
 
     # step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)
 end
 gif(anim, "agent_line_moving_object.gif", fps = 100)
@@ -400,8 +406,8 @@ for i in 1:model.num_agents
     tau = (0.8*x,0) .+ pos
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent)  # add object target
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent)  # add agents
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])  # add object target
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])  # add agents
 
 end
 
@@ -412,7 +418,7 @@ object_vel = (0,0)
 object_tau = object_pos
 object_radius = 0.2
 agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent)  # add object
+add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [])  # add object
 
 for agent in allagents(model)
     if agent.type == :O
@@ -424,7 +430,6 @@ p = Progress(round(Int,model.num_steps/model.step_inc))
 anim = @animate for i in step_range
 
     # step model including plot stuff
-    FMP_Update_Interacting_Pairs(model)
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
@@ -440,7 +445,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
 
     # step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)
 end
 gif(anim, "centered_object_moving_line.gif", fps = 100)
@@ -470,12 +475,12 @@ for i in 1:model.num_agents
     type = :A
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent)
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
 end
 
 object_radius = 0.1
-add_agent!((x/2,y/2), model, (0,0), (x/2,y/2), "#ff0000", :O, object_radius, model.space.extent)  # add object in middle
+add_agent!((x/2,y/2), model, (0,0), (x/2,y/2), "#ff0000", :O, object_radius, model.space.extent, [])  # add object in middle
 
 for agent in allagents(model)
     if agent.type == :O
@@ -487,7 +492,6 @@ p = Progress(round(Int,model.num_steps/model.step_inc))
 anim = @animate for i in step_range
 
     # step model including plot stuff
-    FMP_Update_Interacting_Pairs(model)
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
@@ -503,7 +507,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
 
     # step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)
 end
 gif(anim, "circle_swap_object.gif", fps = 100)
@@ -519,14 +523,13 @@ for i in 1:model.num_agents
     type = :A
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent)
+    add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent, [])
 end
 
 p = Progress(round(Int,model.num_steps/model.step_inc))
 anim = @animate for i in step_range
 
     # step model including plot stuff
-    FMP_Update_Interacting_Pairs(model)
     p1 = plotabm(
         model,
         as = PlotABM_RadiusUtil,
@@ -542,7 +545,7 @@ anim = @animate for i in step_range
     title!(p1, "FMP Simulation (step $(i))")
 
     # step model and progress counter
-    step!(model, agent_step!, model.step_inc)
+    step!(model, agent_step!, model_step!, model.step_inc, false)
     next!(p)
 end
 gif(anim, "random_positions.gif", fps = 100)
