@@ -3,7 +3,7 @@
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## `@agents` macro
+## `@agent` macro
 The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
@@ -52,17 +52,45 @@ nextid
 random_position
 ```
 
+### Removing agents
+```@docs
+kill_agent!
+genocide!
+sample!
+```
+
 ### Moving agents
 ```@docs
 move_agent!
 walk!
 ```
 
-### Removing agents
+## Pathfinding
+In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
 ```@docs
-kill_agent!
-genocide!
-sample!
+AStar
+set_target!
+is_stationary
+```
+
+### Metrics
+```@docs
+DirectDistance
+Chebyshev
+HeightMap
+```
+
+Building a custom metric is straightforward, if the provided ones do not suit your purpose.
+```@docs
+CostMetric
+```
+
+### Advanced Methods
+Functions that are usually not needed to perform most path finding tasks, but may be helpful in certain situations.
+```@docs
+find_path
+delta_cost
+heightmap
 ```
 
 ## Discrete space exclusives

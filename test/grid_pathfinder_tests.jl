@@ -31,6 +31,11 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test length(model.pathfinder.agent_paths) == 1
     kill_agent!(a, model)
     @test length(model.pathfinder.agent_paths) == 0
+    @test heightmap(model) === nothing
+
+    hmap = fill(1, 5, 5)
+    model = ABM(Agent3, space, AStar(space; cost_metric = HeightMap(hmap)))
+    @test heightmap(model) == hmap
 end
 
 

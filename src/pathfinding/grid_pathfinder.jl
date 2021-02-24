@@ -6,7 +6,8 @@ export CostMetric,
     delta_cost,
     find_path,
     set_target!,
-    is_stationary
+    is_stationary,
+    heightmap
 
 """
     Path{D}
@@ -28,10 +29,7 @@ struct DirectDistance{D} <: CostMetric{D}
     direction_costs::Vector{Int}
 end
 
-function Base.show(io::IO, metric::DirectDistance{D}) where {D}
-    s = "DirectDistance metric"
-    print(io, s)
-end
+Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
 """
     DirectDistance{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
@@ -53,20 +51,15 @@ difference in coordinates) between them.
 """
 struct Chebyshev{D} <: CostMetric{D} end
 
-function Base.show(io::IO, metric::Chebyshev{D}) where {D}
-    s = "Chebyshev metric"
-    print(io, s)
-end
+Base.show(io::IO, metric::Chebyshev) = print(io, "Chebyshev")
 
 struct HeightMap{D} <: CostMetric{D}
     base_metric::CostMetric{D}
     hmap::Array{Int,D}
 end
 
-function Base.show(io::IO, metric::HeightMap{D}) where {D}
-    s = "HeightMap metric with base_metric=$(metric.base_metric)"
-    print(io, s)
-end
+Base.show(io::IO, metric::HeightMap) =
+    print(io, "HeightMap with base: $(metric.base_metric)")
 
 """
     HeightMap(hmap::Array{Int,D})
@@ -157,7 +150,9 @@ function vonneumann_neighborhood(D)
 end
 
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
-    s = "A* in $(D) dimensions\nperiodic=$(P)\nmoore=$(M)\nadmissibility=$(pathfinder.admissibility)\nmetric=$(pathfinder.cost_metric)"
+    periodic = P ? "periodic, " : ""
+    moore = M ? "moore, " : ""
+    s = "A* in $(D) dimensions. $(periodic)$(moore)ϵ=$(pathfinder.admissibility), metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
 
@@ -318,6 +313,19 @@ is_stationary(agent, model) = isempty(agent.id, model.pathfinder)
 
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
+
+"""
+    heightmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
+Return the heightmap of the pathfinder if the [`HeightMap`](@ref) metric is in use,
+`nothing` otherwise.
+"""
+function heightmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A}
+    if model.pathfinder.cost_metric isa HeightMap
+        return model.pathfinder.cost_metric.hmap
+    else
+        return nothing
+    end
+end
 
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
