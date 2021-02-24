@@ -11,14 +11,15 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost = AStar(space; cost_metric = Chebyshev).cost_metric
     @test typeof(cost) <: Chebyshev{2}
     @test_throws MethodError AStar(space; cost_metric = HeightMap)
-    cost = AStar(space; cost_metric = HeightMap([1 1])).cost_metric
+    @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1])).cost_metric
+    cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5))).cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
-    @test cost.hmap == [1 1]
-    cost = AStar(space; cost_metric = HeightMap([1 1], Chebyshev)).cost_metric
+    @test cost.hmap == fill(1, 5, 5)
+    cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5), Chebyshev)).cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: Chebyshev{2}
-    @test cost.hmap == [1 1]
+    @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
     @test_throws MethodError AStar(space; cost_metric = HeightMap(hmap))
 end

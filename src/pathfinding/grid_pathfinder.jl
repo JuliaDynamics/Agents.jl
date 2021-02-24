@@ -81,6 +81,19 @@ struct AStar{D,P,M} <: AbstractPathfinder
     admissibility::AbstractFloat
     walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
+
+    function AStar{D,P,M}(
+        agent_paths::Dict,
+        grid_dims::Dims{D},
+        neighborhood::Vector{CartesianIndex{D}},
+        admissibility::AbstractFloat,
+        walkable::Array{Bool,D},
+        cost_metric::CostMetric{D},
+    ) where {D,P,M}
+        
+        @assert typeof(cost_metric) != HeightMap{D} || size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
+        new(agent_paths, grid_dims, neighborhood, admissibility, walkable, cost_metric)
+    end
 end
 
 """
