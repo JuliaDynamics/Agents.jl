@@ -415,7 +415,7 @@ ax =
     )
 lines!(ax, discrete, linewidth = 2, color = :blue)
 save("final.svg", f) # hide
-![](final.svg)
+![](../final.svg)
 
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.
