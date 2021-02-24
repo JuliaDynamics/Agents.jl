@@ -319,3 +319,12 @@ function move_agent!(
     move_agent!(agent, first(model.pathfinder.agent_paths[agent.id]), model)
     popfirst!(model.pathfinder.agent_paths[agent.id])
 end
+
+function kill_agent!(
+    agent::A,
+    model::ABM{<:GridSpace{D},A,<:AStar{D}},
+) where {D,A<:AbstractAgent}
+    delete!(model.pathfinder.agent_paths, agent.id)
+    delete!(model.agents, agent.id)
+    remove_agent_from_space!(agent, model)
+end

@@ -22,6 +22,13 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
     @test_throws MethodError AStar(space; cost_metric = HeightMap(hmap))
+
+    model = ABM(Agent3, space, AStar(space))
+    a = add_agent!((5, 2), model, 654.5)
+    set_target!(a, (1,3), model)
+    @test length(model.pathfinder.agent_paths) == 1
+    kill_agent!(a, model)
+    @test length(model.pathfinder.agent_paths) == 0
 end
 
 
