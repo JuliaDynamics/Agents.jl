@@ -20,7 +20,7 @@ using FileIO # To load images you also need ImageMagick available to your projec
 # The maze is stored as a simple .bmp image, where each pixel corresponds to a position on the grid.
 # White pixels correspond to walkable regions of the maze. To initialize the model, a `Walker` is placed 
 # at the entrance to the maze and `Wall`s wherever the maze is not walkable.
-function initalize_model(; map_path="maze.bmp", seed=42)
+function initialize_model(; map_path="maze.bmp", seed=42)
     ## Load the maze from the image file. White values can be identified by a non-zero red component
     maze = map(x->x.r > 0, load(map_path))
     ## The size of the space is the size of the maze
