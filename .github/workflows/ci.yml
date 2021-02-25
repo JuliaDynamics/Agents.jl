@@ -77,7 +77,7 @@ jobs:
       - name: Install binary dependencies
         run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - name: Instantiate and install dependencies
-        run: run: DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Generate documentation and deploy
         env: # needed for pushing to gh-pages branch
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
