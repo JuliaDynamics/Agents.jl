@@ -57,7 +57,8 @@ If it is ommited then all agents are virtually in one position and have no spati
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
 
-`pathfinder` TODO
+In the case where `space` is a [`GridSpace`](@ref), an optional `pathfinder` value may
+be passed in. See [Path-finding](@ref) for details on its use.
 
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. If `properties` is a dictionary with

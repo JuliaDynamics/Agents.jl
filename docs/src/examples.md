@@ -55,6 +55,12 @@ grid space, but only uses 2 of those dimensions for space. The third represents 
 agent **category**. Here, we can leverage Agents.jl's sophisticated neighbor searches
 to find closely related agents not just in space, but also in property.
 
+### Agent Path-finding
+
+On [`GridSpace`](@ref)'s, the [`AStar`](@ref) algorithm provides automatic path-finding
+for agents with a variety of options and metrics to choose from. We have two models
+showcasing the possibilities of this method: [Maze Runner](@ref) and [Runners](@ref).
+
 ### Synchronous agent updates
 
 Most of the time, using the `agent_step!` loop then the `model_step!` is

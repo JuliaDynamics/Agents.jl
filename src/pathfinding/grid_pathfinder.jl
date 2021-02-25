@@ -12,7 +12,7 @@ export CostMetric,
 
 """
     Path{D}
-An alias for `MutableLinkedList{Dims{D}}`. Used to represent the path to be
+Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace{D}`](@ref).
 """
 const Path{D} = MutableLinkedList{Dims{D}}
@@ -20,9 +20,7 @@ const Path{D} = MutableLinkedList{Dims{D}}
 """
     CostMetric{D}
 An abstract type representing a metric that measures the approximate cost of travelling
-between two points in a `D` dimensional [`GridSpace{D}`](@ref). A struct with this as its
-base type is used as the `cost_metric` for [`AStar`](@ref). To define a custom metric,
-define a struct with this as its base type and a corresponding method for [`delta_cost`](@ref).
+between two points in a `D` dimensional [`GridSpace{D}`](@ref).
 """
 abstract type CostMetric{D} end
 
@@ -33,20 +31,19 @@ end
 Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
 """
-    DirectDistance{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
-The default cost metric for [`AStar`](@ref). Distance is approximated as the shortest path between
-the two points, where from any tile it is possible to step to any of its Moore neighbors.
-`direction_costs` is a `Vector{Int}` where `direction_costs[i]` represents the cost of
-going from a tile to the neighbording tile on the `i` dimensional diagonal. The default value is
-`10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
+    DirectDistance
+Distance is approximated as the shortest path between the two points, provided the
+`walkable` property of [`AStar`](@ref) allows.
+Optionall provide a `Vector{Int}` that represents the cost of going from a tile to the
+neighbording tile on the `i` dimensional diagonal (default is `10√i`).
 
-If `moore_neighbors=false` in the [`AStar`](@ref) struct, then it is only possible to step to
-VonNeumann neighbors. In such a case, only `direction_costs[1]` is used.
+If `moore_neighbors=false` in [`AStar`](@ref), only Von Neumann neighbors will be tested.
+Cost defaults to the first value of the provided vector.
 """
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
 """
-    Chebyshev{D}()
+    Chebyshev
 Distance between two tiles is approximated as the Chebyshev distance (maximum of absolute
 difference in coordinates) between them.
 """
@@ -65,11 +62,10 @@ Base.show(io::IO, metric::HeightMap) =
 """
     HeightMap(hmap::Array{Int,D})
     HeightMap(hmap::Array{Int,D}, ::Type{<:CostMetric})
-An alternative [`CostMetric`](@ref). This allows for a `D` dimensional heightmap to be provided as a
-`D` dimensional integer array, of the same size as the corresponding [`GridSpace{D}`](@ref). This metric
-approximates the distance between two positions as the sum of the shortest distance between them and the absolute
-difference in heights between the two positions. The shortest distance is calculated using the underlying
-`base_metric` field, which defaults to [`DirectDistance`](@ref)
+Distance between two positions is the sum of the shortest distance between them and the
+absolute difference in height. A heightmap of the same size as the corresponding
+[`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
+by defualt.
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
@@ -80,15 +76,14 @@ struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     neighborhood::Vector{CartesianIndex{D}}
-    admissibility::AbstractFloat
-    walkable::Array{Bool,D}
+    admissibility::Float64, walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
 
     function AStar{D,P,M}(
         agent_paths::Dict,
         grid_dims::Dims{D},
         neighborhood::Vector{CartesianIndex{D}},
-        admissibility::AbstractFloat,
+        admissibility::Float64,
         walkable::Array{Bool,D},
         cost_metric::CostMetric{D},
     ) where {D,P,M}
@@ -100,22 +95,29 @@ end
 
 """
     AStar(space::GridSpace; kwargs...)
-Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
+Provides pathfinding capabilities and stores agent paths. Dimensionality and periodicity
+properties are taken from `space`.
 
-## Keywords
-- `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only Von Neumann neighbors.
-- `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour of faster
-  pathfinding. For an admissibility value of `ε`, a path with at most `(1+ε)` times the optimal path length will be
-  calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
-- `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of the space.
-  Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
-- `cost_metric::Union{Type{M},M} where {M<:CostMetric}=DirectDistance` specifies the metric used to approximate the
-  distance between any two walkable points on the grid.
+`moore_neighbors = true` specifies if movement can be to Moore neighbors of a tile,
+or only Von Neumann neighbors.
+
+`admissibility = 0.0` specifies how much a path can deviate from optimal, in favour of
+faster pathfinding. Admissibility (`ε`) of `0.0` will always find the optimal path.
+Larger values of `ε` will explore fewer nodes, returning a path length with at most
+`(1+ε)` times the optimal path length.
+
+`walkable = fill(true, size(space))` is used to specify (un)walkable positions of the
+space. All positions are assumed to be walkable by default.
+
+`cost_metric = DirectDistance` specifies the metric used to approximate the distance
+between any two walkable points on the grid.
+
+Example usage in [Maze Solver](@ref) and [Runner](@ref).
 """
 function AStar(
     space::GridSpace{D,P};
     moore_neighbors::Bool = true,
-    admissibility::AbstractFloat = 0.0,
+    admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, size(space.s)),
     cost_metric::Union{Type{M},M} = DirectDistance,
 ) where {D,P,M<:CostMetric}
@@ -157,7 +159,8 @@ end
 
 """
     position_delta(pathfinder::AStar{D}, from::NTuple{Int,D}, to::NTuple{Int,D})
-Returns the absolute difference in coordinates between `from` and `to` taking into account periodicity of `pathfinder`.
+Returns the absolute difference in coordinates between `from` and `to` taking into account
+periodicity of `pathfinder`.
 """
 position_delta(pathfinder::AStar{D,true}, from::Dims{D}, to::Dims{D}) where {D} =
     min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from))
@@ -166,10 +169,10 @@ position_delta(pathfinder::AStar{D,false}, from::Dims{D}, to::Dims{D}) where {D}
     abs.(to .- from)
 
 """
-    delta_cost(pathfinder::AStar{D}, from::NTuple{D, Int}, to::NTuple{D, Int})
-Calculates and returns an approximation for the cost of travelling from `from` to `to`. This calls the corresponding
-`delta_cost(pathfinder, pathfinder.cost_metric, from, to)` function. In the case of a custom metric, define a method for
-the latter function.
+    delta_cost(pathfinder::AStar{D}, metric<:CostMetric,
+                                        from::NTuple{D, Int}, to::NTuple{D, Int})
+Calculate an approximation for the cost of travelling from `from` to `to`. Expects
+a return value of `Float64`.
 """
 function delta_cost(
     pathfinder::AStar{D,periodic,true},
@@ -232,9 +235,10 @@ GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
 
 """
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
-Using the specified [`AStar`](@ref), calculates and returns the shortest path from `from` to `to` using the A* algorithm.
-Paths are returned as a `MutableLinkedList` of sequential grid positions. If a path does not exist between the given 
-positions, this returns an empty linked list. This function usually does not need to be called explicitly, instead
+Calculate the shortest path from `from` to `to` using the A* algorithm.
+If a path does not exist between the given positions, an empty linked list is returned.
+
+This function usually does not need to be called explicitly, instead
 the use the provided [`set_target!`](@ref) and [`move_agent!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
@@ -293,8 +297,8 @@ end
 
 """
     set_target!(agent::A, target::NTuple{D,Int}, model::ABM{<:GridSpace,A,<:AStar{D}})
-This calculates and stores the shortest path to move the agent from its current position to `target`
-using [`find_path`](@ref).
+Calculates and store the shortest path to move `agent` from its current position to
+`target`.
 """
 function set_target!(
     agent::A,
@@ -306,7 +310,8 @@ end
 
 """
     is_stationary(agent, model::ABM{<:GridSpace,A,<:AStar{D}})
-Return `true` if agent has reached it's target destination, or no path has been set for it.
+Return `true` if `agent` has reached it's target destination, or if no path exists for
+`agent`.
 """
 is_stationary(agent, model) = isempty(agent.id, model.pathfinder)
 
@@ -328,14 +333,14 @@ end
 
 """
     walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
-Return the walkable map of the pathfinder
+Return the walkable map of the pathfinder.
 """
 walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A} = model.pathfinder.walkable
 
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
-Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
-not have a precalculated path, or the path is empty, the agent does not move.
+Move `agent` along the path to its target set by [`set_target!`](@ref). If `agent` does
+not have a precalculated path, or the path is empty, `agent` will not move.
 """
 function move_agent!(
     agent::A,

@@ -65,7 +65,7 @@ move_agent!
 walk!
 ```
 
-## Pathfinding
+## Path-finding
 In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
 ```@docs
 AStar
@@ -73,6 +73,7 @@ set_target!
 is_stationary
 walkmap
 heightmap
+find_path
 ```
 
 ### Metrics
@@ -83,16 +84,7 @@ HeightMap
 ```
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
-```@docs
-CostMetric
-```
-
-### Advanced Methods
-Functions that are usually not needed to perform most path finding tasks, but may be helpful in certain situations.
-```@docs
-find_path
-delta_cost
-```
+See the [Developer Docs](@ref) for details.
 
 ## Discrete space exclusives
 ```@docs
