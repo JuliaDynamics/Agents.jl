@@ -53,6 +53,7 @@ agent_step!(agent, model) = move_agent!(agent, model)
 # for our runners, and display the heightmap for our reference. A better interface to do
 # this is currently a work in progress.
 using InteractiveDynamics
+using AbstractPlotting
 import GLMakie
 
 # ```julia
