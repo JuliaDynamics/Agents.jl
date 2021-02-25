@@ -88,6 +88,7 @@ CostMetric
 ### Advanced Methods
 Functions that are usually not needed to perform most path finding tasks, but may be helpful in certain situations.
 ```@docs
+Path{D}
 find_path
 delta_cost
 heightmap

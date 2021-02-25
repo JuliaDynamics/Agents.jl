@@ -35,12 +35,12 @@ Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
     DirectDistance{D}(direction_costs::Vector{Int}=[floor(Int, 10.0*√x) for x in 1:D])
 The default cost metric for [`AStar`](@ref). Distance is approximated as the shortest path between
 the two points, where from any tile it is possible to step to any of its Moore neighbors.
-`direction_costs` is an `Array{Int,1}` where `direction_costs[i]` represents the cost of
+`direction_costs` is a `Vector{Int}` where `direction_costs[i]` represents the cost of
 going from a tile to the neighbording tile on the `i` dimensional diagonal. The default value is
 `10√i` for the `i` dimensional diagonal, rounded down to the nearest integer.
 
 If `moore_neighbors=false` in the [`AStar`](@ref) struct, then it is only possible to step to
-VonNeumann neighbors.
+VonNeumann neighbors. In such a case, only `direction_costs[1]` is used.
 """
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
@@ -102,16 +102,14 @@ end
 Stores path data of agents, and relevant pathfinding grid data. The dimensions are taken to be those of the space.
 
 ## Keywords
-- `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only
-Von Neumann neighbors.
-- `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour
-of faster pathfinding. For an admissibility value of `ε`, a path with at most `(1+ε)` times the optimal path length
-will be calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
-- `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of
-the space. Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
-- `cost_metric::Union{Type{M},M} where {M<:CostMetric}=DirectDistance`
-specifies the metric used to approximate the distance between any two walkable points on
-the grid.
+- `moore_neighbors::Bool=true` specifies if movement can be to Moore neighbors of a tile, or only Von Neumann neighbors.
+- `admissibility::AbstractFloat=0.0` specifies how much a path can deviate from optimality, in favour of faster
+  pathfinding. For an admissibility value of `ε`, a path with at most `(1+ε)` times the optimal path length will be
+  calculated, exploring fewer nodes in the process. A value of `0` always finds the optimal path.
+- `walkable::Array{Bool,D}=fill(true, size(space.s))` is used to specify (un)walkable positions of the space.
+  Unwalkable positions are never part of any paths. By default, all positions are assumed to be walkable.
+- `cost_metric::Union{Type{M},M} where {M<:CostMetric}=DirectDistance` specifies the metric used to approximate the
+  distance between any two walkable points on the grid.
 """
 function AStar(
     space::GridSpace{D,P};
