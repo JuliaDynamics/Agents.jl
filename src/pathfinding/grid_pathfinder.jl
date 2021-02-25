@@ -76,7 +76,8 @@ struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
     neighborhood::Vector{CartesianIndex{D}}
-    admissibility::Float64, walkable::Array{Bool,D}
+    admissibility::Float64
+    walkable::Array{Bool,D}
     cost_metric::CostMetric{D}
 
     function AStar{D,P,M}(
