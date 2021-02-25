@@ -15,6 +15,8 @@ println("InteractiveDynamics...")
 using InteractiveDynamics
 println("Plotting Backends...")
 using GLMakie
+using CairoMakie
+GLMakie.activate!()
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
@@ -31,7 +33,7 @@ mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
-    file ∉ ("runners.jl", "maze.jl") && continue
+    file ∉ ("runners.jl", "maze.jl", "forest_fire.jl") && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -76,7 +78,7 @@ pages = [
  #       "SIR model for the spread of COVID-19" => "examples/sir.md",
  #       "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
  #       "Wealth distribution" => "examples/wealth_distribution.md",
- #       "Forest fire" => "examples/forest_fire.md",
+        "Forest fire" => "examples/forest_fire.md",
  #       "Conway's game of life" => "examples/game_of_life_2D_CA.md",
  #       "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
  #       "Hegselmann-Krause opinion dynamics" => "examples/hk.md",

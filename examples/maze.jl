@@ -19,7 +19,7 @@ using FileIO # To load images you also need ImageMagick available to your projec
 function initalize_model(map_url)
     ## Load the maze from the image file. White values can be identified by a
     ## non-zero red component
-    maze = map(x -> x.r > 0, load(download(map_path)))
+    maze = map(x -> x.r > 0, load(download(map_url)))
     ## The size of the space is the size of the maze
     space = GridSpace(size(maze); periodic = false)
     ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
