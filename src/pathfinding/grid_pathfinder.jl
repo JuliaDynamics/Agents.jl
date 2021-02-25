@@ -7,7 +7,8 @@ export CostMetric,
     find_path,
     set_target!,
     is_stationary,
-    heightmap
+    heightmap,
+    walkmap
 
 """
     Path{D}

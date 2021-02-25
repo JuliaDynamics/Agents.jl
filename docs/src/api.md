@@ -71,6 +71,8 @@ In addition to the direct movement functions listed above, [`GridSpace`](@ref) h
 AStar
 set_target!
 is_stationary
+walkmap
+heightmap
 ```
 
 ### Metrics
@@ -90,7 +92,6 @@ Functions that are usually not needed to perform most path finding tasks, but ma
 ```@docs
 find_path
 delta_cost
-heightmap
 ```
 
 ## Discrete space exclusives
