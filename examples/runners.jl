@@ -20,7 +20,7 @@ using FileIO # To load images you also need ImageMagick available to your projec
 # Our agent, as you can see, is very simple. Just an `id` and `pos`ition provided by
 # [`@agent`](@ref). The rest of the dynamics of this example will be provided by the model.
 
-function initialise(map_url; goal = (128, 409), seed = 88)
+function initialize(map_url; goal = (128, 409), seed = 88)
     ## Load an image file and convert it do a simple representation of height
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     ## The space of the model can be obtained directly from the image.
@@ -60,7 +60,7 @@ GLMakie.activate!() # hide
 map_url =
     "https://raw.githubusercontent.com/JuliaDynamics/" *
     "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
-model = initialise(map_url)
+model = initialize(map_url)
 
 f, abmstepper = abm_plot(
     model;

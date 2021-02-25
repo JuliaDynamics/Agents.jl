@@ -53,7 +53,7 @@ GLMakie.activate!() # hide
 map_url =
     "https://raw.githubusercontent.com/JuliaDynamics/" *
     "JuliaDynamics/master/videos/agents/maze.bmp"
-model = initialise(map_url)
+model = initalize_model(map_url)
 
 f, abmstepper =
     abm_plot(model; resolution = (700, 700), ac = :red, as = 11, offset = _ -> (-0.5, -0.5))
