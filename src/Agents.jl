@@ -1,118 +1,75 @@
-export AbstractAgent, @agent, GraphAgent, GridAgent, ContinuousAgent, OSMAgent
+module Agents
 
-"""
-    YourAgentType <: AbstractAgent
-Agents participating in Agents.jl simulations are instances of user-defined Types that
-are subtypes of `AbstractAgent`. It is almost always the case that mutable Types make
-for a simpler modellign experience.
+using Requires
+using Distributed
+using LightGraphs
+using DataFrames
+using Random
+using OpenStreetMapX
 
-Your agent type(s) **must have** the `id` field as first field.
-Depending on the space structure there might be a `pos` field of appropriate type
-and a `vel` field of appropriate type.
-Each space structure quantifies precicely what extra fields (if any) are necessary,
-however we recommend to use the [`@agent`](@ref) macro to help you create the agent type.
+import Base.length
+import LinearAlgebra
 
-Your agent type may have other additional fields relevant to your system,
-for example variable quantities like "status" or other "counters".
+# Core structures of Agents.jl
+include("core/agents.jl")
+include("core/model.jl")
+include("core/schedule.jl")
+include("core/space_interaction_API.jl")
 
-As an example, a [`GraphSpace`](@ref) requires an `id::Int` field and a `pos::Int` field.
-To make an agent with two additional properties, `weight, happy`, we'd write
-```julia
-mutable struct ExampleAgent <: AbstractAgent
-    id::Int
-    pos::Int
-    weight::Float64
-    happy::Bool
-end
-```
-"""
-abstract type AbstractAgent end
+include("spaces/nothing.jl")
+include("spaces/graph.jl")
+include("spaces/grid.jl")
+include("spaces/discrete.jl")
+include("spaces/continuous.jl")
+include("spaces/openstreetmap.jl")
+include("spaces/utilities.jl")
 
-"""
-    @agent YourAgentType{X, Y} AgentSupertype begin
-        some_property::X
-        other_extra_property::Y
-        # etc...
+# Stepping and data collection functionality
+include("simulations/step.jl")
+include("simulations/collect.jl")
+include("simulations/paramscan.jl")
+include("simulations/sample.jl")
+
+function __init__()
+    # Plot recipes
+    @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
+        include("visualization/plot-recipes.jl")
     end
-
-Create a struct for your agents which includes the mandatory fields required to operate
-in a particular space. Depending on the space of your model, the `AgentSupertype` is
-chosen appropriately from [`GraphAgent`](@ref), [`GridAgent`](@ref),
-[`ContinuousAgent`](@ref).
-
-## Example
-Using
-```julia
-@agent Person{T} GridAgent{2} begin
-    age::Int
-    moneyz::T
-end
-```
-will in fact create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
-```julia
-mutable struct Person{T} <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Int}
-    age::Int
-    moneyz::T
-end
-```
-"""
-macro agent(name, base, fields)
-    base_type = Core.eval(@__MODULE__, base)
-    base_fieldnames = fieldnames(base_type)
-    base_types = [t for t in base_type.types]
-    base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_types)]
-    res = :(mutable struct $(esc(name)) <: AbstractAgent end)
-    push!(res.args[end].args, base_fields...)
-    push!(res.args[end].args, map(esc,fields.args)...)
-    return res
 end
 
-"""
-    GraphAgent
-Combine with [`@agent`](@ref) to create an agent type for [`GraphSpace`](@ref).
-It attributes the fields `id::Int, pos::Int` to the start of the agent type.
-"""
-mutable struct GraphAgent <: AbstractAgent
-    id::Int
-    pos::Int
+# 4.0 Depreciations
+@deprecate space_neighbors nearby_ids
+@deprecate node_neighbors nearby_positions
+@deprecate get_node_contents ids_in_position
+@deprecate get_node_agents agents_in_position
+@deprecate pick_empty random_empty
+@deprecate find_empty_nodes empty_positions
+@deprecate has_empty_nodes has_empty_positions
+@deprecate nodes positions
+
+# Predefined models
+include("models/Models.jl")
+export Models
+
+# Update message:
+display_update = true
+version_number = "4.1"
+update_name = "update_v$(version_number)"
+
+if display_update
+    if !isfile(joinpath(@__DIR__, update_name))
+        printstyled(
+            stdout,
+            """
+            \nUpdate message: Agents v$(version_number)
+            `AgentBasedModel` now explicitly includes a random number generator, enabling
+            reproducible ABM simulations with Agents.jl.
+            Access it with `model.rng` and seed it with `seed!(model, seed)`!
+            """;
+            color = :light_magenta,
+        )
+        touch(joinpath(@__DIR__, update_name))
+    end
 end
 
-"""
-    GridAgent{D}
-Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`GraphSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D,Int}`
-to the start of the agent type.
-"""
-mutable struct GridAgent{D} <: AbstractAgent
-    id::Int
-    pos::Dims{D}
-end
-
-"""
-    ContinuousAgent{D}
-Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`ContinuousSpace`](@ref). It attributes the fields
-`id::Int, pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`
-to the start of the agent type.
-"""
-mutable struct ContinuousAgent{D} <: AbstractAgent
-    id::Int
-    pos::NTuple{D,Float64}
-    vel::NTuple{D,Float64}
-end
-
-"""
-    OSMAgent
-Combine with [`@agent`](@ref) to create an agent type for [`OpenStreetMapSpace`](@ref).
-It attributes the fields
-`id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}, destination::Tuple{Int,Int,Float64}`
-to the start of the agent type.
-"""
-mutable struct OSMAgent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-    route::Vector{Int}
-    destination::Tuple{Int,Int,Float64}
-end
+end # module
