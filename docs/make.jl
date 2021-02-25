@@ -8,7 +8,7 @@ using Documenter
 println("Agents...")
 using Agents
 println("Plots...")
-using Plots
+#using Plots
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
@@ -18,7 +18,7 @@ using GLMakie
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
-plot([1,1])
+#Plots.plot([1,1])
 f = InteractiveDynamics.AbstractPlotting.Figure()
 f
 
