@@ -56,11 +56,10 @@ jobs:
     steps:
       # Cancel ongoing documentation build if pushing to branch again before the previous
       # build is finished.
-      - name: Cancel ongoing documentation builds for previous commits
+      - name: Cancel ongoing builds and checkout
         uses: styfle/cancel-workflow-action@0.6.0
         with:
           access_token: ${{ github.token }}
-      - name: Checkout
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
