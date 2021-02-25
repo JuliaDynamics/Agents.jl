@@ -329,7 +329,7 @@ end
     walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
 Return the walkable map of the pathfinder
 """
-walkmap(model::ABMP<:GridSpace{D},A,<:AStar{D}) where {D,A} = model.pathfinder.walkable
+walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A} = model.pathfinder.walkable
 
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
