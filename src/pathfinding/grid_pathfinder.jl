@@ -34,8 +34,8 @@ Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
     DirectDistance
 Distance is approximated as the shortest path between the two points, provided the
 `walkable` property of [`AStar`](@ref) allows.
-Optionall provide a `Vector{Int}` that represents the cost of going from a tile to the
-neighbording tile on the `i` dimensional diagonal (default is `10√i`).
+Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
+neighboring tile on the `i` dimensional diagonal (default is `10√i`).
 
 If `moore_neighbors=false` in [`AStar`](@ref), only Von Neumann neighbors will be tested.
 Cost defaults to the first value of the provided vector.
@@ -65,7 +65,7 @@ Base.show(io::IO, metric::HeightMap) =
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in height. A heightmap of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
-by defualt.
+by default.
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
@@ -113,7 +113,7 @@ space. All positions are assumed to be walkable by default.
 `cost_metric = DirectDistance` specifies the metric used to approximate the distance
 between any two walkable points on the grid.
 
-Example usage in [Maze Solver](@ref) and [Runner](@ref).
+Example usage in [Maze Solver](@ref) and [Runners](@ref).
 """
 function AStar(
     space::GridSpace{D,P};
@@ -170,10 +170,9 @@ position_delta(pathfinder::AStar{D,false}, from::Dims{D}, to::Dims{D}) where {D}
     abs.(to .- from)
 
 """
-    delta_cost(pathfinder::AStar{D}, metric<:CostMetric,
-                                        from::NTuple{D, Int}, to::NTuple{D, Int})
-Calculate an approximation for the cost of travelling from `from` to `to`. Expects
-a return value of `Float64`.
+    delta_cost(pathfinder::AStar{D}, metric::M, from, to) where {M<:CostMetric}
+Calculate an approximation for the cost of travelling from `from` to `to` (both of
+type `NTuple{N,Int}`. Expects a return value of `Float64`.
 """
 function delta_cost(
     pathfinder::AStar{D,periodic,true},
@@ -341,7 +340,7 @@ walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A} = model.pathfinder.
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
 Move `agent` along the path to its target set by [`set_target!`](@ref). If `agent` does
-not have a precalculated path, or the path is empty, `agent` will not move.
+not have a pre-calculated path, or the path is empty, `agent` will not move.
 """
 function move_agent!(
     agent::A,
