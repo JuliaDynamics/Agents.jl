@@ -43,8 +43,7 @@ agent_step!(agent, model) = move_agent!(agent, model)
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
 using InteractiveDynamics
-using AbstractPlotting
-import GLMakie
+using GLMakie
 
 # ```julia
 # model = initialise()

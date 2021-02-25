@@ -13,7 +13,8 @@ println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 using InteractiveDynamics
-import CairoMakie
+println("Plotting Backends...")
+using GLMakie
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
@@ -30,6 +31,7 @@ mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
+    file ∉ ("runners.jl", "maze.jl") && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
@@ -69,35 +71,35 @@ pages = [
     "Tutorial" => "tutorial.md",
     "Examples" => [
         "Overview" => "examples.md",
-        "Schelling's segregation model" => "examples/schelling.md",
-        "Sugarscape" => "examples/sugarscape.md",
-        "SIR model for the spread of COVID-19" => "examples/sir.md",
-        "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
-        "Wealth distribution" => "examples/wealth_distribution.md",
-        "Forest fire" => "examples/forest_fire.md",
-        "Conway's game of life" => "examples/game_of_life_2D_CA.md",
-        "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
-        "Hegselmann-Krause opinion dynamics" => "examples/hk.md",
-        "Flocking" => "examples/flock.md",
-        "Daisyworld" => "examples/daisyworld.md",
-        "Predator-Prey" => "examples/predator_prey.md",
+ #       "Schelling's segregation model" => "examples/schelling.md",
+ #       "Sugarscape" => "examples/sugarscape.md",
+ #       "SIR model for the spread of COVID-19" => "examples/sir.md",
+ #       "Continuous space social distancing for COVID-19" => "examples/social_distancing.md",
+ #       "Wealth distribution" => "examples/wealth_distribution.md",
+ #       "Forest fire" => "examples/forest_fire.md",
+ #       "Conway's game of life" => "examples/game_of_life_2D_CA.md",
+ #       "Wright-Fisher model of evolution" => "examples/wright-fisher.md",
+ #       "Hegselmann-Krause opinion dynamics" => "examples/hk.md",
+ #       "Flocking" => "examples/flock.md",
+ #       "Daisyworld" => "examples/daisyworld.md",
+ #       "Predator-Prey" => "examples/predator_prey.md",
         "Maze Solver" => "examples/maze.md",
         "Runners" => "examples/runners.md",
-        "Bacteria Growth" => "examples/growing_bacteria.md",
-        "Opinion spread" => "examples/opinion_spread.md",
-        "Battle Royale" => "examples/battle.md",
-        "Zombie Outbreak" => "examples/zombies.md",
-        "Fractal Growth" => "examples/fractal_growth.md",
+ #       "Bacteria Growth" => "examples/growing_bacteria.md",
+ #       "Opinion spread" => "examples/opinion_spread.md",
+ #       "Battle Royale" => "examples/battle.md",
+ #       "Zombie Outbreak" => "examples/zombies.md",
+ #       "Fractal Growth" => "examples/fractal_growth.md",
         ],
     "Predefined Models" => "models.md",
     "API" => "api.md",
     "Plotting and interactive application" => "interact.md",
-    "Ecosystem Integration" => [
-        "BlackBoxOptim.jl" => "examples/optim.md",
-        "DifferentialEquations.jl" => "examples/diffeq.md",
-        "LightGraphs.jl" => "examples/schoolyard.md",
-        "Measurements.jl" => "examples/measurements.md"
-        ],
+#    "Ecosystem Integration" => [
+#        "BlackBoxOptim.jl" => "examples/optim.md",
+#        "DifferentialEquations.jl" => "examples/diffeq.md",
+#        "LightGraphs.jl" => "examples/schoolyard.md",
+#        "Measurements.jl" => "examples/measurements.md"
+#        ],
     "ABM Framework Comparison" => "comparison.md",
     "Developer Docs" => "devdocs.md"
     ],
