@@ -97,6 +97,8 @@ end
 
 using InteractiveDynamics
 import CairoMakie
+CairoMakie.activate!() # hide
+
 ac(x) = x.status == true ? :black : :white
 am(x) = x.status == true ? '■' : '□'
 abm_video(
