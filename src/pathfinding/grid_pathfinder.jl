@@ -232,9 +232,9 @@ GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
 """
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
 Using the specified [`AStar`](@ref), calculates and returns the shortest path from `from` to `to` using the A* algorithm.
-Paths are returned as a [`Path{D}`](@ref). If a path does not exist between the given positions, this returns an empty
-[`Path{D}`](@ref). This function usually does not need to be called explicitly, instead the use the provided
-[`set_target!`](@ref) and [`move_agent!`](@ref) functions.
+Paths are returned as a `MutableLinkedList` of sequential grid positions. If a path does not exist between the given 
+positions, this returns an empty linked list. This function usually does not need to be called explicitly, instead
+the use the provided [`set_target!`](@ref) and [`move_agent!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     grid = Dict{Dims{D},GridCell}()
@@ -324,6 +324,12 @@ function heightmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A}
         return nothing
     end
 end
+
+"""
+    walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
+Return the walkable map of the pathfinder
+"""
+walkmap(model::ABMP<:GridSpace{D},A,<:AStar{D}) where {D,A} = model.pathfinder.walkable
 
 """
     move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
