@@ -20,9 +20,9 @@ using FileIO # To load images you also need ImageMagick available to your projec
 # Our agent, as you can see, is very simple. Just an `id` and `pos`ition provided by
 # [`@agent`](@ref). The rest of the dynamics of this example will be provided by the model.
 
-function initialise(; map_path = "runners_heightmap.jpg", goal = (128, 409), seed = 88)
+function initialise(map_url; goal = (128, 409), seed = 88)
     ## Load an image file and convert it do a simple representation of height
-    heightmap = floor.(Int, convert.(Float64, load(map_path)) * 255)
+    heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     ## The space of the model can be obtained directly from the image.
     ## Our example file is (400, 500).
     space = GridSpace(size(heightmap), periodic = false)
@@ -54,12 +54,14 @@ agent_step!(agent, model) = move_agent!(agent, model)
 # this is currently a work in progress.
 using InteractiveDynamics
 using GLMakie
+GLMakie.activate!() # hide
 
-# ```julia
-# model = initialise()
-# ```
+## Our sample heightmap
+map_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
+model = initialise(map_url)
 
-model = initialise(map_path = joinpath(@__DIR__, "../../../examples/runners_heightmap.jpg")) # hide
 f, abmstepper = abm_plot(
     model;
     resolution = (700, 700),
@@ -76,6 +78,7 @@ rowsize!(f.layout, 1, ax.scene.px_area[].widths[2]) # Colorbar height = axis hei
 record(f, "runners.mp4", 1:410; framerate = 25) do i
     Agents.step!(abmstepper, model, agent_step!, dummystep, 1)
 end
+nothing # hide
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
