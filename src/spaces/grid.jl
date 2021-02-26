@@ -25,7 +25,7 @@ struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace
 end
 
 """
-    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
+    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev, pathfinder=nothing)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
@@ -42,6 +42,8 @@ cartesian indices have Euclidean distance `≤ r` from the cartesian index of th
 position.
 
 An example using `GridSpace` is the [Forest fire model](@ref).
+
+TODO pathfinder
 """
 function GridSpace(
     d::NTuple{D,Int};
