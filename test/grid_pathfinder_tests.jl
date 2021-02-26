@@ -1,40 +1,41 @@
 moore = Agents.moore_neighborhood(2)
 vonneumann = Agents.vonneumann_neighborhood(2)
 @testset "constructors" begin
-    space = GridSpace((5, 5))
-    cost = AStar(space).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(;)).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = AStar(space; cost_metric = DirectDistance).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = DirectDistance)).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = AStar(space; cost_metric = Chebyshev).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = Chebyshev)).pathfinder.cost_metric
     @test typeof(cost) <: Chebyshev{2}
     @test_throws MethodError AStar(space; cost_metric = HeightMap)
     @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1])).cost_metric
-    cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5))).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5)))).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
     @test cost.hmap == fill(1, 5, 5)
-    cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5), Chebyshev)).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5), Chebyshev))).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: Chebyshev{2}
     @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
-    @test_throws MethodError AStar(space; cost_metric = HeightMap(hmap))
+    @test_throws MethodError GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap)))
 
-    model = ABM(Agent3, space, AStar(space))
+    space = GridSpace((5, 5); pathfinder=(;))
+    model = ABM(Agent3, space)
     a = add_agent!((5, 2), model, 654.5)
     @test is_stationary(a, model)
     set_target!(a, (1,3), model)
     @test !is_stationary(a, model)
-    @test length(model.pathfinder.agent_paths) == 1
+    @test length(model.space.pathfinder.agent_paths) == 1
     kill_agent!(a, model)
-    @test length(model.pathfinder.agent_paths) == 0
+    @test length(model.space.pathfinder.agent_paths) == 0
     @test heightmap(model) === nothing
 
     hmap = fill(1, 5, 5)
-    model = ABM(Agent3, space, AStar(space; cost_metric = HeightMap(hmap)))
+    space = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap)))
+    model = ABM(Agent3, space)
     @test heightmap(model) == hmap
 end
 

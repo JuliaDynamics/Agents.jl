@@ -25,11 +25,11 @@ function initialize(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     ## The space of the model can be obtained directly from the image.
     ## Our example file is (400, 500).
-    space = GridSpace(size(heightmap), periodic = false)
+
     ## The pathfinder. We use the [`Chebyshev`](@ref) metric since we want the runners
     ## to look for the easiest path to run, not just the most direct.
-    pf = AStar(space; cost_metric = HeightMap(heightmap, Chebyshev))
-    model = ABM(Runner, space, pf; rng = MersenneTwister(seed))
+    space = GridSpace(size(heightmap); pathfinder = (cost_metric = HeightMap(heightmap, Chebyshev)) periodic = false)
+    model = ABM(Runner, space; rng = MersenneTwister(seed))
     for _ in 1:10
         ## Place runners in the low-lying space in the map.
         runner = add_agent!((rand(model.rng, 100:350), rand(model.rng, 50:200)), model)
