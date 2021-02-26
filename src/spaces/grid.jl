@@ -16,8 +16,9 @@ struct Hood{D} # type P stands for Periodic and is a boolean
     βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
-struct GridSpace{D,P} <: DiscreteSpace
+struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace
     s::Array{Vector{Int},D}
+    pathfinder::W
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
     hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
@@ -46,6 +47,7 @@ function GridSpace(
     d::NTuple{D,Int};
     periodic::Bool = true,
     metric::Symbol = :chebyshev,
+    pathfinder::Union{NamedTuple,Nothing}=nothing,
     moore = nothing,
 ) where {D}
     s = Array{Vector{Int},D}(undef, d)
@@ -56,8 +58,12 @@ function GridSpace(
     for i in eachindex(s)
         s[i] = Int[]
     end
+
+    astar = pathfinder === nothing ? nothing : AStar(d; periodic, pathfinder...)
+    
     return GridSpace{D,periodic}(
         s,
+        astar,
         metric,
         Dict{Float64,Hood{D}}(),
         Dict{NTuple{D,Float64},Hood{D}}(),

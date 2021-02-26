@@ -88,7 +88,7 @@ struct AStar{D,P,M} <: AbstractPathfinder
         walkable::Array{Bool,D},
         cost_metric::CostMetric{D},
     ) where {D,P,M}
-
+        @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         @assert typeof(cost_metric) != HeightMap{D} || size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
         new(agent_paths, grid_dims, neighborhood, admissibility, walkable, cost_metric)
     end
@@ -116,24 +116,22 @@ between any two walkable points on the grid.
 Example usage in [Maze Solver](@ref) and [Runners](@ref).
 """
 function AStar(
-    space::GridSpace{D,P};
+    dims::Dims{D};
+    periodic::Bool = false,
     moore_neighbors::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, size(space.s)),
     cost_metric::Union{Type{M},M} = DirectDistance,
-) where {D,P,M<:CostMetric}
-
-    @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
-
+) where {D,M<:CostMetric}
     neighborhood = moore_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     if typeof(cost_metric) <: CostMetric
         metric = cost_metric
     else
         metric = cost_metric{D}()
     end
-    return AStar{D,P,moore_neighbors}(
+    return AStar{D,periodic,moore_neighbors}(
         Dict{Int,Path{D}}(),
-        size(space.s),
+        dims,
         neighborhood,
         admissibility,
         walkable,
@@ -296,67 +294,69 @@ end
     all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
 
 """
-    set_target!(agent::A, target::NTuple{D,Int}, model::ABM{<:GridSpace,A,<:AStar{D}})
-Calculates and store the shortest path to move `agent` from its current position to
-`target`.
+    set_target!(agent::A, target::NTuple{D,Int}, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
+This calculates and stores the shortest path to move the agent from its current position to `target`
+using [`find_path`](@ref).
 """
 function set_target!(
     agent::A,
     target::Dims{D},
-    model::ABM{<:GridSpace{D},A,<:AStar{D}},
-) where {D,A<:AbstractAgent}
-    model.pathfinder.agent_paths[agent.id] = find_path(model.pathfinder, agent.pos, target)
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+) where {D,P,A<:AbstractAgent}
+    model.space.pathfinder.agent_paths[agent.id] = find_path(model.space.pathfinder, agent.pos, target)
 end
 
 """
-    is_stationary(agent, model::ABM{<:GridSpace,A,<:AStar{D}})
-Return `true` if `agent` has reached it's target destination, or if no path exists for
-`agent`.
+    is_stationary(agent, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
+Return `true` if agent has reached it's target destination, or no path has been set for it.
 """
-is_stationary(agent, model) = isempty(agent.id, model.pathfinder)
+is_stationary(
+    agent::A,
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+) where {D,P,A<:AbstractAgent} = isempty(agent.id, model.space.pathfinder)
 
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
 """
-    heightmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
+    heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}})
 Return the heightmap of the pathfinder if the [`HeightMap`](@ref) metric is in use,
 `nothing` otherwise.
 """
-function heightmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A}
-    if model.pathfinder.cost_metric isa HeightMap
-        return model.pathfinder.cost_metric.hmap
+function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
+    if model.space.pathfinder.cost_metric isa HeightMap
+        return model.space.pathfinder.cost_metric.hmap
     else
         return nothing
     end
 end
 
 """
-    walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D})
-Return the walkable map of the pathfinder.
+    walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}})
+Return the walkable map of the pathfinder
 """
-walkmap(model::ABM{<:GridSpace{D},A,<:AStar{D}}) where {D,A} = model.pathfinder.walkable
+walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} = model.space.pathfinder.walkable
 
 """
-    move_agent!(agent::A, model::ABM{<:GridSpace,A,<:AStar})
-Move `agent` along the path to its target set by [`set_target!`](@ref). If `agent` does
-not have a pre-calculated path, or the path is empty, `agent` will not move.
+    move_agent!(agent::A, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
+Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
+not have a precalculated path, or the path is empty, the agent does not move.
 """
 function move_agent!(
     agent::A,
-    model::ABM{<:GridSpace{D},A,<:AStar{D}},
-) where {D,A<:AbstractAgent}
-    isempty(agent.id, model.pathfinder) && return
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+) where {D,P,A<:AbstractAgent}
+    isempty(agent.id, model.space.pathfinder) && return
 
-    move_agent!(agent, first(model.pathfinder.agent_paths[agent.id]), model)
-    popfirst!(model.pathfinder.agent_paths[agent.id])
+    move_agent!(agent, first(model.space.pathfinder.agent_paths[agent.id]), model)
+    popfirst!(model.space.pathfinder.agent_paths[agent.id])
 end
 
 function kill_agent!(
     agent::A,
-    model::ABM{<:GridSpace{D},A,<:AStar{D}},
-) where {D,A<:AbstractAgent}
-    delete!(model.pathfinder.agent_paths, agent.id)
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+) where {D,P,A<:AbstractAgent}
+    delete!(model.space.pathfinder.agent_paths, agent.id)
     delete!(model.agents, agent.id)
     remove_agent_from_space!(agent, model)
 end
