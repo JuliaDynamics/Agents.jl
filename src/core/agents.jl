@@ -38,7 +38,7 @@ abstract type AbstractAgent end
 Create a struct for your agents which includes the mandatory fields required to operate
 in a particular space. Depending on the space of your model, the `AgentSupertype` is
 chosen appropriately from [`GraphAgent`](@ref), [`GridAgent`](@ref),
-[`ContinuousAgent`](@ref).
+[`ContinuousAgent`](@ref), [`OSMAgent`](@ref).
 
 ## Example
 Using

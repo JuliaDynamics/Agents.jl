@@ -236,7 +236,7 @@ osm_latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent
 """
     osm_intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Returns the nearest intersection position to (latitude, longitude).
+Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`osm_road`](@ref).
 """
 function osm_intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
@@ -247,7 +247,7 @@ end
 """
     osm_road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Returns a location on a road nearest to (latitude, longitude).
+Return a location on a road nearest to (latitude, longitude).
 Slower, but more precise than [`osm_intersection`](@ref).
 """
 function osm_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
