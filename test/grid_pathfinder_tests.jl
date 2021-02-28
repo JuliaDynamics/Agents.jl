@@ -9,8 +9,8 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test cost.direction_costs == [10, 14]
     cost = GridSpace((5, 5); pathfinder=(cost_metric = Chebyshev,)).pathfinder.cost_metric
     @test typeof(cost) <: Chebyshev{2}
-    @test_throws MethodError AStar(space; cost_metric = HeightMap,)
-    @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1]),).cost_metric
+    @test_throws MethodError AStar((5, 5); cost_metric = HeightMap)
+    @test_throws AssertionError AStar((5, 5); cost_metric = HeightMap([1 1]))
     cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5)),)).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
