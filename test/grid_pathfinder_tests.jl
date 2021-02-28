@@ -4,23 +4,23 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost = GridSpace((5, 5); pathfinder=(;)).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = DirectDistance)).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = DirectDistance,)).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = Chebyshev)).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = Chebyshev,)).pathfinder.cost_metric
     @test typeof(cost) <: Chebyshev{2}
-    @test_throws MethodError AStar(space; cost_metric = HeightMap)
-    @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1])).cost_metric
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5)))).pathfinder.cost_metric
+    @test_throws MethodError AStar(space; cost_metric = HeightMap,)
+    @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1]),).cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5)),)).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
     @test cost.hmap == fill(1, 5, 5)
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5), Chebyshev))).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5), Chebyshev),)).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: Chebyshev{2}
     @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
-    @test_throws MethodError GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap)))
+    @test_throws MethodError GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap),))
 
     space = GridSpace((5, 5); pathfinder=(;))
     model = ABM(Agent3, space)
@@ -34,7 +34,7 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test heightmap(model) === nothing
 
     hmap = fill(1, 5, 5)
-    space = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap)))
+    space = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap),))
     model = ABM(Agent3, space)
     @test heightmap(model) == hmap
 end

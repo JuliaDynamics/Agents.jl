@@ -63,7 +63,7 @@ function GridSpace(
 
     astar = pathfinder === nothing ? nothing : AStar(d; periodic, pathfinder...)
     
-    return GridSpace{D,periodic}(
+    return GridSpace{D,periodic,typeof(astar)}(
         s,
         astar,
         metric,

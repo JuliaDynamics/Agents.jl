@@ -341,11 +341,6 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     else
         s *= "\n space: $(sprint(show, abm.space))"
     end
-    if abm.pathfinder === nothing
-        s *= "\n no pathfinder"
-    else
-        s *= "\n pathfinder: $(sprint(show, abm.pathfinder))"
-    end
     s *= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
