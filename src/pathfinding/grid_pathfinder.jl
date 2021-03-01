@@ -319,6 +319,20 @@ function set_target!(
     model.space.pathfinder.agent_paths[agent.id] = find_path(model.space.pathfinder, agent.pos, target)
 end
 
+function set_best_target!(
+    agent::A,
+    targets::Vector{Dims{D}},
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+) where {D,P,A<:AbstractAgent}
+    best_path = Path()
+    for target in targets
+        path = find_path(model.space.pathfinder, agent.pos, target)
+        (isempty(best_path) || length(path) < length(best_path)) && best_path = path
+    end
+
+    model.space.pathfinder.agent_paths[agent.id] = best_path
+end
+
 """
     is_stationary(agent, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
 Return `true` if agent has reached it's target destination, or no path has been set for it.
