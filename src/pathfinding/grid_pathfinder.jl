@@ -327,7 +327,9 @@ function set_best_target!(
     best_path = Path()
     for target in targets
         path = find_path(model.space.pathfinder, agent.pos, target)
-        (isempty(best_path) || length(path) < length(best_path)) && best_path = path
+        if isempty(best_path) || length(path) < length(best_path)
+            best_path = path
+        end
     end
 
     model.space.pathfinder.agent_paths[agent.id] = best_path
