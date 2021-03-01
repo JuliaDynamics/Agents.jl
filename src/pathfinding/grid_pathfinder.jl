@@ -3,8 +3,8 @@ export CostMetric,
     MaxDistance,
     HeightMap,
     delta_cost,
-    find_path,
     set_target!,
+    set_best_target!,
     move_along_path!,
     is_stationary,
     heightmap,
@@ -248,9 +248,6 @@ GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
 Calculate the shortest path from `from` to `to` using the A* algorithm.
 If a path does not exist between the given positions, an empty linked list is returned.
-
-This function usually does not need to be called explicitly, instead
-the use the provided [`set_target!`](@ref) and [`move_along_path!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     grid = Dict{Dims{D},GridCell}()
@@ -307,9 +304,11 @@ end
     all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
 
 """
-    set_target!(agent, target, model)
+    set_target!(agent, target::NTuple{D,Int}, model)
 Calculate and store the shortest path to move the agent from its current position to
 `target` (a grid position e.g. `(1, 5)`) for models using a [`Pathfinder`](@ref).
+
+Use this method in conjuction with [`move_along_path!`](@ref).
 """
 function set_target!(
     agent::A,
@@ -321,24 +320,38 @@ function set_target!(
 end
 
 """
-    set_best_target!
+    set_best_target!(agent, targets::Vector{NTuple{D,Int}}, model)
 
+Calculate and store the best path to move the agent from its current position to
+a chosen target position taken from `targets` for models using a 
+[`Pathfinder`](@ref).
 
+The `condition = :shortest` keyword retuns the shortest path which is shortest
+(allowing for the conditions of the models pathfinder) out of the possible target
+positions. Alternatively, the `:longest` path may also be requested.
+
+Returns the position of the chosen target.
 """
 function set_best_target!(
     agent::A,
     targets::Vector{Dims{D}},
-    model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
+    model::ABM{<:GridSpace{D,P,<:AStar{D}},A};
+    condition::Symbol = :shortest,
 ) where {D,P,A<:AbstractAgent}
-    best_path = Path()
+    @assert condition ∈ (:shortest, :longest)
+    compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
+    best_path = Path{D}()
+    best_target = nothing
     for target in targets
         path = find_path(model.space.pathfinder, agent.pos, target)
-        if isempty(best_path) || length(path) < length(best_path)
+        if isempty(best_path) || compare(length(path), length(best_path))
             best_path = path
+            best_target = target
         end
     end
 
     model.space.pathfinder.agent_paths[agent.id] = best_path
+    return best_target
 end
 
 """
@@ -354,9 +367,12 @@ Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
 """
-    heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}})
-Return the heightmap of the pathfinder if the [`HeightMap`](@ref) metric is in use,
+    heightmap(model)
+Return the heightmap of a [`Pathfinder`](@ref) if the [`HeightMap`](@ref) metric is in use,
 `nothing` otherwise.
+
+It is possible to mutate the map directly, for example `heightmap(model)[15, 40] = 115`
+or `heightmap(model) .= rand(50, 50)`.
 """
 function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
     if model.space.pathfinder.cost_metric isa HeightMap
@@ -367,16 +383,19 @@ function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
 end
 
 """
-    walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}})
-Return the walkable map of the pathfinder
+    walkmap(model)
+Return the walkable map of a [`Pathfinder`](@ref).
+
+It is possible to mutate the map directly, for example `walkmap(model)[15, 40] = false`.
 """
 walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
     model.space.pathfinder.walkable
 
 """
-    move_along_path!(agent::A, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
-Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
-not have a precalculated path, or the path is empty, the agent does not move.
+    move_along_path!(agent::A, model{<:GridSpace{D,P,<:AStar{D}},A})
+Move `agent` along the path toward its target set by [`set_target!`](@ref) for agents on
+a [`GridSpace`](@ref) using a [`Pathfinder`](@ref). If the agent does
+not have a precalculated path or the path is empty, it remains stationary.
 """
 function move_along_path!(
     agent::A,

@@ -106,6 +106,14 @@ add_node!
 rem_node!
 ```
 
+## Movement with paths
+For [`OSMSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
+movement method is available.
+
+```@docs
+move_along_path!
+```
+
 ## Local area
 ```@docs
 nearby_ids
@@ -260,10 +268,10 @@ In addition to the direct movement functions listed above, [`GridSpace`](@ref) h
 ```@docs
 Pathfinder
 set_target!
+set_best_target!
 is_stationary
 walkmap
 heightmap
-find_path
 ```
 
 ### Metrics
