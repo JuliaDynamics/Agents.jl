@@ -27,7 +27,7 @@ And that's it!
 ## Designing a new Pathfinder Cost Metric
 
 To define a new cost metric, simply make a struct that subtypes `CostMetric` and provide
-a `delta_cost` function for it. These methods work for [`AStar`](@ref) at present, but
+a `delta_cost` function for it. These methods work solely for A* at present, but
 will be available for other pathfinder algorithms in the future.
 
 ```@docs

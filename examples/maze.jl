@@ -5,7 +5,7 @@
 # </video>
 # ```
 # Consider a scenario where a walker agent is stuck in a maze. Finding the shortest path through an
-# arbitrary maze or map is simulated using the [`AStar`](@ref) pathfinder and it's `walkable` map property.
+# arbitrary maze or map is simulated using a [`Pathfinder`](@ref) and its `walkable` map property.
 
 # ## Setup
 using Agents
