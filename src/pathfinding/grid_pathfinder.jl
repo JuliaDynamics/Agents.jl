@@ -2,7 +2,6 @@ export CostMetric,
     DirectDistance,
     MaxDistance,
     HeightMap,
-    AStar,
     delta_cost,
     find_path,
     set_target!,
@@ -308,9 +307,9 @@ end
     all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
 
 """
-    set_target!(agent::A, target::NTuple{D,Int}, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
-This calculates and stores the shortest path to move the agent from its current position to `target`
-using [`find_path`](@ref).
+    set_target!(agent, target, model)
+Calculate and store the shortest path to move the agent from its current position to
+`target` (a grid position e.g. `(1, 5)`) for models using a [`Pathfinder`](@ref).
 """
 function set_target!(
     agent::A,
@@ -321,6 +320,11 @@ function set_target!(
         find_path(model.space.pathfinder, agent.pos, target)
 end
 
+"""
+    set_best_target!
+
+
+"""
 function set_best_target!(
     agent::A,
     targets::Vector{Dims{D}},

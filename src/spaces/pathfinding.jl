@@ -1,3 +1,5 @@
+export Pathfinder
+
 abstract type AbstractPathfinder end
 PathfinderType = Union{Nothing,AbstractPathfinder}
 

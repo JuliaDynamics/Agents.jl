@@ -9,8 +9,8 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test cost.direction_costs == [10, 14]
     cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = MaxDistance)).pathfinder.cost_metric
     @test typeof(cost) <: MaxDistance{2}
-    @test_throws MethodError AStar((5, 5); cost_metric = HeightMap)
-    @test_throws AssertionError AStar((5, 5); cost_metric = HeightMap([1 1]))
+    @test_throws MethodError GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap))
+    @test_throws AssertionError GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap([1 1])))
     cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(fill(1, 5, 5)))).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
@@ -41,7 +41,7 @@ end
 
 
 @testset "metrics" begin
-    pfinder_2d_np_m = AStar{2,false,true}(
+    pfinder_2d_np_m = Agents.AStar{2,false,true}(
         Dict(),
         (10, 10),
         copy(moore),
@@ -49,7 +49,7 @@ end
         fill(true, 10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = AStar{2,false,false}(
+    pfinder_2d_np_nm = Agents.AStar{2,false,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
@@ -57,7 +57,7 @@ end
         fill(true, 10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_p_m = AStar{2,true,true}(
+    pfinder_2d_p_m = Agents.AStar{2,true,true}(
         Dict(),
         (10, 10),
         copy(moore),
@@ -65,7 +65,7 @@ end
         fill(true, 10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = AStar{2,true,false}(
+    pfinder_2d_p_nm = Agents.AStar{2,true,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
@@ -103,7 +103,7 @@ end
     wlk[4, 3] = false
     wlk[5, 3] = false
 
-    pfinder_2d_np_m = AStar{2,false,true}(
+    pfinder_2d_np_m = Agents.AStar{2,false,true}(
         Dict(),
         (7, 6),
         copy(moore),
@@ -111,7 +111,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = AStar{2,false,false}(
+    pfinder_2d_np_nm = Agents.AStar{2,false,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
@@ -119,7 +119,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_p_m = AStar{2,true,true}(
+    pfinder_2d_p_m = Agents.AStar{2,true,true}(
         Dict(),
         (7, 6),
         copy(moore),
@@ -127,7 +127,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = AStar{2,true,false}(
+    pfinder_2d_p_nm = Agents.AStar{2,true,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
