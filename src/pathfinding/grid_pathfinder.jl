@@ -8,7 +8,8 @@ export CostMetric,
     set_target!,
     is_stationary,
     heightmap,
-    walkmap
+    walkmap,
+    Pathfinder
 
 """
     Path{D}
@@ -16,13 +17,6 @@ Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
 const Path{D} = MutableLinkedList{Dims{D}}
-
-"""
-    CostMetric{D}
-An abstract type representing a metric that measures the approximate cost of travelling
-between two points in a `D` dimensional [`GridSpace{D}`](@ref).
-"""
-abstract type CostMetric{D} end
 
 struct DirectDistance{D} <: CostMetric{D}
     direction_costs::Vector{Int}
@@ -133,6 +127,25 @@ function AStar(
         dims,
         neighborhood,
         admissibility,
+        walkable,
+        metric,
+    )
+end
+
+function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
+    walkable = pathfinder.walkable === nothing ? fill(true, dims) : pathfinder.walkable
+    
+    if typeof(pathfinder.cost_metric) <: CostMetric
+        metric = pathfinder.cost_metric
+    else
+        metric = pathfinder.cost_metric{D}()
+    end
+    neighborhood = pathfinder.diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    return AStar{D,periodic,pathfinder.diagonal_neighbors}(
+        Dict{Int,Path{D}}(),
+        dims,
+        neighborhood,
+        pathfinder.admissibility,
         walkable,
         metric,
     )

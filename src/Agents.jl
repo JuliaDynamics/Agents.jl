@@ -17,6 +17,7 @@ include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
+include("spaces/pathfinding.jl")
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")

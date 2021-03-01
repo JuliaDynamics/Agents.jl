@@ -49,7 +49,7 @@ function GridSpace(
     d::NTuple{D,Int};
     periodic::Bool = true,
     metric::Symbol = :chebyshev,
-    pathfinder::Union{NamedTuple,Nothing}=nothing,
+    pathfinder::Union{Pathfinder,Nothing}=nothing,
     moore = nothing,
 ) where {D}
     s = Array{Vector{Int},D}(undef, d)
@@ -61,7 +61,7 @@ function GridSpace(
         s[i] = Int[]
     end
 
-    astar = pathfinder === nothing ? nothing : AStar(d; periodic, pathfinder...)
+    astar = pathfinder === nothing ? nothing : AStar(d, periodic, pathfinder)
     
     return GridSpace{D,periodic,typeof(astar)}(
         s,
