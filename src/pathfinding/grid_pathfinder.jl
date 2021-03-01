@@ -236,7 +236,7 @@ Calculate the shortest path from `from` to `to` using the A* algorithm.
 If a path does not exist between the given positions, an empty linked list is returned.
 
 This function usually does not need to be called explicitly, instead
-the use the provided [`set_target!`](@ref) and [`move_agent!`](@ref) functions.
+the use the provided [`set_target!`](@ref) and [`move_along_path!`](@ref) functions.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     grid = Dict{Dims{D},GridCell}()
@@ -337,11 +337,11 @@ Return the walkable map of the pathfinder
 walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} = model.space.pathfinder.walkable
 
 """
-    move_agent!(agent::A, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
+    move_along_path!(agent::A, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
 Moves the agent along the path to its target set by [`set_target!`](@ref). If the agent does
 not have a precalculated path, or the path is empty, the agent does not move.
 """
-function move_agent!(
+function move_along_path!(
     agent::A,
     model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
 ) where {D,P,A<:AbstractAgent}
