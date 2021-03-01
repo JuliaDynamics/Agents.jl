@@ -28,7 +28,8 @@ function initialize(map_url; goal = (128, 409), seed = 88)
 
     ## The pathfinder. We use the [`MaxDistance`](@ref) metric since we want the runners
     ## to look for the easiest path to run, not just the most direct.
-    space = GridSpace(size(heightmap); pathfinder = (cost_metric = HeightMap(heightmap, MaxDistance),), periodic = false)
+    pathfinder = Pathfinder(cost_metric=HeightMap(heightmap, MaxDistance))
+    space = GridSpace(size(heightmap); pathfinder, periodic = false)
     model = ABM(Runner, space; rng = MersenneTwister(seed))
     for _ in 1:10
         ## Place runners in the low-lying space in the map.

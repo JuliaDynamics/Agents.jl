@@ -20,13 +20,14 @@ function initalize_model(map_url)
     ## Load the maze from the image file. White values can be identified by a
     ## non-zero red component
     maze = map(x -> x.r > 0, load(download(map_url)))
-    ## The size of the space is the size of the maze
     ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
     ## [`DirectDistance`](@ref) is appropriate.
-    ## `moore_neighbors` is set to `false` to prevent cutting corners by going along
+    ## `diagonal_neighbors` is set to `false` to prevent cutting corners by going along
     ## diagonals.
-    space = GridSpace(size(maze); pathfinder=(walkable=maze, moore_neighbors=false), periodic = false)
+    pathfinder = Pathfinder(walkable=maze, diagonal_neighbors=false)
+    ## The size of the space is the size of the maze
+    space = GridSpace(size(maze); pathfinder, periodic = false)
     model = ABM(Walker, space)
     ## Place a walker at the start of the maze
     walker = Walker(1, (1, 4))
