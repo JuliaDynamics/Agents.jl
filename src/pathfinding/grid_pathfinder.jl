@@ -31,7 +31,7 @@ end
 Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
 """
-    DirectDistance{D}([direction_costs::Vector{Int}])
+    DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
 Distance is approximated as the shortest path between the two points, provided the
 `walkable` property of [`AStar`](@ref) allows.
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
@@ -43,7 +43,7 @@ Cost defaults to the first value of the provided vector.
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
 """
-    MaxDistance{D}()
+    MaxDistance{D}() <: CostMetric{D}
 Distance between two tiles is approximated as the maximum of absolute
 difference in coordinates between them.
 """
@@ -60,7 +60,7 @@ Base.show(io::IO, metric::HeightMap) =
     print(io, "HeightMap with base: $(metric.base_metric)")
 
 """
-    HeightMap(hmap::Array{Int,D} [, base_metric::Union{Type{<:CostMetric}, <:CostMetric}])
+    HeightMap(hmap::Array{Int,D} [, base_metric::Union{Type{<:CostMetric}, <:CostMetric}]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in height. A heightmap of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
