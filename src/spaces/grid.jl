@@ -18,10 +18,10 @@ end
 
 struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace
     s::Array{Vector{Int},D}
-    pathfinder::W
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
     hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
+    pathfinder::W
 end
 
 """
@@ -65,10 +65,10 @@ function GridSpace(
     
     return GridSpace{D,periodic,typeof(astar)}(
         s,
-        astar,
         metric,
         Dict{Float64,Hood{D}}(),
         Dict{NTuple{D,Float64},Hood{D}}(),
+        astar,
     )
 end
 

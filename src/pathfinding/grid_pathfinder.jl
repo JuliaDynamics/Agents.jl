@@ -13,7 +13,7 @@ export CostMetric,
 """
     Path{D}
 Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
-taken by an agent in a `D` dimensional [`GridSpace{D}`](@ref).
+taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
 const Path{D} = MutableLinkedList{Dims{D}}
 
@@ -31,7 +31,7 @@ end
 Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
 """
-    DirectDistance
+    DirectDistance{D}([direction_costs::Vector{Int}])
 Distance is approximated as the shortest path between the two points, provided the
 `walkable` property of [`AStar`](@ref) allows.
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
@@ -60,17 +60,16 @@ Base.show(io::IO, metric::HeightMap) =
     print(io, "HeightMap with base: $(metric.base_metric)")
 
 """
-    HeightMap(hmap::Array{Int,D})
-    HeightMap(hmap::Array{Int,D}, ::Type{<:CostMetric})
+    HeightMap(hmap::Array{Int,D} [, base_metric::Union{Type{<:CostMetric}, <:CostMetric}])
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in height. A heightmap of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
-by default.
+by default, and can be changed by specifying `base_metric`.
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
-HeightMap(hmap::Array{Int,D}, ::Type{M}) where {D,M<:CostMetric} =
-    HeightMap{D}(M{D}(), hmap)
+HeightMap(hmap::Array{Int,D}, base_metric::Union{Type{M},M}) where {D,M<:CostMetric} =
+    HeightMap{D}(typeof(base_metric) <: CostMetric ? base_metric : base_metric{D}(), hmap)
 
 struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
@@ -111,7 +110,7 @@ Larger values of `ε` will explore fewer nodes, returning a path length with at 
 space. All positions are assumed to be walkable by default.
 
 `cost_metric = DirectDistance` specifies the metric used to approximate the distance
-between any two walkable points on the grid.
+between any two walkable points on the grid. See [`CostMetric`](@ref).
 
 Example usage in [Maze Solver](@ref) and [Runners](@ref).
 """
