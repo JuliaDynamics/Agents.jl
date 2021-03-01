@@ -52,39 +52,18 @@ nextid
 random_position
 ```
 
-### Removing agents
-```@docs
-kill_agent!
-genocide!
-sample!
-```
-
 ### Moving agents
 ```@docs
 move_agent!
 walk!
 ```
 
-## Path-finding
-In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
+### Removing agents
 ```@docs
-AStar
-set_target!
-is_stationary
-walkmap
-heightmap
-find_path
+kill_agent!
+genocide!
+sample!
 ```
-
-### Metrics
-```@docs
-DirectDistance
-MaxDistance
-HeightMap
-```
-
-Building a custom metric is straightforward, if the provided ones do not suit your purpose.
-See the [Developer Docs](@ref) for details.
 
 ## Discrete space exclusives
 ```@docs
@@ -275,3 +254,25 @@ and pass it to e.g. `step!` by initializing it
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
+
+## Path-finding
+In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
+```@docs
+Pathfinder
+set_target!
+is_stationary
+walkmap
+heightmap
+find_path
+```
+
+### Metrics
+```@docs
+DirectDistance
+MaxDistance
+HeightMap
+```
+
+Building a custom metric is straightforward, if the provided ones do not suit your purpose.
+See the [Developer Docs](@ref) for details.
+

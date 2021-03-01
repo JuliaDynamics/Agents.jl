@@ -1,4 +1,4 @@
-# # Runners
+# # Mountain Runners
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../runners.mp4" type="video/mp4">
@@ -28,9 +28,10 @@ function initialize(map_url; goal = (128, 409), seed = 88)
 
     ## The pathfinder. We use the [`MaxDistance`](@ref) metric since we want the runners
     ## to look for the easiest path to run, not just the most direct.
-    pathfinder = Pathfinder(cost_metric=HeightMap(heightmap, MaxDistance))
+    pathfinder = Pathfinder(cost_metric = HeightMap(heightmap, MaxDistance))
     space = GridSpace(size(heightmap); pathfinder, periodic = false)
-    model = ABM(Runner, space; rng = MersenneTwister(seed))
+    model =
+        ABM(Runner, space; rng = MersenneTwister(seed), properties = Dict(:goal => goal))
     for _ in 1:10
         ## Place runners in the low-lying space in the map.
         runner = add_agent!((rand(model.rng, 100:350), rand(model.rng, 50:200)), model)
@@ -72,6 +73,7 @@ f, abmstepper = abm_plot(
 )
 ax = contents(f[1, 1])[1]
 ax.aspect = DataAspect()
+scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
 hm = heatmap!(ax, heightmap(model); colormap = :terrain)
 f[1, 2] = Colorbar(f, hm, width = 30, label = "Elevation")
 rowsize!(f.layout, 1, ax.scene.px_area[].widths[2]) # Colorbar height = axis height

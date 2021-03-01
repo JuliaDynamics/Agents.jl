@@ -103,7 +103,7 @@ makedocs(
             "Daisyworld" => "examples/daisyworld.md",
             "Predator-Prey" => "examples/predator_prey.md",
             "Maze Solver" => "examples/maze.md",
-            "Runners" => "examples/runners.md",
+            "Mountain Runners" => "examples/runners.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",

@@ -32,8 +32,8 @@ Distance is approximated as the shortest path between the two points, provided t
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
 neighboring tile on the `i` dimensional diagonal (default is `10√i`).
 
-If `moore_neighbors=false` in [`AStar`](@ref), only Von Neumann neighbors will be tested.
-Cost defaults to the first value of the provided vector.
+If `diagonal_neighbors=false` in [`Pathfinder`](@ref), neighbors in diagonal positions will be
+excluded. Cost defaults to the first value of the provided vector.
 """
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
@@ -93,8 +93,8 @@ end
 Provides pathfinding capabilities and stores agent paths. Dimensionality and periodicity
 properties are taken from `space`.
 
-`moore_neighbors = true` specifies if movement can be to Moore neighbors of a tile,
-or only Von Neumann neighbors.
+`diagonal_neighbors = true` specifies if movement can be to diagonal neighbors of a
+tile, or only orthogonal neighbors.
 
 `admissibility = 0.0` specifies how much a path can deviate from optimal, in favour of
 faster pathfinding. Admissibility (`ε`) of `0.0` will always find the optimal path.
@@ -107,17 +107,17 @@ space. All positions are assumed to be walkable by default.
 `cost_metric = DirectDistance` specifies the metric used to approximate the distance
 between any two walkable points on the grid. See [`CostMetric`](@ref).
 
-Example usage in [Maze Solver](@ref) and [Runners](@ref).
+Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
 """
 function AStar(
     dims::Dims{D};
     periodic::Bool = false,
-    moore_neighbors::Bool = true,
+    diagonal_neighbors::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, dims),
     cost_metric::Union{Type{M},M} = DirectDistance,
 ) where {D,M<:CostMetric}
-    neighborhood = moore_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    neighborhood = diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     if typeof(cost_metric) <: CostMetric
         metric = cost_metric
     else
@@ -135,13 +135,14 @@ end
 
 function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
     walkable = pathfinder.walkable === nothing ? fill(true, dims) : pathfinder.walkable
-    
+
     if typeof(pathfinder.cost_metric) <: CostMetric
         metric = pathfinder.cost_metric
     else
         metric = pathfinder.cost_metric{D}()
     end
-    neighborhood = pathfinder.diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    neighborhood =
+        pathfinder.diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     return AStar{D,periodic,pathfinder.diagonal_neighbors}(
         Dict{Int,Path{D}}(),
         dims,
@@ -316,7 +317,8 @@ function set_target!(
     target::Dims{D},
     model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
 ) where {D,P,A<:AbstractAgent}
-    model.space.pathfinder.agent_paths[agent.id] = find_path(model.space.pathfinder, agent.pos, target)
+    model.space.pathfinder.agent_paths[agent.id] =
+        find_path(model.space.pathfinder, agent.pos, target)
 end
 
 function set_best_target!(
@@ -364,7 +366,8 @@ end
     walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}})
 Return the walkable map of the pathfinder
 """
-walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} = model.space.pathfinder.walkable
+walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
+    model.space.pathfinder.walkable
 
 """
     move_along_path!(agent::A, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})

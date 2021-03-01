@@ -41,9 +41,10 @@ the origin position.
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
 
-An example using `GridSpace` is the [Forest fire model](@ref).
+`pathfinder`: Optionally provide an instance of [`Pathfinder`](@ref) to enable
+pathfinding capabilities based on the A* algorithm.
 
-TODO pathfinder
+An example using `GridSpace` is the [Forest fire model](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};
@@ -62,7 +63,7 @@ function GridSpace(
     end
 
     astar = pathfinder === nothing ? nothing : AStar(d, periodic, pathfinder)
-    
+
     return GridSpace{D,periodic,typeof(astar)}(
         s,
         metric,
