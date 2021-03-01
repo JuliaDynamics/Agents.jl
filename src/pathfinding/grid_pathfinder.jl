@@ -1,6 +1,6 @@
 export CostMetric,
     DirectDistance,
-    Chebyshev,
+    MaxDistance,
     HeightMap,
     AStar,
     delta_cost,
@@ -43,13 +43,13 @@ Cost defaults to the first value of the provided vector.
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
 
 """
-    Chebyshev
-Distance between two tiles is approximated as the Chebyshev distance (maximum of absolute
-difference in coordinates) between them.
+    MaxDistance{D}()
+Distance between two tiles is approximated as the maximum of absolute
+difference in coordinates between them.
 """
-struct Chebyshev{D} <: CostMetric{D} end
+struct MaxDistance{D} <: CostMetric{D} end
 
-Base.show(io::IO, metric::Chebyshev) = print(io, "Chebyshev")
+Base.show(io::IO, metric::MaxDistance) = print(io, "MaxDistance")
 
 struct HeightMap{D} <: CostMetric{D}
     base_metric::CostMetric{D}
@@ -202,7 +202,7 @@ end
 
 delta_cost(
     pathfinder::AStar{D},
-    metric::Chebyshev{D},
+    metric::MaxDistance{D},
     from::Dims{D},
     to::Dims{D},
 ) where {D} = max(position_delta(pathfinder, from, to)...)

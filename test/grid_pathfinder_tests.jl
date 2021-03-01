@@ -7,17 +7,17 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost = GridSpace((5, 5); pathfinder=(cost_metric = DirectDistance,)).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = Chebyshev,)).pathfinder.cost_metric
-    @test typeof(cost) <: Chebyshev{2}
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = MaxDistance,)).pathfinder.cost_metric
+    @test typeof(cost) <: MaxDistance{2}
     @test_throws MethodError AStar((5, 5); cost_metric = HeightMap)
     @test_throws AssertionError AStar((5, 5); cost_metric = HeightMap([1 1]))
     cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5)),)).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
     @test cost.hmap == fill(1, 5, 5)
-    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5), Chebyshev),)).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(fill(1, 5, 5), MaxDistance),)).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
-    @test typeof(cost.base_metric) <: Chebyshev{2}
+    @test typeof(cost.base_metric) <: MaxDistance{2}
     @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
     @test_throws MethodError GridSpace((5, 5); pathfinder=(cost_metric = HeightMap(hmap),))
@@ -82,10 +82,10 @@ end
     @test delta_cost(pfinder_2d_np_nm, DirectDistance{2}(), (1, 1), (4, 6)) == 80
     @test delta_cost(pfinder_2d_p_nm, DirectDistance{2}(), (1, 1), (8, 6)) == 80
 
-    @test delta_cost(pfinder_2d_np_m, Chebyshev{2}(), (1, 1), (4, 6)) == 5
-    @test delta_cost(pfinder_2d_p_m, Chebyshev{2}(), (1, 1), (8, 6)) == 5
-    @test delta_cost(pfinder_2d_np_nm, Chebyshev{2}(), (1, 1), (4, 6)) == 5
-    @test delta_cost(pfinder_2d_p_nm, Chebyshev{2}(), (1, 1), (8, 6)) == 5
+    @test delta_cost(pfinder_2d_np_m, MaxDistance{2}(), (1, 1), (4, 6)) == 5
+    @test delta_cost(pfinder_2d_p_m, MaxDistance{2}(), (1, 1), (8, 6)) == 5
+    @test delta_cost(pfinder_2d_np_nm, MaxDistance{2}(), (1, 1), (4, 6)) == 5
+    @test delta_cost(pfinder_2d_p_nm, MaxDistance{2}(), (1, 1), (8, 6)) == 5
 
     @test delta_cost(pfinder_2d_np_m, HeightMap(hmap), (1, 1), (4, 6)) == 162
     @test delta_cost(pfinder_2d_p_m, HeightMap(hmap), (1, 1), (8, 6)) == 162

@@ -79,7 +79,7 @@ find_path
 ### Metrics
 ```@docs
 DirectDistance
-Chebyshev
+MaxDistance
 HeightMap
 ```
 
