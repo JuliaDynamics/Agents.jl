@@ -136,13 +136,13 @@ end
         DirectDistance{2}(),
     )
 
-    p = collect(find_path(pfinder_2d_np_m, (1, 1), (6, 6)))
+    p = collect(Agents.find_path(pfinder_2d_np_m, (1, 1), (6, 6)))
     @test p == [(1, 2), (1, 3), (1, 4), (1, 5), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(find_path(pfinder_2d_np_nm, (1, 1), (6, 6)))
+    p = collect(Agents.find_path(pfinder_2d_np_nm, (1, 1), (6, 6)))
     @test p ==
           [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(find_path(pfinder_2d_p_m, (1, 1), (6, 6)))
+    p = collect(Agents.find_path(pfinder_2d_p_m, (1, 1), (6, 6)))
     @test p == [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
+    p = collect(Agents.find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
     @test p == [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
 end
