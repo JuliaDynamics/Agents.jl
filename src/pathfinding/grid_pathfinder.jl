@@ -82,15 +82,24 @@ struct AStar{D,P,M} <: AbstractPathfinder
         cost_metric::CostMetric{D},
     ) where {D,P,M}
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
-        @assert typeof(cost_metric) != HeightMap{D} || size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
+        if typeof(cost_metric) == HeightMap{D}
+            @assert size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
+        elseif typeof(cost_metric) == DirectDistance{D}
+            if M
+                @assert length(cost_metric.direction_costs) >= D "DirectDistance direction_costs must have as many values as dimensions"
+            else
+                @assert length(cost_metric.direction_costs) >= 1 "DirectDistance direction_costs must have non-zero length"
+            end
+        end
         new(agent_paths, grid_dims, neighborhood, admissibility, walkable, cost_metric)
     end
 end
 
 """
-    AStar(space::GridSpace; kwargs...)
-Provides pathfinding capabilities and stores agent paths. Dimensionality and periodicity
-properties are taken from `space`.
+    AStar(dims::Dims{D}; kwargs...)
+Provides pathfinding capabilities and stores agent paths.
+
+`periodic = false` specifies if the space is periodic
 
 `diagonal_neighbors = true` specifies if movement can be to diagonal neighbors of a
 tile, or only orthogonal neighbors.
