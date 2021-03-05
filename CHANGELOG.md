@@ -1,3 +1,7 @@
+# v4.3
+- Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
+- Fix `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
+
 # v4.2
 * Pathfinding using the A* algorithm is now possible!
 

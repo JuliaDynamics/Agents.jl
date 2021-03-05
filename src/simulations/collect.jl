@@ -1,10 +1,11 @@
 export run!, collect_agent_data!, collect_model_data!,
-       init_agent_dataframe, init_model_dataframe, aggname,
+       init_agent_dataframe, init_model_dataframe, dataname,
        should_we_collect
 
 ###################################################
 # Definition of the data collection API
 ###################################################
+
 get_data(a, s::Symbol, obtainer::Function) = obtainer(getproperty(a, s))
 get_data(a, f::Function, obtainer::Function) = obtainer(f(a))
 
@@ -49,7 +50,7 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   aggregate. For example: `x_pos(a) = a.pos[1]>5` with `(:weight, mean, x_pos)` will result
   in the average weight of agents conditional on their x-position being greater than 5.
 
-  The resulting data name columns use the function [`aggname`](@ref), and create something
+  The resulting data name columns use the function [`dataname`](@ref), and create something
   like `:mean_weight` or `:maximum_f_x_pos`.
   This name doesn't play well with anonymous functions, but you can simply use
   `DataFrames.rename!` to change the returned dataframe's column names.
@@ -157,6 +158,7 @@ end
 ###################################################
 # core data collection functions per step
 ###################################################
+
 """
     init_agent_dataframe(model, adata) → agent_df
 Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
@@ -179,12 +181,12 @@ function init_agent_dataframe(model::ABM{S,A}, properties::AbstractArray) where 
     utypes = union_types(A)
     std_headers = length(utypes) > 1 ? 3 : 2
 
-    headers = Vector{Symbol}(undef, std_headers + length(properties))
-    headers[1] = :step
-    headers[2] = :id
+    headers = Vector{String}(undef, std_headers + length(properties))
+    headers[1] = "step"
+    headers[2] = "id"
 
     for i in 1:length(properties)
-        headers[i+std_headers] = Symbol(properties[i])
+        headers[i+std_headers] = dataname(properties[i])
     end
 
     types = Vector{Vector}(undef, std_headers + length(properties))
@@ -192,7 +194,7 @@ function init_agent_dataframe(model::ABM{S,A}, properties::AbstractArray) where 
     types[2] = Int[]
 
     if std_headers == 3
-        headers[3] = :agent_type
+        headers[3] = "agent_type"
         multi_agent_types!(types, utypes, model, properties)
     else
         single_agent_types!(types, model, properties)
@@ -256,18 +258,18 @@ function collect_agent_data!(df, model, properties::Vector, step::Int=0; kwargs.
     end
 
     for fn in properties
-        _add_col_data!(dd, eltype(df[!, Symbol(fn)]), fn, alla; kwargs...)
+        _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
     end
     append!(df, dd)
     return df
 end
 
 function _add_col_data!(dd::DataFrame, col::Type{T}, property, agent_iter; obtainer = identity) where {T}
-    dd[!, Symbol(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
+    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
 
 function _add_col_data!(dd::DataFrame, col::Type{T}, property, agent_iter; obtainer = identity) where {T>:Missing}
-    dd[!, Symbol(property)] = collect(get_data_missing(a, property, obtainer) for a in agent_iter)
+    dd[!, dataname(property)] = collect(get_data_missing(a, property, obtainer) for a in agent_iter)
 end
 
 
@@ -295,7 +297,7 @@ end
 function single_agent_agg_types!(types::Vector{Vector{T} where T}, headers::Vector{String}, model::ABM, properties::AbstractArray)
     for (i, property) in enumerate(properties)
         k, agg = property
-        headers[i+1] = aggname(property)
+        headers[i+1] = dataname(property)
         # This line assumes that `agg` can work with iterators directly
         current_type =
             typeof(agg(get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)))
@@ -310,7 +312,7 @@ end
 function multi_agent_agg_types!(types::Vector{Vector{T} where T}, utypes::Tuple, headers::Vector{String}, model::ABM, properties::AbstractArray)
     for (i, property) in enumerate(properties)
         k, agg = property
-        headers[i+1] = aggname(property)
+        headers[i+1] = dataname(property)
         current_types = DataType[]
         for atype in utypes
             a = first(Iterators.filter(a -> a isa atype, allagents(model)))
@@ -343,19 +345,21 @@ function multi_agent_agg_types!(types::Vector{Vector{T} where T}, utypes::Tuple,
 end
 
 """
-    aggname(k) → name
-    aggname(k, agg) → name
-    aggname(k, agg, condition) → name
+    dataname(k) → name
 
 Return the name of the column of the `i`-th collected data where `k = adata[i]`
 (or `mdata[i]`).
-`aggname` also accepts tuples with aggregate and conditional values.
+`dataname` also accepts tuples with aggregate and conditional values.
 """
-aggname(k, agg) = string(agg)*"_"*string(k)
-aggname(k, agg, condition) = string(agg)*"_"*string(k)*"_"*string(condition)
-aggname(x::Tuple{K,A}) where {K,A} = aggname(x[1], x[2])
-aggname(x::Tuple{K,A,C}) where {K,A,C} = aggname(x[1], x[2], x[3])
-aggname(x::Union{Function, Symbol, String}) = string(x)
+dataname(x::Tuple) = join(vcat([dataname(x[2]), dataname(x[1])], [dataname(s) for s in x[3:end]]), "_")
+dataname(x::Union{Symbol,String}) = string(x)
+# This takes care to include fieldnames and values in the column name to make column names unique
+# if the same function is used with different values of outer scope variables.
+dataname(x::Function) = join(
+    vcat([string(x)], ["$(prop)=$(getproperty(x, prop))" for prop in propertynames(x)]), "_")
+@deprecate aggname dataname
+@deprecate aggname(k, agg) dataname((k, agg))
+@deprecate aggname(k, agg, condition) dataname((k, agg, condition))
 
 function collect_agent_data!(df, model::ABM, properties::Vector{<:Tuple}, step::Int=0; kwargs...)
     alla = allagents(model)
@@ -386,9 +390,9 @@ end
 Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
 """
 function init_model_dataframe(model::ABM, properties::Vector)
-    headers = Vector{Symbol}(undef, 1+length(properties))
-    headers[1] = :step
-    for i in 1:length(properties); headers[i+1] = Symbol(properties[i]); end
+    headers = Vector{String}(undef, 1+length(properties))
+    headers[1] = "step"
+    for i in 1:length(properties); headers[i+1] = dataname(properties[i]); end
 
     types = Vector{Vector}(undef, 1+length(properties))
     types[1] = Int[]
@@ -415,7 +419,7 @@ Same as [`collect_agent_data!`](@ref) but for model data instead.
 function collect_model_data!(df, model, properties::Vector, step::Int=0; obtainer = identity)
   push!(df[!, :step], step)
   for fn in properties
-    push!(df[!, Symbol(fn)], get_data(model, fn, obtainer))
+    push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
   end
   return df
 end
