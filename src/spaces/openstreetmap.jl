@@ -102,8 +102,8 @@ end
 """
     osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
 
-Selects a random destination and plans a route from the agent's current position. Will
-overwrite any current route.
+Plan a new random route for the agent, by selecting a random destination and
+planning a route from the agent's current position. Overwrite any current route.
 """
 function osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
     agent.destination = osm_random_road_position(model)
