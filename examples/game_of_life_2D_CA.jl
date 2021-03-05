@@ -28,7 +28,7 @@ nothing # hide
 # ## 2. Build the model
 
 # First, define an agent type. It needs to have the compulsary `id` and `pos` fields,
-# as well as an `status` field that is `true` for cells that are alive and `false` otherwise.
+# as well as a `status` field that is `true` for cells that are alive and `false` otherwise.
 
 mutable struct Cell <: AbstractAgent
     id::Int
