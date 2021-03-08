@@ -39,7 +39,7 @@ union_types(x::Type) = (x,)
 union_types(a::Type, b::Union) = (a, union_types(b)...)
 
 """
-    AgentBasedModel(AgentType [, space]; scheduler, properties) → model
+    AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
 Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
@@ -53,6 +53,7 @@ If it is ommited then all agents are virtually in one position and have no spati
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
 
+## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. If `properties` is a dictionary with
 key type `Symbol`, or of it is a struct, then the syntax
@@ -64,13 +65,14 @@ which are the fields of `AgentBasedModel`.
 `scheduler = fastest` decides the order with which agents are activated
 (see e.g. [`by_id`](@ref) and the scheduler API).
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
-or [`run!`](@ref).
+or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
+as illustrated in the [Advanced stepping](@ref) part of the tutorial.
 
 `rng = Random.default_rng()` provides random number generation to the model.
 Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
 
-Type tests for `AgentType` are done, and by default
-warnings are thrown when appropriate. Use keyword `warn=false` to suppress that.
+`warn=false`: Type tests for `AgentType` are done, and by default
+warnings are thrown when appropriate.
 """
 function AgentBasedModel(
     ::Type{A},

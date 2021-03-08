@@ -165,7 +165,7 @@ function fill_space!(
 end
 
 """
-    move_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agentt
+    move_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
 
 Move agent to a random position while respecting a maximum of one agent
 per position. If there are no empty positions, the agent won't move.
