@@ -42,17 +42,17 @@ until(s, n, model) = !n(model, s)
 step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
 
 function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
-  s = 0
-  while until(s, n, model)
-    !agents_first && model_step!(model)
-    if agent_step! ≠ dummystep
-      activation_order = schedule(model)
-      for index in activation_order
-        haskey(model.agents, index) || continue
-        agent_step!(model.agents[index], model)
-      end
+    s = 0
+    while until(s, n, model)
+        !agents_first && model_step!(model)
+        if agent_step! ≠ dummystep
+            activation_order = schedule(model)
+            for index in activation_order
+                haskey(model.agents, index) || continue
+                agent_step!(model.agents[index], model)
+            end
+        end
+        agents_first && model_step!(model)
+        s += 1
     end
-    agents_first && model_step!(model)
-    s += 1
-  end
 end
