@@ -39,9 +39,9 @@ function initalize_model(map_url)
 end
 
 ## Dynamics
-# Stepping the agent is a trivial matter of calling [`move_agent!`](@ref) to move it along it's path to
+# Stepping the agent is a trivial matter of calling [`move_along_path!`](@ref) to move it along it's path to
 # the target.
-agent_step!(agent, model) = move_agent!(agent, model)
+agent_step!(agent, model) = move_along_path!(agent, model)
 
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
@@ -55,14 +55,19 @@ map_url =
     "JuliaDynamics/master/videos/agents/maze.bmp"
 model = initalize_model(map_url)
 
-f, abmstepper =
-    abm_plot(model; resolution = (700, 700), ac = :red, as = 11, offset = _ -> (-0.5, -0.5))
-ax = contents(f[1, 1])[1]
-hm = heatmap!(ax, walkmap(model); colormap = :grays)
-
-record(f, "maze.mp4", 1:310; framerate = 15) do i
-    Agents.step!(abmstepper, model, agent_step!, dummystep, 1)
-end
+# The [`static_preplot!`](@ref) keyword argument allows plotting the maze as a heatmap behind the agent.
+abm_video(
+    "maze.mp4",
+    model,
+    agent_step!;
+    resolution=(700,700),
+    frames=310,
+    framerate=15,
+    ac=:red,
+    as=11,
+    offset = _ -> (-0.5, -0.5),
+    static_preplot! = (ax, _) -> heatmap!(ax, walkmap(model); colormap=:grays)
+)
 nothing # hide
 
 # ```@raw html

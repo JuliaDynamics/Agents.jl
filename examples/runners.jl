@@ -48,7 +48,7 @@ end
 # With the pathfinder in place, and all our runners having a goal position set, stepping
 # is now trivial.
 
-agent_step!(agent, model) = move_agent!(agent, model)
+agent_step!(agent, model) = move_along_path!(agent, model)
 
 # ## Let's Race
 # Plotting is simple enough. We just need to use the [`InteractiveDynamics.abm_plot`](@ref)
@@ -64,23 +64,24 @@ map_url =
     "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
 model = initialize(map_url)
 
-f, abmstepper = abm_plot(
-    model;
+function preplot!(ax, model)
+    ax.aspect = DataAspect()
+    hm = heatmap!(ax, heightmap(model); colormap = :terrain)
+    scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
+end
+
+abm_video(
+    "runners.mp4",
+    model,
+    agent_step!;
     resolution = (700, 700),
+    frames = 410,
+    framerate = 25,
     ac = :black,
     as = 8,
-    scatterkwargs = (strokecolor = :white, strokewidth = 2),
+    scatterkwargs = (strokecolor = :white, strokewidth = 2),    
+    static_preplot! = preplot!
 )
-ax = contents(f[1, 1])[1]
-ax.aspect = DataAspect()
-scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
-hm = heatmap!(ax, heightmap(model); colormap = :terrain)
-f[1, 2] = Colorbar(f, hm, width = 30, label = "Elevation")
-rowsize!(f.layout, 1, ax.scene.px_area[].widths[2]) # Colorbar height = axis height
-
-record(f, "runners.mp4", 1:410; framerate = 25) do i
-    Agents.step!(abmstepper, model, agent_step!, dummystep, 1)
-end
 nothing # hide
 
 # ```@raw html
