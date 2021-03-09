@@ -71,7 +71,7 @@ as illustrated in the [Advanced stepping](@ref) part of the tutorial.
 `rng = Random.default_rng()` provides random number generation to the model.
 Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
 
-`warn=false`: Type tests for `AgentType` are done, and by default
+`warn=true`: Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate.
 """
 function AgentBasedModel(
