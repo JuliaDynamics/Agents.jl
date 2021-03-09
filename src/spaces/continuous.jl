@@ -459,15 +459,24 @@ function FMP_Update_Interacting_Pairs(
     agent_iter = interacting_pairs(model, model.FMP_params.r, :all)
     for agent_id in keys(model.agents)
         Ni = Int64[]
+        Gi = Int64[]
         for (i,j) in agent_iter.pairs
+            # handle agent-agent interactions
             if i == agent_id && model.agents[j].type == :A
                 append!(Ni, j)
             elseif j == agent_id && model.agents[i].type == :A
                 append!(Ni, i)
+            
+            # handle agent-goal interactions
+            elseif i == agent_id && model.agents[j].type == :T
+                append!(Gi, j)
+            elseif j == agent_id && model.agents[i].type == :T
+                append!(Gi, i)
             end
         end
 
         model.agents[agent_id].Ni = Ni
+        model.agents[agent_id].Gi = Gi
     end
 
 end
