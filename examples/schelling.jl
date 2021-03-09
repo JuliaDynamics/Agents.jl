@@ -119,7 +119,6 @@ nothing # hide
 # agent when activated.
 
 function agent_step!(agent, model)
-    agent.mood == true && return # do nothing if already happy
     minhappy = model.min_to_be_happy
     neighbor_positions = nearby_positions(agent, model)
     count_neighbors_same_group = 0
@@ -187,14 +186,14 @@ data[1:10, :]
 # With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
 # For example, let's only get the number of happy individuals, and the
-# maximum of the "x" (not very interesting, but anyway!)
-
+# average of the "x" (not very interesting, but anyway!)
+using Statistics: mean
 model = initialize();
-adata = [(:mood, sum), (x, maximum)]
+adata = [(:mood, sum), (x, mean)]
 data, _ = run!(model, agent_step!, 5; adata)
 data
 
-# Other examples in the documentation are more realistic, with a much more meaningful
+# Other examples in the documentation are more realistic, with more meaningful
 # collected data. Don't forget to use the function [`aggname`](@ref) to access the
 # columns of the resulting dataframe by name.
 

@@ -10,22 +10,25 @@
 
 # It is also available from the `Models` module as [`Models.game_of_life`](@ref).
 
-using Agents
-using Random # hide
-nothing # hide
+using Agents, Random
 
 # ## 1. Define the rules
 
-# Rules of Conway's game of life: DSRO (Death, Survival, Reproduction, Overpopulation).
+# Conway's game of life is a *cellular automaton*, where each cell of the discrete space
+# contains one agent only.
+
+# The rules of Conway's game of life are defined based on four numbers:
+# Death, Survival, Reproduction, Overpopulation, grouped as (D, S, R, O)
 # Cells die if the number of their living neighbors is <D or >O,
 # survive if the number of their living neighbors is ≤S,
 # come to life if their living neighbors are  ≥R and ≤O.
-rules = (2, 3, 3, 3)
+rules = (2, 3, 3, 3) # (D, S, R, O)
 nothing # hide
 
 # ## 2. Build the model
 
-# First, define an agent type. It needs to have the compulsary `id` and `pos` fields, as well as an `status` field that is `true` for cells that are alive and `false` otherwise.
+# First, define an agent type. It needs to have the compulsary `id` and `pos` fields,
+# as well as a `status` field that is `true` for cells that are alive and `false` otherwise.
 
 mutable struct Cell <: AbstractAgent
     id::Int
@@ -33,13 +36,12 @@ mutable struct Cell <: AbstractAgent
     status::Bool
 end
 
-# The following function builds a 2D cellular automaton. `rules` is of type `Tuple{Int,Int,Int,Int}` representing DSRO.
-
+# The following function builds a 2D cellular automaton given some `rules`.
 # `dims` is a tuple of integers determining the width and height of the grid environment.
-# `metric` specifies whether cells connect to their diagonal neighbors.
+# `metric` specifies how to measure distances in the space, and in our example
+# it actually decides whether cells connect to their diagonal neighbors.
 
-# This function creates a model where all cells are "off".
-
+# This function creates a model where all cells are dead.
 function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev, seed = 120)
     space = GridSpace(dims; metric)
     properties = Dict(:rules => rules)
@@ -56,28 +58,32 @@ end
 nothing # hide
 
 # Now we define a stepping function for the model to apply the rules to agents.
-
+# We will also perform a synchronous agent update (meaning that the value of all
+# agents changes after we have decided the new value for each agent individually).
 function ca_step!(model)
     new_status = fill(false, nagents(model))
     for agent in allagents(model)
-        nlive = nlive_neighbors(agent, model)
-        if agent.status == true && (nlive ≤ model.rules[4] && nlive ≥ model.rules[1])
+        n = alive_neighbors(agent, model)
+        if agent.status == true && (n ≤ model.rules[4] && n ≥ model.rules[1])
             new_status[agent.id] = true
-        elseif agent.status == false && (nlive ≥ model.rules[3] && nlive ≤ model.rules[4])
+        elseif agent.status == false && (n ≥ model.rules[3] && n ≤ model.rules[4])
             new_status[agent.id] = true
         end
     end
 
-    for k in keys(model.agents)
-        model.agents[k].status = new_status[k]
+    for id in allids(model)
+        model[id].status = new_status[id]
     end
 end
 
-function nlive_neighbors(agent, model)
-    neighbor_positions = nearby_positions(agent, model)
-    all_neighbors =
-        Iterators.flatten(ids_in_position(np, model) for np in neighbor_positions)
-    sum(model[i].status == true for i in all_neighbors)
+function alive_neighbors(agent, model) # count alive neighboring cells
+    c = 0
+    for n in nearby_agents(agent, model)
+        if n.status == true
+            c += 1
+        end
+    end
+    return c
 end
 nothing # hide
 
@@ -109,7 +115,7 @@ abm_video(
     title = "Game of Life",
     ac = :black,
     as = 12,
-    am = am,
+    am,
     framerate = 5,
 )
 nothing # hide

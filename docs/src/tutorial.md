@@ -1,27 +1,21 @@
 # Tutorial
 
-Agents.jl structures ABM simulations following the following simple mental model:
+In Agents.jl a central structure maps unique IDs (integers) to agent instances, similar to a dictionary. During the simulation, the model evolves in discrete steps. During one step, the user decides which agents will act, how will they act, how many times, and whether any model-level properties will be adjusted.
+Once the time evolution is defined, collecting data during time evolution is straightforward by simply stating which data should be collected.
 
-1. First, the user needs to define the agent type (or types, for mixed models) that will populate the ABM. This is defined as a standard Julia Type.
-2. Then, the user needs to choose in what kind of space these agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
-3. The created agent type, the chosen space, additional model level properties (typically in the form of a dictionary), and a scheduler (a standard Julia function, with several default ones available), are provided in our universal structure [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation.
-4. Simulations in Agents.jl happen in discrete and individual steps. To evolve the model in time the user needs to define one, or two, stepping functions that control how the agents and the model should evolve. These are standard Julia functions that take advantage of the Agents.jl [API](@ref).
-5. To collect data during time evolution, the user needs to specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model. The outputted data are in the form of a `DataFrame`.
+In the spirit of simple design, all of this is done by defining simple Julia data types, like basic functions, structs and dictionaries.
+
+To set up an ABM simulation in Agents.jl, a user only needs to follow these steps:
+
+1. Choose in what kind of space the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
+1. Define the agent type (or types, for mixed models) that will populate the ABM. This is defined as a standard Julia Type and contains two mandatory fields `id, pos`, with the position field being appropriate for the chosen space.
+3. The created agent type, the chosen space, and optional additional model level properties (typically in the form of a dictionary) are provided in our universal structure [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation.
+4. Provide functions that govern the time evolution of the ABM.
+A user can provide an agent-stepping function, that acts on each agent one by one, and/or model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
+5. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model, for example `[:mood, :wealth]`. The outputted data are in the form of a `DataFrame`.
 
 
-## 1. The agent type
-
-```@docs
-AbstractAgent
-```
-
-Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
-Then, the agent can interact with the model and the space further by using
-e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
-
-For more functions visit the [API](@ref) page.
-
-## [2. The space](@id Space)
+## [1. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
@@ -34,6 +28,17 @@ The available spaces are:
 
 One simply initializes an instance of a space, e.g. with `grid = GridSpace((10, 10))` and passes that into [`AgentBasedModel`](@ref). See each individual space for all its possible arguments.
 
+
+## 2. The agent type
+
+```@docs
+AbstractAgent
+```
+
+Once an agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
+Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
+
+For more functions visit the [API](@ref) page.
 
 ## 3. The model
 
@@ -129,7 +134,7 @@ run!(model, agent_step!, model_step!, 10; mdata = assets(model))
 Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng` which by default coincides with the global RNG.
 For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)` or `rand(model.rng, 1:10, 100)`, etc.
 
-Another benefit of this approach is can have deterministic models that can be ran again and yield the same output.
+Another benefit of this approach is deterministic models that can be ran again and yield the same output.
 To do this, either always pass a specifically seeded RNG to the model creation, e.g. `MersenneTwister(1234)`, or call `seed!(model, 1234)` (with any number) after creating the model but before actually running the simulation.
 
 Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but avoid potential biases of pseudo-randomness.
