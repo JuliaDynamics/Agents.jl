@@ -82,7 +82,7 @@ end
 """
     GridAgent{D}
 Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`GraphSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D,Int}`
+[`GridSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D,Int}`
 to the start of the agent type.
 """
 mutable struct GridAgent{D} <: AbstractAgent
