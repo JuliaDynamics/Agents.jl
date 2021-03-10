@@ -248,7 +248,7 @@ struct GridCell
     h::Int
 end
 
-GridCell(g::Int, h::Int, admissibility::AbstractFloat) =
+GridCell(g::Int, h::Int, admissibility::Float64) =
     GridCell(round(Int, g + (1 + admissibility) * h), g, h)
 
 GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
