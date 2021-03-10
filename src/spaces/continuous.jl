@@ -563,6 +563,9 @@ function RepulsiveForce(model::AgentBasedModel, agent)
     f = ntuple(i->0, length(agent.vel))
     for j in agent.Ni
         dist = norm(model.agents[j].pos .- agent.pos)
+        if dist == 0.0
+            dist = 1e-10  # was getting error for agents in same position
+        end
         if dist < model.FMP_params.r
             force = -model.FMP_params.rho * (dist - model.FMP_params.r)^2
             distnorm = (model.agents[j].pos .- agent.pos) ./dist
