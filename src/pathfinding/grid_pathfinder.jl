@@ -144,11 +144,8 @@ end
 function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
     walkable = pathfinder.walkable === nothing ? fill(true, dims) : pathfinder.walkable
 
-    if typeof(pathfinder.cost_metric) <: CostMetric
-        metric = pathfinder.cost_metric
-    else
-        metric = pathfinder.cost_metric{D}()
-    end
+    metric = isnothing(pathfinder.cost_metric) ? DirectDistance{D}() : pathfinder.cost_metric
+
     neighborhood =
         pathfinder.diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     return AStar{D,periodic,pathfinder.diagonal_movement}(

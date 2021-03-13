@@ -10,7 +10,7 @@ between two points in a `D` dimensional [`GridSpace{D}`](@ref).
 """
 abstract type CostMetric{D} end
 
-struct Pathfinder{W<:Union{Array{Bool},Nothing}, M<:CostMetric}
+struct Pathfinder{W<:Union{Array{Bool},Nothing}, M::Union{CostMetric, Nothing}}
     diagonal_movement::Bool
     admissibility::Float64
     walkable::W
@@ -29,15 +29,15 @@ Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder`
 * `diagonal_movement = true` states that agents are allowed to move diagonally.
   Otherwise, only orthogonal directions are possible.
 * `admissibility = 0` allows the algorithm to approximate paths to speed up pathfinding
-  significantly. A value of `admissibility` allows paths atmost `(1+admissibility)` times
+  significantly. A value of `admissibility` allows paths at most `(1+admissibility)` times
   the optimal path length.
 * `walkable = nothing` specifies (un)walkable regions of the space. If specified, it should
   be a boolean array of the same size as the corresponding
   [`GridSpace`](@ref). This defaults to `nothing`, which allows agents to walk on any
   position in the space.
-* `cost_metric = DirectDistance()` is an instance of a cost metric and specifies the method
+* `cost_metric` is an instance of a cost metric and specifies the method
   to use for approximating the distance between two points. This defaults
-  to [`DirectDistance`](@ref).
+  to [`DirectDistance`](@ref) with appropriate dimensionality.
 """
 function Pathfinder(;
     diagonal_movement::Bool = true,

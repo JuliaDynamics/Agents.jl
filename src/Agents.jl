@@ -17,7 +17,7 @@ include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
-include("spaces/pathfinding.jl")
+include("pathfinding/pathfinding_options.jl") # this file is necessary before GridSpace
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")
@@ -32,6 +32,7 @@ include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 
+# Other advanced features
 include("pathfinding/grid_pathfinder.jl")
 
 function __init__()
