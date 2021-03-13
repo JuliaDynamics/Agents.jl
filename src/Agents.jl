@@ -58,7 +58,7 @@ export Models
 
 # Update message:
 display_update = true
-version_number = "4.1"
+version_number = "4.2"
 update_name = "update_v$(version_number)"
 
 if display_update
@@ -68,9 +68,8 @@ if display_update
             """
             \nUpdate message: Agents v$(version_number)
 
-            `AgentBasedModel` now explicitly includes a random number generator, enabling
-            reproducible ABM simulations with Agents.jl.
-            Access it with `model.rng` and seed it with `seed!(model, seed)`!
+            We now have full support for pathfinding, using the A* algorithm, in `GridSpace`!
+            See the "Path-finding" section in the online docs!
             """;
             color = :light_magenta,
         )
