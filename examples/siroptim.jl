@@ -79,7 +79,7 @@ end
 function migrate!(agent, model)
     pid = agent.pos
     d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
-    m = rand(d)
+    m = rand(model.rng, d)
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -94,13 +94,13 @@ function transmit!(agent, model)
     end
 
     d = Poisson(rate)
-    n = rand(d)
+    n = rand(model.rng, d)
     n == 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand() ≤ model.reinfection_probability)
+           (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n == 0 && return
@@ -112,7 +112,7 @@ update_status!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand() ≤ model.death_rate
+        if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R

@@ -1,36 +1,47 @@
 # # Schelling's segregation model
 
-# ![](schelling.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schelling.mp4" type="video/mp4">
+# </video>
+# ```
 
 # In this introductory example we demonstrate Agents.jl's architecture and
 # features through building
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional Chebyshev grid (8 neighbors per position).
-# * If an agent is in the same group with at least three neighbors, then it is happy.
+# * The agents live in a two-dimensional grid with a Chebyshev metric.
+#   This leads to 8 neighboring positions per position (except at the edges of the grid).
+# * Each position of the grid can be occupied by at most one agent.
+# * If an agent has at least `3` neighbors belonging to the same group, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
 # Schelling's model shows that even small preferences of agents to have neighbors
-# belonging to the same group (e.g. preferring that at least 30% of neighbors to
+# belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
 # be in the same group) could lead to total segregation of neighborhoods.
 
 # This model is also available as [`Models.schelling`](@ref).
 
+# ## Creating a space
+
+# For this example, we will be using a Chebyshev 2D grid, e.g.
+
+space = GridSpace((10, 10); periodic = false)
+
+# Agents belonging in this type of space must have a position field that is a
+# `NTuple{2, Int}`. We ensure this below.
+
 # ## Defining the agent type
 
-using Agents, Plots
-gr() # hide
+using Agents
 
 mutable struct SchellingAgent <: AbstractAgent
-    id::Int # The identifier number of the agent
-    pos::Dims{2} # The x, y location of the agent on a 2D grid
-    mood::Bool # whether the agent is happy in its position. (true = happy)
-    group::Int # The group of the agent,  determines mood as it interacts with neighbors
+    id::Int             # The identifier number of the agent
+    pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
+    mood::Bool          # whether the agent is happy in its position. (true = happy)
+    group::Int          # The group of the agent, determines mood as it interacts with neighbors
 end
-
-# Notice that the position of this Agent type is a `Dims{2}`, equivalent to
-# `NTuple{2,Int}`, because we will use a 2-dimensional `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
@@ -45,12 +56,6 @@ end
 # end
 # ```
 
-# ## Creating a space
-
-# For this example, we will be using a Chebyshev 2D grid, e.g.
-
-space = GridSpace((10, 10), periodic = false)
-
 # ## Creating an ABM
 
 # To make our model we follow the instructions of [`AgentBasedModel`](@ref).
@@ -58,7 +63,6 @@ space = GridSpace((10, 10), periodic = false)
 
 properties = Dict(:min_to_be_happy => 3)
 schelling = ABM(SchellingAgent, space; properties)
-
 
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
@@ -85,11 +89,16 @@ schelling2 = ABM(
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+using Random # for reproducibility
+function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ABM(SchellingAgent, space;
-                properties = properties, scheduler = random_activation)
+    rng = Random.MersenneTwister(seed)
+    model = ABM(
+        SchellingAgent, space;
+        properties, rng, scheduler = random_activation
+    )
+
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
     for n in 1:numagents
@@ -98,7 +107,6 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     end
     return model
 end
-nothing # hide
 
 # Notice that the position that an agent is initialized does not matter
 # in this example.
@@ -111,12 +119,12 @@ nothing # hide
 # agent when activated.
 
 function agent_step!(agent, model)
-    agent.mood == true && return # do nothing if already happy
     minhappy = model.min_to_be_happy
-    neighbor_positions = nearby_positions(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
+    ## Here `nearby_agents` (with default arguments) will provide an iterator
+    ## over the nearby agents one grid point away, which are at most 8.
     for neighbor in nearby_agents(agent, model)
         if agent.group == neighbor.group
             count_neighbors_same_group += 1
@@ -132,7 +140,6 @@ function agent_step!(agent, model)
     end
     return
 end
-nothing # hide
 
 # For the purpose of this implementation of Schelling's segregation model,
 # we only need an agent step function.
@@ -179,38 +186,83 @@ data[1:10, :]
 # With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
 # For example, let's only get the number of happy individuals, and the
-# maximum of the "x" (not very interesting, but anyway!)
-
+# average of the "x" (not very interesting, but anyway!)
+using Statistics: mean
 model = initialize();
-adata = [(:mood, sum), (x, maximum)]
+adata = [(:mood, sum), (x, mean)]
 data, _ = run!(model, agent_step!, 5; adata)
 data
 
-# Other examples in the documentation are more realistic, with a much more meaningful
+# Other examples in the documentation are more realistic, with more meaningful
 # collected data. Don't forget to use the function [`aggname`](@ref) to access the
 # columns of the resulting dataframe by name.
 
 # ## Visualizing the data
 
-# We can use the [`plotabm`](@ref) function to plot the distribution of agents on a
-# 2D grid at every generation.
+# We can use the [`abm_plot`](@ref) function to plot the distribution of agents on a
+# 2D grid at every generation, via the
+# [InteractiveDynamics.jl](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/) package
+# and the [Makie.jl](http://makie.juliaplots.org/stable/) plotting ecosystem.
+
 # Let's color the two groups orange and blue and make one a square and the other a circle.
+using InteractiveDynamics
+import CairoMakie # choosing a plotting backend
+
 groupcolor(a) = a.group == 1 ? :blue : :orange
-groupmarker(a) = a.group == 1 ? :circle : :square
-plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
+groupmarker(a) = a.group == 1 ? :circle : :rect
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure # returning the figure displays it
 
 # ## Animating the evolution
 
-# The function [`plotabm`](@ref) can be used to make your own animations
-cd(@__DIR__) #src
-model = initialize();
-anim = @animate for i in 0:10
-    p1 = plotabm(model; ac = groupcolor, am = groupmarker, as = 4)
-    title!(p1, "step $(i)")
-    step!(model, agent_step!, 1)
-end
+# The function [`abm_video`](@ref) can be used to save an animation of the ABM into a
+# video. You could of course also explicitly use `abm_plot` in a `record` loop for
+# finer control over additional plot elements.
 
-gif(anim, "schelling.gif", fps = 2)
+model = initialize();
+abm_video(
+    "schelling.mp4", model, agent_step!;
+    ac = groupcolor, am = groupmarker, as = 10,
+    framerate = 4, frames = 20,
+    title = "Schelling's segregation model"
+)
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schelling.mp4" type="video/mp4">
+# </video>
+# ```
+
+# ## Launching the interactive application
+# Given the definitions we have already created for a normally plotting or animating the ABM
+# it is almost trivial to launch an interactive application for it, through the function
+# [`abm_data_exploration`](@ref).
+
+# We define a dictionary that maps some model-level parameters to a range of potential
+# values, so that we can interactively change them.
+parange = Dict(:min_to_be_happy => 0:8)
+
+# We also define the data we want to collect and interactively explore, and also
+# some labels for them, for shorter names (since the defaults can get large)
+adata = [(:mood, sum), (x, mean)]
+alabels = ["happy", "avg. x"]
+
+model = initialize(; numagents = 300) # fresh model, noone happy
+
+# ```julia
+# figure, adf, mdf = abm_data_exploration(
+#     model, agent_step!, dummystep, parange;
+#     ac = groupcolor, am = groupmarker, as = 10,
+#     adata, alabels
+# )
+# ```
+#
+# ```@raw html
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
+# </video>
+# ```
+
 
 # ## Replicates and parallel computing
 
@@ -284,55 +336,14 @@ data[(end - 10):end, :]
 # We can combine all replicates with an aggregating function, such as mean, using
 # the `groupby` and `combine` functions from the `DataFrames` package:
 
-using DataFrames: groupby, combine, Not, select!
-using Statistics: mean
-gd = groupby(data,[:step, :min_to_be_happy, :numagents])
-data_mean = combine(gd,[:happyperc_mood,:replicate] .=> mean)
+using DataFrames
+gd = groupby(data, [:step, :min_to_be_happy, :numagents])
+data_mean = combine(gd, [:happyperc_mood, :replicate] .=> mean)
 
-select!(data_mean, Not(:replicate_mean))
+out = select(data_mean, Not(:replicate_mean))
 
 # Note that the second argument takes the column names on which to split the data,
 # i.e., it denotes which columns should not be aggregated. It should include
 # the `:step` column and any parameter that changes among simulations. But it should
 # not include the `:replicate` column.
 # So in principle what we are doing here is simply averaging our result across the replicates.
-
-# ## Launching the interactive application
-# Given the definitions we have already created for a normal study of the Schelling model,
-# it is almost trivial to launch an interactive application for it.
-# First, we load `InteractiveDynamics` to access `abm_data_exploration`
-# %% #src
-# ```julia
-# using InteractiveDynamics
-# using GLMakie # we choose OpenGL as plotting backend
-# ```
-
-# Then, we define a dictionary that maps some model-level parameters to a range of potential
-# values, so that we can interactively change them.
-parange = Dict(:min_to_be_happy => 0:8)
-
-# Due to the different plotting backend (Plots.jl vs Makie.jl) we redefine some of the
-# plotting functions (in the near future this won't be necessary, as everything will be Makie.jl based)
-
-groupcolor(a) = a.group == 1 ? :blue : :orange
-groupmarker(a) = a.group == 1 ? :circle : :rect
-
-# We define the `alabels` so that we can simple see the plotted timeseries with a
-# shorter name (since the defaults can get large)
-adata = [(:mood, sum), (x, mean)]
-alabels = ["happy", "avg. x"]
-
-model = initialize(; numagents = 300) # fresh model, noone happy
-
-# ```julia
-# scene, adf, modeldf =
-# abm_data_exploration(model, agent_step!, dummystep, parange;
-#                 ac = groupcolor, am = groupmarker, as = 1,
-#                 adata = adata, alabels = alabels)
-# ```
-#
-# ```@raw html
-# <video width="100%" height="auto" controls autoplay loop>
-# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/schelling_app.mp4?raw=true" type="video/mp4">
-# </video>
-# ```

@@ -11,12 +11,12 @@ Internal struct for efficiently finding neighboring positions to a given positio
 It contains pre-initialized neighbor cartesian indices and delimiters of when the
 neighboring indices would exceed the size of the underlying array.
 """
-struct Hood{D} # type P stands for Periodic and is a boolean
+struct Hood{D}
     whole::Region{D} # allowed values (only useful for non periodic)
     βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
-struct GridSpace{D,P} <: DiscreteSpace
+struct GridSpace{D,P} <: DiscreteSpace # type P stands for Periodic and is a boolean
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
@@ -68,7 +68,7 @@ end
 # %% Implementation of space API
 #######################################################################################
 function random_position(model::ABM{<:GridSpace})
-    Tuple(rand(CartesianIndices(model.space.s)))
+    Tuple(rand(model.rng, CartesianIndices(model.space.s)))
 end
 
 function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}

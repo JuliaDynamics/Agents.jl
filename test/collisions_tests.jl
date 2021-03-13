@@ -12,7 +12,7 @@ function model_initiation()
     pos = (i/10, j/10)
     # these agents have infinite mass and 0 velocity. They are fixed.
     if i > 5
-      vel = sincos(2π*rand()) .* speed
+      vel = sincos(2π*rand(model.rng)) .* speed
       mass = 1.33
     else
       vel = (0.0, 0.0)
@@ -74,7 +74,6 @@ K1, p1 = kinetic(model)
 
 
 # using Plots
-# pyplot()
 # model = model_initiation()
 # colors = [a.id for a in allagents(model)]
 # anim = @animate for i ∈ 1:200

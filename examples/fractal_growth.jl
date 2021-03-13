@@ -47,9 +47,9 @@ Particle(
 # generates a random radius for a particle, within given range defined by `min_radius`
 # and `max_radius`. If `max_radius < min_radius`, it returns `min_radius`: allowing
 # a fixed particle size to be specified.
-rand_circle() = (θ = rand(0.0:0.1:359.9); (cos(θ), sin(θ)))
-particle_radius(min_radius::Float64, max_radius::Float64) =
-    min_radius <= max_radius ? rand(min_radius:0.01:max_radius) : min_radius
+rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
+particle_radius(min_radius::Float64, max_radius::Float64, rng) =
+    min_radius <= max_radius ? rand(rng, min_radius:0.01:max_radius) : min_radius
 
 # The `initialize_model` function returns a new model containing particles placed
 # randomly in the given space and one seed particle at the center.
@@ -83,8 +83,8 @@ function initialize_model(;
     for i in 1:initial_particles
         particle = Particle(
             i,
-            particle_radius(min_radius, max_radius),
-            rand() < clockwise_fraction,
+            particle_radius(min_radius, max_radius, model.rng),
+            rand(model.rng) < clockwise_fraction,
         )
         ## `add_agent!` automatically gives the particle a random position in the space
         add_agent!(particle, model)
@@ -92,7 +92,7 @@ function initialize_model(;
     ## create the seed particle
     particle = Particle(
         initial_particles + 1,
-        particle_radius(min_radius, max_radius),
+        particle_radius(min_radius, max_radius, model.rng),
         true;
         pos = center,
         is_stuck = true,
@@ -132,7 +132,7 @@ function agent_step!(agent::Particle, model)
     agent.vel =
         (
             radial .* model.attraction .+ tangent .* model.spin .+
-            rand_circle() .* model.vibration
+            rand_circle(model.rng) .* model.vibration
         ) ./ (agent.radius^2.0)
     move_agent!(agent, model, model.speed)
 end
@@ -143,9 +143,9 @@ function model_step!(model)
     while model.spawn_count > 0
         particle = Particle(
             nextid(model),
-            particle_radius(model.min_radius, model.max_radius),
-            rand() < model.clockwise_fraction;
-            pos = (rand_circle() .+ 1.0) .* model.space.extent .* 0.49,
+            particle_radius(model.min_radius, model.max_radius, model.rng),
+            rand(model.rng) < model.clockwise_fraction;
+            pos = (rand_circle(model.rng) .+ 1.0) .* model.space.extent .* 0.49,
         )
         add_agent_pos!(particle, model)
         model.spawn_count -= 1

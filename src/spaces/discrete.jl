@@ -25,7 +25,7 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
     itr = reshape(n, length(n))
     if by == :random
-        shuffle!(itr)
+        shuffle!(model.rng, itr)
     elseif by == :population
         sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
@@ -84,7 +84,7 @@ Return a random position without any agents, or `nothing` if no such positions e
 function random_empty(model::ABM{<:DiscreteSpace})
     empty = empty_positions(model)
     isempty(empty) && return nothing
-    rand(collect(empty))
+    rand(model.rng, collect(empty))
 end
 
 #######################################################################################
@@ -96,7 +96,9 @@ export add_agent_single!, fill_space!, move_agent_single!
     add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
 
 Add the `agent` to a random position in the space while respecting a maximum of one agent
-per position. This function does nothing if there aren't any empty positions.
+per position, updating the agent's position to the new one.
+
+This function does nothing if there aren't any empty positions.
 """
 function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
     position = random_empty(model)
@@ -108,13 +110,13 @@ end
 
 """
     add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
-Same as `add_agent!(model, properties...)` but ensures that it adds an agent
+Same as `add_agent!(model, properties...; kwargs...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
 """
 function add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
     empty = collect(empty_positions(model))
     if length(empty) > 0
-        add_agent!(rand(empty), model, properties...; kwargs...)
+        add_agent!(rand(model.rng, empty), model, properties...; kwargs...)
     end
 end
 
@@ -163,7 +165,7 @@ function fill_space!(
 end
 
 """
-    move_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agentt
+    move_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
 
 Move agent to a random position while respecting a maximum of one agent
 per position. If there are no empty positions, the agent won't move.
@@ -174,7 +176,7 @@ function move_agent_single!(
 ) where {A<:AbstractAgent}
     empty = collect(empty_positions(model))
     if length(empty) > 0
-        move_agent!(agent, rand(empty), model)
+        move_agent!(agent, rand(model.rng, empty), model)
     end
     return agent
 end

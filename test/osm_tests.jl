@@ -82,5 +82,12 @@
 
     @test sort!(nearby_ids(model[6], model, 2)) == [4, 5, 7, 8]
     @test sort!(nearby_ids(model[6], model, 800.0)) == [3, 4, 5, 7, 8]
-end
 
+    # Test long moves
+    start = random_position(model)
+    finish = osm_random_road_position(model)
+    route = osm_plan_route(start, finish, model)
+    long = add_agent!(start, model, route, finish)
+    move_agent!(long, model, 10^5)
+    @test long.pos == long.destination
+end

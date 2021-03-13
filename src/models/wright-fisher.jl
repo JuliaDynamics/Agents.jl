@@ -15,7 +15,7 @@ Same as in [Wright-Fisher model of evolution](@ref).
 function wright_fisher(; numagents = 100, selection = true)
     model = ABM(Haploid)
     for i in 1:numagents
-        add_agent!(model, rand())
+        add_agent!(model, rand(model.rng))
     end
     !selection && return model, dummystep, wright_fisher_model_step_neutral!
     return model, dummystep, wright_fisher_model_step_selection!

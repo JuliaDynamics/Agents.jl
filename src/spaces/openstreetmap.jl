@@ -102,8 +102,8 @@ end
 """
     osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
 
-Selects a random destination and plans a route from the agent's current position. Will
-overwrite any current route.
+Plan a new random route for the agent, by selecting a random destination and
+planning a route from the agent's current position. Overwrite any current route.
 """
 function osm_random_route!(agent, model::ABM{<:OpenStreetMapSpace})
     agent.destination = osm_random_road_position(model)
@@ -236,7 +236,7 @@ osm_latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent
 """
     osm_intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Returns the nearest intersection position to (latitude, longitude).
+Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`osm_road`](@ref).
 """
 function osm_intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
@@ -247,7 +247,7 @@ end
 """
     osm_road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Returns a location on a road nearest to (latitude, longitude).
+Return a location on a road nearest to (latitude, longitude).
 Slower, but more precise than [`osm_intersection`](@ref).
 """
 function osm_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
@@ -443,7 +443,36 @@ function travel!(start, finish, distance, agent, model)
                 model,
             )
         else
-            return (finish, finish, 0.0)
+            #######################################
+            # TODO: The code here can be simplified by using the existing `park`.
+            # alright, so here we're in a situation where the agent is imagined to be at 'start' with 'distance left to travel.
+            # the route is empty, but (start,finish) does not equal agent.destination[1:2]
+            # what follows is the srouce code of the function "park", but the 'virtual' agent in it has position
+            # pos=(start,finish,distance-edge_distance)
+            # so I replaced that and nothing else.
+            distance-=edge_distance
+            if finish != agent.destination[1]
+                # At the end of the route, we must travel
+                last_distance = osm_road_length(finish, agent.destination[1], model)
+                if distance >= last_distance + agent.destination[3]
+                    # We reach the destination
+                    return agent.destination
+                elseif distance >= last_distance
+                    # We reach the final road, but not the destination
+                    return (agent.destination[1:2]..., distance - last_distance)
+                else
+                    # We travel the final leg
+                    return (finish, agent.destination[1], distance)
+                end
+            else
+                # Reached final road
+                if distance >= agent.destination[3]
+                    return agent.destination
+                else
+                    return (agent.destination[1:2]..., distance)
+                end
+            end
+            #######################################
         end
     else
         return (start, finish, distance)

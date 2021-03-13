@@ -1,5 +1,9 @@
 # # Continuous space social distancing for COVID-19
-# ![](socialdist5.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist5.mp4" type="video/mp4">
+# </video>
+# ```
 
 # This is a model similar to our [SIR model for the spread of COVID-19](@ref).
 # But instead of having different cities, we let agents move in one continuous
@@ -22,9 +26,8 @@
 # We need to create agents that comply with [`ContinuousSpace`](@ref), i.e.
 # they have a `pos` and `vel` fields, both of which are tuples of float numbers.
 
-using Agents, Random, Plots
-gr() # hide
-cd(@__DIR__) #src
+using Agents, Random
+
 mutable struct Agent <: AbstractAgent
     id::Int
     pos::NTuple{2,Float64}
@@ -38,13 +41,12 @@ end
 # Let's also initialize a trivial model with continuous space
 function ball_model(; speed = 0.002)
     space2d = ContinuousSpace((1, 1), 0.02)
-    model = ABM(Agent, space2d, properties = Dict(:dt => 1.0))
+    model = ABM(Agent, space2d, properties = Dict(:dt => 1.0), rng = MersenneTwister(42))
 
     ## And add some agents to the model
-    Random.seed!(42) # hide
     for ind in 1:500
-        pos = Tuple(rand(2))
-        vel = sincos(2π * rand()) .* speed
+        pos = Tuple(rand(model.rng, 2))
+        vel = sincos(2π * rand(model.rng)) .* speed
         add_agent!(pos, model, vel, 1.0)
     end
     return model
@@ -62,22 +64,24 @@ nothing # hide
 
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
+using InteractiveDynamics
+import CairoMakie
 
-e = model.space.extent
-anim = @animate for i in 1:2:100
-    p1 = plotabm(
-        model,
-        as = 4,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-
-    title!(p1, "step $(i)")
-    step!(model, agent_step!, 2)
-end
-gif(anim, "socialdist1.gif", fps = 25)
+abm_video(
+    "socialdist1.mp4",
+    model,
+    agent_step!;
+    title = "Ball Model",
+    frames = 50,
+    spf = 2,
+    framerate = 25,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist1.mp4" type="video/mp4">
+# </video>
+# ```
 
 # As you can see the agents move in a straight line in periodic space.
 # There is no interaction yet. Let's change that.
@@ -99,20 +103,22 @@ end
 
 model2 = ball_model()
 
-e = model.space.extent
-anim = @animate for i in 1:2:100
-    p1 = plotabm(
-        model2,
-        as = 4,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "step $(i)")
-    step!(model2, agent_step!, model_step!, 2)
-end
-gif(anim, "socialdist2.gif", fps = 25)
+abm_video(
+    "socialdist2.mp4",
+    model2,
+    agent_step!,
+    model_step!;
+    title = "Billiard-like",
+    frames = 50,
+    spf = 2,
+    framerate = 25,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist2.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Alright, this works great so far!
 
@@ -143,21 +149,22 @@ for id in 1:400
 end
 
 # let's animate this again
-
-e = model.space.extent
-anim = @animate for i in 1:2:100
-    p1 = plotabm(
-        model3,
-        as = 4,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "step $(i)")
-    step!(model3, agent_step!, model_step!, 2)
-end
-gif(anim, "socialdist3.gif", fps = 25)
+abm_video(
+    "socialdist3.mp4",
+    model3,
+    agent_step!,
+    model_step!;
+    title = "Billiard-like with stationary agents",
+    frames = 50,
+    spf = 2,
+    framerate = 25,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist3.mp4" type="video/mp4">
+# </video>
+# ```
 
 # ## Adding Virus spread (SIR)
 # We now add more functionality to these agents, according to the SIR model
@@ -211,20 +218,19 @@ function sir_initiation(;
         dt,
     )
     space = ContinuousSpace((1,1), 0.02)
-    model = ABM(PoorSoul, space, properties = properties)
+    model = ABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
-    Random.seed!(seed)
     for ind in 1:N
-        pos = Tuple(rand(2))
+        pos = Tuple(rand(model.rng, 2))
         status = ind ≤ N - initial_infected ? :S : :I
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
-        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand()) .* speed
+        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
 
         ## very high transmission probability
         ## we are modelling close encounters after all
-        β = (βmax - βmin) * rand() + βmin
+        β = (βmax - βmin) * rand(model.rng) + βmin
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
@@ -237,23 +243,15 @@ nothing # hide
 # were given in days).
 
 # To visualize this model, we will use black color for the susceptible, red for
-# the infected infected and green for the recovered, leveraging [`plotabm`](@ref).
+# the infected infected and green for the recovered, leveraging
+# [`InteractiveDynamics.abm_plot`](@ref).
 
 sir_model = sir_initiation()
 
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-e = sir_model.space.extent
-plotabm(
-    sir_model;
-    ac = sir_colors,
-    as = 4,
-    msc=:auto,
-    showaxis = false,
-    grid = false,
-    xlims = (0, e[1]),
-    ylims = (0, e[2]),
-)
+fig, abmstepper = abm_plot(sir_model; ac = sir_colors)
+fig # display figure
 
 # We have increased the size of the model 10-fold (for more realistic further analysis)
 
@@ -265,10 +263,10 @@ function transmit!(a1, a2, rp)
     count(a.status == :I for a in (a1, a2)) ≠ 1 && return
     infected, healthy = a1.status == :I ? (a1, a2) : (a2, a1)
 
-    rand() > infected.β && return
+    rand(model.rng) > infected.β && return
 
     if healthy.status == :R
-        rand() > rp && return
+        rand(model.rng) > rp && return
     end
     healthy.status = :I
 end
@@ -299,7 +297,7 @@ update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand() ≤ model.death_rate
+        if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
@@ -313,22 +311,24 @@ nothing # hide
 
 sir_model = sir_initiation()
 
-e = sir_model.space.extent
-anim = @animate for i in 1:2:100
-    p1 = plotabm(
-        sir_model;
-        ac = sir_colors,
-        as = 4,
-        msc=:auto,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
-end
-gif(anim, "socialdist4.gif", fps = 25)
+abm_video(
+    "socialdist4.mp4",
+    sir_model,
+    sir_agent_step!,
+    sir_model_step!;
+    title = "SIR model",
+    frames = 100,
+    ac = sir_colors,
+    as = 10,
+    spf = 1,
+    framerate = 20,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist4.mp4" type="video/mp4">
+# </video>
+# ```
 
 # ## Exponential spread
 # We can all agree that these animations look interesting, but let's do some actual
@@ -352,18 +352,18 @@ data1, _ = run!(sir_model1, sir_agent_step!, sir_model_step!, 2000; adata)
 data2, _ = run!(sir_model2, sir_agent_step!, sir_model_step!, 2000; adata)
 data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata)
 
-data1[(end - 10):end, :]
+data1[(end-10):end, :]
 
 # Now, we can plot the number of infected versus time
-
-p = plot(
-    data1[:, aggname(:status, infected)],
-    label = "r=$r1, beta=$β1",
-    ylabel = "Infected",
-)
-plot!(p, data2[:, aggname(:status, infected)], label = "r=$r2, beta=$β1")
-plot!(p, data3[:, aggname(:status, infected)], label = "r=$r1, beta=$β2")
-p
+using CairoMakie
+figure = Figure()
+ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
+l1 = lines!(ax, data1[:, aggname(:status, infected)], color = :orange)
+l2 = lines!(ax, data2[:, aggname(:status, infected)], color = :blue)
+l3 = lines!(ax, data3[:, aggname(:status, infected)], color = :green)
+figure[1, 2] =
+    Legend(figure, [l1, l2, l3], ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2"])
+figure
 
 # Exponential growth is evident in all cases.
 
@@ -378,23 +378,23 @@ p
 # (which feels like it approximates reality better).
 
 sir_model = sir_initiation(isolated = 0.8)
-
-e = sir_model.space.extent
-anim = @animate for i in 0:2:1000
-    p1 = plotabm(
-        sir_model;
-        ac = sir_colors,
-        as = 4,
-        msc=:auto,
-        showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-    )
-    title!(p1, "step $(i)")
-    step!(sir_model, sir_agent_step!, sir_model_step!, 2)
-end
-gif(anim, "socialdist5.gif", fps = 25)
+abm_video(
+    "socialdist5.mp4",
+    sir_model,
+    sir_agent_step!,
+    sir_model_step!;
+    title = "Social Distancing",
+    frames = 100,
+    spf = 2,
+    ac = sir_colors,
+    framerate = 20,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../socialdist5.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Here we let some 20% of the population *not* be isolated, probably teenagers still partying,
 # or anti-vaxers / flat-earthers that don't believe in science.
@@ -408,9 +408,13 @@ sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated 
 
 data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata)
 
-plot!(p, data4[:, aggname(:status, infected)], label = "r=$r4, social distancing")
-p
+l4 = lines!(ax, data4[:, aggname(:status, infected)], color = :red)
+figure[1, 2] = Legend(
+    figure,
+    [l1, l2, l3, l4],
+    ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2", "r=$r4, social distancing"],
+)
+figure
 
 # Here you can see the characteristic "flattening the curve" phrase you hear all over the
 # news.
-

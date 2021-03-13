@@ -1,61 +1,50 @@
 # Tutorial
 
-Agents.jl is composed of components for building models, building and managing space structures, collecting data, running batch simulations, and data visualization.
+In Agents.jl a central structure maps unique IDs (integers) to agent instances, similar to a dictionary. During the simulation, the model evolves in discrete steps. During one step, the user decides which agents will act, how will they act, how many times, and whether any model-level properties will be adjusted.
+Once the time evolution is defined, collecting data during time evolution is straightforward by simply stating which data should be collected.
 
-Agents.jl structures simulations in three components:
+In the spirit of simple design, all of this is done by defining simple Julia data types, like basic functions, structs and dictionaries.
 
-1. An [`AgentBasedModel`](@ref) instance.
-1. A [space](@ref Space) instance.
-1. A subtype of [`AbstractAgent`](@ref) for the agents.
+To set up an ABM simulation in Agents.jl, a user only needs to follow these steps:
 
-To run simulations and collect data, the following are also necessary
+1. Choose in what kind of space the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
+1. Define the agent type (or types, for mixed models) that will populate the ABM. This is defined as a standard Julia `struct` and contains two mandatory fields `id, pos`, with the position field being appropriate for the chosen space.
+3. The created agent type, the chosen space, and optional additional model level properties (typically in the form of a dictionary) are provided in our universal structure [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation. Further options are also available, regarding schedulers and random number generation.
+4. Provide functions that govern the time evolution of the ABM. A user can provide an agent-stepping function, that acts on each agent one by one, and/or model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
+5. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model, for example `[:mood, :wealth]`. The outputted data are in the form of a `DataFrame`.
 
-4. Stepping functions that controls how the agents and the model evolve.
-5. Specifying which data should be collected from the agents and/or the model.
 
-So, in order to set up and run an ABM simulation with Agents.jl, you typically need to define a structure, function, or parameter collection for steps 1-3, define the rules of the agent evolution for step 4, and then declare which parameters of the model and the agents should be collected as data during step 5.
+## [1. The space](@id Space)
+Agents.jl offers several possibilities for the space the agents live in.
+In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
 
-## 1. The model
+The available spaces are:
+
+- [`GraphSpace`](@ref): Agent positions are equivalent with nodes of a graph/network.
+- [`GridSpace`](@ref): Space is discretized into boxes, typical style for cellular automata.
+- [`ContinuousSpace`](@ref): Truthful representation of continuous space, regarding location, orientation, and identification of neighboring agents.
+- [`OpenStreetMapSpace`](@ref): A space based on Open Street Map, where agents are confined to move along streets of the map, using real-world meter values for the length of each street.
+
+One simply initializes an instance of a space, e.g. with `grid = GridSpace((10, 10))` and passes that into [`AgentBasedModel`](@ref). See each individual space for all its possible arguments.
+
+
+## 2. The agent type
+
+```@docs
+AbstractAgent
+```
+
+Once an agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
+Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
+
+For more functions visit the [API](@ref) page.
+
+## 3. The model
 
 ```@docs
 AgentBasedModel
 ```
 
-## [2. The space](@id Space)
-Agents.jl offers several possibilities for the space the agents live in.
-In addition, it is straightforward to implement a fundamentally new type of space, see [Developer Docs](@ref).
-
-Spaces are separated into disrete spaces (which by definition have a **finite** amount of **possible positions**) and continuous spaces.
-Thus, it is common for a specific position to contain several agents.
-
-### Discrete spaces
-```@docs
-GraphSpace
-GridSpace
-```
-
-### Continuous spaces
-```@docs
-ContinuousSpace
-OpenStreetMapSpace
-```
-
-## 3. The agent
-
-```@docs
-AbstractAgent
-@agent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
-```
-
-Once an Agent is created it can be added to a model using e.g. [`add_agent!`](@ref).
-Then, the agent can interact with the model and the space further by using
-e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
-
-For more functions visit the [API](@ref) page.
 
 ## 4. Evolving the model
 
@@ -67,7 +56,7 @@ Sometimes we also need a function that changes all agents at once, or changes a 
 An agent step function should only accept two arguments: first, an agent object, and second, a model object.
 
 The model step function should accept only one argument, that is the model object.
-To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function.
+To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function. This is typically the case for [Advanced stepping](@ref).
 
 After you have defined these two functions, you evolve your model with `step!`:
 ```@docs
@@ -90,7 +79,9 @@ Most of the examples in our documentation can be expressed using an independent 
 
 On the other hand, more advanced models require special handling for scheduling, or may need to schedule several times and act on different subsets of agents with different functions.
 In such a scenario, it is more sensible to provide only a `model_step!` function (and use `dummystep` as `agent_step!`), where all configuration is contained within.
-For example
+Notice that if you follow this road, the argument `scheduler` given to [`AgentBasedModel`](@ref) somewhat loses its meaning.
+
+Here is an example:
 ```julia
 function complex_step!(model)
     for a in scheduler1(model)
@@ -106,7 +97,7 @@ end
 step!(model, dummystep, complex_step!, n)
 ```
 
-For defining your own scheduler, see [Schedulers](@ref).
+For defining your own schedulers, see [Schedulers](@ref).
 
 ## 5. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
@@ -137,10 +128,16 @@ end
 run!(model, agent_step!, model_step!, 10; mdata = assets(model))
 ```
 
+## Seeding and Random numbers
+
+Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng` which by default coincides with the global RNG.
+For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)` or `rand(model.rng, 1:10, 100)`, etc.
+
+Another benefit of this approach is deterministic models that can be ran again and yield the same output.
+To do this, either always pass a specifically seeded RNG to the model creation, e.g. `MersenneTwister(1234)`, or call `seed!(model, 1234)` (with any number) after creating the model but before actually running the simulation.
+
+Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but avoid potential biases of pseudo-randomness.
+
 ## An educative example
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.
-
-Each of the examples listed within this documentation are designed to showcase different ways of interacting with the API.
-If you are not sure about how to use a particular function, most likely one of the examples can show you how to interact with it.
-
 For a quick reference concerning the main concepts of agent based modelling, and how the Agents.jl examples implement each one, take a look at the [Overview of Examples](@ref) page.

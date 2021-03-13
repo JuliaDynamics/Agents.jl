@@ -64,7 +64,7 @@ function model_initiation(;
     seed = 0,
 )
 
-    Random.seed!(seed)
+    rng = MersenneTwister(seed)
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -94,7 +94,7 @@ function model_initiation(;
         death_rate
     )
     space = GraphSpace(complete_digraph(C))
-    model = ABM(PoorSoul, space; properties)
+    model = ABM(PoorSoul, space; properties, rng)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -169,13 +169,19 @@ params = create_params(C = 8, max_travel_rate = 0.01)
 model = model_initiation(; params...)
 
 # Alright, let's plot the cities as a graph to get an idea how the model "looks like",
-# using the function [`plotabm`](@ref).
+# using the function [`abm_plot_on_graph`](@ref).
 
 using Plots
 
+# !!! info "AgentsPlots no longer supported"
+#     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
+#     in favor of [InteractiveDynamics.jl](https://github.com/JuliaDynamics/InteractiveDynamics.jl).
+#     This example has not yet been transferred to the new paradigm, but will do so in the
+#     near future.
+
 plotargs = (node_size = 0.2, method = :circular, linealpha = 0.4)
 
-plotabm(model; plotargs...)
+abm_plot_on_graph(model; plotargs...)
 
 # The node size is proportional to the relative population of each city.
 # In principle we could adjust the edge widths to be proportional with the
@@ -194,14 +200,14 @@ edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 250
 
 plotargs = merge(plotargs, (edgewidth = edgewidthsf,))
 
-plotabm(model; plotargs...)
+abm_plot_on_graph(model; plotargs...)
 
 # In the following we will be coloring each node according to how large percentage of the
-# population is infected. So we create a function to give to [`plotabm`](@ref) as a
+# population is infected. So we create a function to give to [`abm_plot_on_graph`](@ref) as a
 # second argument
 
 infected_fraction(x) = cgrad(:inferno)[count(a.status == :I for a in x) / length(x)]
-plotabm(model; ac = infected_fraction, plotargs...)
+abm_plot_on_graph(model; ac = infected_fraction, plotargs...)
 
 # Here this shows all nodes as black, since we haven't run the model yet. Let's change that!
 
@@ -219,7 +225,7 @@ end
 function migrate!(agent, model)
     pid = agent.pos
     d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
-    m = rand(d)
+    m = rand(model.rng, d)
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -234,13 +240,13 @@ function transmit!(agent, model)
     end
 
     d = Poisson(rate)
-    n = rand(d)
+    n = rand(model.rng, d)
     n == 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand() ≤ model.reinfection_probability)
+           (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n == 0 && return
@@ -252,7 +258,7 @@ update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand() ≤ model.death_rate
+        if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
@@ -267,7 +273,7 @@ model = model_initiation(; params...)
 
 anim = @animate for i in 0:30
     i > 0 && step!(model, agent_step!, 1)
-    p1 = plotabm(model; ac = infected_fraction, plotargs...)
+    p1 = abm_plot_on_graph(model; ac = infected_fraction, plotargs...)
     title!(p1, "Day $(i)")
 end
 

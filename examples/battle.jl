@@ -1,5 +1,10 @@
 # # Battle Royale
-# ![](battle.gif)
+#
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../battle.mp4" type="video/mp4">
+# </video>
+# ```
 #
 # This example illustrates how to leverage higher dimensions of a `GridSpace` to identify
 # the distance from neighbors not just spatially, but also categorically. We'll also use
@@ -37,11 +42,11 @@
 
 # ## Model Setup
 
-cd(@__DIR__) #src
 using Random # hide
 using Agents
-using Plots
-gr() # hide
+using InteractiveDynamics
+using AbstractPlotting
+import CairoMakie
 
 mutable struct Fighter <: AbstractAgent
     id::Int
@@ -67,7 +72,7 @@ function battle(; fighters = 50)
 
     n = 0
     while n != fighters
-        pos = (rand(1:100, 2)..., 1) # Start at level 1
+        pos = (rand(model.rng, 1:100, 2)..., 1) # Start at level 1
         if isempty(pos, model)
             add_agent!(pos, model, false, 0, :diamond)
             n += 1
@@ -116,19 +121,20 @@ end
 function battle!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
         ## Odds are equivalent
-        one_winner = rand() < 0.5
+        one_winner = rand(model.rng) < 0.5
     elseif level(one) > level(two)
         ## Odds are in favor of one
-        one_winner = 2 * rand() > rand()
+        one_winner = 2 * rand(model.rng) > rand(model.rng)
     else
         ## Odds are in favor of two
-        one_winner = rand() > 2 * rand()
+        one_winner = rand(model.rng) > 2 * rand(model.rng)
     end
 
     one_winner ? (up = one; down = two) : (up = two; down = one)
 
     new_lvl_up = min(level(up) + 1, 10)
-    new_pos_up = clamp.(rand(-1:1, 2) .+ space(up), [1, 1], size(model.space)[1:2])
+    new_pos_up =
+        clamp.(rand(model.rng, -1:1, 2) .+ space(up), [1, 1], size(model.space)[1:2])
     move_agent!(up, (new_pos_up..., new_lvl_up), model)
     new_lvl_down = level(down) - 1
     if new_lvl_down == 0
@@ -152,7 +158,7 @@ function captor_behavior!(agent, model)
         ## Taunt prisoner or kill it
         prisoner = model[close_ids[1]]
         if prisoner.capture_time > 10
-            agent.shape = :square
+            agent.shape = :rect
             gain = ceil(Int, level(prisoner) / 2)
             new_lvl = min(level(agent) + gain, 10)
             kill_agent!(prisoner, model)
@@ -162,21 +168,24 @@ function captor_behavior!(agent, model)
     else
         ## Someone is here to kill the captor. Could be more than one opponent
         prisoner = [model[id] for id in close_ids if model[id].capture_time > 0][1]
-        exploiter = rand([
-            model[id]
-            for
-            id in close_ids if
-            model[id].capture_time == 0 && model[id].has_prisoner == false
-        ])
+        exploiter = rand(
+            model.rng,
+            [
+                model[id]
+                for
+                id in close_ids if
+                model[id].capture_time == 0 && model[id].has_prisoner == false
+            ],
+        )
         exploiter.shape = :square
         gain = ceil(Int, level(agent) / 2)
-        new_lvl = min(level(agent) + rand(1:gain), 10)
+        new_lvl = min(level(agent) + rand(model.rng, 1:gain), 10)
         kill_agent!(agent, model)
         move_agent!(exploiter, (space(exploiter)..., new_lvl), model)
         ## Prisoner runs away in the commotion
         prisoner.shape = :utriangle
         prisoner.capture_time = 0
-        walk!(prisoner, (rand(-1:1, 2)..., 0), model)
+        walk!(prisoner, (rand(model.rng, -1:1, 2)..., 0), model)
     end
 end
 
@@ -195,8 +204,8 @@ function endgame!(agent, model)
         target = space(opponent)
         if origin == target
             ## Battle
-            agent.shape = :square
-            opponent.shape = :square
+            agent.shape = :rect
+            opponent.shape = :rect
             showdown!(agent, opponent, model)
         else
             walk!(agent, (sign.(target .- origin)..., 0), model)
@@ -207,13 +216,13 @@ end
 function showdown!(one::Fighter, two::Fighter, model)
     if level(one) == level(two)
         ## Odds are equivalent
-        one_winner = rand() < 0.5
+        one_winner = rand(model.rng) < 0.5
     elseif level(one) > level(two)
         ## Odds are in favor of one
-        one_winner = level(one) - level(two) * rand() > rand()
+        one_winner = level(one) - level(two) * rand(model.rng) > rand(model.rng)
     else
         ## Odds are in favor of two
-        one_winner = rand() > level(two) - level(one) * rand()
+        one_winner = rand(model.rng) > level(two) - level(one) * rand(model.rng)
     end
 
     one_winner ? kill_agent!(two, model) : kill_agent!(one, model)
@@ -271,8 +280,8 @@ function agent_step!(agent, model)
                     target = space(opponent)
                     if origin == target
                         ## Battle
-                        agent.shape = :square
-                        opponent.shape = :square
+                        agent.shape = :rect
+                        opponent.shape = :rect
                         battle!(agent, opponent, model)
                     else
                         ## Move towards worthy opponent
@@ -317,44 +326,73 @@ end
 # since it expects our categorical dimension is actually a third spatial one.
 # We start with some custom legends to easier understand the dynamics.
 
+label_action = ["Battle", "Run", "Showdown", "Sneak", "Duel", "Captor", "Prisoner", "Chase"]
+actions = [:rect, :utriangle, :circle, :pentagon, :diamond, :vline, :hline, :star4]
+group_action = [
+    MarkerElement(
+        marker = marker,
+        color = :black,
+        strokecolor = :transparent,
+        markersize = 15,
+    ) for marker in actions
+]
+group_level = [
+    PolyElement(color = color, strokecolor = :transparent) for color in cgrad(:tab10)[1:10]
+]
+nothing #hide
+
+# And some complex internals that will be hidden away in the near future
+
+e = size(model.space.s)[1:2] .+ 2
+o = zero.(e) .- 2
 clr(agent) = cgrad(:tab10)[level(agent)]
-lvl = plot(
-    (1:10)',
-    label = ["Level 1" "Level 2" "Level 3" "Level 4" "Level 5" "Level 6" "Level 7" "Level 8" "Level 9" "Level 10"],
-    palette = :tab10,
-    legend = :top,
-    framestyle = :none,
+mkr(a) = a.shape
+colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
+markers = Observable([mkr(model[id]) for id in by_id(model)])
+pos = Observable([model[id].pos for id in by_id(model)])
+stepper = InteractiveDynamics.ABMStepper(
+    clr,
+    mkr,
+    15,
+    nothing,
+    by_id,
+    pos,
+    colors,
+    Observable(15),
+    markers,
 )
-state = scatter(
-    (1:8)',
-    xlims = (-2, -1),
-    label = ["Battle" "Run" "Showdown" "Sneak" "Duel" "Captor" "Prisoner" "Chase"],
-    markershape = [:square :utriangle :circle :pentagon :diamond :vline :hline :star4],
-    color = :black,
-    legend = :top,
-    framestyle = :none,
+nothing #hide
+
+# Finally, the plot:
+
+f = Figure(resolution = (600, 700))
+ax = f[1, 1] = Axis(f, title = "Battle Royale")
+hidedecorations!(ax)
+ax.xgridvisible = true
+ax.ygridvisible = true
+f[2, 1] = Legend(
+    f,
+    [group_action, group_level],
+    [label_action, string.(1:10)],
+    ["Action", "Level"],
+    orientation = :horizontal,
+    tellheight = true,
+    tellwidth = false,
+    nbanks = 5,
 )
-anim = @animate for i in 0:225
-    posn = [space(model[id]) for id in by_id(model)]
-    cm = [clr(model[id]) for id in by_id(model)]
-    shp = [model[id].shape for id in by_id(model)]
-    ll = @layout [a{0.7w} [b; c]]
-    battle = scatter(
-        posn,
-        legend = :none,
-        color = cm,
-        markersize = 7,
-        markershape = shp,
-        xlims = (-2, 103),
-        ylims = (-2, 103),
-        showaxis = false,
-        minorgrid = true,
-        ticks = (0:10:100, []),
-    )
-    plot(battle, lvl, state, layout = ll, size = (850, 600))
-    step!(model, agent_step!, 1)
+
+scatter!(ax, pos; color = colors, markersize = 15, marker = markers, strokewidth = 0.0)
+xlims!(ax, o[1], e[1])
+ylims!(ax, o[2], e[2])
+record(f, "battle.mp4", 0:225; framerate = 10) do i
+    Agents.step!(stepper, model, agent_step!, dummystep, 1)
 end
-gif(anim, "battle.gif", fps = 10)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../battle.mp4" type="video/mp4">
+# </video>
+# ```
 
 # Some interesting behaviour emerges: sometimes you see a group of diamonds chasing one triangle.
 # What ends up happening here is usually a close pair that wishes to fight gets caught

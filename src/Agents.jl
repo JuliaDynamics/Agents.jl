@@ -62,6 +62,7 @@ if display_update
             stdout,
             """
             \nUpdate message: Agents v$(version_number)
+
             `AgentBasedModel` now explicitly includes a random number generator, enabling
             reproducible ABM simulations with Agents.jl.
             Access it with `model.rng` and seed it with `seed!(model, seed)`!

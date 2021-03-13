@@ -1,5 +1,9 @@
 # # Daisyworld
-# ![](daisyworld.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../daisyworld.mp4" type="video/mp4">
+# </video>
+# ```
 #
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
@@ -49,10 +53,9 @@
 # visualize surface temperature.
 # It is also available from the `Models` module as [`Models.daisyworld`](@ref).
 
-using Agents, Plots
+using Agents
 using Statistics: mean
 using Random # hide
-gr() # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
@@ -122,7 +125,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         temperature = model[ids[1]].temperature
         ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand() < seed_threshold
+        if rand(model.rng) < seed_threshold
             ## Collect all adjacent position that have no daisies
             empty_neighbors = Tuple{Int,Int}[]
             neighbors = nearby_positions(pos, model)
@@ -133,7 +136,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
             end
             if !isempty(empty_neighbors)
                 ## Seed a new daisy in one of those position
-                seeding_place = rand(empty_neighbors)
+                seeding_place = rand(model.rng, empty_neighbors)
                 a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
                 add_agent_pos!(a, model)
             end
@@ -234,14 +237,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(0:max_age), albedo_white)
+        wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(0:max_age), albedo_black)
+        wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 
@@ -253,11 +256,12 @@ nothing # hide
 # %% #src
 # Lets run the model with constant solar isolation and visualize the result
 
-cd(@__DIR__) #src
 Random.seed!(165) # hide
+using InteractiveDynamics, CairoMakie, AbstractPlotting
+
 model = daisyworld()
 
-# To visualize we need to define the necessary functions for [`plotabm`](@ref).
+# To visualize we need to define the necessary functions for [`abm_plot`](@ref).
 # The daisies will obviously be black or white, but the land will have a color
 # that reflects its temperature, with -50 darkest and 100 ᵒC brightest color
 
@@ -267,41 +271,42 @@ daisycolor(a::Land) = landcolor[(a.temperature+50)/150]
 nothing # hide
 
 # And we plot daisies as circles, and land patches as squares
-daisyshape(a::Daisy) = :circle
-daisysize(a::Daisy) = 7
-daisyshape(a::Land) = :square
-daisysize(a::Land) = 8.8
+daisyshape(a::Daisy) = '❀'
+daisysize(a::Daisy) = 13
+daisyshape(a::Land) = '■'
+daisysize(a::Land) = 15
 nothing # hide
 
 # Notice that we want to ensure that the `Land` patches are always plotted first.
 plotsched = by_type((Land, Daisy), false)
 
-plotkwargs = (
-    ac = daisycolor,
-    am = daisyshape,
-    as = daisysize,
-    scheduler = plotsched,
-    aspect_ratio = 1,
-    size = (600, 600),
-    showaxis = false,
-)
+plotkwargs = (ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
 
-p = plotabm(model; plotkwargs...)
+p, _ = abm_plot(model; plotkwargs...)
+p
 
 # And after a couple of steps
-step!(model, agent_step!, model_step!, 5)
-p = plotabm(model; plotkwargs...)
+Agents.step!(model, agent_step!, model_step!, 5)
+p, _ = abm_plot(model; plotkwargs...)
+p
 
 # Let's do some animation now
 Random.seed!(165) # hide
 model = daisyworld()
-anim = @animate for i in 0:30
-    p = plotabm(model; plotkwargs...)
-    title!(p, "step $(i)")
-    step!(model, agent_step!, model_step!)
-end
-gif(anim, "daisyworld.gif", fps = 3)
-
+abm_video(
+    "daisyworld.mp4",
+    model,
+    agent_step!,
+    model_step!;
+    title = "Daisy World",
+    plotkwargs...,
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../daisyworld.mp4" type="video/mp4">
+# </video>
+# ```
 # Running this animation for longer hints that this world achieves quasi-equilibrium
 # for some input parameters, where one `breed` does not totally dominate the other.
 # Of course we can check this easily through data collection.
@@ -318,11 +323,12 @@ Random.seed!(165) # hide
 model = daisyworld(; solar_luminosity = 1.0)
 
 agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
-
-p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
-plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")
-plot!(p; xlabel = "tick", ylabel = "daisy count")
-
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure, xlabel = "tick", ylabel = "daisy count")
+blackl = lines!(ax, agent_df[!, :step], agent_df[!, :count_black_daisies], color = :red)
+whitel = lines!(ax, agent_df[!, :step], agent_df[!, :count_white_daisies], color = :blue)
+figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize = 12)
+figure
 # ## Time dependent dynamics
 # %% #src
 
@@ -342,26 +348,17 @@ model = daisyworld(solar_luminosity = 1.0, scenario = :ramp)
 agent_df, model_df =
     run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
 
-p = plot(agent_df[!, :step], agent_df[!, :count_black_daisies], label = "black")
-plot!(p, agent_df[!, :step], agent_df[!, :count_white_daisies], label = "white")
-plot!(p; xlabel = "tick", ylabel = "daisy count")
+figure = Figure(resolution = (600, 1200))
+ax1 = figure[1, 1] = Axis(figure, ylabel = "daisy count", textsize = 12)
+blackl = lines!(ax1, agent_df[!, :step], agent_df[!, :count_black_daisies], color = :red)
+whitel = lines!(ax1, agent_df[!, :step], agent_df[!, :count_white_daisies], color = :blue)
+figure[1, 2] = Legend(figure, [blackl, whitel], ["black", "white"], textsize = 12)
 
-p2 = plot(
-    agent_df[!, :step],
-    agent_df[!, :mean_temperature_land],
-    ylabel = "temperature",
-    legend = :none,
-)
-p3 = plot(
-    model_df[!, :step],
-    model_df[!, :solar_luminosity],
-    ylabel = "L",
-    xlabel = "ticks",
-    legend = :none,
-)
-
-plot(p, p2, p3, layout = (3, 1), size = (600, 700))
-
+ax2 = figure[2, 1] = Axis(figure, ylabel = "temperature", textsize = 12)
+ax3 = figure[3, 1] = Axis(figure, xlabel = "tick", ylabel = "L", textsize = 12)
+lines!(ax2, agent_df[!, :step], agent_df[!, :mean_temperature_land], color = :red)
+lines!(ax3, model_df[!, :step], model_df[!, :solar_luminosity], color = :red)
+figure
 # ## Interactive scientific research
 # Julia is an interactive language, and thus everything that you do with Agents.jl can be
 # considered interactive. However, we can do even better by using our interactive application.
@@ -369,7 +366,7 @@ plot(p, p2, p3, layout = (3, 1), size = (600, 700))
 # hand, we use the interactive application, to control by ourselves, in real time, how
 # much solar forcing is delivered to daisyworld.
 
-# So, let's use `abm_data_exploration` from the [Interactive application](@ref Interact) page!
+# So, let's make an [`InteractiveDynamics.abm_data_exploration`](@ref).
 
 # ```julia
 # using InteractiveDynamics, GLMakie, Random
@@ -377,42 +374,12 @@ plot(p, p2, p3, layout = (3, 1), size = (600, 700))
 # model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 # ```
 
-# Thankfully, we have already defined the necessary `adata, mdata` as well as the agent
-# color/shape/size functions, and we can re-use them for the interactive application.
-# Because `InteractiveDynamics` uses a different plotting ecosystem, Makie.jl, the plotting
-# functions we have defined for [`plotabm`](@ref) need to be slightly adjusted.
-
-# ```julia
-# using AbstractPlotting: to_color
-# daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
-# const landcolor = cgrad(:thermal)
-# daisycolor(a::Land) = to_color(landcolor[(a.temperature+50)/150])
-#
-# daisyshape(a::Daisy) = :circle
-# daisysize(a::Daisy) = 0.6
-# daisyshape(a::Land) = :rect
-# daisysize(a::Land) = 1
-# ```
-
 # The only significant addition to use the interactive application is that we make a parameter
 # container for surface albedo and for the rate of change of solar luminosity, and add some labels for clarity.
 
 # ```julia
-# params = Dict(
-#     :solar_change => -0.1:0.01:0.1,
-#     :surface_albedo => 0:0.01:1,
-# )
-#
-# alabels = ["black", "white", "T"]
-# mlabels = ["L"]
-#
-# landfirst = by_type((Land, Daisy), false)
-#
-# scene, agent_df, model_def = abm_data_exploration(
-#     model, agent_step!, model_step!, params;
-#     ac = daisycolor, am = daisyshape, as = daisysize,
-#     mdata = mdata, adata = adata, alabels = alabels, mlabels = mlabels,
-#     scheduler = landfirst # crucial to change model scheduler!
+# figure = abm_play(
+#     model, agent_step!, model_step!; plotkwargs...
 # )
 # ```
 
