@@ -111,7 +111,7 @@ For [`OSMSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a s
 movement method is available.
 
 ```@docs
-move_along_path!
+move_along_route!
 ```
 
 ## Local area

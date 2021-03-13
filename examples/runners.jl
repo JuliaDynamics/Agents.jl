@@ -48,7 +48,7 @@ end
 # With the pathfinder in place, and all our runners having a goal position set, stepping
 # is now trivial.
 
-agent_step!(agent, model) = move_along_path!(agent, model)
+agent_step!(agent, model) = move_along_route!(agent, model)
 
 # ## Let's Race
 # Plotting is simple enough. We just need to use the [`InteractiveDynamics.abm_plot`](@ref)

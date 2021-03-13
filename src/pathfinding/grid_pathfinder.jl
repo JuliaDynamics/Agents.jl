@@ -5,7 +5,7 @@ export CostMetric,
     delta_cost,
     set_target!,
     set_best_target!,
-    move_along_path!,
+    move_along_route!,
     is_stationary,
     heightmap,
     walkmap,
@@ -318,7 +318,7 @@ end
 Calculate and store the shortest path to move the agent from its current position to
 `target` (a grid position e.g. `(1, 5)`) for models using a [`Pathfinder`](@ref).
 
-Use this method in conjuction with [`move_along_path!`](@ref).
+Use this method in conjuction with [`move_along_route!`](@ref).
 """
 function set_target!(
     agent::A,
@@ -402,12 +402,12 @@ walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
     model.space.pathfinder.walkable
 
 """
-    move_along_path!(agent::A, model{<:GridSpace{D,P,<:AStar{D}},A})
+    move_along_route!(agent::A, model{<:GridSpace{D,P,<:AStar{D}},A})
 Move `agent` along the path toward its target set by [`set_target!`](@ref) for agents on
 a [`GridSpace`](@ref) using a [`Pathfinder`](@ref). If the agent does
 not have a precalculated path or the path is empty, it remains stationary.
 """
-function move_along_path!(
+function move_along_route!(
     agent::A,
     model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
 ) where {D,P,A<:AbstractAgent}

@@ -39,9 +39,9 @@ function initalize_model(map_url)
 end
 
 ## Dynamics
-# Stepping the agent is a trivial matter of calling [`move_along_path!`](@ref) to move it along it's path to
+# Stepping the agent is a trivial matter of calling [`move_along_route!`](@ref) to move it along it's path to
 # the target.
-agent_step!(agent, model) = move_along_path!(agent, model)
+agent_step!(agent, model) = move_along_route!(agent, model)
 
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
