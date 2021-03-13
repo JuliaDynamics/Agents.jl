@@ -31,7 +31,7 @@ Distance is approximated as the shortest path between the two points, provided t
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
 neighboring tile on the `i` dimensional diagonal (default is `10√i`).
 
-If `diagonal_neighbors=false` in [`Pathfinder`](@ref), neighbors in diagonal positions will be
+If `diagonal_movement=false` in [`Pathfinder`](@ref), neighbors in diagonal positions will be
 excluded. Cost defaults to the first value of the provided vector.
 """
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
@@ -54,7 +54,7 @@ Base.show(io::IO, metric::HeightMap) =
     print(io, "HeightMap with base: $(metric.base_metric)")
 
 """
-    HeightMap(hmap::Array{Int,D} [, base_metric::Union{Type{<:CostMetric}, <:CostMetric}]) <: CostMetric{D}
+    HeightMap(hmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in height. A heightmap of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
@@ -101,7 +101,7 @@ Provides pathfinding capabilities and stores agent paths.
 
 `periodic = false` specifies if the space is periodic
 
-`diagonal_neighbors = true` specifies if movement can be to diagonal neighbors of a
+`diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
 tile, or only orthogonal neighbors.
 
 `admissibility = 0.0` specifies how much a path can deviate from optimal, in favour of
@@ -120,12 +120,12 @@ Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
 function AStar(
     dims::Dims{D};
     periodic::Bool = false,
-    diagonal_neighbors::Bool = true,
+    diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, dims),
     cost_metric::Union{Type{M},M} = DirectDistance,
 ) where {D,M<:CostMetric}
-    neighborhood = diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     if typeof(cost_metric) <: CostMetric
         metric = cost_metric
     else
@@ -150,8 +150,8 @@ function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
         metric = pathfinder.cost_metric{D}()
     end
     neighborhood =
-        pathfinder.diagonal_neighbors ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,pathfinder.diagonal_neighbors}(
+        pathfinder.diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
+    return AStar{D,periodic,pathfinder.diagonal_movement}(
         Dict{Int,Path{D}}(),
         dims,
         neighborhood,
@@ -174,7 +174,8 @@ end
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
     periodic = P ? "periodic, " : ""
     moore = M ? "moore, " : ""
-    s = "A* in $(D) dimensions. $(periodic)$(moore)ϵ=$(pathfinder.admissibility), metric=$(pathfinder.cost_metric)"
+    s = "A* in $(D) dimensions. $(periodic)$(moore)ϵ=$(pathfinder.admissibility), "*
+    "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
 
@@ -332,7 +333,7 @@ end
     set_best_target!(agent, targets::Vector{NTuple{D,Int}}, model)
 
 Calculate and store the best path to move the agent from its current position to
-a chosen target position taken from `targets` for models using a 
+a chosen target position taken from `targets` for models using a
 [`Pathfinder`](@ref).
 
 The `condition = :shortest` keyword retuns the shortest path which is shortest

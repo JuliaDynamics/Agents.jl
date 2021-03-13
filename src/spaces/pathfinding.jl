@@ -11,19 +11,19 @@ between two points in a `D` dimensional [`GridSpace{D}`](@ref).
 abstract type CostMetric{D} end
 
 struct Pathfinder{M<:CostMetric}
-    diagonal_neighbors::Bool
+    diagonal_movement::Bool
     admissibility::Float64
     walkable::Union{Array{Bool},Nothing}
     cost_metric::Union{M,Type{M}}
 end
 
 """
-    Pathfinder(; diagonal_neighbors = true, admissibility = 0.0, walkable = nothing, cost_metric = DirectDistance)
+    Pathfinder(; kwargs...)
 
-Enable pathfinding using the A* algorithm by passing this struct into [`GridSpace`](@ref). Pathfinding parameters
-can be overriden from their default values using the following keyword arguments:
+Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder` into
+[`GridSpace`](@ref). Pathfinding parameters are tuned with the following keyword arguments:
 
-`diagonal_neighbors` defaults to `true`, and allows agents to move to diagonally adjacent cells. If set to `false`,
+* `diagonal_movement = true` states that agents are allowed to move diagonally. and allows agents to move to diagonally adjacent cells. If set to `false`,
 agents are only allowed to move to adjacent neighbors.
 
 `admissibility` allows the algorithm to approximate paths to speed up pathfinding significantly. A value of `ϵ`
@@ -34,13 +34,13 @@ to be optimal.
 dimensions and size as the corresponding [`GridSpace`](@ref). This defaults to `nothing`, which allows agents to walk on any
 position in the space.
 
-`cost_metric` specifies the method to use for approximating the distance between two points. This defaults 
+`cost_metric` specifies the method to use for approximating the distance between two points. This defaults
 to [`DirectDistance`](@ref).
 """
 Pathfinder(;
-    diagonal_neighbors::Bool = true,
+    diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Union{Array{Bool},Nothing} = nothing,
     cost_metric::Union{Type{M},M} = DirectDistance,
 ) where {M<:CostMetric} =
-    Pathfinder(diagonal_neighbors, admissibility, walkable, cost_metric)
+    Pathfinder(diagonal_movement, admissibility, walkable, cost_metric)

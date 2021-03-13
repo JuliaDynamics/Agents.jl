@@ -23,9 +23,9 @@ function initalize_model(map_url)
     ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
     ## [`DirectDistance`](@ref) is appropriate.
-    ## `diagonal_neighbors` is set to `false` to prevent cutting corners by going along
+    ## `diagonal_movement` is set to `false` to prevent cutting corners by going along
     ## diagonals.
-    pathfinder = Pathfinder(walkable=maze, diagonal_neighbors=false)
+    pathfinder = Pathfinder(walkable=maze, diagonal_movement=false)
     ## The size of the space is the size of the maze
     space = GridSpace(size(maze); pathfinder, periodic = false)
     model = ABM(Walker, space)
