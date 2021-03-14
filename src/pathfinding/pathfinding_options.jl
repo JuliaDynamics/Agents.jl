@@ -32,9 +32,9 @@ Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder`
   significantly. A value of `admissibility` allows paths at most `(1+admissibility)` times
   the optimal path length.
 * `walkable = nothing` specifies (un)walkable regions of the space. If specified, it should
-  be a boolean array of the same size as the corresponding
-  [`GridSpace`](@ref). This defaults to `nothing`, which allows agents to walk on any
-  position in the space.
+  be a boolean array of the same size as the corresponding [`GridSpace`](@ref). This defaults
+  to `nothing`, which allows agents to walk on any position in the space. An example usage can
+  be found in [Maze Solver](@ref).
 * `cost_metric` is an instance of a cost metric and specifies the method
   to use for approximating the distance between two points. This defaults
   to [`DirectDistance`](@ref) with appropriate dimensionality.

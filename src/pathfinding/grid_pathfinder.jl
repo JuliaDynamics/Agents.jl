@@ -58,12 +58,13 @@ Base.show(io::IO, metric::HeightMap) =
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in height. A heightmap of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
-by default, and can be changed by specifying `base_metric`.
+by default, and can be changed by specifying `base_metric`. An example usage can be found in
+[Mountain Runners](@ref).
 """
 HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
 
-HeightMap(hmap::Array{Int,D}, base_metric::Union{Type{M},M}) where {D,M<:CostMetric} =
-    HeightMap{D}(typeof(base_metric) <: CostMetric ? base_metric : base_metric{D}(), hmap)
+HeightMap(hmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
+    HeightMap{D}(base_metric, hmap)
 
 struct AStar{D,P,M} <: AbstractPathfinder
     agent_paths::Dict{Int,Path{D}}
@@ -123,21 +124,16 @@ function AStar(
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, dims),
-    cost_metric::Union{Type{M},M} = DirectDistance,
-) where {D,M<:CostMetric}
+    cost_metric::CostMetric{D} = DirectDistance(),
+) where {D}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    if typeof(cost_metric) <: CostMetric
-        metric = cost_metric
-    else
-        metric = cost_metric{D}()
-    end
     return AStar{D,periodic,moore_neighbors}(
         Dict{Int,Path{D}}(),
         dims,
         neighborhood,
         admissibility,
         walkable,
-        metric,
+        cost_metric,
     )
 end
 
@@ -379,7 +375,8 @@ Return the heightmap of a [`Pathfinder`](@ref) if the [`HeightMap`](@ref) metric
 `nothing` otherwise.
 
 It is possible to mutate the map directly, for example `heightmap(model)[15, 40] = 115`
-or `heightmap(model) .= rand(50, 50)`.
+or `heightmap(model) .= rand(50, 50)`. If this is mutated, a new path needs to be planned
+using [`set_target!`](@ref).
 """
 function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
     if model.space.pathfinder.cost_metric isa HeightMap
@@ -394,6 +391,7 @@ end
 Return the walkable map of a [`Pathfinder`](@ref).
 
 It is possible to mutate the map directly, for example `walkmap(model)[15, 40] = false`.
+If this is mutated, a new path needs to be planned using [`set_target!`](@ref).
 """
 walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
     model.space.pathfinder.walkable
