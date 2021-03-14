@@ -10,7 +10,7 @@ between two points in a `D` dimensional [`GridSpace{D}`](@ref).
 """
 abstract type CostMetric{D} end
 
-struct Pathfinder{W<:Union{Array{Bool},Nothing}, M::Union{CostMetric, Nothing}}
+struct Pathfinder{W<:Union{Array{Bool},Nothing}, M<:Union{CostMetric,Nothing}}
     diagonal_movement::Bool
     admissibility::Float64
     walkable::W
@@ -42,8 +42,8 @@ Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder`
 function Pathfinder(;
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkable::Union{Array{Bool},Nothing} = nothing,
-    cost_metric::CostMetric = DirectDistance(),
-)
+    walkable::W = nothing,
+    cost_metric::M = nothing,
+) where {W<:Union{Array{Bool},Nothing}, M<:Union{CostMetric,Nothing}}
     return Pathfinder(diagonal_movement, admissibility, walkable, cost_metric)
 end
