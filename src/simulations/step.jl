@@ -2,7 +2,7 @@ export step!, dummystep
 
 """
     step!(model, agent_step!, n::Int = 1)
-    step!(model, agent_step!, model_step!, n::Int = 1, agents_first::Bool=true)
+    step!(model, agent_step!, model_step!, n::Int = 1, agents_first::Bool = true)
 
 Update agents `n` steps according to the stepping function `agent_step!`.
 Agents will be activated as specified by the `model.scheduler`.
@@ -13,13 +13,16 @@ activates the agents).
 `step!` ignores scheduled IDs that do not exist within the model, allowing
 you to safely kill agents dynamically.
 
-    step!(model, agent_step!, model_step!, n::Function, agents_first::Bool=true)
+    step!(model, agent_step!, model_step!, n::Function, agents_first::Bool = true)
 
 In this version `n` is a function.
 Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
 current amount of steps taken, starting from 0.
 For this method of `step!`, `model_step!` must be provided always (use [`dummystep`](@ref)
 if you have no model stepping dynamics).
+
+See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
+not be convenient.
 """
 function step! end
 

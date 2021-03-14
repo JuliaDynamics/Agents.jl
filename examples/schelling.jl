@@ -11,30 +11,37 @@
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional Chebyshev grid (8 neighbors per position).
-# * If an agent is in the same group with at least three neighbors, then it is happy.
+# * The agents live in a two-dimensional grid with a Chebyshev metric.
+#   This leads to 8 neighboring positions per position (except at the edges of the grid).
+# * Each position of the grid can be occupied by at most one agent.
+# * If an agent has at least `3` neighbors belonging to the same group, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
 # Schelling's model shows that even small preferences of agents to have neighbors
-# belonging to the same group (e.g. preferring that at least 30% of neighbors to
+# belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
 # be in the same group) could lead to total segregation of neighborhoods.
 
 # This model is also available as [`Models.schelling`](@ref).
 
+# ## Creating a space
+
+# For this example, we will be using a Chebyshev 2D grid, e.g.
+
+space = GridSpace((10, 10); periodic = false)
+
+# Agents belonging in this type of space must have a position field that is a
+# `NTuple{2, Int}`. We ensure this below.
+
 # ## Defining the agent type
 
 using Agents
-using StatsBase: mean
 
 mutable struct SchellingAgent <: AbstractAgent
-    id::Int # The identifier number of the agent
-    pos::Dims{2} # The x, y location of the agent on a 2D grid
-    mood::Bool # whether the agent is happy in its position. (true = happy)
-    group::Int # The group of the agent,  determines mood as it interacts with neighbors
+    id::Int             # The identifier number of the agent
+    pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
+    mood::Bool          # whether the agent is happy in its position. (true = happy)
+    group::Int          # The group of the agent, determines mood as it interacts with neighbors
 end
-
-# Notice that the position of this Agent type is a `Dims{2}`, equivalent to
-# `NTuple{2,Int}`, because we will use a 2-dimensional `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
@@ -48,12 +55,6 @@ end
 #     group::Int
 # end
 # ```
-
-# ## Creating a space
-
-# For this example, we will be using a Chebyshev 2D grid, e.g.
-
-space = GridSpace((10, 10), periodic = false)
 
 # ## Creating an ABM
 
@@ -106,7 +107,6 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     end
     return model
 end
-nothing # hide
 
 # Notice that the position that an agent is initialized does not matter
 # in this example.
@@ -120,10 +120,11 @@ nothing # hide
 
 function agent_step!(agent, model)
     minhappy = model.min_to_be_happy
-    neighbor_positions = nearby_positions(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
+    ## Here `nearby_agents` (with default arguments) will provide an iterator
+    ## over the nearby agents one grid point away, which are at most 8.
     for neighbor in nearby_agents(agent, model)
         if agent.group == neighbor.group
             count_neighbors_same_group += 1
@@ -139,7 +140,6 @@ function agent_step!(agent, model)
     end
     return
 end
-nothing # hide
 
 # For the purpose of this implementation of Schelling's segregation model,
 # we only need an agent step function.
@@ -227,7 +227,7 @@ abm_video(
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
 )
-nothing # hide
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../schelling.mp4" type="video/mp4">
@@ -338,9 +338,8 @@ data[(end - 10):end, :]
 # the `groupby` and `combine` functions from the `DataFrames` package:
 
 using DataFrames
-using Statistics: mean
-gd = groupby(data,[:step, :min_to_be_happy, :numagents])
-data_mean = combine(gd,[:happyperc_mood,:replicate] .=> mean)
+gd = groupby(data, [:step, :min_to_be_happy, :numagents])
+data_mean = combine(gd, [:happyperc_mood, :replicate] .=> mean)
 
 out = select(data_mean, Not(:replicate_mean))
 
