@@ -4,7 +4,7 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost = GridSpace((5, 5); pathfinder=Pathfinder()).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = DirectDistance)).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = DirectDistance{2}())).pathfinder.cost_metric
     @test_throws AssertionError GridSpace((5, 5); pathfinder=Pathfinder(cost_metric=DirectDistance{2}([1])))
     @test_throws AssertionError GridSpace((5, 5); pathfinder=Pathfinder(diagonal_movement=false, cost_metric=DirectDistance{2}([])))
     @test typeof(cost) <: DirectDistance{2}
@@ -17,7 +17,7 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
     @test cost.hmap == fill(1, 5, 5)
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(fill(1, 5, 5), MaxDistance))).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}()))).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: MaxDistance{2}
     @test cost.hmap == fill(1, 5, 5)

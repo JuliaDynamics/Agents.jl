@@ -124,7 +124,7 @@ function AStar(
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::Array{Bool,D} = fill(true, dims),
-    cost_metric::CostMetric{D} = DirectDistance(),
+    cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     return AStar{D,periodic,moore_neighbors}(
