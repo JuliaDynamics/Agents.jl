@@ -16,7 +16,8 @@ struct Hood{D}
     βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
-struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace  # type P stands for Periodic and is a boolean
+# type P stands for Periodic and is a boolean
+struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
