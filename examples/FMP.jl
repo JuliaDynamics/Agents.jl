@@ -1,9 +1,9 @@
 # # Force Based Motion Planning
-# ![](circle_swap_pretty.gif) 
+# ![](circle_swap_pretty.gif)
 
 # This is an example implementation of the [Force Based Motion Planning (FMP)](https://arxiv.org/pdf/1909.05415.pdf) algorithm. The algorithm is a decentralized motion
 # planning algorithm where individual agents experience attractive forces towards
-# a goal position and repulsive forces from other agents or objects in the environment. 
+# a goal position and repulsive forces from other agents or objects in the environment.
 # The FMP algorithm is included as a predefined `update_vel` function for use
 # with [`ContinuousSpace`](@ref).
 
@@ -23,8 +23,7 @@
 # - :O = object (has no velocity, cannot move, agents must go around)
 # - :T = target (no velocity, just a projection of agent target zone)
 
-using Agents, Random, LinearAlgebra, Colors, InteractiveDynamics
-import CairoMakie
+using Agents, Random, LinearAlgebra
 
 mutable struct FMP_Agent <: AbstractAgent
     id::Int
@@ -44,7 +43,7 @@ end
 # Next, we define the model. The FMP algorithm has several parameters defined
 # in the original paper which are stored in a struct. Typical values can be
 # generated using the `FMP_Parameter_Init` function and loaded into the model
-# properties. 
+# properties.
 
 # Additionally, note that we pass in `FMP_Update_Vel` as the `update_vel!`
 # keyword argument when we initialize our `ContinuousSpace`.
@@ -52,12 +51,13 @@ end
 ## define AgentBasedModel (ABM)
 
 function FMP_Model()
-    properties = Dict(:FMP_params=>fmp_parameter_init(),
-                      :dt => 0.01,
-                      :num_agents=>30,
-                      :num_steps=>1500,
-                      :step_inc=>2,
-                     )
+    properties = Dict(
+        :FMP_params=>fmp_parameter_init(),
+        :dt => 0.01,
+        :num_agents=>30,
+        :num_steps=>1500,
+        :step_inc=>2,
+    )
 
     space2d = ContinuousSpace((1,1); periodic = true)
     model = ABM(FMP_Agent, space2d, properties=properties)
@@ -90,7 +90,7 @@ for i in 1:model.num_agents
     theta_i = (2*π/model.num_agents)*i
     xi = r*cos(theta_i)+x/2
     yi = r*sin(theta_i)+y/2
-    
+
     xitau = r*cos(theta_i+π)+x/2
     yitau = r*sin(theta_i+π)+y/2
 
@@ -117,23 +117,23 @@ end
 # function occurrs once during each model time step and calls the
 # [`interacting_pairs`](@ref) function to see if agents are within an
 # interactive radius of one another. If they are, they the FMP algorithm
-# computes their attractive/repulsive forces. 
+# computes their attractive/repulsive forces.
 
 agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 
 function model_step!(model)
     fmp_update_interacting_pairs(model)
-    for agent_id in keys(model.agents)
-        fmp_update_vel(model.agents[agent_id], model)
+    for agent in allagents(model)
+        fmp_update_vel(agent, model)
     end
 end
 
-## helpful sim params
-e = model.space.extent
-step_range = 1:model.step_inc:model.num_steps
+# And make it into a video
+using InteractiveDynamics
+import CairoMakie
 
 InteractiveDynamics.abm_video(
-    "examples/output1.mp4",
+    "forced_motion_planning_1.mp4",
     model,
     agent_step!,
     model_step!,
@@ -142,20 +142,18 @@ InteractiveDynamics.abm_video(
     framerate = 100,
     resolution = (600, 600),
     equalaspect=true,
-   )
+)
 
 
 # The above animation isn't very pretty looking - lets plot using some color
 # and shape/scaling utilities. Additionally we want a certain draw order so we
 # write a plotting scheduler.
 
-
-"""
-This function is a scheduler to determine draw order of agents. Draw order (left to right) is :T, :O, :A
-"""
+# This function is a scheduler to determine draw order of agents.
+# Draw order (left to right) is :T, :O, :A
 function plot_scheduler(model::ABM)
 
-    # init blank lists
+    ## init blank lists
     agent_list = []
     object_list = []
     target_list = []
@@ -169,28 +167,25 @@ function plot_scheduler(model::ABM)
         end
     end
 
-    # make composite list [targets, objects, agents]
+    ## make composite list [targets, objects, agents]
     draw_order = []
     append!(draw_order, target_list)
     append!(draw_order, object_list)
     append!(draw_order, agent_list)
-
     return draw_order
 end
 
-"""
-This function is a utility function for coloring agents.
-"""
+# This function is a utility function for coloring agents.
+using Colors
 function agent_init_color(i, num_agents)
     color_range = range(HSV(0,1,1), stop=HSV(-360,1,1), length=num_agents)
     agent_color = color_range[i]
     return string("#", hex(agent_color))
-
 end
 
 # Now that we've defined the plot utilities, lets re-run our simulation with
 # some additional options. We do this by redefining the model, re-adding the
-# agents but this time with a color parameter that is actually used. 
+# agents but this time with a color parameter that is actually used.
 
 model = FMP_Model()
 
@@ -203,7 +198,7 @@ for i in 1:model.num_agents
     theta_i = (2*π/model.num_agents)*i
     xi = r*cos(theta_i)+x/2
     yi = r*sin(theta_i)+y/2
-    
+
     xitau = r*cos(theta_i+π)+x/2
     yitau = r*sin(theta_i+π)+y/2
 
@@ -220,7 +215,7 @@ end
 # Now we run the simulation
 
 InteractiveDynamics.abm_video(
-    "examples/output2.mp4",
+    "forced_motion_planning_2.mp4",
     model,
     agent_step!,
     model_step!,
@@ -230,19 +225,18 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
     ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :rect,
     equalaspect=true,
     scheduler = plot_scheduler,
-   )
+)
 
 # ## Adding Obstacles
 
 # Now that we've plotted some agents and made the resultant simulation output
 # look pretty, lets see how the FMP algorithm handles obstacles. The process is
 # very similar to what we've been doing up until this point. We start by
-# redefining the model and adding in agents. 
+# redefining the model and adding in agents.
 
 model = FMP_Model()
 
@@ -288,7 +282,7 @@ end
 # After adding in the obstacles, we can run the simulation
 
 InteractiveDynamics.abm_video(
-    "examples/output3.mp4",
+    "forced_motion_planning_3.mp4",
     model,
     agent_step!,
     model_step!,
@@ -298,18 +292,18 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
     ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
+
     ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :rect,
     equalaspect=true,
     scheduler = plot_scheduler,
-   )
+)
 
 # ## Other Simulation Types
 
 # These simulations are included as a "recipe booklet" for other ways that the
 # FMP algorithm has been implemented. No new functionality is introduced; these
-# examples are meant as working examples to build off of. 
+# examples are meant as working examples to build off of.
 
 ## Centered Object Moving Line
 model = FMP_Model()
@@ -344,7 +338,7 @@ for agent in allagents(model)
 end
 
 InteractiveDynamics.abm_video(
-    "examples/output4.mp4",
+    "forced_motion_planning_4.mp4",
     model,
     agent_step!,
     model_step!,
@@ -354,12 +348,11 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
     ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,
     equalaspect=true,
     scheduler = plot_scheduler,
-   )
+)
 
 ## Circle Positions w/ Object
 
@@ -400,7 +393,7 @@ for agent in allagents(model)
 end
 
 InteractiveDynamics.abm_video(
-    "examples/output5.mp4",
+    "forced_motion_planning_5.mp4",
     model,
     agent_step!,
     model_step!,
@@ -410,12 +403,12 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
     ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
+
     ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,
     equalaspect=true,
     scheduler = plot_scheduler,
-   )
+)
 
 ## Random Positions
 model = FMP_Model()
@@ -432,7 +425,7 @@ for i in 1:model.num_agents
 end
 
 InteractiveDynamics.abm_video(
-    "examples/output6.mp4",
+    "forced_motion_planning_6.mp4",
     model,
     agent_step!,
     model_step!,
@@ -442,10 +435,9 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
     ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
+
     ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,
     equalaspect=true,
     scheduler = plot_scheduler,
-   )
-
+)
