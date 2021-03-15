@@ -52,7 +52,7 @@ jobs:
           file: lcov.info
   docs:
     name: Documentation
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       # Cancel ongoing documentation build if pushing to branch again before the previous
       # build is finished.
