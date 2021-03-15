@@ -265,6 +265,13 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 
 ## Path-finding
 In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
+
+You can enable path-finding and set it's options by passing an instance of a [`Pathfinder`](@ref) struct to the `pathfinder`
+parameter of the [`GridSpace`](@ref) constructor. During the simulation, call [`set_target!`](@ref) to set the target
+destination for an agent. This triggers the algorithm to calculate a path from the agent's current position to the one
+specified. You can alternatively use [`set_best_target!`](@ref) to choose the best target from a list. Once a target has
+been set, you can move an agent one step along its precalculated path using the [`move_along_route!`](@ref) function.
+Refer to the [Maze Solver](@ref) and [Mountain Runners](@ref) examples for further instruction on how to use the API.
 ```@docs
 Pathfinder
 set_target!

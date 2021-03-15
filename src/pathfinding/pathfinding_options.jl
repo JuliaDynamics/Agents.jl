@@ -1,4 +1,4 @@
-export Pathfinder
+export CostMetric, Pathfinder
 
 abstract type AbstractPathfinder end
 PathfinderType = Union{Nothing,AbstractPathfinder}

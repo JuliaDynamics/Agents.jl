@@ -1,5 +1,4 @@
-export CostMetric,
-    DirectDistance,
+export DirectDistance,
     MaxDistance,
     HeightMap,
     delta_cost,
@@ -8,8 +7,7 @@ export CostMetric,
     move_along_route!,
     is_stationary,
     heightmap,
-    walkmap,
-    Pathfinder
+    walkmap
 
 """
     Path{D}
