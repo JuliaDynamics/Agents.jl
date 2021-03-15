@@ -52,7 +52,7 @@ end
 ## define AgentBasedModel (ABM)
 
 function FMP_Model()
-    properties = Dict(:FMP_params=>FMP_Parameter_Init(),
+    properties = Dict(:FMP_params=>fmp_parameter_init(),
                       :dt => 0.01,
                       :num_agents=>30,
                       :num_steps=>1500,
@@ -122,9 +122,9 @@ end
 agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 
 function model_step!(model)
-    FMP_Update_Interacting_Pairs(model)
+    fmp_update_interacting_pairs(model)
     for agent_id in keys(model.agents)
-        FMP_Update_Vel(model.agents[agent_id], model)
+        fmp_update_vel(model.agents[agent_id], model)
     end
 end
 
@@ -153,7 +153,7 @@ InteractiveDynamics.abm_video(
 """
 This function is a scheduler to determine draw order of agents. Draw order (left to right) is :T, :O, :A
 """
-function PlotABM_Scheduler(model::ABM)
+function plot_scheduler(model::ABM)
 
     # init blank lists
     agent_list = []
@@ -181,7 +181,7 @@ end
 """
 This function is a utility function for coloring agents.
 """
-function AgentInitColor(i, num_agents)
+function agent_init_color(i, num_agents)
     color_range = range(HSV(0,1,1), stop=HSV(-360,1,1), length=num_agents)
     agent_color = color_range[i]
     return string("#", hex(agent_color))
@@ -212,7 +212,7 @@ for i in 1:model.num_agents
     vel = (0,0)
     tau = (xitau, yitau)  ## goal is on opposite side of circle
     radius = model.FMP_params.d/2
-    agent_color = AgentInitColor(i, model.num_agents)  ## This is new
+    agent_color = agent_init_color(i, model.num_agents)  ## This is new
     add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
     add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
 end
@@ -234,7 +234,7 @@ InteractiveDynamics.abm_video(
     ## potential shape options here: https://gr-framework.org/julia-gr.html
     am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
     equalaspect=true,
-    scheduler = PlotABM_Scheduler,
+    scheduler = plot_scheduler,
    )
 
 # ## Adding Obstacles
@@ -256,7 +256,7 @@ for i in 1:model.num_agents
     vel = (0,0)
     tau = pos  ## agent starting position = goal so they initially stay in place
     radius = model.FMP_params.d/2
-    agent_color = AgentInitColor(i, model.num_agents)
+    agent_color = agent_init_color(i, model.num_agents)
     add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
 
 end
@@ -302,7 +302,7 @@ InteractiveDynamics.abm_video(
     ## potential shape options here: https://gr-framework.org/julia-gr.html
     am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
     equalaspect=true,
-    scheduler = PlotABM_Scheduler,
+    scheduler = plot_scheduler,
    )
 
 # ## Other Simulation Types
@@ -322,7 +322,7 @@ for i in 1:model.num_agents
     vel = (0,0)
     tau = (0.8*x,0) .+ pos
     radius = model.FMP_params.d/2
-    agent_color = AgentInitColor(i, model.num_agents)
+    agent_color = agent_init_color(i, model.num_agents)
     add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])  # add object target
     add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
 
@@ -358,7 +358,7 @@ InteractiveDynamics.abm_video(
     ## potential shape options here: https://gr-framework.org/julia-gr.html
     am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
     equalaspect=true,
-    scheduler = PlotABM_Scheduler,
+    scheduler = plot_scheduler,
    )
 
 ## Circle Positions w/ Object
@@ -385,7 +385,7 @@ for i in 1:model.num_agents
     #tau = (x/2,y/2)
     type = :A
     radius = model.FMP_params.d/2
-    agent_color = AgentInitColor(i, model.num_agents)
+    agent_color = agent_init_color(i, model.num_agents)
     add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
     add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
 end
@@ -414,7 +414,7 @@ InteractiveDynamics.abm_video(
     ## potential shape options here: https://gr-framework.org/julia-gr.html
     am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
     equalaspect=true,
-    scheduler = PlotABM_Scheduler,
+    scheduler = plot_scheduler,
    )
 
 ## Random Positions
@@ -427,7 +427,7 @@ for i in 1:model.num_agents
     tau = Tuple(rand(2))
     type = :A
     radius = model.FMP_params.d/2
-    agent_color = AgentInitColor(i, model.num_agents)
+    agent_color = agent_init_color(i, model.num_agents)
     add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent, [], [])
 end
 
@@ -446,6 +446,6 @@ InteractiveDynamics.abm_video(
     ## potential shape options here: https://gr-framework.org/julia-gr.html
     am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
     equalaspect=true,
-    scheduler = PlotABM_Scheduler,
+    scheduler = plot_scheduler,
    )
 
