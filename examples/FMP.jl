@@ -23,11 +23,8 @@
 # - :O = object (has no velocity, cannot move, agents must go around)
 # - :T = target (no velocity, just a projection of agent target zone)
 
-using Agents, Random, Plots, LinearAlgebra, Colors, ProgressMeter
-
-ENV["GKSwstype"]="nul"
-gr()
-cd(@__DIR__)
+using Agents, Random, LinearAlgebra, Colors, InteractiveDynamics
+import CairoMakie
 
 mutable struct FMP_Agent <: AbstractAgent
     id::Int
@@ -39,6 +36,7 @@ mutable struct FMP_Agent <: AbstractAgent
     radius::Float64
     SSdims::NTuple{2, Float64}  ## include this for plotting
     Ni::Array{Int64} ## array of tuples with agent ids and agent positions
+    Gi::Vector{Int64} ## array of neighboring goal IDs
 end
 
 # ## Defining the Model
@@ -102,8 +100,8 @@ for i in 1:model.num_agents
     tau = (xitau, yitau)  ## goal is on opposite side of circle
     radius = model.FMP_params.d/2
     agent_color = "nothing for now"
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
 end
 
 
@@ -134,94 +132,23 @@ end
 e = model.space.extent
 step_range = 1:model.step_inc:model.num_steps
 
-## setup progress meter counter (this is optional but convenient for simulation
-p = Progress(round(Int,model.num_steps/model.step_inc))  ## optional
-anim = @animate for i in step_range
-    
-    p1 = plotabm(
-        model,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-    
-    ## step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)  ## optional
-end
-gif(anim, "circle_swap_ugly.gif", fps = 100)
+InteractiveDynamics.abm_video(
+    "examples/output1.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    equalaspect=true,
+   )
 
-# ## Plotting Utilities
 
-# The above animation isn't very pretty looking - luckily we can pass in some
-# plotting parameters. This section defines some plotting utilities that help
-# with make the generated plot look a little more convincing. 
+# The above animation isn't very pretty looking - lets plot using some color
+# and shape/scaling utilities. Additionally we want a certain draw order so we
+# write a plotting scheduler.
 
-# First, lets define a function that assigns color based on agent type.
-
-using Colors
-"""
-This function is a utility function that takes an agent and overwrites its color if it is of type :T (target) and gives it a grey color for display purposes.
-"""
-function PlotABM_ColorUtil(a::AbstractAgent)
-    if a.type == :A || a.type == :O
-        return a.color
-    else
-        return "#ffffff"
-    end
-end
-
-# Next, lets define a function that changes the plotted marker type based on
-# agent type. This is for display purposes only, all objects/agents/targets are
-# treated as objects with repulsive/forces based on distance between object
-# centroids (e.g. the FMP algorithm doesn't understand square objects without
-# modification)
-
-"""
-This function is a utility function for assigning agent display type based on agent type.
-"""
-function PlotABM_ShapeUtil(a::AbstractAgent)
-    # potential options here:
-    # https://gr-framework.org/julia-gr.html (search for "marker type")
-    if a.type == :A
-        return :circle
-    elseif a.type == :O
-        return :circle
-    elseif a.type == :T
-        return :circle
-    else
-        return :circle
-    end
-end
-
-# Next, lets define a function that changes agent plot size to be a little more
-# realistic.
-"""
-This function is a utility function for setting agent plot size - note that this is for display purposes only and does not impact calculations involving agent radius. 
-"""
-function PlotABM_RadiusUtil(a::AbstractAgent)
-    # this is for display purposes only and does not impact FMP algorithm results
-    # the scaling values are empirically selected
-    # the object scale is based on the agent scaling
-    
-    # magic number appears to be scaling factor for plotting
-    #   ex, an agent/object with radius=1 place in center of SS
-    #   would take up the entire state space. This was empirically
-    #   tested. The 1/a.SSdims is also tested and works well.
-
-    SS_scale = 380*1/minimum(a.SSdims)  # technically a.SSdims[1] and [2] should be equal but just in case.
-    
-    if a.type == :O
-        return a.radius*SS_scale
-    else
-        return a.radius*SS_scale
-    end
-end
-
-# Finally, lets define two utility functions to make sure that draw order and
-# agent colors look pretty.
 
 """
 This function is a scheduler to determine draw order of agents. Draw order (left to right) is :T, :O, :A
@@ -286,33 +213,29 @@ for i in 1:model.num_agents
     tau = (xitau, yitau)  ## goal is on opposite side of circle
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)  ## This is new
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
 end
 
-p = Progress(round(Int,model.num_steps/model.step_inc))
-anim = @animate for i in step_range
+# Now we run the simulation
 
-    # step model including plot stuff
-    p1 = plotabm(
-        model,
-        as = PlotABM_RadiusUtil,
-        ac = PlotABM_ColorUtil,
-        am = PlotABM_ShapeUtil,
-        #showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-        scheduler = PlotABM_Scheduler,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-
-    # step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)
-end
-gif(anim, "circle_swap_pretty.gif", fps = 100)
+InteractiveDynamics.abm_video(
+    "examples/output2.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
+    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
+    
+    ## potential shape options here: https://gr-framework.org/julia-gr.html
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    equalaspect=true,
+    scheduler = PlotABM_Scheduler,
+   )
 
 # ## Adding Obstacles
 
@@ -334,7 +257,7 @@ for i in 1:model.num_agents
     tau = pos  ## agent starting position = goal so they initially stay in place
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])  # add agents
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
 
 end
 # Now that we've added some agents to the state space, lets add an obstacle.
@@ -348,8 +271,8 @@ object_vel = (0,0)
 object_tau = (x-0.1*x, 0.5*y)
 object_radius = 0.1
 agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [])  # add object
-add_agent!(object_tau, model, object_vel, object_tau, agent_color, :T, object_radius, model.space.extent, [])  # add object target
+add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [], [])  # add object
+add_agent!(object_tau, model, object_vel, object_tau, agent_color, :T, object_radius, model.space.extent, [], [])  # add object target
 
 # Now that we've added an obstacle to the state space, we need to take one
 # special step - adding the obstacle to the obstacle list for use by the FMP
@@ -364,29 +287,23 @@ end
 
 # After adding in the obstacles, we can run the simulation
 
-p = Progress(round(Int,model.num_steps/model.step_inc))
-anim = @animate for i in step_range
-
-    # step model including plot stuff
-    p1 = plotabm(
-        model,
-        as = PlotABM_RadiusUtil,
-        ac = PlotABM_ColorUtil,
-        am = PlotABM_ShapeUtil,
-        #showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-        scheduler = PlotABM_Scheduler,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-
-    # step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)
-end
-gif(anim, "agent_line_moving_object.gif", fps = 100)
+InteractiveDynamics.abm_video(
+    "examples/output3.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
+    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
+    
+    ## potential shape options here: https://gr-framework.org/julia-gr.html
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    equalaspect=true,
+    scheduler = PlotABM_Scheduler,
+   )
 
 # ## Other Simulation Types
 
@@ -406,8 +323,8 @@ for i in 1:model.num_agents
     tau = (0.8*x,0) .+ pos
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])  # add object target
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])  # add agents
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])  # add object target
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
 
 end
 
@@ -418,7 +335,7 @@ object_vel = (0,0)
 object_tau = object_pos
 object_radius = 0.2
 agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [])  # add object
+add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [], [])  # add object
 
 for agent in allagents(model)
     if agent.type == :O
@@ -426,29 +343,23 @@ for agent in allagents(model)
     end
 end
 
-p = Progress(round(Int,model.num_steps/model.step_inc))
-anim = @animate for i in step_range
-
-    # step model including plot stuff
-    p1 = plotabm(
-        model,
-        as = PlotABM_RadiusUtil,
-        ac = PlotABM_ColorUtil,
-        am = PlotABM_ShapeUtil,
-        #showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-        scheduler = PlotABM_Scheduler,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-
-    # step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)
-end
-gif(anim, "centered_object_moving_line.gif", fps = 100)
+InteractiveDynamics.abm_video(
+    "examples/output4.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
+    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
+    
+    ## potential shape options here: https://gr-framework.org/julia-gr.html
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    equalaspect=true,
+    scheduler = PlotABM_Scheduler,
+   )
 
 ## Circle Positions w/ Object
 
@@ -475,12 +386,12 @@ for i in 1:model.num_agents
     type = :A
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [])
+    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
+    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
 end
 
 object_radius = 0.1
-add_agent!((x/2,y/2), model, (0,0), (x/2,y/2), "#ff0000", :O, object_radius, model.space.extent, [])  # add object in middle
+add_agent!((x/2,y/2), model, (0,0), (x/2,y/2), "#ff0000", :O, object_radius, model.space.extent, [], [])  # add object in middle
 
 for agent in allagents(model)
     if agent.type == :O
@@ -488,29 +399,23 @@ for agent in allagents(model)
     end
 end
 
-p = Progress(round(Int,model.num_steps/model.step_inc))
-anim = @animate for i in step_range
-
-    # step model including plot stuff
-    p1 = plotabm(
-        model,
-        as = PlotABM_RadiusUtil,
-        ac = PlotABM_ColorUtil,
-        am = PlotABM_ShapeUtil,
-        #showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-        scheduler = PlotABM_Scheduler,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-
-    # step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)
-end
-gif(anim, "circle_swap_object.gif", fps = 100)
+InteractiveDynamics.abm_video(
+    "examples/output5.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
+    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
+    
+    ## potential shape options here: https://gr-framework.org/julia-gr.html
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    equalaspect=true,
+    scheduler = PlotABM_Scheduler,
+   )
 
 ## Random Positions
 model = FMP_Model()
@@ -523,29 +428,24 @@ for i in 1:model.num_agents
     type = :A
     radius = model.FMP_params.d/2
     agent_color = AgentInitColor(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent, [])
+    add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent, [], [])
 end
 
-p = Progress(round(Int,model.num_steps/model.step_inc))
-anim = @animate for i in step_range
+InteractiveDynamics.abm_video(
+    "examples/output6.mp4",
+    model,
+    agent_step!,
+    model_step!,
+    title = "FMP Simulation",
+    frames = model.num_steps,
+    framerate = 100,
+    resolution = (600, 600),
+    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
+    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
+    
+    ## potential shape options here: https://gr-framework.org/julia-gr.html
+    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    equalaspect=true,
+    scheduler = PlotABM_Scheduler,
+   )
 
-    # step model including plot stuff
-    p1 = plotabm(
-        model,
-        as = PlotABM_RadiusUtil,
-        ac = PlotABM_ColorUtil,
-        am = PlotABM_ShapeUtil,
-        #showaxis = false,
-        grid = false,
-        xlims = (0, e[1]),
-        ylims = (0, e[2]),
-        aspect_ratio=:equal,
-        scheduler = PlotABM_Scheduler,
-    )
-    title!(p1, "FMP Simulation (step $(i))")
-
-    # step model and progress counter
-    step!(model, agent_step!, model_step!, model.step_inc, false)
-    next!(p)
-end
-gif(anim, "random_positions.gif", fps = 100)
