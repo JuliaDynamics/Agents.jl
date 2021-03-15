@@ -414,7 +414,7 @@ end
 #######################################################################################
 # FMP Algorithm
 #######################################################################################
-export FMP_Update_Vel, FMP_Update_Interacting_Pairs, FMP_Parameters, FMP_Parameter_Init
+export fmp_update_vel, fmp_update_interacting_pairs, FMP_Parameters, fmp_parameter_init
 
 """
     FMP_Parameters
@@ -446,12 +446,12 @@ mutable struct FMP_Parameters
 end
 
 """
-    FMP_Update_Interacting_Pairs(model)
+    fmp_update_interacting_pairs(model)
 Updates `FMP_Parameters.interaction_array` with the current array of interacting agents by calling
 `interacting_pairs`. It does this once per model step to reduce the potential overhead of calling
 `interacting_pairs` each time `update_vel` is called. 
 """
-function FMP_Update_Interacting_Pairs(
+function fmp_update_interacting_pairs(
     model::ABM{<:ContinuousSpace},
     )
 
@@ -482,12 +482,12 @@ function FMP_Update_Interacting_Pairs(
 end
 
 """
-    FMP_Parameter_Init()
+    fmp_parameter_init()
 A convenience function for initializing the FMP_Parameters struct with typical FMP
 parameters. Users can modify the FMP algorithm parameters through the usage of 
 keyword arguments. 
 """
-function FMP_Parameter_Init(;
+function fmp_parameter_init(;
     rho = 7.5e6,
     rho_obstacle = 7.5e6,
     step_inc = 2,
@@ -516,7 +516,7 @@ end
 
 
 """
-    FMP_Update_Vel(model, FMP_params)
+    fmp_update_vel(model, FMP_params)
 Implements the [Force Based Motion Planning (FMP) algorithm](https://arxiv.org/abs/1909.05415)
 to handle interagent collisions. This function is called each time `agent_step!` is called. This
 function is used in conjunction with the `update_vel!` keyword argument when a `ContinuousSpace`
@@ -534,19 +534,19 @@ each time `update_vel` is invoked via `agent_step`. The three forces are:
 After computing the resultant vectors from each component, an overall resultant vector is computed. This is then capped based on the global max velocity constraint. This final velocity is passed into the agents struct.
 
 """
-function FMP_Update_Vel(
+function fmp_update_vel(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace},
     )
 
     # move_this_agent_to_new_position(i) in FMP paper
     # compute forces and resultant velocities
-    fiR = RepulsiveForce(model, agent)
-    fiGamma = NavigationalFeedback(model, agent)
-    fiObject = ObstactleFeedback(model, agent)
+    fiR = repulsive_force(model, agent)
+    fiGamma = navigational_feedback(model, agent)
+    fiObject = obstacle_feedback(model, agent)
     ui = fiR .+ fiGamma .+ fiObject
     vi = model.agents[agent.id].vel .+ ui .* model.dt
-    vi = CapVelocity(model.FMP_params.vmax, vi)
+    vi = cap_velocity(model.FMP_params.vmax, vi)
 
     # update agent velocities
     agent.vel = vi
@@ -557,7 +557,7 @@ end
 Function to calculate the resultant velocity vector from the repulsive component of the FMP
 algorithm.
 """
-function RepulsiveForce(model::AgentBasedModel, agent)
+function repulsive_force(model::AgentBasedModel, agent)
     # compute repulsive force for each agent
     # note the "." before most math operations, required for component wise tuple math
     f = ntuple(i->0, length(agent.vel))
@@ -585,7 +585,7 @@ end
 Function to calculate the resultant velocity vector from the navigational component of the FMP
 algorithm.
 """
-function NavigationalFeedback(model::AgentBasedModel, agent)
+function navigational_feedback(model::AgentBasedModel, agent)
     # compute navigational force for each agent
     # note the "." before most math operations, required for component wise tuple math
     f = (-model.FMP_params.c1 .* (agent.pos .- agent.tau)) .+ (- model.FMP_params.c2 .* agent.vel)
@@ -600,7 +600,7 @@ end
 Function to calculate the resultant velocity vector from the obstacle avoidance component
 of the FMP algorithm.
 """
-function ObstactleFeedback(model::AgentBasedModel, agent)
+function obstacle_feedback(model::AgentBasedModel, agent)
     # determine obstacle avoidance feedback term
     # note the "." before most math operations, required for component wise tuple math
     f = ntuple(i->0, length(agent.vel))
@@ -627,7 +627,7 @@ end
 """
 Function to bound computed velocities based on globally set vmax parameter.
 """
-function CapVelocity(vmax, vel)
+function cap_velocity(vmax, vel)
     # bound velocity by vmax
     # note the "." before most math operations, required for component wise tuple math
     if norm(vel) > vmax
