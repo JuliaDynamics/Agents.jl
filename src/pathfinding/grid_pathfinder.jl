@@ -164,8 +164,8 @@ end
 
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
     periodic = P ? "periodic, " : ""
-    moore = M ? "moore, " : ""
-    s = "A* in $(D) dimensions. $(periodic)$(moore)ϵ=$(pathfinder.admissibility), "*
+    moore = M ? "diagonal, " : "orthogonal, "
+    s = "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), "*
     "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end

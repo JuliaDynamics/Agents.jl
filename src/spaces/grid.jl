@@ -275,6 +275,7 @@ end
 Base.size(space::GridSpace) = size(space.s)
 
 function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
-    s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$(P)"
+    pathfinder = isnothing(space.pathfinder) ? "" : ", pathfinder=$(space.pathfinder)"
+    s = "GridSpace with size $(size(space)), metric=$(space.metric), periodic=$(P)$pathfinder"
     print(io, s)
 end
