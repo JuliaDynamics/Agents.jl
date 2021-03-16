@@ -34,7 +34,7 @@ Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 """
     DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
 Distance is approximated as the shortest path between the two points, provided the
-`walkable` property of [`AStar`](@ref) allows.
+`walkable` property of [`Pathfinder`](@ref) allows.
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
 neighboring tile on the `i` dimensional diagonal (default is `10√i`).
 
