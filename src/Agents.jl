@@ -17,7 +17,6 @@ include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
-include("pathfinding/pathfinding_options.jl") # this file is necessary before GridSpace
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")

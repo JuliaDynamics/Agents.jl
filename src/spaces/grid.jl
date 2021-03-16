@@ -17,7 +17,7 @@ struct Hood{D}
 end
 
 # type P stands for Periodic and is a boolean
-struct GridSpace{D,P,W<:PathfinderType} <: DiscreteSpace
+struct GridSpace{D,P,W} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
@@ -51,9 +51,9 @@ function GridSpace(
     d::NTuple{D,Int};
     periodic::Bool = true,
     metric::Symbol = :chebyshev,
-    pathfinder::Union{Pathfinder,Nothing}=nothing,
+    pathfinder::W = nothing,
     moore = nothing,
-) where {D}
+) where {D,W}
     s = Array{Vector{Int},D}(undef, d)
     if moore ≠ nothing
         @warn "Keyword `moore` is deprecated, use `metric` instead."
