@@ -85,7 +85,7 @@ end
 
 Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder` into
 [`GridSpace`](@ref). Pathfinding works by using the functions
-[`set_target!`](@ref) and [`move_along_route`](@ref) see [Path-finding](@ref) for more.
+[`set_target!`](@ref) and [`move_along_route!`](@ref) see [Path-finding](@ref) for more.
 
 ## Keywords
 
