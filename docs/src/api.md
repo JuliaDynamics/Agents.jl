@@ -107,7 +107,7 @@ rem_node!
 ```
 
 ## Movement with paths
-For [`OSMSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
 movement method is available.
 
 ```@docs
