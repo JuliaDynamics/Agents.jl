@@ -383,51 +383,7 @@ function move_agent!(
     add_agent_to_space!(agent, model)
 end
 
-"""
-    move_agent!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
 
-Move an agent by `distance` in meters along its planned route.
-"""
-function move_agent!(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
-    distance::Real,
-) where {A<:AbstractAgent}
-
-    if osm_is_stationary(agent)
-        return nothing
-    end
-
-    dist_to_intersection = osm_road_length(agent.pos, model) - agent.pos[3]
-
-    if isempty(agent.route) && agent.pos[1:2] == agent.destination[1:2]
-        # Last one or two moves before destination
-        to_travel = agent.destination[3] - agent.pos[3]
-        if distance >= to_travel
-            pos = agent.destination
-        else
-            pos = (agent.destination[1:2]..., agent.pos[3] + distance)
-        end
-    elseif distance >= dist_to_intersection
-        if !isempty(agent.route)
-            pos = travel!(
-                agent.pos[2],
-                popfirst!(agent.route),
-                distance - dist_to_intersection,
-                agent,
-                model,
-            )
-        else
-            # Now moving to the final destination
-            pos = park(distance - dist_to_intersection, agent, model)
-        end
-    else
-        # move up current path
-        pos = (agent.pos[1], agent.pos[2], agent.pos[3] + distance)
-    end
-
-    move_agent!(agent, pos, model)
-end
 
 function travel!(start, finish, distance, agent, model)
     # Assumes we have just reached the intersection of `start` and `finish`,
@@ -664,67 +620,192 @@ function nearby_positions(
 end
 
 
+###############################################################
+###############################################################
+###############################################################
+###############################################################
+###pull request:
+#model=initiate(;maxspeed=100.0);
+#move_agent!(model[1],model,1.0,by=:seconds)
+###############################################################
+###############################################################
+###############################################################
+###############################################################
 
-#returns sparse matrix with travel times between connected nodes
-function get_travel_times(m::MapData, class_speeds::Dict{Int,Float64} = OpenStreetMapX.SPEED_ROADS_URBAN)::SparseMatrixCSC{Float64,Int64}
-    sparse_times=copy(m.w)
-    @assert length(m.e) == length(m.w.nzval)
-    indices = [(m.v[i],m.v[j]) for (i,j) in m.e]
-    for i = 1:length(m.e)
-        sparse_times[indices[i]...] = 3.6 * (m.w[indices[i]]/class_speeds[m.class[i]])  # t=s/v. 3.6 factor because of physical unit change from km/h to m/s
+export initiate,
+    move_agent!
+
+mutable struct Dummy <: AbstractAgent
+    id::Int                              #agent id
+    pos::Tuple{Int,Int,Float64}          #current position
+    route::Array{Int,1}                  #route of currently active job.
+    destination::Tuple{Int,Int,Float64}  #current destination (of active job)
+end
+
+
+function initiate(;N=1,map_path=TEST_MAP,maxspeed=200.0)::ABM
+    
+    #model properties..
+    map=OpenStreetMapSpace(map_path,trim_to_connected_graph = true,use_cache = false)
+    sparse_times=get_travel_times(map.m,maxspeed)
+    sparse_distances=map.m.w;
+    
+    #..into dictionary
+    props=Dict([
+                :sparse_times=>sparse_times,
+                :sparse_distances=>sparse_distances,
+                :maxspeed=>maxspeed
+            ])
+    
+    #initiate model
+    model=ABM(Dummy,map,properties=props)
+    
+    #add idle buses at random positions
+    for id in 1:N
+        start=random_position(model)
+        finish=random_position(model)
+        tour=osm_plan_route(start,finish,model,by=:fastest)
+        add_agent!(start, model, tour, finish)
+    end
+    
+    return model
+end
+
+"""
+    move_agent!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
+
+Move an agent by `distance` in meters along its planned route.
+"""
+function move_agent!(
+    agent::A,
+    model::ABM{<:OpenStreetMapSpace,A},
+    distance::Real;
+    by=:meters
+) where {A<:AbstractAgent}
+
+    if osm_is_stationary(agent)
+        return nothing
     end
 
-    return sparse_times
-end
-
-
-#translate progress between nodes (agent.pos[3]) from distance into time
-function distance_to_time!(agent,sparse_distances,sparse_times) 
-    distance_since_node=agent.pos[3]
-    edge_length=sparse_distances[agent.pos[1:2]]
-    edge_time=sparse_times[agent.pos[1:2]]
-    time_since_node= edge_length != 0 ? distance_since_node*edge_time/edge_length : 0    
-    agent.pos=(agent.pos[1:2]...,time_since_node)
+####################################
+####################################
+#################################### ADDITIONAL OVERHEAD FROM PULL REQUEST
+    #distance mode
+    if by==:meters
+        #do nothing here, this is the default case
+    elseif by==:kilometers
+        distance*=1000.0
+    elseif by==:miles
+        distance*=1609.344
     
-    return nothing
-end
-
-
-#translate progress between nodes (agent.pos[3]) from time into distance
-function time_to_distance!(agent,sparse_times,sparse_distances) 
-    time_since_node=agent.pos[3]
-    edge_length=sparse_distances[agent.pos[1:2]]
-    edge_time=sparse_times[agent.pos[1:2]]
-    distance_since_node= edge_time != 0 ? time_since_node*edge_length/edge_time : 0
-    agent.pos=(agent.pos[1:2]...,distance_since_node)
+    #time mode
+    else
+        if by==:seconds
+            time=distance
+        elseif by==:minutes
+            time=distance*60.0
+        elseif by==:hours
+            time=distance*3600.0
+        else
+            return println("keyword argument '$(:by)' unknown. Possible values are ':meters' (default), ':kilometers', ':miles', ':seconds', ':minutes' and ':hours'.")
+        end
+        
+        return move_agent_by_time!(agent,model,time)
+    end
+####################################
+####################################
+####################################
     
-    return nothing
+    
+    dist_to_intersection = osm_road_length(agent.pos, model) - agent.pos[3]
+
+    if isempty(agent.route) && agent.pos[1:2] == agent.destination[1:2]
+        # Last one or two moves before destination
+        to_travel = agent.destination[3] - agent.pos[3]
+        if distance >= to_travel
+            pos = agent.destination
+        else
+            pos = (agent.destination[1:2]..., agent.pos[3] + distance)
+        end
+    elseif distance >= dist_to_intersection
+        if !isempty(agent.route)
+            pos = travel!(
+                agent.pos[2],
+                popfirst!(agent.route),
+                distance - dist_to_intersection,
+                agent,
+                model,
+            )
+        else
+            # Now moving to the final destination
+            pos = park(distance - dist_to_intersection, agent, model)
+        end
+    else
+        # move up current path
+        pos = (agent.pos[1], agent.pos[2], agent.pos[3] + distance)
+    end
+
+    move_agent!(agent, pos, model)
 end
 
 
-#moves a single agent in time, not space
+# we use the predefined function move_agent!(.., .., distance),
+# but trick it by changing the network's edge's weights from travel distance to travel times first.
+# The move-step has thus to be wrapped with firstly translating current position agent.pos[3] into a time and then back.
+# 'sparse_times' are precalculated edge weights = travel times.
+# It's a sparse matrix in the same form as model.space.m.w is, and it's stored as a model property.
 function move_agent_by_time!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
-    time::Real,
-    sparse_times::SparseMatrixCSC{Float64,Int64}
+    time::Real
 ) where {A<:AbstractAgent}
     
-    # make identical model, only difference: node weights by time, not distance
-    sparse_distances=model.space.m.w
-    model.space.m.w=sparse_times
-    
     # turn pos[3] into time increment rather than distance increment
-    distance_to_time!(agent,sparse_distances,sparse_times) 
+    distance_to_time!(agent,model) 
+    
+    # switch to "time mode"
+    model.space.m.w=model.sparse_times
     
     # perform move with time-weights instead of distance-weights between nodes
     move_agent!(agent,model,time)
     
-    # make pos[3] a distance again
-    time_to_distance!(agent,sparse_times,sparse_distances) 
+    # switch to "time mode"
+    model.space.m.w=model.sparse_distances
     
-    # retrieve distance-weights
-    model.space.m.w=sparse_distances
+    # make pos[3] a distance again
+    time_to_distance!(agent,model) 
     
     return nothing
+end
+
+
+# create sparse matrix that contains travel times of network
+function get_travel_times(m::MapData,maxspeed::Real, class_speeds::Dict{Int,Float64} = OpenStreetMapX.SPEED_ROADS_URBAN)
+    sparse_times=copy(m.w)
+    @assert length(m.e) == length(m.w.nzval)
+    indices = [(m.v[i],m.v[j]) for (i,j) in m.e]
+    for i = 1:length(m.e)
+        velocity=min(maxspeed,class_speeds[m.class[i]])
+        sparse_times[indices[i]...] = 3.6 * (m.w[indices[i]]/velocity)
+    end
+    return sparse_times
+end
+
+#translate progress between nodes (agent.pos[3]) from distance into time
+function distance_to_time!(agent,model) 
+    distance_since_node=agent.pos[3]
+    edge_length=model.space.m.w[agent.pos[1:2]]
+    edge_time=model.sparse_times[agent.pos[1:2]]
+    time_since_node= edge_length != 0 ? distance_since_node*edge_time/edge_length : 0    
+    agent.pos=(agent.pos[1:2]...,time_since_node)
+end
+
+
+#translate progress between nodes (agent.pos[3]) from time into distance
+function time_to_distance!(agent,model) 
+    time_since_node=agent.pos[3]
+    edge_length=model.space.m.w[agent.pos[1:2]]
+    edge_time=model.sparse_times[agent.pos[1:2]]
+    distance_since_node= edge_time != 0 ? time_since_node*edge_length/edge_time : 0
+    agent.pos=(agent.pos[1:2]...,distance_since_node)
 end
