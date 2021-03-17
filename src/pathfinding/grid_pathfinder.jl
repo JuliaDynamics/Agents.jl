@@ -73,7 +73,7 @@ HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap
 HeightMap(hmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
     HeightMap{D}(base_metric, hmap)
 
-struct Pathfinder{W<:Union{Array{Bool},Nothing}, M<:Union{CostMetric,Nothing}}
+struct Pathfinder{W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
     diagonal_movement::Bool
     admissibility::Float64
     walkable::W
@@ -107,7 +107,7 @@ function Pathfinder(;
     admissibility::Float64 = 0.0,
     walkable::W = nothing,
     cost_metric::M = nothing,
-) where {W<:Union{Array{Bool},Nothing}, M<:Union{CostMetric,Nothing}}
+) where {W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
     return Pathfinder(diagonal_movement, admissibility, walkable, cost_metric)
 end
 
@@ -116,7 +116,7 @@ struct AStar{D,P,M}
     grid_dims::Dims{D}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
-    walkable::Array{Bool,D}
+    walkable::BitArray{D}
     cost_metric::CostMetric{D}
 
     function AStar{D,P,M}(
@@ -124,7 +124,7 @@ struct AStar{D,P,M}
         grid_dims::Dims{D},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
-        walkable::Array{Bool,D},
+        walkable::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M}
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
@@ -155,7 +155,7 @@ faster pathfinding. Admissibility (`ε`) of `0.0` will always find the optimal p
 Larger values of `ε` will explore fewer nodes, returning a path length with at most
 `(1+ε)` times the optimal path length.
 
-`walkable = fill(true, size(space))` is used to specify (un)walkable positions of the
+`walkable = trues(size(space))` is used to specify (un)walkable positions of the
 space. All positions are assumed to be walkable by default.
 
 `cost_metric = DirectDistance` specifies the metric used to approximate the distance
@@ -168,7 +168,7 @@ function AStar(
     periodic::Bool = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkable::Array{Bool,D} = fill(true, dims),
+    walkable::BitArray{D} = trues(dims),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
@@ -183,9 +183,10 @@ function AStar(
 end
 
 function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
-    walkable = pathfinder.walkable === nothing ? fill(true, dims) : pathfinder.walkable
+    walkable = pathfinder.walkable === nothing ? trues(dims) : pathfinder.walkable
 
-    metric = isnothing(pathfinder.cost_metric) ? DirectDistance{D}() : pathfinder.cost_metric
+    metric =
+        isnothing(pathfinder.cost_metric) ? DirectDistance{D}() : pathfinder.cost_metric
 
     neighborhood =
         pathfinder.diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
@@ -212,8 +213,9 @@ end
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
     periodic = P ? "periodic, " : ""
     moore = M ? "diagonal, " : "orthogonal, "
-    s = "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), "*
-    "metric=$(pathfinder.cost_metric)"
+    s =
+        "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), " *
+        "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
 

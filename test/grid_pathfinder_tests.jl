@@ -1,34 +1,70 @@
 moore = Agents.moore_neighborhood(2)
 vonneumann = Agents.vonneumann_neighborhood(2)
 @testset "constructors" begin
-    cost = GridSpace((5, 5); pathfinder=Pathfinder()).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder = Pathfinder()).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = DirectDistance{2}())).pathfinder.cost_metric
-    @test_throws AssertionError GridSpace((5, 5); pathfinder=Pathfinder(cost_metric=DirectDistance{2}([1])))
-    @test_throws AssertionError GridSpace((5, 5); pathfinder=Pathfinder(diagonal_movement=false, cost_metric=DirectDistance{2}([])))
+    cost =
+        GridSpace(
+            (5, 5);
+            pathfinder = Pathfinder(cost_metric = DirectDistance{2}()),
+        ).pathfinder.cost_metric
+    @test_throws AssertionError GridSpace(
+        (5, 5);
+        pathfinder = Pathfinder(cost_metric = DirectDistance{2}([1])),
+    )
+    @test_throws AssertionError GridSpace(
+        (5, 5);
+        pathfinder = Pathfinder(
+            diagonal_movement = false,
+            cost_metric = DirectDistance{2}([]),
+        ),
+    )
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = MaxDistance{2}())).pathfinder.cost_metric
+    cost =
+        GridSpace(
+            (5, 5);
+            pathfinder = Pathfinder(cost_metric = MaxDistance{2}()),
+        ).pathfinder.cost_metric
     @test typeof(cost) <: MaxDistance{2}
-    @test_throws MethodError GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap))
-    @test_throws AssertionError GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap([1 1])))
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(fill(1, 5, 5)))).pathfinder.cost_metric
+    @test_throws MethodError GridSpace(
+        (5, 5);
+        pathfinder = Pathfinder(cost_metric = HeightMap),
+    )
+    @test_throws AssertionError GridSpace(
+        (5, 5);
+        pathfinder = Pathfinder(cost_metric = HeightMap([1 1])),
+    )
+    cost =
+        GridSpace(
+            (5, 5);
+            pathfinder = Pathfinder(cost_metric = HeightMap(fill(1, 5, 5))),
+        ).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
     @test cost.hmap == fill(1, 5, 5)
-    cost = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}()))).pathfinder.cost_metric
+    cost =
+        GridSpace(
+            (5, 5);
+            pathfinder = Pathfinder(
+                cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}()),
+            ),
+        ).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: MaxDistance{2}
     @test cost.hmap == fill(1, 5, 5)
     hmap = zeros(Int, 1, 1, 1)
-    @test_throws MethodError GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(hmap)))
+    @test_throws MethodError GridSpace(
+        (5, 5);
+        pathfinder = Pathfinder(cost_metric = HeightMap(hmap)),
+    )
 
-    space = GridSpace((5, 5); pathfinder=Pathfinder())
+    space = GridSpace((5, 5); pathfinder = Pathfinder())
     model = ABM(Agent3, space)
     a = add_agent!((5, 2), model, 654.5)
     @test is_stationary(a, model)
-    set_target!(a, (1,3), model)
+    set_target!(a, (1, 3), model)
     @test !is_stationary(a, model)
     @test length(model.space.pathfinder.agent_paths) == 1
     kill_agent!(a, model)
@@ -36,11 +72,10 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test heightmap(model) === nothing
 
     hmap = fill(1, 5, 5)
-    space = GridSpace((5, 5); pathfinder=Pathfinder(cost_metric = HeightMap(hmap)))
+    space = GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap(hmap)))
     model = ABM(Agent3, space)
     @test heightmap(model) == hmap
 end
-
 
 @testset "metrics" begin
     pfinder_2d_np_m = Agents.AStar{2,false,true}(
@@ -48,7 +83,7 @@ end
         (10, 10),
         copy(moore),
         0.0,
-        fill(true, 10, 10),
+        trues(10, 10),
         DirectDistance{2}(),
     )
     pfinder_2d_np_nm = Agents.AStar{2,false,false}(
@@ -56,7 +91,7 @@ end
         (10, 10),
         copy(vonneumann),
         0.0,
-        fill(true, 10, 10),
+        trues(10, 10),
         DirectDistance{2}(),
     )
     pfinder_2d_p_m = Agents.AStar{2,true,true}(
@@ -64,7 +99,7 @@ end
         (10, 10),
         copy(moore),
         0.0,
-        fill(true, 10, 10),
+        trues(10, 10),
         DirectDistance{2}(),
     )
     pfinder_2d_p_nm = Agents.AStar{2,true,false}(
@@ -72,7 +107,7 @@ end
         (10, 10),
         copy(vonneumann),
         0.0,
-        fill(true, 10, 10),
+        trues(10, 10),
         DirectDistance{2}(),
     )
     hmap = fill(0, 10, 10)
@@ -96,7 +131,7 @@ end
 end
 
 @testset "pathing" begin
-    wlk = fill(true, 7, 6)
+    wlk = trues(7, 6)
     wlk[2:7, 1] .= false
     wlk[7, 3:6] .= false
     wlk[[2:4; 6], 4] .= false
