@@ -620,56 +620,13 @@ function nearby_positions(
 end
 
 
-###############################################################
-###############################################################
-###############################################################
-###############################################################
-###pull request:
-#model=initiate(;maxspeed=100.0);
-#move_agent!(model[1],model,1.0,by=:seconds)
-###############################################################
-###############################################################
+
+
 ###############################################################
 ###############################################################
 
-export initiate,
-    move_agent!
+export move_agent!
 
-mutable struct Dummy <: AbstractAgent
-    id::Int                              #agent id
-    pos::Tuple{Int,Int,Float64}          #current position
-    route::Array{Int,1}                  #route of currently active job.
-    destination::Tuple{Int,Int,Float64}  #current destination (of active job)
-end
-
-
-function initiate(;N=1,map_path=TEST_MAP,maxspeed=200.0)::ABM
-    
-    #model properties..
-    map=OpenStreetMapSpace(map_path,trim_to_connected_graph = true,use_cache = false)
-    sparse_times=get_travel_times(map.m,maxspeed)
-    sparse_distances=map.m.w;
-    
-    #..into dictionary
-    props=Dict([
-                :sparse_times=>sparse_times,
-                :sparse_distances=>sparse_distances,
-                :maxspeed=>maxspeed
-            ])
-    
-    #initiate model
-    model=ABM(Dummy,map,properties=props)
-    
-    #add idle buses at random positions
-    for id in 1:N
-        start=random_position(model)
-        finish=random_position(model)
-        tour=osm_plan_route(start,finish,model,by=:fastest)
-        add_agent!(start, model, tour, finish)
-    end
-    
-    return model
-end
 
 """
     move_agent!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
@@ -687,9 +644,7 @@ function move_agent!(
         return nothing
     end
 
-####################################
-####################################
-#################################### ADDITIONAL OVERHEAD FROM PULL REQUEST
+#ADDITIONAL OVERHEAD FROM PULL REQUEST
     #distance mode
     if by==:meters
         #do nothing here, this is the default case
@@ -712,10 +667,7 @@ function move_agent!(
         
         return move_agent_by_time!(agent,model,time)
     end
-####################################
-####################################
-####################################
-    
+#ENDS HERE
     
     dist_to_intersection = osm_road_length(agent.pos, model) - agent.pos[3]
 
