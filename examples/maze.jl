@@ -19,7 +19,7 @@ using FileIO # To load images you also need ImageMagick available to your projec
 function initalize_model(map_url)
     ## Load the maze from the image file. White values can be identified by a
     ## non-zero red component
-    maze = map(x -> x.r > 0, load(download(map_url)))
+    maze = BitArray(map(x -> x.r > 0, load(download(map_url))))
     ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
     ## [`DirectDistance`](@ref) is appropriate.
