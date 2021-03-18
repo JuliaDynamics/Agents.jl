@@ -38,7 +38,7 @@ function initalize_model(map_url)
     return model
 end
 
-## Dynamics
+# # Dynamics
 # Stepping the agent is a trivial matter of calling [`move_along_route!`](@ref) to move it along it's path to
 # the target.
 agent_step!(agent, model) = move_along_route!(agent, model)
