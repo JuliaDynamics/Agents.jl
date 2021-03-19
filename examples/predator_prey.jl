@@ -206,6 +206,7 @@ nothing # hide
 using InteractiveDynamics
 using AbstractPlotting
 import CairoMakie
+CairoMakie.activate!() # hide
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()

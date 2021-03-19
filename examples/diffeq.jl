@@ -32,9 +32,9 @@
 
 using Agents
 using Distributions
-using AbstractPlotting
-import CairoMakie
-using Random #hide
+using CairoMakie
+CairoMakie.activate!() # hide
+using Random # hide
 
 mutable struct Fisher <: AbstractAgent
     id::Int

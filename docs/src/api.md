@@ -3,7 +3,7 @@
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## `@agents` macro
+## `@agent` macro
 The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
@@ -104,6 +104,14 @@ osm_map_coordinates
 add_edge!
 add_node!
 rem_node!
+```
+
+## Movement with paths
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
+movement method is available.
+
+```@docs
+move_along_route!
 ```
 
 ## Local area
@@ -254,3 +262,32 @@ and pass it to e.g. `step!` by initializing it
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
+
+## Path-finding
+In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
+
+You can enable path-finding and set it's options by passing an instance of a [`Pathfinder`](@ref) struct to the `pathfinder`
+parameter of the [`GridSpace`](@ref) constructor. During the simulation, call [`set_target!`](@ref) to set the target
+destination for an agent. This triggers the algorithm to calculate a path from the agent's current position to the one
+specified. You can alternatively use [`set_best_target!`](@ref) to choose the best target from a list. Once a target has
+been set, you can move an agent one step along its precalculated path using the [`move_along_route!`](@ref) function.
+Refer to the [Maze Solver](@ref) and [Mountain Runners](@ref) examples for further instruction on how to use the API.
+```@docs
+Pathfinder
+set_target!
+set_best_target!
+is_stationary
+walkmap
+heightmap
+```
+
+### Metrics
+```@docs
+DirectDistance
+MaxDistance
+HeightMap
+```
+
+Building a custom metric is straightforward, if the provided ones do not suit your purpose.
+See the [Developer Docs](@ref) for details.
+

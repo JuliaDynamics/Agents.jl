@@ -27,14 +27,14 @@
 
 # For this example, we will be using a Chebyshev 2D grid, e.g.
 
+using Agents
+
 space = GridSpace((10, 10); periodic = false)
 
 # Agents belonging in this type of space must have a position field that is a
 # `NTuple{2, Int}`. We ensure this below.
 
 # ## Defining the agent type
-
-using Agents
 
 mutable struct SchellingAgent <: AbstractAgent
     id::Int             # The identifier number of the agent
@@ -207,6 +207,7 @@ data
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 using InteractiveDynamics
 import CairoMakie # choosing a plotting backend
+CairoMakie.activate!() # hide
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect

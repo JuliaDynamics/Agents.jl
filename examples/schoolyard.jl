@@ -23,8 +23,8 @@
 
 using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
 using InteractiveDynamics
-using AbstractPlotting
-import CairoMakie
+using CairoMakie
+CairoMakie.activate!() # hide
 
 # And create a very simple agent.
 
