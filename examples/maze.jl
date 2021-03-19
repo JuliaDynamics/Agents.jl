@@ -22,8 +22,8 @@ function initalize_model(map_url)
     maze = BitArray(map(x -> x.r > 0, load(download(map_url))))
     ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
-    ## [`DirectDistance`](@ref) is appropriate.
-    ## `diagonal_movement` is set to `false` to prevent cutting corners by going along
+    ## `DirectDistance` is appropriate.
+    ## `diagonal_movement` is set to false to prevent cutting corners by going along
     ## diagonals.
     pathfinder = Pathfinder(walkable=maze, diagonal_movement=false)
     ## The size of the space is the size of the maze
