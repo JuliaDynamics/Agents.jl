@@ -18,6 +18,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 DataFrames = "0.21, 0.22, 1"
+DataStructures = "0.18"
 GraphRecipes = "0.5"
 LightGraphs = "1"
 OpenStreetMapX = "0.2"
