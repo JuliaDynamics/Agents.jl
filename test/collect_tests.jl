@@ -70,6 +70,13 @@
         @test aggname((x_position, length)) == "length_x_position"
         ypos(a) = a.pos[2] > 5
         @test aggname((x_position, length, ypos)) == "length_x_position_ypos"
+
+        funcs = Vector{Function}(undef, 2)
+        for i=1:length(funcs)
+            inline_func(x) = i*x
+            funcs[i] = inline_func
+        end
+        @test dataname(funcs[2]) == "inline_func_i=2"
     end
 
     @testset "Aggregate Collections" begin
@@ -180,6 +187,17 @@
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
+
+        _, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [365 * 5],
+            when = false,
+            mdata = [(m) -> (m.deep.data[i]) for i=1:length(model.deep.data)],
+        )
+        @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
     end
 
     @testset "Low-level API for Collections" begin
@@ -257,6 +275,14 @@
         @test size(df) == (2, 4)
         @test df[1, :wpos] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, :wpos])
+
+        # Expect similar output, but using anonymous accessor functions
+        props = [(a)->(a.pos[i] + a.weight) for i=1:2]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 5)
+        @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
+        @test ismissing(df[2, dataname(props[2])])
 
         add_agent_pos!(Agent3(3, (2,4), 19.81),model)
         add_agent_pos!(Agent4(4, (4,1), 3),model)
