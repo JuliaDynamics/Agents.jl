@@ -1,5 +1,6 @@
 # v4.2
 * Pathfinding using the A* algorithm is now possible!
+- Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.
