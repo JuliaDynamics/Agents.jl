@@ -1,7 +1,7 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["Tim DuBois", "George Datseris", "Ali Vahdati"]
-version = "4.3.0"
+version = "4.2.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
