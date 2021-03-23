@@ -14,6 +14,12 @@
     @test model.a == 2
     @test model.b == "test"
 
+    model.a = 7
+    model.b = "Changed"
+    @test model.a == 7
+    @test model.b == "Changed"
+    @test_throws ErrorException model.c = 5
+
     newa = Agent0(6)
     model[6] = newa
     @test model[6] == newa
@@ -22,6 +28,28 @@
     prop2 = Agent2(1, 0.5)
     model2 = ABM(Agent0; properties = prop2)
     @test model2.weight == 0.5
+
+    mutable struct Properties
+        par1::Int
+        par2::Float64
+        par3::String
+    end
+    properties = Properties(1,1.0,"Test")
+    model = ABM(Agent0; properties = properties)
+    @test model.par1 == 1
+    @test model.par2 == 1.0
+    @test model.par3 == "Test"
+
+    model.par1 = 7
+    model.par2 = 7
+    model.par3 = "Changed"
+    @test model.par1 == 7
+    @test model.par2 == 7.0
+    @test model.par3 == "Changed"
+    @test_throws ErrorException model.par4 = 5
+
+    model = ABM(Agent0)
+    @test_throws ErrorException model.a = 5
 end
 
 @testset "model access typestability" begin
