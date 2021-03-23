@@ -205,8 +205,7 @@ nothing # hide
 # grass patches after each step. First: initialize the model.
 using InteractiveDynamics
 using AbstractPlotting
-import CairoMakie
-CairoMakie.activate!() # hide
+import GLMakie
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()

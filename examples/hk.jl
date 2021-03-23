@@ -142,8 +142,7 @@ agent_data, _ = run!(
 agent_data
 
 # Finally we run three scenarios, collect the data and plot it.
-using DataFrames, CairoMakie
-CairoMakie.activate!() # hide
+using DataFrames, GLMakie
 using Random # hide
 Random.seed!(42) # hide
 

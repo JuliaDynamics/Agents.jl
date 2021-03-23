@@ -23,8 +23,7 @@
 
 using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
 using InteractiveDynamics
-using CairoMakie
-CairoMakie.activate!() # hide
+using GLMakie
 
 # And create a very simple agent.
 

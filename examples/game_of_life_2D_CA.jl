@@ -102,8 +102,7 @@ end
 # We use the [`InteractiveDynamics.abm_video`](@ref) for creating an animation and saving it to an mp4
 
 using InteractiveDynamics
-import CairoMakie
-CairoMakie.activate!() # hide
+import GLMakie
 
 ac(x) = x.status == true ? :black : :white
 am(x) = x.status == true ? '■' : '□'

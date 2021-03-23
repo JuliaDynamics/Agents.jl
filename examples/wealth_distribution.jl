@@ -68,8 +68,7 @@ wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 # and then we can make a histogram of the result.
 # With a simple visualization we immediately see the power-law distribution:
 
-using CairoMakie, AbstractPlotting
-CairoMakie.activate!() # hide
+using GLMakie
 hist(
     wealths;
     bins = collect(0:9),

@@ -16,8 +16,7 @@
 
 using Agents
 using InteractiveDynamics # plotting agents
-using CairoMakie # for static plotting
-CairoMakie.activate!() # hide
+using GLMakie
 using Random # hide
 
 # ## Building the model
@@ -119,7 +118,7 @@ f
 # The first three opinions of an agent determines its color in RGB.
 Random.seed!(648) # hide
 levels_per_opinion = 3
-ac(agent) = CairoMakie.RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
+ac(agent) = GLMakie.RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
 model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
 
 abm_video(

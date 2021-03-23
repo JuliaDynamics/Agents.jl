@@ -32,8 +32,7 @@
 
 using Agents
 using Distributions
-using CairoMakie
-CairoMakie.activate!() # hide
+using GLMakie
 using Random # hide
 
 mutable struct Fisher <: AbstractAgent

@@ -24,8 +24,7 @@
 # We start by defining the agent type
 using Agents, Random
 using InteractiveDynamics
-using CairoMakie
-CairoMakie.activate!() # hide
+using GLMakie
 
 mutable struct Tree <: AbstractAgent
     id::Int

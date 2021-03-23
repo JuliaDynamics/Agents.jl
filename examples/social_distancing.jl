@@ -65,8 +65,7 @@ nothing # hide
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 using InteractiveDynamics
-import CairoMakie
-CairoMakie.activate!() # hide
+import GLMakie
 
 abm_video(
     "socialdist1.mp4",
@@ -356,7 +355,6 @@ data3, _ = run!(sir_model3, sir_agent_step!, sir_model_step!, 2000; adata)
 data1[(end-10):end, :]
 
 # Now, we can plot the number of infected versus time
-using CairoMakie
 figure = Figure()
 ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
 l1 = lines!(ax, data1[:, aggname(:status, infected)], color = :orange)

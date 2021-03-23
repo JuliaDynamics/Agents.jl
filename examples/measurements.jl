@@ -39,8 +39,7 @@ end
 # from there.
 
 using AbstractPlotting
-import CairoMakie
-CairoMakie.activate!() # hide
+import GLMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase

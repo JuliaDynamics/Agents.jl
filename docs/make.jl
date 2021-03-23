@@ -14,9 +14,8 @@ println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 using InteractiveDynamics
-println("Plotting Backends...")
+println("Plotting Backend...")
 import GLMakie
-import CairoMakie
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.

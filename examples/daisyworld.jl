@@ -257,8 +257,7 @@ nothing # hide
 # Lets run the model with constant solar isolation and visualize the result
 
 Random.seed!(165) # hide
-using InteractiveDynamics, CairoMakie
-CairoMakie.activate!() # hide
+using InteractiveDynamics, GLMakie
 
 model = daisyworld()
 

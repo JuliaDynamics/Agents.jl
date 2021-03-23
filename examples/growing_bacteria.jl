@@ -170,8 +170,7 @@ nothing # hide
 # plot the bacteria cells. We define a function that creates a custom `Shape` based
 # on the agent:
 using InteractiveDynamics
-import CairoMakie # choose plotting backend
-CairoMakie.activate!() # hide
+import GLMakie # choose plotting backend
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)
@@ -194,7 +193,7 @@ end
 nothing # hide
 
 # set up some nice colors
-bacteria_color(b) = CairoMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)
+bacteria_color(b) = GLMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)
 nothing # hide
 
 # and proceed with the animation
