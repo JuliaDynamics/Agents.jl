@@ -39,7 +39,7 @@ end
 # from there.
 
 using AbstractPlotting
-import GLMakie
+using GLMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase

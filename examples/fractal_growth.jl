@@ -160,7 +160,7 @@ Random.seed!(42) # hide
 model = initialize_model()
 
 using InteractiveDynamics
-import GLMakie
+using GLMakie
 
 ## Particles that are stuck and part of the fractal are shown in red, for visual distinction
 particle_color(a::Particle) = a.is_stuck ? :red : :blue
