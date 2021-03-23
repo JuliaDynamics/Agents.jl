@@ -278,7 +278,7 @@ gif(anim, "daisyworld.gif", fps = 10)
 p1 = plot(model_df[!, :solar_luminosity], legend = false, ylabel = "Solar Luminosity")
 p2 = plot(model_df[!, :global_temperature], legend = false, ylabel = "Global Temperature")
 p3 = plot(
-    [agent_df[!, aggname(white, total)], agent_df[!, aggname(black, total)]],
+    [agent_df[!, dataname((white, total))], agent_df[!, dataname((black, total))]],
     legend = false,
     ylabel = "Population",
 )

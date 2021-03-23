@@ -194,7 +194,7 @@ data, _ = run!(model, agent_step!, 5; adata)
 data
 
 # Other examples in the documentation are more realistic, with more meaningful
-# collected data. Don't forget to use the function [`aggname`](@ref) to access the
+# collected data. Don't forget to use the function [`dataname`](@ref) to access the
 # columns of the resulting dataframe by name.
 
 # ## Visualizing the data

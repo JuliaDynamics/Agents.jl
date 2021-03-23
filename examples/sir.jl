@@ -304,13 +304,13 @@ N = sum(model.Ns) # Total initial population
 x = data.step
 p = plot(
     x,
-    log10.(data[:, aggname(:status, infected)]),
+    log10.(data[:, dataname((:status, infected))]),
     label = "infected",
     xlabel = "steps",
     ylabel = "log10(count)",
 )
-plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
-dead = log10.(N .- data[:, aggname(:status, length)])
+plot!(p, x, log10.(data[:, dataname((:status, recovered))]), label = "recovered")
+dead = log10.(N .- data[:, dataname((:status, length))])
 plot!(p, x, dead, label = "dead")
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases

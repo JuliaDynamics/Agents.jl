@@ -359,9 +359,9 @@ data1[(end-10):end, :]
 using CairoMakie
 figure = Figure()
 ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
-l1 = lines!(ax, data1[:, aggname(:status, infected)], color = :orange)
-l2 = lines!(ax, data2[:, aggname(:status, infected)], color = :blue)
-l3 = lines!(ax, data3[:, aggname(:status, infected)], color = :green)
+l1 = lines!(ax, data1[:, dataname((:status, infected))], color = :orange)
+l2 = lines!(ax, data2[:, dataname((:status, infected))], color = :blue)
+l3 = lines!(ax, data3[:, dataname((:status, infected))], color = :green)
 figure[1, 2] =
     Legend(figure, [l1, l2, l3], ["r=$r1, beta=$β1", "r=$r2, beta=$β1", "r=$r1, beta=$β2"])
 figure
@@ -409,7 +409,7 @@ sir_model4 = sir_initiation(reinfection_probability = r4, βmin = β1, isolated 
 
 data4, _ = run!(sir_model4, sir_agent_step!, sir_model_step!, 2000; adata)
 
-l4 = lines!(ax, data4[:, aggname(:status, infected)], color = :red)
+l4 = lines!(ax, data4[:, dataname((:status, infected))], color = :red)
 figure[1, 2] = Legend(
     figure,
     [l1, l2, l3, l4],
