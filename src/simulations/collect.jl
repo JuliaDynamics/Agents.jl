@@ -50,10 +50,10 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   aggregate. For example: `x_pos(a) = a.pos[1]>5` with `(:weight, mean, x_pos)` will result
   in the average weight of agents conditional on their x-position being greater than 5.
 
-  The resulting data name columns use the function [`dataname`](@ref), and create something
-  like `:mean_weight` or `:maximum_f_x_pos`.
-  This name doesn't play well with anonymous functions, but you can simply use
-  `DataFrames.rename!` to change the returned dataframe's column names.
+  The resulting data name columns use the function [`dataname`](@ref). They create something
+  like `:mean_weight` or `:maximum_f_x_pos`. In addition, you can use anonymous functions in a list comprehension to assign elements of an array into different columns:
+  `adata = [(a)->(a.interesting_array[i]) for i=1:N]`. Column names can also be renamed
+  with `DataFrames.rename!` after data is collected.
 
   **Notice:** Aggregating only works if there are agents to be aggregated over.
   If you remove agents during model run, you should modify the aggregating functions.
