@@ -51,7 +51,8 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
   in the average weight of agents conditional on their x-position being greater than 5.
 
   The resulting data name columns use the function [`dataname`](@ref). They create something
-  like `:mean_weight` or `:maximum_f_x_pos`. In addition, you can use anonymous functions in a list comprehension to assign elements of an array into different columns:
+  like `:mean_weight` or `:maximum_f_x_pos`. In addition, you can use anonymous functions
+  in a list comprehension to assign elements of an array into different columns:
   `adata = [(a)->(a.interesting_array[i]) for i=1:N]`. Column names can also be renamed
   with `DataFrames.rename!` after data is collected.
 
