@@ -1,7 +1,8 @@
-# v4.2
-* Pathfinding using the A* algorithm is now possible!
+# v4.2 (Unreleased)
+- Pathfinding using the A* algorithm is now possible!
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
+- Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.

@@ -165,6 +165,8 @@ There may be times when pair-wise, triplet-wise or higher interactions need to b
 accounted for across most or all of the model's agent population. The following methods
 provide an interface for such calculation.
 
+These methods follow the conventions outlined above in [A note on iteration](@ref).
+
 ```@docs
 iter_agent_groups
 map_agent_groups
