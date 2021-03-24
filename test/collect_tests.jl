@@ -12,7 +12,7 @@
                 :tick => 0,
                 :flag => false,
                 :container => Float64[],
-                :deep => Nested([20.0, 52.1])
+                :deep => Nested([20.0, 52.1]),
             ),
         )
         add_agent!((4, 3), model, 0.1)
@@ -63,17 +63,18 @@
         @test_throws ErrorException init_agent_dataframe(model, [:UNKNOWN])
     end
 
-    @testset "aggname" begin
-        @test aggname(:weight) == "weight"
-        @test aggname(:weight, mean) == "mean_weight"
-        @test aggname(x_position, length) == "length_x_position"
-        @test aggname((x_position, length)) == "length_x_position"
+    @testset "dataname" begin
+        adata = [(:weight, mean), (x_position, length)]
+        @test dataname(:weight) == "weight"
+        @test dataname((:weight, mean)) == "mean_weight"
+        @test dataname(adata[2]) == "length_x_position"
+        @test dataname((x_position, length)) == "length_x_position"
         ypos(a) = a.pos[2] > 5
-        @test aggname((x_position, length, ypos)) == "length_x_position_ypos"
+        @test dataname((x_position, length, ypos)) == "length_x_position_ypos"
 
         funcs = Vector{Function}(undef, 2)
-        for i=1:length(funcs)
-            inline_func(x) = i*x
+        for i in 1:length(funcs)
+            inline_func(x) = i * x
             funcs[i] = inline_func
         end
         @test dataname(funcs[2]) == "inline_func_i=2"
@@ -95,7 +96,7 @@
         # renamed mean(weight). ID is meaningless and will therefore be dropped.
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight]
-        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
+        @test df[1, dataname((:weight, mean))] ≈ 0.37333333333
 
         # Add a function as a property
         props = [:weight, x_position]
@@ -110,7 +111,7 @@
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
-        @test df[1, aggname(x_position, mean)] ≈ 4.3333333
+        @test df[1, dataname(props[2])] ≈ 4.3333333
 
         xtest(agent) = agent.pos[1] > 5
         ytest(agent) = agent.pos[2] > 5
@@ -120,23 +121,23 @@
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight_ytest]
-        @test df[1, aggname((:weight, mean, ytest))] ≈ 0.67
+        @test df[1, dataname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
-        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
-        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
+        @test df[1, dataname(props[1])] ≈ 0.37333333333
+        @test df[1, dataname(props[2])] ≈ 0.67
 
         props = [(:weight, mean, xtest), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
-        @test df[1, aggname(:weight, mean, xtest)] ≈ 0.35
-        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
+        @test df[1, dataname(props[1])] ≈ 0.35
+        @test df[1, dataname(props[2])] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin
@@ -195,7 +196,7 @@
             365 * 5;
             when_model = [365 * 5],
             when = false,
-            mdata = [(m) -> (m.deep.data[i]) for i=1:length(model.deep.data)],
+            mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
     end
@@ -246,9 +247,9 @@
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3, Agent4}, GridSpace((10,10)); warn = false)
-        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
-        add_agent_pos!(Agent4(2, (10,7), 5),model)
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
+        add_agent_pos!(Agent4(2, (10, 7), 5), model)
 
         # Expect position type (both agents have it)
         props = [:pos]
@@ -277,24 +278,24 @@
         @test ismissing(df[2, :wpos])
 
         # Expect similar output, but using anonymous accessor functions
-        props = [(a)->(a.pos[i] + a.weight) for i=1:2]
+        props = [(a) -> (a.pos[i] + a.weight) for i in 1:2]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (2, 5)
         @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, dataname(props[2])])
 
-        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
-        add_agent_pos!(Agent4(4, (4,1), 3),model)
+        add_agent_pos!(Agent3(3, (2, 4), 19.81), model)
+        add_agent_pos!(Agent4(4, (4, 1), 3), model)
 
         props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 7)
-        @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
-        @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
-        @test typeof(df.p) <: Vector{Union{Missing, Int}}
-        @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.pos) <: Vector{Tuple{Int,Int}}
+        @test typeof(df.weight) <: Vector{Union{Missing,Float64}}
+        @test typeof(df.p) <: Vector{Union{Missing,Int}}
+        @test typeof(df.wpos) <: Vector{Union{Missing,Float64}}
 
         # Expect something completely unknown to fail
         props = [:UNKNOWN]
@@ -340,17 +341,17 @@
             pos::Dims{2}
             weight::Int
         end
-        model = ABM(Union{Agent3, Agent3Int}, GridSpace((10,10)); warn = false)
-        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
-        add_agent_pos!(Agent3Int(2, (10,7), 5),model)
-        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
-        add_agent_pos!(Agent3Int(4, (4,1), 3),model)
+        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
+        add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
+        add_agent_pos!(Agent3Int(2, (10, 7), 5), model)
+        add_agent_pos!(Agent3(3, (2, 4), 19.81), model)
+        add_agent_pos!(Agent3Int(4, (4, 1), 3), model)
 
         props = [:weight]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 4)
-        @test typeof(df.weight) <: Vector{Union{Float64, Int}}
+        @test typeof(df.weight) <: Vector{Union{Float64,Int}}
 
         # Expect a1.weight <: Float64, a2.weight <: Int64 to fail in aggregate
         props = [(:weight, sum)]
@@ -388,9 +389,9 @@
         collect_model_data!(model_data, model, model_props, 1; obtainer = deepcopy)
         model.deep.data[1] += 0.9
         collect_model_data!(model_data, model, model_props, 2; obtainer = deepcopy)
-        @test model_data[1,:deep].data[1] ≈ 20.0
-        @test model_data[3,:deep].data[1] ≈ 20.9
-        @test [length(d.data) for d in model_data[!,:deep]] == [3, 4, 4]
+        @test model_data[1, :deep].data[1] ≈ 20.0
+        @test model_data[3, :deep].data[1] ≈ 20.9
+        @test [length(d.data) for d in model_data[!, :deep]] == [3, 4, 4]
 
         model = initialize()
         agent_data, model_data = run!(
@@ -411,10 +412,7 @@ end
 
 @testset "Parameter scan" begin
     n = 10
-    parameters = Dict(
-        :density => [0.6, 0.7, 0.8],
-        :griddims => (20, 20),
-    )
+    parameters = Dict(:density => [0.6, 0.7, 0.8], :griddims => (20, 20))
 
     forest, agent_step!, forest_step! = Models.forest_fire()
     forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
