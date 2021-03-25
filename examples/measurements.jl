@@ -38,9 +38,7 @@ end
 # each of these functions do, see the [Daisyworld](@ref) example, as they are copied directly
 # from there.
 
-using AbstractPlotting
-import CairoMakie
-CairoMakie.activate!() # hide
+using CairoMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase

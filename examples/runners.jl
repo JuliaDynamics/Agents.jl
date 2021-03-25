@@ -55,8 +55,8 @@ agent_step!(agent, model) = move_along_route!(agent, model)
 # for our runners, and display the heightmap for our reference. A better interface to do
 # this is currently a work in progress.
 using InteractiveDynamics
-using GLMakie
-GLMakie.activate!() # hide
+using CairoMakie
+CairoMakie.activate!(type = "png") # hide
 
 ## Our sample heightmap
 map_url =

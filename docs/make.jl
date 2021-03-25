@@ -2,26 +2,21 @@ cd(@__DIR__)
 using Pkg;
 Pkg.activate(@__DIR__);
 const CI = get(ENV, "CI", nothing) == "true"
-CI && (ENV["GKSwstype"] = "100")
 println("Loading Packages")
 println("Documenter...")
 using Documenter
 println("Agents...")
 using Agents
-println("Plots...")
-using Plots
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 using InteractiveDynamics
-println("Plotting Backends...")
-import GLMakie
+println("Plotting Backend...")
 import CairoMakie
 
 println("Setting up Environment")
 # Initialise plotting environments to squash build output bleeding into docs.
-Plots.plot([1, 1])
-f = InteractiveDynamics.AbstractPlotting.Figure()
+f = CairoMakie.Figure()
 f
 
 ENV["GKS_ENCODING"] = "utf-8"
