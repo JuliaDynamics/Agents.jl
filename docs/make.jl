@@ -14,11 +14,6 @@ using InteractiveDynamics
 println("Plotting Backend...")
 import CairoMakie
 
-println("Setting up Environment")
-# Initialise plotting environments to squash build output bleeding into docs.
-f = CairoMakie.Figure()
-f
-
 ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples")
 @info "Converting Examples to Docuementation"
@@ -26,7 +21,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
 #toskip = ("daisyworld_matrix.jl", "siroptim.jl")
-toskip = ("daisyworld_matrix.jl", "siroptim.jl", "fractal_growth.jl", "maze.jl", "optim.jl")
+toskip = ("daisyworld_matrix.jl", "siroptim.jl", "fractal_growth.jl", "optim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -98,7 +93,7 @@ makedocs(
             "Flocking" => "examples/flock.md",
             "Daisyworld" => "examples/daisyworld.md",
             "Predator-Prey" => "examples/predator_prey.md",
-#            "Maze Solver" => "examples/maze.md",
+            "Maze Solver" => "examples/maze.md",
             "Mountain Runners" => "examples/runners.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
             "Opinion spread" => "examples/opinion_spread.md",
