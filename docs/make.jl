@@ -103,7 +103,7 @@ makedocs(
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",
             "Zombie Outbreak" => "examples/zombies.md",
-            "Fractal Growth" => "examples/fractal_growth.md",
+ #           "Fractal Growth" => "examples/fractal_growth.md",
         ],
         "Predefined Models" => "models.md",
         "API" => "api.md",
