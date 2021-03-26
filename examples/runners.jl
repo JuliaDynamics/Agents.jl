@@ -67,7 +67,7 @@ model = initialize(map_url)
 function preplot!(ax, model)
     ax.aspect = DataAspect()
     hm = heatmap!(ax, heightmap(model); colormap = :terrain)
-    scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
+    scatter!(ax, model.goal; color = (:red, 50), marker = 'x', markersize=10)
 end
 
 abm_video(
@@ -78,8 +78,8 @@ abm_video(
     frames = 410,
     framerate = 25,
     ac = :black,
-    as = 8,
-    scatterkwargs = (strokecolor = :white, strokewidth = 2),    
+    as = 10,
+    scatterkwargs = (strokecolor = :white, strokewidth = 2),
     static_preplot! = preplot!
 )
 nothing # hide
