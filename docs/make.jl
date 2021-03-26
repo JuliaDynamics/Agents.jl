@@ -21,7 +21,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
 #toskip = ("daisyworld_matrix.jl", "siroptim.jl")
-toskip = ("daisyworld_matrix.jl", "siroptim.jl", "fractal_growth.jl")
+toskip = ("daisyworld_matrix.jl", "siroptim.jl", "measurements.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -99,7 +99,7 @@ makedocs(
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",
             "Zombie Outbreak" => "examples/zombies.md",
- #           "Fractal Growth" => "examples/fractal_growth.md",
+            "Fractal Growth" => "examples/fractal_growth.md",
         ],
         "Predefined Models" => "models.md",
         "API" => "api.md",
@@ -108,7 +108,7 @@ makedocs(
             "BlackBoxOptim.jl" => "examples/optim.md",
             "DifferentialEquations.jl" => "examples/diffeq.md",
             "LightGraphs.jl" => "examples/schoolyard.md",
-            "Measurements.jl" => "examples/measurements.md",
+#            "Measurements.jl" => "examples/measurements.md",
         ],
         "ABM Framework Comparison" => "comparison.md",
         "Developer Docs" => "devdocs.md",
