@@ -26,7 +26,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
 #toskip = ("daisyworld_matrix.jl", "siroptim.jl")
-toskip = ("daisyworld_matrix.jl", "siroptim.jl", "fractal_growth.jl", "maze.jl", "runners.jl", "optim.jl")
+toskip = ("daisyworld_matrix.jl", "siroptim.jl", "fractal_growth.jl", "maze.jl", "optim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -99,7 +99,7 @@ makedocs(
             "Daisyworld" => "examples/daisyworld.md",
             "Predator-Prey" => "examples/predator_prey.md",
 #            "Maze Solver" => "examples/maze.md",
-#            "Mountain Runners" => "examples/runners.md",
+            "Mountain Runners" => "examples/runners.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",
@@ -111,9 +111,9 @@ makedocs(
         "Plotting and interactive application" => "interact.md",
         "Ecosystem Integration" => [
 #            "BlackBoxOptim.jl" => "examples/optim.md",
-#            "DifferentialEquations.jl" => "examples/diffeq.md",
-#            "LightGraphs.jl" => "examples/schoolyard.md",
-#            "Measurements.jl" => "examples/measurements.md",
+            "DifferentialEquations.jl" => "examples/diffeq.md",
+            "LightGraphs.jl" => "examples/schoolyard.md",
+            "Measurements.jl" => "examples/measurements.md",
         ],
         "ABM Framework Comparison" => "comparison.md",
         "Developer Docs" => "devdocs.md",
