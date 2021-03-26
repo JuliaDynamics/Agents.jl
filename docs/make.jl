@@ -7,6 +7,10 @@ println("Documenter...")
 using Documenter
 println("Agents...")
 using Agents
+# Include plot recipes explicitly for documentation builds
+# Would not be included by default since it sits behind
+# a Plots.jl Requires guard
+include("../src/visualization/plot-recipes.jl")
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
