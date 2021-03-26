@@ -79,7 +79,7 @@ jobs:
           julia --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.add(PackageSpec(name="Documenter", rev="master"))'
+            Pkg.add(PackageSpec(name="Documenter", rev="master"))
             Pkg.instantiate()'
       - name: Generate documentation and deploy
         env: # needed for pushing to gh-pages branch
