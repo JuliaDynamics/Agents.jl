@@ -75,7 +75,7 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - name: Instantiate and install dependencies
-         run: |
+        run: |
           julia --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
