@@ -37,30 +37,19 @@
 using Agents
 using Random # hide
 
-mutable struct Sheep <: AbstractAgent
+mutable struct SheepWolfGrass <: AbstractAgent
     id::Int
     pos::Dims{2}
+    type::Symbol # :sheep, :wolf or :grass
+    ## These fields are shared for sheep and wolves:
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
-end
-
-mutable struct Wolf <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    energy::Float64
-    reproduction_prob::Float64
-    Δenergy::Float64
-end
-
-mutable struct Grass <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+    ## These fields are only for grasses:
     fully_grown::Bool
     regrowth_time::Int
     countdown::Int
 end
-nothing # hide
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
@@ -81,7 +70,7 @@ function initialize_model(;
 )
     space = GridSpace(dims, periodic = false)
     model =
-        ABM(Union{Sheep,Wolf,Grass}, space, scheduler = by_type(true, true), warn = false)
+        ABM(SheepWolfGrass, space, scheduler = random_activation, warn = false)
     id = 0
     for _ in 1:n_sheep
         id += 1
