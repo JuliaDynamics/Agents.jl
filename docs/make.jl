@@ -119,6 +119,7 @@ makedocs(
             "LightGraphs.jl" => "examples/schoolyard.md",
             "Measurements.jl" => "examples/measurements.md",
         ],
+        "Performance Tips" => "performance_tips.md",
         "ABM Framework Comparison" => "comparison.md",
         "Developer Docs" => "devdocs.md",
     ],
