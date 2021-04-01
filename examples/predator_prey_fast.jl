@@ -51,6 +51,14 @@ mutable struct SheepWolfGrass <: AbstractAgent
     countdown::Int
 end
 
+# Three simple helper functions to define these agents simpler
+Sheep(id, pos, energy, repr, Δe) =
+SheepWolfGrass(id, pos, :sheep, energy, repr, Δe, false, 0, 0)
+Wolf(id, pos, energy, repr, Δe) =
+SheepWolfGrass(id, pos, :wolf,  energy, repr, Δe, false, 0, 0)
+Grass(id, pos, grown, regrowth, countdown) =
+SheepWolfGrass(id, pos, :grass, 0, 0, 0, grown, regrowth, countdown)
+
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
 # dimensional grid space, which enables animals to walk in all
@@ -69,8 +77,7 @@ function initialize_model(;
     wolf_reproduce = 0.05,
 )
     space = GridSpace(dims, periodic = false)
-    model =
-        ABM(SheepWolfGrass, space, scheduler = random_activation, warn = false)
+    model = ABM(SheepWolfGrass, space, scheduler = random_activation, warn = false)
     id = 0
     for _ in 1:n_sheep
         id += 1
@@ -95,7 +102,6 @@ function initialize_model(;
     end
     return model
 end
-nothing # hide
 
 # The function `agent_step!` is dispatched on each subtype in order to produce
 # type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
@@ -103,12 +109,24 @@ nothing # hide
 # If their energy level is below zero, an agent dies. Otherwise, the agent lives and
 # reproduces with some probability.
 
-function agent_step!(sheep::Sheep, model)
-    move!(sheep, model)
+# Sheep and wolves move to a random adjacent position with the `move!` function.
+
+function agent_step!(agent::SheepWolfGrass, model)
+    if agent.type == :sheep
+        agent_step_sheep!(agent, model)
+    elseif agent.type == :wolf
+        agent_step_wolf!(agent, model)
+    else
+        agent_step_grass!(agent, model)
+    end
+end
+
+function agent_step_sheep!(sheep, model)
+    walk!(sheep, rand, model)
     sheep.energy -= 1
     agents = collect(agents_in_position(sheep.pos, model))
-    dinner = filter!(x -> isa(x, Grass), agents)
-    eat!(sheep, dinner, model)
+    dinner = filter!(x -> x.type == :grass, agents)
+    sheep_eat!(sheep, dinner, model)
     if sheep.energy < 0
         kill_agent!(sheep, model)
         return
@@ -118,12 +136,12 @@ function agent_step!(sheep::Sheep, model)
     end
 end
 
-function agent_step!(wolf::Wolf, model)
-    move!(wolf, model)
+function agent_step_wolf!(wolf, model)
+    walk!(wolf, rand, model)
     wolf.energy -= 1
     agents = collect(agents_in_position(wolf.pos, model))
-    dinner = filter!(x -> isa(x, Sheep), agents)
-    eat!(wolf, dinner, model)
+    dinner = filter!(x -> x.type == :sheep, agents)
+    wolf_eat!(wolf, dinner, model)
     if wolf.energy < 0
         kill_agent!(wolf, model)
         return
@@ -132,13 +150,11 @@ function agent_step!(wolf::Wolf, model)
         reproduce!(wolf, model)
     end
 end
-nothing # hide
 
 # The behavior of grass functions differently. If it is fully grown, it is consumable.
 # Otherwise, it cannot be consumed until it regrows after a delay specified by
 # `regrowth_time`.
-
-function agent_step!(grass::Grass, model)
+function agent_step_grass!(grass, model)
     if !grass.fully_grown
         if grass.countdown <= 0
             grass.fully_grown = true
@@ -148,21 +164,12 @@ function agent_step!(grass::Grass, model)
         end
     end
 end
-nothing # hide
-
-# Sheep and wolves move to a random adjacent position with the `move!` function.
-function move!(agent, model)
-    neighbors = nearby_positions(agent, model)
-    position = rand(model.rng, collect(neighbors))
-    move_agent!(agent, position, model)
-end
-nothing # hide
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
 # additional energy and the grass will not be available for consumption until regrowth time
 # has elapsed. If a wolf eats a sheep, the sheep dies and the wolf acquires more energy.
 
-function eat!(sheep::Sheep, grass_array, model)
+function sheep_eat!(sheep, grass_array, model)
     isempty(grass_array) && return
     grass = grass_array[1]
     if grass.fully_grown
@@ -171,28 +178,28 @@ function eat!(sheep::Sheep, grass_array, model)
     end
 end
 
-function eat!(wolf::Wolf, sheep, model)
+function wolf_eat!(wolf, sheep, model)
     if !isempty(sheep)
         dinner = rand(model.rng, sheep)
         kill_agent!(dinner, model)
         wolf.energy += wolf.Δenergy
     end
 end
-nothing # hide
 
 # Sheep and wolves share a common reproduction method. Reproduction has a cost of 1/2 the
 # current energy level of the parent. The offspring is an exact copy of the parent, with
 # exception of `id`.
-
 function reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    A = typeof(agent)
-    offspring = A(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
+    if agent.type == :sheep
+        offspring = Sheep(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
+    else
+        offspring = Wolf(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
+    end
     add_agent_pos!(offspring, model)
     return
 end
-nothing # hide
 
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
