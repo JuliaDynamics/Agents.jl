@@ -46,7 +46,7 @@ agent_step!(agent, model) = move_along_route!(agent, model)
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
 using InteractiveDynamics
-using GLMakie
+import GLMakie
 GLMakie.activate!() # hide
 
 ## Our sample walkmap
@@ -62,11 +62,11 @@ abm_video(
     agent_step!;
     resolution=(700,700),
     frames=310,
-    framerate=15,
+    framerate=60,
     ac=:red,
     as=11,
-    offset = _ -> (-0.5, -0.5),
-    static_preplot! = (ax, _) -> heatmap!(ax, walkmap(model); colormap=:grays)
+    # offset = _ -> (-0.5, -0.5),
+    heatarray = walkmap(model),
 )
 nothing # hide
 
