@@ -65,8 +65,8 @@ abm_video(
     framerate=60,
     ac=:red,
     as=11,
-    # offset = _ -> (-0.5, -0.5),
     heatarray = walkmap(model),
+    add_colorbar = false,
 )
 nothing # hide
 
