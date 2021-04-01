@@ -7,10 +7,6 @@ println("Documenter...")
 using Documenter
 println("Agents...")
 using Agents
-# Include plot recipes explicitly for documentation builds
-# Would not be included by default since it sits behind
-# a Plots.jl Requires guard
-include("../src/visualization/plot-recipes.jl")
 println("Literate...")
 import Literate
 println("InteractiveDynamics...")
@@ -24,8 +20,7 @@ println("Converting Examples")
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outdir)
-#toskip = ("daisyworld_matrix.jl", "siroptim.jl")
-toskip = ("daisyworld_matrix.jl", "siroptim.jl", "measurements.jl")
+toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)

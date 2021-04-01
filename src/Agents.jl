@@ -39,6 +39,11 @@ function __init__()
     @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
         include("visualization/plot-recipes.jl")
     end
+    # Workaround for Documenter.jl, so we don't need to include
+    # heavy dependencies to build documentation
+    @require Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4" begin
+        include("visualization/plot-recipes.jl")
+    end
 end
 
 # 4.0 Depreciations
