@@ -192,11 +192,8 @@ end
 function reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    if agent.type == :sheep
-        offspring = Sheep(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
-    else
-        offspring = Wolf(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
-    end
+    A = agent.type == :sheep ? Sheep : Wolf
+    offspring = A(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
     add_agent_pos!(offspring, model)
     return
 end
@@ -207,22 +204,23 @@ end
 using InteractiveDynamics
 using AbstractPlotting
 import CairoMakie
-CairoMakie.activate!() # hide
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
 
 # To view our starting population, we can build an overview plot:
+offset(a) = a.type == :sheep ? (0.2, 0.0) : a.type == :wolf ? (-0.2, 0.0) : (0.0, 0.0)
+mshape(a) = a.type == :sheep ? '⚫' : a.type == :wolf ? '▲' : '■'
+function mcolor(a)
+    if a.type == :sheep
+        RGBAf0(1.0, 1.0, 1.0, 0.8)
+    elseif a.type == :wolf
+        RGBAf0(0.2, 0.2, 0.2, 0.8)
+    else
+        cgrad([:brown, :green])[a.countdown/a.regrowth_time]
+    end
+end
 
-offset(a::Sheep) = (0.2, 0.0)
-offset(a::Wolf) = (-0.2, 0.0)
-offset(a::Grass) = (0.0, 0.0)
-mshape(a::Sheep) = '⚫'
-mshape(a::Wolf) = '▲'
-mshape(a::Grass) = '■'
-mcolor(a::Sheep) = RGBAf0(1.0, 1.0, 1.0, 0.8)
-mcolor(a::Wolf) = RGBAf0(0.2, 0.2, 0.2, 0.8)
-mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown/a.regrowth_time]
 figure, = abm_plot(
     model;
     resolution = (800, 600),
@@ -230,7 +228,7 @@ figure, = abm_plot(
     am = mshape,
     as = 22,
     ac = mcolor,
-    scheduler = by_type((Grass, Sheep, Wolf), false),
+    # TODO: scheduler = by_type((Grass, Sheep, Wolf), false),
     equalaspect = true,
 )
 figure
