@@ -93,6 +93,17 @@ mutable struct Agent15 <: AbstractAgent
     money::Int
 end
 
+function initialize_model_1(;n_agents=600,dims=(5,5))
+    space = GridSpace(dims)
+    model = ABM(Agent1, space; scheduler=random_activation, warn=false)
+    id = 0
+    for id in 1:n_agents
+        agent = Agent1(id, (0,0), 10)
+        add_agent!(agent, model)
+    end
+    return model
+end
+
 function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
     agent_types = [Agent1,Agent2,Agent3,Agent4,Agent5,Agent6,Agent7,Agent8,
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
@@ -114,10 +125,9 @@ end
 function agent_step!(agent, model)
     move!(agent, model)
     agents = agents_in_position(agent.pos, model)
-    map(a->exchange!(agent, a), agents)
+    for a in agents; exchange!(agent, a); end
     return nothing
 end
-
 
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
@@ -134,6 +144,14 @@ function exchange!(agent, other_agent)
     return nothing
 end
 
+function run_simulation_1(n_steps, n_reps)
+    t = @timed for _ in 1:n_reps
+        model = initialize_model_1()
+        Agents.step!(model, agent_step!, n_steps)
+    end
+    return t[2]/n_reps
+end
+
 function run_simulation(n_steps, n_reps; n_types)
     t = @timed for _ in 1:n_reps
         model = initialize_model(;n_types=n_types)
@@ -142,21 +160,27 @@ function run_simulation(n_steps, n_reps; n_types)
     return t[2]/n_reps
 end
 
-# %% Run the simulation, do performance estimate
+# %% Run the simulation, do performance estimate, first with 1, then with many
 Random.seed!(2514)
 n_steps = 500
-times = Float64[]
-n_types = [1,2,3,5,10,15]
+n_reps = 5
+n_types = [2,3,4,5,10,15]
+# compile
+run_simulation_1(1, 1)
 for n in n_types; run_simulation(1, 1; n_types=n); end  # compile
+
+time_1 = run_simulation_1(n_steps, n_reps)
+times = Float64[]
 for n in n_types
     println(n)
-    t = run_simulation(n_steps, 5; n_types=n)
-    push!(times, t)
+    t = run_simulation(n_steps, n_reps; n_types=n)
+    push!(times, t/time_1)
 end
 
-using GLMakie
-fig, ax, = lines(n_types, times ./ times[1])
-scatter!(ax, n_types, times ./ times[1])
+using AbstractPlotting
+import CairoMakie
+fig, ax, = lines(n_types, times)
+scatter!(ax, n_types, times)
 ax.xlabel = "# types"
-ax.ylabel = "relative time to 1 type"
+ax.ylabel = "time, relative to 1 type"
 fig
