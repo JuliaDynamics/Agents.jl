@@ -228,29 +228,34 @@ end
 # %% #src
 # Lets run the model with constant solar isolation and visualize the result
 
-Random.seed!(165) # hide
 using InteractiveDynamics
 import CairoMakie
 CairoMakie.activate!() # hide
 
+Random.seed!(165) # hide
 model = daisyworld()
 
 # To visualize we need to define the necessary functions for [`abm_plot`](@ref).
-# We will also utilize its ability to plot an underlying heatmap, and automatically
-# update its corresponding colorbar. The underlying heatmap will be the temperature
-# of the surface, while daisies will be plotted in black and white as per their breed.
+# We will also utilize its ability to plot an underlying heatmap,
+# which will be the model surface temperature,
+# while daisies will be plotted in black and white as per their breed.
+# Notice that we will explicitly provide a `colorrange` to the heatmap keywords,
+# otherwise the colormap will be continuously and automatically updated to match
+# the underlying temperature values while we are animating the time evolution.
 
 daisycolor(a::Daisy) = a.breed
+
 plotkwargs = (
-    ac=daisycolor, as = 13, am = '♠', scatterkwargs = (strokewidth = 0.2,),
-    heatarray=model.temperature
+    ac=daisycolor, as = 12, am = '♠',
+    heatarray = :temperature,
+    heatkwargs = (colorrange = (-20, 60),),
 )
 fig, _ = abm_plot(model; plotkwargs...)
 fig
 
 # And after a couple of steps
 Agents.step!(model, agent_step!, model_step!, 5)
-fig, _ = abm_plot(model; plotkwargs...)
+fig, _ = abm_plot(model; heatarray = model.temperature, plotkwargs...)
 fig
 
 # Let's do some animation now
@@ -333,16 +338,26 @@ figure
 # ```julia
 # using InteractiveDynamics, GLMakie, Random
 # Random.seed!(165)
-# model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 # ```
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 
 # The only significant addition to use the interactive application is that we make a parameter
-# container for surface albedo and for the rate of change of solar luminosity, and add some labels for clarity.
+# container for surface albedo and for the rate of change of solar luminosity,
+# and add some labels for clarity.
+params = Dict(
+    :solar_change => -0.1:0.01:0.1,
+    :surface_albedo => 0:0.01:1,
+)
+alabels = ["black", "white"]
+mlabels = ["T", "L"]
+
+# And we run it
 
 # ```julia
-# figure = abm_play(
-#     model, agent_step!, model_step!; plotkwargs...
-# )
+fig, adf, mdf = abm_data_exploration(
+    model, agent_step!, model_step!, params;
+    mdata, adata, alabels, mlabels, plotkwargs...
+)
 # ```
 
 # ```@raw html
