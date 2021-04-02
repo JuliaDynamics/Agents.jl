@@ -1,11 +1,6 @@
 # Performance Tips
 
 Here we list various tips that will help users make faster ABMs with Agents.jl.
-These will typically come at the cost of ease of use, or clarity and extend of source code.
-Because otherwise, if they had no downsides, we would have already implemented them in Agents.jl.
-
-Notice that most tips presented here are context-specific. This means if you truly care about performance of your model, because you intend to do massive simulations, it is probably worth it to test all approaches until you conclude which one is the most performant.
-
 Please do read through Julia's own [Performance Tips](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-tips) section as well, as it will help you write performant code in general.
 
 ## Use Type-stable containers for the model properties
@@ -66,6 +61,8 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
+The result is that having many types (here 15 different types) makes the code about 5-6 times slower.
+
 **Notice that this is a temporary problem! In the future we plan to re-work Agents.jl internals regarding multi-agent models and deal with this performance hit without requiring the user to do something differently.**
 
-At the moment, if you want to use many different agent types, you can try including all properties all types should have. You can specify what "type" of agent it is via including a field `type` or `kind` whose value is a symbol: `:wolf, :sheep, :grass`. Properties that should only belong to one kind of agent could be initialized with a "null" value for the other kinds. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
+At the moment, if you want to use many different agent types, you can try including all properties all types should have in one type. You can specify what "type" of agent it is via including a field `type` or `kind` whose value is a symbol: `:wolf, :sheep, :grass`. Properties that should only belong to one kind of agent could be initialized with a "null" value for the other kinds. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
