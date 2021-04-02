@@ -34,37 +34,25 @@
 # See also the [Predator-prey dynamics: simple](@ref) version, which highlights how
 # one can stick with a single type instance to increase overall performance.
 
-using Agents
-using Random # hide
+using Agents, Random
 
-mutable struct SheepWolfGrass <: AbstractAgent
+mutable struct SheepWolf <: AbstractAgent
     id::Int
     pos::Dims{2}
-    type::Symbol # :sheep, :wolf or :grass
-    ## These fields are shared for sheep and wolves:
+    type::Symbol # :sheep or :wolf
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
-    ## These fields are only for grasses:
-    fully_grown::Bool
-    regrowth_time::Int
-    countdown::Int
 end
 
-# Three simple helper functions to define these agents simpler
-Sheep(id, pos, energy, repr, Δe) =
-SheepWolfGrass(id, pos, :sheep, energy, repr, Δe, false, 0, 0)
-Wolf(id, pos, energy, repr, Δe) =
-SheepWolfGrass(id, pos, :wolf,  energy, repr, Δe, false, 0, 0)
-Grass(id, pos, grown, regrowth, countdown) =
-SheepWolfGrass(id, pos, :grass, 0, 0, 0, grown, regrowth, countdown)
+# Simple helper functions
+Sheep(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :sheep, energy, repr, Δe)
+Wolf(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :wolf,  energy, repr, Δe)
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
 # dimensional grid space, which enables animals to walk in all
-# directions. Heterogeneous agents are specified in the model as a `Union`. Agents are
-# scheduled `by_type`, which randomizes the order of agents with the constraint that agents
-# of a particular type are scheduled consecutively.
+# directions.
 
 function initialize_model(;
     n_sheep = 100,
@@ -75,9 +63,20 @@ function initialize_model(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
+    seed = 23182
 )
+
+    rng = MersenneTwister(seed)
     space = GridSpace(dims, periodic = false)
-    model = ABM(SheepWolfGrass, space, scheduler = random_activation, warn = false)
+    ## Model properties contain the grass as two arrays: whether it is fully grown
+    ## and the time to regrow. Also have static parameter `regrowth_time`.
+    ## Notice how the properties are a `NamedTuple` to ensure type stability.
+    properties = (
+        fully_grown = falses(dims),
+        countdown = zeros(Int, dims),
+        regrowth_time = regrowth_time,
+    )
+    model = ABM(SheepWolf, space; properties, rng, scheduler = random_activation)
     id = 0
     for _ in 1:n_sheep
         id += 1
@@ -93,35 +92,31 @@ function initialize_model(;
         wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
-    for p in positions(model)
-        id += 1
+    for p in positions(model) # random grass initial growth
         fully_grown = rand(model.rng, Bool)
         countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
-        grass = Grass(id, (0, 0), fully_grown, regrowth_time, countdown)
-        add_agent!(grass, p, model)
+        model.countdown[p[1], p[2]] = countdown
+        model.fully_grown[p[1], p[2]] = fully_grown
     end
     return model
 end
 
-# The function `agent_step!` is dispatched on each subtype in order to produce
-# type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
-# energy unit by moving to an adjacent position and both consume a food source if available.
-# If their energy level is below zero, an agent dies. Otherwise, the agent lives and
-# reproduces with some probability.
+# The function `sheepwolf_step!` is dispatched on the sheep and wolves similarly:
+# both lose 1 energy unit by moving to an adjacent position and both consume
+# a food source if available. If their energy level is below zero, they die.
+# Otherwise, they live and reproduces with some probability.
 
-# Sheep and wolves move to a random adjacent position with the `move!` function.
+# Sheep and wolves move to a random adjacent position with the [`walk!`](@ref) function.
 
-function agent_step!(agent::SheepWolfGrass, model)
+function sheepwolf_step!(agent::SheepWolf, model)
     if agent.type == :sheep
-        agent_step_sheep!(agent, model)
-    elseif agent.type == :wolf
-        agent_step_wolf!(agent, model)
-    else
-        agent_step_grass!(agent, model)
+        sheep_step!(agent, model)
+    else # then `agent.type == :wolf`
+        wolf_step!(agent, model)
     end
 end
 
-function agent_step_sheep!(sheep, model)
+function sheep_step!(sheep, model)
     walk!(sheep, rand, model)
     sheep.energy -= 1
     agents = collect(agents_in_position(sheep.pos, model))
@@ -136,7 +131,7 @@ function agent_step_sheep!(sheep, model)
     end
 end
 
-function agent_step_wolf!(wolf, model)
+function wolf_step!(wolf, model)
     walk!(wolf, rand, model)
     wolf.energy -= 1
     agents = collect(agents_in_position(wolf.pos, model))
@@ -148,20 +143,6 @@ function agent_step_wolf!(wolf, model)
     end
     if rand(model.rng) <= wolf.reproduction_prob
         reproduce!(wolf, model)
-    end
-end
-
-# The behavior of grass functions differently. If it is fully grown, it is consumable.
-# Otherwise, it cannot be consumed until it regrows after a delay specified by
-# `regrowth_time`.
-function agent_step_grass!(grass, model)
-    if !grass.fully_grown
-        if grass.countdown <= 0
-            grass.fully_grown = true
-            grass.countdown = grass.regrowth_time
-        else
-            grass.countdown -= 1
-        end
     end
 end
 
@@ -192,82 +173,102 @@ end
 function reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    A = agent.type == :sheep ? Sheep : Wolf
-    offspring = A(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
+    offspring = SheepWolf(id, agent.pos,
+        agent.type, agent.energy, agent.reproduction_prob, agent.Δenergy
+    )
     add_agent_pos!(offspring, model)
     return
 end
 
-# ## Running the model
-# We will run the model for 500 steps and record the number of sheep, wolves and consumable
-# grass patches after each step. First: initialize the model.
-using InteractiveDynamics
-using AbstractPlotting
-import CairoMakie
-Random.seed!(23182) # hide
-n_steps = 500
-model = initialize_model()
 
-# To view our starting population, we can build an overview plot:
-offset(a) = a.type == :sheep ? (0.2, 0.0) : a.type == :wolf ? (-0.2, 0.0) : (0.0, 0.0)
-mshape(a) = a.type == :sheep ? '⚫' : a.type == :wolf ? '▲' : '■'
-function mcolor(a)
-    if a.type == :sheep
-        RGBAf0(1.0, 1.0, 1.0, 0.8)
-    elseif a.type == :wolf
-        RGBAf0(0.2, 0.2, 0.2, 0.8)
-    else
-        cgrad([:brown, :green])[a.countdown/a.regrowth_time]
+# The behavior of grass functions differently. If it is fully grown, it is consumable.
+# Otherwise, it cannot be consumed until it regrows after a delay specified by
+# `regrowth_time`. The grass is tuned from a model stepping function
+
+function grass_step!(model)
+    @inbounds for p in positions(model) # we don't have to enable bound checking
+        if !(model.fully_grown[p[1], p[2]])
+            if model.countdown[p[1], p[2]] ≤ 0
+                model.fully_grown[p[1], p[2]] = true
+                model.countdown[p[1], p[2]] = model.regrowth_time
+            else
+                model.countdown[p[1], p[2]] -= 1
+            end
+        end
     end
 end
 
-figure, = abm_plot(
-    model;
-    resolution = (800, 600),
-    offset = offset,
-    am = mshape,
-    as = 22,
-    ac = mcolor,
-    # TODO: scheduler = by_type((Grass, Sheep, Wolf), false),
-    equalaspect = true,
+model = initialize_model()
+
+# ## Running the model
+# %% #src
+# We will run the model for 500 steps and record the number of sheep, wolves and consumable
+# grass patches after each step. First: initialize the model.
+using InteractiveDynamics
+import CairoMakie
+
+# To view our starting population, we can build an overview plot using [`abm_plot`](@ref).
+# We define the plotting details for the wolves and sheep:
+offset(a) = a.type == :sheep ? (-0.7, -0.5) : (-0.3, -0.5)
+ashape(a) = a.type == :sheep ? '⚫' : '▲'
+acolor(a) = a.type == :sheep ? RGBAf0(1.0, 1.0, 1.0, 0.8) : RGBAf0(0.2, 0.2, 0.2, 0.8)
+
+# and instruct [`plot_abm`](@ref) how to plot grass as a heatmap:
+grasscolor(model) = model.countdown ./ model.regrowth_time
+# and finally define a colormap for the grass:
+heatkwargs = (colormap = [:brown, :green], colorrange = (0, 1))
+
+plotkwargs = (
+    ac=acolor, as = 15, am = ashape, offset = offset,
+    heatarray = grasscolor, heatkwargs = heatkwargs
 )
-figure
-# Now, lets run the simulation and collect some data.
 
-sheep(a) = typeof(a) == Sheep
-wolves(a) = typeof(a) == Wolf
-grass(a) = typeof(a) == Grass && a.fully_grown
-adata = [(sheep, count), (wolves, count), (grass, count)]
-results, _ = run!(model, agent_step!, n_steps; adata)
+fig, _ = abm_plot(model; plotkwargs...)
+fig
 
-# The plot shows the population dynamics over time. Initially, wolves become extinct because they
-# consume the sheep too quickly. The few remaining sheep reproduce and gradually reach an
+# Now, lets run the simulation and collect some data. Define datacollection:
+sheep(a) = a.type == :sheep
+wolves(a) = a.type == :wolf
+count_grass(model) = count(model.fully_grown)
+# Run simulation:
+model = initialize_model()
+n = 500
+adata = [(sheep, count), (wolves, count)]
+mdata = [count_grass]
+adf, mdf = run!(model, sheepwolf_step!, grass_step!, n; adata, mdata)
+
+# The following plot shows the population dynamics over time.
+# Initially, wolves become extinct because they consume the sheep too quickly.
+# The few remaining sheep reproduce and gradually reach an
 # equilibrium that can be supported by the amount of available grass.
-figure = Figure(resolution = (600, 400))
-ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
-sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
-wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
-grassl = lines!(ax, results.step, results.count_grass, color = :green)
-figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
-figure
+function plot_population_timeseries(adf, mdf)
+    figure = Figure(resolution = (600, 400))
+    ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
+    sheepl = lines!(ax, adf.step, adf.count_sheep, color = :blue)
+    wolfl = lines!(ax, adf.step, adf.count_wolves, color = :orange)
+    grassl = lines!(ax, mdf.step, mdf.count_grass, color = :green)
+    figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
+    figure
+end
 
-# Altering the input conditions, we now see a landscape where all three agents find an
-# equilibrium.
+plot_population_timeseries(adf, mdf)
 
-Random.seed!(7756) # hide
+# Altering the input conditions, we now see a landscape where sheep, wolves and grass
+# find an equilibrium
 model = initialize_model(
     n_wolves = 20,
     dims = (25, 25),
     Δenergy_sheep = 5,
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
+    seed = 7756
 )
-results, _ = run!(model, agent_step!, n_steps; adata)
+adf, mdf = run!(model, sheepwolf_step!, grass_step!, n; adata, mdata)
 
-figure = Figure(resolution = (600, 400))
-ax = figure[1, 1] = Axis(figure, xlabel = "Step", ylabel = "Population")
-sheepl = lines!(ax, results.step, results.count_sheep, color = :blue)
-wolfl = lines!(ax, results.step, results.count_wolves, color = :orange)
-grassl = lines!(ax, results.step, results.count_grass, color = :green)
-figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
-figure
+plot_population_timeseries(adf, mdf)
+
+# ## Video
+# Given that we have defined plotting functions, making a video is as simple as
+
+model = initialize_model()
+abm_video("sheepwolf.mp4", model, sheepwolf_step!, grass_step!; frames = 50, plotkwargs...)

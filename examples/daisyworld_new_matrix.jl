@@ -178,6 +178,7 @@ end
 
 import StatsBase
 import DrWatson: @dict
+using Random
 
 function daisyworld(;
     griddims = (30, 30),
@@ -190,14 +191,16 @@ function daisyworld(;
     solar_change = 0.005,
     solar_luminosity = 1.0, # initial luminosity
     scenario = :default,
+    seed = 165,
 )
 
+    rng = MersenneTwister(seed)
     space = GridSpace(griddims)
     properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
     properties[:tick] = 0
     properties[:temperature] = zeros(griddims)
 
-    model = ABM(Daisy, space; properties)
+    model = ABM(Daisy, space; properties, rng)
 
     ## Populate with daisies: each position has only one daisy (black or white)
     grid = collect(positions(model))
@@ -232,7 +235,6 @@ using InteractiveDynamics
 import CairoMakie
 CairoMakie.activate!() # hide
 
-Random.seed!(165) # hide
 model = daisyworld()
 
 # To visualize we need to define the necessary functions for [`abm_plot`](@ref).
@@ -259,7 +261,6 @@ fig, _ = abm_plot(model; heatarray = model.temperature, plotkwargs...)
 fig
 
 # Let's do some animation now
-Random.seed!(165)
 model = daisyworld()
 abm_video(
     "daisyworld.mp4",
@@ -286,7 +287,6 @@ black(a) = a.breed == :black
 white(a) = a.breed == :white
 adata = [(black, count), (white, count)]
 
-Random.seed!(165)
 model = daisyworld(; solar_luminosity = 1.0)
 
 agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
@@ -305,15 +305,14 @@ figure
 # and would be nice to plot solar luminosity as well.
 # Thus, we define in addition
 temperature(model) = mean(model.temperature)
-mdata = [:solar_luminosity, temperature]
+mdata = [temperature, :solar_luminosity]
 
 # And we run (and plot) everything
-Random.seed!(165) # hide
 model = daisyworld(solar_luminosity = 1.0, scenario = :ramp)
 agent_df, model_df =
     run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
 
-figure = Figure(resolution = (600, 800))
+figure = Figure(resolution = (600, 600))
 ax1 = figure[1, 1] = Axis(figure, ylabel = "daisy count", textsize = 12)
 blackl = lines!(ax1, agent_df[!, :step], agent_df[!, :count_black], color = :red)
 whitel = lines!(ax1, agent_df[!, :step], agent_df[!, :count_white], color = :blue)
@@ -337,7 +336,6 @@ figure
 
 # ```julia
 # using InteractiveDynamics, GLMakie, Random
-# Random.seed!(165)
 # ```
 model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 
@@ -345,8 +343,8 @@ model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :cha
 # container for surface albedo and for the rate of change of solar luminosity,
 # and add some labels for clarity.
 params = Dict(
-    :solar_change => -0.1:0.01:0.1,
     :surface_albedo => 0:0.01:1,
+    :solar_change => -0.1:0.01:0.1,
 )
 alabels = ["black", "white"]
 mlabels = ["T", "L"]
@@ -354,14 +352,14 @@ mlabels = ["T", "L"]
 # And we run it
 
 # ```julia
-fig, adf, mdf = abm_data_exploration(
-    model, agent_step!, model_step!, params;
-    mdata, adata, alabels, mlabels, plotkwargs...
-)
+# fig, adf, mdf = abm_data_exploration(
+#     model, agent_step!, model_step!, params;
+#     mdata, adata, alabels, mlabels, plotkwargs...
+# )
 # ```
 
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
-# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/daisies.mp4?raw=true" type="video/mp4">
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
