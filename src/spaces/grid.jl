@@ -11,20 +11,22 @@ Internal struct for efficiently finding neighboring positions to a given positio
 It contains pre-initialized neighbor cartesian indices and delimiters of when the
 neighboring indices would exceed the size of the underlying array.
 """
-struct Hood{D} # type P stands for Periodic and is a boolean
+struct Hood{D}
     whole::Region{D} # allowed values (only useful for non periodic)
     βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
 end
 
-struct GridSpace{D,P} <: DiscreteSpace
+# type P stands for Periodic and is a boolean
+struct GridSpace{D,P,W} <: DiscreteSpace
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}
     hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
+    pathfinder::W
 end
 
 """
-    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
+    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev, pathfinder = nothing)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
@@ -40,14 +42,18 @@ the origin position.
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
 
+`pathfinder`: Optionally provide an instance of [`Pathfinder`](@ref) to enable
+pathfinding capabilities based on the A* algorithm, see [Path-finding](@ref) in the docs.
+
 An example using `GridSpace` is the [Forest fire model](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};
     periodic::Bool = true,
     metric::Symbol = :chebyshev,
+    pathfinder::W = nothing,
     moore = nothing,
-) where {D}
+) where {D,W}
     s = Array{Vector{Int},D}(undef, d)
     if moore ≠ nothing
         @warn "Keyword `moore` is deprecated, use `metric` instead."
@@ -56,11 +62,15 @@ function GridSpace(
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,periodic}(
+
+    astar = pathfinder === nothing ? nothing : AStar(d, periodic, pathfinder)
+
+    return GridSpace{D,periodic,typeof(astar)}(
         s,
         metric,
         Dict{Float64,Hood{D}}(),
         Dict{NTuple{D,Float64},Hood{D}}(),
+        astar,
     )
 end
 
@@ -266,6 +276,7 @@ end
 Base.size(space::GridSpace) = size(space.s)
 
 function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
-    s = "GridSpace with size $(size(space)), metric=$(space.metric) and periodic=$(P)"
+    pathfinder = isnothing(space.pathfinder) ? "" : ", pathfinder=$(space.pathfinder)"
+    s = "GridSpace with size $(size(space)), metric=$(space.metric), periodic=$(P)$pathfinder"
     print(io, s)
 end

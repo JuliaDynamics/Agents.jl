@@ -218,16 +218,15 @@ end
 
 """
     add_agent!([pos,] model::ABM, args...; kwargs...) → newagent
-Create and add a new agent to the model by constructing an agent of the
-type of the `model`. Propagate all *extra* positional arguments and
-keyword arguemts to the agent constructor.
+Create and add a new agent to the model using the constructor of the agent type of the model.
 Optionally provide a position to add the agent to as *first argument*, which must
 match the space position type.
 
-Notice that this function takes care of setting the agent's id *and* position and thus
-`args...` and `kwargs...` are propagated to other fields the agent has (see example below).
+This function takes care of setting the agent's id *and* position.
+The extra provided `args...` and `kwargs...` are propagated to other fields
+of the agent constructor (see example below).
 
-    add_agent!([pos,] A, model::ABM, args...; kwargs...) → newagent
+    add_agent!([pos,] A::Type, model::ABM, args...; kwargs...) → newagent
 
 Use this version for mixed agent models, with `A` the agent type you wish to create
 (to be called as `A(id, pos, args...; kwargs...)`), because it is otherwise not possible

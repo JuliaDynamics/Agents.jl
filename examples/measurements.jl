@@ -40,6 +40,7 @@ end
 
 using AbstractPlotting
 import CairoMakie
+CairoMakie.activate!() # hide
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase

@@ -24,7 +24,8 @@
 # We start by defining the agent type
 using Agents, Random
 using InteractiveDynamics
-import CairoMakie
+using CairoMakie
+CairoMakie.activate!() # hide
 
 mutable struct Tree <: AbstractAgent
     id::Int
@@ -81,7 +82,7 @@ count(t -> t.status == :burnt, allagents(forest))
 
 #
 
-step!(forest, tree_step!, 10)
+Agents.step!(forest, tree_step!, 10)
 count(t -> t.status == :burnt, allagents(forest))
 
 # Now we can do some data collection as well using an aggregate function `percentage`:

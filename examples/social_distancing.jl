@@ -66,6 +66,7 @@ nothing # hide
 # Cool, let's see now how this model evolves.
 using InteractiveDynamics
 import CairoMakie
+CairoMakie.activate!() # hide
 
 abm_video(
     "socialdist1.mp4",
