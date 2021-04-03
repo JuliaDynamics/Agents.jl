@@ -414,15 +414,17 @@ end
 #######################################################################################
 # FMP Algorithm
 #######################################################################################
-export fmp_update_vel, fmp_update_interacting_pairs, FMP_Parameters, fmp_parameter_init
+export fmp_update_vel!, fmp_update_interacting_pairs!, FMP_Parameters, fmp_parameter_init
 
 """
     FMP_Parameters
-The parameters for the FMP model as defined in the FMP paper. Helper function `FMP_Parameter_Init`
-is used to initialize the struct with default parameters. Users can modify FMP default parameters
-through the usage of keyword arguments. See [the original paper](https://arxiv.org/abs/1909.05415)
-for a complete description of model parameters. Parameters included in this struct that are not 
-present in the original paper are:
+The parameters for the FMP model as defined in the [FMP paper](https://arxiv.org/abs/1909.05415). The helper function `fmp_parameter_init` is used to initialize the struct with default parameters. The default values in `fmp_parameter_init` generally reflect the parameterization from the original paper. The available FMP parameters are:
+- `rho`: Positive repulsive gradient; dictates the magnitude of the repulsive force as a function of inter-agent distance.
+- `rho_obstacle`: Positive repulsive gradient for objects; similar to `rho` but used for agent-object repulsive forces.
+- `c1`, `c2`: Positive constant values used in the navigational feedback computation.
+- `vmax`: Maximum velocity of the agents.
+- `d`: Agent diameter
+- `r`: Function for computing interactive radius. `r` is the threshold distance for interagent repulsive forces. 
 - `obstacle_list`: list of obstacles in the state space
 - `interaction_array`: n x n boolean array (n = number of agents) where `interaction_array[i,j]=1`
 indicates that the ith and jth agents are interacting. Used so that `interacting_pairs` is only called
@@ -432,8 +434,6 @@ once per iteration rather than every time `update_vel` is called.
 mutable struct FMP_Parameters
     rho::Float64
     rho_obstacle::Float64
-    step_inc::Int64
-    terminal_max_dis::Float64
     c1::Float64
     c2::Float64
     vmax::Float64
@@ -446,12 +446,12 @@ mutable struct FMP_Parameters
 end
 
 """
-    fmp_update_interacting_pairs(model)
+    fmp_update_interacting_pairs!(model)
 Updates `FMP_Parameters.interaction_array` with the current array of interacting agents by calling
 `interacting_pairs`. It does this once per model step to reduce the potential overhead of calling
 `interacting_pairs` each time `update_vel` is called. 
 """
-function fmp_update_interacting_pairs(
+function fmp_update_interacting_pairs!(
     model::ABM{<:ContinuousSpace},
     )
 
@@ -485,13 +485,11 @@ end
     fmp_parameter_init()
 A convenience function for initializing the FMP_Parameters struct with typical FMP
 parameters. Users can modify the FMP algorithm parameters through the usage of 
-keyword arguments. 
+keyword arguments. Possible keyword arguments are `rho`, `rho_obstacle`, `c1`, `c2`, `vmax`, `d` and `obstacle_list`. All keywords definitions can be found in the documentation for the `FMP_Parameter` struct. 
 """
 function fmp_parameter_init(;
     rho = 7.5e6,
     rho_obstacle = 7.5e6,
-    step_inc = 2,
-    terminal_max_dis = 0.01,
     c1 = 10,
     c2 = 10,
     vmax = 0.1,
@@ -503,8 +501,6 @@ function fmp_parameter_init(;
     FMP_params = FMP_Parameters()
     FMP_params.rho = rho
     FMP_params.rho_obstacle = rho_obstacle
-    FMP_params.step_inc = step_inc
-    FMP_params.terminal_max_dis = terminal_max_dis
     FMP_params.c1 = c1
     FMP_params.c2 = c2
     FMP_params.vmax = vmax
@@ -516,16 +512,14 @@ end
 
 
 """
-    fmp_update_vel(model, FMP_params)
+    fmp_update_vel!(model, FMP_params)
 Implements the [Force Based Motion Planning (FMP) algorithm](https://arxiv.org/abs/1909.05415)
-to handle interagent collisions. This function is called each time `agent_step!` is called. This
-function is used in conjunction with the `update_vel!` keyword argument when a `ContinuousSpace`
-is initialized.
+to handle interagent collisions. 
 
 Example usage in [Force Based Motion Planning](@ref).
 
 The FMP algorithm that determines the three primary forces being experienced by an agent
-each time `update_vel` is invoked via `agent_step`. The three forces are:
+each time `fmp_update_vel!` is called. The three forces are:
 
 - Repulsive force: analogous to a "magnetic" repulsion based on proximity of agent and other agents in the state space.
 - Navigational force: an attractive force drawing an agent to its goal position
@@ -534,7 +528,7 @@ each time `update_vel` is invoked via `agent_step`. The three forces are:
 After computing the resultant vectors from each component, an overall resultant vector is computed. This is then capped based on the global max velocity constraint. This final velocity is passed into the agents struct.
 
 """
-function fmp_update_vel(
+function fmp_update_vel!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace},
     )

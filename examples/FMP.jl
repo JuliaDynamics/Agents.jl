@@ -4,10 +4,6 @@
 # This is an example implementation of the [Force Based Motion Planning (FMP)](https://arxiv.org/pdf/1909.05415.pdf) algorithm. The algorithm is a decentralized motion
 # planning algorithm where individual agents experience attractive forces towards
 # a goal position and repulsive forces from other agents or objects in the environment. 
-# The FMP algorithm is included as a predefined `update_vel` function for use
-# with [`ContinuousSpace`](@ref).
-
-
 # ## Defining the Agent
 
 # First we need to define an `AbstractAgent` struct that has the necessary
@@ -26,10 +22,7 @@
 using Agents, Random, LinearAlgebra, Colors, InteractiveDynamics
 import CairoMakie
 
-mutable struct FMP_Agent <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Float64}
-    vel::NTuple{2, Float64}
+@agent FMP_Agent ContinuousAgent{2} begin
     tau::NTuple{2, Float64}
     color::String
     type::Symbol
@@ -43,11 +36,8 @@ end
 
 # Next, we define the model. The FMP algorithm has several parameters defined
 # in the original paper which are stored in a struct. Typical values can be
-# generated using the `FMP_Parameter_Init` function and loaded into the model
+# generated using the `fmp_parameter_init` function and loaded into the model
 # properties. 
-
-# Additionally, note that we pass in `FMP_Update_Vel` as the `update_vel!`
-# keyword argument when we initialize our `ContinuousSpace`.
 
 ## define AgentBasedModel (ABM)
 
@@ -56,7 +46,6 @@ function FMP_Model()
                       :dt => 0.01,
                       :num_agents=>30,
                       :num_steps=>1500,
-                      :step_inc=>2,
                      )
 
     space2d = ContinuousSpace((1,1); periodic = true)
@@ -78,32 +67,48 @@ end
 # plotting functionalities (described later in this tutorial)
 
 ## add agents to model
-## determine circle params
 model = FMP_Model()
 
-x, y = model.space.extent
-r = 0.9*(min(x,y)/2)
+# lets start by defining a helper function that takes a model and some
+# placement functions to place agents
 
-for i in 1:model.num_agents
+function agent_placement_helper!(model, agent_placer, goal_placer, color_select)
+    x, y = model.space.extent
 
-    ## compute position around circle
-    theta_i = (2*π/model.num_agents)*i
-    xi = r*cos(theta_i)+x/2
-    yi = r*sin(theta_i)+y/2
-    
-    xitau = r*cos(theta_i+π)+x/2
-    yitau = r*sin(theta_i+π)+y/2
+    for i in 1:model.num_agents
 
-    ## set agent params
-    pos = (xi, yi)
-    vel = (0,0)
-    tau = (xitau, yitau)  ## goal is on opposite side of circle
-    radius = model.FMP_params.d/2
-    agent_color = "nothing for now"
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
+        pos = agent_placer(x, y, i, model.num_agents)
+        tau = goal_placer(x, y, i, model.num_agents)
+
+        vel = (0,0)
+        radius = model.FMP_params.d/2
+
+        if color_select != "none"
+            color = color_select(i, model.num_agents)
+        else
+            color = "none"
+        end
+
+        if agent_placer != "none"
+            add_agent!(pos, model, vel, tau, color, :A, radius, model.space.extent, [], [])
+        end
+
+        if goal_placer != "none"
+            add_agent!(tau, model, vel, tau, color, :T, radius, model.space.extent, [], [])
+        end
+    end
 end
 
+# place agents around circle, place targets opposite of agents
+circle_agents(x, y, i, num_agents) = (0.45*cos((2*π/num_agents)*i)+x/2, 
+                                     0.45*sin((2*π/num_agents)*i)+y/2
+                                    )
+circle_goals(x, y, i, num_agents) = (0.45*cos((2*π/num_agents)*i+π)+x/2, 
+                                     0.45*sin((2*π/num_agents)*i+π)+y/2
+                                    )
+
+# place agents
+agent_placement_helper!(model, circle_agents, circle_goals, "none")
 
 # ## Running a Simulation
 
@@ -122,16 +127,12 @@ end
 agent_step!(agent, model) = move_agent!(agent, model, model.dt)
 
 function model_step!(model)
-    fmp_update_interacting_pairs(model)
+    fmp_update_interacting_pairs!(model)
     for agent_id in keys(model.agents)
-        fmp_update_vel(model.agents[agent_id], model)
+        fmp_update_vel!(model.agents[agent_id], model)
     end
 end
-
-## helpful sim params
-e = model.space.extent
-step_range = 1:model.step_inc:model.num_steps
-
+@info "Plotting simulation 1..."
 InteractiveDynamics.abm_video(
     "examples/output1.mp4",
     model,
@@ -192,33 +193,18 @@ end
 # some additional options. We do this by redefining the model, re-adding the
 # agents but this time with a color parameter that is actually used. 
 
-model = FMP_Model()
+model = FMP_Model()  # reset the model to remove previously added agents
+agent_placement_helper!(model, circle_agents, circle_goals, agent_init_color) 
 
-x, y = model.space.extent
-r = 0.9*(min(x,y)/2)
+# We also define a few plotting helper functions
+as_f(a) = 1200*1/minimum(a.SSdims)*a.radius  ## this was defined empirically
+ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff"
+am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle
 
-for i in 1:model.num_agents
+# Now we run the simulation with some helper functions to access the agent
+# params.
 
-    ## compute position around circle
-    theta_i = (2*π/model.num_agents)*i
-    xi = r*cos(theta_i)+x/2
-    yi = r*sin(theta_i)+y/2
-    
-    xitau = r*cos(theta_i+π)+x/2
-    yitau = r*sin(theta_i+π)+y/2
-
-    ## set agent params
-    pos = (xi, yi)
-    vel = (0,0)
-    tau = (xitau, yitau)  ## goal is on opposite side of circle
-    radius = model.FMP_params.d/2
-    agent_color = agent_init_color(i, model.num_agents)  ## This is new
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
-end
-
-# Now we run the simulation
-
+@info "Plotting simulation 2..."
 InteractiveDynamics.abm_video(
     "examples/output2.mp4",
     model,
@@ -228,11 +214,9 @@ InteractiveDynamics.abm_video(
     frames = model.num_steps,
     framerate = 100,
     resolution = (600, 600),
-    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
-    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    as = as_f,
+    ac = ac_f,
+    am = am_f,
     equalaspect=true,
     scheduler = plot_scheduler,
    )
@@ -245,25 +229,15 @@ InteractiveDynamics.abm_video(
 # redefining the model and adding in agents. 
 
 model = FMP_Model()
+line_agent(x, y, i, num_agents) = (0.5*x, 
+                                   y - (0.1*y+0.9*y/(num_agents)*(i-1)))
+agent_placement_helper!(model, line_agent, line_agent, agent_init_color)  # place goals at agent starting positions
 
-x, y = model.space.extent
-for i in 1:model.num_agents
-    ## add agents into vertical line
-    xi = 0.5*x
-    yi = y - (0.1*y+0.9*y/(model.num_agents)*(i-1))
-
-    pos = (xi, yi)
-    vel = (0,0)
-    tau = pos  ## agent starting position = goal so they initially stay in place
-    radius = model.FMP_params.d/2
-    agent_color = agent_init_color(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
-
-end
 # Now that we've added some agents to the state space, lets add an obstacle.
 # Obstacles are just like agents except they don't experience repulsive forces,
 # only attractive ones.
 
+x,y = model.space.extent
 xio = 0.1*x
 yio = 0.5*y
 object_pos = (xio, yio)
@@ -287,6 +261,7 @@ end
 
 # After adding in the obstacles, we can run the simulation
 
+@info "Plotting simulation 3..."
 InteractiveDynamics.abm_video(
     "examples/output3.mp4",
     model,
@@ -296,156 +271,9 @@ InteractiveDynamics.abm_video(
     frames = model.num_steps,
     framerate = 100,
     resolution = (600, 600),
-    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
-    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
+    as = as_f,
+    ac = ac_f,
+    am = am_f,
     equalaspect=true,
     scheduler = plot_scheduler,
    )
-
-# ## Other Simulation Types
-
-# These simulations are included as a "recipe booklet" for other ways that the
-# FMP algorithm has been implemented. No new functionality is introduced; these
-# examples are meant as working examples to build off of. 
-
-## Centered Object Moving Line
-model = FMP_Model()
-x, y = model.space.extent
-for i in 1:model.num_agents
-    xi = 0.1*x
-    yi = y - (0.1*y+0.9*y/(model.num_agents)*(i-1))
-
-    pos = (xi, yi)
-    vel = (0,0)
-    tau = (0.8*x,0) .+ pos
-    radius = model.FMP_params.d/2
-    agent_color = agent_init_color(i, model.num_agents)
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])  # add object target
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])  # add agents
-
-end
-
-xio = 0.3*x
-yio = 0.5*y
-object_pos = (xio, yio)
-object_vel = (0,0)
-object_tau = object_pos
-object_radius = 0.2
-agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [], [])  # add object
-
-for agent in allagents(model)
-    if agent.type == :O
-        append!(model.FMP_params.obstacle_list, agent.id)
-    end
-end
-
-InteractiveDynamics.abm_video(
-    "examples/output4.mp4",
-    model,
-    agent_step!,
-    model_step!,
-    title = "FMP Simulation",
-    frames = model.num_steps,
-    framerate = 100,
-    resolution = (600, 600),
-    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
-    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
-    equalaspect=true,
-    scheduler = plot_scheduler,
-   )
-
-## Circle Positions w/ Object
-
-# determine circle params
-model = FMP_Model()
-x, y = model.space.extent
-r = 0.9*(min(x,y)/2)
-
-for i in 1:model.num_agents
-
-    # compute position around circle
-    theta_i = (2*π/model.num_agents)*i
-    xi = r*cos(theta_i)+x/2
-    yi = r*sin(theta_i)+y/2
-
-    xitau = r*cos(theta_i+π)+x/2
-    yitau = r*sin(theta_i+π)+y/2
-
-    # set agent params
-    pos = (xi, yi)
-    vel = (0,0)
-    tau = (xitau, yitau)  # goal is on opposite side of circle
-    #tau = (x/2,y/2)
-    type = :A
-    radius = model.FMP_params.d/2
-    agent_color = agent_init_color(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, :A, radius, model.space.extent, [], [])
-    add_agent!(tau, model, vel, tau, agent_color, :T, radius, model.space.extent, [], [])
-end
-
-object_radius = 0.1
-add_agent!((x/2,y/2), model, (0,0), (x/2,y/2), "#ff0000", :O, object_radius, model.space.extent, [], [])  # add object in middle
-
-for agent in allagents(model)
-    if agent.type == :O
-        append!(model.FMP_params.obstacle_list, agent.id)
-    end
-end
-
-InteractiveDynamics.abm_video(
-    "examples/output5.mp4",
-    model,
-    agent_step!,
-    model_step!,
-    title = "FMP Simulation",
-    frames = model.num_steps,
-    framerate = 100,
-    resolution = (600, 600),
-    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
-    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
-    equalaspect=true,
-    scheduler = plot_scheduler,
-   )
-
-## Random Positions
-model = FMP_Model()
-
-Random.seed!(42)
-for i in 1:model.num_agents
-    pos = Tuple(rand(2))
-    vel = Tuple(rand(2))
-    tau = Tuple(rand(2))
-    type = :A
-    radius = model.FMP_params.d/2
-    agent_color = agent_init_color(i, model.num_agents)
-    add_agent!(pos, model, vel, tau, agent_color, type, radius, model.space.extent, [], [])
-end
-
-InteractiveDynamics.abm_video(
-    "examples/output6.mp4",
-    model,
-    agent_step!,
-    model_step!,
-    title = "FMP Simulation",
-    frames = model.num_steps,
-    framerate = 100,
-    resolution = (600, 600),
-    as = as_f(a) = 1200*1/minimum(a.SSdims)*a.radius,  ## this was defined empirically
-    ac = ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff",
-    
-    ## potential shape options here: https://gr-framework.org/julia-gr.html
-    am = am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle,  
-    equalaspect=true,
-    scheduler = plot_scheduler,
-   )
-
