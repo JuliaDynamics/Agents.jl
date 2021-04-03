@@ -58,17 +58,14 @@ using InteractiveDynamics
 using GLMakie
 GLMakie.activate!() # hide
 
-## Our sample heightmap
+# We load the sample heightmap
 map_url =
     "https://raw.githubusercontent.com/JuliaDynamics/" *
     "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
 model = initialize(map_url)
 
-function preplot!(ax, model)
-    ax.aspect = DataAspect()
-    hm = heatmap!(ax, heightmap(model); colormap = :terrain)
-    scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
-end
+# and plot
+static_preplot!(ax, model) = scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
 
 abm_video(
     "runners.mp4",
@@ -76,11 +73,14 @@ abm_video(
     agent_step!;
     resolution = (700, 700),
     frames = 410,
-    framerate = 25,
+    framerate = 30,
     ac = :black,
     as = 8,
-    scatterkwargs = (strokecolor = :white, strokewidth = 2),    
-    static_preplot! = preplot!
+    scatterkwargs = (strokecolor = :white, strokewidth = 2),
+    heatarray = model -> heightmap(model),
+    heatkwargs = (colormap = :terrain,),
+    add_colorbar = false,
+    static_preplot!
 )
 nothing # hide
 

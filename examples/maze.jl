@@ -62,10 +62,10 @@ abm_video(
     agent_step!;
     resolution=(700,700),
     frames=310,
-    framerate=60,
+    framerate=30,
     ac=:red,
     as=11,
-    heatarray = walkmap(model),
+    heatarray = model -> walkmap(model),
     add_colorbar = false,
 )
 nothing # hide
