@@ -359,6 +359,8 @@ stepper = InteractiveDynamics.ABMStepper(
     colors,
     Observable(15),
     markers,
+    nothing,
+    nothing
 )
 nothing #hide
 
