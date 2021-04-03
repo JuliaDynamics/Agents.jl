@@ -107,7 +107,7 @@ makedocs(
             "BlackBoxOptim.jl" => "examples/optim.md",
             "DifferentialEquations.jl" => "examples/diffeq.md",
             "LightGraphs.jl" => "examples/schoolyard.md",
-#            "Measurements.jl" => "examples/measurements.md",
+            "Measurements.jl" => "examples/measurements.md",
         ],
         "ABM Framework Comparison" => "comparison.md",
         "Developer Docs" => "devdocs.md",
