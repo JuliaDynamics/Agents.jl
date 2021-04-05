@@ -116,6 +116,7 @@ abm_video(
     as = 12,
     am,
     framerate = 5,
+    scatterkwargs = (strokewidth = 0,),
 )
 nothing # hide
 # ```@raw html
