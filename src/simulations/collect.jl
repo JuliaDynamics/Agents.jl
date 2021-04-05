@@ -454,7 +454,7 @@ end
 
 "Run replicates of the same simulation in parallel"
 function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates;
-    seeds = [rand(Int) for _ in 1:replicates], kwargs...)
+    seeds = [abs(rand(Int)) for _ in 1:replicates], kwargs...)
 
     models = [deepcopy(model) for _ in 1:replicates-1]
     push!(models, model) # no reason to make an additional copy
@@ -465,8 +465,6 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates
     all_data = pmap(
         j -> _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...), 1:replicates
     )
-    for j in 1:replicates
-        seed!(mo)
 
     df_agent = DataFrame()
     df_model = DataFrame()

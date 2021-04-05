@@ -464,3 +464,8 @@ end
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
+
+@testset "Parallel and seeds" begin
+    model, agent_step!, model_step! = Models.schelling(numagents = 1)
+    adata = [:pos]
+    data, _ = run!(model, agent_step!, 2; adata, replicates = 3, parallel = true)
