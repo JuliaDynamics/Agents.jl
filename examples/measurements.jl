@@ -202,7 +202,7 @@ agent_df, model_df =
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
-lb = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :blue)
+lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
 lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
 leg =
     f[1, 1] = Legend(
