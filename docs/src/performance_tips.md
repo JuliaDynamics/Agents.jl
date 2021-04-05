@@ -3,6 +3,12 @@
 Here we list various tips that will help users make faster ABMs with Agents.jl.
 Please do read through Julia's own [Performance Tips](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-tips) section as well, as it will help you write performant code in general.
 
+## Benchmark your stepping functions!
+By design Agents.jl allows users to create their own arbitrary stepping functions that control the time evolution of the model.
+This provides maximum freedom on creating an ABM.
+However, it has the downside that Agents.jl cannot help you with the performance of the stepping functions themselves.
+So, be sure that you benchmark your code, and you follow Julia's Performance Tips!
+
 ## Use Type-stable containers for the model properties
 This tip is actually not related to Agents.jl and you will also read about it in Julia's [abstract container tips](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-abstract-container). In general, avoid containers whose values are of unknown type. E.g.:
 
