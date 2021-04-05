@@ -103,7 +103,6 @@ end
 
 using InteractiveDynamics
 import CairoMakie
-CairoMakie.activate!() # hide
 
 ac(x) = x.status == true ? :black : :white
 am(x) = x.status == true ? '■' : '□'
@@ -117,6 +116,7 @@ abm_video(
     as = 12,
     am,
     framerate = 5,
+    scatterkwargs = (strokewidth = 0,),
 )
 nothing # hide
 # ```@raw html

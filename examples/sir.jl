@@ -1,5 +1,9 @@
 # # SIR model for the spread of COVID-19
-# ![](covid_evolution.gif)
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../covid_evolution.mp4" type="video/mp4">
+# </video>
+# ```
 #
 # This example illustrates how to use `GraphSpace` and how to model agents on an graph
 # (network) where the transition probabilities between each node (position) is not constant.
@@ -41,8 +45,7 @@ cd(@__DIR__) #src
 using Agents, Random, DataFrames, LightGraphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
-using Plots
-gr() # hide
+using CairoMakie
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int
@@ -168,49 +171,6 @@ end
 params = create_params(C = 8, max_travel_rate = 0.01)
 model = model_initiation(; params...)
 
-# Alright, let's plot the cities as a graph to get an idea how the model "looks like",
-# using the function [`abm_plot_on_graph`](@ref).
-
-using Plots
-
-# !!! info "AgentsPlots no longer supported"
-#     [AgentsPlots.jl](https://github.com/JuliaDynamics/AgentsPlots.jl) is now deprecated
-#     in favor of [InteractiveDynamics.jl](https://github.com/JuliaDynamics/InteractiveDynamics.jl).
-#     This example has not yet been transferred to the new paradigm, but will do so in the
-#     near future.
-
-plotargs = (node_size = 0.2, method = :circular, linealpha = 0.4)
-
-abm_plot_on_graph(model; plotargs...)
-
-# The node size is proportional to the relative population of each city.
-# In principle we could adjust the edge widths to be proportional with the
-# migration rates, by doing:
-
-g = model.space.graph
-edgewidthsdict = Dict()
-for node in 1:nv(g)
-    nbs = neighbors(g, node)
-    for nb in nbs
-        edgewidthsdict[(node, nb)] = params[:migration_rates][node, nb]
-    end
-end
-
-edgewidthsf(s, d, w) = edgewidthsdict[(s, d)] * 250
-
-plotargs = merge(plotargs, (edgewidth = edgewidthsf,))
-
-abm_plot_on_graph(model; plotargs...)
-
-# In the following we will be coloring each node according to how large percentage of the
-# population is infected. So we create a function to give to [`abm_plot_on_graph`](@ref) as a
-# second argument
-
-infected_fraction(x) = cgrad(:inferno)[count(a.status == :I for a in x) / length(x)]
-abm_plot_on_graph(model; ac = infected_fraction, plotargs...)
-
-# Here this shows all nodes as black, since we haven't run the model yet. Let's change that!
-
 # ## SIR Stepping functions
 
 # Now we define the functions for modelling the virus spread in time
@@ -269,15 +229,37 @@ end
 nothing # hide
 
 # ## Example animation
+
+# First, we'll define a few variables that look over aspects of the model
+total_infected(m) = count(a.status == :I for a in allagents(m))
+infected_fraction(x) = cgrad(:inferno)[count(model[id].status == :I for id in x) / length(x)]
+s = Observable(0) # Current step
+total = Observable(total_infected(model)) # Number of infected across all cities
+color = Observable(infected_fraction.(model.space.s)) # Percentage of infected people per city
+title = lift((c, t) -> "Step = "*string(c)*", Infected = "*string(t), s, total)
+
+# Then, initialise the model and view the contagion:
+
 model = model_initiation(; params...)
-
-anim = @animate for i in 0:30
-    i > 0 && step!(model, agent_step!, 1)
-    p1 = abm_plot_on_graph(model; ac = infected_fraction, plotargs...)
-    title!(p1, "Day $(i)")
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure; title, xlabel = "City", ylabel = "Population")
+barplot!(ax, model.Ns, strokecolor = :black, strokewidth = 1; color)
+record(figure, "covid_evolution.mp4"; framerate = 5) do io
+    for j in 1:40
+        recordframe!(io)
+        Agents.step!(model, agent_step!, 1)
+        color[] = infected_fraction.(model.space.s)
+        s[] += 1
+        total[] = total_infected(model)
+    end
+    recordframe!(io)
 end
-
-gif(anim, "covid_evolution.gif", fps = 5)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../covid_evolution.mp4" type="video/mp4">
+# </video>
+# ```
 
 # One can really see "explosive growth" in this animation. Things look quite calm for
 # a while and then suddenly supermarkets have no toilet paper anymore!
@@ -302,16 +284,14 @@ data[1:10, :]
 
 N = sum(model.Ns) # Total initial population
 x = data.step
-p = plot(
-    x,
-    log10.(data[:, aggname(:status, infected)]),
-    label = "infected",
-    xlabel = "steps",
-    ylabel = "log10(count)",
-)
-plot!(p, x, log10.(data[:, aggname(:status, recovered)]), label = "recovered")
+figure = Figure(resolution = (600, 400))
+ax = figure[1, 1] = Axis(figure, xlabel = "steps", ylabel = "log10(count)")
+li = lines!(ax, x, log10.(data[:, aggname(:status, infected)]), color = :blue)
+lr = lines!(ax, x, log10.(data[:, aggname(:status, recovered)]), color = :red)
 dead = log10.(N .- data[:, aggname(:status, length)])
-plot!(p, x, dead, label = "dead")
+ld = lines!(ax, x, dead, color = :green)
+figure[1, 2] = Legend(figure, [li, lr, ld], ["infected", "recovered", "dead"], textsize = 12)
+figure
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases
 # linearly, until everyone is infected.
