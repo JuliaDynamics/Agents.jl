@@ -4,5 +4,4 @@ ignore:
   - "src/visualization" # Plot recipes are soon to be unsupported
   - "test"
   - "docs"
-  - "paper"
 
