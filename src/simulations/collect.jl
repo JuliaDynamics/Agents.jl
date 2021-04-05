@@ -459,11 +459,11 @@ function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates
     models = [deepcopy(model) for _ in 1:replicates-1]
     push!(models, model) # no reason to make an additional copy
     if model.rng isa MersenneTwister
-        for j in 1:replicates; seed!(model, seeds[j]); end
+        for j in 1:replicates; seed!(models[j], seeds[j]); end
     end
 
     all_data = pmap(
-        j -> _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...), 1:replicates
+        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...), 1:replicates
     )
 
     df_agent = DataFrame()
