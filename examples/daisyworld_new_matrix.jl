@@ -7,12 +7,9 @@
 #
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
-# - Collecting data with the low-level data collection API
 # - Diffusion of a quantity in a `GridSpace`
-# - the `fill_space!` function
-# - represent a space "surface property" as an agent
+# - Including a "surface property" in the model
 # - counting time in the model and having time-dependent dynamics
-# - data collection in a mixed-agent model
 # - performing interactive scientific research
 #
 # ## Overview of Daisyworld

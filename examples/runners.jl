@@ -51,6 +51,7 @@ end
 agent_step!(agent, model) = move_along_route!(agent, model)
 
 # ## Let's Race
+# %% #src
 # Plotting is simple enough. We just need to use the [`InteractiveDynamics.abm_plot`](@ref)
 # for our runners, and display the heightmap for our reference. A better interface to do
 # this is currently a work in progress.
@@ -73,13 +74,12 @@ abm_video(
     agent_step!;
     resolution = (700, 700),
     frames = 410,
-    framerate = 30,
+    framerate = 45,
     ac = :black,
     as = 8,
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
     heatarray = model -> heightmap(model),
     heatkwargs = (colormap = :terrain,),
-    add_colorbar = false,
     static_preplot!
 )
 nothing # hide
