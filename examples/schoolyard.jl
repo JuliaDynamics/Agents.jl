@@ -24,7 +24,6 @@
 using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
 using InteractiveDynamics
 using CairoMakie
-CairoMakie.activate!() # hide
 
 # And create a very simple agent.
 
@@ -144,7 +143,7 @@ model = schoolyard()
 s = Observable(0) # counter of current step
 t = lift(x -> "Playgound Dynamics, step = "*string(x), s)
 f, abmstepper = abm_plot(model, as = 15)
-ax = contents(f[1, 1])[1]
+ax = contents(f[1, 1][1, 1])[1]
 ## ax.title = t[]
 scatter!([50 50]; color = :red) # Show position of teacher
 limits!(ax, 0, 100, 0, 100)

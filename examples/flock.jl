@@ -113,7 +113,6 @@ end
 # ## Plotting the flock
 using InteractiveDynamics
 import CairoMakie
-CairoMakie.activate!()
 
 # The great thing about [`abm_plot`](@ref) is its flexibility. We can incorporate the
 # direction of the birds when plotting them, by making the "marker" function `am`

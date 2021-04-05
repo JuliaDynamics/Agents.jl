@@ -25,7 +25,6 @@
 using Agents, Random
 using InteractiveDynamics
 using CairoMakie
-CairoMakie.activate!() # hide
 
 mutable struct Tree <: AbstractAgent
     id::Int

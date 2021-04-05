@@ -161,7 +161,6 @@ model = initialize_model()
 
 using InteractiveDynamics
 import CairoMakie
-CairoMakie.activate!() # hide
 
 ## Particles that are stuck and part of the fractal are shown in red, for visual distinction
 particle_color(a::Particle) = a.is_stuck ? :red : :blue
@@ -177,10 +176,11 @@ abm_video(
     model_step!;
     ac = particle_color,
     as = particle_size,
-    am = '⚪',
+    am = '●',
     spf = 10,
     frames = 600,
     framerate = 25,
+    scatterkwargs = (strokewidth = 0.5, strokecolor = :white),
 )
 nothing # hide
 # ```@raw html

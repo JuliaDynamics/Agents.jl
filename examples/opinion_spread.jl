@@ -17,7 +17,6 @@
 using Agents
 using InteractiveDynamics # plotting agents
 using CairoMakie # for static plotting
-CairoMakie.activate!() # hide
 using Random # hide
 
 # ## Building the model

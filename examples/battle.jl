@@ -46,7 +46,6 @@ using Random # hide
 using Agents
 using InteractiveDynamics
 using CairoMakie
-CairoMakie.activate!() # hide
 
 mutable struct Fighter <: AbstractAgent
     id::Int
@@ -177,7 +176,7 @@ function captor_behavior!(agent, model)
                 model[id].capture_time == 0 && model[id].has_prisoner == false
             ],
         )
-        exploiter.shape = :square
+        exploiter.shape = :rect
         gain = ceil(Int, level(agent) / 2)
         new_lvl = min(level(agent) + rand(model.rng, 1:gain), 10)
         kill_agent!(agent, model)
@@ -360,6 +359,8 @@ stepper = InteractiveDynamics.ABMStepper(
     colors,
     Observable(15),
     markers,
+    nothing,
+    nothing
 )
 nothing #hide
 
