@@ -4,6 +4,7 @@
 # This is an example implementation of the [Force Based Motion Planning (FMP)](https://arxiv.org/pdf/1909.05415.pdf) algorithm. The algorithm is a decentralized motion
 # planning algorithm where individual agents experience attractive forces towards
 # a goal position and repulsive forces from other agents or objects in the environment. 
+#
 # ## Defining the Agent
 
 # First we need to define an `AbstractAgent` struct that has the necessary
@@ -186,7 +187,6 @@ function agent_init_color(i, num_agents)
     color_range = range(HSV(0,1,1), stop=HSV(-360,1,1), length=num_agents)
     agent_color = color_range[i]
     return string("#", hex(agent_color))
-
 end
 
 # Now that we've defined the plot utilities, lets re-run our simulation with
