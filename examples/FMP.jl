@@ -1,23 +1,24 @@
 # # Force Based Motion Planning
-# ![](circle_swap_pretty.gif) 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../output2.mp4" type="video/mp4">
+# </video>
+# ```
 
 # This is an example implementation of the [Force Based Motion Planning (FMP)](https://arxiv.org/pdf/1909.05415.pdf) algorithm. The algorithm is a decentralized motion
 # planning algorithm where individual agents experience attractive forces towards
-# a goal position and repulsive forces from other agents or objects in the environment. 
+# a goal position and repulsive forces from other agents or obstacles in the environment. 
 #
 # ## Defining the Agent
 
 # First we need to define an `AbstractAgent` struct that has the necessary
 # information for the FMP algorithm to run. `pos`, and `vel` are position and
 # velocity, respectively. `tau` is an agents goal position. `color` is an
-# optional parameter for plotting used in this example. `type` is the agent
-# type: `:A` is an agent, `:O` is an obstacle, and `:T` is a target. `radius`
-# is the radius of the agent. `SSdims` is an optional parameter used for
-# plotting purposes.
-#
-# Agent types have the following distinctions:
+# optional parameter for plotting used in this example. 
+# `radius` is the radius of the agent.
+# `type` is the agent type: 
 # - :A = agent (has velocity, subject to repulsive forces)
-# - :O = object (has no velocity, cannot move, agents must go around)
+# - :O = obstacle (has no velocity, cannot move, agents must go around)
 # - :T = target (no velocity, just a projection of agent target zone)
 
 using Agents, Random, LinearAlgebra, Colors, InteractiveDynamics
@@ -37,7 +38,7 @@ end
 
 # Next, we define the model. The FMP algorithm has several parameters defined
 # in the original paper which are stored in a struct. Typical values can be
-# generated using the `fmp_parameter_init` function and loaded into the model
+# generated using the [`fmp_parameter_init!`](@ref) function and loaded into the model
 # properties. 
 
 ## define AgentBasedModel (ABM)
@@ -58,10 +59,11 @@ end
 
 # Now that we have defined a model, lets add some agents into it. In the
 # following example, we add agents around the perimeter of a circle. We add
-# their target position (tau) across the circle from each agent. Note that the
+# their target position (`tau`) across the circle from each agent. Note that the
 # arguments passed to `add_agent!` correspond to the `AbstractAgent` struct
-# we defined earlier. Note that `:A` (agent types) experience navigational
-# forces and repulsive forces. `:T` (target types) do not experience any
+# we defined earlier. Also recognize that agent types `:A` experience navigational
+# forces and repulsive forces. Target types `:T` do not experience any
+# forces. Obstacle types `:O` experience navigational forces but not repulsive
 # forces.
 
 # Also note that the `color` parameter doesn't do anything unless we use some
@@ -70,8 +72,8 @@ end
 ## add agents to model
 model = FMP_Model()
 
-# lets start by defining a helper function that takes a model and some
-# placement functions to place agents
+## lets start by defining a helper function that takes a model and some
+## placement functions to place agents
 
 function agent_placement_helper!(model, agent_placer, goal_placer, color_select)
     x, y = model.space.extent
@@ -100,7 +102,7 @@ function agent_placement_helper!(model, agent_placer, goal_placer, color_select)
     end
 end
 
-# place agents around circle, place targets opposite of agents
+## place agents around circle, place targets opposite of agents
 circle_agents(x, y, i, num_agents) = (0.45*cos((2*π/num_agents)*i)+x/2, 
                                      0.45*sin((2*π/num_agents)*i)+y/2
                                     )
@@ -108,18 +110,18 @@ circle_goals(x, y, i, num_agents) = (0.45*cos((2*π/num_agents)*i+π)+x/2,
                                      0.45*sin((2*π/num_agents)*i+π)+y/2
                                     )
 
-# place agents
+## place agents
 agent_placement_helper!(model, circle_agents, circle_goals, "none")
 
 # ## Running a Simulation
 
 # Now that we've defined our agent type, our model, and added agents into the
 # model, we are ready to simulate. First we define a method for `agent_step!`.
-# Note that `agent_step!` takes into account our `update_vel` function during
-# simulation at each time step.
+# Note that our definition of `agent_step!` uses [`fmp_update_vel!`](@ref) 
+# at each time step.
 
-# Note the inclusion of the call to `FMP_Update_Interacting_Pairs` and
-# `FMP_Update_Interacting_Pairs` in the `model_step!` function.. This
+# Also note the inclusion of the call to [`fmp_update_interacting_pairs!`](@ref) 
+# in the `model_step!` function. This
 # function occurrs once during each model time step and calls the
 # [`interacting_pairs`](@ref) function to see if agents are within an
 # interactive radius of one another. If they are, they the FMP algorithm
@@ -145,44 +147,44 @@ InteractiveDynamics.abm_video(
     resolution = (600, 600),
     equalaspect=true,
    )
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../output1.mp4" type="video/mp4">
+# </video>
+# ```
 
-
-# The above animation isn't very pretty looking - lets plot using some color
+# The above animation isn't very pretty looking; lets plot using some color
 # and shape/scaling utilities. Additionally we want a certain draw order so we
-# write a plotting scheduler.
+# define a plotting scheduler.
 
 
-"""
-This function is a scheduler to determine draw order of agents. Draw order (left to right) is :T, :O, :A
-"""
 function plot_scheduler(model::ABM)
 
-    # init blank lists
+    ## init blank lists
     agent_list = []
-    object_list = []
+    obstacle_list = []
     target_list = []
     for agent in values(model.agents)
+
+        ## append to list based on draw order (:T, :O, :A in this example)
         if agent.type == :A
             append!(agent_list, agent.id)
         elseif agent.type == :T
             append!(target_list, agent.id)
         elseif agent.type == :O
-            append!(object_list, agent.id)
+            append!(obstacle_list, agent.id)
         end
     end
 
-    # make composite list [targets, objects, agents]
+    ## make composite list [targets, obstacles, agents]
     draw_order = []
     append!(draw_order, target_list)
-    append!(draw_order, object_list)
+    append!(draw_order, obstacle_list)
     append!(draw_order, agent_list)
 
     return draw_order
 end
 
-"""
-This function is a utility function for coloring agents.
-"""
 function agent_init_color(i, num_agents)
     color_range = range(HSV(0,1,1), stop=HSV(-360,1,1), length=num_agents)
     agent_color = color_range[i]
@@ -201,8 +203,7 @@ as_f(a) = 1200*1/minimum(a.SSdims)*a.radius  ## this was defined empirically
 ac_f(a) = a.type in (:A, :O) ? a.color : "#ffffff"
 am_f(a) = a.type in (:A, :O, :T) ? :circle : :circle
 
-# Now we run the simulation with some helper functions to access the agent
-# params.
+# Now we run the simulation with some helper functions to access the agent parameters.
 
 @info "Plotting simulation 2..."
 InteractiveDynamics.abm_video(
@@ -221,6 +222,11 @@ InteractiveDynamics.abm_video(
     scheduler = plot_scheduler,
    )
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../output2.mp4" type="video/mp4">
+# </video>
+# ```
 # ## Adding Obstacles
 
 # Now that we've plotted some agents and made the resultant simulation output
@@ -240,13 +246,13 @@ agent_placement_helper!(model, line_agent, line_agent, agent_init_color)  # plac
 x,y = model.space.extent
 xio = 0.1*x
 yio = 0.5*y
-object_pos = (xio, yio)
-object_vel = (0,0)
-object_tau = (x-0.1*x, 0.5*y)
-object_radius = 0.1
+obstacle_pos = (xio, yio)
+obstacle_vel = (0,0)
+obstacle_tau = (x-0.1*x, 0.5*y)
+obstacle_radius = 0.1
 agent_color = "#ff0000"
-add_agent!(object_pos, model, object_vel, object_tau, agent_color, :O, object_radius, model.space.extent, [], [])  # add object
-add_agent!(object_tau, model, object_vel, object_tau, agent_color, :T, object_radius, model.space.extent, [], [])  # add object target
+add_agent!(obstacle_pos, model, obstacle_vel, obstacle_tau, agent_color, :O, obstacle_radius, model.space.extent, [], [])  # add obstacle
+add_agent!(obstacle_tau, model, obstacle_vel, obstacle_tau, agent_color, :T, obstacle_radius, model.space.extent, [], [])  # add target
 
 # Now that we've added an obstacle to the state space, we need to take one
 # special step - adding the obstacle to the obstacle list for use by the FMP
@@ -259,7 +265,7 @@ for agent in allagents(model)
     end
 end
 
-# After adding in the obstacles, we can run the simulation
+# After adding in the obstacles, we can run the simulation.
 
 @info "Plotting simulation 3..."
 InteractiveDynamics.abm_video(
@@ -277,3 +283,8 @@ InteractiveDynamics.abm_video(
     equalaspect=true,
     scheduler = plot_scheduler,
    )
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../output3.mp4" type="video/mp4">
+# </video>
+# ```
