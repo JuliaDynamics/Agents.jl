@@ -228,7 +228,6 @@ figure, = abm_plot(
     as = 22,
     ac = mcolor,
     scheduler = by_type((Grass, Sheep, Wolf), false),
-    equalaspect = true,
 )
 figure
 # Now, lets run the simulation and collect some data.
