@@ -9,6 +9,14 @@ This provides maximum freedom on creating an ABM.
 However, it has the downside that Agents.jl cannot help you with the performance of the stepping functions themselves.
 So, be sure that you benchmark your code, and you follow Julia's Performance Tips!
 
+## Take advantage of parallelization
+Julia provides several tools for [parallelization and distributed computing](https://docs.julialang.org/en/v1/manual/parallel-computing/).
+Notice that we cannot help you with parallelizing the _actual model evolution_ via the agent- and model-stepping functions. This is something you must do manually, as depending on the model, parallelization might not be possible at all due to e.g. the access and overwrite of the same memory location (writing on same agent in different threads or killing/creating agents).
+If your model evolution satisfies the [criteria allowing parallelism](https://docs.julialang.org/en/v1/manual/multi-threading/#Caveats), the simplest way to do it is using Julia's [`@threads` or `@spawn` macros](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
+
+The only native parallelization we can offer is parallelizing over the full model evolution and data collection loop. This is done by providing a `replicates > 0` and `parallel = true` argument to [`run!`](@ref).
+
+
 ## Use Type-stable containers for the model properties
 This tip is actually not related to Agents.jl and you will also read about it in Julia's [abstract container tips](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-abstract-container). In general, avoid containers whose values are of unknown type. E.g.:
 
