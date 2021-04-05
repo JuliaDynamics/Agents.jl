@@ -145,7 +145,6 @@ InteractiveDynamics.abm_video(
     frames = model.num_steps,
     framerate = 100,
     resolution = (600, 600),
-    equalaspect=true,
    )
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -218,7 +217,6 @@ InteractiveDynamics.abm_video(
     as = as_f,
     ac = ac_f,
     am = am_f,
-    equalaspect=true,
     scheduler = plot_scheduler,
    )
 
@@ -280,7 +278,6 @@ InteractiveDynamics.abm_video(
     as = as_f,
     ac = ac_f,
     am = am_f,
-    equalaspect=true,
     scheduler = plot_scheduler,
    )
 # ```@raw html
