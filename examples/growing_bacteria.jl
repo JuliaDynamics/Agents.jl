@@ -171,7 +171,6 @@ nothing # hide
 # on the agent:
 using InteractiveDynamics
 import CairoMakie # choose plotting backend
-CairoMakie.activate!() # hide
 
 function cassini_oval(agent)
     t = LinRange(0, 2π, 50)

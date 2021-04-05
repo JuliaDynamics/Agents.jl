@@ -258,7 +258,6 @@ nothing # hide
 
 Random.seed!(165) # hide
 using InteractiveDynamics, CairoMakie
-CairoMakie.activate!() # hide
 
 model = daisyworld()
 
