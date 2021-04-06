@@ -109,15 +109,17 @@ function run!(model::ABM, agent_step!, model_step!, n;
 
   r = replicates
   if r > 0
-      TODO: FIX THIS!!!
-    if parallel
-      return parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+      @warn("""
+      Running replicate simulations with `run!` is deprecated. It will be removed in
+      Agents v4.3. Please use the new `multirun!` function instead.
+      """)
+      models = [deepcopy(model) for _ in 1:r]
+      return multirun!(models, agent_step!, model_step!, n; parallel, kwargs...)
     else
-      return series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+        # TODO: In v4.3 the _run! function has no reason to exist, it can be
+        # internalized inside `run!`.
+        return _run!(model, agent_step!, model_step!, n; kwargs...)
     end
-  else
-    return _run!(model, agent_step!, model_step!, n; kwargs...)
-  end
 end
 
 ###################################################
