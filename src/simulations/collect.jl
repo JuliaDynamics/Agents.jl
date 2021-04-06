@@ -89,14 +89,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
-  nested mutable containers.
-  Both of these options have performance penalties.
-* `replicates=0` : Run `replicates` replicates of the simulation.
-* `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel
-  using Julia's `Distributed.pmap`.
-* `seeds = [rand(Int) for _ in 1:replicates]` : Only when `replicates>0`.
-  What seeds to use in the model's random number generator, `rng`, see [`AgentBasedModel`](@ref).
-  The seeds are added to the model via `seed!(model, seed)` if `rng isa MersenneTwister`.
+  nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
 """
 function run! end
