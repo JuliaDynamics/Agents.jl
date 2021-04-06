@@ -4,10 +4,10 @@
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
 - Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
-- New function `multirun!` for running ensemble model simulations.
+- New function `ensemblerun!` for running ensemble model simulations.
 
 ## Deprecated
-- Keyword `replicates` of `run!` is deprecated in favor of `multirun!` and will be invalid in a future version.
+- Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!` and will be invalid in a future version.
 - `paramscan` with `replicates` is deprecated and will be invalid in a future version.
 
 # v4.1.2

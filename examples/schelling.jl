@@ -267,13 +267,13 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # ## Ensembles and distributed computing
 
 # We can run ensemble simulations and collect the output of every member in a single `DataFrame`.
-# To that end we use the [`multirun!`](@ref) function.
+# To that end we use the [`ensemblerun!`](@ref) function.
 # The function accepts a `Vector` of ABMs, each (typically) initialized with a different
 # seed and/or agent distribution. For example we can do
 models = [initialize(seed = x) for x in rand(UInt8, 3)];
 
 # and then
-adf, = multirun!(models, agent_step!, dummystep, 5; adata)
+adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
 adf[(end - 10):end, :]
 
 # It is possible to run the ensemble in parallel.
@@ -296,11 +296,11 @@ adf[(end - 10):end, :]
 # @everywhere agent_step!(...) = ...
 # ```
 
-# Then we can tell the `multirun!` function to run the ensemble in parallel
+# Then we can tell the `ensemblerun!` function to run the ensemble in parallel
 # using the keyword `parallel = true`:
 
 # ```julia
-# adf, = multirun!(models, agent_step!, dummystep, 5; adata, parallel = true)
+# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
 # ```
 
 # ## Scanning parameter ranges

@@ -108,10 +108,10 @@ function run!(
     if r > 0
         @warn("""
         Running replicate simulations with `run!` is deprecated. It will be removed in a
-        future version of Agents.jl. Please use the new `multirun!` function instead.
+        future version of Agents.jl. Please use the new `ensemblerun!` function instead.
         """)
         models = [deepcopy(model) for _ in 1:r]
-        adf, mdf = multirun!(models, agent_step!, model_step!, n; parallel, kwargs...)
+        adf, mdf = ensemblerun!(models, agent_step!, model_step!, n; parallel, kwargs...)
         rename!(adf, :ensemble => :replicate)
         rename!(mdf, :ensemble => :replicate)
         return adf, mdf

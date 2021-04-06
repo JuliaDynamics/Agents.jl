@@ -31,7 +31,7 @@ include("simulations/step.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
-include("simulations/multirun.jl")
+include("simulations/ensemblerun.jl")
 
 # Other advanced features
 include("pathfinding/grid_pathfinder.jl")

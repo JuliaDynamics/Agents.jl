@@ -1,8 +1,8 @@
-export multirun!
+export ensemblerun!
 Vector_or_Tuple = Union{AbstractArray, Tuple}
 
 """
-    multirun!(models::Vector, agent_step!, model_step!, n; kwargs...)
+    ensemblerun!(models::Vector, agent_step!, model_step!, n; kwargs...)
 Perform an ensemble simulation of [`run!`](@ref) for all `model ∈ models`.
 Each `model` should be a (different) instance of an [`AgentBasedModel`](@ref) but probably
 initialized with a different random seed or different initial agent distribution.
@@ -18,7 +18,7 @@ docs online).
 
 All other keywords are propagated to [`run!`](@ref) as-is.
 """
-function multirun!(
+function ensemblerun!(
         models::Vector_or_Tuple, agent_step!, model_step!, n;
         parallel = false, kwargs...
     )
@@ -30,23 +30,23 @@ function multirun!(
 end
 
 """
-    multirun!(generator, agent_step!, model_step!, n; kwargs...)
-Generate many `ABM`s and propagate them into `multirun!(models, ...)` using the
+    ensemblerun!(generator, agent_step!, model_step!, n; kwargs...)
+Generate many `ABM`s and propagate them into `ensemblerun!(models, ...)` using the
 the provided `generator` which is a one-argument function whose input is a seed.
 
 This method has the keywords `ensemble = 5, seeds = abs.(rand(Int, ensemble))`
 and the only thing it does is:
 ```julia
 models = [generator(seed) for seed ∈ seeds]
-multirun!(models, args...; kwargs...)
+ensemblerun!(models, args...; kwargs...)
 ```
 """
-function multirun!(
+function ensemblerun!(
         generator, args...;
         ensemble = 5, seeds = abs.(rand(Int, ensemble)), kwargs...
     )
     models = [generator(seed) for seed ∈ seeds]
-    multirun!(models, args...; kwargs...)
+    ensemblerun!(models, args...; kwargs...)
 end
 
 function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
