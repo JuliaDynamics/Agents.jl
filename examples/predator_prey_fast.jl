@@ -47,7 +47,7 @@ end
 
 # Simple helper functions
 Sheep(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :sheep, energy, repr, Δe)
-Wolf(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :wolf,  energy, repr, Δe)
+Wolf(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :wolf, energy, repr, Δe)
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
@@ -63,7 +63,7 @@ function initialize_model(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
-    seed = 23182
+    seed = 23182,
 )
 
     rng = MersenneTwister(seed)
@@ -173,13 +173,17 @@ end
 function reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    offspring = SheepWolf(id, agent.pos,
-        agent.type, agent.energy, agent.reproduction_prob, agent.Δenergy
+    offspring = SheepWolf(
+        id,
+        agent.pos,
+        agent.type,
+        agent.energy,
+        agent.reproduction_prob,
+        agent.Δenergy,
     )
     add_agent_pos!(offspring, model)
     return
 end
-
 
 # The behavior of grass functions differently. If it is fully grown, it is consumable.
 # Otherwise, it cannot be consumed until it regrows after a delay specified by
@@ -205,7 +209,7 @@ model = initialize_model()
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
 using InteractiveDynamics
-import CairoMakie
+using CairoMakie
 
 # To view our starting population, we can build an overview plot using [`abm_plot`](@ref).
 # We define the plotting details for the wolves and sheep:
@@ -219,8 +223,12 @@ grasscolor(model) = model.countdown ./ model.regrowth_time
 heatkwargs = (colormap = [:brown, :green], colorrange = (0, 1))
 
 plotkwargs = (
-    ac=acolor, as = 15, am = ashape, offset = offset,
-    heatarray = grasscolor, heatkwargs = heatkwargs
+    ac = acolor,
+    as = 15,
+    am = ashape,
+    offset = offset,
+    heatarray = grasscolor,
+    heatkwargs = heatkwargs,
 )
 
 fig, _ = abm_plot(model; plotkwargs...)
@@ -261,7 +269,7 @@ model = initialize_model(
     Δenergy_sheep = 5,
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
-    seed = 7756
+    seed = 7756,
 )
 adf, mdf = run!(model, sheepwolf_step!, grass_step!, n; adata, mdata)
 
