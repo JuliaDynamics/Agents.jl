@@ -52,13 +52,13 @@ end
 function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     @assert models[1] isa ABM
     df_agent, df_model = _run!(models[1], agent_step!, model_step!, n; kwargs...)
-    replicate_col!(df_agent, 1)
-    replicate_col!(df_model, 1)
+    add_ensemble_index!(df_agent, 1)
+    add_ensemble_index!(df_model, 1)
 
     for m in 2:length(models)
         df_agentTemp, df_modelTemp = _run!(models[m], agent_step!, model_step!, n; kwargs...)
-        replicate_col!(df_agentTemp, m)
-        replicate_col!(df_modelTemp, m)
+        add_ensemble_index!(df_agentTemp, m)
+        add_ensemble_index!(df_modelTemp, m)
         append!(df_agent, df_agentTemp)
         append!(df_model, df_modelTemp)
     end
@@ -73,8 +73,8 @@ function parallel_ensemble(models::ABM, agent_step!, model_step!, n; kwargs...)
     df_agent = DataFrame()
     df_model = DataFrame()
     for (m, d) in enumerate(all_data)
-        replicate_col!(d[1], m)
-        replicate_col!(d[2], m)
+        add_ensemble_index!(d[1], m)
+        add_ensemble_index!(d[2], m)
         append!(df_agent, d[1])
         append!(df_model, d[2])
     end
@@ -82,6 +82,6 @@ function parallel_ensemble(models::ABM, agent_step!, model_step!, n; kwargs...)
     return df_agent, df_model, models
 end
 
-function replicate_col!(df, m)
+function add_ensemble_index!(df, m)
     df[!, :ensemble] = fill(m, 1:size(df, 1))
 end
