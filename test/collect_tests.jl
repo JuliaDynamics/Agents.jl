@@ -435,22 +435,6 @@ end
         @test unique(data.step) == 0:10
         @test unique(data.density) == [0.6, 0.7, 0.8]
     end
-
-    @testset "Scan with replicates" begin
-        adata = [(unburnt, count), (burnt, count)]
-        data, _ = paramscan(
-            parameters,
-            forest_initiation;
-            n = n,
-            agent_step! = dummystep,
-            model_step! = forest_step!,
-            replicates = 3,
-            adata = adata,
-            progress = false,
-        )
-        # the first 3 is the number of combinations of changing params
-        @test size(data) == (((n + 1) * 3) * 3, 5)
-    end
 end
 
 @testset "Issue #179 fix" begin
