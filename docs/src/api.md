@@ -270,6 +270,9 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 multirun!
 ```
 
+### How to use `Distributed`
+To use the `paralle=true` option of [`multirun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and parallel computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+
 ## Path-finding
 In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
 
