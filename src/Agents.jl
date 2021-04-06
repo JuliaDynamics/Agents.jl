@@ -17,6 +17,7 @@ include("core/model.jl")
 include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
+# Existing spaces
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")
@@ -30,6 +31,7 @@ include("simulations/step.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
+include("simulations/multirun.jl")
 
 # Other advanced features
 include("pathfinding/grid_pathfinder.jl")
