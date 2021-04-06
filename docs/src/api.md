@@ -265,6 +265,11 @@ ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
+## Ensemble runs and Parallelization
+```@docs
+multirun!
+```
+
 ## Path-finding
 In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
 
@@ -292,4 +297,3 @@ HeightMap
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
 See the [Developer Docs](@ref) for details.
-

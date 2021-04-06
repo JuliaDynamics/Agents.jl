@@ -1,9 +1,10 @@
 Vector_or_Tuple = Union{AbstractArray, Tuple}
 
 """
-    multirun!(models, agent_step!, model_step!, n; kwargs...) → agent_df, model_df
-Call [`run!`](@ref) for the replicate `models`, which are (different) instances
-of an ABM obeying the same rules `agent_step!, model_step!`.
+    multirun!(models::Vector, agent_step!, model_step!, n; kwargs...) → agent_df, model_df
+Call [`run!`](@ref) for all `model ∈ models`. Each `model` should be a (different) instance
+of an [`AgentBasedModel`](@ref) but probably initialized with a different random seed or
+different initial agent distribution. All models obey the same rules `agent_step!, model_step!`.
 
 Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:replicate`, which will have
