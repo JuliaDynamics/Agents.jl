@@ -7,8 +7,8 @@
 - New function `multirun!` for running ensemble model simulations.
 
 ## Deprecated
-- Keyword `replicates` of `run!` is deprecated in favor of `multirun!` and will be invalid in version 4.3.
-- `paramscan` with `replicates` is deprecated and will be invalid in version 4.3.
+- Keyword `replicates` of `run!` is deprecated in favor of `multirun!` and will be invalid in a future version.
+- `paramscan` with `replicates` is deprecated and will be invalid in a future version.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.

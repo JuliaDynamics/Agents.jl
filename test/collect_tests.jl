@@ -474,10 +474,11 @@ end
 end
 
 @testset "multirun! and different seeds" begin
-    model, agent_step!, model_step! = Models.schelling(numagents = 1)
+    model, as!, ms! = Models.schelling(numagents = 1)
     generator(seed) = Models.schelling(;numagents = 1, seed)[1]
     seeds = [1234, 563, 211]
     adata = [:pos]
-    adf, _ = multirun!(generator, agent_step!, model_step!, 2; adata, seeds)
+    adf, _ = multirun!(generator, as!, ms!, 2; adata, seeds)
     @test adf[!, :pos] == unique(adf[!, :pos])
+    @test sort!(adf[:, :ensemble]) == [1,1,1,2,2,2,3,3,3]
 end

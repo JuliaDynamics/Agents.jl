@@ -99,20 +99,25 @@ function run! end
 run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function run!(model::ABM, agent_step!, model_step!, n;
-  replicates::Int=0, parallel::Bool=false, kwargs...)
+function run!(
+        model::ABM, agent_step!, model_step!, n;
+        replicates::Int=0, parallel::Bool=false, kwargs...
+    )
 
-  r = replicates
-  if r > 0
-      @warn("""
-      Running replicate simulations with `run!` is deprecated. It will be removed in
-      Agents v4.3. Please use the new `multirun!` function instead.
-      """)
-      models = [deepcopy(model) for _ in 1:r]
-      return multirun!(models, agent_step!, model_step!, n; parallel, kwargs...)
+    r = replicates
+    if r > 0
+        @warn("""
+        Running replicate simulations with `run!` is deprecated. It will be removed in a
+        future version of Agents.jl. Please use the new `multirun!` function instead.
+        """)
+        models = [deepcopy(model) for _ in 1:r]
+        adf, mdf = multirun!(models, agent_step!, model_step!, n; parallel, kwargs...)
+        rename!(adf, :ensemble => :replicate)
+        rename!(mdf, :ensemble => :replicate)
+        return adf, mdf
     else
-        # TODO: In v4.3 the _run! function has no reason to exist, it can be
-        # internalized inside `run!`.
+        # TODO: When deprecations are removed, the _run! function has no reason to exist,
+        # it can be internalized inside `run!`.
         return _run!(model, agent_step!, model_step!, n; kwargs...)
     end
 end
