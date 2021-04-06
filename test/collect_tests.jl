@@ -465,7 +465,11 @@ end
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
 
-@testset "Parallel and seeds" begin
+@testset "multirun! and different seeds" begin
     model, agent_step!, model_step! = Models.schelling(numagents = 1)
+    generator(seed) = Models.schelling(;numagents = 1, seed)[1]
+    seeds = [1234, 563, 211]
     adata = [:pos]
-    data, _ = run!(model, agent_step!, 2; adata, replicates = 3, parallel = true)
+    adf, _ = multirun!(generator, agent_step!, model_step!, 2; adata, seeds)
+    @test adf[!, :pos] == unique(adf[!, :pos])
+end

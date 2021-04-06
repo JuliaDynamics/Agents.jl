@@ -1,7 +1,8 @@
+export multirun!
 Vector_or_Tuple = Union{AbstractArray, Tuple}
 
 """
-    multirun!(models::Vector, agent_step!, model_step!, n; kwargs...) → agent_df, model_df
+    multirun!(models::Vector, agent_step!, model_step!, n; kwargs...)
 Call [`run!`](@ref) for all `model ∈ models`. Each `model` should be a (different) instance
 of an [`AgentBasedModel`](@ref) but probably initialized with a different random seed or
 different initial agent distribution. All models obey the same rules `agent_step!, model_step!`.
@@ -9,6 +10,7 @@ different initial agent distribution. All models obey the same rules `agent_step
 Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:replicate`, which will have
 integer values counting the replicate simulations.
+The function returns `agent_df, model_df, models`.
 
 The keyword `parallel=false` will run the simulations in parallel using Julia's
 `Distributed.pmap` (you need to have loaded `Agents` with `@everywhere`, see
@@ -41,15 +43,14 @@ multirun!(models, args...; kwargs...)
 """
 function multirun!(
         generator, args...;
-        replicates = 5, seeds = [abs(rand(Int)) for _ in 1:replicates], kwargs...
+        replicates = 5, seeds = abs.(rand(Int, replicates)), kwargs...
     )
     models = [generator(seed) for seed ∈ seeds]
     multirun!(models, args...; kwargs...)
 end
 
-"Run replicates of the same simulation"
-function series_replicates(models, agent_step!, model_step!, n, replicates; kwargs...)
-
+function series_replicates(models, agent_step!, model_step!, n; kwargs...)
+    @assert models[1] isa ABM
     df_agent, df_model = _run!(models[1], agent_step!, model_step!, n; kwargs...)
     replicate_col!(df_agent, 1)
     replicate_col!(df_model, 1)
@@ -64,18 +65,9 @@ function series_replicates(models, agent_step!, model_step!, n, replicates; kwar
     return df_agent, df_model, models
 end
 
-"Run replicates of the same simulation in parallel"
-function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates;
-    seeds = [abs(rand(Int)) for _ in 1:replicates], kwargs...)
-
-    models = [deepcopy(model) for _ in 1:replicates-1]
-    push!(models, model) # no reason to make an additional copy
-    if model.rng isa MersenneTwister
-        for j in 1:replicates; seed!(models[j], seeds[j]); end
-    end
-
+function parallel_replicates(models::ABM, agent_step!, model_step!, n; kwargs...)
     all_data = pmap(
-        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...), 1:replicates
+        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...), 1:length(models)
     )
 
     df_agent = DataFrame()
