@@ -218,16 +218,16 @@ leg =
 
 ax2 = f[2, 1] = Axis(f, ylabel = "Temperature")
 highband =
-    Measurements.value.(agent_df[!, aggname(adata[3])]) +
-    Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+    Measurements.value.(agent_df[!, dataname(adata[3])]) +
+    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
 lowband =
-    Measurements.value.(agent_df[!, aggname(adata[3])]) -
-    Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+    Measurements.value.(agent_df[!, dataname(adata[3])]) -
+    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
 band!(ax2, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
 lines!(
     ax2,
     agent_df.step,
-    Measurements.value.(agent_df[!, aggname(adata[3])]),
+    Measurements.value.(agent_df[!, dataname(adata[3])]),
     linewidth = 2,
     color = :blue,
 )

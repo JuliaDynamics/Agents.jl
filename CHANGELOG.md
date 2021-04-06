@@ -1,6 +1,8 @@
 # v4.2
 ## New features
-* Pathfinding using the A* algorithm is now possible!
+- Pathfinding using the A* algorithm is now possible!
+- Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
+- Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
 - Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
 - New function `multirun!` for running ensemble model simulations.
 
