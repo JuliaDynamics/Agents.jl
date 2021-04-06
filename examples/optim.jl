@@ -162,16 +162,17 @@
 #         count(a.status == :I for a in allagents(model)) / nagents(model)
 #     n_fraction(model) = -1.0 * nagents(model) / initial_size
 #
+#     mdata = [infected_fraction, n_fraction]
 #     _, data = run!(
 #         model,
 #         agent_step!,
 #         50;
-#         mdata = [infected_fraction, n_fraction],
+#         mdata,
 #         when_model = [50],
 #         replicates = 10,
 #     )
 #
-#     return mean(data.infected_fraction), mean(data.n_fraction)
+#     return mean(data[!, dataname(mdata[1])), mean(data[!, dataname(mdata[2]))
 # end
 # ```
 

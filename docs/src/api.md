@@ -211,7 +211,7 @@ init_agent_dataframe
 collect_agent_data!
 init_model_dataframe
 collect_model_data!
-aggname
+dataname
 ```
 
 ## [Schedulers](@id Schedulers)
