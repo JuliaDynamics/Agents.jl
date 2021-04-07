@@ -4,7 +4,7 @@
     for i in 1:5
         add_agent!(model)
     end
-    @test model.scheduler == fastest
+    @test model.scheduler == schedule_fastest
     @test typeof(model.agents) <: Dict
     @test model.space === nothing
     @test model.properties == Dict(:a => 2, :b => "test")

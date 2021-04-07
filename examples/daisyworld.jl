@@ -278,7 +278,7 @@ daisysize(a::Land) = 15
 nothing # hide
 
 # Notice that we want to ensure that the `Land` patches are always plotted first.
-plotsched = by_type((Land, Daisy), false)
+plotsched = schedule_by_type((Land, Daisy), false)
 
 plotkwargs = (ac = daisycolor, am = daisyshape, as = daisysize, scheduler = plotsched)
 

@@ -66,7 +66,7 @@ function battle(; fighters = 50)
     model = ABM(
         Fighter,
         GridSpace((100, 100, 10); periodic = false);
-        scheduler = random_activation,
+        scheduler = schedule_randomly,
     )
 
     n = 0
@@ -346,15 +346,15 @@ e = size(model.space.s)[1:2] .+ 2
 o = zero.(e) .- 2
 clr(agent) = cgrad(:tab10)[level(agent)]
 mkr(a) = a.shape
-colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
-markers = Observable([mkr(model[id]) for id in by_id(model)])
-pos = Observable([model[id].pos for id in by_id(model)])
+colors = Observable(to_color.([clr(model[id]) for id in schedule_by_id(model)]))
+markers = Observable([mkr(model[id]) for id in schedule_by_id(model)])
+pos = Observable([model[id].pos for id in schedule_by_id(model)])
 stepper = InteractiveDynamics.ABMStepper(
     clr,
     mkr,
     15,
     nothing,
-    by_id,
+    schedule_by_id,
     pos,
     colors,
     Observable(15),

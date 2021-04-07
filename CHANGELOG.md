@@ -7,8 +7,9 @@
 - New function `ensemblerun!` for running ensemble model simulations.
 
 ## Deprecated
-- Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!` and will be invalid in a future version.
-- `paramscan` with `replicates` is deprecated and will be invalid in a future version.
+- Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
+- `paramscan` with `replicates` is deprecated and this functionality of having _both_ replicates and parameter scanning in one function will be invalid in a future version.
+- All the scheduler names have been deprecated in favor of the same schedulers but prefixed with `schedule_` as follows: `fastest` to `schedule_fastest`, `by_id` to `schedule_by_id`, `random_activation` to `schedule_randomly`, `partial_activation` to `schedule_partially`, `property_activation` to `schedule_by_property`, `by_type` to `schedule_by_type`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.

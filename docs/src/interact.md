@@ -58,7 +58,7 @@ daisyshape(a::Daisy) = '♣'
 daisysize(a::Daisy) = 15
 daisyshape(a::Land) = :rect
 daisysize(a::Land) = 20
-landfirst = by_type((Land, Daisy), false) # scheduler
+landfirst = schedule_by_type((Land, Daisy), false) # scheduler
 
 # Parameter exploration and data collection:
 params = Dict(

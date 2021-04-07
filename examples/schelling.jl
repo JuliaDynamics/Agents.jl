@@ -67,17 +67,17 @@ schelling = ABM(SchellingAgent, space; properties)
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
 # property `:group`, so that all agents of group 1 act first.
-# We would then use the scheduler [`property_activation`](@ref) like so:
+# We would then use the scheduler [`schedule_by_property`](@ref) like so:
 
 schelling2 = ABM(
     SchellingAgent,
     space;
     properties = properties,
-    scheduler = property_activation(:group),
+    scheduler = schedule_by_property(:group),
 )
 
-# Notice that `property_activation` accepts an argument and returns a function,
-# which is why we didn't just give `property_activation` to `scheduler`.
+# Notice that `schedule_by_property` accepts an argument and returns a function,
+# which is why we didn't just give `schedule_by_property` to `scheduler`.
 
 # ## Creating the ABM through a function
 
@@ -85,7 +85,7 @@ schelling2 = ABM(
 # it will be easy to recreate the model and change its parameters.
 
 # In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`random_activation`](@ref).
+# We also change the scheduler to [`schedule_randomly`](@ref).
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
@@ -96,7 +96,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     rng = Random.MersenneTwister(seed)
     model = ABM(
         SchellingAgent, space;
-        properties, rng, scheduler = random_activation
+        properties, rng, scheduler = schedule_randomly
     )
 
     ## populate the model with agents, adding equal amount of the two types of agents
