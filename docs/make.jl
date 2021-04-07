@@ -15,10 +15,11 @@ println("Plotting Backend...")
 import CairoMakie
 
 ENV["GKS_ENCODING"] = "utf-8"
-println("Converting Examples")
-@info "Converting Examples to Docuementation"
+println("Converting Examples...")
+
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
+rm(outdir; force=true, recursive=true) # cleans up previous examples
 mkpath(outdir)
 toskip = ("daisyworld_matrix.jl", "siroptim.jl")
 for file in readdir(indir)
@@ -30,12 +31,13 @@ end
 # download the themes
 println("Themeing")
 using DocumenterTools: Themes
+import Downloads
 for file in (
     "juliadynamics-lightdefs.scss",
     "juliadynamics-darkdefs.scss",
     "juliadynamics-style.scss",
 )
-    download(
+    Downloads.download(
         "https://raw.githubusercontent.com/JuliaDynamics/doctheme/master/$file",
         joinpath(@__DIR__, file),
     )
