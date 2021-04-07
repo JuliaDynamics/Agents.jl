@@ -14,7 +14,7 @@ Julia provides several tools for [parallelization and distributed computing](htt
 Notice that we cannot help you with parallelizing the _actual model evolution_ via the agent- and model-stepping functions. This is something you must do manually, as depending on the model, parallelization might not be possible at all due to e.g. the access and overwrite of the same memory location (writing on same agent in different threads or killing/creating agents).
 If your model evolution satisfies the [criteria allowing parallelism](https://docs.julialang.org/en/v1/manual/multi-threading/#Caveats), the simplest way to do it is using Julia's [`@threads` or `@spawn` macros](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
 
-The only native parallelization we can offer is parallelizing over the full model evolution and data collection loop. This is done by providing a `replicates > 0` and `parallel = true` argument to [`run!`](@ref).
+The only native parallelization we can offer is parallelizing over the full model evolution and data collection loop. This is done by providing a `parallel = true` keyword argument to [`ensemblerun!`](@ref).
 
 
 ## Use Type-stable containers for the model properties
