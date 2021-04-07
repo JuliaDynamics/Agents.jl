@@ -119,9 +119,7 @@ end
 function sheep_step!(sheep, model)
     walk!(sheep, rand, model)
     sheep.energy -= 1
-    agents = collect(agents_in_position(sheep.pos, model))
-    dinner = filter!(x -> x.type == :grass, agents)
-    sheep_eat!(sheep, dinner, model)
+    sheep_eat!(sheep, model)
     if sheep.energy < 0
         kill_agent!(sheep, model)
         return
@@ -150,12 +148,10 @@ end
 # additional energy and the grass will not be available for consumption until regrowth time
 # has elapsed. If a wolf eats a sheep, the sheep dies and the wolf acquires more energy.
 
-function sheep_eat!(sheep, grass_array, model)
-    isempty(grass_array) && return
-    grass = grass_array[1]
-    if grass.fully_grown
+function sheep_eat!(sheep, model)
+    if model.fully_grown[sheep.pos...]
         sheep.energy += sheep.Δenergy
-        grass.fully_grown = false
+        model.fully_grown[sheep.pos...] = false
     end
 end
 
@@ -278,5 +274,21 @@ plot_population_timeseries(adf, mdf)
 # ## Video
 # Given that we have defined plotting functions, making a video is as simple as
 
-model = initialize_model()
-abm_video("sheepwolf.mp4", model, sheepwolf_step!, grass_step!; frames = 50, plotkwargs...)
+model = initialize_model(
+    n_wolves = 20,
+    dims = (25, 25),
+    Δenergy_sheep = 5,
+    sheep_reproduce = 0.2,
+    wolf_reproduce = 0.08,
+    seed = 7756,
+)
+abm_video(
+    "sheepwolf.mp4",
+    model,
+    sheepwolf_step!,
+    grass_step!;
+    frames = 50,
+    framerate = 10,
+    plotkwargs...,
+)
+
