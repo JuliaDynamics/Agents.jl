@@ -81,7 +81,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
-### Other keywords
+## Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
   A lot of flexibility is offered based on the type of `when`. If `when::Vector`,
   then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
@@ -91,10 +91,7 @@ By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
-  nested mutable containers.
-  Both of these options have performance penalties.
-* `replicates=0` : Run `replicates` replicates of the simulation.
-* `parallel=false` : Only when `replicates>0`. Run replicate simulations in parallel.
+  nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
 """
 function run! end
@@ -102,19 +99,27 @@ function run! end
 run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
 run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function run!(model::ABM, agent_step!, model_step!, n;
-  replicates::Int=0, parallel::Bool=false, kwargs...)
+function run!(
+        model::ABM, agent_step!, model_step!, n;
+        replicates::Int=0, parallel::Bool=false, kwargs...
+    )
 
-  r = replicates
-  if r > 0
-    if parallel
-      return parallel_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+    r = replicates
+    if r > 0
+        @warn("""
+        Running replicate simulations with `run!` is deprecated. It will be removed in a
+        future version of Agents.jl. Please use the new `ensemblerun!` function instead.
+        """)
+        models = [deepcopy(model) for _ in 1:r]
+        adf, mdf = ensemblerun!(models, agent_step!, model_step!, n; parallel, kwargs...)
+        rename!(adf, :ensemble => :replicate)
+        rename!(mdf, :ensemble => :replicate)
+        return adf, mdf
     else
-      return series_replicates(model, agent_step!, model_step!, n, r; kwargs...)
+        # TODO: When deprecations are removed, the _run! function has no reason to exist,
+        # it can be internalized inside `run!`.
+        return _run!(model, agent_step!, model_step!, n; kwargs...)
     end
-  else
-    return _run!(model, agent_step!, model_step!, n; kwargs...)
-  end
 end
 
 ###################################################
@@ -431,42 +436,3 @@ collect_model_data!(df, model, properties::Nothing, step::Int=0; kwargs...) = df
 ###################################################
 # Parallel / replicates
 ###################################################
-function replicate_col!(df, rep)
-  df[!, :replicate] = [rep for i in 1:size(df, 1)]
-end
-
-"Run replicates of the same simulation"
-function series_replicates(model, agent_step!, model_step!, n, replicates; kwargs...)
-
-  df_agent, df_model = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
-  replicate_col!(df_agent, 1)
-  replicate_col!(df_model, 1)
-
-  for rep in 2:replicates
-    df_agentTemp, df_modelTemp = _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...)
-    replicate_col!(df_agentTemp, rep)
-    replicate_col!(df_modelTemp, rep)
-
-    append!(df_agent, df_agentTemp)
-    append!(df_model, df_modelTemp)
-  end
-  return df_agent, df_model
-end
-
-"Run replicates of the same simulation in parallel"
-function parallel_replicates(model::ABM, agent_step!, model_step!, n, replicates; kwargs...)
-
-  all_data = pmap(j -> _run!(deepcopy(model), agent_step!, model_step!, n; kwargs...),
-                  1:replicates)
-
-  df_agent = DataFrame()
-  df_model = DataFrame()
-  for (rep, d) in enumerate(all_data)
-    replicate_col!(d[1], rep)
-    replicate_col!(d[2], rep)
-    append!(df_agent, d[1])
-    append!(df_model, d[2])
-  end
-
-  return df_agent, df_model
-end

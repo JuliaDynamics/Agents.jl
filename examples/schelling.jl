@@ -264,17 +264,20 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # ```
 
 
-# ## Replicates and parallel computing
+# ## Ensembles and distributed computing
 
-# We can run replicates of a simulation and collect all of them in a single `DataFrame`.
-# To that end, we only need to specify `replicates` in the `run!` function:
+# We can run ensemble simulations and collect the output of every member in a single `DataFrame`.
+# To that end we use the [`ensemblerun!`](@ref) function.
+# The function accepts a `Vector` of ABMs, each (typically) initialized with a different
+# seed and/or agent distribution. For example we can do
+models = [initialize(seed = x) for x in rand(UInt8, 3)];
 
-model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
-data, _ = run!(model, agent_step!, 5; adata = adata, replicates = 3)
-data[(end - 10):end, :]
+# and then
+adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
+adf[(end - 10):end, :]
 
-# It is possible to run the replicates in parallel.
-# For that, we should start julia with `julia -p n` where is the number
+# It is possible to run the ensemble in parallel.
+# For that, we should start julia with `julia -p n` where `n` is the number
 # of processing cores. Alternatively, we can define the number of cores from
 # within a Julia session:
 
@@ -287,15 +290,17 @@ data[(end - 10):end, :]
 # `@everywhere`, e.g.
 
 # ```julia
+# using Distributed
 # @everywhere using Agents
 # @everywhere mutable struct SchellingAgent ...
+# @everywhere agent_step!(...) = ...
 # ```
 
-# Then we can tell the `run!` function to run replicates in parallel:
+# Then we can tell the `ensemblerun!` function to run the ensemble in parallel
+# using the keyword `parallel = true`:
 
 # ```julia
-# data, _ = run!(model, agent_step!, 2, adata=adata,
-#                replicates=5, parallel=true)
+# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
 # ```
 
 # ## Scanning parameter ranges
@@ -308,7 +313,7 @@ data[(end - 10):end, :]
 # We now also define a processing function, that returns the percentage of
 # happy agents:
 
-happyperc(moods) = count(x -> x == true, moods) / length(moods)
+happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
 parameters = Dict(
@@ -317,33 +322,8 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
-data
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf
 
-# `paramscan` also allows running replicates per parameter setting:
-
-data, _ = paramscan(
-    parameters,
-    initialize;
-    adata = adata,
-    n = 3,
-    agent_step! = agent_step!,
-    replicates = 3,
-)
-
-data[(end - 10):end, :]
-
-# We can combine all replicates with an aggregating function, such as mean, using
-# the `groupby` and `combine` functions from the `DataFrames` package:
-
-using DataFrames
-gd = groupby(data, [:step, :min_to_be_happy, :numagents])
-data_mean = combine(gd, [:happyperc_mood, :replicate] .=> mean)
-
-out = select(data_mean, Not(:replicate_mean))
-
-# Note that the second argument takes the column names on which to split the data,
-# i.e., it denotes which columns should not be aggregated. It should include
-# the `:step` column and any parameter that changes among simulations. But it should
-# not include the `:replicate` column.
-# So in principle what we are doing here is simply averaging our result across the replicates.
+# We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to
+# "total happiness".

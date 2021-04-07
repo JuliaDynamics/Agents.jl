@@ -459,22 +459,6 @@ end
         @test unique(data.step) == 0:10
         @test unique(data.density) == [0.6, 0.7, 0.8]
     end
-
-    @testset "Scan with replicates" begin
-        adata = [(unburnt, count), (burnt, count)]
-        data, _ = paramscan(
-            parameters,
-            forest_initiation;
-            n = n,
-            agent_step! = dummystep,
-            model_step! = forest_step!,
-            replicates = 3,
-            adata = adata,
-            progress = false,
-        )
-        # the first 3 is the number of combinations of changing params
-        @test size(data) == (((n + 1) * 3) * 3, 5)
-    end
 end
 
 @testset "Issue #179 fix" begin
@@ -487,4 +471,14 @@ end
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
+end
+
+@testset "ensemblerun! and different seeds" begin
+    _, as!, ms! = Models.schelling(numagents = 1)
+    generator(seed) = Models.schelling(;numagents = 1, seed)[1]
+    seeds = [1234, 563, 211]
+    adata = [:pos]
+    adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
+    @test adf[!, :pos] == unique(adf[!, :pos])
+    @test sort!(adf[:, :ensemble]) == [1,1,1,2,2,2,3,3,3]
 end
