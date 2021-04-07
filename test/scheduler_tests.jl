@@ -20,7 +20,7 @@
     @test sort!(collect(model.scheduler(model))) == 1:N
 
     # random
-    model = ABM(Agent0; scheduler = random_activation, rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = schedule_randomly, rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end

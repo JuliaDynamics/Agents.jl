@@ -85,7 +85,7 @@ schelling2 = ABM(
 # it will be easy to recreate the model and change its parameters.
 
 # In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`random_activation`](@ref).
+# We also change the scheduler to [`schedule_randomly`](@ref).
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
@@ -96,7 +96,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     rng = Random.MersenneTwister(seed)
     model = ABM(
         SchellingAgent, space;
-        properties, rng, scheduler = random_activation
+        properties, rng, scheduler = schedule_randomly
     )
 
     ## populate the model with agents, adding equal amount of the two types of agents

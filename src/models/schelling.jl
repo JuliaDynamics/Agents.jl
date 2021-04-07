@@ -21,7 +21,7 @@ function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, 
     space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = MersenneTwister(seed)
-    model = ABM(SchellingAgent, space; properties, rng, scheduler = random_activation)
+    model = ABM(SchellingAgent, space; properties, rng, scheduler = schedule_randomly)
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
