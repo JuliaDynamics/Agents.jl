@@ -37,7 +37,7 @@ end
 
 """
     ensemblerun!(generator, agent_step!, model_step!, n; kwargs...)
-Generate many `ABM`s and propagate them into `ensemblerun!(models, ...)` using the
+Generate many `ABM`s and propagate them into `ensemblerun!(models, ...)` using
 the provided `generator` which is a one-argument function whose input is a seed.
 
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
@@ -70,7 +70,7 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models::ABM, agent_step!, model_step!, n; kwargs...)
+function parallel_ensemble(models, agent_step!, model_step!, n; kwargs...)
     all_data = pmap(
         j -> _run!(models[j], agent_step!, model_step!, n; kwargs...),
         1:length(models),
