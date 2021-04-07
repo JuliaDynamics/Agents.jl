@@ -28,7 +28,7 @@
     @test model.scheduler(model)[1:3] != fastest_order
 
     # partial
-    model = ABM(Agent0; scheduler = partial_activation(0.1), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = schedule_partially(0.1), rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
