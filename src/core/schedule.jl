@@ -1,4 +1,5 @@
 export schedule
+export schedule_randomly, schedule_by_id, schedule_fastest, schedule_partially, schedule_by_property, schedule_by_type
 export random_activation, by_id, fastest, partial_activation, property_activation, by_type
 """
     schedule(model)
@@ -10,38 +11,43 @@ schedule(model::ABM) = model.scheduler(model)
 # Schedulers
 ####################################
 """
-    fastest
+    schedule_fastest
 Activate all agents once per step in the order dictated by the agent's container,
 which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-fastest(model::ABM) = keys(model.agents)
+schedule_fastest(model::ABM) = keys(model.agents)
+
+@deprecate fastest schedule_fastest
 
 """
-    by_id
+    schedule_by_id
 Activate agents at each step according to their id.
 """
-function by_id(model::ABM)
+function schedule_by_id(model::ABM)
     agent_ids = sort(collect(keys(model.agents)))
     return agent_ids
 end
 
-@deprecate as_added by_id
+@deprecate by_id schedule_by_id
+@deprecate as_added schedule_by_id
 
 """
-    random_activation
+    schedule_randomly
 Activate agents once per step in a random order.
 Different random ordering is used at each different step.
 """
-function random_activation(model::ABM)
+function schedule_randomly(model::ABM)
     order = shuffle(model.rng, collect(keys(model.agents)))
 end
 
+@deprecate random_activation schedule_randomly
+
 """
-    partial_activation(p)
+    schedule_partially(p)
 At each step, activate only `p` percentage of randomly chosen agents.
 """
-function partial_activation(p::Real)
+function schedule_partially(p::Real)
     function partial(model::ABM)
         ids = collect(keys(model.agents))
         return randsubseq(model.rng, ids, p)
@@ -49,13 +55,15 @@ function partial_activation(p::Real)
     return partial
 end
 
+@deprecate partial_activation schedule_partially
+
 """
-    property_activation(property)
+    schedule_by_property(property)
 At each step, activate the agents in an order dictated by their `property`,
 with agents with greater `property` acting first. `property` is a `Symbol`, which
 just dictates which field the agents to compare.
 """
-function property_activation(p::Symbol)
+function schedule_by_property(p::Symbol)
     function by_property(model::ABM)
         ids = collect(keys(model.agents))
         properties = [getproperty(model.agents[id], p) for id in ids]
@@ -64,15 +72,17 @@ function property_activation(p::Symbol)
     end
 end
 
+@deprecate property_activation schedule_by_property
+
 """
-    by_type(shuffle_types::Bool, shuffle_agents::Bool)
+    schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
 Useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
 the default order of the container (equivalent to [`fastest`](@ref)).
 """
-function by_type(shuffle_types::Bool, shuffle_agents::Bool)
+function schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         sets = [Integer[] for _ in types]
@@ -86,12 +96,14 @@ function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     end
 end
 
+@deprecate by_type schedule_by_type
+
 """
-    by_type((C, B, A), shuffle_agents::Bool)
+    schedule_by_type((C, B, A), shuffle_agents::Bool)
 Activate agents by type in specified order (since `Union`s are not order preserving).
 `shuffle_agents = true` randomizes the order of agents within each group.
 """
-function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+function schedule_by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         if order !== nothing
