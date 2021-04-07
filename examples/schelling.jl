@@ -313,7 +313,7 @@ adf[(end - 10):end, :]
 # We now also define a processing function, that returns the percentage of
 # happy agents:
 
-happyperc(moods) = count(x -> x == true, moods) / length(moods)
+happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
 parameters = Dict(
