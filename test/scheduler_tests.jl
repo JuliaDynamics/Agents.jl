@@ -13,7 +13,7 @@
 
     # fastest
     Random.seed!(12)
-    model = ABM(Agent0; scheduler = fastest)
+    model = ABM(Agent0; scheduler = schedule_fastest)
     for i in 1:N
         add_agent!(model)
     end
@@ -63,7 +63,7 @@ end
 end
 
 # Mixed model
-function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = fastest)
+function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = schedule_fastest)
     model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
     atypes = (Agent0,Agent1,Agent2,Agent3)
     id = 1

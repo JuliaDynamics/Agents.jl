@@ -62,7 +62,7 @@ for structs).
 This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
 which are the fields of `AgentBasedModel`.
 
-`scheduler = fastest` decides the order with which agents are activated
+`scheduler = schedule_fastest` decides the order with which agents are activated
 (see e.g. [`by_id`](@ref) and the scheduler API).
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
 or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
@@ -77,7 +77,7 @@ warnings are thrown when appropriate.
 function AgentBasedModel(
     ::Type{A},
     space::S = nothing;
-    scheduler::F = fastest,
+    scheduler::F = schedule_fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true,
