@@ -1,8 +1,15 @@
-# v4.2 (Unreleased)
+# v4.2 (UNRELEASED)
+## New features
 - Pathfinding using the A* algorithm is now possible!
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
 - Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
+- New function `ensemblerun!` for running ensemble model simulations.
+
+## Deprecated
+- Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
+- `paramscan` with `replicates` is deprecated and this functionality of having _both_ replicates and parameter scanning in one function will be invalid in a future version.
+- All the scheduler names have been deprecated in favor of the same schedulers but prefixed with `schedule_` as follows: `fastest` to `schedule_fastest`, `by_id` to `schedule_by_id`, `random_activation` to `schedule_randomly`, `partial_activation` to `schedule_partially`, `property_activation` to `schedule_by_property`, `by_type` to `schedule_by_type`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.

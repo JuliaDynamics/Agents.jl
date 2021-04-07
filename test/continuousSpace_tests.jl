@@ -102,7 +102,7 @@ end
   @test (3, 6) ∉ pairs
 
   space2 = ContinuousSpace((10, 10), 0.1,periodic = false)
-  model2 = ABM(Agent6, space2; scheduler = by_id)
+  model2 = ABM(Agent6, space2; scheduler = schedule_by_id)
   for i in 1:4
     add_agent_pos!(Agent6(i, pos[i], (0.0, 0.0), 0), model2)
   end

@@ -227,12 +227,12 @@ Notice that schedulers can be given directly to model creation, and thus become 
 ### Predefined schedulers
 Some useful schedulers are available below as part of the Agents.jl public API:
 ```@docs
-fastest
-by_id
-random_activation
-partial_activation
-property_activation
-by_type
+schedule_fastest
+schedule_by_id
+schedule_randomly
+schedule_partially
+schedule_by_property
+schedule_by_type
 ```
 
 ### Advanced scheduling
@@ -265,6 +265,14 @@ ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
+## Ensemble runs and Parallelization
+```@docs
+ensemblerun!
+```
+
+### How to use `Distributed`
+To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+
 ## Path-finding
 In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
 
@@ -292,4 +300,3 @@ HeightMap
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
 See the [Developer Docs](@ref) for details.
-

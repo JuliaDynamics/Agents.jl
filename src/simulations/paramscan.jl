@@ -16,7 +16,7 @@ contains many parameters and thus is scanned. All other entries of
 `parameters` that are not `Vector`s are not expanded in the scan.
 
 The second argument `initialize` is a function that creates an ABM and returns it.
-It should accept keyword arguments which are the *keys* of the `parameters` dictionary.
+It must accept keyword arguments which are the *keys* of the `parameters` dictionary.
 Since the user decides how to use input arguments to make an ABM, `parameters` can be
 used to affect model properties, space type and creation as well as agent properties,
 see the example below.
@@ -28,10 +28,9 @@ The following keywords modify the `paramscan` function:
   included in the output `DataFrame`.
 - `progress::Bool = true` whether to show the progress of simulations.
 
-The following keywords are propagated into [`run!`](@ref):
-```julia
-agent_step!, model_step!, n, when, step0, parallel, replicates, adata, mdata
-```
+All other keywords are propagated into [`run!`](@ref).
+Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
+to [`run!`](@ref) as arguments. Naturally,
 `agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
 
 ## Example
@@ -42,7 +41,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
-                properties = properties, scheduler = random_activation)
+                properties = properties, scheduler = schedule_randomly)
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
@@ -52,7 +51,7 @@ end
 ```
 and do a parameter scan by doing:
 ```julia
-happyperc(moods) = count(x -> x == true, moods) / length(moods)
+happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
 parameters = Dict(
@@ -61,49 +60,48 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
 """
-function paramscan(parameters::Dict{Symbol,}, initialize;
-  progress::Bool = true, include_constants::Bool = false,
-  n = 1, agent_step! = dummystep,  model_step! = dummystep,
-  kwargs...)
+function paramscan(
+        parameters::Dict, initialize;
+        progress::Bool = true, include_constants::Bool = false,
+        n = 1, agent_step! = dummystep,  model_step! = dummystep, kwargs...
+    )
 
-  if include_constants
-    changing_params = collect(keys(parameters))
-  else
-    changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
-  end
-
-  combs = dict_list(parameters)
-  ncombs = length(combs)
-  counter = 0
-  d, rest = Iterators.peel(combs)
-  model = initialize(; d...)
-  df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
-  addparams!(df_agent, df_model, d, changing_params)
-  for d in rest
-    model = initialize(; d...)
-    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
-    addparams!(df_agentTemp, df_modelTemp, d, changing_params)
-    append!(df_agent, df_agentTemp)
-    append!(df_model, df_modelTemp)
-    if progress
-      # show progress
-      counter += 1
-      print("\u1b[1G")
-      percent = round(counter*100/ncombs, digits=2)
-      print("Progress: $percent%")
-      print("\u1b[K")
+    if include_constants
+        changing_params = collect(keys(parameters))
+    else
+        changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
     end
-  end
-  progress && println()
-  return df_agent, df_model
+
+    combs = dict_list(parameters)
+    ncombs = length(combs)
+    counter = 0
+    d, rest = Iterators.peel(combs)
+    model = initialize(; d...)
+    df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
+    addparams!(df_agent, df_model, d, changing_params)
+    for d in rest
+        model = initialize(; d...)
+        df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
+        addparams!(df_agentTemp, df_modelTemp, d, changing_params)
+        append!(df_agent, df_agentTemp)
+        append!(df_model, df_modelTemp)
+        if progress
+            # show progress
+            counter += 1
+            print("\u1b[1G")
+            percent = round(counter*100/ncombs, digits=2)
+            print("Progress: $percent%")
+            print("\u1b[K")
+        end
+    end
+    progress && println()
+    return df_agent, df_model
 end
 
-"""
-Adds new columns for each parameter in `changing_params`.
-"""
+"Add new columns for each parameter in `changing_params`."
 function addparams!(df_agent::AbstractDataFrame, df_model::AbstractDataFrame, params::Dict{Symbol,}, changing_params::Vector{Symbol})
     # There is duplication here, but we cannot guarantee which parameter is unique
     # to each dataframe since `initialize` is user defined.
@@ -121,22 +119,21 @@ end
 
 # This function is taken from DrWatson:
 function dict_list(c::Dict)
-  iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
-  non_iterables = setdiff(keys(c), iterable_fields)
+    iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
+    non_iterables = setdiff(keys(c), iterable_fields)
 
-  iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
-  non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
+    iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
+    non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
 
-  vec(
-    map(Iterators.product(values(iterable_dict)...)) do vals
-      dd = Dict(keys(iterable_dict) .=> vals)
-      if isempty(non_iterable_dict)
-        dd
-      elseif isempty(iterable_dict)
-        non_iterable_dict
-      else
-        merge(non_iterable_dict, dd)
-      end
+    vec(map(Iterators.product(values(iterable_dict)...)) do vals
+        dd = Dict(keys(iterable_dict) .=> vals)
+        if isempty(non_iterable_dict)
+            dd
+        elseif isempty(iterable_dict)
+            non_iterable_dict
+        else
+            merge(non_iterable_dict, dd)
+        end
     end
-  )
+    )
 end

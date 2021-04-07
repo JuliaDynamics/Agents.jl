@@ -73,7 +73,7 @@ function sugarscape(;
     model = AgentBasedModel(
         SugarSeeker,
         space,
-        scheduler = random_activation,
+        scheduler = schedule_randomly,
         properties = properties,
     )
     for _ in 1:N
