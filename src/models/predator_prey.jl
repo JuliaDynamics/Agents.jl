@@ -60,7 +60,7 @@ function predator_prey(;
     model = ABM(
         Union{Sheep,Wolf,Grass},
         space,
-        scheduler = by_type(true, true),
+        scheduler = schedule_by_type(true, true),
         warn = false,
         properties = properties,
     )
