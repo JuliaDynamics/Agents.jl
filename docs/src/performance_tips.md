@@ -51,7 +51,7 @@ Body::Any
 ```
 which makes the model stepping function have type instability due to the model properties themselves being type unstable.
 
-The solution is to use a Dictionary for model properties only when all values are of the same type, or to use a custom `mutable struct` for model properties where each property is type annoted, e.g:
+The solution is to use a Dictionary for model properties only when all values are of the same type, or to use a custom `mutable struct` for model properties where each property is type annotated, e.g:
 ```julia
 Base.@kwdef mutable struct Parameters
 	par1::Int = 1
