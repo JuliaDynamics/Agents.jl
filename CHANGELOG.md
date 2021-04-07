@@ -1,4 +1,4 @@
-# v4.2
+# v4.2 (UNRELEASED)
 ## New features
 - Pathfinding using the A* algorithm is now possible!
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes

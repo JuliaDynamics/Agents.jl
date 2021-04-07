@@ -1,5 +1,5 @@
 export ensemblerun!
-Vector_or_Tuple = Union{AbstractArray, Tuple}
+Vector_or_Tuple = Union{AbstractArray,Tuple}
 
 """
     ensemblerun!(models::Vector, agent_step!, model_step!, n; kwargs...)
@@ -12,16 +12,22 @@ Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:ensemble`, which has an integer
 value counting the ensemble member. The function returns `agent_df, model_df, models`.
 
-The keyword `parallel=true` will run the simulations in parallel using Julia's
-`Distributed.pmap` (you need to have loaded `Agents` with `@everywhere`, see
+The keyword `parallel = false`, when `true`, will run the simulations in parallel using
+Julia's `Distributed.pmap` (you need to have loaded `Agents` with `@everywhere`, see
 docs online).
 
 All other keywords are propagated to [`run!`](@ref) as-is.
+
+Example usage in [Schelling's segregation model](@ref).
 """
 function ensemblerun!(
-        models::Vector_or_Tuple, agent_step!, model_step!, n;
-        parallel = false, kwargs...
-    )
+    models::Vector_or_Tuple,
+    agent_step!,
+    model_step!,
+    n;
+    parallel = false,
+    kwargs...,
+)
     if parallel
         return parallel_ensemble(models, agent_step!, model_step!, n; kwargs...)
     else
@@ -34,18 +40,16 @@ end
 Generate many `ABM`s and propagate them into `ensemblerun!(models, ...)` using the
 the provided `generator` which is a one-argument function whose input is a seed.
 
-This method has the keywords `ensemble = 5, seeds = abs.(rand(Int, ensemble))`
-and the only thing it does is:
-```julia
-models = [generator(seed) for seed ∈ seeds]
-ensemblerun!(models, args...; kwargs...)
-```
+This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
 function ensemblerun!(
-        generator, args...;
-        ensemble = 5, seeds = abs.(rand(Int, ensemble)), kwargs...
-    )
-    models = [generator(seed) for seed ∈ seeds]
+    generator,
+    args...;
+    ensemble = 5,
+    seeds = rand(UInt32, ensemble),
+    kwargs...,
+)
+    models = [generator(seed) for seed in seeds]
     ensemblerun!(models, args...; kwargs...)
 end
 
@@ -56,7 +60,8 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     add_ensemble_index!(df_model, 1)
 
     for m in 2:length(models)
-        df_agentTemp, df_modelTemp = _run!(models[m], agent_step!, model_step!, n; kwargs...)
+        df_agentTemp, df_modelTemp =
+            _run!(models[m], agent_step!, model_step!, n; kwargs...)
         add_ensemble_index!(df_agentTemp, m)
         add_ensemble_index!(df_modelTemp, m)
         append!(df_agent, df_agentTemp)
@@ -67,7 +72,8 @@ end
 
 function parallel_ensemble(models::ABM, agent_step!, model_step!, n; kwargs...)
     all_data = pmap(
-        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...), 1:length(models)
+        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...),
+        1:length(models),
     )
 
     df_agent = DataFrame()
@@ -83,5 +89,5 @@ function parallel_ensemble(models::ABM, agent_step!, model_step!, n; kwargs...)
 end
 
 function add_ensemble_index!(df, m)
-    df[!, :ensemble] = fill(m, 1:size(df, 1))
+    df[!, :ensemble] = fill(m, size(df, 1))
 end

@@ -474,7 +474,7 @@ end
 end
 
 @testset "ensemblerun! and different seeds" begin
-    model, as!, ms! = Models.schelling(numagents = 1)
+    _, as!, ms! = Models.schelling(numagents = 1)
     generator(seed) = Models.schelling(;numagents = 1, seed)[1]
     seeds = [1234, 563, 211]
     adata = [:pos]

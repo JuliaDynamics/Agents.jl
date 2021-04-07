@@ -76,6 +76,13 @@ The [Wright-Fisher model of evolution](@ref) shows us how we can sample a popula
 agents based on certain model properties. This is quite helpful in genetic and biology
 studies where agents are cell analogues.
 
+### Parameter searching and ensemble analysis
+
+The lower portion of the [Schelling's segregation model](@ref) page deals with some
+advanced topics like how one can run many examples in parallel to get ensemble averages
+of many similar model runs. In addition to this, it explores ways of searching
+parameter ranges of your model to fine-tune inputs.
+
 ### Cellular Automata
 
 A subset of ABMs, these models have individual agents with a set of behaviors,
