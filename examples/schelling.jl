@@ -67,17 +67,17 @@ schelling = ABM(SchellingAgent, space; properties)
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
 # property `:group`, so that all agents of group 1 act first.
-# We would then use the scheduler [`property_activation`](@ref) like so:
+# We would then use the scheduler [`schedule_by_property`](@ref) like so:
 
 schelling2 = ABM(
     SchellingAgent,
     space;
     properties = properties,
-    scheduler = property_activation(:group),
+    scheduler = schedule_by_property(:group),
 )
 
-# Notice that `property_activation` accepts an argument and returns a function,
-# which is why we didn't just give `property_activation` to `scheduler`.
+# Notice that `schedule_by_property` accepts an argument and returns a function,
+# which is why we didn't just give `schedule_by_property` to `scheduler`.
 
 # ## Creating the ABM through a function
 

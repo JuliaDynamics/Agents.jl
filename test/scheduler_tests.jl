@@ -37,7 +37,7 @@
     @test length(a) <= N/10
 
     # by property
-    model = ABM(Agent2; scheduler = property_activation(:weight))
+    model = ABM(Agent2; scheduler = schedule_by_property(:weight))
     for i in 1:N
         add_agent!(model, rand(model.rng) / rand(model.rng))
     end
