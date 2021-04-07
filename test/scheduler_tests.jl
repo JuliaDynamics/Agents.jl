@@ -3,8 +3,8 @@
 @testset "Simple Schedulers" begin
     N = 1000
 
-    # by_id
-    model = ABM(Agent0; scheduler = by_id)
+    # schedule_by_id
+    model = ABM(Agent0; scheduler = schedule_by_id)
     for i in 1:N
         add_agent!(model)
     end

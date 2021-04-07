@@ -63,7 +63,7 @@ This syntax can't be used for `name` being `agents, space, scheduler, properties
 which are the fields of `AgentBasedModel`.
 
 `scheduler = schedule_fastest` decides the order with which agents are activated
-(see e.g. [`by_id`](@ref) and the scheduler API).
+(see e.g. [`schedule_by_id`](@ref) and the scheduler API).
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
 or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
 as illustrated in the [Advanced stepping](@ref) part of the tutorial.
@@ -231,16 +231,16 @@ allids(model) = keys(model.agents)
 export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
-    iter_agent_groups(order::Int, model::ABM; scheduler = by_id)
+    iter_agent_groups(order::Int, model::ABM; scheduler = schedule_by_id)
 
 Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
 iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
 e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
 
-Index order is provided by the [`by_id`](@ref) scheduler by default, but can be altered
+Index order is provided by the [`schedule_by_id`](@ref) scheduler by default, but can be altered
 with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = by_id) =
+iter_agent_groups(order::Int, model::ABM; scheduler = schedule_by_id) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
@@ -263,13 +263,13 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
     (f(idx) for idx in iter_agent_groups(order, model; kwargs...) if filter(idx))
 
 """
-    index_mapped_groups(order::Int, model::ABM; scheduler = by_id)
-    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id)
+    index_mapped_groups(order::Int, model::ABM; scheduler = schedule_by_id)
+    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = schedule_by_id)
 Return an iterable of agent ids in the model, meeting the `filter` criterea if used.
 """
-index_mapped_groups(order::Int, model::ABM; scheduler = by_id) =
+index_mapped_groups(order::Int, model::ABM; scheduler = schedule_by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id) =
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = schedule_by_id) =
     Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
