@@ -5,6 +5,7 @@
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
 - Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
 - New function `ensemblerun!` for running ensemble model simulations.
+- Scheduler `schedule_by_property` (previously `property_activation`) now allows as input arbitrary functions besides symbols.
 
 ## Deprecated
 - Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
