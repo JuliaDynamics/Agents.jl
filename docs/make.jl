@@ -21,7 +21,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force=true, recursive=true) # cleans up previous examples
 mkpath(outdir)
-toskip = ("predator_pray_multiagent.jl", "siroptim.jl")
+toskip = ("predator_prey_multiagent.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)

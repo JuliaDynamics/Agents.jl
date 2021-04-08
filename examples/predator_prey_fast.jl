@@ -1,5 +1,11 @@
 # # Predator-prey dynamics
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sheepwolf.mp4" type="video/mp4">
+# </video>
+# ```
+
 # The predator-prey model emulates the population dynamics of predator and prey animals who
 # live in a common ecosystem and compete over limited resources. This model is an
 # agent-based analog to the classic
@@ -71,7 +77,7 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(SheepWolf, space; properties, rng, scheduler = random_activation)
+    model = ABM(SheepWolf, space; properties, rng, scheduler = schedule_randomly)
     id = 0
     for _ in 1:n_sheep
         id += 1
@@ -203,7 +209,7 @@ using CairoMakie
 # To view our starting population, we can build an overview plot using [`abm_plot`](@ref).
 # We define the plotting details for the wolves and sheep:
 offset(a) = a.type == :sheep ? (-0.7, -0.5) : (-0.3, -0.5)
-ashape(a) = a.type == :sheep ? '⚫' : '▲'
+ashape(a) = a.type == :sheep ? :circle : :utriangle
 acolor(a) = a.type == :sheep ? RGBAf0(1.0, 1.0, 1.0, 0.8) : RGBAf0(0.2, 0.2, 0.2, 0.8)
 
 # and instruct [`abm_plot`](@ref) how to plot grass as a heatmap:
@@ -281,6 +287,12 @@ abm_video(
     sheepwolf_step!,
     grass_step!;
     frames = 150,
-    framerate = 10,
+    framerate = 8,
     plotkwargs...,
 )
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../sheepwolf.mp4" type="video/mp4">
+# </video>
+# ```

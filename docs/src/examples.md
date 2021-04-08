@@ -94,7 +94,7 @@ Two famous examples of this model type are [Conway's game of life](@ref) and
 
 In the real world, groups of people interact differently with people they know vs people
 they don't know. In ABM worlds, that's no different.
-[Model of predator-prey dynamics](@ref) (or more colloquially: Wolf-Sheep) implements
+[Predator-prey dynamics](@ref) (or more colloquially: Wolf-Sheep) implements
 interactions between a pack of Wolves, a heard of Sheep and meadows of Grass.
 [Daisyworld](@ref) is an example of how a model property (in this case temperature) can
 be elevated to an agent type.
