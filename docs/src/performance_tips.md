@@ -10,11 +10,28 @@ However, it has the downside that Agents.jl cannot help you with the performance
 So, be sure that you benchmark your code, and you follow Julia's Performance Tips!
 
 ## Take advantage of parallelization
+In Agents.jl we offer native parallelization over the full model evolution and data collection loop. This is done by providing a `parallel = true` keyword argument to [`ensemblerun!`](@ref) or [`paramscan`](@ref). This uses distributed computing via Julia's `Distributed` module. For that, start Julia with `julia -p n` where `n` is the number of processing cores or add processes from within a Julia session using:
+
+```julia
+using Distributed
+addprocs(4)
+```
+
+For distributed computing to work, all definitions must be preceded with
+`@everywhere`, e.g.
+
+```julia
+using Distributed
+@everywhere using Agents
+@everywhere mutable struct SchellingAgent ...
+@everywhere agent_step!(...) = ...
+```
+
+## In-model parallelization
+
 Julia provides several tools for [parallelization and distributed computing](https://docs.julialang.org/en/v1/manual/parallel-computing/).
 Notice that we cannot help you with parallelizing the _actual model evolution_ via the agent- and model-stepping functions. This is something you must do manually, as depending on the model, parallelization might not be possible at all due to e.g. the access and overwrite of the same memory location (writing on same agent in different threads or killing/creating agents).
 If your model evolution satisfies the [criteria allowing parallelism](https://docs.julialang.org/en/v1/manual/multi-threading/#Caveats), the simplest way to do it is using Julia's [`@threads` or `@spawn` macros](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
-
-The only native parallelization we can offer is parallelizing over the full model evolution and data collection loop. This is done by providing a `parallel = true` keyword argument to [`ensemblerun!`](@ref).
 
 
 ## Use Type-stable containers for the model properties
