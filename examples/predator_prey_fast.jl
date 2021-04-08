@@ -1,4 +1,4 @@
-# # Predator-prey dynamics: simple
+# # Predator-prey dynamics: fast
 
 # The predator-prey model emulates the population dynamics of predator and prey animals who
 # live in a common ecosystem and compete over limited resources. This model is an
@@ -95,8 +95,8 @@ function initialize_model(;
     for p in positions(model) # random grass initial growth
         fully_grown = rand(model.rng, Bool)
         countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
-        model.countdown[p[1], p[2]] = countdown
-        model.fully_grown[p[1], p[2]] = fully_grown
+        model.countdown[p...] = countdown
+        model.fully_grown[p...] = fully_grown
     end
     return model
 end
@@ -187,12 +187,12 @@ end
 
 function grass_step!(model)
     @inbounds for p in positions(model) # we don't have to enable bound checking
-        if !(model.fully_grown[p[1], p[2]])
-            if model.countdown[p[1], p[2]] ≤ 0
-                model.fully_grown[p[1], p[2]] = true
-                model.countdown[p[1], p[2]] = model.regrowth_time
+        if !(model.fully_grown[p...])
+            if model.countdown[p...] ≤ 0
+                model.fully_grown[p...] = true
+                model.countdown[p...] = model.regrowth_time
             else
-                model.countdown[p[1], p[2]] -= 1
+                model.countdown[p...] -= 1
             end
         end
     end
@@ -287,7 +287,7 @@ abm_video(
     model,
     sheepwolf_step!,
     grass_step!;
-    frames = 50,
+    frames = 150,
     framerate = 10,
     plotkwargs...,
 )
