@@ -1,4 +1,4 @@
-# # Predator-prey dynamics: fast
+# # Predator-prey dynamics
 
 # The predator-prey model emulates the population dynamics of predator and prey animals who
 # live in a common ecosystem and compete over limited resources. This model is an
@@ -28,11 +28,6 @@
 # the delay between being consumed and the regrowth time.
 
 # It is also available from the `Models` module as [`Models.predator_prey`](@ref).
-
-# Notice that in this file we create the "simple" or "more intuitive" or "less lines of code"
-# version of this model, where the different "kinds" of agents are different Julia types.
-# See also the [Predator-prey dynamics: simple](@ref) version, which highlights how
-# one can stick with a single type instance to increase overall performance.
 
 using Agents, Random
 
@@ -81,8 +76,6 @@ function initialize_model(;
     for _ in 1:n_sheep
         id += 1
         energy = rand(1:(Δenergy_sheep*2)) - 1
-        ## Note that we must instantiate agents before adding them in a mixed-ABM
-        ## to confirm their type.
         sheep = Sheep(id, (0, 0), energy, sheep_reproduce, Δenergy_sheep)
         add_agent!(sheep, model)
     end
@@ -291,4 +284,3 @@ abm_video(
     framerate = 10,
     plotkwargs...,
 )
-

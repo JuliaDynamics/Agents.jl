@@ -1,17 +1,17 @@
-# # Predator-prey dynamics: simple
+# # Predator-prey dynamics: multi-agent version
 
-# The predator-prey model emulates the population dynamics of predator and prey animals who
-# live in a common ecosystem and compete over limited resources. This model is an
-# agent-based analog to the classic
-# [Lotka-Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations)
-# differential equation model. This example illustrates how to develop models with
-# heterogeneous agents (sometimes referred to as a *mixed agent based model*).
+# This version of the predator prey model has identical dynamics as the one
+# in the [Predator-prey dynamics](@ref) example. However, the actual model
+# implementation here is done based on a multi-agent approach, where
+# the wolves, sheep and grass are all agents each belonging to one of
+# three distinct types.
 
-# The environment is a two dimensional grid containing sheep, wolves and grass. In the
-# model, wolves eat sheep and sheep eat grass. Their populations will oscillate over time
-# if the correct balance of resources is achieved. Without this balance however, a
-# population may become extinct. For example, if wolf population becomes too large,
-# they will deplete the sheep and subsequently die of starvation.
+# This approach is **less performant** than the version in [Predator-prey dynamics](@ref).
+# It is nevertheless remaining here as an example of a multi-agent model.
+
+# We won't repeat the model rule description here and go straight in to the implementation.
+
+# ---
 
 # We will begin by loading the required packages and defining three subtypes of
 # `AbstractAgent`: `Sheep`, Wolf, and `Grass`. All three agent types have `id` and `pos`
@@ -60,7 +60,6 @@ mutable struct Grass <: AbstractAgent
     regrowth_time::Int
     countdown::Int
 end
-nothing # hide
 
 # The function `initialize_model` returns a new model containing sheep, wolves, and grass
 # using a set of pre-defined values (which can be overwritten). The environment is a two
@@ -106,7 +105,6 @@ function initialize_model(;
     end
     return model
 end
-nothing # hide
 
 # The function `agent_step!` is dispatched on each subtype in order to produce
 # type-specific behavior. The `agent_step!` is similar for sheep and wolves: both lose 1
@@ -143,7 +141,6 @@ function agent_step!(wolf::Wolf, model)
         reproduce!(wolf, model)
     end
 end
-nothing # hide
 
 # The behavior of grass functions differently. If it is fully grown, it is consumable.
 # Otherwise, it cannot be consumed until it regrows after a delay specified by
@@ -159,7 +156,6 @@ function agent_step!(grass::Grass, model)
         end
     end
 end
-nothing # hide
 
 # Sheep and wolves move to a random adjacent position with the `move!` function.
 function move!(agent, model)
@@ -167,7 +163,6 @@ function move!(agent, model)
     position = rand(model.rng, collect(neighbors))
     move_agent!(agent, position, model)
 end
-nothing # hide
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
 # additional energy and the grass will not be available for consumption until regrowth time
@@ -189,7 +184,6 @@ function eat!(wolf::Wolf, sheep, model)
         wolf.energy += wolf.Δenergy
     end
 end
-nothing # hide
 
 # Sheep and wolves share a common reproduction method. Reproduction has a cost of 1/2 the
 # current energy level of the parent. The offspring is an exact copy of the parent, with
@@ -203,7 +197,6 @@ function reproduce!(agent, model)
     add_agent_pos!(offspring, model)
     return
 end
-nothing # hide
 
 # ## Running the model
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable

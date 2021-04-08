@@ -93,7 +93,7 @@ makedocs(
             "Hegselmann-Krause opinion dynamics" => "examples/hk.md",
             "Flocking" => "examples/flock.md",
             "Daisyworld" => "examples/daisyworld.md",
-            "Predator-Prey" => "examples/predator_prey.md",
+            "Predator-Prey" => "examples/predator_prey_fast.md",
             "Maze Solver" => "examples/maze.md",
             "Mountain Runners" => "examples/runners.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
