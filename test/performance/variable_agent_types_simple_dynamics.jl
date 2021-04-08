@@ -181,10 +181,9 @@ for n in n_types
     push!(times, t/time_1)
 end
 
-using AbstractPlotting
 import CairoMakie
-fig, ax, = lines(n_types, times)
-scatter!(ax, n_types, times)
+fig, ax, = CairoMakie.lines(n_types, times)
+CairoMakie.scatter!(ax, n_types, times)
 ax.xlabel = "# types"
 ax.ylabel = "time, relative to 1 type"
 fig
