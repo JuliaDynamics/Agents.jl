@@ -206,7 +206,7 @@ offset(a) = a.type == :sheep ? (-0.7, -0.5) : (-0.3, -0.5)
 ashape(a) = a.type == :sheep ? '⚫' : '▲'
 acolor(a) = a.type == :sheep ? RGBAf0(1.0, 1.0, 1.0, 0.8) : RGBAf0(0.2, 0.2, 0.2, 0.8)
 
-# and instruct [`plot_abm`](@ref) how to plot grass as a heatmap:
+# and instruct [`abm_plot`](@ref) how to plot grass as a heatmap:
 grasscolor(model) = model.countdown ./ model.regrowth_time
 # and finally define a colormap for the grass:
 heatkwargs = (colormap = [:brown, :green], colorrange = (0, 1))

@@ -229,8 +229,7 @@ end
 # Lets run the model with constant solar isolation and visualize the result
 
 using InteractiveDynamics
-import CairoMakie
-CairoMakie.activate!() # hide
+using CairoMakie
 
 model = daisyworld()
 
@@ -267,7 +266,7 @@ abm_video(
     title = "Daisy World",
     plotkwargs...,
 )
-nothing # hide
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../daisyworld.mp4" type="video/mp4">
@@ -287,7 +286,7 @@ adata = [(black, count), (white, count)]
 model = daisyworld(; solar_luminosity = 1.0)
 
 agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata)
-figure = CairoMakie.Figure(resolution = (600, 400))
+figure = Figure(resolution = (600, 400))
 ax = figure[1, 1] = Axis(figure, xlabel = "tick", ylabel = "daisy count")
 blackl = lines!(ax, agent_df[!, :step], agent_df[!, :count_black], color = :red)
 whitel = lines!(ax, agent_df[!, :step], agent_df[!, :count_white], color = :blue)

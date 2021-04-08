@@ -139,7 +139,7 @@ end
 
 # Now, we can watch the dynamics of the social system unfold:
 using InteractiveDynamics
-import CairoMakie
+using CairoMakie
 
 model = schoolyard()
 
