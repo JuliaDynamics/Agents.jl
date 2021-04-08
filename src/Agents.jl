@@ -73,9 +73,12 @@ if display_update
             stdout,
             """
             \nUpdate message: Agents v$(version_number)
+            Please see the changelog online. Some key features:
 
-            We now have full support for pathfinding, using the A* algorithm, in `GridSpace`!
-            See the "Path-finding" section in the online docs!
+            * Full support for pathfinding, using the A* algorithm, in `GridSpace`
+            * Scheduler names have been reworked for more clarity
+            * New function `ensemblerun!` which replaces using `replicates` in `run!`
+            * New documentation page "Performance Tips"
             """;
             color = :light_magenta,
         )

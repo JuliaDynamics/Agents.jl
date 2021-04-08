@@ -5,9 +5,8 @@ export run!, collect_agent_data!, collect_model_data!,
 ###################################################
 # Definition of the data collection API
 ###################################################
-
-get_data(a, s::Symbol, obtainer::Function) = obtainer(getproperty(a, s))
-get_data(a, f::Function, obtainer::Function) = obtainer(f(a))
+get_data(a, s::Symbol, obtainer::Function=identity) = obtainer(getproperty(a, s))
+get_data(a, f::Function, obtainer::Function=identity) = obtainer(f(a))
 
 get_data_missing(a, s::Symbol, obtainer::Function) =
     hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing

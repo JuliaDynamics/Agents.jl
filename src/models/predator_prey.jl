@@ -1,23 +1,17 @@
-export Sheep, Wolf, Grass
+using Agents, Random
 
-mutable struct Sheep <: AbstractAgent
+mutable struct SheepWolf <: AbstractAgent
     id::Int
     pos::Dims{2}
+    type::Symbol # :sheep or :wolf
     energy::Float64
+    reproduction_prob::Float64
+    Δenergy::Float64
 end
 
-mutable struct Wolf <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    energy::Float64
-end
-
-mutable struct Grass <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-    fully_grown::Bool
-    countdown::Int
-end
+# Simple helper functions
+Sheep(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :sheep, energy, repr, Δe)
+Wolf(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :wolf, energy, repr, Δe)
 
 """
 ``` julia
@@ -30,14 +24,10 @@ predator_prey(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
+    seed = 23182,
 )
 ```
-Same as in [Model of predator-prey dynamics](@ref).
-
-To access the `Sheep`, `Wolf` and `Grass` types, simply call
-``` julia
-using Agents.Models: Sheep, Wolf, Grass
-```
+Same as in [Predator-prey dynamics](@ref).
 """
 function predator_prey(;
     n_sheep = 100,
@@ -48,114 +38,117 @@ function predator_prey(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
+    seed = 23182,
 )
+
+    rng = MersenneTwister(seed)
     space = GridSpace(dims, periodic = false)
-    properties = Dict(
-        :Δenergy_wolf => Δenergy_wolf,
-        :Δenergy_sheep => Δenergy_sheep,
-        :regrowth_time => regrowth_time,
-        :sheep_reproduce => sheep_reproduce,
-        :wolf_reproduce => wolf_reproduce,
+    ## Model properties contain the grass as two arrays: whether it is fully grown
+    ## and the time to regrow. Also have static parameter `regrowth_time`.
+    ## Notice how the properties are a `NamedTuple` to ensure type stability.
+    properties = (
+        fully_grown = falses(dims),
+        countdown = zeros(Int, dims),
+        regrowth_time = regrowth_time,
     )
-    model = ABM(
-        Union{Sheep,Wolf,Grass},
-        space,
-        scheduler = schedule_by_type(true, true),
-        warn = false,
-        properties = properties,
-    )
+    model = ABM(SheepWolf, space; properties, rng, scheduler = random_activation)
     id = 0
     for _ in 1:n_sheep
         id += 1
-        energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
-        sheep = Sheep(id, (0, 0), energy)
+        energy = rand(1:(Δenergy_sheep*2)) - 1
+        sheep = Sheep(id, (0, 0), energy, sheep_reproduce, Δenergy_sheep)
         add_agent!(sheep, model)
     end
     for _ in 1:n_wolves
         id += 1
-        energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
-        wolf = Wolf(id, (0, 0), energy)
+        energy = rand(1:(Δenergy_wolf*2)) - 1
+        wolf = Wolf(id, (0, 0), energy, wolf_reproduce, Δenergy_wolf)
         add_agent!(wolf, model)
     end
-    for p in positions(model)
-        id += 1
+    for p in positions(model) # random grass initial growth
         fully_grown = rand(model.rng, Bool)
         countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
-        grass = Grass(id, (0, 0), fully_grown, countdown)
-        add_agent!(grass, p, model)
+        model.countdown[p...] = countdown
+        model.fully_grown[p...] = fully_grown
     end
-    return model, predator_prey_agent_step!, dummystep
+    return model
 end
 
-function predator_prey_agent_step!(sheep::Sheep, model)
-    move!(sheep, model)
+function sheepwolf_step!(agent::SheepWolf, model)
+    if agent.type == :sheep
+        sheep_step!(agent, model)
+    else # then `agent.type == :wolf`
+        wolf_step!(agent, model)
+    end
+end
+
+function sheep_step!(sheep, model)
+    walk!(sheep, rand, model)
     sheep.energy -= 1
-    agents = collect(agents_in_position(sheep.pos, model))
-    dinner = filter!(x -> isa(x, Grass), agents)
-    eat!(sheep, dinner, model)
+    sheep_eat!(sheep, model)
     if sheep.energy < 0
         kill_agent!(sheep, model)
         return
     end
-    if rand(model.rng) <= model.sheep_reproduce
-        reproduce!(sheep, model)
+    if rand(model.rng) <= sheep.reproduction_prob
+        wolfsheep_reproduce!(sheep, model)
     end
 end
 
-function predator_prey_agent_step!(wolf::Wolf, model)
-    move!(wolf, model)
+function wolf_step!(wolf, model)
+    walk!(wolf, rand, model)
     wolf.energy -= 1
     agents = collect(agents_in_position(wolf.pos, model))
-    dinner = filter!(x -> isa(x, Sheep), agents)
-    eat!(wolf, dinner, model)
+    dinner = filter!(x -> x.type == :sheep, agents)
+    wolf_eat!(wolf, dinner, model)
     if wolf.energy < 0
         kill_agent!(wolf, model)
         return
     end
-    if rand(model.rng) <= model.wolf_reproduce
-        reproduce!(wolf, model)
+    if rand(model.rng) <= wolf.reproduction_prob
+        wolfsheep_reproduce!(wolf, model)
     end
 end
 
-function predator_prey_agent_step!(grass::Grass, model)
-    if !grass.fully_grown
-        if grass.countdown <= 0
-            grass.fully_grown = true
-            grass.countdown = model.regrowth_time
-        else
-            grass.countdown -= 1
-        end
+function sheep_eat!(sheep, model)
+    if model.fully_grown[sheep.pos...]
+        sheep.energy += sheep.Δenergy
+        model.fully_grown[sheep.pos...] = false
     end
 end
 
-function move!(agent, model)
-    neighbors = nearby_positions(agent, model)
-    position = rand(model.rng, collect(neighbors))
-    move_agent!(agent, position, model)
-end
-
-function eat!(sheep::Sheep, grass_array, model)
-    isempty(grass_array) && return
-    grass = grass_array[1]
-    if grass.fully_grown
-        sheep.energy += model.Δenergy_sheep
-        grass.fully_grown = false
-    end
-end
-
-function eat!(wolf::Wolf, sheep, model)
+function wolf_eat!(wolf, sheep, model)
     if !isempty(sheep)
         dinner = rand(model.rng, sheep)
         kill_agent!(dinner, model)
-        wolf.energy += model.Δenergy_wolf
+        wolf.energy += wolf.Δenergy
     end
 end
 
-function reproduce!(agent, model)
+function wolfsheep_reproduce!(agent, model)
     agent.energy /= 2
     id = nextid(model)
-    A = typeof(agent)
-    offspring = A(id, agent.pos, agent.energy)
+    offspring = SheepWolf(
+        id,
+        agent.pos,
+        agent.type,
+        agent.energy,
+        agent.reproduction_prob,
+        agent.Δenergy,
+    )
     add_agent_pos!(offspring, model)
     return
+end
+
+function grass_step!(model)
+    @inbounds for p in positions(model) # we don't have to enable bound checking
+        if !(model.fully_grown[p...])
+            if model.countdown[p...] ≤ 0
+                model.fully_grown[p...] = true
+                model.countdown[p...] = model.regrowth_time
+            else
+                model.countdown[p...] -= 1
+            end
+        end
+    end
 end

@@ -62,11 +62,11 @@ abm_video(
     agent_step!;
     resolution=(700,700),
     frames=310,
-    framerate=15,
+    framerate=30,
     ac=:red,
     as=11,
-    offset = _ -> (-0.5, -0.5),
-    static_preplot! = (ax, _) -> heatmap!(ax, walkmap(model); colormap=:grays)
+    heatarray = model -> walkmap(model),
+    add_colorbar = false,
 )
 nothing # hide
 

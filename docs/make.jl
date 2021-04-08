@@ -21,7 +21,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force=true, recursive=true) # cleans up previous examples
 mkpath(outdir)
-toskip = ("daisyworld_matrix.jl", "siroptim.jl")
+toskip = ("predator_prey_multiagent.jl", "siroptim.jl")
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -29,7 +29,7 @@ end
 
 # %%
 # download the themes
-println("Themeing")
+println("Theme-ing")
 using DocumenterTools: Themes
 import Downloads
 for file in (
@@ -93,7 +93,7 @@ makedocs(
             "Hegselmann-Krause opinion dynamics" => "examples/hk.md",
             "Flocking" => "examples/flock.md",
             "Daisyworld" => "examples/daisyworld.md",
-            "Predator-Prey" => "examples/predator_prey.md",
+            "Predator-Prey" => "examples/predator_prey_fast.md",
             "Maze Solver" => "examples/maze.md",
             "Mountain Runners" => "examples/runners.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
@@ -111,6 +111,7 @@ makedocs(
             "LightGraphs.jl" => "examples/schoolyard.md",
             "Measurements.jl" => "examples/measurements.md",
         ],
+        "Performance Tips" => "performance_tips.md",
         "ABM Framework Comparison" => "comparison.md",
         "Developer Docs" => "devdocs.md",
     ],

@@ -65,7 +65,7 @@ nothing # hide
 # `dt` is our time resolution, but we will talk about this more later!
 # Cool, let's see now how this model evolves.
 using InteractiveDynamics
-import CairoMakie
+using CairoMakie
 
 abm_video(
     "socialdist1.mp4",

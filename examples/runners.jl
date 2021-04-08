@@ -51,6 +51,7 @@ end
 agent_step!(agent, model) = move_along_route!(agent, model)
 
 # ## Let's Race
+# %% #src
 # Plotting is simple enough. We just need to use the [`InteractiveDynamics.abm_plot`](@ref)
 # for our runners, and display the heightmap for our reference. A better interface to do
 # this is currently a work in progress.
@@ -58,17 +59,14 @@ using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!(type = "png") # hide
 
-## Our sample heightmap
+# We load the sample heightmap
 map_url =
     "https://raw.githubusercontent.com/JuliaDynamics/" *
     "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
 model = initialize(map_url)
 
-function preplot!(ax, model)
-    ax.aspect = DataAspect()
-    hm = heatmap!(ax, heightmap(model); colormap = :terrain)
-    scatter!(ax, model.goal; color = (:red, 50), marker = 'x', markersize=10)
-end
+# and plot
+static_preplot!(ax, model) = scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
 
 abm_video(
     "runners.mp4",
@@ -76,11 +74,13 @@ abm_video(
     agent_step!;
     resolution = (700, 700),
     frames = 410,
-    framerate = 25,
+    framerate = 45,
     ac = :black,
-    as = 10,
+    as = 8,
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
-    static_preplot! = preplot!
+    heatarray = model -> heightmap(model),
+    heatkwargs = (colormap = :terrain,),
+    static_preplot!
 )
 nothing # hide
 

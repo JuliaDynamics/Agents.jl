@@ -13,6 +13,8 @@ To set up an ABM simulation in Agents.jl, a user only needs to follow these step
 4. Provide functions that govern the time evolution of the ABM. A user can provide an agent-stepping function, that acts on each agent one by one, and/or model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
 5. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model, for example `[:mood, :wealth]`. The outputted data are in the form of a `DataFrame`.
 
+If you're planning of running massive simulations, it might be worth having a look at the [Performance Tips](@ref) after familiarizing yourself with Agents.jl.
+
 
 ## [1. The space](@id Space)
 Agents.jl offers several possibilities for the space the agents live in.

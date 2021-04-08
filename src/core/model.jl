@@ -48,10 +48,14 @@ The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is ommited then all agents are virtually in one position and have no spatial structure.
+If it is ommited then all agents are virtually in one position and there is no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
+
+**Note:** Agents.jl supports multiple agent types by passing a `Union` of agent types
+as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
+drawbacks of this approach.
 
 ## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
