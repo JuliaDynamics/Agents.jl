@@ -1,3 +1,5 @@
+using Agents.Pathfinding
+
 moore = Agents.moore_neighborhood(2)
 vonneumann = Agents.vonneumann_neighborhood(2)
 @testset "constructors" begin

@@ -1,5 +1,6 @@
 
 """
+    Pathfinding
 Submodule containing functionality for path-finding based on the A* algorithm.
 Currently available only for [`GridSpace`](@ref).
 

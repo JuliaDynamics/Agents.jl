@@ -8,8 +8,9 @@ schedule(model::ABM) = model.scheduler(model)
 # Notice how the above lines are *outside* the submodule
 
 """
-The schedulers of Agents.jl have a very simple interface and are all contained in the
-submodule `Schedulers`. All schedulers are functions that take as an input the ABM and
+    Schedulers
+Submodule containing all predefined schedulers of Agents.jl and the scheduling API.
+Schedulers have a very simple interface. They are functions that take as an input the ABM and
 return an iterator over agent IDs. Notice that this iterator can be a "true" iterator
 (non-allocated) or can be just a standard vector of IDs. You can define your own scheduler
 according to this API and use it when making an [`AgentBasedModel`](@ref).
