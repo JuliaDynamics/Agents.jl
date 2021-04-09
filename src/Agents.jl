@@ -14,7 +14,6 @@ import LinearAlgebra
 # Core structures of Agents.jl
 include("core/agents.jl")
 include("core/model.jl")
-include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
 # Existing spaces
@@ -33,8 +32,9 @@ include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 include("simulations/ensemblerun.jl")
 
-# Other advanced features
-include("pathfinding/grid_pathfinder.jl")
+# Other features that exist in submodules
+include("submodules/pathfinding/all_pathfinders.jl")
+include("submodules/schedulers.jl")
 
 # Deprecations, that will be removed in future versions
 
