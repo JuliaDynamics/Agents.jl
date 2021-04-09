@@ -28,63 +28,7 @@ InteractiveDynamics.abm_video
 InteractiveDynamics.abm_data_exploration
 ```
 
-Here is an example application made with [`InteractiveDynamics.abm_data_exploration`](@ref).
-
-```@raw html
-<video width="100%" height="auto" controls autoplay loop>
-<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
-</video>
-```
-
-the application is made with the following script:
-
-```julia
-using InteractiveDynamics, Agents, Random, Statistics
-import GLMakie
-
-Random.seed!(165) # hide
-model, agent_step!, model_step! = Models.daisyworld(;
-    solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
-)
-Daisy, Land = Agents.Models.Daisy, Agents.Models.Land
-
-# Parameter define agent color and shape:
-using GLMakie.AbstractPlotting: to_color
-daisycolor(a::Daisy) = RGBAf0(to_color(a.breed))
-landcolor = cgrad(:thermal)
-daisycolor(a::Land) = to_color(landcolor[(a.temperature+50)/150])
-
-daisyshape(a::Daisy) = '♣'
-daisysize(a::Daisy) = 15
-daisyshape(a::Land) = :rect
-daisysize(a::Land) = 20
-landfirst = Schedulers.by_type((Land, Daisy), false) # scheduler
-
-# Parameter exploration and data collection:
-params = Dict(
-    :solar_change => -0.1:0.01:0.1,
-    :surface_albedo => 0:0.01:1,
-)
-
-black(a) = a.breed == :black
-white(a) = a.breed == :white
-daisies(a) = a isa Daisy
-land(a) = a isa Land
-adata = [(black, count, daisies), (white, count, daisies), (:temperature, mean, land)]
-mdata = [:solar_luminosity]
-
-alabels = ["black", "white", "T"]
-mlabels = ["L"]
-
-model, agent_step!, model_step! = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
-
-fig, adf, mdf = abm_data_exploration(
-    model, agent_step!, model_step!, params;
-    ac = daisycolor, am = daisyshape, as = daisysize,
-    mdata, adata, alabels, mlabels,
-    scheduler = landfirst # crucial to change model scheduler!
-)
-```
+Here is an example application made with [`InteractiveDynamics.abm_data_exploration`](@ref) from the [Daisyworld](@ref) example.
 
 ## Graph plotting
 To plot agents existing of a [`GraphSpace`](@ref) we can't use `InteractiveDynamics` because Makie.jl does not support plotting on graphs (yet). We provide the following function in this case, which comes into scope when `using Plots`. See also the [SIR model for the spread of COVID-19](@ref) example for an application.
