@@ -1,11 +1,12 @@
-export schedule
-export schedule_randomly, schedule_by_id, schedule_fastest, schedule_partially, schedule_by_property, schedule_by_type
-export random_activation, by_id, fastest, partial_activation, property_activation, by_type
+export schedule, Schedulers
 """
     schedule(model)
 Return an iterator over the scheduled IDs using the model's scheduler.
 """
 schedule(model::ABM) = model.scheduler(model)
+
+export schedule_randomly, schedule_by_id, schedule_fastest, schedule_partially, schedule_by_property, schedule_by_type
+export random_activation, by_id, fastest, partial_activation, property_activation, by_type
 
 ####################################
 # Schedulers
@@ -18,8 +19,6 @@ This is the fastest way to activate all agents once per step.
 """
 schedule_fastest(model::ABM) = keys(model.agents)
 
-@deprecate fastest schedule_fastest
-
 """
     schedule_by_id
 A scheduler that activates all agents agents at each step according to their id.
@@ -29,9 +28,6 @@ function schedule_by_id(model::ABM)
     return agent_ids
 end
 
-@deprecate by_id schedule_by_id
-@deprecate as_added schedule_by_id
-
 """
     schedule_randomly
 A scheduler that activates all agents once per step in a random order.
@@ -40,8 +36,6 @@ Different random ordering is used at each different step.
 function schedule_randomly(model::ABM)
     order = shuffle(model.rng, collect(keys(model.agents)))
 end
-
-@deprecate random_activation schedule_randomly
 
 """
     schedule_partially(p)
@@ -55,7 +49,6 @@ function schedule_partially(p::Real)
     return partial
 end
 
-@deprecate partial_activation schedule_partially
 
 """
     schedule_by_property(property)
@@ -73,7 +66,6 @@ function schedule_by_property(p)
     end
 end
 
-@deprecate property_activation schedule_by_property
 
 """
     schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
@@ -96,8 +88,6 @@ function schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
         vcat(sets...)
     end
 end
-
-@deprecate by_type schedule_by_type
 
 """
     schedule_by_type((C, B, A), shuffle_agents::Bool)

@@ -36,6 +36,8 @@ include("simulations/ensemblerun.jl")
 # Other advanced features
 include("pathfinding/grid_pathfinder.jl")
 
+# Deprecations, that will be removed in future versions
+
 function __init__()
     # Plot recipes
     @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
