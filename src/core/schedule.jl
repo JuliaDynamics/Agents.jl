@@ -1,9 +1,29 @@
 export schedule, Schedulers
 """
-    schedule(model)
+    schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
 """
 schedule(model::ABM) = model.scheduler(model)
+
+# Notice how the above lines are *outside* the submodule
+
+"""
+The schedulers of Agents.jl have a very simple interface and are all contained in the
+submodule `Schedulers`. All schedulers are functions that take as an input the ABM and
+return an iterator over agent IDs. Notice that this iterator can be a "true" iterator
+(non-allocated) or can be just a standard vector of IDs. You can define your own scheduler
+according to this API and use it when making an [`AgentBasedModel`](@ref).
+You can also use the function `schedule(model)` to obtain the scheduled ID list,
+if you prefer to write your own `step!`-like loop.
+
+See also [Advanced scheduling](@ref) for making more advanced schedulers.
+
+Notice that schedulers can be given directly to model creation, and thus become the
+"default" scheduler a model uses, but they can just as easily be incorporated in a
+`model_step!` function as shown in [Advanced stepping](@ref).
+"""
+module Schedulers
+using Agents
 
 export Schedulers.randomly, Schedulers.by_id, Schedulers.fastest, Schedulers.partially, Schedulers.by_property, Schedulers.by_type
 

@@ -215,17 +215,12 @@ dataname
 ```
 
 ## [Schedulers](@id Schedulers)
-The schedulers of Agents.jl have a very simple interface.
-All schedulers are functions, that take as an input the ABM and return an iterator over agent IDs.
-Notice that this iterator can be a "true" iterator (non-allocated) or can be just a standard vector of IDs.
-You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
-You can also use the function `schedule(model)` to obtain the scheduled ID list, if you prefer to write your own `step!`-like loop.
-
-Notice that schedulers can be given directly to model creation, and thus become the "default" scheduler a model uses, but they can just as easily be incorporated in a `model_step!` function as shown in [Advanced stepping](@ref).
-
+```@docs
+Schedulers
+```
 
 ### Predefined schedulers
-Some useful schedulers are available below as part of the Agents.jl public API:
+Some useful schedulers are available below as part of the Agents.jl API:
 ```@docs
 Schedulers.fastest
 Schedulers.by_id
