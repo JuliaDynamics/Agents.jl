@@ -1,7 +1,7 @@
-@deprecate fastest schedule_fastest
-@deprecate by_id schedule_by_id
-@deprecate as_added schedule_by_id
-@deprecate random_activation schedule_randomly
-@deprecate partial_activation schedule_partially
-@deprecate property_activation schedule_by_property
-@deprecate by_type schedule_by_type
+@deprecate fastest Schedulers.fastest
+@deprecate by_id Schedulers.by_id
+@deprecate as_added Schedulers.by_id
+@deprecate random_activation Schedulers.randomly
+@deprecate partial_activation Schedulers.partially
+@deprecate property_activation Schedulers.by_property
+@deprecate by_type Schedulers.by_type

@@ -36,7 +36,7 @@ function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
     model = AgentBasedModel(
         Citizen,
         space,
-        scheduler = schedule_randomly,
+        scheduler = Schedulers.randomly,
         properties = properties,
     )
     for pos in positions(model)

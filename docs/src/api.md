@@ -227,12 +227,12 @@ Notice that schedulers can be given directly to model creation, and thus become 
 ### Predefined schedulers
 Some useful schedulers are available below as part of the Agents.jl public API:
 ```@docs
-schedule_fastest
-schedule_by_id
-schedule_randomly
-schedule_partially
-schedule_by_property
-schedule_by_type
+Schedulers.fastest
+Schedulers.by_id
+Schedulers.randomly
+Schedulers.partially
+Schedulers.by_property
+Schedulers.by_type
 ```
 
 ### Advanced scheduling

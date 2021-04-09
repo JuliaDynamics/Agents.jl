@@ -52,7 +52,7 @@ end
 # We could, alternatively, make the three opinions a single field with vector value.
 
 function hk_model(; numagents = 100, ϵ = 0.2)
-    model = ABM(HKAgent, scheduler = schedule_fastest, properties = Dict(:ϵ => ϵ))
+    model = ABM(HKAgent, scheduler = Schedulers.fastest, properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
         o = rand(model.rng)
         add_agent!(model, o, o, -1)

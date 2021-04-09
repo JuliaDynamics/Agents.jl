@@ -30,7 +30,7 @@ end
 # We can also make a very simple [`AgentBasedModel`](@ref) for our model.
 
 function wealth_model(; numagents = 100, initwealth = 1)
-    model = ABM(WealthAgent, scheduler = schedule_randomly)
+    model = ABM(WealthAgent, scheduler = Schedulers.randomly)
     for i in 1:numagents
         add_agent!(model, initwealth)
     end
@@ -93,7 +93,7 @@ end
 
 function wealth_model_2D(; dims = (25, 25), wealth = 1, M = 1000)
     space = GridSpace(dims, periodic = true)
-    model = ABM(WealthInSpace, space; scheduler = schedule_randomly)
+    model = ABM(WealthInSpace, space; scheduler = Schedulers.randomly)
     for i in 1:M # add agents in random positions
         add_agent!(model, wealth)
     end

@@ -65,7 +65,7 @@ end
 # using a set of pre-defined values (which can be overwritten). The environment is a two
 # dimensional grid space, which enables animals to walk in all
 # directions. Heterogeneous agents are specified in the model as a `Union`. Agents are
-# scheduled `schedule_by_type`, which randomizes the order of agents with the constraint that agents
+# scheduled `Schedulers.by_type`, which randomizes the order of agents with the constraint that agents
 # of a particular type are scheduled consecutively.
 
 function initialize_model(;
@@ -80,7 +80,7 @@ function initialize_model(;
 )
     space = GridSpace(dims, periodic = false)
     model =
-        ABM(Union{Sheep,Wolf,Grass}, space, scheduler = schedule_by_type(true, true), warn = false)
+        ABM(Union{Sheep,Wolf,Grass}, space, scheduler = Schedulers.by_type(true, true), warn = false)
     id = 0
     for _ in 1:n_sheep
         id += 1
@@ -225,7 +225,7 @@ figure, = abm_plot(
     am = mshape,
     as = 22,
     ac = mcolor,
-    scheduler = schedule_by_type((Grass, Sheep, Wolf), false),
+    scheduler = Schedulers.by_type((Grass, Sheep, Wolf), false),
 )
 figure
 # Now, lets run the simulation and collect some data.

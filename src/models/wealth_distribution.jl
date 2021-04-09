@@ -16,7 +16,7 @@ Same as in [Wealth distribution model](@ref).
 """
 function wealth_distribution(; dims = (25, 25), wealth = 1, M = 1000)
     space = GridSpace(dims, periodic = true)
-    model = ABM(WealthInSpace, space; scheduler = schedule_randomly)
+    model = ABM(WealthInSpace, space; scheduler = Schedulers.randomly)
     for i in 1:M # add agents in random positions
         add_agent!(model, wealth)
     end

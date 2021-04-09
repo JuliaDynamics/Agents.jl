@@ -49,7 +49,7 @@ model1 = ABM(
     GridSpace((15, 15));
     warn = false,
     rng = MersenneTwister(42),
-    scheduler = schedule_randomly,
+    scheduler = Schedulers.randomly,
 )
 
 for _ in 1:50
@@ -100,7 +100,7 @@ model2 = ABM(
     GridAgentAll,
     GridSpace((15, 15));
     rng = MersenneTwister(42),
-    scheduler = schedule_randomly,
+    scheduler = Schedulers.randomly,
 )
 
 for _ in 1:50
