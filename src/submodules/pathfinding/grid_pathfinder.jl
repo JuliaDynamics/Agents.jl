@@ -1,77 +1,9 @@
-export CostMetric,
-    DirectDistance,
-    MaxDistance,
-    HeightMap,
-    Pathfinder,
-    delta_cost,
-    set_target!,
-    set_best_target!,
-    move_along_route!,
-    is_stationary,
-    heightmap,
-    walkmap
-
-"""
-    CostMetric{D}
-An abstract type representing a metric that measures the approximate cost of travelling
-between two points in a `D` dimensional [`GridSpace{D}`](@ref).
-"""
-abstract type CostMetric{D} end
-
 """
     Path{D}
 Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
 const Path{D} = MutableLinkedList{Dims{D}}
-
-struct DirectDistance{D} <: CostMetric{D}
-    direction_costs::Vector{Int}
-end
-
-Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
-
-"""
-    DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
-Distance is approximated as the shortest path between the two points, provided the
-`walkable` property of [`Pathfinder`](@ref) allows.
-Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
-neighboring tile on the `i` dimensional diagonal (default is `10√i`).
-
-If `diagonal_movement=false` in [`Pathfinder`](@ref), neighbors in diagonal positions will be
-excluded. Cost defaults to the first value of the provided vector.
-"""
-DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
-
-"""
-    MaxDistance{D}() <: CostMetric{D}
-Distance between two tiles is approximated as the maximum of absolute
-difference in coordinates between them.
-"""
-struct MaxDistance{D} <: CostMetric{D} end
-
-Base.show(io::IO, metric::MaxDistance) = print(io, "MaxDistance")
-
-struct HeightMap{D} <: CostMetric{D}
-    base_metric::CostMetric{D}
-    hmap::Array{Int,D}
-end
-
-Base.show(io::IO, metric::HeightMap) =
-    print(io, "HeightMap with base: $(metric.base_metric)")
-
-"""
-    HeightMap(hmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
-Distance between two positions is the sum of the shortest distance between them and the
-absolute difference in height. A heightmap of the same size as the corresponding
-[`GridSpace{D}`](@ref) is required. Distance is calculated using [`DirectDistance`](@ref)
-by default, and can be changed by specifying `base_metric`. An example usage can be found in
-[Mountain Runners](@ref).
-"""
-HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
-
-HeightMap(hmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
-    HeightMap{D}(base_metric, hmap)
 
 struct Pathfinder{W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
     diagonal_movement::Bool
@@ -81,11 +13,12 @@ struct Pathfinder{W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
 end
 
 """
-    Pathfinder(; kwargs...)
+    Pathfinding.Pathfinder(; kwargs...)
 
 Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder` into
 [`GridSpace`](@ref). Pathfinding works by using the functions
-[`set_target!`](@ref) and [`move_along_route!`](@ref) see [Path-finding](@ref) for more.
+[`Pathfinding.set_target!`](@ref) and [`move_along_route!`](@ref) see [`Pathfinding`](@ref)
+for more.
 
 ## Keywords
 
@@ -100,7 +33,7 @@ Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder`
     be found in [Maze Solver](@ref).
 * `cost_metric` is an instance of a cost metric and specifies the method
     to use for approximating the distance between two points. This defaults
-    to [`DirectDistance`](@ref) with appropriate dimensionality.
+    to [`Pathfinding.DirectDistance`](@ref) with appropriate dimensionality.
 """
 function Pathfinder(;
     diagonal_movement::Bool = true,
@@ -143,7 +76,7 @@ end
 
 """
     AStar(dims::Dims{D}; kwargs...)
-Provides pathfinding capabilities and stores agent paths.
+Provides pathfinding capabilities and stores agent paths. Not part of public API.
 
 `periodic = false` specifies if the space is periodic
 
@@ -354,9 +287,9 @@ end
     all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
 
 """
-    set_target!(agent, target::NTuple{D,Int}, model)
+    Pathfinding.set_target!(agent, target::NTuple{D,Int}, model)
 Calculate and store the shortest path to move the agent from its current position to
-`target` (a grid position e.g. `(1, 5)`) for models using a [`Pathfinder`](@ref).
+`target` (a grid position e.g. `(1, 5)`) for models using [`Pathfinding`](@ref).
 
 Use this method in conjuction with [`move_along_route!`](@ref).
 """
@@ -370,11 +303,10 @@ function set_target!(
 end
 
 """
-    set_best_target!(agent, targets::Vector{NTuple{D,Int}}, model)
+    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Int}}, model)
 
 Calculate and store the best path to move the agent from its current position to
-a chosen target position taken from `targets` for models using a
-[`Pathfinder`](@ref).
+a chosen target position taken from `targets` for models using [`Pathfinding`](@ref).
 
 The `condition = :shortest` keyword retuns the shortest path which is shortest
 (allowing for the conditions of the models pathfinder) out of the possible target
@@ -404,11 +336,7 @@ function set_best_target!(
     return best_target
 end
 
-"""
-    is_stationary(agent, model::ABM{<:GridSpace{D,P,<:AStar{D}},A})
-Return `true` if agent has reached it's target destination, or no path has been set for it.
-"""
-is_stationary(
+Agents.is_stationary(
     agent::A,
     model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
 ) where {D,P,A<:AbstractAgent} = isempty(agent.id, model.space.pathfinder)
@@ -417,13 +345,14 @@ Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
 """
-    heightmap(model)
-Return the heightmap of a [`Pathfinder`](@ref) if the [`HeightMap`](@ref) metric is in use,
-`nothing` otherwise.
+    Pathfinding.heightmap(model)
+Return the heightmap of a [`Pathfinding.Pathfinder`](@ref) if the
+[`Pathfinding.HeightMap`](@ref) metric is in use, `nothing` otherwise.
 
-It is possible to mutate the map directly, for example `heightmap(model)[15, 40] = 115`
-or `heightmap(model) .= rand(50, 50)`. If this is mutated, a new path needs to be planned
-using [`set_target!`](@ref).
+It is possible to mutate the map directly, for example
+`Pathfinding.heightmap(model)[15, 40] = 115`
+or `Pathfinding.heightmap(model) .= rand(50, 50)`. If this is mutated,
+a new path needs to be planned using [`Pathfinding.set_target!`](@ref).
 """
 function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
     if model.space.pathfinder.cost_metric isa HeightMap
@@ -434,22 +363,23 @@ function heightmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P}
 end
 
 """
-    walkmap(model)
-Return the walkable map of a [`Pathfinder`](@ref).
+    Pathfinding.walkmap(model)
+Return the walkable map of a [`Pathfinding.Pathfinder`](@ref).
 
-It is possible to mutate the map directly, for example `walkmap(model)[15, 40] = false`.
-If this is mutated, a new path needs to be planned using [`set_target!`](@ref).
+It is possible to mutate the map directly, for example
+`Pathfinding.walkmap(model)[15, 40] = false`.
+If this is mutated, a new path needs to be planned using [`Pathfinding.set_target!`](@ref).
 """
 walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
     model.space.pathfinder.walkable
 
 """
-    move_along_route!(agent::A, model{<:GridSpace{D,P,<:AStar{D}},A})
-Move `agent` along the path toward its target set by [`set_target!`](@ref) for agents on
-a [`GridSpace`](@ref) using a [`Pathfinder`](@ref). If the agent does
-not have a precalculated path or the path is empty, it remains stationary.
+    move_along_route!(agent, model_with_pathfinding)
+Move `agent` along the route toward its target set by [`Pathfinding.set_target!`](@ref)
+for agents on a [`GridSpace`](@ref) using a [`Pathfinding.Pathfinder`](@ref).
+If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
-function move_along_route!(
+function Agents.move_along_route!(
     agent::A,
     model::ABM{<:GridSpace{D,P,<:AStar{D}},A},
 ) where {D,P,A<:AbstractAgent}
