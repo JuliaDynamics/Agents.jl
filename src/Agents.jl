@@ -77,6 +77,8 @@ if display_update
             \nUpdate message: Agents v$(version_number)
             Please see the changelog online. Some key features:
 
+            * Self-contained features of Agents.jl will from now own exist in their own
+              submodules.
             * Full support for pathfinding, using the A* algorithm, in `GridSpace`
             * Scheduler names have been reworked for more clarity
             * New function `ensemblerun!` which replaces using `replicates` in `run!`
