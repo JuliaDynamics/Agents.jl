@@ -24,9 +24,9 @@ see the example below.
 ## Keywords
 The following keywords modify the `paramscan` function:
 
-- `include_constants::Bool=false` determines whether constant parameters should be
-  included in the output `DataFrame`. If false, the varying parameters will still be
-  included in the output.
+- `include_constants::Bool=false`: If false, the varying parameters (Vector in `parameters`) 
+  will be included in the output `DataFrame`, if true, constant parameters 
+  (non-Vector in `parameteres`) will also be included.
 - `parallel::Bool = false` whether `Distributed.pmap` is used to run simulations 
   in parallel. You have to use `@everywhere` for all the codes needed in the simulations
 - `progress::Bool = true` whether to show the progress of simulations.
@@ -69,33 +69,8 @@ parameters = Dict(
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
 
-To enable `parallel = true`, the dependencies should be loaded as:
-```
-using Distributed
-addprocs(4)
-@everywhere begin
-    using Agents
-    using Random
-    using Statistics: mean
-    using DataFrames
-end
-```
-and also add `@everywhere` to every function or variables needed by the simulations
-```
-@everywhere mutable struct SchellingAgent ...
-@everywhere function agent_step! ...
-@everywhere function initialize ...
-@everywhere happyperc(moods) ...
-@everywhere adata ...
-@everywhere parameters
-```
-then do the parameter scan by
-```
-adf, _ = paramscan(parameters, initialize; parallel = true, adata, agent_step!, n = 3)
-```
-
-To avoid `@everywhere` in everywhere, you can write the core part of the model
-in `Schelling.jl` and do `@everywhere include("Schelling.jl"`
+If you want to run your simulation in parallel (`parallel = true`), you have
+to make use of the `@everywhere` macro (see [Performance Tips](@ref)).
 """
 function paramscan(
     parameters::Dict, 
