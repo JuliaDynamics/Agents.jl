@@ -7,6 +7,7 @@ using LightGraphs
 using DataFrames
 using Random
 using OpenStreetMapX
+using ProgressMeter
 
 import Base.length
 import LinearAlgebra

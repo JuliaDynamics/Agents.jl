@@ -25,13 +25,19 @@ see the example below.
 The following keywords modify the `paramscan` function:
 
 - `include_constants::Bool=false` determines whether constant parameters should be
-  included in the output `DataFrame`.
+  included in the output `DataFrame`. If false, the varying parameters will still be
+  included in the output.
+- `parallel::Bool = false` whether `Distributed.pmap` is used to run simulations 
+  in parallel. You have to use `@everywhere` for all the codes needed in the simulations
 - `progress::Bool = true` whether to show the progress of simulations.
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
 to [`run!`](@ref) as arguments. Naturally,
 `agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
+The `adata, mdata` lists shouldn't contain the parameters that are already in
+the `parameters` dictionary to avoid duplication.
+
 
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
@@ -62,59 +68,85 @@ parameters = Dict(
 
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
+
+To enable `parallel = true`, the dependencies should be loaded as:
+```
+using Distributed
+addprocs(4)
+@everywhere begin
+    using Agents
+    using Random
+    using Statistics: mean
+    using DataFrames
+end
+```
+and also add `@everywhere` to every function or variables needed by the simulations
+```
+@everywhere mutable struct SchellingAgent ...
+@everywhere function agent_step! ...
+@everywhere function initialize ...
+@everywhere happyperc(moods) ...
+@everywhere adata ...
+@everywhere parameters
+```
+then do the parameter scan by
+```
+adf, _ = paramscan(parameters, initialize; parallel = true, adata, agent_step!, n = 3)
+```
+
+To avoid `@everywhere` in everywhere, you can write the core part of the model
+in `Schelling.jl` and do `@everywhere include("Schelling.jl"`
 """
 function paramscan(
-        parameters::Dict, initialize;
-        progress::Bool = true, include_constants::Bool = false,
-        n = 1, agent_step! = dummystep,  model_step! = dummystep, kwargs...
-    )
+    parameters::Dict, 
+    initialize;
+    include_constants::Bool = false,
+    parallel::Bool = false,
+    progress::Bool = true,
+    agent_step! = dummystep,
+    model_step! = dummystep,
+    n = 1,
+    kwargs...
+)
 
     if include_constants
-        changing_params = collect(keys(parameters))
+        output_params = collect(keys(parameters))
     else
-        changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
+        output_params = [k for (k, v) in parameters if typeof(v)<:Vector]
     end
 
     combs = dict_list(parameters)
-    ncombs = length(combs)
-    counter = 0
-    d, rest = Iterators.peel(combs)
-    model = initialize(; d...)
-    df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
-    addparams!(df_agent, df_model, d, changing_params)
-    for d in rest
-        model = initialize(; d...)
-        df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
-        addparams!(df_agentTemp, df_modelTemp, d, changing_params)
-        append!(df_agent, df_agentTemp)
-        append!(df_model, df_modelTemp)
-        if progress
-            # show progress
-            counter += 1
-            print("\u1b[1G")
-            percent = round(counter*100/ncombs, digits=2)
-            print("Progress: $percent%")
-            print("\u1b[K")
-        end
-    end
-    progress && println()
-    return df_agent, df_model
-end
 
-"Add new columns for each parameter in `changing_params`."
-function addparams!(df_agent::AbstractDataFrame, df_model::AbstractDataFrame, params::Dict{Symbol,}, changing_params::Vector{Symbol})
-    # There is duplication here, but we cannot guarantee which parameter is unique
-    # to each dataframe since `initialize` is user defined.
-    nrows_agent = size(df_agent, 1)
-    nrows_model = size(df_model, 1)
-    for c in changing_params
-        if !isempty(df_model)
-            df_model[!, c] = [params[c] for i in 1:nrows_model]
+    if progress
+        if parallel
+            all_data = @showprogress pmap(combs) do i
+                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+            end
+        else
+            all_data = @showprogress map(combs) do i
+                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+            end
         end
-        if !isempty(df_agent)
-            df_agent[!, c] = [params[c] for i in 1:nrows_agent]
+    else
+        if parallel
+            all_data = pmap(combs) do i
+                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+            end
+        else
+            all_data = map(combs) do i
+                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+            end
         end
     end
+
+    df_agent = DataFrame()
+    df_model = DataFrame()
+    for (df1, df2) in all_data
+        append!(df_agent, df1)
+        append!(df_model, df2)
+    end
+
+    return df_agent, df_model
 end
 
 # This function is taken from DrWatson:
@@ -136,4 +168,21 @@ function dict_list(c::Dict)
         end
     end
     )
+end
+
+function run_single(
+    param_dict::Dict,
+    output_params::Vector{Symbol},
+    initialize;
+    agent_step! = dummystep,
+    model_step! = dummystep,
+    n = 1,
+    kwargs...
+)
+    model = initialize(; param_dict...)
+    df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
+    output_params_dict = filter(j -> first(j) in output_params, param_dict)
+    insertcols!(df_agent_single, output_params_dict...)
+    insertcols!(df_model_single, output_params_dict...)
+    return (df_agent_single, df_model_single)
 end
