@@ -25,6 +25,7 @@ Notice that schedulers can be given directly to model creation, and thus become 
 """
 module Schedulers
 using Agents
+using Random: shuffle!, randsubseq
 
 export randomly, by_id, fastest, partially, by_property, by_type
 
@@ -54,7 +55,7 @@ A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 function randomly(model::ABM)
-    order = shuffle(model.rng, collect(keys(model.agents)))
+    order = shuffle!(model.rng, collect(keys(model.agents)))
 end
 
 """
@@ -97,7 +98,7 @@ the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{S,A}) where {S,A}
-        types = union_types(A)
+        types = Agents.union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
             idx = findfirst(t -> t == typeof(agent), types)
@@ -116,7 +117,7 @@ preserving). `shuffle_agents = true` randomizes the order of agents within each 
 """
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
-        types = union_types(A)
+        types = Agents.union_types(A)
         if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"
             types = order

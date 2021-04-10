@@ -1,5 +1,5 @@
 @testset "OpenStreetMap space" begin
-    space = OpenStreetMapSpace(TEST_MAP)
+    space = OpenStreetMapSpace(OSM.TEST_MAP)
     @test length(space.s) == 1799
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 1456 roadways and 1799 intersections"
@@ -53,20 +53,20 @@
     @test OSM.map_coordinates(model[1], model) == (-2904.337825035879, 1444.5549163962387)
     @test OSM.map_coordinates(model[2], model) == (-1475.8022717621393, 461.34058791100955)
 
-    @test !osm_is_stationary(model[1])
+    @test !is_stationary(model[1], model)
     move_agent!(model[1], model, 403.2)
     @test length(model[1].route) == 16
     move_agent!(model[1], model, 1500)
     @test isempty(model[1].route)
-    @test !osm_is_stationary(model[1])
+    @test !is_stationary(model[1], model)
     move_agent!(model[1], model, 200)
-    @test !osm_is_stationary(model[1])
+    @test !is_stationary(model[1], model)
     move_agent!(model[1], model, 200)
-    @test !osm_is_stationary(model[1])
+    @test !is_stationary(model[1], model)
     move_agent!(model[1], model, 200)
-    @test osm_is_stationary(model[1])
+    @test is_stationary(model[1], model)
 
-    @test osm_is_stationary(model[2])
+    @test is_stationary(model[2], model)
     @test move_agent!(model[2], model, 50) === nothing
 
     add_agent!(start_r, model, route, finish_r)

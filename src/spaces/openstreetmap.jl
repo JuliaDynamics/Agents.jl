@@ -6,6 +6,8 @@ See the docstring of the space for more info.
 module OSM # OpenStreetMap
 using Agents
 using OpenStreetMapX
+using LightGraphs
+using LinearAlgebra: dot
 
 export OpenStreetMapSpace, OSMSpace, TEST_MAP
 export random_road_position,
@@ -33,7 +35,7 @@ keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can b
 passed into the `OpenStreetMapX.get_map_data` function.
 
 For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-README. We provide a variable `TEST_MAP` to use as a `path` for testing.
+README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
 performance. An example of its usage can be found in [Zombie Outbreak](@ref).
@@ -65,8 +67,11 @@ Further details can be found in [`OSMAgent`](@ref).
 ## Routing
 
 There are two ways to generate a route, depending on the situation.
-1. [`OSM.plan_route`](@ref), which provides `:shortest` and `:fastest` paths (with the option of a `return_trip`) between intersections or positions.
-2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it; overriding the current route (if any).
+1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
+   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
+   between intersections or positions.
+2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
+   overriding the current route (if any).
 """
 function OpenStreetMapSpace(
     path::AbstractString;
@@ -74,14 +79,15 @@ function OpenStreetMapSpace(
     trim_to_connected_graph = true,
 )
     m = get_map_data(path; use_cache, trim_to_connected_graph)
-    agent_positions = [Int[] for i in 1:nv(m.g)]
+    agent_positions = [Int[] for i in 1:Agents.nv(m.g)]
     return OpenStreetMapSpace(m, agent_positions)
 end
 
 function Base.show(io::IO, s::OpenStreetMapSpace)
     print(
         io,
-        "OpenStreetMapSpace with $(length(s.m.roadways)) roadways and $(length(s.m.intersections)) intersections",
+        "OpenStreetMapSpace with $(length(s.m.roadways)) roadways "*
+        "and $(length(s.m.intersections)) intersections",
     )
 end
 
@@ -218,7 +224,7 @@ end
 
 Return (latitude, longitude) of current road or intersection position.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = latlon(model.space.m, pos)
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = OpenStreetMapX.latlon(model.space.m, pos)
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
@@ -233,7 +239,7 @@ function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
         lla = LLA(enu_coord, model.space.m.bounds)
         return (lla.lat, lla.lon)
     else
-        return latlon(model.space.m, pos[1])
+        return OpenStreetMapX.latlon(model.space.m, pos[1])
     end
 end
 
@@ -437,9 +443,11 @@ function travel!(start, finish, distance, agent, model)
         else
             #######################################
             # TODO: The code here can be simplified by using the existing `park`.
-            # alright, so here we're in a situation where the agent is imagined to be at 'start' with 'distance left to travel.
+            # alright, so here we're in a situation where the agent is imagined to be at
+            # 'start' with 'distance left to travel.
             # the route is empty, but (start,finish) does not equal agent.destination[1:2]
-            # what follows is the srouce code of the function "park", but the 'virtual' agent in it has position
+            # what follows is the srouce code of the function "park", but the 'virtual'
+            # agent in it has position
             # pos=(start,finish,distance-edge_distance)
             # so I replaced that and nothing else.
             distance-=edge_distance
@@ -567,10 +575,12 @@ function ids_on_road(
         (model[i].id, dist_front(model[i].pos[3]))
         for i in model.space.s[pos1] if model[i].pos[2] == pos2
     ]
-    # Opposite direction. We must invert the distances here to obtain a relative distance from `pos`
-    #NOTE: I think a complication happens here when we're looking at divided roads. They don't end up having
-    #the same ids, so this comparison isn't possible. Unsure if we can do something about that using
-    #OpenStreetMapX or not.
+    # Opposite direction. We must invert the distances here to obtain a relative
+    # distance from `pos`
+    # NOTE: I think a complication happens here when we're looking at divided roads.
+    # They don't end up having
+    # the same ids, so this comparison isn't possible. Unsure if we can do something
+    # about that using OpenStreetMapX or not.
     append!(
         res,
         [

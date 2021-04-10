@@ -63,7 +63,9 @@ function GridSpace(
         s[i] = Int[]
     end
 
-    astar = pathfinder === nothing ? nothing : AStar(d, periodic, pathfinder)
+    # TODO: This is bad design. `AStar` should not be mentioned here,
+    # nor any `Pathfinding` business. This file should be "pure".
+    astar = pathfinder === nothing ? nothing : Pathfinding.AStar(d, periodic, pathfinder)
 
     return GridSpace{D,periodic,typeof(astar)}(
         s,

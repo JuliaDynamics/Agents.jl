@@ -37,7 +37,7 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; map_path = TEST_MAP)
+function initialise(; map_path = OSM.TEST_MAP)
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for id in 1:100

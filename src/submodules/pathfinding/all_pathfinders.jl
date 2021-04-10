@@ -1,3 +1,5 @@
+export Pathfinding
+
 """
     Pathfinding
 Submodule containing functionality for path-finding based on the A* algorithm.
@@ -19,6 +21,7 @@ module Pathfinding
 
 using Agents
 using DataStructures
+using LinearAlgebra
 
 include("metrics.jl")
 include("grid_pathfinder.jl")

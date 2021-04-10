@@ -22,7 +22,8 @@ export move_agent!,
     nearby_positions,
     nearby_ids,
     nearby_agents,
-    move_along_route!
+    move_along_route!,
+    is_stationary
 
 notimplemented(model) =
     error("Not implemented for space type $(nameof(typeof(model.space)))")
