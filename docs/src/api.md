@@ -88,6 +88,13 @@ nearest_neighbor
 elastic_collision!
 ```
 
+## Graph space exclusives
+```@docs
+add_edge!
+add_node!
+rem_node!
+```
+
 ## OpenStreetMap space exclusives
 ```@docs
 OSM
@@ -100,13 +107,6 @@ OSM.random_route!
 OSM.road_length
 osm_is_stationary
 OSM.map_coordinates
-```
-
-## Graph space exclusives
-```@docs
-add_edge!
-add_node!
-rem_node!
 ```
 
 ## Movement with paths

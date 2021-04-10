@@ -1,5 +1,3 @@
-export OSM.OpenStreetMapSpace
-
 """
     OSM
 Submodule for functionality related to [`OpenStreetMapSpace`](@ref).
@@ -7,6 +5,7 @@ See the docstring of the space for more info.
 """
 module OSM # OpenStreetMap
 using Agents
+using OpenStreetMapX
 
 export OpenStreetMapSpace, OSMSpace, TEST_MAP
 export random_road_position,
@@ -18,7 +17,7 @@ export random_road_position,
     intersection,
     road
 
-struct OpenStreetMapSpace <: DiscreteSpace # TODO: Why is this a discrete space?
+struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
     m::OpenStreetMapX.MapData
     s::Vector{Vector{Int}}
 end
@@ -99,12 +98,12 @@ const TEST_MAP =
 """
     OSM.random_road_position(model::ABM{OpenStreetMapSpace})
 
-Similar to `random_position`, but rather than providing only intersections, this method
+Similar to [`random_position`](@ref), but rather than providing only intersections, this method
 returns a location somewhere on a road heading in a random direction.
 """
-function OSM.random_road_position(model::ABM{<:OpenStreetMapSpace})
+function random_road_position(model::ABM{<:OpenStreetMapSpace})
     ll = generate_point_in_bounds(model.space.m)
-    return OSM.road(ll, model)
+    return road(ll, model)
 end
 
 """
@@ -113,9 +112,9 @@ end
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any current route.
 """
-function OSM.random_route!(agent, model::ABM{<:OpenStreetMapSpace})
-    agent.destination = OSM.random_road_position(model)
-    agent.route = OSM.plan_route(agent.pos, agent.destination, model)
+function random_route!(agent, model::ABM{<:OpenStreetMapSpace})
+    agent.destination = random_road_position(model)
+    agent.route = plan_route(agent.pos, agent.destination, model)
     return nothing
 end
 
@@ -136,7 +135,7 @@ extra keyword arguments. Consult the OpenStreetMapX documentation for more detai
 
 If `return_trip = true`, a route will be planned from start -> finish -> start.
 """
-function OSM.plan_route(
+function plan_route(
     start::Int,
     finish::Int,
     model::ABM{<:OpenStreetMapSpace};
@@ -160,7 +159,7 @@ function OSM.plan_route(
     map(p -> getindex(model.space.m.v, p), route)
 end
 
-function OSM.plan_route(
+function plan_route(
     start::Tuple{Int,Int,Float64},
     finish::Int,
     model::ABM{<:OpenStreetMapSpace};
@@ -170,7 +169,7 @@ function OSM.plan_route(
     path = if return_trip
         plan_return_route(start[2], finish, start[1], model; kwargs...)
     else
-        OSM.plan_route(start[2], finish, model; kwargs...)
+        plan_route(start[2], finish, model; kwargs...)
     end
     ## Since we start on an edge, there are two possibilities here.
     ## 1. The route wants us to turn around, thus next id en-route will
@@ -183,13 +182,13 @@ function OSM.plan_route(
     return path
 end
 
-function OSM.plan_route(
+function plan_route(
     start,
     finish::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace};
     kwargs...,
 )
-    path = OSM.plan_route(start, finish[1], model; kwargs...)
+    path = plan_route(start, finish[1], model; kwargs...)
     isempty(path) || pop!(path)
     return path
 end
@@ -219,13 +218,13 @@ end
 
 Return (latitude, longitude) of current road or intersection position.
 """
-OSM.latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = latlon(model.space.m, pos)
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = latlon(model.space.m, pos)
 
-function OSM.latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
         start = get_EastNorthUp_coordinate(pos[1], model)
         finish = get_EastNorthUp_coordinate(pos[2], model)
-        travelled = pos[3] / OSM.road_length(pos, model)
+        travelled = pos[3] / road_length(pos, model)
         enu_coord = ENU(
             getX(start) * (1 - travelled) + getX(finish) * travelled,
             getY(start) * (1 - travelled) + getY(finish) * travelled,
@@ -238,16 +237,16 @@ function OSM.latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace
     end
 end
 
-OSM.latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
-    OSM.latlon(agent.pos, model)
+latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+    latlon(agent.pos, model)
 
 """
-    OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
 """
-function OSM.intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     idx = getindex(model.space.m.v, point_to_nodes(ll, model.space.m))
     return (idx, idx, 0.0)
 end
@@ -258,7 +257,7 @@ end
 Return a location on a road nearest to (latitude, longitude).
 Slower, but more precise than [`OSM.intersection`](@ref).
 """
-function OSM.road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll_enu = ENU(LLA(ll...), model.space.m.bounds)
     P = (ll_enu.east, ll_enu.north, ll_enu.up)
 
@@ -280,7 +279,7 @@ function OSM.road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
             B = (np_enu.east, np_enu.north, np_enu.up)
             closest = orthognonal_projection(A, B, P)
             candidate = (idx, np, distance(np_enu, ENU(closest...)))
-            push!(candidates, (candidate, sum(abs.(OSM.latlon(candidate, model) .- ll))))
+            push!(candidates, (candidate, sum(abs.(latlon(candidate, model) .- ll))))
         end
     else
         # idx is the second position
@@ -292,7 +291,7 @@ function OSM.road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
             A = (np_enu.east, np_enu.north, np_enu.up)
             closest = orthognonal_projection(A, B, P)
             candidate = (np, idx, distance(np_enu, ENU(closest...)))
-            push!(candidates, (candidate, sum(abs.(OSM.latlon(candidate, model) .- ll))))
+            push!(candidates, (candidate, sum(abs.(latlon(candidate, model) .- ll))))
         end
     end
     bestidx = findmin(last.(candidates))[2]
@@ -310,11 +309,11 @@ end
 
 Return a set of coordinates for an agent on the underlying map. Useful for plotting.
 """
-function OSM.map_coordinates(agent, model)
+function map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
         start = get_EastNorthUp_coordinate(agent.pos[1], model)
         finish = get_EastNorthUp_coordinate(agent.pos[2], model)
-        travelled = agent.pos[3] / OSM.road_length(agent.pos, model)
+        travelled = agent.pos[3] / road_length(agent.pos, model)
         (
             getX(start) * (1 - travelled) + getX(finish) * travelled,
             getY(start) * (1 - travelled) + getY(finish) * travelled,
@@ -331,9 +330,9 @@ end
 
 Return the road length (in meters) between two intersections given by intersection ids.
 """
-OSM.road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
-    OSM.road_length(pos[1], pos[2], model)
-OSM.road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
+road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    road_length(pos[1], pos[2], model)
+road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
     model.space.m.w[p1, p2]
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
@@ -355,7 +354,7 @@ get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.
 
 function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
     ll = generate_point_in_bounds(model.space.m)
-    return OSM.intersection(ll, model)
+    return intersection(ll, model)
 end
 
 function Agents.add_agent_to_space!(
@@ -391,7 +390,7 @@ function Agents.move_along_route!(
         return nothing
     end
 
-    dist_to_intersection = OSM.road_length(agent.pos, model) - agent.pos[3]
+    dist_to_intersection = road_length(agent.pos, model) - agent.pos[3]
 
     if isempty(agent.route) && agent.pos[1:2] == agent.destination[1:2]
         # Last one or two moves before destination
@@ -425,7 +424,7 @@ end
 function travel!(start, finish, distance, agent, model)
     # Assumes we have just reached the intersection of `start` and `finish`,
     # and have `distance` left to travel.
-    edge_distance = OSM.road_length(start, finish, model)
+    edge_distance = road_length(start, finish, model)
     if edge_distance <= distance
         if !isempty(agent.route)
             return travel!(
@@ -446,7 +445,7 @@ function travel!(start, finish, distance, agent, model)
             distance-=edge_distance
             if finish != agent.destination[1]
                 # At the end of the route, we must travel
-                last_distance = OSM.road_length(finish, agent.destination[1], model)
+                last_distance = road_length(finish, agent.destination[1], model)
                 if distance >= last_distance + agent.destination[3]
                     # We reach the destination
                     return agent.destination
@@ -478,7 +477,7 @@ function park(distance, agent, model)
     # in `agent.pos`, and we have `distance` left to travel.
     if agent.pos[2] != agent.destination[1]
         # At the end of the route, we must travel
-        last_distance = OSM.road_length(agent.pos[2], agent.destination[1], model)
+        last_distance = road_length(agent.pos[2], agent.destination[1], model)
         if distance >= last_distance + agent.destination[3]
             # We reach the destination
             return agent.destination
@@ -512,7 +511,7 @@ function Agents.nearby_ids(
     args...;
     kwargs...,
 )
-    current_road = OSM.road_length(pos, model)
+    current_road = road_length(pos, model)
     nearby = Int[]
 
     close = ids_on_road(pos[1], pos[2], model)
@@ -559,7 +558,7 @@ function ids_on_road(
     model::ABM{<:OpenStreetMapSpace},
     reverse = false,
 )
-    distance = OSM.road_length(pos1, pos2, model)
+    distance = road_length(pos1, pos2, model)
     dist_front(d) = reverse ? distance - d : d
     dist_back(d) = reverse ? d : distance - d
     # Agents listed in the current position, filtered to current road
@@ -592,7 +591,7 @@ function search_outward_ids!(
     # find all intersections the current end position connects to
     outgoing = filter(i -> i != pos1, nearby_positions(pos2, model; neighbor_type = :out))
     # Distances for each road
-    outdist = [OSM.road_length(pos2, o, model) for o in outgoing]
+    outdist = [road_length(pos2, o, model) for o in outgoing]
     # Identify roads that are shorter than the search distance
     go_deeper = findall(i -> i < distance, outdist)
     # Those in the `go_deeper` category are completely covered by the distance search.
@@ -628,7 +627,7 @@ function search_inward_ids!(
     # find all intersections the current start position connects to
     incoming = filter(i -> i != pos2, nearby_positions(pos1, model; neighbor_type = :in))
     # Distances for each road
-    indist = [OSM.road_length(i, pos1, model) for i in incoming]
+    indist = [road_length(i, pos1, model) for i in incoming]
     # Identify roads that are shorter than the search distance
     go_deeper = findall(i -> i < distance, indist)
     # Those in the `go_deeper` category are completely covered by the distance search.
@@ -686,3 +685,6 @@ function Agents.nearby_positions(
 end
 
 end # module OSM
+
+const OpenStreetMapSpace = OSM.OpenStreetMapSpace
+export OpenStreetMapSpace, OSM

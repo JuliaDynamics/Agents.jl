@@ -6,7 +6,6 @@ using DataStructures
 using LightGraphs
 using DataFrames
 using Random
-using OpenStreetMapX
 
 import Base.length
 import LinearAlgebra

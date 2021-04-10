@@ -1,4 +1,3 @@
-
 """
     Pathfinding
 Submodule containing functionality for path-finding based on the A* algorithm.
@@ -17,6 +16,9 @@ Refer to the [Maze Solver](@ref) and [Mountain Runners](@ref) examples using pat
 and see the available functions below as well.
 """
 module Pathfinding
+
+using Agents
+using DataStructures
 
 include("metrics.jl")
 include("grid_pathfinder.jl")

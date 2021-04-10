@@ -26,7 +26,7 @@ Notice that schedulers can be given directly to model creation, and thus become 
 module Schedulers
 using Agents
 
-export Schedulers.randomly, Schedulers.by_id, Schedulers.fastest, Schedulers.partially, Schedulers.by_property, Schedulers.by_type
+export randomly, by_id, fastest, partially, by_property, by_type
 
 ####################################
 # Schedulers
@@ -37,13 +37,13 @@ A scheduler that activates all agents once per step in the order dictated by the
 agent's container, which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-Schedulers.fastest(model::ABM) = keys(model.agents)
+fastest(model::ABM) = keys(model.agents)
 
 """
     Schedulers.by_id
 A scheduler that activates all agents agents at each step according to their id.
 """
-function Schedulers.by_id(model::ABM)
+function by_id(model::ABM)
     agent_ids = sort(collect(keys(model.agents)))
     return agent_ids
 end
@@ -53,7 +53,7 @@ end
 A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
-function Schedulers.randomly(model::ABM)
+function randomly(model::ABM)
     order = shuffle(model.rng, collect(keys(model.agents)))
 end
 
@@ -61,7 +61,7 @@ end
     Schedulers.partially(p)
 A scheduler that at each step activates only `p` percentage of randomly chosen agents.
 """
-function Schedulers.partially(p::Real)
+function partially(p::Real)
     function partial(model::ABM)
         ids = collect(keys(model.agents))
         return randsubseq(model.rng, ids, p)
@@ -77,7 +77,7 @@ with agents with greater `property` acting first. `property` can be a `Symbol`, 
 just dictates which field of the agents to compare, or a function which inputs an agent
 and outputs a real number.
 """
-function Schedulers.by_property(p)
+function by_property(p)
     function property(model::ABM)
         ids = collect(keys(model.agents))
         properties = [Agents.get_data(model[id], p) for id in ids]
@@ -95,7 +95,7 @@ Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
 the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
-function Schedulers.by_type(shuffle_types::Bool, shuffle_agents::Bool)
+function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         sets = [Integer[] for _ in types]
@@ -114,7 +114,7 @@ end
 A scheduler that activates agents by type in specified order (since `Union`s are not order
 preserving). `shuffle_agents = true` randomizes the order of agents within each group.
 """
-function Schedulers.by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = union_types(A)
         if order !== nothing
@@ -130,3 +130,5 @@ function Schedulers.by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Boo
         vcat(sets...)
     end
 end
+
+end # Schedulers submodule
