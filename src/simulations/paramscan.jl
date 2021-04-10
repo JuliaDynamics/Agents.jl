@@ -29,7 +29,6 @@ The following keywords modify the `paramscan` function:
   (non-Vector in `parameteres`) will also be included.
 - `parallel::Bool = false` whether `Distributed.pmap` is used to run simulations 
   in parallel. You have to use `@everywhere` for all the codes needed in the simulations
-- `progress::Bool = true` whether to show the progress of simulations.
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
@@ -77,7 +76,6 @@ function paramscan(
     initialize;
     include_constants::Bool = false,
     parallel::Bool = false,
-    progress::Bool = true,
     agent_step! = dummystep,
     model_step! = dummystep,
     n = 1,
@@ -92,25 +90,13 @@ function paramscan(
 
     combs = dict_list(parameters)
 
-    if progress
-        if parallel
-            all_data = @showprogress pmap(combs) do i
-                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-            end
-        else
-            all_data = @showprogress map(combs) do i
-                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-            end
+    if parallel
+        all_data = @showprogress pmap(combs) do i
+            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     else
-        if parallel
-            all_data = pmap(combs) do i
-                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-            end
-        else
-            all_data = map(combs) do i
-                run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-            end
+        all_data = @showprogress map(combs) do i
+            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     end
 
