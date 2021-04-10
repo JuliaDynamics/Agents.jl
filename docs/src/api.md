@@ -90,6 +90,7 @@ elastic_collision!
 
 ## OpenStreetMap space exclusives
 ```@docs
+OSM
 OSM.latlon
 OSM.intersection
 OSM.road

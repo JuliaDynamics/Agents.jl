@@ -1,5 +1,10 @@
 export OSM.OpenStreetMapSpace
 
+"""
+    OSM
+Submodule for functionality related to [`OpenStreetMapSpace`](@ref).
+See the docstring of the space for more info.
+"""
 module OSM # OpenStreetMap
 using Agents
 
@@ -13,7 +18,7 @@ export random_road_position,
     intersection,
     road
 
-struct OpenStreetMapSpace <: DiscreteSpace
+struct OpenStreetMapSpace <: DiscreteSpace # TODO: Why is this a discrete space?
     m::OpenStreetMapX.MapData
     s::Vector{Vector{Int}}
 end
@@ -21,6 +26,7 @@ end
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
+The functionality related to Open Street Map spaces is in the submodule `OSM`.
 
 Much of the functionality of this space is provided by interfacing with
 [OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
