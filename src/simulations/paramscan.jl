@@ -24,23 +24,23 @@ see the example below.
 ## Keywords
 The following keywords modify the `paramscan` function:
 
-- `include_constants::Bool=false`: If false, the varying parameters (Vector in `parameters`) 
-  will be included in the output `DataFrame`, if true, constant parameters 
+- `include_constants::Bool = false`: by default, only the varying parameters (Vector in
+  `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
   (non-Vector in `parameteres`) will also be included.
-- `parallel::Bool = false` whether `Distributed.pmap` is used to run simulations 
-  in parallel. You have to use `@everywhere` for all the codes needed in the simulations
+- `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
+  in parallel. This must be used in conjunction with `@everywhere` (see
+  [Performance Tips](@ref)).
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
-to [`run!`](@ref) as arguments. Naturally,
-`agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
+to [`run!`](@ref) as arguments. Naturally, `agent_step!, model_step!, n` and at least one
+of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
 
-
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
-There we define
+There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
@@ -67,25 +67,22 @@ parameters = Dict(
 
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
-
-If you want to run your simulation in parallel (`parallel = true`), you have
-to make use of the `@everywhere` macro (see [Performance Tips](@ref)).
 """
 function paramscan(
-    parameters::Dict, 
+    parameters::Dict,
     initialize;
     include_constants::Bool = false,
     parallel::Bool = false,
     agent_step! = dummystep,
     model_step! = dummystep,
     n = 1,
-    kwargs...
+    kwargs...,
 )
 
     if include_constants
         output_params = collect(keys(parameters))
     else
-        output_params = [k for (k, v) in parameters if typeof(v)<:Vector]
+        output_params = [k for (k, v) in parameters if typeof(v) <: Vector]
     end
 
     combs = dict_list(parameters)
@@ -127,8 +124,7 @@ function dict_list(c::Dict)
         else
             merge(non_iterable_dict, dd)
         end
-    end
-    )
+    end)
 end
 
 function run_single(
@@ -138,7 +134,7 @@ function run_single(
     agent_step! = dummystep,
     model_step! = dummystep,
     n = 1,
-    kwargs...
+    kwargs...,
 )
     model = initialize(; param_dict...)
     df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
