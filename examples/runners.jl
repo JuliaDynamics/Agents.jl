@@ -8,10 +8,10 @@
 # Let's consider a race to the top of a mountain. Runners have been scattered about
 # a map in some low lying areas and need to find the best path up to the peak.
 #
-# We'll use [`Pathfinder`](@ref) and a [`HeightMap`](@ref) to simulate this.
+# We'll use [`Pathfinding.Pathfinder`](@ref) and a [`Pathfinder.HeightMap`](@ref) to simulate this.
 
 # ## Setup
-using Agents
+using Agents, Agents.Pathfinding
 using Random
 using FileIO # To load images you also need ImageMagick available to your project
 

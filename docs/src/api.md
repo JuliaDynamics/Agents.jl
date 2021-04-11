@@ -56,8 +56,6 @@ random_position
 ```@docs
 move_agent!
 walk!
-move_along_route!
-is_stationary
 ```
 
 ### Removing agents
@@ -109,11 +107,12 @@ OSM.map_coordinates
 ```
 
 ## Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
 movement method is available.
 
 ```@docs
 move_along_route!
+is_stationary
 ```
 
 ## Local area
@@ -273,21 +272,18 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 ## Path-finding
 ```@docs
 Pathfinding
-```
-
-```@docs
-Pathfinder
-set_target!
-set_best_target!
-walkmap
-heightmap
+Pathfinding.Pathfinder
+Pathfinding.set_target!
+Pathfinding.set_best_target!
+Pathfinding.walkmap
+Pathfinding.heightmap
 ```
 
 ### Metrics
 ```@docs
-DirectDistance
-MaxDistance
-HeightMap
+Pathfinding.DirectDistance
+Pathfinding.MaxDistance
+Pathfinding.HeightMap
 ```
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.

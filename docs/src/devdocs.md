@@ -31,6 +31,6 @@ a `delta_cost` function for it. These methods work solely for A* at present, but
 will be available for other pathfinder algorithms in the future.
 
 ```@docs
-CostMetric
-delta_cost
+Pathfinding.CostMetric
+Pathfinding.delta_cost
 ```
