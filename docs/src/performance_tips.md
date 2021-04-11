@@ -23,8 +23,35 @@ For distributed computing to work, all definitions must be preceded with
 ```julia
 using Distributed
 @everywhere using Agents
-@everywhere mutable struct SchellingAgent ...
-@everywhere agent_step!(...) = ...
+@everywhere function initialized
+@everywhere mutable struct SchellingAgent(...) ...
+@everywhere function agent_step!(...) = ...
+@everywhere adata = ...
+```
+
+To avoid having `@everywhere` in everywhere, you can use the 
+`@everywhere begin...end` block, e.g.
+```julia
+@everywhere begin
+    using Agents
+    using Random
+    using Statistics: mean
+    using DataFrames
+end
+```
+
+To further reduce the use of `@everywhere` you can move the core
+definition of your model in a file, e.g.
+in `schelling.jl`:
+```
+using Agents
+function initialize(...) ...
+mutable struct SchellingAgent(...) ...
+function agent_step!(...) = ...
+```
+then `include` the file with `everywhere`:
+```
+@everywhere include("schelling.jl")
 ```
 
 ## In-model parallelization

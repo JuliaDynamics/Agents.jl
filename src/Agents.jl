@@ -6,6 +6,7 @@ using DataStructures
 using LightGraphs
 using DataFrames
 using Random
+import ProgressMeter
 
 import Base.length
 import LinearAlgebra
