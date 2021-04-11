@@ -428,7 +428,6 @@ end
             agent_step! = agent_step!,
             model_step! = forest_step!,
             adata = adata,
-            progress = false,
         )
         # 3 is the number of combinations of changing params
         @test size(data) == ((n + 1) * 3, 4)
@@ -440,7 +439,6 @@ end
             model_step! = forest_step!,
             include_constants = true,
             adata = adata,
-            progress = false,
         )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
@@ -454,7 +452,6 @@ end
             agent_step! = agent_step!,
             model_step! = forest_step!,
             adata = adata,
-            progress = false,
         )
         @test unique(data.step) == 0:10
         @test unique(data.density) == [0.6, 0.7, 0.8]
