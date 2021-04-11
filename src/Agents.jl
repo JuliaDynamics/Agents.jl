@@ -36,8 +36,6 @@ include("simulations/ensemblerun.jl")
 include("submodules/pathfinding/all_pathfinders.jl")
 include("submodules/schedulers.jl")
 
-# Deprecations, that will be removed in future versions
-
 function __init__()
     # Plot recipes
     @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
@@ -49,6 +47,8 @@ function __init__()
         include("visualization/plot-recipes.jl")
     end
 end
+
+# Deprecations, that will be removed in future versions
 
 # 4.0 Depreciations
 @deprecate space_neighbors nearby_ids

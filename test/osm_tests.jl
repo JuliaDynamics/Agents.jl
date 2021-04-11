@@ -54,25 +54,25 @@
     @test OSM.map_coordinates(model[2], model) == (-1475.8022717621393, 461.34058791100955)
 
     @test !is_stationary(model[1], model)
-    move_agent!(model[1], model, 403.2)
+    move_along_route!(model[1], model, 403.2)
     @test length(model[1].route) == 16
-    move_agent!(model[1], model, 1500)
+    move_along_route!(model[1], model, 1500)
     @test isempty(model[1].route)
     @test !is_stationary(model[1], model)
-    move_agent!(model[1], model, 200)
+    move_along_route!(model[1], model, 200)
     @test !is_stationary(model[1], model)
-    move_agent!(model[1], model, 200)
+    move_along_route!(model[1], model, 200)
     @test !is_stationary(model[1], model)
-    move_agent!(model[1], model, 200)
+    move_along_route!(model[1], model, 200)
     @test is_stationary(model[1], model)
 
     @test is_stationary(model[2], model)
-    @test move_agent!(model[2], model, 50) === nothing
+    @test move_along_route!(model[2], model, 50) === nothing
 
     add_agent!(start_r, model, route, finish_r)
     OSM.random_route!(model[3], model)
     @test model[3].destination != finish_r
-    move_agent!(model[3], model, 100.0)
+    move_along_route!(model[3], model, 100.0)
 
     for i in 1:5
         s = (start_r[1:2]..., start_r[3] - i)
@@ -88,6 +88,6 @@
     finish = OSM.random_road_position(model)
     route = OSM.plan_route(start, finish, model)
     long = add_agent!(start, model, route, finish)
-    move_agent!(long, model, 10^5)
+    move_along_route!(long, model, 10^5)
     @test long.pos == long.destination
 end

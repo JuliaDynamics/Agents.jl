@@ -15,4 +15,4 @@
 @deprecate osm_latlon, OSM.latlon,
 @deprecate osm_intersection, OSM.intersection,
 @deprecate osm_road OSM.road
-@deprecate move_agent!(a, model::ABM{<:OpenStreetMapSpace}, distance) move_along_path!(a, model, distance)
+@deprecate move_agent!(a, model::ABM{<:OpenStreetMapSpace}, distance) move_along_route!(a, model, distance)

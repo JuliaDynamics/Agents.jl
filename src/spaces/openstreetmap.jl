@@ -381,6 +381,16 @@ function Agents.remove_agent_from_space!(
     return agent
 end
 
+function move_agent!(
+    agent::A,
+    pos::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace,A},
+) where {A}
+    Agents.remove_agent_from_space!(agent, model)
+    agent.pos = pos
+    Agents.add_agent_to_space!(agent, model)
+end
+
 """
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
 
@@ -392,7 +402,7 @@ function Agents.move_along_route!(
     distance::Real,
 ) where {A<:AbstractAgent}
 
-    if osm_is_stationary(agent)
+    if is_stationary(agent, model)
         return nothing
     end
 
