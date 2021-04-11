@@ -21,7 +21,7 @@ end
 
 # To be explicit, this macro builds the following type:
 # ```julia
-# mutable sturct Zombie <: AbstractAgent
+# mutable struct Zombie <: AbstractAgent
 #     id::Int
 #     pos::Tuple{Int,Int,Float64}
 #     route::Vector{Int}
@@ -62,13 +62,13 @@ end
 
 function agent_step!(agent, model)
     ## Each agent will progress 25 meters along their route
-    move_agent!(agent, model, 25)
+    move_along_route!(agent, model, 25)
 
-    if osm_is_stationary(agent) && rand(model.rng) < 0.1
+    if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.random_route!(agent, model)
         ## Start on new route
-        move_agent!(agent, model, 25)
+        move_along_route!(agent, model, 25)
     end
 
     if agent.infected
