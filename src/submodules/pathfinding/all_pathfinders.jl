@@ -34,7 +34,6 @@ export CostMetric,
     delta_cost,
     set_target!,
     set_best_target!,
-    is_stationary,
     heightmap,
     walkmap
 

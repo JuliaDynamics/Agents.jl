@@ -105,7 +105,6 @@ OSM.random_road_position
 OSM.plan_route
 OSM.random_route!
 OSM.road_length
-osm_is_stationary
 OSM.map_coordinates
 ```
 
@@ -280,7 +279,6 @@ Pathfinding
 Pathfinder
 set_target!
 set_best_target!
-is_stationary
 walkmap
 heightmap
 ```
