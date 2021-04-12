@@ -662,6 +662,14 @@ end # module OSM
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
 
+This space represents the underlying map as a *continuous* entity choosing accuracy over
+performance by explicitly taking into account that every intersection is connected by
+a road with a finite length in meters.
+An example of its usage can be found in [Zombie Outbreak](@ref).
+Nevertheless, all functions that target `DiscreteSpace`s apply here as well, e.g.
+[`positions`](@ref). The discrete part are the underlying road intersections, that
+are represented by a graph.
+
 Much of the functionality of this space is provided by interfacing with
 [OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
 keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
@@ -670,11 +678,8 @@ passed into the `OpenStreetMapX.get_map_data` function.
 For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
 README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
 
-This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. An example of its usage can be found in [Zombie Outbreak](@ref).
-
-If your solution can tolerate routes to and from intersections only, a
-faster implementation can be achieved by using the
+If your solution can tolerate routes to and from intersections only without caring for the
+continuity of the roads in between, a faster implementation can be achieved by using the
 [graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
 of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
 integration example: [Social networks with LightGraphs.jl](@ref).
