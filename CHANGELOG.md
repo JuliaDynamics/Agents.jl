@@ -1,4 +1,4 @@
-# v4.2 (UNRELEASED)
+# v4.2
 ## New features and fixes
 - Self-contained features of Agents.jl will from now own exist in their own submodules. This will make the public API less cluttered and functionality more contained. Currently the new submodules are `Schedulers, Pathfinding, OSM`.
 - Pathfinding using the A* algorithm is now possible! Available for `GridSpace`.
@@ -11,7 +11,7 @@
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
 - Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
 - `paramscan` with `replicates` is deprecated. If you want to parameter scan and at the same time run multiple simulations at each parameter combination, simply use `seed` as a parameter, which tunes the model's initial random seed.
-- All the scheduler names have been deprecated in favor of the same schedulers but prefixed with `schedule_` as follows: `fastest` to `Schedulers.fastest`, `by_id` to `Schedulers.by_id`, `random_activation` to `Schedulers.randomly`, `partial_activation` to `Schedulers.partially`, `property_activation` to `Schedulers.by_property`, `by_type` to `Schedulers.by_type`.
+- All the scheduler names have been deprecated in favor of a `Schedulers` module: `fastest` to `Schedulers.fastest`, `by_id` to `Schedulers.by_id`, `random_activation` to `Schedulers.randomly`, `partial_activation` to `Schedulers.partially`, `property_activation` to `Schedulers.by_property`, `by_type` to `Schedulers.by_type`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.
