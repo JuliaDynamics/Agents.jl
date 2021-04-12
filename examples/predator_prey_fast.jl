@@ -264,7 +264,7 @@ model = initialize_model(
     Δenergy_sheep = 5,
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
-    seed = 7756,
+    seed = 7758,
 )
 adf, mdf = run!(model, sheepwolf_step!, grass_step!, n; adata, mdata)
 
@@ -279,7 +279,7 @@ model = initialize_model(
     Δenergy_sheep = 5,
     sheep_reproduce = 0.2,
     wolf_reproduce = 0.08,
-    seed = 7756,
+    seed = 7758,
 )
 abm_video(
     "sheepwolf.mp4",
