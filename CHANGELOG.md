@@ -1,16 +1,17 @@
 # v4.2 (UNRELEASED)
 ## New features and fixes
-- Pathfinding using the A* algorithm is now possible!
+- Self-contained features of Agents.jl will from now own exist in their own submodules. This will make the public API less cluttered and functionality more contained. Currently the new submodules are `Schedulers, Pathfinding, OSM`.
+- Pathfinding using the A* algorithm is now possible! Available for `GridSpace`.
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
 - Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
 - New function `ensemblerun!` for running ensemble model simulations.
-- Scheduler `schedule_by_property` (previously `property_activation`) now allows as input arbitrary functions besides symbols.
+- Scheduler `Schedulers.by_property` (previously `property_activation`) now allows as input arbitrary functions besides symbols.
 
 ## Deprecated
 - Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
 - Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
-- `paramscan` with `replicates` is deprecated and this functionality of having _both_ replicates and parameter scanning in one function will be invalid in a future version.
-- All the scheduler names have been deprecated in favor of the same schedulers but prefixed with `schedule_` as follows: `fastest` to `schedule_fastest`, `by_id` to `schedule_by_id`, `random_activation` to `schedule_randomly`, `partial_activation` to `schedule_partially`, `property_activation` to `schedule_by_property`, `by_type` to `schedule_by_type`.
+- `paramscan` with `replicates` is deprecated. If you want to parameter scan and at the same time run multiple simulations at each parameter combination, simply use `seed` as a parameter, which tunes the model's initial random seed.
+- All the scheduler names have been deprecated in favor of the same schedulers but prefixed with `schedule_` as follows: `fastest` to `Schedulers.fastest`, `by_id` to `Schedulers.by_id`, `random_activation` to `Schedulers.randomly`, `partial_activation` to `Schedulers.partially`, `property_activation` to `Schedulers.by_property`, `by_type` to `Schedulers.by_type`.
 
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.

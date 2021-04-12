@@ -1,53 +1,68 @@
-export schedule
-export schedule_randomly, schedule_by_id, schedule_fastest, schedule_partially, schedule_by_property, schedule_by_type
-export random_activation, by_id, fastest, partial_activation, property_activation, by_type
+export schedule, Schedulers
 """
-    schedule(model)
+    schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
 """
 schedule(model::ABM) = model.scheduler(model)
+
+# Notice how the above lines are *outside* the submodule
+
+"""
+    Schedulers
+Submodule containing all predefined schedulers of Agents.jl and the scheduling API.
+Schedulers have a very simple interface. They are functions that take as an input the ABM and
+return an iterator over agent IDs. Notice that this iterator can be a "true" iterator
+(non-allocated) or can be just a standard vector of IDs. You can define your own scheduler
+according to this API and use it when making an [`AgentBasedModel`](@ref).
+You can also use the function `schedule(model)` to obtain the scheduled ID list,
+if you prefer to write your own `step!`-like loop.
+
+See also [Advanced scheduling](@ref) for making more advanced schedulers.
+
+Notice that schedulers can be given directly to model creation, and thus become the
+"default" scheduler a model uses, but they can just as easily be incorporated in a
+`model_step!` function as shown in [Advanced stepping](@ref).
+"""
+module Schedulers
+using Agents
+using Random: shuffle!, randsubseq
+
+export randomly, by_id, fastest, partially, by_property, by_type
 
 ####################################
 # Schedulers
 ####################################
 """
-    schedule_fastest
+    Schedulers.fastest
 A scheduler that activates all agents once per step in the order dictated by the
 agent's container, which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-schedule_fastest(model::ABM) = keys(model.agents)
-
-@deprecate fastest schedule_fastest
+fastest(model::ABM) = keys(model.agents)
 
 """
-    schedule_by_id
+    Schedulers.by_id
 A scheduler that activates all agents agents at each step according to their id.
 """
-function schedule_by_id(model::ABM)
+function by_id(model::ABM)
     agent_ids = sort(collect(keys(model.agents)))
     return agent_ids
 end
 
-@deprecate by_id schedule_by_id
-@deprecate as_added schedule_by_id
-
 """
-    schedule_randomly
+    Schedulers.randomly
 A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
-function schedule_randomly(model::ABM)
-    order = shuffle(model.rng, collect(keys(model.agents)))
+function randomly(model::ABM)
+    order = shuffle!(model.rng, collect(keys(model.agents)))
 end
 
-@deprecate random_activation schedule_randomly
-
 """
-    schedule_partially(p)
+    Schedulers.partially(p)
 A scheduler that at each step activates only `p` percentage of randomly chosen agents.
 """
-function schedule_partially(p::Real)
+function partially(p::Real)
     function partial(model::ABM)
         ids = collect(keys(model.agents))
         return randsubseq(model.rng, ids, p)
@@ -55,17 +70,16 @@ function schedule_partially(p::Real)
     return partial
 end
 
-@deprecate partial_activation schedule_partially
 
 """
-    schedule_by_property(property)
+    Schedulers.by_property(property)
 A scheduler that at each step activates the agents in an order dictated by their `property`,
 with agents with greater `property` acting first. `property` can be a `Symbol`, which
 just dictates which field of the agents to compare, or a function which inputs an agent
 and outputs a real number.
 """
-function schedule_by_property(p)
-    function by_property(model::ABM)
+function by_property(p)
+    function property(model::ABM)
         ids = collect(keys(model.agents))
         properties = [Agents.get_data(model[id], p) for id in ids]
         s = sortperm(properties)
@@ -73,19 +87,18 @@ function schedule_by_property(p)
     end
 end
 
-@deprecate property_activation schedule_by_property
 
 """
-    schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
+    Schedulers.by_type(shuffle_types::Bool, shuffle_agents::Bool)
 A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
-the default order of the container (equivalent to [`schedule_fastest`](@ref)).
+the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
-function schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
+function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{S,A}) where {S,A}
-        types = union_types(A)
+        types = Agents.union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
             idx = findfirst(t -> t == typeof(agent), types)
@@ -97,16 +110,14 @@ function schedule_by_type(shuffle_types::Bool, shuffle_agents::Bool)
     end
 end
 
-@deprecate by_type schedule_by_type
-
 """
-    schedule_by_type((C, B, A), shuffle_agents::Bool)
+    Schedulers.by_type((C, B, A), shuffle_agents::Bool)
 A scheduler that activates agents by type in specified order (since `Union`s are not order
 preserving). `shuffle_agents = true` randomizes the order of agents within each group.
 """
-function schedule_by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM{S,A}) where {S,A}
-        types = union_types(A)
+        types = Agents.union_types(A)
         if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"
             types = order
@@ -120,3 +131,5 @@ function schedule_by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
         vcat(sets...)
     end
 end
+
+end # Schedulers submodule

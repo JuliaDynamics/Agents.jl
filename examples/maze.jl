@@ -5,10 +5,10 @@
 # </video>
 # ```
 # Consider a scenario where a walker agent is stuck in a maze. Finding the shortest path through an
-# arbitrary maze or map is simulated using a [`Pathfinder`](@ref) and its `walkable` map property.
+# arbitrary maze or map is simulated using a [`Pathfinding.Pathfinder`](@ref) and its `walkable` map property.
 
 # ## Setup
-using Agents
+using Agents, Agents.Pathfinding
 using FileIO # To load images you also need ImageMagick available to your project
 
 # The `Walker` agent needs no special property, just the `id` and `position` from [`@agent`](@ref).

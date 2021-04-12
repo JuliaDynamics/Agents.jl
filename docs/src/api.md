@@ -40,11 +40,7 @@ ContinuousSpace
 OpenStreetMapSpace
 ```
 
-## Model-agent interaction
-The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space, but these are described further below in this page.
-
-### Adding agents
+## Adding agents
 ```@docs
 add_agent!
 add_agent_pos!
@@ -52,13 +48,23 @@ nextid
 random_position
 ```
 
-### Moving agents
+## Moving agents
 ```@docs
 move_agent!
 walk!
 ```
 
-### Removing agents
+
+### Movement with paths
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
+movement method is available.
+
+```@docs
+move_along_route!
+is_stationary
+```
+
+## Removing agents
 ```@docs
 kill_agent!
 genocide!
@@ -86,19 +92,6 @@ nearest_neighbor
 elastic_collision!
 ```
 
-## OpenStreetMap space exclusives
-```@docs
-osm_latlon
-osm_intersection
-osm_road
-osm_random_road_position
-osm_plan_route
-osm_random_route!
-osm_road_length
-osm_is_stationary
-osm_map_coordinates
-```
-
 ## Graph space exclusives
 ```@docs
 add_edge!
@@ -106,12 +99,17 @@ add_node!
 rem_node!
 ```
 
-## Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinder`](@ref), a special
-movement method is available.
-
+## OpenStreetMap space exclusives
 ```@docs
-move_along_route!
+OSM
+OSM.latlon
+OSM.intersection
+OSM.road
+OSM.random_road_position
+OSM.plan_route
+OSM.random_route!
+OSM.road_length
+OSM.map_coordinates
 ```
 
 ## Local area
@@ -173,7 +171,6 @@ map_agent_groups
 index_mapped_groups
 ```
 
-
 ## Parameter scanning
 ```@docs
 paramscan
@@ -215,24 +212,19 @@ dataname
 ```
 
 ## [Schedulers](@id Schedulers)
-The schedulers of Agents.jl have a very simple interface.
-All schedulers are functions, that take as an input the ABM and return an iterator over agent IDs.
-Notice that this iterator can be a "true" iterator (non-allocated) or can be just a standard vector of IDs.
-You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
-You can also use the function `schedule(model)` to obtain the scheduled ID list, if you prefer to write your own `step!`-like loop.
-
-Notice that schedulers can be given directly to model creation, and thus become the "default" scheduler a model uses, but they can just as easily be incorporated in a `model_step!` function as shown in [Advanced stepping](@ref).
-
+```@docs
+Schedulers
+```
 
 ### Predefined schedulers
-Some useful schedulers are available below as part of the Agents.jl public API:
+Some useful schedulers are available below as part of the Agents.jl API:
 ```@docs
-schedule_fastest
-schedule_by_id
-schedule_randomly
-schedule_partially
-schedule_by_property
-schedule_by_type
+Schedulers.fastest
+Schedulers.by_id
+Schedulers.randomly
+Schedulers.partially
+Schedulers.by_property
+Schedulers.by_type
 ```
 
 ### Advanced scheduling
@@ -274,28 +266,20 @@ ensemblerun!
 To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
 
 ## Path-finding
-In addition to the direct movement functions listed above, [`GridSpace`](@ref) has the additional benefit of path planning.
-
-You can enable path-finding and set it's options by passing an instance of a [`Pathfinder`](@ref) struct to the `pathfinder`
-parameter of the [`GridSpace`](@ref) constructor. During the simulation, call [`set_target!`](@ref) to set the target
-destination for an agent. This triggers the algorithm to calculate a path from the agent's current position to the one
-specified. You can alternatively use [`set_best_target!`](@ref) to choose the best target from a list. Once a target has
-been set, you can move an agent one step along its precalculated path using the [`move_along_route!`](@ref) function.
-Refer to the [Maze Solver](@ref) and [Mountain Runners](@ref) examples for further instruction on how to use the API.
 ```@docs
-Pathfinder
-set_target!
-set_best_target!
-is_stationary
-walkmap
-heightmap
+Pathfinding
+Pathfinding.Pathfinder
+Pathfinding.set_target!
+Pathfinding.set_best_target!
+Pathfinding.walkmap
+Pathfinding.heightmap
 ```
 
 ### Metrics
 ```@docs
-DirectDistance
-MaxDistance
-HeightMap
+Pathfinding.DirectDistance
+Pathfinding.MaxDistance
+Pathfinding.HeightMap
 ```
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.

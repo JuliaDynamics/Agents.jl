@@ -42,7 +42,7 @@ the origin position.
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
 
-`pathfinder`: Optionally provide an instance of [`Pathfinder`](@ref) to enable
+`pathfinder`: Optionally provide an instance of [`Pathfinding.Pathfinder`](@ref) to enable
 pathfinding capabilities based on the A* algorithm, see [Path-finding](@ref) in the docs.
 
 An example using `GridSpace` is the [Forest fire model](@ref).
@@ -63,7 +63,9 @@ function GridSpace(
         s[i] = Int[]
     end
 
-    astar = pathfinder === nothing ? nothing : AStar(d, periodic, pathfinder)
+    # TODO: This is bad design. `AStar` should not be mentioned here,
+    # nor any `Pathfinding` business. This file should be "pure".
+    astar = pathfinder === nothing ? nothing : Pathfinding.AStar(d, periodic, pathfinder)
 
     return GridSpace{D,periodic,typeof(astar)}(
         s,

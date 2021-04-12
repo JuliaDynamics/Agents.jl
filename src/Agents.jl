@@ -6,7 +6,6 @@ using DataStructures
 using LightGraphs
 using DataFrames
 using Random
-using OpenStreetMapX
 import ProgressMeter
 
 import Base.length
@@ -15,7 +14,6 @@ import LinearAlgebra
 # Core structures of Agents.jl
 include("core/agents.jl")
 include("core/model.jl")
-include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
 # Existing spaces
@@ -34,8 +32,9 @@ include("simulations/paramscan.jl")
 include("simulations/sample.jl")
 include("simulations/ensemblerun.jl")
 
-# Other advanced features
-include("pathfinding/grid_pathfinder.jl")
+# Other features that exist in submodules
+include("submodules/pathfinding/all_pathfinders.jl")
+include("submodules/schedulers.jl")
 
 function __init__()
     # Plot recipes
@@ -48,6 +47,8 @@ function __init__()
         include("visualization/plot-recipes.jl")
     end
 end
+
+# Deprecations, that will be removed in future versions
 
 # 4.0 Depreciations
 @deprecate space_neighbors nearby_ids
@@ -76,10 +77,13 @@ if display_update
             \nUpdate message: Agents v$(version_number)
             Please see the changelog online. Some key features:
 
+            * Self-contained features of Agents.jl will from now own exist in their own
+              submodules. In the future, more features will be in submodules like this.
             * Full support for pathfinding, using the A* algorithm, in `GridSpace`
-            * Scheduler names have been reworked for more clarity
+            * Several names have been reworked for more clarity (with deprecations)
             * New function `ensemblerun!` which replaces using `replicates` in `run!`
             * New documentation page "Performance Tips"
+            * Parallelization of `paramscan`
             """;
             color = :light_magenta,
         )

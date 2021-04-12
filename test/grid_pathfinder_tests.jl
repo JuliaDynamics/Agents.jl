@@ -1,21 +1,23 @@
-moore = Agents.moore_neighborhood(2)
-vonneumann = Agents.vonneumann_neighborhood(2)
+using Agents.Pathfinding
+
+moore = Pathfinding.moore_neighborhood(2)
+vonneumann = Pathfinding.vonneumann_neighborhood(2)
 @testset "constructors" begin
-    cost = GridSpace((5, 5); pathfinder = Pathfinder()).pathfinder.cost_metric
+    cost = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder()).pathfinder.cost_metric
     @test typeof(cost) <: DirectDistance{2}
     @test cost.direction_costs == [10, 14]
     cost =
         GridSpace(
             (5, 5);
-            pathfinder = Pathfinder(cost_metric = DirectDistance{2}()),
+            pathfinder = Pathfinding.Pathfinder(cost_metric = DirectDistance{2}()),
         ).pathfinder.cost_metric
     @test_throws AssertionError GridSpace(
         (5, 5);
-        pathfinder = Pathfinder(cost_metric = DirectDistance{2}([1])),
+        pathfinder = Pathfinding.Pathfinder(cost_metric = DirectDistance{2}([1])),
     )
     @test_throws AssertionError GridSpace(
         (5, 5);
-        pathfinder = Pathfinder(
+        pathfinder = Pathfinding.Pathfinder(
             diagonal_movement = false,
             cost_metric = DirectDistance{2}([]),
         ),
@@ -25,21 +27,21 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost =
         GridSpace(
             (5, 5);
-            pathfinder = Pathfinder(cost_metric = MaxDistance{2}()),
+            pathfinder = Pathfinding.Pathfinder(cost_metric = MaxDistance{2}()),
         ).pathfinder.cost_metric
     @test typeof(cost) <: MaxDistance{2}
     @test_throws MethodError GridSpace(
         (5, 5);
-        pathfinder = Pathfinder(cost_metric = HeightMap),
+        pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap),
     )
     @test_throws AssertionError GridSpace(
         (5, 5);
-        pathfinder = Pathfinder(cost_metric = HeightMap([1 1])),
+        pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap([1 1])),
     )
     cost =
         GridSpace(
             (5, 5);
-            pathfinder = Pathfinder(cost_metric = HeightMap(fill(1, 5, 5))),
+            pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(fill(1, 5, 5))),
         ).pathfinder.cost_metric
     @test typeof(cost) <: HeightMap{2}
     @test typeof(cost.base_metric) <: DirectDistance{2}
@@ -47,7 +49,7 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     cost =
         GridSpace(
             (5, 5);
-            pathfinder = Pathfinder(
+            pathfinder = Pathfinding.Pathfinder(
                 cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}()),
             ),
         ).pathfinder.cost_metric
@@ -57,10 +59,10 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     hmap = zeros(Int, 1, 1, 1)
     @test_throws MethodError GridSpace(
         (5, 5);
-        pathfinder = Pathfinder(cost_metric = HeightMap(hmap)),
+        pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(hmap)),
     )
 
-    space = GridSpace((5, 5); pathfinder = Pathfinder())
+    space = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder())
     model = ABM(Agent3, space)
     a = add_agent!((5, 2), model, 654.5)
     @test is_stationary(a, model)
@@ -72,13 +74,13 @@ vonneumann = Agents.vonneumann_neighborhood(2)
     @test heightmap(model) === nothing
 
     hmap = fill(1, 5, 5)
-    space = GridSpace((5, 5); pathfinder = Pathfinder(cost_metric = HeightMap(hmap)))
+    space = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(hmap)))
     model = ABM(Agent3, space)
     @test heightmap(model) == hmap
 end
 
 @testset "metrics" begin
-    pfinder_2d_np_m = Agents.AStar{2,false,true}(
+    pfinder_2d_np_m = Pathfinding.AStar{2,false,true}(
         Dict(),
         (10, 10),
         copy(moore),
@@ -86,7 +88,7 @@ end
         trues(10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = Agents.AStar{2,false,false}(
+    pfinder_2d_np_nm = Pathfinding.AStar{2,false,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
@@ -94,7 +96,7 @@ end
         trues(10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_p_m = Agents.AStar{2,true,true}(
+    pfinder_2d_p_m = Pathfinding.AStar{2,true,true}(
         Dict(),
         (10, 10),
         copy(moore),
@@ -102,7 +104,7 @@ end
         trues(10, 10),
         DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = Agents.AStar{2,true,false}(
+    pfinder_2d_p_nm = Pathfinding.AStar{2,true,false}(
         Dict(),
         (10, 10),
         copy(vonneumann),
@@ -140,7 +142,7 @@ end
     wlk[4, 3] = false
     wlk[5, 3] = false
 
-    pfinder_2d_np_m = Agents.AStar{2,false,true}(
+    pfinder_2d_np_m = Pathfinding.AStar{2,false,true}(
         Dict(),
         (7, 6),
         copy(moore),
@@ -148,7 +150,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_np_nm = Agents.AStar{2,false,false}(
+    pfinder_2d_np_nm = Pathfinding.AStar{2,false,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
@@ -156,7 +158,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_p_m = Agents.AStar{2,true,true}(
+    pfinder_2d_p_m = Pathfinding.AStar{2,true,true}(
         Dict(),
         (7, 6),
         copy(moore),
@@ -164,7 +166,7 @@ end
         wlk,
         DirectDistance{2}(),
     )
-    pfinder_2d_p_nm = Agents.AStar{2,true,false}(
+    pfinder_2d_p_nm = Pathfinding.AStar{2,true,false}(
         Dict(),
         (7, 6),
         copy(vonneumann),
@@ -173,13 +175,13 @@ end
         DirectDistance{2}(),
     )
 
-    p = collect(Agents.find_path(pfinder_2d_np_m, (1, 1), (6, 6)))
+    p = collect(Pathfinding.find_path(pfinder_2d_np_m, (1, 1), (6, 6)))
     @test p == [(1, 2), (1, 3), (1, 4), (1, 5), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(Agents.find_path(pfinder_2d_np_nm, (1, 1), (6, 6)))
+    p = collect(Pathfinding.find_path(pfinder_2d_np_nm, (1, 1), (6, 6)))
     @test p ==
           [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(Agents.find_path(pfinder_2d_p_m, (1, 1), (6, 6)))
+    p = collect(Pathfinding.find_path(pfinder_2d_p_m, (1, 1), (6, 6)))
     @test p == [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
-    p = collect(Agents.find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
+    p = collect(Pathfinding.find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
     @test p == [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
 end

@@ -77,7 +77,7 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(SheepWolf, space; properties, rng, scheduler = schedule_randomly)
+    model = ABM(SheepWolf, space; properties, rng, scheduler = Schedulers.randomly)
     id = 0
     for _ in 1:n_sheep
         id += 1

@@ -19,6 +19,10 @@ docs online).
 All other keywords are propagated to [`run!`](@ref) as-is.
 
 Example usage in [Schelling's segregation model](@ref).
+
+If you want to scan parameters and at the same time run multiple simulations at each
+parameter combination, simply use `seed` as a parameter, and use that parameter to
+tune the model's initial random seed and agent distribution.
 """
 function ensemblerun!(
     models::Vector_or_Tuple,

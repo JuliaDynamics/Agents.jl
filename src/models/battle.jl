@@ -16,7 +16,7 @@ function battle(; fighters = 50)
     model = ABM(
         Fighter,
         GridSpace((100, 100, 10); periodic = false);
-        scheduler = schedule_randomly,
+        scheduler = Schedulers.randomly,
     )
 
     n = 0
