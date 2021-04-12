@@ -1,6 +1,8 @@
+export OpenStreetMapSpace, OSMSpace, OSM
+
 """
     OSM
-Submodule for functionality related to [`OpenStreetMapSpace`](@ref).
+Submodule for functionality related to `OpenStreetMapSpace`.
 See the docstring of the space for more info.
 """
 module OSM # OpenStreetMap
@@ -9,8 +11,8 @@ using OpenStreetMapX
 using LightGraphs
 using LinearAlgebra: dot
 
-export OpenStreetMapSpace, OSMSpace, TEST_MAP
-export random_road_position,
+export TEST_MAP,
+    random_road_position,
     plan_route,
     map_coordinates,
     road_length,
@@ -24,55 +26,6 @@ struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete
     s::Vector{Vector{Int}}
 end
 
-"""
-    OpenStreetMapSpace(path::AbstractString; kwargs...)
-Create a space residing on the Open Street Map (OSM) file provided via `path`.
-The functionality related to Open Street Map spaces is in the submodule `OSM`.
-
-Much of the functionality of this space is provided by interfacing with
-[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
-keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
-passed into the `OpenStreetMapX.get_map_data` function.
-
-For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
-
-This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. An example of its usage can be found in [Zombie Outbreak](@ref).
-
-If your solution can tolerate routes to and from intersections only, a
-faster implementation can be achieved by using the
-[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
-of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
-integration example: [Social networks with LightGraphs.jl](@ref).
-
-## The OSMAgent
-
-The base properties for an agent residing on an `OSMSpace` are as follows:
-```julia
-mutable struct OSMAgent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-    route::Vector{Int}
-    destination::Tuple{Int,Int,Float64}
-end
-```
-
-Current `pos`ition and `destination` tuples are represented as
-`(start intersection index, finish intersection index, distance travelled in meters)`.
-The `route` is an ordered list of intersections, providing a path to reach `destination`.
-
-Further details can be found in [`OSMAgent`](@ref).
-
-## Routing
-
-There are two ways to generate a route, depending on the situation.
-1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
-   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
-   between intersections or positions.
-2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
-   overriding the current route (if any).
-"""
 function OpenStreetMapSpace(
     path::AbstractString;
     use_cache = false,
@@ -86,12 +39,10 @@ end
 function Base.show(io::IO, s::OpenStreetMapSpace)
     print(
         io,
-        "OpenStreetMapSpace with $(length(s.m.roadways)) roadways "*
+        "OpenStreetMapSpace with $(length(s.m.roadways)) roadways " *
         "and $(length(s.m.intersections)) intersections",
     )
 end
-
-const OSMSpace = OpenStreetMapSpace
 
 const TEST_MAP =
     joinpath(dirname(pathof(OpenStreetMapX)), "..", "test", "data", "reno_east3.osm")
@@ -224,7 +175,8 @@ end
 
 Return (latitude, longitude) of current road or intersection position.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = OpenStreetMapX.latlon(model.space.m, pos)
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+    OpenStreetMapX.latlon(model.space.m, pos)
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
@@ -338,8 +290,7 @@ Return the road length (in meters) between two intersections given by intersecti
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
-road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
-    model.space.m.w[p1, p2]
+road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.w[p1, p2]
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return agent.pos == agent.destination && isempty(agent.route)
@@ -460,7 +411,7 @@ function travel!(start, finish, distance, agent, model)
             # agent in it has position
             # pos=(start,finish,distance-edge_distance)
             # so I replaced that and nothing else.
-            distance-=edge_distance
+            distance -= edge_distance
             if finish != agent.destination[1]
                 # At the end of the route, we must travel
                 last_distance = road_length(finish, agent.destination[1], model)
@@ -706,5 +657,55 @@ end
 
 end # module OSM
 
+"""
+    OpenStreetMapSpace(path::AbstractString; kwargs...)
+Create a space residing on the Open Street Map (OSM) file provided via `path`.
+The functionality related to Open Street Map spaces is in the submodule `OSM`.
+
+Much of the functionality of this space is provided by interfacing with
+[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
+keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
+passed into the `OpenStreetMapX.get_map_data` function.
+
+For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
+README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
+
+This space represents the underlying map as a *continuous* entity choosing accuracy over
+performance. An example of its usage can be found in [Zombie Outbreak](@ref).
+
+If your solution can tolerate routes to and from intersections only, a
+faster implementation can be achieved by using the
+[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
+of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
+integration example: [Social networks with LightGraphs.jl](@ref).
+
+## The OSMAgent
+
+The base properties for an agent residing on an `OSMSpace` are as follows:
+```julia
+mutable struct OSMAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
+end
+```
+
+Current `pos`ition and `destination` tuples are represented as
+`(start intersection index, finish intersection index, distance travelled in meters)`.
+The `route` is an ordered list of intersections, providing a path to reach `destination`.
+
+Further details can be found in [`OSMAgent`](@ref).
+
+## Routing
+
+There are two ways to generate a route, depending on the situation.
+1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
+   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
+   between intersections or positions.
+2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
+   overriding the current route (if any).
+"""
 const OpenStreetMapSpace = OSM.OpenStreetMapSpace
-export OpenStreetMapSpace, OSM
+
+const OSMSpace = OSM.OpenStreetMapSpace
