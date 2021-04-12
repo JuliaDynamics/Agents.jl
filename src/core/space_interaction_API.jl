@@ -78,8 +78,8 @@ What the "radius" means depends on the space type:
 - `GridSpace, ContinuousSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
   in the space of cartesian indices.
 - `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
-extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
-spaces.
+  extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
+  spaces.
 - `OpenStreetMapSpace`: `r` is equivalent with distance (in meters) neeeded to be travelled
   according to existing roads in order to reach given `position`.
 
@@ -121,11 +121,11 @@ nearby_positions(position, model, r = 1) = notimplemented(model)
 #######################################################################################
 # %% IMPLEMENT: Advanced functionality for route planning
 #######################################################################################
-"""
-    move_along_route!(agent, model, args...; kwargs...)
-Move `agent` along the route planned for it. Used in situations like path-finding
-or open street map space movement.
-"""
+# """
+#     move_along_route!(agent, model, args...; kwargs...)
+# Move `agent` along the route planned for it. Used in situations like path-finding
+# or open street map space movement.
+# """
 move_along_route!(agent, model, args...; kwargs...) = notimplemented(model)
 
 """

@@ -78,11 +78,12 @@ if display_update
             Please see the changelog online. Some key features:
 
             * Self-contained features of Agents.jl will from now own exist in their own
-              submodules.
+              submodules. In the future, more features will be in submodules like this.
             * Full support for pathfinding, using the A* algorithm, in `GridSpace`
-            * Scheduler names have been reworked for more clarity
+            * Several names have been reworked for more clarity (with deprecations)
             * New function `ensemblerun!` which replaces using `replicates` in `run!`
             * New documentation page "Performance Tips"
+            * Parallelization of `paramscan`
             """;
             color = :light_magenta,
         )

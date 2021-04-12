@@ -40,11 +40,7 @@ ContinuousSpace
 OpenStreetMapSpace
 ```
 
-## Model-agent interaction
-The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space, but these are described further below in this page.
-
-### Adding agents
+## Adding agents
 ```@docs
 add_agent!
 add_agent_pos!
@@ -52,13 +48,23 @@ nextid
 random_position
 ```
 
-### Moving agents
+## Moving agents
 ```@docs
 move_agent!
 walk!
 ```
 
-### Removing agents
+
+### Movement with paths
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
+movement method is available.
+
+```@docs
+move_along_route!
+is_stationary
+```
+
+## Removing agents
 ```@docs
 kill_agent!
 genocide!
@@ -104,15 +110,6 @@ OSM.plan_route
 OSM.random_route!
 OSM.road_length
 OSM.map_coordinates
-```
-
-## Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
-movement method is available.
-
-```@docs
-move_along_route!
-is_stationary
 ```
 
 ## Local area
@@ -173,7 +170,6 @@ iter_agent_groups
 map_agent_groups
 index_mapped_groups
 ```
-
 
 ## Parameter scanning
 ```@docs

@@ -375,7 +375,7 @@ walkmap(model::ABM{<:GridSpace{D,P,<:AStar{D}}}) where {D,P} =
 
 """
     move_along_route!(agent, model_with_pathfinding)
-Move `agent` along the route toward its target set by [`Pathfinding.set_target!`](@ref)
+Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
 for agents on a [`GridSpace`](@ref) using a [`Pathfinding.Pathfinder`](@ref).
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
