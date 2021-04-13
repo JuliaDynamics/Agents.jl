@@ -105,7 +105,11 @@ function by_type(shuffle_types::Bool, shuffle_agents::Bool)
             push!(sets[idx], agent.id)
         end
         shuffle_types && shuffle!(model.rng, sets)
-        shuffle_agents && [shuffle!(model.rng, set) for set in sets]
+        if shuffle_agents
+            for set in sets
+                shuffle!(model.rng, set)
+            end
+        end
         vcat(sets...)
     end
 end
@@ -127,7 +131,11 @@ function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        shuffle_agents && [shuffle!(model.rng, set) for set in sets]
+        if shuffle_agents
+            for set in sets
+                shuffle!(model.rng, set)
+            end
+        end
         vcat(sets...)
     end
 end
