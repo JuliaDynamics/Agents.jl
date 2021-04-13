@@ -1,6 +1,4 @@
-mutable struct Tree <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent Tree GridAgent{2} begin
     status::Symbol  #:green, :burning, :burnt
 end
 

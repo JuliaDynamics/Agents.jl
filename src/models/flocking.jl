@@ -1,9 +1,6 @@
 using LinearAlgebra
 
-mutable struct Bird <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent Bird ContinuousAgent{2} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -65,7 +62,6 @@ function flocking_agent_step!(bird, model)
         N += 1
         neighbor = model[id].pos
         heading = neighbor .- bird.pos
-
         cohere = cohere .+ heading
         if edistance(bird.pos, neighbor, model) < bird.separation
             separate = separate .- heading

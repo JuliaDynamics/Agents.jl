@@ -1,15 +1,12 @@
 using Agents, Random
 
-mutable struct SheepWolf <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent SheepWolf GridAgent{2} begin
     type::Symbol # :sheep or :wolf
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
 end
 
-# Simple helper functions
 Sheep(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :sheep, energy, repr, Δe)
 Wolf(id, pos, energy, repr, Δe) = SheepWolf(id, pos, :wolf, energy, repr, Δe)
 
@@ -24,7 +21,6 @@ predator_prey(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
-    seed = 23182,
 )
 ```
 Same as in [Predator-prey dynamics](@ref).
@@ -38,20 +34,14 @@ function predator_prey(;
     Δenergy_wolf = 20,
     sheep_reproduce = 0.04,
     wolf_reproduce = 0.05,
-    seed = 23182,
 )
-
-    rng = MersenneTwister(seed)
     space = GridSpace(dims, periodic = false)
-    ## Model properties contain the grass as two arrays: whether it is fully grown
-    ## and the time to regrow. Also have static parameter `regrowth_time`.
-    ## Notice how the properties are a `NamedTuple` to ensure type stability.
     properties = (
         fully_grown = falses(dims),
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(SheepWolf, space; properties, rng, scheduler = random_activation)
+    model = ABM(SheepWolf, space; properties, scheduler = Schedulers.randomly)
     id = 0
     for _ in 1:n_sheep
         id += 1
@@ -71,16 +61,11 @@ function predator_prey(;
         model.countdown[p...] = countdown
         model.fully_grown[p...] = fully_grown
     end
-    return model
+    return model, predator_agent_step!, predator_model_step!
 end
 
-function sheepwolf_step!(agent::SheepWolf, model)
-    if agent.type == :sheep
-        sheep_step!(agent, model)
-    else # then `agent.type == :wolf`
-        wolf_step!(agent, model)
-    end
-end
+predator_agent_step!(agent::SheepWolf, model) =
+    agent.type == :sheep ? sheep_step!(agent, model) : wolf_step!(agent, model)
 
 function sheep_step!(sheep, model)
     walk!(sheep, rand, model)
@@ -140,8 +125,8 @@ function wolfsheep_reproduce!(agent, model)
     return
 end
 
-function grass_step!(model)
-    @inbounds for p in positions(model) # we don't have to enable bound checking
+function predator_model_step!(model)
+    @inbounds for p in positions(model)
         if !(model.fully_grown[p...])
             if model.countdown[p...] ≤ 0
                 model.fully_grown[p...] = true
