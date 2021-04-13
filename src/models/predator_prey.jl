@@ -1,5 +1,3 @@
-using Agents, Random
-
 @agent SheepWolf GridAgent{2} begin
     type::Symbol # :sheep or :wolf
     energy::Float64
