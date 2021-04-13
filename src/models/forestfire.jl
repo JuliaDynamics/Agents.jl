@@ -1,6 +1,4 @@
-@agent Tree GridAgent{2} begin
-    status::Symbol  #:green, :burning, :burnt
-end
+@agent Automata GridAgent{2} begin end
 
 """
 ``` julia
@@ -13,24 +11,22 @@ Same as in [Forest fire model](@ref).
 """
 function forest_fire(; density = 0.7, griddims = (100, 100))
     space = GridSpace(griddims; periodic = false, metric = :euclidean)
-    forest = AgentBasedModel(Tree, space)
-    for position in positions(forest)
+    forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
+    for I in CartesianIndices(forest.trees)
         if rand(forest.rng) < density
-            state = position[1] == 1 ? :burning : :green
-            add_agent!(position, forest, state)
+            forest.trees[I] = I[1] == 1 ? 2 : 1
         end
     end
-    return forest, forest_agent_step!, dummystep
+    return forest, dummystep, forest_model_step!
 end
 
-function forest_agent_step!(tree, forest)
-    if tree.status == :burning
-        for neighbor in nearby_agents(tree, forest)
-            if neighbor.status == :green
-                neighbor.status = :burning
+function forest_model_step!(forest)
+    for I in findall(isequal(2), forest.trees)
+        for idx in nearby_positions(I.I, forest)
+            if forest.trees[idx...] == 1
+                forest.trees[idx...] = 2
             end
         end
-        tree.status = :burnt
+        forest.trees[I] = 3
     end
 end
-
