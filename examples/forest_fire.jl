@@ -100,7 +100,7 @@ plotkwargs = (
         colormap = cgrad([:white, :green, :red, :darkred]; categorical = true),
     ),
 )
-fig, _ = abm_plot(model; plotkwargs...)
+fig, _ = abm_plot(forest; plotkwargs...)
 fig
 
 # or animate it
