@@ -471,11 +471,12 @@ end
 end
 
 @testset "ensemblerun! and different seeds" begin
-    _, as!, ms! = Models.schelling(numagents = 1)
-    generator(seed) = Models.schelling(;numagents = 1, seed)[1]
+    _, as!, ms! = Models.daisyworld(;griddims=(4,4), init_black=0.5, init_white=0.5)
+    generator(seed) = Models.daisyworld(;griddims=(4,4), init_black=0.5, init_white=0.5, seed)[1]
     seeds = [1234, 563, 211]
-    adata = [:pos]
+    daisy(a) = a isa Models.Daisy
+    adata = [(:age, sum, daisy)]
     adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
-    @test adf[!, :pos] == unique(adf[!, :pos])
+    @test adf[!, :sum_age_daisy] == unique(adf[!, :sum_age_daisy])
     @test sort!(adf[:, :ensemble]) == [1,1,1,2,2,2,3,3,3]
 end
