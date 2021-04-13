@@ -31,7 +31,7 @@ example to take a look at first to see if you can solve your problem without one
 Making a discrete grid is perhaps the easiest way to conceptualise space in a model.
 [Sugarscape](@ref) is one of our more complex examples, but gives you a good overview
 of what is possible on a grid. If you're looking for something simpler, then the
-[Forest fire model](@ref) would be a good start.
+[Forest fire](@ref) would be a good start, which is also an example of a cellular automaton.
 
 A more complex, but far more powerful space type is something we call
 [`ContinuousSpace`](@ref). In this space, agents generally move with a given velocity

@@ -1,4 +1,4 @@
-# # Forest fire model
+# # Forest fire
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

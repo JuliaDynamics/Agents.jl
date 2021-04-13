@@ -29,7 +29,7 @@ using Distributed
 @everywhere adata = ...
 ```
 
-To avoid having `@everywhere` in everywhere, you can use the 
+To avoid having `@everywhere` in everywhere, you can use the
 `@everywhere begin...end` block, e.g.
 ```julia
 @everywhere begin
@@ -106,6 +106,17 @@ end
 properties = Parameters()
 model = ABM(MyAgent; properties = properties)
 ```
+
+## Don't use agents to represent a spatial property
+In some cases there is some property that exists in every point of a discrete space, e.g.
+the amount of grass, or whether there is grass or not, or whether there is a tree there that is burning or not.
+This most typically happens when one simulates a cellular automaton.
+
+It might be tempting to represent this property as a specific type of agent like `Grass` or `Tree`, and add an instance of this agent in every position of the [`GridSpace`](@ref).
+However, in Agents.jl this is not necessary and a much more performant approach can be followed.
+Specifically, you can represent this property as a standard Julia `Array` that is a property of the model. This will typically lead to a 5-10 fold increase in performance.
+
+For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
 ## Avoid `Union`s of many different agent types (temporary!)
 Due to the way Julia's type system works, and the fact that agents are grouped in a dictionary mapping IDs to agent instances, using multiple types for different agents always creates a performance hit because it leads to type instability.
