@@ -16,116 +16,113 @@
 # 1. A tree will burn if at least one neighbor is burning
 
 # The forest has an innate `density`, which is the proportion of trees initialized as
-# `green`, however all trees that reside at `x=1` on the grid are `burning`.
+# `green`, however all trees that reside on the left side of the grid are `burning`.
 # The model is also available from the `Models` module as [`Models.forest_fire`](@ref).
 
 # ## Defining the core structures
 
-# We start by defining the agent type
+# Cellular automata don't necessarily require an agent-like structure. Here we will
+# demonstrate how a model focused solution is possible.
 using Agents, Random
-using InteractiveDynamics
 using CairoMakie
 
-mutable struct Tree <: AbstractAgent
+mutable struct Automata <: AbstractAgent
     id::Int
-    pos::Dims{2}
-    status::Symbol  #:green, :burning, :burnt
 end
 nothing # hide
 
-# The agent type `Tree` has three fields: `id` and `pos`, which have to be there for any agent,
-# and a `status` field that we introduce for this specific model.
-# The `status` field will be `:green` when the tree is ok, `:burning` when on fire,
-# and finally `:burnt`.
+# The agent type `Automata` is effectively a dummy agent, for which we will invoke
+# [`dummystep`](@ref) when stepping the model.
 
 # We then make a setup function that initializes the model.
 function forest_fire(; density = 0.7, griddims = (100, 100))
-    space = GridSpace(griddims; periodic = false, metric = :euclidean)
-    forest = AgentBasedModel(Tree, space)
-    ## create and add trees to each position with a probability
-    ## determined by the `density`.
-    for position in positions(forest)
+    offsets = [Tuple(i == j ? 1 : 0 for i in 1:2) for j in 1:2]
+    offsets = vcat(offsets, [.-dir for dir in offsets])
+    ## The `trees` field is coded such that
+    ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
+    ## `offsets` is a quick way of identifying euclidean neighbors.
+    forest = ABM(Automata; properties = (trees = zeros(Int, griddims), offsets = offsets))
+    for I in CartesianIndices(forest.trees)
         if rand(forest.rng) < density
-            ## Set the trees at position x=1 on fire
-            state = position[1] == 1 ? :burning : :green
-            add_agent!(position, forest, state)
+            ## Set the trees at the left edge on fire
+            forest.trees[I] = I[1] == 1 ? 2 : 1
         end
     end
     return forest
 end
 
+# Notice we have not even required the use of a space for this simple model.
+
 forest = forest_fire()
 
 # ## Defining the step!
-# Because of the way the forest fire model is defined, we only need a
-# stepping function for the agents
 
-function tree_step!(tree, forest)
-    ## The current tree is burning
-    if tree.status == :burning
-        ## Find all green neighbors and set them on fire
-        for neighbor in nearby_agents(tree, forest)
-            if neighbor.status == :green
-                neighbor.status = :burning
+function tree_step!(forest)
+    nx, ny = size(forest.trees)
+    ## Find trees that are burning (coded as 2)
+    for I in findall(isequal(2), forest.trees)
+        ## Look up all euclidean neighbors
+        neighbors = Iterators.filter(
+            x -> 1 <= x[1] <= nx && 1 <= x[2] <= ny,
+            (I.I .+ n for n in forest.offsets),
+        )
+        for idx in neighbors
+            ## If a neighbor is Green (1), set it on fire (2)
+            if forest.trees[idx...] == 1
+                forest.trees[idx...] = 2
             end
         end
-        tree.status = :burnt
+        ## Finally, any burning tree is burnt out (2)
+        forest.trees[I] = 3
     end
 end
 nothing # hide
 
 # ## Running the model
 
-Agents.step!(forest, tree_step!, 1)
-count(t -> t.status == :burnt, allagents(forest))
+Agents.step!(forest, dummystep, tree_step!, 1)
+count(t == 3 for t in forest.trees) # Number of burnt trees on step 1
 
 #
 
-Agents.step!(forest, tree_step!, 10)
-count(t -> t.status == :burnt, allagents(forest))
+Agents.step!(forest, dummystep, tree_step!, 10)
+count(t == 3 for t in forest.trees) # Number of burnt trees on step 11
 
 # Now we can do some data collection as well using an aggregate function `percentage`:
 
 Random.seed!(2)
 forest = forest_fire(griddims = (20, 20))
-burnt_percentage(m) = count(t -> t.status == :burnt, allagents(m)) / length(positions(m))
+burnt_percentage(f) = count(t == 3 for t in f.trees) / prod(size(f.trees))
 mdata = [burnt_percentage]
 
-_, data = run!(forest, tree_step!, 10; mdata)
+_, data = run!(forest, dummystep, tree_step!, 10; mdata)
 data
 
 # Now let's plot the model. We use green for unburnt trees, red for burning and a
 # dark red for burnt.
 forest = forest_fire()
-Agents.step!(forest, tree_step!, 1)
+Agents.step!(forest, dummystep, tree_step!, 1)
 
-function treecolor(a)
-    color = :green
-    if a.status == :burning
-        color = :red
-    elseif a.status == :burnt
-        color = :darkred
-    end
-    color
-end
-
-figure, _ = abm_plot(forest; ac = treecolor, as = 8)
-figure
+treecolor = cgrad([:white, :green, :red, :darkred]; categorical = true)
+trees = Observable(forest.trees)
+fig = Figure(resolution = (600, 600))
+GLMakie.heatmap(fig[1, 1], trees; colormap = treecolor)
+fig
 
 # or animate it
 Random.seed!(10)
 forest = forest_fire(density = 0.6)
-abm_video(
-    "forest.mp4",
-    forest,
-    tree_step!;
-    ac = treecolor,
-    as = 8,
-    framerate = 2,
-    frames = 10,
-    spf = 5,
-    title = "Forest Fire",
-)
+trees = Observable(forest.trees)
+fig = Figure(resolution = (600, 600))
+GLMakie.heatmap(fig[1, 1], trees; colormap = treecolor, colorrange = (0, 3))
+record(fig, "forest.mp4"; framerate = 5) do io
+    for j in 1:20
+        recordframe!(io)
+        Agents.step!(forest, dummystep, tree_step!, 5)
+        trees[] = trees[]
+    end
+    recordframe!(io)
+end
 nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>
