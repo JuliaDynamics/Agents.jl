@@ -41,7 +41,7 @@ function predator_prey(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(SheepWolf, space; properties, scheduler = Schedulers.randomly)
+    model = ABM(SheepWolf, space; properties, scheduler = Schedulers.by_property(:type))
     id = 0
     for _ in 1:n_sheep
         id += 1
