@@ -417,41 +417,41 @@ end
     forest, agent_step!, forest_step! = Models.forest_fire()
     forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
-    burnt(a) = a.status == :burnt
-    unburnt(a) = a.status == :green
+    burnt(f) = count(t == 3 for t in f.trees)
+    unburnt(f) = count(t == 1 for t in f.trees)
     @testset "Standard Scan" begin
-        adata = [(unburnt, count), (burnt, count)]
-        data, _ = paramscan(
+        mdata = [unburnt, burnt]
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
-            adata = adata,
+            mdata,
         )
         # 3 is the number of combinations of changing params
         @test size(data) == ((n + 1) * 3, 4)
-        data, _ = paramscan(
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
             include_constants = true,
-            adata = adata,
+            mdata,
         )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
         @test size(data) == ((n + 1) * 3, 5)
 
-        adata = [:status]
-        data, _ = paramscan(
+        mdata = [burnt]
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
-            adata = adata,
+            mdata,
         )
         @test unique(data.step) == 0:10
         @test unique(data.density) == [0.6, 0.7, 0.8]
@@ -471,12 +471,13 @@ end
 end
 
 @testset "ensemblerun! and different seeds" begin
-    _, as!, ms! = Models.daisyworld(;griddims=(4,4), init_black=0.5, init_white=0.5)
-    generator(seed) = Models.daisyworld(;griddims=(4,4), init_black=0.5, init_white=0.5, seed)[1]
+    _, as!, ms! = Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5)
+    generator(seed) =
+        Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5, seed)[1]
     seeds = [1234, 563, 211]
     daisy(a) = a isa Models.Daisy
     adata = [(:age, sum, daisy)]
     adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
     @test adf[!, :sum_age_daisy] == unique(adf[!, :sum_age_daisy])
-    @test sort!(adf[:, :ensemble]) == [1,1,1,2,2,2,3,3,3]
+    @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end

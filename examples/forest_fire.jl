@@ -24,11 +24,10 @@
 # Cellular automata don't necessarily require an agent-like structure. Here we will
 # demonstrate how a model focused solution is possible.
 using Agents, Random
+using InteractiveDynamics
 using CairoMakie
 
-mutable struct Automata <: AbstractAgent
-    id::Int
-end
+@agent Automata GridAgent{2} begin end
 nothing # hide
 
 # The agent type `Automata` is effectively a dummy agent, for which we will invoke
@@ -36,12 +35,10 @@ nothing # hide
 
 # We then make a setup function that initializes the model.
 function forest_fire(; density = 0.7, griddims = (100, 100))
-    offsets = [Tuple(i == j ? 1 : 0 for i in 1:2) for j in 1:2]
-    offsets = vcat(offsets, [.-dir for dir in offsets])
+    space = GridSpace(griddims; periodic = false, metric = :euclidean)
     ## The `trees` field is coded such that
     ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
-    ## `offsets` is a quick way of identifying euclidean neighbors.
-    forest = ABM(Automata; properties = (trees = zeros(Int, griddims), offsets = offsets))
+    forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
         if rand(forest.rng) < density
             ## Set the trees at the left edge on fire
@@ -51,22 +48,14 @@ function forest_fire(; density = 0.7, griddims = (100, 100))
     return forest
 end
 
-# Notice we have not even required the use of a space for this simple model.
-
 forest = forest_fire()
 
 # ## Defining the step!
 
 function tree_step!(forest)
-    nx, ny = size(forest.trees)
     ## Find trees that are burning (coded as 2)
     for I in findall(isequal(2), forest.trees)
-        ## Look up all euclidean neighbors
-        neighbors = Iterators.filter(
-            x -> 1 <= x[1] <= nx && 1 <= x[2] <= ny,
-            (I.I .+ n for n in forest.offsets),
-        )
-        for idx in neighbors
+        for idx in nearby_positions(I.I, forest)
             ## If a neighbor is Green (1), set it on fire (2)
             if forest.trees[idx...] == 1
                 forest.trees[idx...] = 2
@@ -103,26 +92,33 @@ data
 forest = forest_fire()
 Agents.step!(forest, dummystep, tree_step!, 1)
 
-treecolor = cgrad([:white, :green, :red, :darkred]; categorical = true)
-trees = Observable(forest.trees)
-fig = Figure(resolution = (600, 600))
-GLMakie.heatmap(fig[1, 1], trees; colormap = treecolor)
+plotkwargs = (
+    add_colorbar = false,
+    heatarray = :trees,
+    heatkwargs = (
+        colorrange = (0, 3),
+        colormap = cgrad([:white, :green, :red, :darkred]; categorical = true),
+    ),
+)
+fig, _ = abm_plot(model; plotkwargs...)
 fig
 
 # or animate it
 Random.seed!(10)
 forest = forest_fire(density = 0.6)
-trees = Observable(forest.trees)
-fig = Figure(resolution = (600, 600))
-GLMakie.heatmap(fig[1, 1], trees; colormap = treecolor, colorrange = (0, 3))
-record(fig, "forest.mp4"; framerate = 5) do io
-    for j in 1:20
-        recordframe!(io)
-        Agents.step!(forest, dummystep, tree_step!, 5)
-        trees[] = trees[]
-    end
-    recordframe!(io)
-end
+add_agent!(forest) # Add one dummy agent so that abm_video will allow us to plot.
+abm_video(
+    "forest.mp4",
+    forest,
+    dummystep,
+    tree_step!;
+    as = 0,
+    framerate = 5,
+    frames = 20,
+    spf = 5,
+    title = "Forest Fire",
+    plotkwargs...,
+)
 nothing # hide
 # ```@raw html
 # <video width="auto" controls autoplay loop>

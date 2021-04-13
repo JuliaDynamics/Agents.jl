@@ -1,6 +1,4 @@
-mutable struct Automata <: AbstractAgent
-    id::Int
-end
+@agent Automata GridAgent{2} begin end
 
 """
 ``` julia
@@ -12,10 +10,8 @@ forest_fire(;
 Same as in [Forest fire model](@ref).
 """
 function forest_fire(; density = 0.7, griddims = (100, 100))
-    offsets = [Tuple(i == j ? 1 : 0 for i in 1:2) for j in 1:2]
-    offsets = vcat(offsets, [.-dir for dir in offsets])
-    forest = ABM(Automata; properties = (trees = zeros(Int, griddims), offsets = offsets))
-    # Empty = 0, Green = 1, Burning = 2, Burnt = 3
+    space = GridSpace(griddims; periodic = false, metric = :euclidean)
+    forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
         if rand(forest.rng) < density
             forest.trees[I] = I[1] == 1 ? 2 : 1
@@ -25,13 +21,8 @@ function forest_fire(; density = 0.7, griddims = (100, 100))
 end
 
 function forest_model_step!(forest)
-    nx, ny = size(forest.trees)
     for I in findall(isequal(2), forest.trees)
-        neighbors = Iterators.filter(
-            x -> 1 <= x[1] <= nx && 1 <= x[2] <= ny,
-            (I.I .+ n for n in forest.offsets),
-        )
-        for idx in neighbors
+        for idx in nearby_positions(I.I, forest)
             if forest.trees[idx...] == 1
                 forest.trees[idx...] = 2
             end
