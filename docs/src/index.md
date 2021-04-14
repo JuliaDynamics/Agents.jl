@@ -4,6 +4,10 @@ Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based mo
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
 To get started, please read the [Tutorial](@ref) page.
 
+!!! info "Star us on GitHub!"
+    If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
+    This gives us an accurate lower bound of the (satisfied) user count.
+
 !!! tip "Latest news: Agents.jl v4.2"
       * Self-contained features of Agents.jl will from now own exist in their own
         submodules. In the future, more features will be in submodules like this.
