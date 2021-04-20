@@ -426,7 +426,6 @@ function fmp_update_interacting_pairs!(
             end
         end
 
-        println("please work")
         model.agents[agent_id].Ni = Ni
         model.agents[agent_id].Gi = Gi
         model.agents[agent_id].Oi = Oi
