@@ -406,7 +406,6 @@ function fmp_update_interacting_pairs!(
     for agent_id in keys(model.agents)
         Ni = Int64[]
         Gi = Int64[]
-        Oi = Int64[]
         for (i,j) in agent_iter.pairs
             # handle agent-agent interactions
             if i == agent_id && model.agents[j].type == :A
@@ -423,15 +422,6 @@ function fmp_update_interacting_pairs!(
 
         model.agents[agent_id].Ni = Ni
         model.agents[agent_id].Gi = Gi
-
-        for obs_id in model.FMP_params.obstacle_list
-            dist = norm(model.agents[obs_id].pos  .- model.agents[agent_id].pos) - model.agents[obs_id].radius
-            if dist < model.agents[agent_id].radius
-                append!(Oi, obs_id)
-            end
-        end
-
-        model.agents[agent_id].Oi = Oi
     end
 
 end
@@ -553,6 +543,7 @@ function obstacle_feedback(model::AgentBasedModel, agent)
     # note the "." before most math operations, required for component wise tuple math
     f = ntuple(i->0, length(agent.vel))
 
+    Oi = Int64[]
     for id in model.FMP_params.obstacle_list
         # the original paper defines z as p_j-r_j-p_i in equation 17/18
         #   in the paper r_j is treated a vector, however it makes more sense to
@@ -560,11 +551,13 @@ function obstacle_feedback(model::AgentBasedModel, agent)
         #   (j is obstacle (id) and i is agent (i))
         dist = norm(model.agents[id].pos  .- agent.pos) - model.agents[id].radius
         if dist < agent.radius
+            append!(Oi, id)
             force = -model.FMP_params.rho_obstacle * (dist - model.agents[id].radius)^2
             distnorm = (model.agents[id].pos .- agent.pos) ./ norm(model.agents[id].pos .- agent.pos)
             f = f .+ (force .* distnorm)
         end
     end
+    agent.Oi = Oi
     if agent.type == :O || agent.type == :T
         return ntuple(i->0, length(agent.vel))
     else
