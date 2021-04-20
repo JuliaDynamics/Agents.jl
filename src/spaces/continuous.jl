@@ -406,6 +406,7 @@ function fmp_update_interacting_pairs!(
     for agent_id in keys(model.agents)
         Ni = Int64[]
         Gi = Int64[]
+        Oi = Int64[]
         for (i,j) in agent_iter.pairs
             # handle agent-agent interactions
             if i == agent_id && model.agents[j].type == :A
@@ -417,11 +418,18 @@ function fmp_update_interacting_pairs!(
                 append!(Gi, j)
             elseif j == agent_id && model.agents[i].type == :T
                 append!(Gi, i)
+            # handle agent-obstacle interactions
+            elseif i == agent_id && model.agents[j].type == :O
+                append!(Oi, j)
+            elseif j == agent_id && model.agents[i].type == :O
+                append!(Oi, i)
             end
         end
 
+        println("please work")
         model.agents[agent_id].Ni = Ni
         model.agents[agent_id].Gi = Gi
+        model.agents[agent_id].Oi = Oi
     end
 
 end
