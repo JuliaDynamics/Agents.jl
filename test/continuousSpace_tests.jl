@@ -112,30 +112,30 @@ end
   @test length(pairs) == 5
   @test (1, 4) ∉ pairs
 
-  space3 = ContinuousSpace((10,10), 1.0, periodic = false)
-  model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
-  for i in 1:10
-    add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
-  end
-  for i in 11:20
-    add_agent_pos!(AgentU1(i, (i/10-1, 0.5), (0.0, 0.0)), model3)
-  end
-  for i in 21:30
-    add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
-  end
-  pairs = interacting_pairs(model3, 0.1, :types).pairs
-  @test length(pairs) == 7
-  for (a,b) in pairs
-      @test typeof(model3[a]) !== typeof(model3[b])
-  end
-  @test (3, 6) ∉ pairs
+  # space3 = ContinuousSpace((10,10), 1.0, periodic = false)
+  # model3 = ABM(Union{Agent6, AgentU1, AgentU2}, space3; warn = false)
+  # for i in 1:10
+  #   add_agent_pos!(Agent6(i, (i/10, i/10), (0.0, 0.0), 0), model3)
+  # end
+  # for i in 11:20
+  #   add_agent_pos!(AgentU1(i, (i/10-1, 0.5), (0.0, 0.0)), model3)
+  # end
+  # for i in 21:30
+  #   add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
+  # end
+  # pairs = interacting_pairs(model3, 0.1, :types).pairs
+  # @test length(pairs) == 7
+  # for (a,b) in pairs
+  #     @test typeof(model3[a]) !== typeof(model3[b])
+  # end
+  # @test (3, 6) ∉ pairs
 
-  # Test that we have at least some Agent6's in this match
-  @test any(typeof(model3[a]) <: Agent6 || typeof(model3[b]) <: Agent6 for (a,b) in pairs)
-  pairs = interacting_pairs(model3, 0.2, :types; scheduler = ignore_six).pairs
-  @test length(pairs) == 12
-  # No Agent6's when using the ignore_six scheduler
-  @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
+  # # Test that we have at least some Agent6's in this match
+  # @test any(typeof(model3[a]) <: Agent6 || typeof(model3[b]) <: Agent6 for (a,b) in pairs)
+  # pairs = interacting_pairs(model3, 0.2, :types; scheduler = ignore_six).pairs
+  # @test length(pairs) == 12
+  # # No Agent6's when using the ignore_six scheduler
+  # @test all(!(typeof(model3[a]) <: Agent6) && !(typeof(model3[b]) <: Agent6) for (a,b) in pairs)
 
   # Fix #288
   space = ContinuousSpace((1,1), 0.1; periodic = true)

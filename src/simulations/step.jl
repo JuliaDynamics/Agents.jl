@@ -50,9 +50,8 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
             activation_order = schedule(model)
-            for index in activation_order
-                haskey(model.agents, index) || continue
-                agent_step!(model.agents[index], model)
+            for agent in (model[id] for id in activation_order)
+                agent_step!(agent, model)
             end
         end
         agents_first && model_step!(model)

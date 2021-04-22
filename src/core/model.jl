@@ -14,7 +14,7 @@ ValidPos =
     Union{Int,NTuple{N,Int},NTuple{M,<:AbstractFloat},Tuple{Int,Int,Float64}} where {N,M}
 
 struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
-    agents::Dict{Int,A}
+    agents::StructArray{A}
     space::S
     scheduler::F
     properties::P
@@ -88,7 +88,7 @@ function AgentBasedModel(
 ) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
 
-    agents = Dict{Int,A}()
+    agents = StructArray{A}(undef, 0)
     return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
@@ -107,7 +107,11 @@ export random_agent, nagents, allagents, allids, nextid, seed!
 
 Return an agent given its ID.
 """
-Base.getindex(m::ABM, id::Integer) = m.agents[id]
+function Base.getindex(model::ABM, id::Integer) 
+    ind = findfirst(x -> x == id, model.agents.id)
+    ind === nothing && throw(ArgumentError("Given ID could not be found in the model!"))
+    return LazyRow(model.agents, ind)
+end
 
 """
     model[id] = agent
@@ -117,12 +121,21 @@ Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
-function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
-    a.id ≠ id &&
+function Base.setindex!(model::ABM, agent::AbstractAgent, id::Int)
+    agent.id ≠ id &&
     throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
-    m.agents[id] = a
-    m.maxid[] < id && (m.maxid[] += 1)
-    return a
+    push!(model.agents, agent)
+    model.maxid[] < id && update_maxid(model)
+    return agent
+end
+
+"""
+    update_maxid(model::ABM)
+
+Update `model.maxid` to store the highest `id` of currently active agents in the `model`.
+"""
+function update_maxid(model::ABM)
+    model.maxid[] = findmax(model.agents.id)[1]
 end
 
 """
@@ -191,7 +204,7 @@ end
     random_agent(model) → agent
 Return a random agent from the model.
 """
-random_agent(model) = model[rand(model.rng, keys(model.agents))]
+random_agent(model) = rand(model.rng, collect(allagents(model)))
 
 """
     random_agent(model, condition) → agent
@@ -200,14 +213,8 @@ The function generates a random permutation of agent IDs and iterates through th
 If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    ids = shuffle!(model.rng, collect(keys(model.agents)))
-    i, L = 1, length(ids)
-    a = model[ids[1]]
-    while !condition(a)
-        i += 1
-        i > L && return nothing
-        a = model[ids[i]]
-    end
+    as = filter(condition, collect(allagents(model)))
+    a = rand(model.rng, as)
     return a
 end
 
@@ -221,13 +228,13 @@ nagents(model::ABM) = length(model.agents)
     allagents(model)
 Return an iterator over all agents of the model.
 """
-allagents(model) = values(model.agents)
+allagents(model) = (model[id] for id in model.agents.id)
 
 """
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
-allids(model) = keys(model.agents)
+allids(model) = model.agents.id
 
 #######################################################################################
 # %% Higher order collections

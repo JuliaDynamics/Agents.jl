@@ -254,7 +254,7 @@ function multi_agent_types!(types::Vector{Vector{T} where T}, utypes::Tuple, mod
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int=0; kwargs...)
-    alla = sort!(collect(values(model.agents)), by = a -> a.id)
+    alla = model.agents
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a -> a.id, alla)

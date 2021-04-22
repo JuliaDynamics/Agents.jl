@@ -4,7 +4,8 @@ no space type
 =#
 
 function kill_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
-    delete!(model.agents, agent.id)
+    index = findfirst(x -> x == agent.id, model.agents.id)
+    index !== nothing && deleteat!(model.agents.id, index)
 end
 
 function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}

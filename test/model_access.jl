@@ -5,7 +5,7 @@
         add_agent!(model)
     end
     @test model.scheduler == Schedulers.fastest
-    @test typeof(model.agents) <: Dict
+    @test typeof(model.agents) <: StructArray
     @test model.space === nothing
     @test model.properties == Dict(:a => 2, :b => "test")
     a = model[1]

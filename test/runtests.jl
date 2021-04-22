@@ -1,4 +1,4 @@
-using Test, Agents, Random, LightGraphs, DataFrames
+using Test, Agents, Random, LightGraphs, DataFrames, StructArrays
 using StatsBase: mean
 using StableRNGs
 

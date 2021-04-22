@@ -4,6 +4,7 @@ docs/src/examples
 *.css
 Manifest.toml
 *.code-workspace
+.vscode/
 /benchmark/*.json
 !/benchmark/tune.json
 /.benchmarkci

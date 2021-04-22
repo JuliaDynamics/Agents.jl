@@ -144,8 +144,9 @@ is_stationary(agent, model) = notimplemented(model)
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM)
-    delete!(model.agents, a.id)
+function kill_agent!(agent::AbstractAgent, model::ABM)
+    index = findfirst(x -> x == agent.id, model.agents.id)
+    index !== nothing && deleteat!(model.agents.id, index)
     remove_agent_from_space!(a, model)
 end
 
@@ -159,7 +160,7 @@ function genocide!(model::ABM)
     for a in allagents(model)
         kill_agent!(a, model)
     end
-    model.maxid[] = 0
+    update_maxid(model)
 end
 
 """
@@ -167,10 +168,10 @@ end
 Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
-    for (k, v) in model.agents
-        k > n && kill_agent!(v, model)
+    for id in model.agents.id
+        id > n && kill_agent!(model[id], model)
     end
-    model.maxid[] = n
+    update_maxid(model)
 end
 
 """
@@ -208,7 +209,7 @@ Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
     model[agent.id] = agent
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+    model.maxid[] < agent.id && update_maxid(model)
     add_agent_to_space!(agent, model)
     return agent
 end

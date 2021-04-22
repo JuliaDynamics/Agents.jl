@@ -38,14 +38,14 @@ A scheduler that activates all agents once per step in the order dictated by the
 agent's container, which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-fastest(model::ABM) = keys(model.agents)
+fastest(model::ABM) = model.agents.id
 
 """
     Schedulers.by_id
 A scheduler that activates all agents agents at each step according to their id.
 """
 function by_id(model::ABM)
-    agent_ids = sort(collect(keys(model.agents)))
+    agent_ids = sort(model.agents.id)
     return agent_ids
 end
 
@@ -55,7 +55,7 @@ A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 function randomly(model::ABM)
-    order = shuffle!(model.rng, collect(keys(model.agents)))
+    order = shuffle(model.rng, model.agents.id)
 end
 
 """
@@ -64,8 +64,7 @@ A scheduler that at each step activates only `p` percentage of randomly chosen a
 """
 function partially(p::Real)
     function partial(model::ABM)
-        ids = collect(keys(model.agents))
-        return randsubseq(model.rng, ids, p)
+        return randsubseq(model.rng, model.agents.id, p)
     end
     return partial
 end
@@ -80,10 +79,9 @@ and outputs a real number.
 """
 function by_property(p)
     function property(model::ABM)
-        ids = collect(keys(model.agents))
-        properties = [Agents.get_data(model[id], p) for id in ids]
+        properties = Agents.get_data(model.agents, p)
         s = sortperm(properties)
-        return ids[s]
+        return @view model.agents.id[s]
     end
 end
 

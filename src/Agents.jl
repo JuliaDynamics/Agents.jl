@@ -1,5 +1,6 @@
 module Agents
 
+using StructArrays
 using Requires
 using Distributed
 using DataStructures
