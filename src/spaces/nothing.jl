@@ -6,6 +6,7 @@ no space type
 function kill_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     index = findfirst(x -> x == agent.id, model.agents.id)
     index !== nothing && deleteat!(model.agents.id, index)
+    update_idmap!(model)
 end
 
 function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
@@ -14,7 +15,8 @@ end
 
 function add_agent_pos!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     model[agent.id] = agent
-    return model[agent.id]
+    update_idmap!(model)
+    return model[model.idmap[agent.id]]
 end
 
 function add_agent!(

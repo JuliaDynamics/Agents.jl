@@ -20,6 +20,7 @@ struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    idmap::Dict{Int,Int}
 end
 
 const ABM = AgentBasedModel
@@ -89,7 +90,7 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
 
     agents = StructArray{A}(undef, 0)
-    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0), Dict())
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -108,9 +109,10 @@ export random_agent, nagents, allagents, allids, nextid, seed!
 Return an agent given its ID.
 """
 function Base.getindex(model::ABM, id::Integer) 
-    ind = findfirst(x -> x == id, model.agents.id)
-    ind === nothing && throw(ArgumentError("Given ID could not be found in the model!"))
-    return LazyRow(model.agents, ind)
+    index = model.idmap[id] 
+    index === nothing && 
+        throw(ArgumentError("Given ID could not be found in the model!"))
+    return LazyRow(model.agents, index)
 end
 
 """
@@ -125,16 +127,33 @@ function Base.setindex!(model::ABM, agent::AbstractAgent, id::Int)
     agent.id ≠ id &&
     throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     push!(model.agents, agent)
-    model.maxid[] < id && update_maxid(model)
+    model.maxid[] < id && update_maxid!(model)
     return agent
 end
 
 """
-    update_maxid(model::ABM)
+    update_idmap!(model::ABM)
+
+Map `id`s of currently active agents in the `model` to their indices in the `model.agents` 
+array.
+"""
+function update_idmap!(model::ABM)
+    for id in model.agents.id
+        index = findfirst(x -> x == id, model.agents.id)
+        if index === nothing
+            delete!(model.idmap, id)
+        else
+            model.idmap[id] = index
+        end
+    end
+end
+
+"""
+    update_maxid!(model::ABM)
 
 Update `model.maxid` to store the highest `id` of currently active agents in the `model`.
 """
-function update_maxid(model::ABM)
+function update_maxid!(model::ABM)
     model.maxid[] = findmax(model.agents.id)[1]
 end
 
@@ -169,6 +188,8 @@ function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
         return getfield(m, :rng)
     elseif s === :maxid
         return getfield(m, :maxid)
+    elseif s === :idmap
+        return getfield(m, :idmap)
     elseif P <: Dict
         return getindex(getfield(m, :properties), s)
     else # properties is assumed to be a struct

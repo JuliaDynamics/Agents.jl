@@ -160,7 +160,7 @@ function genocide!(model::ABM)
     for a in allagents(model)
         kill_agent!(a, model)
     end
-    update_maxid(model)
+    update_maxid!(model)
 end
 
 """
@@ -171,7 +171,7 @@ function genocide!(model::ABM, n::Integer)
     for id in model.agents.id
         id > n && kill_agent!(model[id], model)
     end
-    update_maxid(model)
+    update_maxid!(model)
 end
 
 """
@@ -209,7 +209,7 @@ Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
     model[agent.id] = agent
-    model.maxid[] < agent.id && update_maxid(model)
+    model.maxid[] < agent.id && update_maxid!(model)
     add_agent_to_space!(agent, model)
     return agent
 end
