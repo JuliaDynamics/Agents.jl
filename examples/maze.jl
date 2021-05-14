@@ -55,7 +55,7 @@ map_url =
     "JuliaDynamics/master/videos/agents/maze.bmp"
 model = initalize_model(map_url)
 
-# The `static_preplot!` keyword argument allows plotting the maze as a heatmap behind the agent.
+# The `heatarray` keyword argument allows plotting the maze as a heatmap behind the agent.
 abm_video(
     "maze.mp4",
     model,
