@@ -404,7 +404,13 @@ function init_model_dataframe(model::ABM, properties::Vector)
     for (i,k) in enumerate(properties)
         types[i+1] =
             if typeof(k) <: Symbol
-                typeof(model.properties[k])[]
+                current_props = model.properties
+                # How the properties are accessed depends on the type
+                if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
+                    typeof(current_props[k])[]
+                else
+                    typeof(getfield(current_props, k))[]
+                end
             else
                 current_type = typeof(k(model))
                 isconcretetype(current_type) || warn("Type is not concrete when using $(k)"*
