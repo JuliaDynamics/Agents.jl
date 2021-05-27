@@ -34,6 +34,6 @@ function populate_from_csv!(
     end
 end
 
-function Base.parse(::Type{NTuple{N,T}}, s::String) where {N,T}
-    return Tuple(map(x -> parse(T, x), split(s[2:(end-1)], ", ")))
+function Base.parse(::Type{NTuple{N,T}}, str::String; base::Int = 10) where {N,T}
+    return Tuple(map(x -> parse(T, x; base), split(str[2:(end-1)], ", ")))
 end
