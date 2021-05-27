@@ -1,4 +1,5 @@
 using CSV
+import Base: parse
 
 """
     populate_from_csv!(filename, model, agent_type; kwargs...)
@@ -12,12 +13,27 @@ to fields of the struct.
 """
 function populate_from_csv!(
     filename,
-    model::ABM{A},
+    model::ABM{S,A},
     agent_type::B;
     kwargs...
-) where {A, B<:Union{Type{<:A}, Function}}
-    !(agent_type isa Function) && !haskey(kwargs, :types) && (kwargs[:types] = collect(fieldtypes(agent_type)))
-    for row in Rows(filename; kwargs...)
+) where {A, B<:Type{<:A},S}
+    !haskey(kwargs, :types) && (kwargs = (kwargs..., types = collect(fieldtypes(agent_type))))
+    for row in CSV.Rows(filename; kwargs...)
         add_agent_pos!(agent_type(row...), model)
     end
+end
+
+function populate_from_csv!(
+    filename,
+    model::ABM{S,A},
+    agent_type::Function;
+    kwargs...
+) where {S, A}
+    for row in CSV.Rows(filename; kwargs...)
+        add_agent_pos!(agent_type(row...), model)
+    end
+end
+
+function Base.parse(::Type{NTuple{N,T}}, s::String) where {N,T}
+    return Tuple(map(x -> parse(T, x), split(s[2:(end-1)], ", ")))
 end
