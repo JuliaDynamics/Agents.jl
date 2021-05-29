@@ -408,6 +408,24 @@
         @test size(agent_data) == (0, 2)
         @test size(model_data) == (2, 5)
     end
+
+    @testset "init_model_dataframe issue #494 fix" begin
+        # Ensure that model_init_dataframe works when properties are specified as a struct.
+        struct Props
+            a::Float64
+            b::Bool
+        end
+
+        model = ABM(
+            Agent3,
+            GridSpace((10, 10));
+            properties=Props(1, false),
+        )
+        mdata = [:a, :b]
+
+        model_data = init_model_dataframe(model, mdata)
+        @test eltype.(eachcol(model_data)) == [Int, Float64, Bool]
+    end
 end
 
 @testset "Parameter scan" begin
