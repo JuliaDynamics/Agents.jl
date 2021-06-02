@@ -10,8 +10,8 @@ are forwarded to `CSV.Rows`. `col_map` is a map from keyword arguments of
 `agent_type` to the column index populating that argument.
 """
 function populate_from_csv!(
-    filename,
     model::ABM{S,A},
+    filename,
     agent_type::B,
     col_map::Dict{Symbol,Int} = Dict();
     kwargs...
