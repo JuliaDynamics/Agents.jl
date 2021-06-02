@@ -31,7 +31,7 @@ function populate_from_csv!(
     end
 end
 
-function dump_to_csv(filename, agents::Vector{A}, fields = collect(fieldnames(A)); kwargs...) where {A<:AbstractAgent}
+function dump_to_csv(filename, agents, fields = collect(fieldnames(A)); kwargs...) where {A<:AbstractAgent}
     data = DataFrame()
     for f in fields
         data[!, f] = [getproperty(a, f) for a in agents]
