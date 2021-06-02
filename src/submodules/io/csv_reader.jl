@@ -1,7 +1,7 @@
 using CSV
 
 """
-    populate_from_csv!(filename, model, agent_type, col_map; kwargs...)
+    populate_from_csv!(model, filename, agent_type, col_map; kwargs...)
 
 Populates the given `model` using data read from csv file at `filename`.
 `agent_type` is either a subtype of `AbstractAgent` also used in `model` or
