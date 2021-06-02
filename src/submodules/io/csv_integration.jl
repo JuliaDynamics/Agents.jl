@@ -1,4 +1,5 @@
 using CSV
+using DataFrames
 
 """
     populate_from_csv!(model, filename, agent_type, col_map; kwargs...)
@@ -13,11 +14,11 @@ function populate_from_csv!(
     model::ABM{S,A},
     filename,
     agent_type::B,
-    col_map::Dict{Symbol,Int} = Dict();
+    col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
     kwargs...
 ) where {A,B<:Union{Type{<:A},Function},S}
     if !haskey(kwargs, :types) && isstructtype(agent_type)  
-        kwargs[:types] = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type))
+        kwargs = (kwargs..., types = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type)))
     end
     
     if isempty(col_map)
@@ -31,7 +32,7 @@ function populate_from_csv!(
     end
 end
 
-function dump_to_csv(filename, agents, fields = collect(fieldnames(A)); kwargs...) where {A<:AbstractAgent}
+function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents))); kwargs...)
     data = DataFrame()
     for f in fields
         data[!, f] = [getproperty(a, f) for a in agents]
