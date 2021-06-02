@@ -16,7 +16,7 @@ function populate_from_csv!(
     col_map::Dict{Symbol,Int} = Dict();
     kwargs...
 ) where {A,B<:Union{Type{<:A},Function},S}
-    if !haskey(kwargs, :types)
+    if !haskey(kwargs, :types) && isstructtype(agent_type)  
         kwargs[:types] = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type))
     end
     
