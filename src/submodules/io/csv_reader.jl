@@ -13,10 +13,20 @@ function populate_from_csv!(
     filename,
     model::ABM{S,A},
     agent_type::B,
-    col_map::Dict{Symbol,Int};
+    col_map::Dict{Symbol,Int} = Dict();
     kwargs...
-) where {A,B<:Type{<:A},S}
-    for row in CSV.Rows(filename; kwargs...)
-        add_agent_pos!(agent_type(; (k => row[v] for (k, v) in  col_map)...), model)
+) where {A,B<:Union{Type{<:A},Function},S}
+    if !haskey(kwargs, :types)
+        kwargs[:types] = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type))
+    end
+    
+    if isempty(col_map)
+        for row in CSV.Rows(filename; kwargs...)
+            add_agent_pos!(agent_type(row...), model)
+        end
+    else
+        for row in CSV.Rows(filename; kwargs...)
+            add_agent_pos!(agent_type(; (k => row[v] for (k, v) in  col_map)...), model)
+        end
     end
 end
