@@ -33,9 +33,18 @@ function populate_from_csv!(
 end
 
 function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents))); kwargs...)
+    atype = eltype(agents)
     data = DataFrame()
     for f in fields
-        data[!, f] = [getproperty(a, f) for a in agents]
+        ftype = fieldtype(atype, f)
+        if ftype <: Tuple && isconcretetype(ftype)
+            flen = length(fieldtypes(ftype))
+            for i in 1:flen
+                data[!, Symbol(f, "_$i")] = [getproperty(a, f)[i] for a in agents]
+            end
+        else
+            data[!, f] = [getproperty(a, f) for a in agents]
+        end
     end
     
     CSV.write(filename, data; kwargs...)
