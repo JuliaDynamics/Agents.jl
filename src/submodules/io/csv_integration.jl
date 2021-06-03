@@ -19,6 +19,14 @@ function populate_from_csv!(
 ) where {A,B<:Union{Type{<:A},Function},S}
     if !haskey(kwargs, :types) && isstructtype(agent_type)  
         kwargs = (kwargs..., types = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type)))
+        for (k, v) in kwargs.types
+            if v <: Tuple && isconcretetype(v)
+                len = length(fieldtypes(v))
+                for i in 1:len
+                    kwargs.types[Symbol(k, "_$i")] = fieldtypes(v)[i]
+                end
+            end
+        end
     end
     
     if isempty(col_map)

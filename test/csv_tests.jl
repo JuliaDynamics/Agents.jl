@@ -55,7 +55,7 @@
     empty_model, _ = Models.battle(; fighters = 0)
 
     Agents.ModelIO.dump_to_csv("test.csv", allagents(model))
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.Fighter; types = [Int, Int, Int, Int, Bool, Int, Symbol])
+    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.Fighter)
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
