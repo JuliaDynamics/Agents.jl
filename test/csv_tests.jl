@@ -15,18 +15,18 @@
 
     model = ABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false)
     
-    @test_throws AssertionError Agents.ModelIO.populate_from_csv!(model, "test.csv")
+    @test_throws AssertionError Agents.AgentsIO.populate_from_csv!(model, "test.csv")
 
     model, _ = Models.hk(numagents = 10)
     empty_model, _ = Models.hk(numagents = 0)
 
-    Agents.ModelIO.dump_to_csv("test.csv", allagents(model))
+    Agents.AgentsIO.dump_to_csv("test.csv", allagents(model))
     
     open("test.csv", "r") do f
         @test length(split(readline(f), ',')) == 4
     end
     
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
+    Agents.AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
@@ -35,7 +35,7 @@
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
 
     genocide!(empty_model)
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.HKAgent, Dict(:id => 1, :op1 => 3, :op2 => 2))
+    Agents.AgentsIO.populate_from_csv!(empty_model, "test.csv", Models.HKAgent, Dict(:id => 1, :op1 => 3, :op2 => 2))
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
@@ -43,14 +43,14 @@
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
 
-    Agents.ModelIO.dump_to_csv("test.csv", allagents(model), [:id, :old_opinion])
+    Agents.AgentsIO.dump_to_csv("test.csv", allagents(model), [:id, :old_opinion])
 
     open("test.csv", "r") do f
         @test length(split(readline(f), ',')) == 2
     end
 
     genocide!(empty_model)
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
+    Agents.AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
@@ -61,8 +61,8 @@
     model, _ = Models.battle(; fighters = 10)
     empty_model, _ = Models.battle(; fighters = 0)
 
-    Agents.ModelIO.dump_to_csv("test.csv", allagents(model))
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
+    Agents.AgentsIO.dump_to_csv("test.csv", allagents(model))
+    Agents.AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
