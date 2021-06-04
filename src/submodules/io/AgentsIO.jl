@@ -1,6 +1,6 @@
-export ModelIO
+export AgentsIO
 
-module ModelIO
+module AgentsIO
 using Agents
 
 include("csv_integration.jl")
