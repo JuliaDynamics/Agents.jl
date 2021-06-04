@@ -15,6 +15,7 @@ function populate_from_csv!(
     filename,
     agent_type::B = A,
     col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
+    row_number_is_id = false,
     kwargs...,
 ) where {A,B<:Union{Type{<:A},Function},S}
     @assert(
@@ -40,12 +41,24 @@ function populate_from_csv!(
     end
 
     if isempty(col_map)
-        for row in CSV.Rows(read(filename); kwargs...)
-            add_agent_pos!(agent_type(row...), model)
+        if row_number_is_id
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...))
+                add_agent_pos!(agent_type(id, row...), model)
+            end
+        else
+            for row in CSV.Rows(read(filename); kwargs...)
+                add_agent_pos!(agent_type(row...), model)
+            end
         end
     else
-        for row in CSV.Rows(read(filename); kwargs...)
-            add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
+        if row_number_is_id
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...))
+                add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
+            end
+        else
+            for row in CSV.Rows(read(filename); kwargs...)
+                add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
+            end
         end
     end
 end
