@@ -10,6 +10,13 @@
         return Models.Fighter(id, (p1, p2, p3), has, cap, shape)
     end
 
+    @agent Foo GridAgent{2} begin end
+    @agent Bar GridAgent{2} begin end
+
+    model = ABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false)
+    
+    @test_throws AssertionError Agents.ModelIO.populate_from_csv!(model, "test.csv")
+
     model, _ = Models.hk(numagents = 10)
     empty_model, _ = Models.hk(numagents = 0)
 
@@ -19,7 +26,7 @@
         @test length(split(readline(f), ',')) == 4
     end
     
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.HKAgent)
+    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
@@ -43,7 +50,7 @@
     end
 
     genocide!(empty_model)
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.HKAgent)
+    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))
@@ -55,7 +62,7 @@
     empty_model, _ = Models.battle(; fighters = 0)
 
     Agents.ModelIO.dump_to_csv("test.csv", allagents(model))
-    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv", Models.Fighter)
+    Agents.ModelIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
     @test all(haskey(empty_model.agents, i) for i in allids(model))

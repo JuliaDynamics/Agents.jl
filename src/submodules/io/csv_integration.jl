@@ -13,12 +13,22 @@ are forwarded to `CSV.Rows`. `col_map` is a map from keyword arguments of
 function populate_from_csv!(
     model::ABM{S,A},
     filename,
-    agent_type::B,
+    agent_type::B = A,
     col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
-    kwargs...
+    kwargs...,
 ) where {A,B<:Union{Type{<:A},Function},S}
-    if !haskey(kwargs, :types) && isstructtype(agent_type)  
-        kwargs = (kwargs..., types = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type)))
+    @assert(
+        agent_type isa Function || !(agent_type isa Union),
+        "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent"
+    )
+    if !haskey(kwargs, :types) && isstructtype(agent_type)
+        kwargs = (
+            kwargs...,
+            types = Dict(
+                fieldname(agent_type, i) => fieldtype(agent_type, i) for
+                i in 1:fieldcount(agent_type)
+            ),
+        )
         for (k, v) in kwargs.types
             if v <: Tuple && isconcretetype(v)
                 len = length(fieldtypes(v))
@@ -28,14 +38,14 @@ function populate_from_csv!(
             end
         end
     end
-    
+
     if isempty(col_map)
         for row in CSV.Rows(read(filename); kwargs...)
             add_agent_pos!(agent_type(row...), model)
         end
     else
         for row in CSV.Rows(read(filename); kwargs...)
-            add_agent_pos!(agent_type(; (k => row[v] for (k, v) in  col_map)...), model)
+            add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
         end
     end
 end
@@ -54,6 +64,6 @@ function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents
             data[!, f] = [getproperty(a, f) for a in agents]
         end
     end
-    
+
     CSV.write(filename, data; kwargs...)
 end
