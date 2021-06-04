@@ -30,11 +30,11 @@ function populate_from_csv!(
     end
     
     if isempty(col_map)
-        for row in CSV.Rows(filename; kwargs...)
+        for row in CSV.Rows(read(filename); kwargs...)
             add_agent_pos!(agent_type(row...), model)
         end
     else
-        for row in CSV.Rows(filename; kwargs...)
+        for row in CSV.Rows(read(filename); kwargs...)
             add_agent_pos!(agent_type(; (k => row[v] for (k, v) in  col_map)...), model)
         end
     end
