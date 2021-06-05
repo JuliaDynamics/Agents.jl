@@ -284,3 +284,9 @@ Pathfinding.HeightMap
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
 See the [Developer Docs](@ref) for details.
+
+## AgentsIO
+```@docs
+AgentsIO.populate_from_csv!
+AgentsIO.dump_to_csv
+```
