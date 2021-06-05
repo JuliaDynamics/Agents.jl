@@ -39,7 +39,7 @@ mutable struct HKAgent <: AbstractAgent
     id::Int
     old_opinion::Float64
     new_opinion::Float64
-    previous_opinon::Float64
+    previous_opinion::Float64
 end
 
 # There is a reason the agent has three fields that are "the same".
@@ -75,7 +75,7 @@ nothing # hide
 
 # Now we implement the `agent_step!`
 function agent_step!(agent, model)
-    agent.previous_opinon = agent.old_opinion
+    agent.previous_opinion = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent, model))
 end
 nothing # hide
@@ -104,7 +104,7 @@ nothing # hide
 # amount of steps we can specify a function instead.
 function terminate(model, s)
     if any(
-        !isapprox(a.previous_opinon, a.new_opinion; rtol = 1e-12) for a in allagents(model)
+        !isapprox(a.previous_opinion, a.new_opinion; rtol = 1e-12) for a in allagents(model)
     )
         return false
     else
