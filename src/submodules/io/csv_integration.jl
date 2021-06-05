@@ -101,7 +101,7 @@ function populate_from_csv!(
 end
 
 """
-    function dump_to_csv(filename, agents, fields; kwargs...)
+    function dump_to_csv(filename, agents [, fields]; kwargs...)
 
 Dump `agents` to the CSV file specified by `filename`. `agents` is any iterable
 sequence of types, such as from [`allagents`](@ref). `fields` is an iterable sequence of
