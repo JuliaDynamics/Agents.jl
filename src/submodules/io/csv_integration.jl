@@ -17,7 +17,7 @@ the first argument (or as `id` keyword) to `agent_type`.
 
 Any other keyword arguments are forwarded to `CSV.Rows`. If the `types` keyword is not
 specified and `agent_type` is a struct, then the mapping from struct field to type will be used.
-`Tuple{...}` fields will be suffixed with `_1`, `_2`, ... similarly to [`dump_to_csv`](@ref)
+`Tuple{...}` fields will be suffixed with `_1`, `_2`, ... similarly to [`AgentsIO.dump_to_csv`](@ref)
 
 For example,
 ```
@@ -110,7 +110,7 @@ it is automatically inferred using `eltype(agents)`. All `kwargs...` are forward
 to `CSV.write`.
 
 All `Tuple{...}` fields are flattened to multiple columns suffixed by `_1`, `_2`...
-similarly to [`populate_from_csv!`](@ref)
+similarly to [`AgentsIO.populate_from_csv!`](@ref)
 
 For example,
 ```
@@ -124,7 +124,7 @@ model = ABM(Foo, ...)
 ...
 AgentsIO.dump_to_csv("test.csv", allagents(model))
 ```
-The resultant "test.csv" file will contain the following columns: `id`, `pos_1`, `pos_2`,
+The resultant `"test.csv"` file will contain the following columns: `id`, `pos_1`, `pos_2`,
 `foo_1`, `foo_2`.
 """
 function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents))); kwargs...)
