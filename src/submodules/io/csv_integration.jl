@@ -2,7 +2,7 @@ using CSV
 using DataFrames
 
 """
-    populate_from_csv!(model, filename [, agent_type, col_map]; row_number_is_id, kwargs...)
+    AgentsIO.populate_from_csv!(model, filename [, agent_type, col_map]; row_number_is_id, kwargs...)
 
 Populate the given `model` using CSV data contained in `filename`. Use `agent_type` to
 specify the type of agent to create (In the case of multi-agent models) or a function
@@ -28,7 +28,7 @@ struct Foo <: AbstractAgent
 end
 
 model = ABM(Foo, ...)
-populate_from_csv!(model, "test.csv")
+AgentsIO.populate_from_csv!(model, "test.csv")
 ```
 Here, `types` will be inferred to be
 ```
@@ -101,7 +101,7 @@ function populate_from_csv!(
 end
 
 """
-    function dump_to_csv(filename, agents [, fields]; kwargs...)
+    AgentsIO.dump_to_csv(filename, agents [, fields]; kwargs...)
 
 Dump `agents` to the CSV file specified by `filename`. `agents` is any iterable
 sequence of types, such as from [`allagents`](@ref). `fields` is an iterable sequence of
@@ -122,7 +122,7 @@ end
 
 model = ABM(Foo, ...)
 ...
-dump_to_csv("test.csv", allagents(model))
+AgentsIO.dump_to_csv("test.csv", allagents(model))
 ```
 The resultant "test.csv" file will contain the following columns: `id`, `pos_1`, `pos_2`,
 `foo_1`, `foo_2`.
