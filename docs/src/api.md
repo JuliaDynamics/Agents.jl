@@ -287,6 +287,7 @@ See the [Developer Docs](@ref) for details.
 
 ## AgentsIO
 ```@docs
+AgentsIO
 AgentsIO.populate_from_csv!
 AgentsIO.dump_to_csv
 ```

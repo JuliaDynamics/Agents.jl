@@ -45,7 +45,7 @@ names that match will be converted to the appropriate type. There should exist a
 for `Foo` taking the appropriate combination of fields as parameters.
 
 If `"test.csv"` contains the following columns: `pos_1, pos_2, foo_1, foo_2`, then `model`
-can be populated as `populate_from_csv!(model, "test.csv"; row_number_is_id = true)`.
+can be populated as `AgentsIO.populate_from_csv!(model, "test.csv"; row_number_is_id = true)`.
 """
 function populate_from_csv!(
     model::ABM{S,A},
