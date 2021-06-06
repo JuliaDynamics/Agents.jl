@@ -57,8 +57,8 @@ include("models/Models.jl")
 export Models
 
 # Update message:
-display_update = true
-version_number = "4.2"
+display_update = false
+version_number = "4.3"
 update_name = "update_v$(version_number)"
 
 if display_update
