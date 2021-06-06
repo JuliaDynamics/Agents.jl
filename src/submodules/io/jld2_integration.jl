@@ -1,5 +1,28 @@
 using JLD2
 
+function dump_to_jld2(filename, model::ABM)
+    @save filename model
+    if model.space isa GraphSpace
+        @info "The underlying graph in GraphSpace is not saved. Use GraphIO.jl to save the graph as a separate file"
+    end
+    if model.space isa OpenStreetMapSpace
+        @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
+    end
+end
+
+function load_from_jld2(filename; kwargs...)
+    if model.space isa GraphSpace && !haskey(kwargs, :graph)
+        @error "Provide a LightGraphs.jl graph to use for GraphSpace"
+    end
+    if model.space isa OpenStreetMapSpace && !haskey(kwargs, :open_street_map)
+        @error "Provide a OpenStreetMap to use for OpenStreetMapSpace"
+    end
+    @load filename model
+
+    haskey(kwargs, :scheduler) && (model.scheduler = kwargs.scheduler)
+    model.space isa ContinuousSpace && haskey(kwargs, :update_vel) && (model.space.update_vel! = kwargs.update_vel)
+end
+
 struct SerializedABM{S<:SpaceType,A<:AbstractAgent,P,R<:AbstractRNG}
     agents::Vector{A}
     space::S
