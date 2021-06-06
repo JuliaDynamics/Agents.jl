@@ -58,7 +58,7 @@ export Models
 
 # Update message:
 display_update = true
-version_number = "4.2"
+version_number = "4.3"
 update_name = "update_v$(version_number)"
 
 if display_update
@@ -67,15 +67,9 @@ if display_update
             stdout,
             """
             \nUpdate message: Agents v$(version_number)
-            Please see the changelog online. Some key features:
+            Please see the changelog online. The key features:
 
-            * Self-contained features of Agents.jl will from now own exist in their own
-              submodules. In the future, more features will be in submodules like this.
-            * Full support for pathfinding, using the A* algorithm, in `GridSpace`
-            * Several names have been reworked for more clarity (with deprecations)
-            * New function `ensemblerun!` which replaces using `replicates` in `run!`
-            * New documentation page "Performance Tips"
-            * Parallelization of `paramscan`
+            * New functions `dump_to_csv` and `populate_from_csv!` to save and load agent data to and from CSV files
             """;
             color = :light_magenta,
         )
