@@ -9,12 +9,6 @@ To get started, please read the [Tutorial](@ref) page.
     This gives us an accurate lower bound of the (satisfied) user count.
 
 !!! tip "Latest news: Agents.jl v4.2"
-      * Self-contained features of Agents.jl will from now own exist in their own
-        submodules. In the future, more features will be in submodules like this.
-      * Full support for pathfinding, using the A* algorithm, in `GridSpace`
-      * New function `ensemblerun!` which replaces using `replicates` in `run!`
-      * New documentation page "Performance Tips"
-      * Parallelization of `paramscan`
       * New functions `dump_to_csv` and `populate_from_csv!` to save and load agent data to and from CSV files
 
 ## Features
