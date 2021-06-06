@@ -15,6 +15,7 @@ To get started, please read the [Tutorial](@ref) page.
       * New function `ensemblerun!` which replaces using `replicates` in `run!`
       * New documentation page "Performance Tips"
       * Parallelization of `paramscan`
+      * New functions `dump_to_csv` and `populate_from_csv!` to save and load agent data to and from CSV files
 
 ## Features
 * Free, open source and extremely transparent.
