@@ -12,4 +12,5 @@ module AgentsIO
 using Agents
 
 include("csv_integration.jl")
+include("jld2_integration.jl")
 end

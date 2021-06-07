@@ -1,29 +1,10 @@
+using Random
 using JLD2
 
-function dump_to_jld2(filename, model::ABM)
-    @save filename model
-    if model.space isa GraphSpace
-        @info "The underlying graph in GraphSpace is not saved. Use GraphIO.jl to save the graph as a separate file"
-    end
-    if model.space isa OpenStreetMapSpace
-        @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
-    end
-end
+to_serializable(t; kwargs...) = t
+from_serializable(t; kwargs...) = t
 
-function load_from_jld2(filename; kwargs...)
-    if model.space isa GraphSpace && !haskey(kwargs, :graph)
-        @error "Provide a LightGraphs.jl graph to use for GraphSpace"
-    end
-    if model.space isa OpenStreetMapSpace && !haskey(kwargs, :open_street_map)
-        @error "Provide a OpenStreetMap to use for OpenStreetMapSpace"
-    end
-    @load filename model
-
-    haskey(kwargs, :scheduler) && (model.scheduler = kwargs.scheduler)
-    model.space isa ContinuousSpace && haskey(kwargs, :update_vel) && (model.space.update_vel! = kwargs.update_vel)
-end
-
-struct SerializedABM{S<:SpaceType,A<:AbstractAgent,P,R<:AbstractRNG}
+struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
     agents::Vector{A}
     space::S
     properties::P
@@ -31,75 +12,97 @@ struct SerializedABM{S<:SpaceType,A<:AbstractAgent,P,R<:AbstractRNG}
     maxid::Int64
 end
 
-JLD2.writeas(::Type{ABM{S,A,F,P,R}}) where {S,A,F,P,R} = SerializedABM{S,A,P,R}
-
-JLD2.wconvert(::Type{SerializedABM{S,A,P,R}}, abm::ABM{S,A,F,P,R}) where {S,A,F,P,R} =
-    SerializedABM{S,A,P,R}(
-        collect(values(abm.agents)),
-        abm.space,
-        abm.properties,
-        abm.rng,
-        abm.maxid.x,
-    )
-
-function JLD2.rconvert(::Type{ABM{S,A,F,P,R}}, sabm::SerializedABM{S,A,P,R}) where {S,A,F,P,R}
-    abm = ABM{S,A,F,P,R}(
-        Dict(a.id => a for a in sabm.agents),
-        sabm.space,
-        Schedulers.fastest,
-        sabm.properties,
-        sabm.rng,
-        Base.RefValue{Int64}(sa.maxid),
-    )
-
-    for a in sabm.agents
-        push!(abm.space.s[a, pos...], a.id)
-    end
-end
-
-struct SerializedGridSpace{D,P,W}
-    s::Array{Vector{Int},D}
+struct SerializableGridSpace{D,P,W}
+    dims::NTuple{D,Int}
     metric::Symbol
-    hoods::Vector{Tuple{Float64,Hood{D}}}
-    hoods_tuple::Vector{Tuple{NTuple{D,Float64},Hood{D}}}
+    hoods::Vector{Tuple{Float64,Agents.Hood{D}}}
+    hoods_tuple::Vector{Tuple{NTuple{D,Float64},Agents.Hood{D}}}
     pathfinder::W
 end
 
-JLD2.writeas(::Type{GridSpace{D,P,W}}) = SerializedGridSpace{D,P,W}
-
-JLD2.wconvert(::Type{SerializedGridSpace{D,P,W}}, sp::GridSpace{D,P,W}) where {D,P,W} =
-    SerializedGridSpace{D,P,W}(
-        sp.s,
-        sp.metric,
-        [(k, v) for (k, v) in sp.hoods],
-        [(k, v) for (k, v) in sp.hoods_tuple],
-        sp.pathfinder,
-    )
-
-JLD2.rconvert(::Type{GridSpace{D,P,W}}, sp::SerializedGridSpace{D,P,W}) where {D,P,W} =
-    GridSpace{D,P,W}(
-        sp.s,
-        sp.metric,
-        Dict(k => v for (k, v) in sp.hoods),
-        Dict(k => v for (k, v) in sp.hoods_tuple),
-        sp.pathfinder,
-    )
-
-struct SerializedContinuousSpace{D,P,T<:AbstractFloat}
-    grid::GridSpace{D,P}
+struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
+    grid::SerializableGridSpace{D,P}
     dims::NTuple{D,Int}
     spacing::T
     extent::NTuple{D,T}
 end
 
-JLD2.writeas(::Type{ContinuousSpace{D,P,T}}) where {D,P,T} = SerializedContinuousSpace{D,P,T}
+to_serializable(t::ABM; kwargs...) = SerializableABM(
+    collect(values(t.agents)),
+    to_serializable(t.space; kwargs...),
+    t.properties,
+    t.rng,
+    t.maxid.x,
+)
 
-JLD2.wconvert(
-    ::Type{SerializedContinuousSpace{D,P,T}},
-    sp::ContinuousSpace{D,P,T},
-) where {D,P,T} = SerializedContinuousSpace{D,P,T}(sp.grid, sp.dims, sp.spacing, sp.extent)
+to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W} = SerializableGridSpace{D,P,W}(
+    size(t.s),
+    t.metric,
+    [(k, v) for (k, v) in t.hoods],
+    [(k, v) for (k, v) in t.hoods_tuple],
+    to_serializable(t.pathfinder),
+)
 
-JLD2.rconvert(
-    ::Type{ContinuousSpace{D,P,T,F}},
-    sp::SerializedContinuousSpace{D,P,T},
-) where {D,P,T,F} = ContinuousSpace{D,P,T,F}(sp.grid, defvel, sp.dims, sp.spacing, sp.extent)
+to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
+    SerializableContinuousSpace{D,P,T}(
+        to_serializable(t.grid; kwargs...),
+        t.dims,
+        t.spacing,
+        t.extent,
+    )
+
+function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
+    abm = ABM(
+        A,
+        from_serializable(t.space; kwargs...);
+        scheduler = get(kwargs, :scheduler, Schedulers.fastest),
+        properties = t.properties,
+        rng = t.rng,
+    )
+    abm.maxid[] = t.maxid
+    for a in t.agents
+        add_agent_pos!(a, abm)
+    end
+    return abm
+end
+
+function from_serializable(t::SerializableGridSpace{D,P,W}; kwargs...) where {D,P,W}
+    s = Array{Vector{Int},D}(undef, t.dims)
+    for i in eachindex(s)
+        s[i] = Int[]
+    end
+    return GridSpace{D,P,W}(
+        s,
+        t.metric,
+        Dict(k => v for (k, v) in t.hoods),
+        Dict(k => v for (k, v) in t.hoods_tuple),
+        from_serializable(t.pathfinder; kwargs...),
+    )
+end
+
+function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
+    update_vel! = get(kwargs, :update_vel!, Agents.defvel)
+    ContinuousSpace{D,P,T,eltype(update_vel!)}(
+        from_serializable(t.grid),
+        update_vel!,
+        t.dims,
+        t.spacing,
+        t.extent,
+    )
+end
+
+function dump_to_jld2(filename, model::ABM; kwargs...)
+    if model.space isa GraphSpace
+        @info "The underlying graph in GraphSpace is not saved. Use GraphIO.jl to save the graph as a separate file"
+    end
+    if model.space isa OpenStreetMapSpace
+        @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
+    end
+    model = to_serializable(model)
+    @save filename model
+end
+
+function load_from_jld2(filename; kwargs...)
+    @load filename model
+    return from_serializable(model)
+end
