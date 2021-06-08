@@ -138,11 +138,11 @@ function dump_to_jld2(filename, model::ABM; kwargs...)
     if model.space isa OpenStreetMapSpace
         @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
     end
-    model = to_serializable(model)
+    model = to_serializable(model; kwargs...)
     @save filename model
 end
 
 function load_from_jld2(filename; kwargs...)
     @load filename model
-    return from_serializable(model)
+    return from_serializable(model; kwargs...)
 end
