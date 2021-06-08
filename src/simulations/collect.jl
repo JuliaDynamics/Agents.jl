@@ -209,7 +209,7 @@ function init_agent_dataframe(model::ABM{S,A}, properties::AbstractArray) where 
 end
 
 function single_agent_types!(types::Vector{Vector{T} where T}, model::ABM, properties::AbstractArray)
-    a = random_agent(model)
+    a = first(model.agents).second
     for (i, k) in enumerate(properties)
         current_type = typeof(get_data(a, k, identity))
         isconcretetype(current_type) || warn(
