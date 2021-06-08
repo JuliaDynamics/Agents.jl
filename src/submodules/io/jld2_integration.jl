@@ -37,7 +37,7 @@ struct SerializableAStar{D,P,M}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
     walkable::BitArray{D}
-    cost_metric::CostMetric{D}
+    cost_metric::Pathfinding.CostMetric{D}
 end
 
 to_serializable(t::ABM; kwargs...) = SerializableABM(
@@ -64,12 +64,9 @@ to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
         t.extent,
     )
 
-to_serializable(t::GraphSpace{G}; kwargs...) where {G} = 
-    SerializableGraphSpace{G}(
-        t.graph,
-    )
+to_serializable(t::GraphSpace{G}; kwargs...) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::AStar{D,P,M}; kwargs...) where {D,P,M} =
+to_serializable(t::Pathfinding.AStar{D,P,M}; kwargs...) where {D,P,M} =
     SerializableAStar{D,P,M}(
         [(k, collect(v)) for (k, v) in t.agent_paths],
         t.grid_dims,
@@ -119,14 +116,13 @@ function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) whe
     )
 end
 
-from_serializable(t::SerializableGraphSpace{G}; kwargs...) where {G} = 
-    GraphSpace{G}(
-        t.graph,
-    )
+from_serializable(t::SerializableGraphSpace{G}; kwargs...) where {G} = GraphSpace{G}(t.graph)
 
 from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
-    AStar{D,P,M}(
-        Dict{Int,Agents.Path{D}}(k => Path{D}(v...) for (k, v) in t.agent_paths),
+    Pathfinding.AStar{D,P,M}(
+        Dict{Int,Pathfinding.Path{D}}(
+            k => Pathfinding.Path{D}(v...) for (k, v) in t.agent_paths
+        ),
         t.grid_dims,
         map(CartesianIndex, t.neighborhood),
         t.admissibility,
