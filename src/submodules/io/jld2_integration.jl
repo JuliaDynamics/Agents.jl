@@ -53,7 +53,7 @@ to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W} = SerializableGrid
     t.metric,
     [(k, v) for (k, v) in t.hoods],
     [(k, v) for (k, v) in t.hoods_tuple],
-    to_serializable(t.pathfinder),
+    to_serializable(t.pathfinder; kwargs...),
 )
 
 to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
@@ -107,8 +107,8 @@ end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
     update_vel! = get(kwargs, :update_vel!, Agents.defvel)
-    ContinuousSpace{D,P,T,eltype(update_vel!)}(
-        from_serializable(t.grid),
+    ContinuousSpace(
+        from_serializable(t.grid; kwargs...),
         update_vel!,
         t.dims,
         t.spacing,
