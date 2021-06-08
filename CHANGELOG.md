@@ -1,3 +1,7 @@
+# v4.3 (UNRELEASED)
+## New features and fixes
+- Save and load agent information from CSV files.
+
 # v4.2
 ## New features and fixes
 - Self-contained features of Agents.jl will from now own exist in their own submodules. This will make the public API less cluttered and functionality more contained. Currently the new submodules are `Schedulers, Pathfinding, OSM`.

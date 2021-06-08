@@ -4,6 +4,7 @@ authors = ["Tim DuBois", "George Datseris", "Ali Vahdati"]
 version = "4.3.1"
 
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -18,6 +19,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+CSV = "0.8"
 DataFrames = "0.21, 0.22, 1"
 DataStructures = "0.18"
 GraphRecipes = "0.5"

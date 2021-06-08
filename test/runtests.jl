@@ -84,4 +84,5 @@ end
     include("grid_pathfinder_tests.jl")
     include("collisions_tests.jl")
     include("graph_tests.jl")
+    include("csv_tests.jl")
 end
