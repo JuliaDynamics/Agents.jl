@@ -27,6 +27,19 @@ struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
     extent::NTuple{D,T}
 end
 
+struct SerializableGraphSpace{G}
+    graph::G
+end
+
+struct SerializableAStar{D,P,M}
+    agent_paths::Vector{Tuple{Int,Vector{Dims{D}}}}
+    grid_dims::Dims{D}
+    neighborhood::Vector{Dims{D}}
+    admissibility::Float64
+    walkable::BitArray{D}
+    cost_metric::CostMetric{D}
+end
+
 to_serializable(t::ABM; kwargs...) = SerializableABM(
     collect(values(t.agents)),
     to_serializable(t.space; kwargs...),
@@ -49,6 +62,21 @@ to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
         t.dims,
         t.spacing,
         t.extent,
+    )
+
+to_serializable(t::GraphSpace{G}; kwargs...) where {G} = 
+    SerializableGraphSpace{G}(
+        t.graph,
+    )
+
+to_serializable(t::AStar{D,P,M}; kwargs...) where {D,P,M} =
+    SerializableAStar{D,P,M}(
+        [(k, collect(v)) for (k, v) in t.agent_paths],
+        t.grid_dims,
+        map(Tuple, t.neighborhood),
+        t.admissibility,
+        t.walkable,
+        t.cost_metric,
     )
 
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
@@ -91,10 +119,22 @@ function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) whe
     )
 end
 
+from_serializable(t::SerializableGraphSpace{G}; kwargs...) where {G} = 
+    GraphSpace{G}(
+        t.graph,
+    )
+
+from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
+    AStar{D,P,M}(
+        Dict{Int,Agents.Path{D}}(k => Path{D}(v...) for (k, v) in t.agent_paths),
+        t.grid_dims,
+        map(CartesianIndex, t.neighborhood),
+        t.admissibility,
+        t.walkable,
+        t.cost_metric,
+    )
+
 function dump_to_jld2(filename, model::ABM; kwargs...)
-    if model.space isa GraphSpace
-        @info "The underlying graph in GraphSpace is not saved. Use GraphIO.jl to save the graph as a separate file"
-    end
     if model.space isa OpenStreetMapSpace
         @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
     end
