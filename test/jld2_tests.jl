@@ -8,7 +8,8 @@
 
     function test_grid_space(space, other)
         @test size(space.s) == size(other.s)
-        @test space.s == other.s
+        @test all(length(other.s[pos]) == length(space.s[pos]) for pos in eachindex(space.s))
+        @test all(all(x in other.s[pos] for x in space.s[pos]) for pos in eachindex(space.s))
         @test space.metric == other.metric
         @test length(space.hoods) == length(other.hoods)
         @test all(other.hoods[k].whole == v.whole for (k, v) in space.hoods)
@@ -95,6 +96,49 @@
         @test model.space.dims == other.space.dims
         @test model.space.spacing == other.space.spacing
         @test model.space.extent == other.space.extent
+
+        rm("test.jld2")
+    end
+
+    @testset "GraphSpace" begin
+        struct ModelData
+            i::Int
+            f::Float32
+            d::Dict{Int,String}
+        end
+
+        model = ABM(
+            Agent7,
+            GraphSpace(complete_graph(10));
+            properties = ModelData(3, 4.2f32, Dict(1=>"foo", 2=>"bar")),
+            rng = MersenneTwister(42)
+        )
+
+        for i in 1:30
+            add_agent_pos!(Agent7(i, i%10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
+        end
+
+        AgentsIO.dump_to_jld2("test.jld2", model)
+        other = AgentsIO.load_from_jld2("test.jld2")
+
+        # agent data
+        @test nagents(other) == nagents(model)
+        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(model[i].pos == other[i].pos for i in allids(model))
+        @test all(model[i].f1 == other[i].f1 for i in allids(model))
+        @test all(model[i].f2 == other[i].f2 for i in allids(model))
+        # properties
+        @test model.i == other.i
+        @test model.f == other.f
+        @test all(haskey(other.d, k) for k in keys(model.d))
+        @test all(other.d[k] == v for (k, v) in model.d)
+        # model data
+        test_model_data(model, other)
+        # space data
+        @test model.space.graph == other.space.graph
+        @test length(model.space.s) == length(other.space.s)
+        @test all(length(model.space.s[pos]) == length(other.space.s[pos]) for pos in eachindex(model.space.s))
+        @test all(all(x in other.space.s[pos] for x in model.space.s[pos]) for pos in eachindex(model.space.s))
 
         rm("test.jld2")
     end

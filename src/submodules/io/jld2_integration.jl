@@ -116,7 +116,7 @@ function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) whe
     )
 end
 
-from_serializable(t::SerializableGraphSpace{G}; kwargs...) where {G} = GraphSpace{G}(t.graph)
+from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
 
 from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
     Pathfinding.AStar{D,P,M}(
