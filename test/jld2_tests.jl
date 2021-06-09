@@ -1,4 +1,23 @@
 @testset "JLD2" begin
+
+    function test_model_data(model, other)
+        @test model.scheduler == other.scheduler
+        @test model.rng == other.rng
+        @test model.maxid.x == other.maxid.x
+    end
+
+    function test_grid_space(space, other)
+        @test size(space.s) == size(other.s)
+        @test space.s == other.s
+        @test space.metric == other.metric
+        @test length(space.hoods) == length(other.hoods)
+        @test all(other.hoods[k].whole == v.whole for (k, v) in space.hoods)
+        @test all(other.hoods[k].βs == v.βs for (k, v) in space.hoods)
+        @test length(space.hoods_tuple) == length(other.hoods_tuple)
+        @test all(haskey(other.hoods_tuple, k) for k in keys(space.hoods_tuple))
+        @test all(other.hoods_tuple[k] == v for (k, v) in space.hoods_tuple)
+    end
+
     @testset "No space" begin
         model, _ = Models.hk()
         AgentsIO.dump_to_jld2("test.jld2", model)
@@ -13,9 +32,7 @@
         # properties
         @test model.ϵ == other.ϵ
         # model data
-        @test model.scheduler == other.scheduler
-        @test model.rng == other.rng
-        @test model.maxid.x == other.maxid.x
+        test_model_data(model, other)
 
         rm("test.jld2")
     end
@@ -39,21 +56,10 @@
         @test model.countdown == other.countdown
         @test model.regrowth_time == other.regrowth_time
         # model data
-        @test model.scheduler == other.scheduler
-        @test model.rng == other.rng
-        @test model.maxid.x == other.maxid.x
+        test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        @test size(model.space.s) == size(other.space.s)
-        @test model.space.s == other.space.s
-        @test model.space.metric == other.space.metric
-        @test length(model.space.hoods) == length(other.space.hoods)
-        @test all(other.space.hoods[k].whole == model.space.hoods[k].whole for (k, v) in model.space.hoods)
-        @test all(other.space.hoods[k].βs == model.space.hoods[k].βs for (k, v) in model.space.hoods)
-        @test all(other.space.hoods[k] == v for (k, v) in model.space.hoods)
-        @test length(model.space.hoods_tuple) == length(other.space.hoods_tuple)
-        @test all(haskey(other.space.hoods_tuple, k) for k in keys(model.space.hoods_tuple))
-        @test all(other.space.hoods_tuple[k] == v for (k, v) in model.space.hoods_tuple)
+        test_grid_space(model.space, other.space)
 
         rm("test.jld2")
     end
@@ -81,21 +87,10 @@
         @test model.interaction_radius == other.interaction_radius
         @test model.dt == other.dt
         # model data
-        @test model.scheduler == other.scheduler
-        @test model.rng == other.rng
-        @test model.maxid.x == other.maxid.x
+        test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        @test size(model.space.grid.s) == size(other.space.grid.s)
-        @test model.space.grid.s == other.space.grid.s
-        @test model.space.grid.metric == other.space.grid.metric
-        @test length(model.space.grid.hoods) == length(other.space.grid.hoods)
-        @test all(haskey(other.space.grid.hoods, k) for k in keys(model.space.grid.hoods))
-        @test all(other.space.grid.hoods[k].whole == model.space.grid.hoods[k].whole for (k, v) in model.space.grid.hoods)
-        @test all(other.space.grid.hoods[k].βs == model.space.grid.hoods[k].βs for (k, v) in model.space.grid.hoods)
-        @test length(model.space.grid.hoods_tuple) == length(other.space.grid.hoods_tuple)
-        @test all(haskey(other.space.grid.hoods_tuple, k) for k in keys(model.space.grid.hoods_tuple))
-        @test all(other.space.grid.hoods_tuple[k] == v for (k, v) in model.space.grid.hoods_tuple)
+        test_grid_space(model.space.grid, other.space.grid)
         @test model.space.update_vel! == other.space.update_vel!
         @test model.space.dims == other.space.dims
         @test model.space.spacing == other.space.spacing
