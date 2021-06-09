@@ -19,6 +19,50 @@
         @test all(other.hoods_tuple[k] == v for (k, v) in space.hoods_tuple)
     end
 
+    test_costmetric(metric, other) = @test false
+    test_costmetric(
+        metric::Pathfinding.DirectDistance{D},
+        other::Pathfinding.DirectDistance{D}
+    ) where {D} = @test metric.direction_costs == other.direction_costs
+
+    test_costmetric(
+        metric::Pathfinding.MaxDistance{D},
+        other::Pathfinding.MaxDistance{D}
+    ) where {D} = @test true
+
+    function test_costmetric(
+        metric::Pathfinding.HeightMap{D},
+        other::Pathfinding.HeightMap{D}
+    ) where {D}
+        @test metric.hmap == other.hmap
+        test_costmetric(metric.base_metric, other.base_metric)
+    end
+
+
+    function test_astar(astar, other)
+        @test typeof(astar) == typeof(other)
+        @test astar.agent_paths == other.agent_paths
+        @test astar.grid_dims == other.grid_dims
+        @test astar.neighborhood == other.neighborhood
+        @test astar.admissibility == other.admissibility
+        @test astar.walkable == other.walkable
+        test_costmetric(astar.cost_metric, other.cost_metric)
+    end
+
+    function test_pathfinding_model(model, other)
+        # agent data
+        @test nagents(other) == nagents(model)
+        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(model[i].pos == other[i].pos for i in allids(model))
+        # model data
+        test_model_data(model, other)
+        # space data
+        @test typeof(model.space) == typeof(other.space)    # to check periodicity
+        test_grid_space(model.space, other.space)
+        # pathfinder data
+        test_astar(model.space.pathfinder, other.space.pathfinder)
+    end
+
     @testset "No space" begin
         model, _ = Models.hk()
         AgentsIO.dump_to_jld2("test.jld2", model)
@@ -139,6 +183,41 @@
         @test length(model.space.s) == length(other.space.s)
         @test all(length(model.space.s[pos]) == length(other.space.s[pos]) for pos in eachindex(model.space.s))
         @test all(all(x in other.space.s[pos] for x in model.space.s[pos]) for pos in eachindex(model.space.s))
+
+        rm("test.jld2")
+    end
+
+    @testset "Pathfinder" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m)
+        walk = BitArray(fill(true, 10, 10))
+        walk[2, 2] = false
+        walk[9, 9] = false
+        hmap = abs.(rand(Int, 10, 10)) .% 10
+        direct = Pathfinding.DirectDistance{2}([0, 10])
+        maxd = Pathfinding.MaxDistance{2}()
+        hmm = Pathfinding.HeightMap(hmap)
+
+        function setup_model(; kwargs...)
+            model = ABM(Agent1, GridSpace((10, 10); periodic = false, pathfinder = Pathfinding.Pathfinder(; kwargs...)), rng = MersenneTwister(42))
+            add_agent!((1, 1), model)
+            Pathfinding.set_target!(model[1], (10, 10), model)
+            step!(model, astep!, dummystep)
+
+            AgentsIO.dump_to_jld2("test.jld2", model)
+            other = AgentsIO.load_from_jld2("test.jld2")
+            return model, other
+        end
+        
+        test_pathfinding_model(setup_model()...)
+        test_pathfinding_model(setup_model(; diagonal_movement = true)...)
+        test_pathfinding_model(setup_model(; admissibility = 0.5)...)
+        test_pathfinding_model(setup_model(; walkable = walk)...)
+        test_pathfinding_model(setup_model(; cost_metric = direct)...)
+        test_pathfinding_model(setup_model(; cost_metric = maxd)...)
+        test_pathfinding_model(setup_model(; cost_metric = hmm)...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, direct))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, maxd))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, hmm))...)
 
         rm("test.jld2")
     end

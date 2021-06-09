@@ -48,13 +48,16 @@ to_serializable(t::ABM; kwargs...) = SerializableABM(
     t.maxid.x,
 )
 
-to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W} = SerializableGridSpace{D,P,W}(
-    size(t.s),
-    t.metric,
-    [(k, v) for (k, v) in t.hoods],
-    [(k, v) for (k, v) in t.hoods_tuple],
-    to_serializable(t.pathfinder; kwargs...),
-)
+function to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W}
+    pathfinder = to_serializable(t.pathfinder; kwargs...)
+    SerializableGridSpace{D,P,typeof(pathfinder)}(
+        size(t.s),
+        t.metric,
+        [(k, v) for (k, v) in t.hoods],
+        [(k, v) for (k, v) in t.hoods_tuple],
+        pathfinder,
+    )
+end
 
 to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
     SerializableContinuousSpace{D,P,T}(
@@ -96,12 +99,13 @@ function from_serializable(t::SerializableGridSpace{D,P,W}; kwargs...) where {D,
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P,W}(
+    pathfinder = from_serializable(t.pathfinder; kwargs...)
+    return GridSpace{D,P,typeof(pathfinder)}(
         s,
         t.metric,
         Dict(k => v for (k, v) in t.hoods),
         Dict(k => v for (k, v) in t.hoods_tuple),
-        from_serializable(t.pathfinder; kwargs...),
+        pathfinder,
     )
 end
 
