@@ -290,4 +290,6 @@ See the [Developer Docs](@ref) for details.
 AgentsIO
 AgentsIO.populate_from_csv!
 AgentsIO.dump_to_csv
+AgentsIO.dump_to_jld2
+AgentsIO.load_from_jld2
 ```
