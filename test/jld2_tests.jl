@@ -221,4 +221,41 @@
 
         rm("test.jld2")
     end
+
+    @testset "Multi-agent" begin
+        model, _ = Models.daisyworld()
+        AgentsIO.dump_to_jld2("test.jld2", model)
+        other = AgentsIO.load_from_jld2("test.jld2"; scheduler = Models.daisysched)
+
+        # agent data
+        @test nagents(other) == nagents(model)
+        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(model[i].pos == other[i].pos for i in allids(model))
+        @test all(model[i].temperature == other[i].temperature for i in allids(model) if model[i] isa Models.Land)
+        @test all(model[i].breed == other[i].breed for i in allids(model) if model[i] isa Models.Daisy)
+        @test all(model[i].age == other[i].age for i in allids(model) if model[i] isa Models.Daisy)
+        @test all(model[i].albedo == other[i].albedo for i in allids(model) if model[i] isa Models.Daisy)
+        # properties
+        @test model.max_age == other.max_age
+        @test model.surface_albedo == other.surface_albedo
+        @test model.solar_luminosity == other.solar_luminosity
+        @test model.solar_change == other.solar_change
+        @test model.scenario == other.scenario
+        @test model.tick == other.tick
+        # model data
+        test_model_data(model, other)
+        # space data
+        test_grid_space(model.space, other.space)
+
+        rm("test.jld2")
+    end
+
+    @testset "OSMSpace" begin
+        @agent Zombie OSMAgent begin
+            infected::Bool
+        end
+        model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
+        
+        @test_throws AssertionError AgentsIO.dump_to_jld2("test.jld2", model)
+    end
 end

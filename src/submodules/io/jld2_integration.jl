@@ -135,9 +135,7 @@ from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
     )
 
 function dump_to_jld2(filename, model::ABM; kwargs...)
-    if model.space isa OpenStreetMapSpace
-        @info "The underlying OpenStreetMap in OpenStreetMapSpace is not saved."
-    end
+    @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
     model = to_serializable(model; kwargs...)
     @save filename model
 end
