@@ -1,7 +1,7 @@
 using Random
 using JLD2
 
-to_serializable(t; kwargs...) = t
+to_serializable(t) = t
 from_serializable(t; kwargs...) = t
 
 struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
@@ -40,16 +40,16 @@ struct SerializableAStar{D,P,M}
     cost_metric::Pathfinding.CostMetric{D}
 end
 
-to_serializable(t::ABM; kwargs...) = SerializableABM(
+to_serializable(t::ABM) = SerializableABM(
     collect(values(t.agents)),
-    to_serializable(t.space; kwargs...),
+    to_serializable(t.space),
     t.properties,
     t.rng,
     t.maxid.x,
 )
 
-function to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W}
-    pathfinder = to_serializable(t.pathfinder; kwargs...)
+function to_serializable(t::GridSpace{D,P,W}) where {D,P,W}
+    pathfinder = to_serializable(t.pathfinder)
     SerializableGridSpace{D,P,typeof(pathfinder)}(
         size(t.s),
         t.metric,
@@ -59,17 +59,17 @@ function to_serializable(t::GridSpace{D,P,W}; kwargs...) where {D,P,W}
     )
 end
 
-to_serializable(t::ContinuousSpace{D,P,T}; kwargs...) where {D,P,T} =
+to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
     SerializableContinuousSpace{D,P,T}(
-        to_serializable(t.grid; kwargs...),
+        to_serializable(t.grid),
         t.dims,
         t.spacing,
         t.extent,
     )
 
-to_serializable(t::GraphSpace{G}; kwargs...) where {G} = SerializableGraphSpace{G}(t.graph)
+to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::Pathfinding.AStar{D,P,M}; kwargs...) where {D,P,M} =
+to_serializable(t::Pathfinding.AStar{D,P,M}) where {D,P,M} =
     SerializableAStar{D,P,M}(
         [(k, collect(v)) for (k, v) in t.agent_paths],
         t.grid_dims,
@@ -134,12 +134,34 @@ from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
         t.cost_metric,
     )
 
-function dump_to_jld2(filename, model::ABM; kwargs...)
+"""
+    dump_to_jld2(filename, model::ABM)
+
+Write the entire `model` to the JLD2 file specified by `filename`. Agent data, including
+multi-agent models, is also saved. Any types not supported by JLD2.jl will not be
+serialized/deserialized correctly. Currently, serialization is also not supported for
+models using OpenStreetMapSpace. Functions are not saved, including stepping functions,
+schedulers, and `update_vel!`. The last two can be provided to [`load_from_jld2`](@ref)
+using the appropriate keyword arguments.
+"""
+function dump_to_jld2(filename, model::ABM)
     @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
     model = to_serializable(model; kwargs...)
     @save filename model
 end
 
+"""
+    load_from_jld2(filename; kwargs...)
+
+Load the model saved to the file specified by `filename`.
+
+The keyword argument `scheduler = Schedulers.fastest` specifies what scheduler should
+be used for the model.
+
+The keyword argument `update_vel!` specifies a function that should be used to
+update each agent's velocity before it is moved. Refer to [`ContinuousSpace`](@ref) for
+details.
+"""
 function load_from_jld2(filename; kwargs...)
     @load filename model
     return from_serializable(model; kwargs...)
