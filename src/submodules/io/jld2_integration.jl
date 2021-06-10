@@ -146,7 +146,7 @@ using the appropriate keyword arguments.
 """
 function dump_to_jld2(filename, model::ABM)
     @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
-    model = to_serializable(model; kwargs...)
+    model = to_serializable(model)
     @save filename model
 end
 
