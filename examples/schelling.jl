@@ -327,3 +327,88 @@ adf
 
 # We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to
 # "total happiness".
+
+# ## Saving the model state
+
+# It is often useful to save a model after running it, so that multiple branching
+# scenarios can be simulated from that point onwards. For example, once most of
+# the population is happy, let's see what happens if some more agents occupy the
+# empty cells. The new agents could all be of one group, or belong to a third, new, group.
+# Simulating this needs multiple copies of the model. `Agents.jl` provides the
+# functions [`AgentsIO.save_checkpoint`](@ref) and [`AgentsIO.load_checkpoint`](@ref)
+# to save and load models to JLD2 files respectively.
+
+# First, let's create a model with 200 agents and run it for 40 iterations.
+
+model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
+run!(model, agent_step!, 40)
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# Most of the agents have settled happily. Now, let's save the model.
+
+AgentsIO.save_checkpoint("schelling.jld2", model)
+
+# Note that we can now leave the REPL, and come back later to run the model,
+# right from where we left off. Let's clear the model variable and then
+# load it back in from the file
+
+model = nothing
+model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+
+# Since functions are not saved, the scheduler has to be passed while loading
+# the model. Let's now verify that we loaded back exactly what we saved.
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# For starters, let's see what happens if we add 100 more agents of group 1
+
+for i in 1:100
+    agent = SchellingAgent(nextid(model), (1, 1), false, 1)
+    add_agent_single!(agent, model)
+end
+
+# Let's see what our model looks like now.
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# And then run it for 40 iterations.
+
+run!(model, agent_step!, 40)
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# It looks like they eventually cluster again. What if the agents are of a new group?
+# We can start by loading the model back in from the file, thus resetting the
+# changes we made.
+
+model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+
+for i in 1:100
+    agent = SchellingAgent(nextid(model), (1, 1), false, 3)
+    add_agent_single!(agent, model)
+end
+
+# To visualize the model, we need to redefine `groupcolor` and `groupmarker`
+# to handle a third group.
+
+groupcolor(a) = (:blue, :orange, :green)[a.group]
+groupmarker(a) = (:circle, :rect, :cross)[a.group]
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# The new agents are scattered randomly, as expected. Now let's run the model.
+
+run!(model, agent_step!, 40)
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# The new agents also form their own clusters, despite being completely scattered.
+# It's also interesting to note that there is minimal rearrangement among the existing
+# groups. The new agents simply occupy the remaining space.
