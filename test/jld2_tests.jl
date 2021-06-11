@@ -65,8 +65,8 @@
 
     @testset "No space" begin
         model, _ = Models.hk()
-        AgentsIO.dump_to_jld2("test.jld2", model)
-        other = AgentsIO.load_from_jld2("test.jld2")
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2")
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -86,8 +86,8 @@
         # predator_prey used since properties is a NamedTuple, and contains an Array
         model, astep, mstep = Models.predator_prey()
         step!(model, astep, mstep, 50)
-        AgentsIO.dump_to_jld2("test.jld2", model)
-        other = AgentsIO.load_from_jld2("test.jld2"; scheduler = Schedulers.by_property(:type))
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.by_property(:type))
         
         # agent data
         @test nagents(other) == nagents(model)
@@ -112,8 +112,8 @@
     @testset "ContinuousSpace" begin
         model, astep, mstep = Models.social_distancing(N = 300)
         step!(model, astep, mstep, 100)
-        AgentsIO.dump_to_jld2("test.jld2", model)
-        other = AgentsIO.load_from_jld2("test.jld2")
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2")
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -162,8 +162,8 @@
             add_agent_pos!(Agent7(i, i%10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
         end
 
-        AgentsIO.dump_to_jld2("test.jld2", model)
-        other = AgentsIO.load_from_jld2("test.jld2")
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2")
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -203,8 +203,8 @@
             Pathfinding.set_target!(model[1], (10, 10), model)
             step!(model, astep!, dummystep)
 
-            AgentsIO.dump_to_jld2("test.jld2", model)
-            other = AgentsIO.load_from_jld2("test.jld2")
+            AgentsIO.save_checkpoint("test.jld2", model)
+            other = AgentsIO.load_checkpoint("test.jld2")
             return model, other
         end
         
@@ -224,8 +224,8 @@
 
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
-        AgentsIO.dump_to_jld2("test.jld2", model)
-        other = AgentsIO.load_from_jld2("test.jld2"; scheduler = Models.daisysched)
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Models.daisysched)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -256,6 +256,6 @@
         end
         model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
         
-        @test_throws AssertionError AgentsIO.dump_to_jld2("test.jld2", model)
+        @test_throws AssertionError AgentsIO.save_checkpoint("test.jld2", model)
     end
 end

@@ -7,7 +7,7 @@ using JLD2
 Return the serializable form of the passed value. This defaults to the value itself,
 unless a more specific method is defined. Define a method for this function and for
 [`AgentsIO.from_serializable`](@ref) if you need custom serialization for model
-properties. This also enables passing keyword arguments to [`AgentsIO.load_from_jld2`](@ref)
+properties. This also enables passing keyword arguments to [`AgentsIO.load_checkpoint`](@ref)
 and having access to them during deserialization of the properties. This function
 is not called recursively on every type/value during serialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
@@ -23,7 +23,7 @@ Given a value in its serializable form, return the original version. This defaul
 to the value itself, unless a more specific method is defined. Define a method for 
 this function and for [`AgentsIO.to_serializable`](@ref) if you need custom
 serialization for model properties. This also enables passing keyword arguments
-to [`AgentsIO.load_from_jld2`](@ref) and having access to them through `kwargs`.
+to [`AgentsIO.load_checkpoint`](@ref) and having access to them through `kwargs`.
 This function is not called recursively on every type/value during deserialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
 for every occurence of a specific type (such as agent structs), refer to the
@@ -162,24 +162,24 @@ from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
     )
 
 """
-    AgentsIO.dump_to_jld2(filename, model::ABM)
+    AgentsIO.save_checkpoint(filename, model::ABM)
 
 Write the entire `model` to the JLD2 file specified by `filename`. Agent data, including
 multi-agent models, is also saved. Serialization capability depends on JLD2.jl.
 Currently, serialization is also not supported for models using OpenStreetMapSpace.
 Functions are not saved, including stepping functions, schedulers, and `update_vel!`.
-The last two can be provided to [`AgentsIO.load_from_jld2`](@ref) using the appropriate
+The last two can be provided to [`AgentsIO.load_checkpoint`](@ref) using the appropriate
 keyword arguments. In case you require custom serialization for model properties,
 refer to [`AgentsIO.to_serializable`](@ref) and [`AgentsIO.from_serializable`](@ref).
 """
-function dump_to_jld2(filename, model::ABM)
+function save_checkpoint(filename, model::ABM)
     @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
     model = to_serializable(model)
     @save filename model
 end
 
 """
-    AgentsIO.load_from_jld2(filename; kwargs...)
+    AgentsIO.load_checkpoint(filename; kwargs...)
 
 Load the model saved to the file specified by `filename`.
 
@@ -193,7 +193,7 @@ details.
 Any other keyword arguments are forwarded to [`AgentsIO.from_serializable`](@ref) and
 can be used in case a custom method is defined.
 """
-function load_from_jld2(filename; kwargs...)
+function load_checkpoint(filename; kwargs...)
     @load filename model
     return from_serializable(model; kwargs...)
 end

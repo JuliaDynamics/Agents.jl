@@ -289,7 +289,9 @@ See the [Developer Docs](@ref) for details.
 ```@docs
 AgentsIO
 AgentsIO.populate_from_csv!
-AgentsIO.dump_to_csv
-AgentsIO.dump_to_jld2
+AgentsIO.save_checkpoint
+AgentsIO.load_checkpoint
 AgentsIO.load_from_jld2
+AgentsIO.to_serializable
+AgentsIO.from_serializable
 ```
