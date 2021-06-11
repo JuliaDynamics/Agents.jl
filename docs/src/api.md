@@ -291,7 +291,6 @@ AgentsIO
 AgentsIO.populate_from_csv!
 AgentsIO.save_checkpoint
 AgentsIO.load_checkpoint
-AgentsIO.load_from_jld2
 AgentsIO.to_serializable
 AgentsIO.from_serializable
 ```

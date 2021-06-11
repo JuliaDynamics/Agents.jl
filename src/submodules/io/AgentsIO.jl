@@ -7,7 +7,7 @@ to and from files.
 
 You can save and load agent data to and from CSV files using [`AgentsIO.dump_to_csv`](@ref)
 and [`AgentsIO.populate_from_csv!`](@ref) respectively. Entire models can also be saved
-to JLD2 files using [`AgentsIO.dump_to_jld2`](@ref) and [`AgentsIO.load_from_jld2`](@ref).
+to JLD2 files using [`AgentsIO.save_checkpoint`](@ref) and [`AgentsIO.load_checkpoint`](@ref).
 """
 module AgentsIO
 using Agents
