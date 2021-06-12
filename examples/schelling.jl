@@ -206,7 +206,7 @@ data
 
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 using InteractiveDynamics
-using CairoMakie # choosing a plotting backend
+using GLMakie # choosing a plotting backend
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
@@ -351,10 +351,8 @@ figure
 AgentsIO.save_checkpoint("schelling.jld2", model)
 
 # Note that we can now leave the REPL, and come back later to run the model,
-# right from where we left off. Let's clear the model variable and then
-# load it back in from the file
+# right from where we left off.
 
-model = nothing
 model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
 
 # Since functions are not saved, the scheduler has to be passed while loading
