@@ -263,71 +263,6 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # </video>
 # ```
 
-
-# ## Ensembles and distributed computing
-
-# We can run ensemble simulations and collect the output of every member in a single `DataFrame`.
-# To that end we use the [`ensemblerun!`](@ref) function.
-# The function accepts a `Vector` of ABMs, each (typically) initialized with a different
-# seed and/or agent distribution. For example we can do
-models = [initialize(seed = x) for x in rand(UInt8, 3)];
-
-# and then
-adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
-adf[(end - 10):end, :]
-
-# It is possible to run the ensemble in parallel.
-# For that, we should start julia with `julia -p n` where `n` is the number
-# of processing cores. Alternatively, we can define the number of cores from
-# within a Julia session:
-
-# ```julia
-# using Distributed
-# addprocs(4)
-# ```
-
-# For distributed computing to work, all definitions must be preceded with
-# `@everywhere`, e.g.
-
-# ```julia
-# using Distributed
-# @everywhere using Agents
-# @everywhere mutable struct SchellingAgent ...
-# @everywhere agent_step!(...) = ...
-# ```
-
-# Then we can tell the `ensemblerun!` function to run the ensemble in parallel
-# using the keyword `parallel = true`:
-
-# ```julia
-# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
-# ```
-
-# ## Scanning parameter ranges
-
-# We often are interested in the effect of different parameters on the behavior of an
-# agent-based model. `Agents.jl` provides the function [`paramscan`](@ref) to automatically explore
-# the effect of different parameter values.
-
-# We have already defined our model initialization function as `initialize`.
-# We now also define a processing function, that returns the percentage of
-# happy agents:
-
-happyperc(moods) = count(moods) / length(moods)
-adata = [(:mood, happyperc)]
-
-parameters = Dict(
-    :min_to_be_happy => collect(2:5), # expanded
-    :numagents => [200, 300],         # expanded
-    :griddims => (20, 20),            # not Vector = not expanded
-)
-
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
-adf
-
-# We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to
-# "total happiness".
-
 # ## Saving the model state
 
 # It is often useful to save a model after running it, so that multiple branching
@@ -418,3 +353,67 @@ figure
 # groups. The new agents simply occupy the remaining space.
 
 rm("../schelling.jld2") # hide
+
+# ## Ensembles and distributed computing
+
+# We can run ensemble simulations and collect the output of every member in a single `DataFrame`.
+# To that end we use the [`ensemblerun!`](@ref) function.
+# The function accepts a `Vector` of ABMs, each (typically) initialized with a different
+# seed and/or agent distribution. For example we can do
+models = [initialize(seed = x) for x in rand(UInt8, 3)];
+
+# and then
+adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
+adf[(end - 10):end, :]
+
+# It is possible to run the ensemble in parallel.
+# For that, we should start julia with `julia -p n` where `n` is the number
+# of processing cores. Alternatively, we can define the number of cores from
+# within a Julia session:
+
+# ```julia
+# using Distributed
+# addprocs(4)
+# ```
+
+# For distributed computing to work, all definitions must be preceded with
+# `@everywhere`, e.g.
+
+# ```julia
+# using Distributed
+# @everywhere using Agents
+# @everywhere mutable struct SchellingAgent ...
+# @everywhere agent_step!(...) = ...
+# ```
+
+# Then we can tell the `ensemblerun!` function to run the ensemble in parallel
+# using the keyword `parallel = true`:
+
+# ```julia
+# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
+# ```
+
+# ## Scanning parameter ranges
+
+# We often are interested in the effect of different parameters on the behavior of an
+# agent-based model. `Agents.jl` provides the function [`paramscan`](@ref) to automatically explore
+# the effect of different parameter values.
+
+# We have already defined our model initialization function as `initialize`.
+# We now also define a processing function, that returns the percentage of
+# happy agents:
+
+happyperc(moods) = count(moods) / length(moods)
+adata = [(:mood, happyperc)]
+
+parameters = Dict(
+    :min_to_be_happy => collect(2:5), # expanded
+    :numagents => [200, 300],         # expanded
+    :griddims => (20, 20),            # not Vector = not expanded
+)
+
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf
+
+# We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to
+# "total happiness".
