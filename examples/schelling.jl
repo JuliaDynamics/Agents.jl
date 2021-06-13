@@ -352,8 +352,11 @@ AgentsIO.save_checkpoint("schelling.jld2", model)
 
 # Note that we can now leave the REPL, and come back later to run the model,
 # right from where we left off.
-
-model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+#
+# ```julia
+# model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+# ```
+model = AgentsIO.load_checkpoint("../schelling.jld2"; scheduler = Schedulers.randomly) # hide
 
 # Since functions are not saved, the scheduler has to be passed while loading
 # the model. Let's now verify that we loaded back exactly what we saved.
@@ -383,8 +386,11 @@ figure
 # It looks like they eventually cluster again. What if the agents are of a new group?
 # We can start by loading the model back in from the file, thus resetting the
 # changes we made.
-
-model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+#
+# ```julia
+# model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+# ```
+model = AgentsIO.load_checkpoint("../schelling.jld2"; scheduler = Schedulers.randomly) # hide
 
 for i in 1:100
     agent = SchellingAgent(nextid(model), (1, 1), false, 3)
@@ -410,3 +416,5 @@ figure
 # The new agents also form their own clusters, despite being completely scattered.
 # It's also interesting to note that there is minimal rearrangement among the existing
 # groups. The new agents simply occupy the remaining space.
+
+rm("../schelling.jld2") # hide
