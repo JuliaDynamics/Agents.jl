@@ -8,8 +8,20 @@ Return the serializable form of the passed value. This defaults to the value its
 unless a more specific method is defined. Define a method for this function and for
 [`AgentsIO.from_serializable`](@ref) if you need custom serialization for model
 properties. This also enables passing keyword arguments to [`AgentsIO.load_checkpoint`](@ref)
-and having access to them during deserialization of the properties. This function
-is not called recursively on every type/value during serialization. The final
+and having access to them during deserialization of the properties. Some possible
+scenarios where this may be required are:
+
+- Your properties contain functions (or any type not supported by JLD2.jl). These may not
+  be (de)serialized correctly. This could result in checkpoint files that cannot be loaded
+  back in, or contain reconstructed types that do not retain their data/functionality.
+- Your properties contain data that can be recalculated during deserialization. Omitting
+  such properties can reduce the size of the checkpoint file, at the expense of some extra
+  computation at deserialization.
+
+If your model properties do not fall in the above scenarios, you do not need to use this
+function.
+
+This function is not called recursively on every type/value during serialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
 for every occurence of a specific type (such as agent structs), refer to the
 Custom Serialization section of JLD2.jl documentation.
@@ -24,6 +36,9 @@ to the value itself, unless a more specific method is defined. Define a method f
 this function and for [`AgentsIO.to_serializable`](@ref) if you need custom
 serialization for model properties. This also enables passing keyword arguments
 to [`AgentsIO.load_checkpoint`](@ref) and having access to them through `kwargs`.
+
+Refer to [`AgentsIO.to_serializable`](@ref) to check when you need to define this function.
+
 This function is not called recursively on every type/value during deserialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
 for every occurence of a specific type (such as agent structs), refer to the
