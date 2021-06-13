@@ -291,6 +291,7 @@ AgentsIO.save_checkpoint("schelling.jld2", model)
 # ```julia
 # model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
 # ```
+
 model = AgentsIO.load_checkpoint("../schelling.jld2"; scheduler = Schedulers.randomly) # hide
 
 # Since functions are not saved, the scheduler has to be passed while loading
@@ -325,6 +326,7 @@ figure
 # ```julia
 # model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
 # ```
+
 model = AgentsIO.load_checkpoint("../schelling.jld2"; scheduler = Schedulers.randomly) # hide
 
 for i in 1:100
@@ -335,17 +337,17 @@ end
 # To visualize the model, we need to redefine `groupcolor` and `groupmarker`
 # to handle a third group.
 
-groupcolor(a) = (:blue, :orange, :green)[a.group]
-groupmarker(a) = (:circle, :rect, :cross)[a.group]
+newgroupcolor(a) = (:blue, :orange, :green)[a.group]
+newgroupmarker(a) = (:circle, :rect, :cross)[a.group]
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abm_plot(model; ac = newgroupcolor, am = newgroupmarker, as = 10)
 figure
 
 # The new agents are scattered randomly, as expected. Now let's run the model.
 
 run!(model, agent_step!, 40)
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abm_plot(model; ac = newgroupcolor, am = newgroupmarker, as = 10)
 figure
 
 # The new agents also form their own clusters, despite being completely scattered.
