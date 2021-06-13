@@ -165,13 +165,16 @@ from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
 """
     AgentsIO.save_checkpoint(filename, model::ABM)
 
-Write the entire `model` to the JLD2 file specified by `filename`. Agent data, including
-multi-agent models, is also saved. Serialization capability depends on JLD2.jl.
-Currently, serialization is also not supported for models using OpenStreetMapSpace.
-Functions are not saved, including stepping functions, schedulers, and `update_vel!`.
-The last two can be provided to [`AgentsIO.load_checkpoint`](@ref) using the appropriate
-keyword arguments. In case you require custom serialization for model properties,
-refer to [`AgentsIO.to_serializable`](@ref) and [`AgentsIO.from_serializable`](@ref).
+Write the entire `model` to file specified by `filename`. The following points
+should be considered before using this functionality:
+
+- Currently, serialization is also not supported for models using OpenStreetMapSpace.
+- Functions are not saved, including stepping functions, schedulers, and `update_vel!`.
+  The last two can be provided to [`AgentsIO.load_checkpoint`](@ref) using the appropriate
+  keyword arguments.
+
+In case you require custom serialization for model properties, refer to
+[`AgentsIO.to_serializable`](@ref) and [`AgentsIO.from_serializable`](@ref).
 """
 function save_checkpoint(filename, model::ABM)
     @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
