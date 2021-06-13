@@ -285,7 +285,7 @@ Pathfinding.HeightMap
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
 See the [Developer Docs](@ref) for details.
 
-## AgentsIO
+## (De)Serialization
 ```@docs
 AgentsIO
 AgentsIO.populate_from_csv!
