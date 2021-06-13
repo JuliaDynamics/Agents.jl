@@ -113,6 +113,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
+        warn = get(kwargs, :warn, true),
     )
     abm.maxid[] = t.maxid
     for a in t.agents
@@ -189,6 +190,9 @@ be used for the model.
 The keyword argument `update_vel!` specifies a function that should be used to
 update each agent's velocity before it is moved. Refer to [`ContinuousSpace`](@ref) for
 details.
+
+The keyword argument `warn = true` can be used to disable warnings from type checks on the
+agent type.
 
 Any other keyword arguments are forwarded to [`AgentsIO.from_serializable`](@ref) and
 can be used in case a custom method is defined.
