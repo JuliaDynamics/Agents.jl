@@ -34,3 +34,14 @@ will be available for other pathfinder algorithms in the future.
 Pathfinding.CostMetric
 Pathfinding.delta_cost
 ```
+
+## Implementing custom serialization for model properties
+Custom serialization may be required if your properties contain non-serializable data, such as
+functions. Alternatively, if it is possible to recalculate some properties during deserialization
+it may be space-efficient to not save them. To implement custom serialization, define methods
+for the `to_serializable` and `from_serializable` functions:
+
+```@docs
+AgentsIO.to_serializable
+AgentsIO.from_serializable
+```
