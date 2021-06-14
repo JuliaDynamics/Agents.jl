@@ -183,9 +183,6 @@ should be considered before using this functionality:
 - Functions are not saved, including stepping functions, schedulers, and `update_vel!`.
   The last two can be provided to [`AgentsIO.load_checkpoint`](@ref) using the appropriate
   keyword arguments.
-
-In case you require custom serialization for model properties, refer to
-[`AgentsIO.to_serializable`](@ref) and [`AgentsIO.from_serializable`](@ref).
 """
 function save_checkpoint(filename, model::ABM)
     @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
