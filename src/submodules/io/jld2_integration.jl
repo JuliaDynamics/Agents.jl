@@ -204,9 +204,6 @@ details.
 
 The keyword argument `warn = true` can be used to disable warnings from type checks on the
 agent type.
-
-Any other keyword arguments are forwarded to [`AgentsIO.from_serializable`](@ref) and
-can be used in case a custom method is defined.
 """
 function load_checkpoint(filename; kwargs...)
     @load filename model
