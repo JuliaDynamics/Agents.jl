@@ -11,12 +11,6 @@
         @test all(length(other.s[pos]) == length(space.s[pos]) for pos in eachindex(space.s))
         @test all(all(x in other.s[pos] for x in space.s[pos]) for pos in eachindex(space.s))
         @test space.metric == other.metric
-        @test length(space.hoods) == length(other.hoods)
-        @test all(other.hoods[k].whole == v.whole for (k, v) in space.hoods)
-        @test all(other.hoods[k].βs == v.βs for (k, v) in space.hoods)
-        @test length(space.hoods_tuple) == length(other.hoods_tuple)
-        @test all(haskey(other.hoods_tuple, k) for k in keys(space.hoods_tuple))
-        @test all(other.hoods_tuple[k] == v for (k, v) in space.hoods_tuple)
     end
 
     test_costmetric(metric, other) = @test false
@@ -225,7 +219,7 @@
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Models.daisysched)
+        other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; scheduler = Models.daisysched, warn = false)
 
         # agent data
         @test nagents(other) == nagents(model)

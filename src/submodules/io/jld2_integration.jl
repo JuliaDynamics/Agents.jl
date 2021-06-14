@@ -57,8 +57,6 @@ end
 struct SerializableGridSpace{D,P,W}
     dims::NTuple{D,Int}
     metric::Symbol
-    hoods::Vector{Tuple{Float64,Agents.Hood{D}}}
-    hoods_tuple::Vector{Tuple{NTuple{D,Float64},Agents.Hood{D}}}
     pathfinder::W
 end
 
@@ -95,8 +93,6 @@ function to_serializable(t::GridSpace{D,P,W}) where {D,P,W}
     SerializableGridSpace{D,P,typeof(pathfinder)}(
         size(t.s),
         t.metric,
-        [(k, v) for (k, v) in t.hoods],
-        [(k, v) for (k, v) in t.hoods_tuple],
         pathfinder,
     )
 end
@@ -146,8 +142,8 @@ function from_serializable(t::SerializableGridSpace{D,P,W}; kwargs...) where {D,
     return GridSpace{D,P,typeof(pathfinder)}(
         s,
         t.metric,
-        Dict(k => v for (k, v) in t.hoods),
-        Dict(k => v for (k, v) in t.hoods_tuple),
+        Dict(),
+        Dict(),
         pathfinder,
     )
 end
