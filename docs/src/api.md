@@ -285,9 +285,15 @@ Pathfinding.HeightMap
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.
 See the [Developer Docs](@ref) for details.
 
-## AgentsIO
+## Save/Load
+There may be scenarios where interacting with data in the form of files is necessary. The following
+functions provide an interface to save/load data to/from files.
 ```@docs
-AgentsIO
 AgentsIO.populate_from_csv!
 AgentsIO.dump_to_csv
+AgentsIO.save_checkpoint
+AgentsIO.load_checkpoint
 ```
+
+In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
+for details.
