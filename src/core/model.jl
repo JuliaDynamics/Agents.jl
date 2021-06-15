@@ -352,10 +352,11 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     print(io, s)
     if abm.properties ≠ nothing
         if typeof(abm.properties) <: Dict
-            print(io, "\n properties: ", collect(keys(abm.properties)))
+            props = collect(keys(abm.properties))
         else
-            print(io, "\n properties: ", collect(propertynames(abm.properties)))
+            props = collect(propertynames(abm.properties))
         end
+        print(io, "\n properties: ", join(props, ", "))
     end
 end
 schedulername(x::Union{Function,DataType}) = nameof(x)
