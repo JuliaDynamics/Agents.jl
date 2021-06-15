@@ -351,7 +351,12 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     s *= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
-        print(io, "\n properties: ", abm.properties)
+        if typeof(abm.properties) <: Dict
+            props = collect(keys(abm.properties))
+        else
+            props = collect(propertynames(abm.properties))
+        end
+        print(io, "\n properties: ", join(props, ", "))
     end
 end
 schedulername(x::Union{Function,DataType}) = nameof(x)
