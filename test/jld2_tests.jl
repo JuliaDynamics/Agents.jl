@@ -244,12 +244,12 @@
         rm("test.jld2")
     end
 
-    @testset "OSMSpace" begin
-        @agent Zombie OSMAgent begin
-            infected::Bool
-        end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
+    # @testset "OSMSpace" begin
+    #     @agent Zombie OSMAgent begin
+    #         infected::Bool
+    #     end
+    #     model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
         
-        @test_throws AssertionError AgentsIO.save_checkpoint("test.jld2", model)
-    end
+    #     @test_throws AssertionError AgentsIO.save_checkpoint("test.jld2", model)
+    # end
 end
