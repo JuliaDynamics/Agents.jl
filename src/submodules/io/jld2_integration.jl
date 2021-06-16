@@ -71,6 +71,16 @@ struct SerializableGraphSpace{G}
     graph::G
 end
 
+struct OSMAgentPositionData
+    id::Int
+    pos::NTuple{2,Float64}
+    dest::NTuple{2,Float64}
+end
+
+struct SerializableOSMSpace
+    agents::Vector{OSMAgentPositionData}
+end
+
 struct SerializableAStar{D,P,M}
     agent_paths::Vector{Tuple{Int,Vector{Dims{D}}}}
     grid_dims::Dims{D}
@@ -80,42 +90,45 @@ struct SerializableAStar{D,P,M}
     cost_metric::Pathfinding.CostMetric{D}
 end
 
-to_serializable(t::ABM) = SerializableABM(
-    collect(values(t.agents)),
-    to_serializable(t.space),
-    to_serializable(t.properties),
-    t.rng,
-    t.maxid.x,
-)
+function to_serializable(t::ABM{S}) where {S}
+    sabm = SerializableABM(
+        collect(values(t.agents)),
+        to_serializable(t.space),
+        to_serializable(t.properties),
+        t.rng,
+        t.maxid.x,
+    )
+    if S <: OSM.OpenStreetMapSpace
+        for a in values(t.agents)
+            push!(
+                sabm.space.agents,
+                OSMAgentPositionData(a.id, OSM.latlon(a, t), OSM.latlon(a.destination, t)),
+            )
+        end
+    end
+    return sabm
+end
 
 function to_serializable(t::GridSpace{D,P,W}) where {D,P,W}
     pathfinder = to_serializable(t.pathfinder)
-    SerializableGridSpace{D,P,typeof(pathfinder)}(
-        size(t.s),
-        t.metric,
-        pathfinder,
-    )
+    SerializableGridSpace{D,P,typeof(pathfinder)}(size(t.s), t.metric, pathfinder)
 end
 
 to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
-    SerializableContinuousSpace{D,P,T}(
-        to_serializable(t.grid),
-        t.dims,
-        t.spacing,
-        t.extent,
-    )
+    SerializableContinuousSpace{D,P,T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
 
 to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::Pathfinding.AStar{D,P,M}) where {D,P,M} =
-    SerializableAStar{D,P,M}(
-        [(k, collect(v)) for (k, v) in t.agent_paths],
-        t.grid_dims,
-        map(Tuple, t.neighborhood),
-        t.admissibility,
-        t.walkable,
-        t.cost_metric,
-    )
+to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([])
+
+to_serializable(t::Pathfinding.AStar{D,P,M}) where {D,P,M} = SerializableAStar{D,P,M}(
+    [(k, collect(v)) for (k, v) in t.agent_paths],
+    t.grid_dims,
+    map(Tuple, t.neighborhood),
+    t.admissibility,
+    t.walkable,
+    t.cost_metric,
+)
 
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     abm = ABM(
@@ -127,6 +140,14 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         warn = get(kwargs, :warn, true),
     )
     abm.maxid[] = t.maxid
+
+    if S <: OSM.OpenStreetMapSpace
+        for a in t.agents
+            a.pos = OSM.road(a, abm)
+            a.destination = OSM.road(a.destination, abm)
+        end
+    end
+
     for a in t.agents
         add_agent_pos!(a, abm)
     end
@@ -139,13 +160,7 @@ function from_serializable(t::SerializableGridSpace{D,P,W}; kwargs...) where {D,
         s[i] = Int[]
     end
     pathfinder = from_serializable(t.pathfinder; kwargs...)
-    return GridSpace{D,P,typeof(pathfinder)}(
-        s,
-        t.metric,
-        Dict(),
-        Dict(),
-        pathfinder,
-    )
+    return GridSpace{D,P,typeof(pathfinder)}(s, t.metric, Dict(), Dict(), pathfinder)
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
@@ -160,6 +175,16 @@ function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) whe
 end
 
 from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
+
+function from_serializable(t::SerializableOSMSpace; kwargs...)
+    @assert haskey(kwargs, :path) "Path to OpenStreetMap not provided"
+
+    OSM.OpenStreetMapSpace(
+        get(kwargs, :path, OSM.TEST_MAP);   # Should never need default value
+        use_cache = get(kwargs, :use_cache, false),
+        trim_to_connected_graph = get(kwargs, :trim_to_connected_graph, true),
+    )
+end
 
 from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
     Pathfinding.AStar{D,P,M}(
@@ -185,7 +210,6 @@ should be considered before using this functionality:
   keyword arguments.
 """
 function save_checkpoint(filename, model::ABM)
-    @assert !(model.space isa OpenStreetMapSpace) "Currently serialization is not supported for OpenStreetMapSpace"
     model = to_serializable(model)
     @save filename model
 end
