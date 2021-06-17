@@ -197,12 +197,12 @@ Load the model saved to the file specified by `filename`.
 
 ## Keywords
 - `scheduler = Schedulers.fastest` specifies what scheduler should
-be used for the model.
+  be used for the model.
 - `update_vel!` specifies a function that should be used to
-update each agent's velocity before it is moved. Refer to [`ContinuousSpace`](@ref) for
-details.
+  update each agent's velocity before it is moved. Refer to [`ContinuousSpace`](@ref) for
+  details.
 - `warn = true` can be used to disable warnings from type checks on the
-agent type.
+  agent type.
 """
 function load_checkpoint(filename; kwargs...)
     @load filename model
