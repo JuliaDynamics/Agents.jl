@@ -75,6 +75,7 @@ struct OSMAgentPositionData
     id::Int
     pos::NTuple{2,Float64}
     dest::NTuple{2,Float64}
+    route::Vector{NTuple{2,Float64}}
 end
 
 struct SerializableOSMSpace
@@ -102,7 +103,12 @@ function to_serializable(t::ABM{S}) where {S}
         for a in values(t.agents)
             push!(
                 sabm.space.agents,
-                OSMAgentPositionData(a.id, OSM.latlon(a, t), OSM.latlon(a.destination, t)),
+                OSMAgentPositionData(
+                    a.id,
+                    OSM.latlon(a, t),
+                    OSM.latlon(a.destination, t),
+                    [OSM.latlon(i, t) for i in a.route],
+                ),
             )
         end
     end
@@ -142,9 +148,11 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     abm.maxid[] = t.maxid
 
     if S <: OSM.OpenStreetMapSpace
+        agentdata = Dict(a.id => a for a in t.space.agents)
         for a in t.agents
-            a.pos = OSM.road(a, abm)
-            a.destination = OSM.road(a.destination, abm)
+            a.pos = OSM.road(agentdata[a.id].pos, abm)
+            a.destination = OSM.road(agentdata[a.id].dest, abm)
+            a.route = [OSM.intersection(i, abm) for i in agentdata[a.id].route]
         end
     end
 
@@ -177,10 +185,10 @@ end
 from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
 
 function from_serializable(t::SerializableOSMSpace; kwargs...)
-    @assert haskey(kwargs, :path) "Path to OpenStreetMap not provided"
+    @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
 
     OSM.OpenStreetMapSpace(
-        get(kwargs, :path, OSM.TEST_MAP);   # Should never need default value
+        get(kwargs, :map, OSM.TEST_MAP);   # Should never need default value
         use_cache = get(kwargs, :use_cache, false),
         trim_to_connected_graph = get(kwargs, :trim_to_connected_graph, true),
     )
