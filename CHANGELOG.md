@@ -1,4 +1,8 @@
-# v4.3 (UNRELEASED)
+# v4.4 (UNRELEASED)
+## New features and fixes
+- Provide a generator function to collect `mdata` in `run!` and `ensemblerun!`.
+
+# v4.3
 ## New features and fixes
 - Save and load agent information from CSV files.
 
