@@ -270,10 +270,10 @@
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].pos == other[i].pos for i in allids(model))
-        @test all(model[i].destination == other[i].destination for i in allids(model))
+        @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
+        @test all(OSM.latlon(model[i].destination, model) == OSM.latlon(other[i].destination, other) for i in allids(model))
         @test all(length(model[i].route) == length(other[i].route) for i in allids(model))
-        @test all(all(model[i].route[j] == other[i].route[j] for j in 1:length(model[i].route)) for i in allids(model))
+        @test all(all(OSM.latlon(model[i].route[j], model) == OSM.latlon(other[i].route[j], other) for j in 1:length(model[i].route)) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)

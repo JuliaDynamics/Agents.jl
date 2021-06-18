@@ -73,8 +73,8 @@ end
 
 struct OSMAgentPositionData
     id::Int
-    pos::NTuple{2,Float64}
-    dest::NTuple{2,Float64}
+    pos::Tuple{NTuple{2,Float64},NTuple{2,Float64},Float64}
+    dest::Tuple{NTuple{2,Float64},NTuple{2,Float64},Float64}
     route::Vector{NTuple{2,Float64}}
 end
 
@@ -105,8 +105,12 @@ function to_serializable(t::ABM{S}) where {S}
                 sabm.space.agents,
                 OSMAgentPositionData(
                     a.id,
-                    OSM.latlon(a, t),
-                    OSM.latlon(a.destination, t),
+                    (OSM.latlon(a.pos[1], t), OSM.latlon(a.pos[2], t), a.pos[3]),
+                    (
+                        OSM.latlon(a.destination[1], t),
+                        OSM.latlon(a.destination[2], t),
+                        a.destination[3],
+                    ),
                     [OSM.latlon(i, t) for i in a.route],
                 ),
             )
@@ -147,12 +151,20 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     )
     abm.maxid[] = t.maxid
 
-    if S <: OSM.OpenStreetMapSpace
+    if S <: SerializableOSMSpace
         agentdata = Dict(a.id => a for a in t.space.agents)
         for a in t.agents
-            a.pos = OSM.road(agentdata[a.id].pos, abm)
-            a.destination = OSM.road(agentdata[a.id].dest, abm)
-            a.route = [OSM.intersection(i, abm) for i in agentdata[a.id].route]
+            a.pos = (
+                OSM.intersection(agentdata[a.id].pos[1], abm)[1],
+                OSM.intersection(agentdata[a.id].pos[2], abm)[1],
+                agentdata[a.id].pos[3],
+            )
+            a.destination = (
+                OSM.intersection(agentdata[a.id].dest[1], abm)[1],
+                OSM.intersection(agentdata[a.id].dest[2], abm)[1],
+                agentdata[a.id].dest[3],
+            )
+            a.route = [OSM.intersection(i, abm)[1] for i in agentdata[a.id].route]
         end
     end
 
