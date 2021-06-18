@@ -113,7 +113,7 @@ The [`run!`](@ref) function has been designed for maximum flexibility: nearly al
 This means that [`run!`](@ref) has not been designed for maximum performance (or minimum memory allocation). However, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
 
 As your models become more complex, it may not be advantageous to use lots of helper functions in the global scope to assist with data collection.
-If this is the case in your model, here's a helpful tip to keep things clean:
+If this is the case in your model, here's a helpful tip to keep things clean: use a generator function to collect data.
 
 ```julia
 function assets(model)
@@ -127,7 +127,7 @@ function assets(model)
     end
     return [:age, :details, total_savings, strategy]
 end
-run!(model, agent_step!, model_step!, 10; mdata = assets(model))
+run!(model, agent_step!, model_step!, 10; mdata = assets)
 ```
 
 ## Seeding and Random numbers
