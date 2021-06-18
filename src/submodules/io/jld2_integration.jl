@@ -100,6 +100,15 @@ function to_serializable(t::ABM{S}) where {S}
         t.maxid.x,
     )
     if S <: OSM.OpenStreetMapSpace
+        for i in 1:length(sabm.agents)
+            sabm.agents[i] = typeof(sabm.agents[i])(
+                (
+                    getproperty(sabm.agents[i], x) for x in fieldnames(typeof(sabm.agents[i]))
+                )...,
+            )
+            sabm.agents[i].route = []
+        end
+
         for a in values(t.agents)
             push!(
                 sabm.space.agents,
