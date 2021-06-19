@@ -251,11 +251,16 @@ Load the model saved to the file specified by `filename`.
 ## Keywords
 - `scheduler = Schedulers.fastest` specifies what scheduler should
   be used for the model.
+- `warn = true` can be used to disable warnings from type checks on the
+    agent type.
+[`ContinuousSpace`](@ref) specific:
 - `update_vel!` specifies a function that should be used to
   update each agent's velocity before it is moved. Refer to [`ContinuousSpace`](@ref) for
   details.
-- `warn = true` can be used to disable warnings from type checks on the
-  agent type.
+[`OpenStreetMapSpace`](@ref) specific:
+- `map` is a path to the OpenStreetMap to be used for the space. This is a required parameter
+  if the space is [`OpenStreetMapSpace`](@ref).
+- `use_cache = false`, `trim_to_connected_graph = true` refer to [`OpenStreetMapSpace`](@ref)
 """
 function load_checkpoint(filename; kwargs...)
     @load filename model
