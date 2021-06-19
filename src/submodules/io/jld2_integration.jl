@@ -233,7 +233,8 @@ from_serializable(t::SerializableAStar{D,P,M}; kwargs...) where {D,P,M} =
 Write the entire `model` to file specified by `filename`. The following points
 should be considered before using this functionality:
 
-- Currently, serialization is also not supported for models using OpenStreetMapSpace.
+- OpenStreetMap data is not saved. The path to the map should be specified when loading
+  the model using the `map` keyword of [`AgentsIO.load_checkpoint`](@ref).
 - Functions are not saved, including stepping functions, schedulers, and `update_vel!`.
   The last two can be provided to [`AgentsIO.load_checkpoint`](@ref) using the appropriate
   keyword arguments.
