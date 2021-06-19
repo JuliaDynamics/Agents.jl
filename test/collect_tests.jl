@@ -208,9 +208,15 @@
         # and yearly data with a yearly `step`.
         model = initialize()
         model_props = [:flag, :year]
+        function model_props_fn(model)
+            flagfn(model) = model.flag
+            yearfn(model) = model.year
+            return [flagfn, yearfn]
+        end
         agent_agg = [(:weight, mean)]
         agent_props = [:weight]
         daily_model_data = init_model_dataframe(model, model_props)
+        daily_model_data_fn = init_model_dataframe(model, model_props_fn)
         daily_agent_aggregate = init_agent_dataframe(model, agent_agg)
         yearly_agent_data = init_agent_dataframe(model, agent_props)
 
@@ -218,6 +224,7 @@
             for day in 1:365
                 step!(model, agent_step!, model_step!, 1)
                 collect_model_data!(daily_model_data, model, model_props, day * year)
+                collect_model_data!(daily_model_data_fn, model, model_props_fn, day * year)
                 collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
             end
             collect_agent_data!(yearly_agent_data, model, agent_props, year)
@@ -226,6 +233,10 @@
         @test size(daily_model_data) == (1825, 3)
         @test propertynames(daily_model_data) == [:step, :flag, :year]
         @test maximum(daily_model_data[!, :step]) == 1825
+
+        @test size(daily_model_data_fn) == (1825, 3)
+        @test propertynames(daily_model_data_fn) == [:step, :flagfn, :yearfn]
+        @test maximum(daily_model_data_fn[!, :step]) == 1825
 
         @test size(daily_agent_aggregate) == (1825, 2)
         @test propertynames(daily_agent_aggregate) == [:step, :mean_weight]
