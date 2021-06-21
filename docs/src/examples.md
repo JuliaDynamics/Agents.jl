@@ -8,8 +8,8 @@ quickly reference to find exactly what they're looking for.
 
 The simplest, and most thoroughly discussed example we have is
 [Schelling's segregation model](@ref). Here, you will learn how to create an agent,
-define its actions, collect data from an experiment, plot results and even how to set
-up multiple experiments in parallel.
+define its actions, collect data from an experiment, plot results, save the model to a file and
+even how to set up multiple experiments in parallel.
 
 [Opinion spread](@ref) is another all-round showcase of these topics, with some
 interesting, yet more complicated dynamics.
@@ -98,6 +98,11 @@ they don't know. In ABM worlds, that's no different.
 interactions between a pack of Wolves, a heard of Sheep and meadows of Grass.
 [Daisyworld](@ref) is an example of how a model property (in this case temperature) can
 be elevated to an agent type.
+
+### Saving and loading models
+
+One of the later sections of the [Schelling's segregation model](@ref) page gives an example
+of how models can be saved to/loaded from files and a possible use case for the same.
 
 ## Advanced Topics
 
