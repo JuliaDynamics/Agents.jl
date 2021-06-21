@@ -93,14 +93,14 @@ end
 
 function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
-        collect(values(t.agents)),
+        collect(allagents(t)),
         to_serializable(t.space),
         to_serializable(t.properties),
         t.rng,
         t.maxid.x,
     )
     if S <: OSM.OpenStreetMapSpace
-        for i in 1:length(sabm.agents)
+        for i in 1:nagents(t)
             sabm.agents[i] = typeof(sabm.agents[i])(
                 (
                     getproperty(sabm.agents[i], x) for x in fieldnames(typeof(sabm.agents[i]))
@@ -109,7 +109,7 @@ function to_serializable(t::ABM{S}) where {S}
             sabm.agents[i].route = []
         end
 
-        for a in values(t.agents)
+        for a in allagents(t)
             push!(
                 sabm.space.agents,
                 OSMAgentPositionData(
