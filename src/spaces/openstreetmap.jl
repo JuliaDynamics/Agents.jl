@@ -57,6 +57,8 @@ const TEST_MAP =
 
 Similar to [`random_position`](@ref), but rather than providing only intersections, this method
 returns a location somewhere on a road heading in a random direction.
+
+**Note:** This method is currently not reproducible
 """
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
     ll = generate_point_in_bounds(model.space.m)
@@ -68,6 +70,8 @@ end
 
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any current route.
+
+**Note:** This method is currently not reproducible
 """
 function random_route!(agent, model::ABM{<:OpenStreetMapSpace})
     agent.destination = random_road_position(model)
