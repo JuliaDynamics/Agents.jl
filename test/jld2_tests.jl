@@ -250,6 +250,34 @@
         end
         model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
         
-        @test_throws AssertionError AgentsIO.save_checkpoint("test.jld2", model)
+        for id in 1:100
+            start = random_position(model)
+            finish = OSM.random_road_position(model)
+            route = OSM.plan_route(start, finish, model)
+            human = Zombie(id, start, route, finish, false)
+            add_agent_pos!(human, model)
+        end
+        
+        start = OSM.road((39.52320181536525, -119.78917553184259), model)
+        finish = OSM.intersection((39.510773, -119.75916700000002), model)
+        route = OSM.plan_route(start, finish, model)
+        zombie = add_agent!(start, model, route, finish, true)
+
+        AgentsIO.save_checkpoint("test.jld2", model)
+        @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.TEST_MAP)
+
+        # agent data
+        @test nagents(other) == nagents(model)
+        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
+        @test all(OSM.latlon(model[i].destination, model) == OSM.latlon(other[i].destination, other) for i in allids(model))
+        @test all(length(model[i].route) == length(other[i].route) for i in allids(model))
+        @test all(all(OSM.latlon(model[i].route[j], model) == OSM.latlon(other[i].route[j], other) for j in 1:length(model[i].route)) for i in allids(model))
+        @test all(model[i].infected == other[i].infected for i in allids(model))
+        # model data
+        test_model_data(model, other)
+
+        rm("test.jld2")
     end
 end

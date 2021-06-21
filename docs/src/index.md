@@ -8,8 +8,8 @@ To get started, please read the [Tutorial](@ref) page.
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v4.3"
-      * New functions `dump_to_csv` and `populate_from_csv!` to save and load agent data to and from CSV files
+!!! tip "Latest news: Agents.jl v4.4"
+      * New functions `save_checkpoint` and `load_checkpoint` to save and load entire models to and from files
 
 ## Features
 * Free, open source and extremely transparent.

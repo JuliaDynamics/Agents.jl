@@ -1,6 +1,7 @@
 # v4.4 (UNRELEASED)
 ## New features and fixes
 - Provide a generator function to collect `mdata` in `run!` and `ensemblerun!`.
+- Save/load entire models using `save_checkpoint` and `load_checkpoint`
 
 # v4.3
 ## New features and fixes

@@ -59,7 +59,7 @@ Similar to [`random_position`](@ref), but rather than providing only intersectio
 returns a location somewhere on a road heading in a random direction.
 """
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
-    ll = generate_point_in_bounds(model.space.m)
+    ll = random_point_in_bounds(model)
     return road(ll, model)
 end
 
@@ -297,6 +297,13 @@ function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
 end
 
 #HELPERS, NOT EXPORTED
+function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
+    bounds = model.space.m.bounds
+    return (
+        rand(model.rng) * (bounds.max_y - bounds.min_y) + bounds.min_y,
+        rand(model.rng) * (bounds.max_x - bounds.min_x) + bounds.min_x
+    )
+end
 
 """
     get_EastNorthUp_coordinate(pos::Int, model)
@@ -310,7 +317,7 @@ get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.
 #######################################################################################
 
 function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
-    ll = generate_point_in_bounds(model.space.m)
+    ll = random_point_in_bounds(model)
     return intersection(ll, model)
 end
 

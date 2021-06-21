@@ -58,7 +58,7 @@ export Models
 
 # Update message:
 display_update = false
-version_number = "4.3"
+version_number = "4.4"
 update_name = "update_v$(version_number)"
 
 if display_update
