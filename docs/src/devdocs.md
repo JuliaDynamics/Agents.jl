@@ -51,7 +51,7 @@ AgentsIO.from_serializable
 ### For agent structs
 Similarly to model properties, you may need to implement custom serialization for agent structs.
 `from_serializable` and `to_serializable` are not called during (de)serialization of agent structs.
-Instead, [JLD2's custom serialization functionality](https://juliaio.github.io/JLD2.jl/dev/customserialization/)
+Instead, [JLD2's custom serialization functionality](https://juliaio.github.io/JLD2.jl/stable/customserialization/)
 should be used. All instances of the agent struct will be converted to and from the specified
 type during serialization. For OpenStreetMap agents, the position, destination and route are
 saved separately. These values will be loaded back in during deserialization of the model and
