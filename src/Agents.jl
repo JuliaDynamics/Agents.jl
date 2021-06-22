@@ -1,6 +1,7 @@
 module Agents
 
 using Requires
+using Scratch
 using Distributed
 using DataStructures
 using LightGraphs
@@ -37,6 +38,8 @@ include("submodules/pathfinding/all_pathfinders.jl")
 include("submodules/schedulers.jl")
 include("submodules/io/AgentsIO.jl")
 
+versions_dir = ""
+
 function __init__()
     # Plot recipes
     @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
@@ -47,6 +50,8 @@ function __init__()
     @require Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4" begin
         include("visualization/plot-recipes.jl")
     end
+    # Get scratch space for this package
+    global versions_dir = @get_scratch!("versions")
 end
 
 # Deprecations, that will be removed in future versions
@@ -57,12 +62,12 @@ include("models/Models.jl")
 export Models
 
 # Update message:
-display_update = false
+display_update = true
 version_number = "4.4"
 update_name = "update_v$(version_number)"
 
 if display_update
-    if !isfile(joinpath(@__DIR__, update_name))
+    if !isfile(joinpath(versions_dir, update_name))
         printstyled(
             stdout,
             """
@@ -79,7 +84,7 @@ if display_update
             """;
             color = :light_magenta,
         )
-        touch(joinpath(@__DIR__, update_name))
+        touch(joinpath(versions_dir, update_name))
     end
 end
 
