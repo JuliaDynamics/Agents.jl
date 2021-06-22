@@ -48,14 +48,14 @@ function __init__()
     @require Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4" begin
         include("visualization/plot-recipes.jl")
     end
-    # Get scratch space for this package
-    versions_dir = @get_scratch!("versions")
     # Update message:
     display_update = true
     version_number = "4.4"
     update_name = "update_v$(version_number)"
     
     if display_update
+        # Get scratch space for this package
+        versions_dir = @get_scratch!("versions")
         if !isfile(joinpath(versions_dir, update_name))
             printstyled(
                 stdout,
