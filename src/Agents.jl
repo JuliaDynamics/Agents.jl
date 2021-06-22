@@ -1,6 +1,7 @@
 module Agents
 
 using Requires
+using Scratch
 using Distributed
 using DataStructures
 using LightGraphs
@@ -47,6 +48,29 @@ function __init__()
     @require Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4" begin
         include("visualization/plot-recipes.jl")
     end
+    # Update message:
+    display_update = true
+    version_number = "4.4"
+    update_name = "update_v$(version_number)"
+    
+    if display_update
+        # Get scratch space for this package
+        versions_dir = @get_scratch!("versions")
+        if !isfile(joinpath(versions_dir, update_name))
+            printstyled(
+                stdout,
+                """
+                \nUpdate message: Agents v$(version_number)
+                Please see the changelog online. Some key features:
+    
+                * Agent data can be loaded from and saved to CSV files using `populate_from_csv!` and `dump_to_csv`
+                * Support for saving and loading entire models using `save_checkpoint` and `load_checkpoint`
+                """;
+                color = :light_magenta,
+            )
+            touch(joinpath(versions_dir, update_name))
+        end
+    end
 end
 
 # Deprecations, that will be removed in future versions
@@ -56,31 +80,5 @@ include("deprecated.jl")
 include("models/Models.jl")
 export Models
 
-# Update message:
-display_update = false
-version_number = "4.4"
-update_name = "update_v$(version_number)"
-
-if display_update
-    if !isfile(joinpath(@__DIR__, update_name))
-        printstyled(
-            stdout,
-            """
-            \nUpdate message: Agents v$(version_number)
-            Please see the changelog online. Some key features:
-
-            * Self-contained features of Agents.jl will from now own exist in their own
-              submodules. In the future, more features will be in submodules like this.
-            * Full support for pathfinding, using the A* algorithm, in `GridSpace`
-            * Several names have been reworked for more clarity (with deprecations)
-            * New function `ensemblerun!` which replaces using `replicates` in `run!`
-            * New documentation page "Performance Tips"
-            * Parallelization of `paramscan`
-            """;
-            color = :light_magenta,
-        )
-        touch(joinpath(@__DIR__, update_name))
-    end
-end
 
 end # module
