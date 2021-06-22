@@ -63,6 +63,7 @@ function __init__()
                 \nUpdate message: Agents v$(version_number)
                 Please see the changelog online. Some key features:
     
+                * Agent data can be loaded from and saved to CSV files using `populate_from_csv!` and `dump_to_csv`
                 * Support for saving and loading entire models using `save_checkpoint` and `load_checkpoint`
                 """;
                 color = :light_magenta,
