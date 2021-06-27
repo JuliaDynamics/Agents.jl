@@ -7,7 +7,7 @@ forest_fire(;
     griddims = (100, 100)
 )
 ```
-Same as in [Forest fire model](@ref).
+Same as in [Forest fire](@ref).
 """
 function forest_fire(; density = 0.7, griddims = (100, 100))
     space = GridSpace(griddims; periodic = false, metric = :euclidean)

@@ -17,7 +17,7 @@ the first argument (or as `id` keyword) to `agent_type`.
 
 Any other keyword arguments are forwarded to `CSV.Rows`. If the `types` keyword is not
 specified and `agent_type` is a struct, then the mapping from struct field to type will be used.
-`Tuple{...}` fields will be suffixed with `_1`, `_2`, ... similarly to [`AgentsIO.dump_to_csv!`](@ref)
+`Tuple{...}` fields will be suffixed with `_1`, `_2`, ... similarly to [`AgentsIO.dump_to_csv`](@ref)
 
 For example,
 ```
