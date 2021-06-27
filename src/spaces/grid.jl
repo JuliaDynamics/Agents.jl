@@ -45,7 +45,7 @@ position.
 `pathfinder`: Optionally provide an instance of [`Pathfinding.Pathfinder`](@ref) to enable
 pathfinding capabilities based on the A* algorithm, see [Path-finding](@ref) in the docs.
 
-An example using `GridSpace` is the [Forest fire model](@ref).
+An example using `GridSpace` is the [Forest fire](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};

@@ -104,7 +104,8 @@ nothing # hide
 # amount of steps we can specify a function instead.
 function terminate(model, s)
     if any(
-        !isapprox(a.previous_opinion, a.new_opinion; rtol = 1e-12) for a in allagents(model)
+        !isapprox(a.previous_opinion, a.new_opinion; rtol = 1e-12)
+        for a in allagents(model)
     )
         return false
     else
@@ -147,8 +148,8 @@ using Random # hide
 Random.seed!(42) # hide
 
 const cmap = cgrad(:lightrainbow)
-plotsim(ax, data, ϵ) =
-    map(groupby(data, :id)) do grp
+plotsim(ax, data) =
+    for grp in groupby(data, :id)
         lines!(ax, grp.step, grp.new_opinion, color = cmap[grp.id[1]/100])
     end
 
@@ -157,6 +158,6 @@ figure = Figure(resolution = (600, 600))
 for (i, e) in enumerate(eps)
     ax = figure[i, 1] = Axis(figure; title = "epsilon = $e")
     e_data = model_run(ϵ = e)
-    plotsim(ax, e_data, e)
+    plotsim(ax, e_data)
 end
 figure

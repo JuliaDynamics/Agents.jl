@@ -7,7 +7,7 @@ We used the following models for the comparison:
 
 - [Predator-prey dynamics](@ref) (Wolf Sheep Grass), a [`GridSpace`](@ref) model, which requires agents to be added, removed and moved; as well as identify properties of neighbouring positions.
 - The [Flock model](@ref) (Flocking), a [`ContinuousSpace`](@ref) model, chosen over other models to include a MASON benchmark. Agents must move in accordance with social rules over the space.
-- The [Forest fire model](@ref) (Forest Fire), provides comparisons for cellular automata type ABMs (i.e. when agents do not move). NOTE: The Agents.jl implementation of this model has been changed in v4.0 to be directly comparable to Mesa and NetLogo. As a consequence it no longer follows the [original rule-set](https://en.wikipedia.org/wiki/Forest-fire_model).
+- The [Forest fire](@ref) model, provides comparisons for cellular automata type ABMs (i.e. when agents do not move). NOTE: The Agents.jl implementation of this model has been changed in v4.0 to be directly comparable to Mesa and NetLogo. As a consequence it no longer follows the [original rule-set](https://en.wikipedia.org/wiki/Forest-fire_model).
 - [Schelling's-segregation-model](@ref) (Schelling), an additional [`GridSpace`](@ref) model to compare with MASON. Simpler rules than Wolf Sheep Grass.
 
 The results are characterised in two ways: how long it took each model to perform the same scenario (initial conditions, grid size, run length etc. are the same across all frameworks), and how many lines of code (LOC) it took to describe each model and its dynamics. We use this result as a metric to represent the complexity of learning and working with a framework.
