@@ -10,10 +10,8 @@
 using Agents: isempty
 using Base: String, Float32, Float64
 using Agents, AgentsPlots
-using Gadfly: plot as ggplot, Geom, inch, SVG
 using GLMakie
 using InteractiveDynamics
-using Match
 using ImageFiltering
 using DataFrames: rename!, stack
 
@@ -127,10 +125,11 @@ turn_angles = Vector(-3*pi/4:pi/4:pi);  # multiples of pi/4
 
 """cache positions, fractions relative to the world dims"""
 cache_positions = [
-    (3/5, 1/2), (1/5, 2/5), (1/5, 4/5)]  # fractions relative to the world dims
+    (3/5, 1/2), (1/5, 2/5), (1/5, 4/5)];  # fractions relative to the world dims
 
 """directions in tuple format (x, y) ej. (1,-1)"""
-turn_directions = grid_direction.(turn_angles)
+turn_directions = grid_direction.(turn_angles);
+
 
 """
 Initializes ABM
@@ -139,7 +138,7 @@ Initializes ABM
 - `num_ants::Integer`: total of ants agents.
 - `griddims::Tuple[Int]`: dimensions of the ant world.
 - `max_turn_angle::Int`: maximum angle that the ant is allowed to turn, 
-the direction is not specified so the ant will turn between ``\[-max_turn_angle, max_turn_angle\]``.
+the direction is not specified so the ant will turn between ``[-max_turn_angle, max_turn_angle]``.
 - `evaporation_r::Float64`: evaporation rate of the pheromones.
 - `diffusion_r::Float64`: diffusion rate of the pheromones, 
 which is the portion of the tile that is spread across neighbors.
@@ -303,7 +302,7 @@ function agent_forage!(agent::Ant, model)
     dinner_array = filter!(x -> isa(x, Food), agents)
 
     if !isempty(dinner_array)
-        food = dinner_array[0]
+        food = dinner_array[1]
         eat!(agent, food, model)
         agent.drop = model.init_drop
         agent.state = :going_home
@@ -392,16 +391,11 @@ end
 
 groupcolor(_::Ant) = :black;
 groupcolor(_::Colony) = RGBA(24/255, 48/255, 60/255, 0.6);
-groupcolor(a::Food) = @match a.amount begin 
-        0 => :black
-        _ => :green
-    end;
+groupcolor(_::Food) = :green;
 
-groupmarker(a) = @match a begin
-        a::Ant => '⚫'
-        c::Colony => '■'
-        f::Food => '■'
-    end;
+groupmarker(_::Ant) = '⚫';
+groupmarker(_::Colony) = '■';
+groupmarker(_::Food) = '■';
 
 grasscolor(model) = model.ant_pheromone;
 heatkwargs = (colormap = [:white, :blue], colorrange = (0, 10));
@@ -432,8 +426,8 @@ make_video(model);
 # helper functions for adata
 food_cache(cid) = a -> a isa Food && a.cache_id==cid;
 
-is_cache_number(a, cid) = a isa Food && a.cache_id==cid
-nansum(x) = isempty(x) ? 0.0 : sum(x)
+is_cache_number(a, cid) = a isa Food && a.cache_id==cid;
+nansum(x) = isempty(x) ? 0.0 : sum(x);
 
 # initializes model and adata
 model = initialize();
@@ -447,11 +441,15 @@ data, _ = run!(
 
 rename!(data, [:step, :amount_cache_1, :amount_cache_2, :amount_cache_3]);
 
-# wide to long format
-data_melt = stack(
-    data, 
-    [:amount_cache_1, :amount_cache_2, :amount_cache_3], [:step]; 
-    variable_name=:cache_number, value_name=:amount);
+function plot_food_timeseries(data)
+    figure = Figure(resolution = (1200, 800))
+    ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Food in cache")
+    c1 = lines!(ax, data.step, data.amount_cache_1, color = :blue)
+    c2 = lines!(ax, data.step, data.amount_cache_2, color = :orange)
+    c3 = lines!(ax, data.step, data.amount_cache_3, color = :green)
+    figure[1, 2] = Legend(figure, [c1, c2, c3], ["Cache 1", "Cache 2", "Cache 3"])
+    return figure
+end
 
-p = ggplot(data_melt, x=:step, y=:amount, color=:cache_number, Geom.line)
-p|> SVG("cache_amounts.svg")
+fig = plot_food_timeseries(data);
+save("cache_amounts.png", fig);
