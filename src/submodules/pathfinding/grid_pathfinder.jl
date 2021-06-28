@@ -5,45 +5,6 @@ taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
 const Path{D} = MutableLinkedList{Dims{D}}
 
-struct Pathfinder{W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
-    diagonal_movement::Bool
-    admissibility::Float64
-    walkable::W
-    cost_metric::M
-end
-
-"""
-    Pathfinding.Pathfinder(; kwargs...)
-
-Enable pathfinding using the A* algorithm by passing an instance of `Pathfinder` into
-[`GridSpace`](@ref). Pathfinding works by using the functions
-[`Pathfinding.set_target!`](@ref) and [`move_along_route!`](@ref) see [`Pathfinding`](@ref)
-for more.
-
-## Keywords
-
-* `diagonal_movement = true` states that agents are allowed to move diagonally.
-    Otherwise, only orthogonal directions are possible.
-* `admissibility = 0` allows the algorithm to approximate paths to speed up pathfinding
-    significantly. A value of `admissibility` allows paths at most `(1+admissibility)` times
-    the optimal path length.
-* `walkable = nothing` specifies (un)walkable regions of the space. If specified, it should
-    be a `BitArray` array of the same size as the corresponding [`GridSpace`](@ref). This defaults
-    to `nothing`, which allows agents to walk on any position in the space. An example usage can
-    be found in [Maze Solver](@ref).
-* `cost_metric` is an instance of a cost metric and specifies the method
-    to use for approximating the distance between two points. This defaults
-    to [`Pathfinding.DirectDistance`](@ref) with appropriate dimensionality.
-"""
-function Pathfinder(;
-    diagonal_movement::Bool = true,
-    admissibility::Float64 = 0.0,
-    walkable::W = nothing,
-    cost_metric::M = nothing,
-) where {W<:Union{BitArray,Nothing},M<:Union{CostMetric,Nothing}}
-    return Pathfinder(diagonal_movement, admissibility, walkable, cost_metric)
-end
-
 struct AStar{D,P,M}
     agent_paths::Dict{Int,Path{D}}
     grid_dims::Dims{D}
@@ -60,6 +21,7 @@ struct AStar{D,P,M}
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M}
+        @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if typeof(cost_metric) == HeightMap{D}
             @assert size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
@@ -115,23 +77,14 @@ function AStar(
     )
 end
 
-function AStar(dims::Dims{D}, periodic::Bool, pathfinder::Pathfinder) where {D}
-    walkable = pathfinder.walkable === nothing ? trues(dims) : pathfinder.walkable
-
-    metric =
-        isnothing(pathfinder.cost_metric) ? DirectDistance{D}() : pathfinder.cost_metric
-
-    neighborhood =
-        pathfinder.diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,pathfinder.diagonal_movement}(
-        Dict{Int,Path{D}}(),
-        dims,
-        neighborhood,
-        pathfinder.admissibility,
-        walkable,
-        metric,
-    )
-end
+AStar(
+    space::GridSpace{D,periodic};
+    diagonal_movement::Bool = true,
+    admissibility::Float64 = 0.0,
+    walkable::BitArray{D} = trues(size(space.s)),
+    cost_metric::CostMetric{D} = DirectDistance{D}(),
+) where {D,periodic} =
+    AStar(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
 
 moore_neighborhood(D) = [
     CartesianIndex(a)
