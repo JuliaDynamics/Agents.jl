@@ -24,7 +24,8 @@ using DataStructures
 using LinearAlgebra
 
 include("metrics.jl")
-include("grid_pathfinder.jl")
+include("astar.jl")
+include("astar_grid_api.jl")
 
 export CostMetric,
     DirectDistance,
@@ -35,7 +36,6 @@ export CostMetric,
     set_target!,
     set_best_target!,
     heightmap,
-    walkmap
 
 
 end
