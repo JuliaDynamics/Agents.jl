@@ -36,7 +36,7 @@ include("simulations/ensemblerun.jl")
 # Other features that exist in submodules
 include("submodules/pathfinding/all_pathfinders.jl")
 include("submodules/schedulers.jl")
-# include("submodules/io/AgentsIO.jl")
+include("submodules/io/AgentsIO.jl")
 
 function __init__()
     # Plot recipes
