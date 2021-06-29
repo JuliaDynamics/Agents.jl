@@ -214,7 +214,7 @@ function from_serializable(t::SerializableOSMSpace; kwargs...)
     )
 end
 
-JLD2.rconvert(::Pathfinding.AStar{D,P,M}, t::SerializableAStar{D,P,M}) where {D,P,M} =
+JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M}}, t::SerializableAStar{D,P,M}) where {D,P,M} =
     Pathfinding.AStar{D,P,M}(
         Dict{Int,Pathfinding.Path{D}}(
             k => Pathfinding.Path{D}(v...) for (k, v) in t.agent_paths
