@@ -244,8 +244,8 @@ Base.isempty(id::Int, pathfinder::AStar) =
 
 Agents.is_stationary(
     agent::A,
-    pathfinder::AStar{D},
-) where {D,A<:AbstractAgent} = isempty(agent.id, pathfinder)
+    pathfinder::AStar,
+) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
 
 """
     Pathfinding.heightmap(pathfinder)
@@ -257,7 +257,7 @@ It is possible to mutate the map directly, for example
 or `Pathfinding.heightmap(pathfinder) .= rand(50, 50)`. If this is mutated,
 a new path needs to be planned using [`Pathfinding.set_target!`](@ref).
 """
-function heightmap(pathfinder::AStar{D}) where {D}
+function heightmap(pathfinder::AStar)
     if pathfinder.cost_metric isa HeightMap
         return pathfinder.cost_metric.hmap
     else
@@ -268,7 +268,7 @@ end
 function Agents.kill_agent!(
     agent::A,
     model::ABM{S,A},
-    pathfinder::AStar{D},
+    pathfinder::AStar,
 ) where {S,A<:AbstractAgent}
     delete!(pathfinder.agent_paths, agent.id)
     delete!(model.agents, agent.id)
