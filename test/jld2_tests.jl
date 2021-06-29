@@ -54,7 +54,7 @@
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
         test_grid_space(model.space, other.space)
         # pathfinder data
-        test_astar(model.space.pathfinder, other.space.pathfinder)
+        test_astar(model.pathfinder, other.pathfinder)
     end
 
     @testset "No space" begin
@@ -182,7 +182,7 @@
     end
 
     @testset "Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m)
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -192,9 +192,16 @@
         hmm = Pathfinding.HeightMap(hmap)
 
         function setup_model(; kwargs...)
-            model = ABM(Agent1, GridSpace((10, 10); periodic = false, pathfinder = Pathfinding.Pathfinder(; kwargs...)), rng = MersenneTwister(42))
+            space = GridSpace((10, 10); periodic = false)
+            pathfinder = Pathfinding.AStar(space; kwargs...)
+            model = ABM(
+                Agent1,
+                space;
+                properties = (pathfinder = pathfinder, ),
+                rng = MersenneTwister(42)
+            )
             add_agent!((1, 1), model)
-            Pathfinding.set_target!(model[1], (10, 10), model)
+            Pathfinding.set_target!(model[1], (10, 10), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)

@@ -3,85 +3,70 @@
 
     moore = Pathfinding.moore_neighborhood(2)
     vonneumann = Pathfinding.vonneumann_neighborhood(2)
+    space = GridSpace((5, 5))
     @testset "constructors" begin
-        cost = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder()).pathfinder.cost_metric
+        # Default/DirectDistance metric
+        cost = AStar(space).cost_metric
         @test typeof(cost) <: DirectDistance{2}
         @test cost.direction_costs == [10, 14]
-        cost =
-            GridSpace(
-                (5, 5);
-                pathfinder = Pathfinding.Pathfinder(cost_metric = DirectDistance{2}()),
-            ).pathfinder.cost_metric
-        @test_throws AssertionError GridSpace(
-            (5, 5);
-            pathfinder = Pathfinding.Pathfinder(cost_metric = DirectDistance{2}([1])),
+        @test_throws AssertionError AStar(space; cost_metric = DirectDistance{2}([1]))
+        @test_throws AssertionError AStar(
+            space;
+            diagonal_movement = false,
+            cost_metric = DirectDistance{2}([])
         )
-        @test_throws AssertionError GridSpace(
-            (5, 5);
-            pathfinder = Pathfinding.Pathfinder(
-                diagonal_movement = false,
-                cost_metric = DirectDistance{2}([]),
-            ),
-        )
-        @test typeof(cost) <: DirectDistance{2}
-        @test cost.direction_costs == [10, 14]
-        cost =
-            GridSpace(
-                (5, 5);
-                pathfinder = Pathfinding.Pathfinder(cost_metric = MaxDistance{2}()),
-            ).pathfinder.cost_metric
+        
+        # MaxDistance metric
+        cost = AStar(space; cost_metric = MaxDistance{2}()).cost_metric
         @test typeof(cost) <: MaxDistance{2}
-        @test_throws MethodError GridSpace(
-            (5, 5);
-            pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap),
-        )
-        @test_throws AssertionError GridSpace(
-            (5, 5);
-            pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap([1 1])),
-        )
-        cost =
-            GridSpace(
-                (5, 5);
-                pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(fill(1, 5, 5))),
-            ).pathfinder.cost_metric
+
+        # HeightMap metric
+        @test_throws TypeError AStar(space; cost_metric = HeightMap)
+        @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1]))
+        
+        cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5))).cost_metric
         @test typeof(cost) <: HeightMap{2}
         @test typeof(cost.base_metric) <: DirectDistance{2}
         @test cost.hmap == fill(1, 5, 5)
-        cost =
-            GridSpace(
-                (5, 5);
-                pathfinder = Pathfinding.Pathfinder(
-                    cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}()),
-                ),
-            ).pathfinder.cost_metric
+
+        cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}())).cost_metric
         @test typeof(cost) <: HeightMap{2}
         @test typeof(cost.base_metric) <: MaxDistance{2}
         @test cost.hmap == fill(1, 5, 5)
         hmap = zeros(Int, 1, 1, 1)
-        @test_throws MethodError GridSpace(
-            (5, 5);
-            pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(hmap)),
-        )
+        @test_throws TypeError AStar(space; cost_metric = HeightMap(hmap))
+    end
 
-        space = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder())
-        model = ABM(Agent3, space)
+    @testset "API functions" begin
+        pathfinder = AStar(space)
+        model = ABM(Agent3, space; properties = (pf = pathfinder,))
         a = add_agent!((5, 2), model, 654.5)
-        @test is_stationary(a, model)
-        set_target!(a, (1, 3), model)
-        @test !is_stationary(a, model)
-        @test length(model.space.pathfinder.agent_paths) == 1
-        kill_agent!(a, model)
-        @test length(model.space.pathfinder.agent_paths) == 0
-        @test heightmap(model) === nothing
+        @test is_stationary(a, model.pf)
+        
+        set_target!(a, (1, 3), model.pf)
+        @test !is_stationary(a, model.pf)
+        @test length(model.pf.agent_paths) == 1
+        
+        move_along_route!(a, model, model.pf)
+        @test a.pos == (1, 3)
+
+        delete!(model.pf.agent_paths, 1)
+        @test length(model.pf.agent_paths) == 0
+        @test set_best_target!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
+        @test length(model.pf.agent_paths) == 1
+
+        kill_agent!(a, model, model.pf)
+        @test length(model.pf.agent_paths) == 0
+        @test heightmap(model.pf) === nothing
 
         hmap = fill(1, 5, 5)
-        space = GridSpace((5, 5); pathfinder = Pathfinding.Pathfinder(cost_metric = HeightMap(hmap)))
-        model = ABM(Agent3, space)
-        @test heightmap(model) == hmap
+        pathfinder = AStar(space; cost_metric = HeightMap(hmap))
+        model = ABM(Agent3, space; properties = (pf = pathfinder, ))
+        @test heightmap(model.pf) == hmap
     end
 
     @testset "metrics" begin
-        pfinder_2d_np_m = Pathfinding.AStar{2,false,true}(
+        pfinder_2d_np_m = AStar{2,false,true}(
             Dict(),
             (10, 10),
             copy(moore),
@@ -89,7 +74,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_np_nm = Pathfinding.AStar{2,false,false}(
+        pfinder_2d_np_nm = AStar{2,false,false}(
             Dict(),
             (10, 10),
             copy(vonneumann),
@@ -97,7 +82,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_p_m = Pathfinding.AStar{2,true,true}(
+        pfinder_2d_p_m = AStar{2,true,true}(
             Dict(),
             (10, 10),
             copy(moore),
@@ -105,7 +90,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_p_nm = Pathfinding.AStar{2,true,false}(
+        pfinder_2d_p_nm = AStar{2,true,false}(
             Dict(),
             (10, 10),
             copy(vonneumann),
@@ -143,7 +128,7 @@
         wlk[4, 3] = false
         wlk[5, 3] = false
 
-        pfinder_2d_np_m = Pathfinding.AStar{2,false,true}(
+        pfinder_2d_np_m = AStar{2,false,true}(
             Dict(),
             (7, 6),
             copy(moore),
@@ -151,7 +136,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_np_nm = Pathfinding.AStar{2,false,false}(
+        pfinder_2d_np_nm = AStar{2,false,false}(
             Dict(),
             (7, 6),
             copy(vonneumann),
@@ -159,7 +144,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_m = Pathfinding.AStar{2,true,true}(
+        pfinder_2d_p_m = AStar{2,true,true}(
             Dict(),
             (7, 6),
             copy(moore),
@@ -167,7 +152,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_nm = Pathfinding.AStar{2,true,false}(
+        pfinder_2d_p_nm = AStar{2,true,false}(
             Dict(),
             (7, 6),
             copy(vonneumann),
