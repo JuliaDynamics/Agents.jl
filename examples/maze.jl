@@ -5,7 +5,7 @@
 # </video>
 # ```
 # Consider a scenario where a walker agent is stuck in a maze. Finding the shortest path through an
-# arbitrary maze or map is simulated using a [`Pathfinding.Pathfinder`](@ref) and its `walkable` map property.
+# arbitrary maze or map is simulated using a [`Pathfinding.AStar`](@ref) and its `walkable` map property.
 
 # ## Setup
 using Agents, Agents.Pathfinding
@@ -20,20 +20,23 @@ function initalize_model(map_url)
     ## Load the maze from the image file. White values can be identified by a
     ## non-zero red component
     maze = BitArray(map(x -> x.r > 0, load(download(map_url))))
-    ## Create a pathfinder by specifying the `walkable` parameter for the pathfinder.
+    ## The size of the space is the size of the maze
+    space = GridSpace(size(maze); periodic = false)
+    ## Create a pathfinder using the AStar algorithm by providing the space and specifying
+    ## the `walkable` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
     ## `DirectDistance` is appropriate.
     ## `diagonal_movement` is set to false to prevent cutting corners by going along
     ## diagonals.
-    pathfinder = Pathfinder(walkable=maze, diagonal_movement=false)
-    ## The size of the space is the size of the maze
-    space = GridSpace(size(maze); pathfinder, periodic = false)
-    model = ABM(Walker, space)
+    properties = (
+        pathfinder = AStar(space; walkable=maze, diagonal_movement=false),
+    )
+    model = ABM(Walker, space; properties)
     ## Place a walker at the start of the maze
     walker = Walker(1, (1, 4))
     add_agent_pos!(walker, model)
-    ## The walker's movement target is the end of the maze
-    set_target!(walker, (41, 32), model)
+    ## The walker's movement target is the end of the maze.
+    set_target!(walker, (41, 32), model.pathfinder)
 
     return model
 end
@@ -41,7 +44,7 @@ end
 # # Dynamics
 # Stepping the agent is a trivial matter of calling [`move_along_route!`](@ref) to move it along it's path to
 # the target.
-agent_step!(agent, model) = move_along_route!(agent, model)
+agent_step!(agent, model) = move_along_route!(agent, model, model.pathfinder)
 
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
@@ -65,7 +68,7 @@ abm_video(
     framerate=30,
     ac=:red,
     as=11,
-    heatarray = model -> walkmap(model),
+    heatarray = model -> model.pathfinder.walkable,
     add_colorbar = false,
 )
 nothing # hide
