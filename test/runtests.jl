@@ -81,7 +81,7 @@ end
     include("collect_tests.jl")
     include("continuousSpace_tests.jl")
     include("osm_tests.jl")
-    include("grid_pathfinder_tests.jl")
+    include("astar_tests.jl")
     include("collisions_tests.jl")
     include("graph_tests.jl")
     include("csv_tests.jl")
