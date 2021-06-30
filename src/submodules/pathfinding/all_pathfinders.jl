@@ -25,7 +25,7 @@ using LinearAlgebra
 
 include("metrics.jl")
 include("astar.jl")
-include("astar_grid_api.jl")
+include("astar_grid.jl")
 
 export CostMetric,
     DirectDistance,
