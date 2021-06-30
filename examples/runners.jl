@@ -8,7 +8,7 @@
 # Let's consider a race to the top of a mountain. Runners have been scattered about
 # a map in some low lying areas and need to find the best path up to the peak.
 #
-# We'll use [`Pathfinding.Pathfinder`](@ref) and a [`Pathfinding.HeightMap`](@ref) to simulate this.
+# We'll use [`Pathfinding.AStar`](@ref) and a [`Pathfinding.HeightMap`](@ref) to simulate this.
 
 # ## Setup
 using Agents, Agents.Pathfinding
@@ -25,18 +25,21 @@ function initialize(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     ## The space of the model can be obtained directly from the image.
     ## Our example file is (400, 500).
-
+    space = GridSpace(size(heightmap); periodic = false)
     ## The pathfinder. We use the `MaxDistance` metric since we want the runners
     ## to look for the easiest path to run, not just the most direct.
-    pathfinder = Pathfinder(cost_metric = HeightMap(heightmap, MaxDistance{2}()))
-    space = GridSpace(size(heightmap); pathfinder, periodic = false)
-    model =
-        ABM(Runner, space; rng = MersenneTwister(seed), properties = Dict(:goal => goal))
+    pathfinder = AStar(space; cost_metric = HeightMap(heightmap, MaxDistance{2}()))
+    model = ABM(
+        Runner,
+        space;
+        rng = MersenneTwister(seed),
+        properties = Dict(:goal => goal, :pathfinder => pathfinder)
+    )
     for _ in 1:10
         ## Place runners in the low-lying space in the map.
         runner = add_agent!((rand(model.rng, 100:350), rand(model.rng, 50:200)), model)
         ## Everyone wants to get to the same place.
-        set_target!(runner, goal, model)
+        set_target!(runner, goal, model.pathfinder)
     end
     return model
 end
@@ -48,7 +51,7 @@ end
 # With the pathfinder in place, and all our runners having a goal position set, stepping
 # is now trivial.
 
-agent_step!(agent, model) = move_along_route!(agent, model)
+agent_step!(agent, model) = move_along_route!(agent, model, model.pathfinder)
 
 # ## Let's Race
 # %% #src
@@ -78,7 +81,7 @@ abm_video(
     ac = :black,
     as = 8,
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
-    heatarray = model -> heightmap(model),
+    heatarray = model -> heightmap(model.pathfinder),
     heatkwargs = (colormap = :terrain,),
     static_preplot!
 )
