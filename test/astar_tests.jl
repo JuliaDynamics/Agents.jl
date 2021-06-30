@@ -5,6 +5,7 @@
     vonneumann = Pathfinding.vonneumann_neighborhood(2)
     space = GridSpace((5, 5))
     @testset "constructors" begin
+        @test_throws AssertionError AStar(space; admissibility = -1.0)
         # Default/DirectDistance metric
         cost = AStar(space).cost_metric
         @test typeof(cost) <: DirectDistance{2}
