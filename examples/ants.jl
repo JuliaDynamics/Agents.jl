@@ -7,12 +7,11 @@
 # The ants move around randomly at first, and when encountering food, return to their colony leaving a pheromone trail
 # Other ants when moving randomly could also follow the pheromone trail in the strongest direction
 
-using Agents: isempty
-using Base: String, Float32, Float64
+using Base: String, Float64
 using Agents, AgentsPlots
 using GLMakie
 using InteractiveDynamics
-using ImageFiltering
+using ImageFiltering: imfilter as matrix_correlation
 using DataFrames: rename!, stack
 
 
@@ -377,17 +376,17 @@ function diffuse!(model)
     diffusion_kernel = (1/8) * model.diffusion_r .* ones(3,3)
     diffusion_kernel[2,2] = 1 - model.diffusion_r
 
-    diffused_grid = imfilter(model.ant_pheromone, diffusion_kernel) # diffuse with kernel
-    diffused_grid = (1-model.evaporation_r) .* diffused_grid  # evaporate
-    diffused_grid[diffused_grid.<= 0.05] .= 0  # if its too low make it zero
-    diffused_grid[model[0].pos...] = 0  # no pheromones inside the colony
+    new_pheromones = matrix_correlation(model.ant_pheromone, diffusion_kernel) # diffuse with kernel
+    new_pheromones .*= (1-model.evaporation_r)  # evaporate
+    new_pheromones[new_pheromones.<= 0.05] .= 0  # if its too low make it zero
+    new_pheromones[model[0].pos...] = 0  # no pheromones inside the colony
     
     @inbounds for p in positions(model) # we don't have to enable bound checking
-        model.ant_pheromone[p...] = diffused_grid[p...]
+        model.ant_pheromone[p...] = new_pheromones[p...]
     end
 end
 
-# Plotting
+# Plotting and results
 
 groupcolor(_::Ant) = :black;
 groupcolor(_::Colony) = RGBA(24/255, 48/255, 60/255, 0.6);
@@ -418,7 +417,7 @@ function make_video(model)
         plotkwargs...,)
 end
 
-make_video(model);
+make_video(model)
 
 
 # generate data to further analysis of the food amounts in the caches
@@ -451,5 +450,4 @@ function plot_food_timeseries(data)
     return figure
 end
 
-fig = plot_food_timeseries(data);
-save("cache_amounts.png", fig);
+plot_food_timeseries(data)
