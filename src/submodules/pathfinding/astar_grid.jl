@@ -1,7 +1,7 @@
 """
     Pathfinding.set_target!(agent, target::NTuple{D,Int}, pathfinder)
 Calculate and store the shortest path to move the agent from its current position to
-`target` (a grid position e.g. `(1, 5)`) for models using [`Pathfinding`](@ref).
+`target` (a grid position e.g. `(1, 5)`) for using the provided `pathfinder`.
 
 Use this method in conjuction with [`move_along_route!`](@ref).
 """
@@ -49,9 +49,9 @@ function set_best_target!(
 end
 
 """
-    move_along_route!(agent, model_with_pathfinding)
+    move_along_route!(agent, model, pathfinder)
 Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
-for agents on a [`GridSpace`](@ref) using a [`Pathfinding.Pathfinder`](@ref).
+for agents on a [`GridSpace`](@ref) using a [`Pathfinding.AStar`](@ref).
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
 function Agents.move_along_route!(

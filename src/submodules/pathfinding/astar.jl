@@ -37,24 +37,22 @@ struct AStar{D,P,M}
 end
 
 """
-    AStar(dims::Dims{D}; kwargs...)
-Provides pathfinding capabilities and stores agent paths. Not part of public API.
+    AStar(space::GridSpace{D}; kwargs...)
+Enables pathfinding for agents in the provided `space` using the A* algorithm. This
+struct must be passed into any pathfinding functions.
 
-`periodic = false` specifies if the space is periodic
-
-`diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
-tile, or only orthogonal neighbors.
-
-`admissibility = 0.0` specifies how much a path can deviate from optimal, in favour of
-faster pathfinding. Admissibility (`ε`) of `0.0` will always find the optimal path.
-Larger values of `ε` will explore fewer nodes, returning a path length with at most
-`(1+ε)` times the optimal path length.
-
-`walkable = trues(size(space))` is used to specify (un)walkable positions of the
-space. All positions are assumed to be walkable by default.
-
-`cost_metric = DirectDistance` specifies the metric used to approximate the distance
-between any two walkable points on the grid. See [`CostMetric`](@ref).
+## Keywords
+- `diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
+  tile, or only orthogonal neighbors.
+- `admissibility = 0.0` allows the algorithm to aprroximate paths to speed up pathfinding.
+  A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
+  length.
+- `walkable = trues(size(space))` specifies the (un)walkable positions of the
+  space. If specified, it should be a `BitArray` of the same size as the corresponding
+  `GridSpace`. By default, agents can walk anywhere in the space. An example usage can
+  be found in [Maze Solver](@ref)
+- `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
+  metric used to approximate the distance between any two points. See [`CostMetric`](@ref).
 
 Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
 """
@@ -249,7 +247,7 @@ Agents.is_stationary(
 
 """
     Pathfinding.heightmap(pathfinder)
-Return the heightmap of a [`Pathfinding.Pathfinder`](@ref) if the
+Return the heightmap of a [`Pathfinding.AStar`](@ref) if the
 [`Pathfinding.HeightMap`](@ref) metric is in use, `nothing` otherwise.
 
 It is possible to mutate the map directly, for example
@@ -265,6 +263,11 @@ function heightmap(pathfinder::AStar)
     end
 end
 
+"""
+    kill_agent!(agent, model, pathfinder)
+The same as `kill_agent!(agent, model)`, but also removes the agent's path data
+from `pathfinder`.
+"""
 function Agents.kill_agent!(
     agent::A,
     model::ABM{S,A},

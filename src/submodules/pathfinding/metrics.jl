@@ -12,11 +12,11 @@ end
 """
     Pathfinding.DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
 Distance is approximated as the shortest path between the two points, provided the
-`walkable` property of [`Pathfinding.Pathfinder`](@ref) allows.
+`walkable` property of [`Pathfinding.AStar`](@ref) allows.
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
 neighboring tile on the `i` dimensional diagonal (default is `10√i`).
 
-If `diagonal_movement=false` in [`Pathfinding.Pathfinder`](@ref), neighbors in diagonal
+If `diagonal_movement=false` in [`Pathfinding.AStar`](@ref), neighbors in diagonal
 positions will be excluded. Cost defaults to the first value of the provided vector.
 """
 DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x in 1:D])
