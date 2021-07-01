@@ -28,35 +28,33 @@ function initalize_model(map_url)
     ## `DirectDistance` is appropriate.
     ## `diagonal_movement` is set to false to prevent cutting corners by going along
     ## diagonals.
-    properties = (
-        pathfinder = AStar(space; walkable=maze, diagonal_movement=false),
-    )
-    model = ABM(Walker, space; properties)
+    pathfinder = AStar(space; walkable=maze, diagonal_movement=false)
+    model = ABM(Walker, space)
     ## Place a walker at the start of the maze
     walker = Walker(1, (1, 4))
     add_agent_pos!(walker, model)
     ## The walker's movement target is the end of the maze.
-    set_target!(walker, (41, 32), model.pathfinder)
+    set_target!(walker, (41, 32), pathfinder)
 
-    return model
+    return model, pathfinder
 end
+
+## Our sample walkmap
+map_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/maze.bmp"
+model, pathfinder = initalize_model(map_url)
 
 # # Dynamics
 # Stepping the agent is a trivial matter of calling [`move_along_route!`](@ref) to move it along it's path to
 # the target.
-agent_step!(agent, model) = move_along_route!(agent, model, model.pathfinder)
+agent_step!(agent, model) = move_along_route!(agent, model, pathfinder)
 
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
 using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!(type = "png") # hide
-
-## Our sample walkmap
-map_url =
-    "https://raw.githubusercontent.com/JuliaDynamics/" *
-    "JuliaDynamics/master/videos/agents/maze.bmp"
-model = initalize_model(map_url)
 
 # The `heatarray` keyword argument allows plotting the maze as a heatmap behind the agent.
 abm_video(
@@ -68,7 +66,7 @@ abm_video(
     framerate=30,
     ac=:red,
     as=11,
-    heatarray = model -> model.pathfinder.walkable,
+    heatarray = _ -> pathfinder.walkable,
     add_colorbar = false,
 )
 nothing # hide
