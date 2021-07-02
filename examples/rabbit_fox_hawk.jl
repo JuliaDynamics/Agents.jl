@@ -127,7 +127,10 @@ function rabbit_step!(rabbit, model)
 
     predators = map(
         x -> x.pos,
-        filter(x -> x.type in [:fox, :hawk], nearby_agent(rabbit, model, model.rabbit_vision)),
+        filter(
+            x -> x.type in [:fox, :hawk],
+            nearby_agents(rabbit, model, model.rabbit_vision),
+        ),
     )
 
     walkable_neighbors = nearby_walkable(pos, model, model.landfinder)
@@ -154,4 +157,33 @@ function rabbit_step!(rabbit, model)
     end
 
     move_along_route!(rabbit, model, model.landfinder)
+end
+
+function fox_step!(fox, model)
+    food = filter(x -> x.type == :rabbit, nearby_agents(fox, model))
+    if !isempty(food)
+        kill_agent!(rand(model.rng, food), model, model.landfinder)
+        fox.energy += model.Δe_fox
+    end
+
+    fox.energy -= 1
+    if fox.energy <= 0
+        kill_agent!(fox, model, model.landfinder)
+        return
+    end
+
+    if is_stationary(fox, model, model.landfinder)
+        prey = filter(x -> x.type == :rabbit, nearby_agents(fox, model, model.fox_vision))
+        if isempty(prey)
+            move_agent!(
+                fox,
+                rand(model.rng, nearby_walkable(fox.pos, model, model.landfinder)),
+                model,
+            )
+            return
+        end
+        set_best_target!(fox, prey, model.landfinder)
+    end
+
+    move_along_route!(fox, model, model.landfinder)
 end
