@@ -144,7 +144,7 @@ function rabbit_step!(rabbit, model)
     if is_stationary(rabbit, model, model.landfinder)
         grass = filter(
             x -> model.grass[x],
-            nearby_positions(rabbit.pos, model, model.rabbit_vision),
+            nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision),
         )
         if isempty(grass)
             move_agent!(rabbit, rand(model.rng, walkable_neighbors), model)
