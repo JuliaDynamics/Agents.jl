@@ -100,7 +100,7 @@ function initialize_model(
 end
 
 nearby_walkable(pos, model, pathfinder, r = 1) =
-    filter(x -> pathfinder.walkable[x], nearby_positions(pos, model, r))
+    filter(x -> pathfinder.walkable[x] == 1, nearby_positions(pos, model, r))
 
 function animal_step!(animal, model)
     if animal.type == :rabbit
@@ -113,7 +113,7 @@ function animal_step!(animal, model)
 end
 
 function rabbit_step!(rabbit, model)
-    if model.grass[rabbit.pos...]
+    if model.grass[rabbit.pos...] == 1
         model.grass[rabbit.pos...] = 0
         rabbit.energy += model.Δe_rabbit
     end
@@ -146,7 +146,7 @@ function rabbit_step!(rabbit, model)
 
     if is_stationary(rabbit, model, model.landfinder)
         grass = filter(
-            x -> model.grass[x],
+            x -> model.grass[x] == 1,
             nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision),
         )
         if isempty(grass)
