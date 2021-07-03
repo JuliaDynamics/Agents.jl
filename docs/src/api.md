@@ -268,10 +268,9 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 ## Path-finding
 ```@docs
 Pathfinding
-Pathfinding.Pathfinder
+Pathfinding.AStar
 Pathfinding.set_target!
 Pathfinding.set_best_target!
-Pathfinding.walkmap
 Pathfinding.heightmap
 ```
 
