@@ -14,22 +14,22 @@ Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
 
 function initialize_model(
     heightmap_url,
-    water_level = 15,
-    grass_level = 80,
-    mountain_level = 110;
-    n_rabbits = 120,
-    n_foxes = 60,
+    water_level = 60,
+    grass_level = 110,
+    mountain_level = 150;
+    n_rabbits = 140,
+    n_foxes = 80,
     n_hawks = 60,
     Δe_rabbit = 4,
-    Δe_fox = 20,
+    Δe_fox = 40,
     Δe_hawk = 40,
-    rabbit_repr = 0.05,
+    rabbit_repr = 0.03,
     fox_repr = 0.04,
     hawk_repr = 0.04,
     rabbit_vision = 3,
     fox_vision = 5,
     hawk_vision = 7,
-    regrowth_chance = 0.1,
+    regrowth_chance = 0.05,
     seed = 42,
 )
     heightmap = floor.(Int, convert.(Float64, load(heightmap_url)) * 256)
@@ -89,7 +89,6 @@ function initialize_model(
         )
     end
 
-    valid_positions = filter(x -> heightmap[x] < mountain_level, CartesianIndices(heightmap))
     for _ in 1:n_hawks
         add_agent_pos!(
             Hawk(
@@ -104,7 +103,7 @@ function initialize_model(
     model
 end
 
-nearby_walkable(pos, model, pathfinder, r = 1) = [x for x in nearby_positions(pos, model, r) if pathfinder.walkable[x...] == 1]
+nearby_walkable(pos, model, pathfinder, r = 1) = filter(x -> pathfinder.walkable[x...] == 1, collect(nearby_positions(pos, model, r)))
 
 function animal_step!(animal, model)
     if animal.type == :rabbit
@@ -129,19 +128,20 @@ function rabbit_step!(rabbit, model)
         return
     end
 
-    predators = map(
-        x -> x.pos,
-        [
-            x for x in nearby_agents(rabbit, model, model.rabbit_vision)
-                if x.type in [:fox, :hawk]
-        ],
-    )
+    predators = [x.pos for x in nearby_agents(rabbit, model, model.rabbit_vision) if x.type == :fox || x.type == :hawk]
 
     walkable_neighbors = nearby_walkable(rabbit.pos, model, model.landfinder)
 
     if !isempty(predators)
-        closest = minimum(map(x -> sum.((x .- rabbit.pos) .^ 2), predators))
-        best = argmin(map(x -> sum.((Tuple(x) .- closest)) .^ 2, walkable_neighbors))
+        direction = (0, 0)
+        for predator in predators
+            away_direction = rabbit.pos .- predator
+            direction = direction .+ away_direction ./ sum(away_direction .^ 2)
+        end
+        direction = direction ./ √sum(direction .^ 2)
+        ideal_position = rabbit.pos .+ direction
+        best = argmin(map(x -> sum((x .- ideal_position) .^ 2), walkable_neighbors))
+
         move_agent!(rabbit, walkable_neighbors[best], model)
         return
     end
@@ -149,15 +149,12 @@ function rabbit_step!(rabbit, model)
     rand(model.rng) <= model.rabbit_repr && reproduce!(rabbit, model)
 
     if is_stationary(rabbit, model.landfinder)
-        grass = filter(
-            x -> model.grass[x] == 1,
-            nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision),
-        )
+        grass = [x for x in nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision) if model.grass[x...] == 1]
         if isempty(grass)
-            move_agent!(rabbit, rand(model.rng, walkable_neighbors), model)
+            set_target!(rabbit, rand(model.rng, nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision)), model.landfinder)
             return
         end
-        set_best_target!(rabbit, grass, model.landfinder)
+        set_target!(rabbit, rand(model.rng, grass), model.landfinder)
     end
 
     move_along_route!(rabbit, model, model.landfinder)
@@ -181,10 +178,10 @@ function fox_step!(fox, model)
     if is_stationary(fox, model.landfinder)
         prey = [ x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
         if isempty(prey)
-            move_agent!(
+            set_target!(
                 fox,
-                rand(model.rng, nearby_walkable(fox.pos, model, model.landfinder)),
-                model,
+                rand(model.rng, nearby_walkable(fox.pos, model, model.landfinder, model.fox_vision)),
+                model.landfinder,
             )
             return
         end
@@ -212,13 +209,14 @@ function hawk_step!(hawk, model)
     if is_stationary(hawk, model.airfinder)
         prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if x.type == :rabbit]
         if isempty(prey)
-            move_agent!(
+            set_target!(
                 hawk,
-                rand(model.rng, collect(nearby_walkable(hawk.pos, model, model.airfinder))),
-                model,
+                rand(model.rng, collect(nearby_walkable(hawk.pos, model, model.airfinder, model.hawk_vision))),
+                model.airfinder,
             )
             return
         end
+
         set_best_target!(hawk, map(x -> x.pos, prey), model.airfinder)
     end
 
@@ -242,3 +240,20 @@ function model_step!(model)
     growable = view(model.grass, model.grass .== 0 .& model.water_level .< heightmap(model.landfinder) .<= model.grass_level)
     growable .= rand(model.rng, length(growable)) .< model.regrowth_chance
 end
+
+animalmarker(a) =
+    if a.type == :rabbit
+        :circle
+    elseif a.type == :fox
+        :rect
+    else
+        :utriangle
+    end
+animalcolor(a) =
+    if a.type == :rabbit
+        (:brown, 0.6)
+    elseif a.type == :fox
+        (:orange, 0.6)
+    else
+        (:blue, 0.6)
+    end
