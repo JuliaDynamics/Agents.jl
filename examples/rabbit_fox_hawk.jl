@@ -16,9 +16,9 @@ function initialize_model(
     heightmap_url,
     water_level = 60,
     grass_level = 110,
-    mountain_level = 150;
+    mountain_level = 160;
     n_rabbits = 140,
-    n_foxes = 80,
+    n_foxes = 60,
     n_hawks = 60,
     Δe_rabbit = 4,
     Δe_fox = 40,
@@ -27,8 +27,8 @@ function initialize_model(
     fox_repr = 0.04,
     hawk_repr = 0.04,
     rabbit_vision = 3,
-    fox_vision = 5,
-    hawk_vision = 7,
+    fox_vision = 7,
+    hawk_vision = 13,
     regrowth_chance = 0.05,
     seed = 42,
 )
@@ -38,7 +38,7 @@ function initialize_model(
     rng = MersenneTwister(seed)
 
     space = GridSpace(dims; periodic = false)
-    land_walkmap = BitArray(map(x -> water_level < x < mountain_level, heightmap))
+    land_walkmap = BitArray(map(x -> water_level < x < grass_level, heightmap))
     air_walkmap = BitArray(map(x -> x < mountain_level, heightmap))
     grass = BitArray(
         rand(rng, dims...) .< ((grass_level .- heightmap) ./ (grass_level - water_level)),
@@ -89,6 +89,7 @@ function initialize_model(
         )
     end
 
+    valid_position = filter(x -> water_level < heightmap[x] < mountain_level, CartesianIndices(air_walkmap))
     for _ in 1:n_hawks
         add_agent_pos!(
             Hawk(
@@ -237,6 +238,7 @@ function reproduce!(agent, model)
 end
 
 function model_step!(model)
+
     growable = view(model.grass, model.grass .== 0 .& model.water_level .< heightmap(model.landfinder) .<= model.grass_level)
     growable .= rand(model.rng, length(growable)) .< model.regrowth_chance
 end
