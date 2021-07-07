@@ -3,7 +3,7 @@ using Random
 using FileIO
 using ImageMagick # hide
 
-@agent Animal GridAgent{2} begin
+@agent Animal GridAgent{3} begin
     type::Symbol
     energy::Int
 end
@@ -14,9 +14,9 @@ Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
 
 function initialize_model(
     heightmap_url,
-    water_level = 60,
-    grass_level = 110,
-    mountain_level = 160;
+    water_level = 10,
+    grass_level = 20,
+    mountain_level = 35;
     n_rabbits = 140,
     n_foxes = 60,
     n_hawks = 60,
@@ -32,24 +32,28 @@ function initialize_model(
     regrowth_chance = 0.05,
     seed = 42,
 )
-    heightmap = floor.(Int, convert.(Float64, load(heightmap_url)) * 256)
-    dims = size(heightmap)
+    heightmap = floor.(Int, convert.(Float64, load(heightmap_url)) * 39) .+ 1
+    dims = (size(heightmap)..., 40)
 
     rng = MersenneTwister(seed)
 
     space = GridSpace(dims; periodic = false)
-    land_walkmap = BitArray(map(x -> water_level < x < grass_level, heightmap))
-    air_walkmap = BitArray(map(x -> x < mountain_level, heightmap))
+    land_walkmap = BitArray(falses(dims...))
+    air_walkmap = BitArray(falses(dims...))
+    for i in 1:dims[1], j in 1:dims[2]
+        water_level < heightmap[i, j] < grass_level && (land_walkmap[i, j, heightmap[i, j]+1] = true)
+        heightmap[i, j] < mountain_level && (air_walkmap[i, j, (heightmap[i, j]+1):end] .= true)
+    end
     grass = BitArray(
-        rand(rng, dims...) .< ((grass_level .- heightmap) ./ (grass_level - water_level)),
+        rand(rng, dims[1:2]...) .< ((grass_level .- heightmap) ./ (grass_level - water_level)),
     )
     properties = (
         landfinder = AStar(
             space;
             walkable = land_walkmap,
-            cost_metric = HeightMap(heightmap, MaxDistance{2}()),
+            cost_metric = DirectDistance{3}(),
         ),
-        airfinder = AStar(space; walkable = air_walkmap),
+        airfinder = AStar(space; walkable = air_walkmap, cost_metric = MaxDistance{3}()),
         Δe_rabbit = Δe_rabbit,
         Δe_fox = Δe_fox,
         Δe_hawk = Δe_hawk,
@@ -59,6 +63,7 @@ function initialize_model(
         rabbit_vision = rabbit_vision,
         fox_vision = fox_vision,
         hawk_vision = hawk_vision,
+        heightmap = heightmap,
         grass = grass,
         regrowth_chance = regrowth_chance,
         water_level = water_level,
@@ -89,7 +94,7 @@ function initialize_model(
         )
     end
 
-    valid_position = filter(x -> water_level < heightmap[x] < mountain_level, CartesianIndices(air_walkmap))
+    valid_position = filter(x -> air_walkmap[x] && x[3] > water_level, CartesianIndices(air_walkmap))
     for _ in 1:n_hawks
         add_agent_pos!(
             Hawk(
@@ -117,8 +122,8 @@ function animal_step!(animal, model)
 end
 
 function rabbit_step!(rabbit, model)
-    if model.grass[rabbit.pos...] == 1
-        model.grass[rabbit.pos...] = 0
+    if model.grass[rabbit.pos[1:2]...] == 1
+        model.grass[rabbit.pos[1:2]...] = 0
         rabbit.energy += model.Δe_rabbit
     end
 
@@ -134,9 +139,9 @@ function rabbit_step!(rabbit, model)
     walkable_neighbors = nearby_walkable(rabbit.pos, model, model.landfinder)
 
     if !isempty(predators)
-        direction = (0, 0)
+        direction = (0, 0, 0)
         for predator in predators
-            away_direction = rabbit.pos .- predator
+            away_direction = (rabbit.pos .- predator) .* (1, 1, 0)
             direction = direction .+ away_direction ./ sum(away_direction .^ 2)
         end
         direction = direction ./ √sum(direction .^ 2)
@@ -150,7 +155,7 @@ function rabbit_step!(rabbit, model)
     rand(model.rng) <= model.rabbit_repr && reproduce!(rabbit, model)
 
     if is_stationary(rabbit, model.landfinder)
-        grass = [x for x in nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision) if model.grass[x...] == 1]
+        grass = [x for x in nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision) if model.grass[x[1:2]...] == 1]
         if isempty(grass)
             set_target!(rabbit, rand(model.rng, nearby_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision)), model.landfinder)
             return
@@ -177,7 +182,7 @@ function fox_step!(fox, model)
     rand(model.rng) <= model.fox_repr && reproduce!(fox, model)
 
     if is_stationary(fox, model.landfinder)
-        prey = [ x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
+        prey = [x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
         if isempty(prey)
             set_target!(
                 fox,
@@ -238,8 +243,7 @@ function reproduce!(agent, model)
 end
 
 function model_step!(model)
-
-    growable = view(model.grass, model.grass .== 0 .& model.water_level .< heightmap(model.landfinder) .<= model.grass_level)
+    growable = view(model.grass, model.grass .== 0 .& model.water_level .< model.heightmap .<= model.grass_level)
     growable .= rand(model.rng, length(growable)) .< model.regrowth_chance
 end
 
@@ -253,9 +257,9 @@ animalmarker(a) =
     end
 animalcolor(a) =
     if a.type == :rabbit
-        (:brown, 0.6)
+        :brown
     elseif a.type == :fox
-        (:orange, 0.6)
+        :orange
     else
-        (:blue, 0.6)
+        :blue
     end
