@@ -189,7 +189,7 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
 end
 
 #######################################################################################
-# Continuous space exclusive
+# Continuous space exclusive: agent interctions
 #######################################################################################
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
@@ -410,3 +410,23 @@ function Base.iterate(iter::PairIterator, i = 1)
     id1, id2 = p
     return (iter.agents[id1], iter.agents[id2]), i + 1
 end
+
+
+#######################################################################################
+# %% Spatial fields
+#######################################################################################
+function get_spatial_property(pos, property::AbstractArray, model::ABM)
+    spacesize = model.space.extent
+    propertysize = size(property)
+    idxs = _convert_pos_to_cell(pos, spacesize, propertysize)
+    return property[idxs]
+end
+
+function _convert_pos_to_cell(pos, spacesize, propertysize)
+    εs = spacesize ./ propertysize
+    idxs = floor.(Int, pos ./ εs) .+ 1
+    return CartesianIndex(idxs)
+end
+
+get_spatial_property(pos, property, model::ABM) = property(pos)
+
