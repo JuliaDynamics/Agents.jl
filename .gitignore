@@ -1,14 +1,11 @@
 docs/build/
 docs/src/examples
-paper/__latexindent_temp\.tex
 *.scss
 *.css
 Manifest.toml
-*.pyc
 *.code-workspace
 /benchmark/*.json
 !/benchmark/tune.json
 /.benchmarkci
-.*.tmp.nlogo
 *.osm.cache
 src/update_*

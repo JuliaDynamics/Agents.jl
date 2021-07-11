@@ -302,7 +302,7 @@ end
     kill_agent!(agent, model)
     @test nagents(model) == 1
     add_agent!(model)
-    kill_agents!([1, 3], model)
+    genocide!(model, [1, 3])
     @test nagents(model) == 0
     # GraphSpace
     model = ABM(Agent5, GraphSpace(path_graph(6)))

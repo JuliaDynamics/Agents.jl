@@ -30,7 +30,7 @@ end
 # We can also make a very simple [`AgentBasedModel`](@ref) for our model.
 
 function wealth_model(; numagents = 100, initwealth = 1)
-    model = ABM(WealthAgent, scheduler = random_activation)
+    model = ABM(WealthAgent, scheduler = Schedulers.randomly)
     for i in 1:numagents
         add_agent!(model, initwealth)
     end
@@ -68,7 +68,7 @@ wealths = filter(x -> x.step == N - 1, data)[!, :wealth]
 # and then we can make a histogram of the result.
 # With a simple visualization we immediately see the power-law distribution:
 
-using CairoMakie, AbstractPlotting
+using CairoMakie
 hist(
     wealths;
     bins = collect(0:9),
@@ -93,7 +93,7 @@ end
 
 function wealth_model_2D(; dims = (25, 25), wealth = 1, M = 1000)
     space = GridSpace(dims, periodic = true)
-    model = ABM(WealthInSpace, space; scheduler = random_activation)
+    model = ABM(WealthInSpace, space; scheduler = Schedulers.randomly)
     for i in 1:M # add agents in random positions
         add_agent!(model, wealth)
     end

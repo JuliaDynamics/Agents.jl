@@ -16,7 +16,7 @@ contains many parameters and thus is scanned. All other entries of
 `parameters` that are not `Vector`s are not expanded in the scan.
 
 The second argument `initialize` is a function that creates an ABM and returns it.
-It should accept keyword arguments which are the *keys* of the `parameters` dictionary.
+It must accept keyword arguments which are the *keys* of the `parameters` dictionary.
 Since the user decides how to use input arguments to make an ABM, `parameters` can be
 used to affect model properties, space type and creation as well as agent properties,
 see the example below.
@@ -24,25 +24,29 @@ see the example below.
 ## Keywords
 The following keywords modify the `paramscan` function:
 
-- `include_constants::Bool=false` determines whether constant parameters should be
-  included in the output `DataFrame`.
-- `progress::Bool = true` whether to show the progress of simulations.
+- `include_constants::Bool = false`: by default, only the varying parameters (Vector in
+  `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
+  (non-Vector in `parameteres`) will also be included.
+- `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
+  in parallel. This must be used in conjunction with `@everywhere` (see
+  [Performance Tips](@ref)).
 
-The following keywords are propagated into [`run!`](@ref):
-```julia
-agent_step!, model_step!, n, when, step0, parallel, replicates, adata, mdata
-```
-`agent_step!, model_step!, n` and at least one of `adata, mdata` are mandatory.
+All other keywords are propagated into [`run!`](@ref).
+Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
+to [`run!`](@ref) as arguments. Naturally, `agent_step!, model_step!, n` and at least one
+of `adata, mdata` are mandatory.
+The `adata, mdata` lists shouldn't contain the parameters that are already in
+the `parameters` dictionary to avoid duplication.
 
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
-There we define
+There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpace(griddims, moore = true)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
-                properties = properties, scheduler = random_activation)
+                properties = properties, scheduler = Schedulers.randomly)
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
@@ -52,7 +56,7 @@ end
 ```
 and do a parameter scan by doing:
 ```julia
-happyperc(moods) = count(x -> x == true, moods) / length(moods)
+happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
 parameters = Dict(
@@ -61,82 +65,81 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
 """
-function paramscan(parameters::Dict{Symbol,}, initialize;
-  progress::Bool = true, include_constants::Bool = false,
-  n = 1, agent_step! = dummystep,  model_step! = dummystep,
-  kwargs...)
+function paramscan(
+    parameters::Dict,
+    initialize;
+    include_constants::Bool = false,
+    parallel::Bool = false,
+    agent_step! = dummystep,
+    model_step! = dummystep,
+    n = 1,
+    kwargs...,
+)
 
-  if include_constants
-    changing_params = collect(keys(parameters))
-  else
-    changing_params = [k for (k, v) in parameters if typeof(v)<:Vector]
-  end
-
-  combs = dict_list(parameters)
-  ncombs = length(combs)
-  counter = 0
-  d, rest = Iterators.peel(combs)
-  model = initialize(; d...)
-  df_agent, df_model = run!(model, agent_step!, model_step!, n; kwargs...)
-  addparams!(df_agent, df_model, d, changing_params)
-  for d in rest
-    model = initialize(; d...)
-    df_agentTemp, df_modelTemp = run!(model, agent_step!, model_step!, n; kwargs...)
-    addparams!(df_agentTemp, df_modelTemp, d, changing_params)
-    append!(df_agent, df_agentTemp)
-    append!(df_model, df_modelTemp)
-    if progress
-      # show progress
-      counter += 1
-      print("\u1b[1G")
-      percent = round(counter*100/ncombs, digits=2)
-      print("Progress: $percent%")
-      print("\u1b[K")
+    if include_constants
+        output_params = collect(keys(parameters))
+    else
+        output_params = [k for (k, v) in parameters if typeof(v) <: Vector]
     end
-  end
-  progress && println()
-  return df_agent, df_model
-end
 
-"""
-Adds new columns for each parameter in `changing_params`.
-"""
-function addparams!(df_agent::AbstractDataFrame, df_model::AbstractDataFrame, params::Dict{Symbol,}, changing_params::Vector{Symbol})
-    # There is duplication here, but we cannot guarantee which parameter is unique
-    # to each dataframe since `initialize` is user defined.
-    nrows_agent = size(df_agent, 1)
-    nrows_model = size(df_model, 1)
-    for c in changing_params
-        if !isempty(df_model)
-            df_model[!, c] = [params[c] for i in 1:nrows_model]
+    combs = dict_list(parameters)
+
+    if parallel
+        all_data = ProgressMeter.@showprogress pmap(combs) do i
+            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
-        if !isempty(df_agent)
-            df_agent[!, c] = [params[c] for i in 1:nrows_agent]
+    else
+        all_data = ProgressMeter.@showprogress map(combs) do i
+            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     end
+
+    df_agent = DataFrame()
+    df_model = DataFrame()
+    for (df1, df2) in all_data
+        append!(df_agent, df1)
+        append!(df_model, df2)
+    end
+
+    return df_agent, df_model
 end
 
 # This function is taken from DrWatson:
 function dict_list(c::Dict)
-  iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
-  non_iterables = setdiff(keys(c), iterable_fields)
+    iterable_fields = filter(k -> typeof(c[k]) <: Vector, keys(c))
+    non_iterables = setdiff(keys(c), iterable_fields)
 
-  iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
-  non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
+    iterable_dict = Dict(iterable_fields .=> getindex.(Ref(c), iterable_fields))
+    non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
 
-  vec(
-    map(Iterators.product(values(iterable_dict)...)) do vals
-      dd = Dict(keys(iterable_dict) .=> vals)
-      if isempty(non_iterable_dict)
-        dd
-      elseif isempty(iterable_dict)
-        non_iterable_dict
-      else
-        merge(non_iterable_dict, dd)
-      end
-    end
-  )
+    vec(map(Iterators.product(values(iterable_dict)...)) do vals
+        dd = Dict(keys(iterable_dict) .=> vals)
+        if isempty(non_iterable_dict)
+            dd
+        elseif isempty(iterable_dict)
+            non_iterable_dict
+        else
+            merge(non_iterable_dict, dd)
+        end
+    end)
+end
+
+function run_single(
+    param_dict::Dict,
+    output_params::Vector{Symbol},
+    initialize;
+    agent_step! = dummystep,
+    model_step! = dummystep,
+    n = 1,
+    kwargs...,
+)
+    model = initialize(; param_dict...)
+    df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
+    output_params_dict = filter(j -> first(j) in output_params, param_dict)
+    insertcols!(df_agent_single, output_params_dict...)
+    insertcols!(df_model_single, output_params_dict...)
+    return (df_agent_single, df_model_single)
 end

@@ -170,7 +170,7 @@ function sugarscape(;
     model = AgentBasedModel(
         SugarSeeker,
         space,
-        scheduler = random_activation,
+        scheduler = Schedulers.randomly,
         properties = properties,
         rng = MersenneTwister(seed)
     )

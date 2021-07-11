@@ -8,8 +8,8 @@ quickly reference to find exactly what they're looking for.
 
 The simplest, and most thoroughly discussed example we have is
 [Schelling's segregation model](@ref). Here, you will learn how to create an agent,
-define its actions, collect data from an experiment, plot results and even how to set
-up multiple experiments in parallel.
+define its actions, collect data from an experiment, plot results, save the model to a file and
+even how to set up multiple experiments in parallel.
 
 [Opinion spread](@ref) is another all-round showcase of these topics, with some
 interesting, yet more complicated dynamics.
@@ -31,7 +31,7 @@ example to take a look at first to see if you can solve your problem without one
 Making a discrete grid is perhaps the easiest way to conceptualise space in a model.
 [Sugarscape](@ref) is one of our more complex examples, but gives you a good overview
 of what is possible on a grid. If you're looking for something simpler, then the
-[Forest fire model](@ref) would be a good start.
+[Forest fire](@ref) would be a good start, which is also an example of a cellular automaton.
 
 A more complex, but far more powerful space type is something we call
 [`ContinuousSpace`](@ref). In this space, agents generally move with a given velocity
@@ -55,6 +55,13 @@ grid space, but only uses 2 of those dimensions for space. The third represents 
 agent **category**. Here, we can leverage Agents.jl's sophisticated neighbor searches
 to find closely related agents not just in space, but also in property.
 
+### Agent Path-finding
+
+On [`GridSpace`](@ref)'s, the [`Pathfinding.Pathfinder`](@ref) system (using the A* algorithm)
+provides automatic path-finding for agents with a variety of options and metrics to
+choose from. We have two models showcasing the possibilities of this method:
+[Maze Solver](@ref) and [Mountain Runners](@ref).
+
 ### Synchronous agent updates
 
 Most of the time, using the `agent_step!` loop then the `model_step!` is
@@ -69,6 +76,13 @@ The [Wright-Fisher model of evolution](@ref) shows us how we can sample a popula
 agents based on certain model properties. This is quite helpful in genetic and biology
 studies where agents are cell analogues.
 
+### Parameter searching and ensemble analysis
+
+The lower portion of the [Schelling's segregation model](@ref) page deals with some
+advanced topics like how one can run many examples in parallel to get ensemble averages
+of many similar model runs. In addition to this, it explores ways of searching
+parameter ranges of your model to fine-tune inputs.
+
 ### Cellular Automata
 
 A subset of ABMs, these models have individual agents with a set of behaviors,
@@ -80,10 +94,15 @@ Two famous examples of this model type are [Conway's game of life](@ref) and
 
 In the real world, groups of people interact differently with people they know vs people
 they don't know. In ABM worlds, that's no different.
-[Model of predator-prey dynamics](@ref) (or more colloquially: Wolf-Sheep) implements
+[Predator-prey dynamics](@ref) (or more colloquially: Wolf-Sheep) implements
 interactions between a pack of Wolves, a heard of Sheep and meadows of Grass.
 [Daisyworld](@ref) is an example of how a model property (in this case temperature) can
 be elevated to an agent type.
+
+### Saving and loading models
+
+One of the later sections of the [Schelling's segregation model](@ref) page gives an example
+of how models can be saved to/loaded from files and a possible use case for the same.
 
 ## Advanced Topics
 

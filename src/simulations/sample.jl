@@ -15,7 +15,6 @@ this agent will be chosen in the new sampling.
 # Keywords
 * `replace = true` : whether sampling is performed with replacement, i.e. all agents can
 be chosen more than once.
-* `rng = GLOBAL_RNG` : a random number generator to perform the sampling with.
 
 Example usage in [Wright-Fisher model of evolution](@ref).
 """
@@ -24,15 +23,14 @@ function sample!(
     n::Int,
     weight = nothing;
     replace = true,
-    rng::AbstractRNG = Random.GLOBAL_RNG,
 )
     nagents(model) > 0 || return
     org_ids = collect(keys(model.agents))
     if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
-        newids = sample(rng, org_ids, weights, n, replace = replace)
+        newids = sample(model.rng, org_ids, weights, n, replace = replace)
     else
-        newids = sample(rng, org_ids, n, replace = replace)
+        newids = sample(model.rng, org_ids, n, replace = replace)
     end
     add_newids!(model, org_ids, newids)
 end

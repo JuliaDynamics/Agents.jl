@@ -39,7 +39,7 @@ mutable struct HKAgent <: AbstractAgent
     id::Int
     old_opinion::Float64
     new_opinion::Float64
-    previous_opinon::Float64
+    previous_opinion::Float64
 end
 
 # There is a reason the agent has three fields that are "the same".
@@ -52,7 +52,7 @@ end
 # We could, alternatively, make the three opinions a single field with vector value.
 
 function hk_model(; numagents = 100, ϵ = 0.2)
-    model = ABM(HKAgent, scheduler = fastest, properties = Dict(:ϵ => ϵ))
+    model = ABM(HKAgent, scheduler = Schedulers.fastest, properties = Dict(:ϵ => ϵ))
     for i in 1:numagents
         o = rand(model.rng)
         add_agent!(model, o, o, -1)
@@ -75,7 +75,7 @@ nothing # hide
 
 # Now we implement the `agent_step!`
 function agent_step!(agent, model)
-    agent.previous_opinon = agent.old_opinion
+    agent.previous_opinion = agent.old_opinion
     agent.new_opinion = mean(boundfilter(agent, model))
 end
 nothing # hide
@@ -104,7 +104,8 @@ nothing # hide
 # amount of steps we can specify a function instead.
 function terminate(model, s)
     if any(
-        !isapprox(a.previous_opinon, a.new_opinion; rtol = 1e-12) for a in allagents(model)
+        !isapprox(a.previous_opinion, a.new_opinion; rtol = 1e-12)
+        for a in allagents(model)
     )
         return false
     else
@@ -147,16 +148,16 @@ using Random # hide
 Random.seed!(42) # hide
 
 const cmap = cgrad(:lightrainbow)
-plotsim(ax, data, ϵ) =
-    map(groupby(data, :id)) do grp
+plotsim(ax, data) =
+    for grp in groupby(data, :id)
         lines!(ax, grp.step, grp.new_opinion, color = cmap[grp.id[1]/100])
     end
 
 eps = [0.05, 0.15, 0.3]
-figure = Figure(resolution = (600, 450))
+figure = Figure(resolution = (600, 600))
 for (i, e) in enumerate(eps)
     ax = figure[i, 1] = Axis(figure; title = "epsilon = $e")
     e_data = model_run(ϵ = e)
-    plotsim(ax, e_data, e)
+    plotsim(ax, e_data)
 end
 figure

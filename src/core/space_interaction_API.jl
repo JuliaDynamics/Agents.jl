@@ -17,12 +17,13 @@ export move_agent!,
     add_agent!,
     add_agent_pos!,
     kill_agent!,
-    kill_agents!,
     genocide!,
     random_position,
     nearby_positions,
     nearby_ids,
-    nearby_agents
+    nearby_agents,
+    move_along_route!,
+    is_stationary
 
 notimplemented(model) =
     error("Not implemented for space type $(nameof(typeof(model.space)))")
@@ -77,8 +78,8 @@ What the "radius" means depends on the space type:
 - `GridSpace, ContinuousSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
   in the space of cartesian indices.
 - `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
-extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
-spaces.
+  extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
+  spaces.
 - `OpenStreetMapSpace`: `r` is equivalent with distance (in meters) neeeded to be travelled
   according to existing roads in order to reach given `position`.
 
@@ -118,6 +119,23 @@ given position.
 nearby_positions(position, model, r = 1) = notimplemented(model)
 
 #######################################################################################
+# %% IMPLEMENT: Advanced functionality for route planning
+#######################################################################################
+# """
+#     move_along_route!(agent, model, args...; kwargs...)
+# Move `agent` along the route planned for it. Used in situations like path-finding
+# or open street map space movement.
+# """
+move_along_route!(agent, model, args...; kwargs...) = notimplemented(model)
+
+"""
+    is_stationary(agent, model)
+Return `true` if agent has reached the end of its route, or no route
+has been set for it. Used in setups where using [`move_along_route!`](@ref) is valid.
+"""
+is_stationary(agent, model) = notimplemented(model)
+
+#######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
 """
@@ -134,17 +152,6 @@ end
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
-    kill_agents!(ids, model::ABM)
-
-Remove all agents with then given ids agent from the model.
-"""
-function kill_agents!(ids, model::ABM)
-    for i in ids
-        kill_agent!(i, model)
-    end
-end
-
-"""
     genocide!(model::ABM)
 Kill all the agents of the model.
 """
@@ -157,13 +164,23 @@ end
 
 """
     genocide!(model::ABM, n::Int)
-Kill the agents of the model whose IDs are larger than n.
+Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
     for (k, v) in model.agents
         k > n && kill_agent!(v, model)
     end
     model.maxid[] = n
+end
+
+"""
+    genocide!(model::ABM, IDs)
+Kill the agents with the given IDs.
+"""
+function genocide!(model::ABM, ids)
+    for id in ids
+        kill_agent!(id, model)
+    end
 end
 
 """
@@ -218,16 +235,15 @@ end
 
 """
     add_agent!([pos,] model::ABM, args...; kwargs...) → newagent
-Create and add a new agent to the model by constructing an agent of the
-type of the `model`. Propagate all *extra* positional arguments and
-keyword arguemts to the agent constructor.
+Create and add a new agent to the model using the constructor of the agent type of the model.
 Optionally provide a position to add the agent to as *first argument*, which must
 match the space position type.
 
-Notice that this function takes care of setting the agent's id *and* position and thus
-`args...` and `kwargs...` are propagated to other fields the agent has (see example below).
+This function takes care of setting the agent's id *and* position.
+The extra provided `args...` and `kwargs...` are propagated to other fields
+of the agent constructor (see example below).
 
-    add_agent!([pos,] A, model::ABM, args...; kwargs...) → newagent
+    add_agent!([pos,] A::Type, model::ABM, args...; kwargs...) → newagent
 
 Use this version for mixed agent models, with `A` the agent type you wish to create
 (to be called as `A(id, pos, args...; kwargs...)`), because it is otherwise not possible

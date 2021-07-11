@@ -16,8 +16,7 @@
 
 using Agents
 using InteractiveDynamics # plotting agents
-using AbstractPlotting # plotting data
-import CairoMakie # for static plotting
+using CairoMakie # for static plotting
 using Random # hide
 
 # ## Building the model
@@ -37,7 +36,7 @@ function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
     model = AgentBasedModel(
         Citizen,
         space,
-        scheduler = random_activation,
+        scheduler = Schedulers.randomly,
         properties = properties,
     )
     for pos in positions(model)

@@ -16,7 +16,6 @@ jobs:
       matrix:
         version:
           - '1'
-          - '^1.6.0-0'
         os:  [ubuntu-latest, windows-latest, macos-latest]
         arch:
           - x64
@@ -52,20 +51,28 @@ jobs:
           file: lcov.info
   docs:
     name: Documentation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       # Cancel ongoing documentation build if pushing to branch again before the previous
       # build is finished.
-      - name: Cancel ongoing documentation builds for previous commits
+      - name: Cancel ongoing builds and checkout
         uses: styfle/cancel-workflow-action@0.6.0
         with:
           access_token: ${{ github.token }}
-
-      # Build docs
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
       - name: Instantiate and install dependencies
         run: |
           julia --project=docs -e '
@@ -76,8 +83,7 @@ jobs:
         env: # needed for pushing to gh-pages branch
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run:
-          julia --project=docs docs/make.jl
+        run: julia --project=docs --color=yes docs/make.jl
       - name: Doctests
         run: |
           julia --project=docs -e '

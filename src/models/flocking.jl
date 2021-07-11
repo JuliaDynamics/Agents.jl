@@ -1,9 +1,6 @@
 using LinearAlgebra
 
-mutable struct Bird <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent Bird ContinuousAgent{2} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -40,7 +37,7 @@ function flocking(;
     spacing = visual_distance / 1.5,
 )
     space2d = ContinuousSpace(extent, spacing)
-    model = ABM(Bird, space2d, scheduler = random_activation)
+    model = ABM(Bird, space2d, scheduler = Schedulers.randomly)
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
         add_agent!(
@@ -65,7 +62,6 @@ function flocking_agent_step!(bird, model)
         N += 1
         neighbor = model[id].pos
         heading = neighbor .- bird.pos
-
         cohere = cohere .+ heading
         if edistance(bird.pos, neighbor, model) < bird.separation
             separate = separate .- heading

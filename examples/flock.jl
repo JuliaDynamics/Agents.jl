@@ -57,7 +57,7 @@ function initialize_model(;
     spacing = visual_distance / 1.5,
 )
     space2d = ContinuousSpace(extent, spacing)
-    model = ABM(Bird, space2d, scheduler = random_activation)
+    model = ABM(Bird, space2d, scheduler = Schedulers.randomly)
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
         add_agent!(
@@ -112,7 +112,7 @@ end
 
 # ## Plotting the flock
 using InteractiveDynamics
-import CairoMakie
+using CairoMakie
 
 # The great thing about [`abm_plot`](@ref) is its flexibility. We can incorporate the
 # direction of the birds when plotting them, by making the "marker" function `am`

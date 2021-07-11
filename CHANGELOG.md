@@ -1,3 +1,27 @@
+# v4.4 (UNRELEASED)
+## New features and fixes
+- Provide a generator function to collect `mdata` in `run!` and `ensemblerun!`.
+- Save/load entire models using `save_checkpoint` and `load_checkpoint`
+
+# v4.3
+## New features and fixes
+- Save and load agent information from CSV files.
+
+# v4.2
+## New features and fixes
+- Self-contained features of Agents.jl will from now own exist in their own submodules. This will make the public API less cluttered and functionality more contained. Currently the new submodules are `Schedulers, Pathfinding, OSM`.
+- Pathfinding using the A* algorithm is now possible! Available for `GridSpace`.
+- Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
+- Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
+- New function `ensemblerun!` for running ensemble model simulations.
+- Scheduler `Schedulers.by_property` (previously `property_activation`) now allows as input arbitrary functions besides symbols.
+
+## Deprecated
+- Deprecate `aggname` in favor of `dataname` for naming of columns in collection dataframes
+- Keyword `replicates` of `run!` is deprecated in favor of `ensemblerun!`.
+- `paramscan` with `replicates` is deprecated. If you want to parameter scan and at the same time run multiple simulations at each parameter combination, simply use `seed` as a parameter, which tunes the model's initial random seed.
+- All the scheduler names have been deprecated in favor of a `Schedulers` module: `fastest` to `Schedulers.fastest`, `by_id` to `Schedulers.by_id`, `random_activation` to `Schedulers.randomly`, `partial_activation` to `Schedulers.partially`, `property_activation` to `Schedulers.by_property`, `by_type` to `Schedulers.by_type`.
+
 # v4.1.2
 - Plotting with Plots.jl and `plotabm` is deprecated in favor of InteractiveDynamics.jl, Makie.jl and `abm_plot`.
 

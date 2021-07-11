@@ -21,13 +21,12 @@
 
 # To begin, we load in some dependencies
 
-using Agents, LightGraphs, SimpleWeightedGraphs, SparseArrays, Random
-using InteractiveDynamics
-using AbstractPlotting
-import CairoMakie
+using Agents
+using SimpleWeightedGraphs: SimpleWeightedDiGraph # will make social network
+using SparseArrays: findnz                        # for social network connections
+using Random: MersenneTwister                     # reproducibility
 
-# And create a very simple agent.
-
+# And create a very simple agent without any extra properties
 mutable struct Student <: AbstractAgent
     id::Int
     pos::Tuple{Float64,Float64}
@@ -55,6 +54,7 @@ function schoolyard(;
     noise = 0.1,
     max_force = 1.7,
     spacing = 4.0,
+    seed = 6998,
 )
     model = ABM(
         Student,
@@ -65,6 +65,7 @@ function schoolyard(;
             :buddies => SimpleWeightedDiGraph(numStudents),
             :max_force => max_force,
         ),
+        rng = MersenneTwister(seed)
     )
     for student in 1:numStudents
         ## Students begin near the school building
@@ -137,23 +138,24 @@ end
 # ## Visualising the system
 
 # Now, we can watch the dynamics of the social system unfold:
+using InteractiveDynamics
+using CairoMakie
 
-Random.seed!(6548) #hide
 model = schoolyard()
 
-s = Observable(0) # counter of current step
-t = lift(x -> "Playgound Dynamics, step = "*string(x), s)
-f, abmstepper = abm_plot(model, as = 15)
-ax = contents(f[1, 1])[1]
-## ax.title = t[]
-scatter!([50 50]; color = :red) # Show position of teacher
-limits!(ax, 0, 100, 0, 100)
-hidedecorations!(ax)
-record(f, "schoolyard.mp4", 1:40; framerate = 15) do i
-    Agents.step!(abmstepper, model, agent_step!, dummystep, 1)
-    s[] = i; s[] = s[]
-    ## ax.title = t[]
+function static_preplot!(ax, model)
+    obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
+    CairoMakie.hidedecorations!(ax) # hide tick labels etc.
+    CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
 end
+
+abm_video(
+    "schoolyard.mp4", model, agent_step!, dummystep;
+    framerate = 15, frames = 40,
+    title = "Playgound dynamics",
+    static_preplot!,
+)
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../schoolyard.mp4" type="video/mp4">

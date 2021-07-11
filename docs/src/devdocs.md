@@ -23,3 +23,37 @@ In principle, the following should be done:
 1. Extend `nearby_ids(position, model, r)`.
 
 And that's it!
+
+## Designing a new Pathfinder Cost Metric
+
+To define a new cost metric, simply make a struct that subtypes `CostMetric` and provide
+a `delta_cost` function for it. These methods work solely for A* at present, but
+will be available for other pathfinder algorithms in the future.
+
+```@docs
+Pathfinding.CostMetric
+Pathfinding.delta_cost
+```
+
+## Implementing custom serialization
+
+### For model properties
+Custom serialization may be required if your properties contain non-serializable data, such as
+functions. Alternatively, if it is possible to recalculate some properties during deserialization
+it may be space-efficient to not save them. To implement custom serialization, define methods
+for the `to_serializable` and `from_serializable` functions:
+
+```@docs
+AgentsIO.to_serializable
+AgentsIO.from_serializable
+```
+
+### For agent structs
+Similarly to model properties, you may need to implement custom serialization for agent structs.
+`from_serializable` and `to_serializable` are not called during (de)serialization of agent structs.
+Instead, [JLD2's custom serialization functionality](https://juliaio.github.io/JLD2.jl/stable/customserialization/)
+should be used. All instances of the agent struct will be converted to and from the specified
+type during serialization. For OpenStreetMap agents, the position, destination and route are
+saved separately. These values will be loaded back in during deserialization of the model and
+override any values in the agent structs. To save space, the agents in the serialized model
+will have empty `route` fields.

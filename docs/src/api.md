@@ -3,7 +3,7 @@
 The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## `@agents` macro
+## `@agent` macro
 The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
@@ -40,11 +40,7 @@ ContinuousSpace
 OpenStreetMapSpace
 ```
 
-## Model-agent interaction
-The following API is mostly universal across all types of [Space](@ref Space).
-Only some specific methods are exclusive to a specific type of space, but these are described further below in this page.
-
-### Adding agents
+## Adding agents
 ```@docs
 add_agent!
 add_agent_pos!
@@ -52,13 +48,23 @@ nextid
 random_position
 ```
 
-### Moving agents
+## Moving agents
 ```@docs
 move_agent!
 walk!
 ```
 
-### Removing agents
+
+### Movement with paths
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
+movement method is available.
+
+```@docs
+move_along_route!
+is_stationary
+```
+
+## Removing agents
 ```@docs
 kill_agent!
 genocide!
@@ -86,24 +92,24 @@ nearest_neighbor
 elastic_collision!
 ```
 
-## OpenStreetMap space exclusives
-```@docs
-osm_latlon
-osm_intersection
-osm_road
-osm_random_road_position
-osm_plan_route
-osm_random_route!
-osm_road_length
-osm_is_stationary
-osm_map_coordinates
-```
-
 ## Graph space exclusives
 ```@docs
 add_edge!
 add_node!
 rem_node!
+```
+
+## OpenStreetMap space exclusives
+```@docs
+OSM
+OSM.latlon
+OSM.intersection
+OSM.road
+OSM.random_road_position
+OSM.plan_route
+OSM.random_route!
+OSM.road_length
+OSM.map_coordinates
 ```
 
 ## Local area
@@ -157,12 +163,13 @@ There may be times when pair-wise, triplet-wise or higher interactions need to b
 accounted for across most or all of the model's agent population. The following methods
 provide an interface for such calculation.
 
+These methods follow the conventions outlined above in [A note on iteration](@ref).
+
 ```@docs
 iter_agent_groups
 map_agent_groups
 index_mapped_groups
 ```
-
 
 ## Parameter scanning
 ```@docs
@@ -201,28 +208,23 @@ init_agent_dataframe
 collect_agent_data!
 init_model_dataframe
 collect_model_data!
-aggname
+dataname
 ```
 
 ## [Schedulers](@id Schedulers)
-The schedulers of Agents.jl have a very simple interface.
-All schedulers are functions, that take as an input the ABM and return an iterator over agent IDs.
-Notice that this iterator can be a "true" iterator (non-allocated) or can be just a standard vector of IDs.
-You can define your own scheduler according to this API and use it when making an [`AgentBasedModel`](@ref).
-You can also use the function `schedule(model)` to obtain the scheduled ID list, if you prefer to write your own `step!`-like loop.
-
-Notice that schedulers can be given directly to model creation, and thus become the "default" scheduler a model uses, but they can just as easily be incorporated in a `model_step!` function as shown in [Advanced stepping](@ref).
-
+```@docs
+Schedulers
+```
 
 ### Predefined schedulers
-Some useful schedulers are available below as part of the Agents.jl public API:
+Some useful schedulers are available below as part of the Agents.jl API:
 ```@docs
-fastest
-by_id
-random_activation
-partial_activation
-property_activation
-by_type
+Schedulers.fastest
+Schedulers.by_id
+Schedulers.randomly
+Schedulers.partially
+Schedulers.by_property
+Schedulers.by_type
 ```
 
 ### Advanced scheduling
@@ -254,3 +256,44 @@ and pass it to e.g. `step!` by initializing it
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
+
+## Ensemble runs and Parallelization
+```@docs
+ensemblerun!
+```
+
+### How to use `Distributed`
+To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+
+## Path-finding
+```@docs
+Pathfinding
+Pathfinding.Pathfinder
+Pathfinding.set_target!
+Pathfinding.set_best_target!
+Pathfinding.walkmap
+Pathfinding.heightmap
+```
+
+### Metrics
+```@docs
+Pathfinding.DirectDistance
+Pathfinding.MaxDistance
+Pathfinding.HeightMap
+```
+
+Building a custom metric is straightforward, if the provided ones do not suit your purpose.
+See the [Developer Docs](@ref) for details.
+
+## Save, Load, Checkpoints
+There may be scenarios where interacting with data in the form of files is necessary. The following
+functions provide an interface to save/load data to/from files.
+```@docs
+AgentsIO.save_checkpoint
+AgentsIO.load_checkpoint
+AgentsIO.populate_from_csv!
+AgentsIO.dump_to_csv
+```
+
+In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
+for details.

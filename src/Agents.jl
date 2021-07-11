@@ -1,11 +1,13 @@
 module Agents
 
 using Requires
+using Scratch
 using Distributed
+using DataStructures
 using LightGraphs
 using DataFrames
 using Random
-using OpenStreetMapX
+import ProgressMeter
 
 import Base.length
 import LinearAlgebra
@@ -13,9 +15,9 @@ import LinearAlgebra
 # Core structures of Agents.jl
 include("core/agents.jl")
 include("core/model.jl")
-include("core/schedule.jl")
 include("core/space_interaction_API.jl")
 
+# Existing spaces
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
 include("spaces/grid.jl")
@@ -29,33 +31,17 @@ include("simulations/step.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
+include("simulations/ensemblerun.jl")
 
+# Other features that exist in submodules
+include("submodules/pathfinding/all_pathfinders.jl")
+include("submodules/schedulers.jl")
+include("submodules/io/AgentsIO.jl")
 include("deprecations.jl")
 
 # Predefined models
 include("models/Models.jl")
 export Models
 
-# Update message:
-display_update = true
-version_number = "4.1"
-update_name = "update_v$(version_number)"
-
-if display_update
-    if !isfile(joinpath(@__DIR__, update_name))
-        printstyled(
-            stdout,
-            """
-            \nUpdate message: Agents v$(version_number)
-
-            `AgentBasedModel` now explicitly includes a random number generator, enabling
-            reproducible ABM simulations with Agents.jl.
-            Access it with `model.rng` and seed it with `seed!(model, seed)`!
-            """;
-            color = :light_magenta,
-        )
-        touch(joinpath(@__DIR__, update_name))
-    end
-end
 
 end # module

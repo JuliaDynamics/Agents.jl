@@ -11,30 +11,37 @@
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional Chebyshev grid (8 neighbors per position).
-# * If an agent is in the same group with at least three neighbors, then it is happy.
+# * The agents live in a two-dimensional grid with a Chebyshev metric.
+#   This leads to 8 neighboring positions per position (except at the edges of the grid).
+# * Each position of the grid can be occupied by at most one agent.
+# * If an agent has at least `3` neighbors belonging to the same group, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
 # Schelling's model shows that even small preferences of agents to have neighbors
-# belonging to the same group (e.g. preferring that at least 30% of neighbors to
+# belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
 # be in the same group) could lead to total segregation of neighborhoods.
 
 # This model is also available as [`Models.schelling`](@ref).
 
-# ## Defining the agent type
+# ## Creating a space
+
+# For this example, we will be using a Chebyshev 2D grid, e.g.
 
 using Agents
-using StatsBase: mean
+
+space = GridSpace((10, 10); periodic = false)
+
+# Agents belonging in this type of space must have a position field that is a
+# `NTuple{2, Int}`. We ensure this below.
+
+# ## Defining the agent type
 
 mutable struct SchellingAgent <: AbstractAgent
-    id::Int # The identifier number of the agent
-    pos::Dims{2} # The x, y location of the agent on a 2D grid
-    mood::Bool # whether the agent is happy in its position. (true = happy)
-    group::Int # The group of the agent,  determines mood as it interacts with neighbors
+    id::Int             # The identifier number of the agent
+    pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
+    mood::Bool          # whether the agent is happy in its position. (true = happy)
+    group::Int          # The group of the agent, determines mood as it interacts with neighbors
 end
-
-# Notice that the position of this Agent type is a `Dims{2}`, equivalent to
-# `NTuple{2,Int}`, because we will use a 2-dimensional `GridSpace`.
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
@@ -49,12 +56,6 @@ end
 # end
 # ```
 
-# ## Creating a space
-
-# For this example, we will be using a Chebyshev 2D grid, e.g.
-
-space = GridSpace((10, 10), periodic = false)
-
 # ## Creating an ABM
 
 # To make our model we follow the instructions of [`AgentBasedModel`](@ref).
@@ -66,17 +67,17 @@ schelling = ABM(SchellingAgent, space; properties)
 # Here we used the default scheduler (which is also the fastest one) to create
 # the model. We could instead try to activate the agents according to their
 # property `:group`, so that all agents of group 1 act first.
-# We would then use the scheduler [`property_activation`](@ref) like so:
+# We would then use the scheduler [`Schedulers.by_property`](@ref) like so:
 
 schelling2 = ABM(
     SchellingAgent,
     space;
     properties = properties,
-    scheduler = property_activation(:group),
+    scheduler = Schedulers.by_property(:group),
 )
 
-# Notice that `property_activation` accepts an argument and returns a function,
-# which is why we didn't just give `property_activation` to `scheduler`.
+# Notice that `Schedulers.by_property` accepts an argument and returns a function,
+# which is why we didn't just give `Schedulers.by_property` to `scheduler`.
 
 # ## Creating the ABM through a function
 
@@ -84,7 +85,7 @@ schelling2 = ABM(
 # it will be easy to recreate the model and change its parameters.
 
 # In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`random_activation`](@ref).
+# We also change the scheduler to [`Schedulers.randomly`](@ref).
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
@@ -95,7 +96,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     rng = Random.MersenneTwister(seed)
     model = ABM(
         SchellingAgent, space;
-        properties, rng, scheduler = random_activation
+        properties, rng, scheduler = Schedulers.randomly
     )
 
     ## populate the model with agents, adding equal amount of the two types of agents
@@ -106,7 +107,6 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     end
     return model
 end
-nothing # hide
 
 # Notice that the position that an agent is initialized does not matter
 # in this example.
@@ -119,12 +119,12 @@ nothing # hide
 # agent when activated.
 
 function agent_step!(agent, model)
-    agent.mood == true && return # do nothing if already happy
     minhappy = model.min_to_be_happy
-    neighbor_positions = nearby_positions(agent, model)
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
     ## and increment count_neighbors_same_group as appropriately.
+    ## Here `nearby_agents` (with default arguments) will provide an iterator
+    ## over the nearby agents one grid point away, which are at most 8.
     for neighbor in nearby_agents(agent, model)
         if agent.group == neighbor.group
             count_neighbors_same_group += 1
@@ -140,7 +140,6 @@ function agent_step!(agent, model)
     end
     return
 end
-nothing # hide
 
 # For the purpose of this implementation of Schelling's segregation model,
 # we only need an agent step function.
@@ -187,15 +186,15 @@ data[1:10, :]
 # With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
 # For example, let's only get the number of happy individuals, and the
-# maximum of the "x" (not very interesting, but anyway!)
-
+# average of the "x" (not very interesting, but anyway!)
+using Statistics: mean
 model = initialize();
-adata = [(:mood, sum), (x, maximum)]
+adata = [(:mood, sum), (x, mean)]
 data, _ = run!(model, agent_step!, 5; adata)
 data
 
-# Other examples in the documentation are more realistic, with a much more meaningful
-# collected data. Don't forget to use the function [`aggname`](@ref) to access the
+# Other examples in the documentation are more realistic, with more meaningful
+# collected data. Don't forget to use the function [`dataname`](@ref) to access the
 # columns of the resulting dataframe by name.
 
 # ## Visualizing the data
@@ -207,7 +206,7 @@ data
 
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 using InteractiveDynamics
-import CairoMakie # choosing a plotting backend
+using CairoMakie # choosing a plotting backend
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
@@ -227,7 +226,7 @@ abm_video(
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
 )
-nothing # hide
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../schelling.mp4" type="video/mp4">
@@ -264,18 +263,106 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # </video>
 # ```
 
+# ## Saving the model state
+# It is often useful to save a model after running it, so that multiple branching
+# scenarios can be simulated from that point onwards. For example, once most of
+# the population is happy, let's see what happens if some more agents occupy the
+# empty cells. The new agents could all be of one group, or belong to a third, new, group.
+# Simulating this needs multiple copies of the model. `Agents.jl` provides the
+# functions [`AgentsIO.save_checkpoint`](@ref) and [`AgentsIO.load_checkpoint`](@ref)
+# to save and load models to JLD2 files respectively.
 
-# ## Replicates and parallel computing
+# First, let's create a model with 200 agents and run it for 40 iterations.
 
-# We can run replicates of a simulation and collect all of them in a single `DataFrame`.
-# To that end, we only need to specify `replicates` in the `run!` function:
+@eval Main __atexample__named__schelling = $(@__MODULE__) # hide
 
-model = initialize(numagents = 370, griddims = (20, 20), min_to_be_happy = 3)
-data, _ = run!(model, agent_step!, 5; adata = adata, replicates = 3)
-data[(end - 10):end, :]
+model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
+run!(model, agent_step!, 40)
 
-# It is possible to run the replicates in parallel.
-# For that, we should start julia with `julia -p n` where is the number
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# Most of the agents have settled happily. Now, let's save the model.
+
+AgentsIO.save_checkpoint("schelling.jld2", model)
+
+# Note that we can now leave the REPL, and come back later to run the model,
+# right from where we left off.
+
+model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+
+# Since functions are not saved, the scheduler has to be passed while loading
+# the model. Let's now verify that we loaded back exactly what we saved.
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# For starters, let's see what happens if we add 100 more agents of group 1
+
+for i in 1:100
+    agent = SchellingAgent(nextid(model), (1, 1), false, 1)
+    add_agent_single!(agent, model)
+end
+
+# Let's see what our model looks like now.
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# And then run it for 40 iterations.
+
+run!(model, agent_step!, 40)
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# It looks like they eventually cluster again. What if the agents are of a new group?
+# We can start by loading the model back in from the file, thus resetting the
+# changes we made.
+
+model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
+
+for i in 1:100
+    agent = SchellingAgent(nextid(model), (1, 1), false, 3)
+    add_agent_single!(agent, model)
+end
+
+# To visualize the model, we need to redefine `groupcolor` and `groupmarker`
+# to handle a third group.
+
+groupcolor(a) = (:blue, :orange, :green)[a.group]
+groupmarker(a) = (:circle, :rect, :cross)[a.group]
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# The new agents are scattered randomly, as expected. Now let's run the model.
+
+run!(model, agent_step!, 40)
+
+figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure
+
+# The new agents also form their own clusters, despite being completely scattered.
+# It's also interesting to note that there is minimal rearrangement among the existing
+# groups. The new agents simply occupy the remaining space.
+
+rm("schelling.jld2") # hide
+
+# ## Ensembles and distributed computing
+
+# We can run ensemble simulations and collect the output of every member in a single `DataFrame`.
+# To that end we use the [`ensemblerun!`](@ref) function.
+# The function accepts a `Vector` of ABMs, each (typically) initialized with a different
+# seed and/or agent distribution. For example we can do
+models = [initialize(seed = x) for x in rand(UInt8, 3)];
+
+# and then
+adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
+adf[(end - 10):end, :]
+
+# It is possible to run the ensemble in parallel.
+# For that, we should start julia with `julia -p n` where `n` is the number
 # of processing cores. Alternatively, we can define the number of cores from
 # within a Julia session:
 
@@ -288,15 +375,17 @@ data[(end - 10):end, :]
 # `@everywhere`, e.g.
 
 # ```julia
+# using Distributed
 # @everywhere using Agents
 # @everywhere mutable struct SchellingAgent ...
+# @everywhere agent_step!(...) = ...
 # ```
 
-# Then we can tell the `run!` function to run replicates in parallel:
+# Then we can tell the `ensemblerun!` function to run the ensemble in parallel
+# using the keyword `parallel = true`:
 
 # ```julia
-# data, _ = run!(model, agent_step!, 2, adata=adata,
-#                replicates=5, parallel=true)
+# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
 # ```
 
 # ## Scanning parameter ranges
@@ -309,7 +398,7 @@ data[(end - 10):end, :]
 # We now also define a processing function, that returns the percentage of
 # happy agents:
 
-happyperc(moods) = count(x -> x == true, moods) / length(moods)
+happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
 parameters = Dict(
@@ -318,34 +407,8 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-data, _ = paramscan(parameters, initialize; adata = adata, n = 3, agent_step! = agent_step!)
-data
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf
 
-# `paramscan` also allows running replicates per parameter setting:
-
-data, _ = paramscan(
-    parameters,
-    initialize;
-    adata = adata,
-    n = 3,
-    agent_step! = agent_step!,
-    replicates = 3,
-)
-
-data[(end - 10):end, :]
-
-# We can combine all replicates with an aggregating function, such as mean, using
-# the `groupby` and `combine` functions from the `DataFrames` package:
-
-using DataFrames
-using Statistics: mean
-gd = groupby(data,[:step, :min_to_be_happy, :numagents])
-data_mean = combine(gd,[:happyperc_mood,:replicate] .=> mean)
-
-out = select(data_mean, Not(:replicate_mean))
-
-# Note that the second argument takes the column names on which to split the data,
-# i.e., it denotes which columns should not be aggregated. It should include
-# the `:step` column and any parameter that changes among simulations. But it should
-# not include the `:replicate` column.
-# So in principle what we are doing here is simply averaging our result across the replicates.
+# We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to
+# "total happiness".

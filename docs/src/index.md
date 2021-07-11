@@ -4,8 +4,12 @@ Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based mo
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
 To get started, please read the [Tutorial](@ref) page.
 
-!!! tip "Latest news"
-    Welcome to Agents.jl v4.0! This new release features improved `GridSpace` and `ContinuousSpace` (re-written from scratch), overall performance improvements of Agents.jl of a full order of magnitude (and sometimes more) and re-naming many API functions to make sense (deprecations have been put in place). Have a look at the [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
+!!! info "Star us on GitHub!"
+    If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
+    This gives us an accurate lower bound of the (satisfied) user count.
+
+!!! tip "Latest news: Agents.jl v4.4"
+      * New functions `save_checkpoint` and `load_checkpoint` to save and load entire models to and from files
 
 ## Features
 * Free, open source and extremely transparent.

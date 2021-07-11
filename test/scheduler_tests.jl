@@ -3,8 +3,8 @@
 @testset "Simple Schedulers" begin
     N = 1000
 
-    # by_id
-    model = ABM(Agent0; scheduler = by_id)
+    # Schedulers.by_id
+    model = ABM(Agent0; scheduler = Schedulers.by_id)
     for i in 1:N
         add_agent!(model)
     end
@@ -13,14 +13,14 @@
 
     # fastest
     Random.seed!(12)
-    model = ABM(Agent0; scheduler = fastest)
+    model = ABM(Agent0; scheduler = Schedulers.fastest)
     for i in 1:N
         add_agent!(model)
     end
     @test sort!(collect(model.scheduler(model))) == 1:N
 
     # random
-    model = ABM(Agent0; scheduler = random_activation, rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.randomly, rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
@@ -28,7 +28,7 @@
     @test model.scheduler(model)[1:3] != fastest_order
 
     # partial
-    model = ABM(Agent0; scheduler = partial_activation(0.1), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.partially(0.1), rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
@@ -37,7 +37,7 @@
     @test length(a) <= N/10
 
     # by property
-    model = ABM(Agent2; scheduler = property_activation(:weight))
+    model = ABM(Agent2; scheduler = Schedulers.by_property(:weight))
     for i in 1:N
         add_agent!(model, rand(model.rng) / rand(model.rng))
     end
@@ -63,7 +63,7 @@ end
 end
 
 # Mixed model
-function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = fastest)
+function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = Schedulers.fastest)
     model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
     atypes = (Agent0,Agent1,Agent2,Agent3)
     id = 1
@@ -97,7 +97,7 @@ end
 
     # shuffling types scheduler
     Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(true, false))
+    model = init_mixed_model(scheduler = Schedulers.by_type(true, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
     @test unique([typeof(model[id]) for id in s1]) != unique([typeof(model[id]) for id in s2])
@@ -113,14 +113,14 @@ end
 
     # NOT shuffling types scheduler
     Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(false, false))
+    model = init_mixed_model(scheduler = Schedulers.by_type(false, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
     @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
     # Not shuffling types, but shuffling agents
     Random.seed!(12)
-    model = init_mixed_model(scheduler = by_type(false, true))
+    model = init_mixed_model(scheduler = Schedulers.by_type(false, true))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
     @test [typeof(model[id]) for id in s1] == [typeof(model[id]) for id in s2]
@@ -130,7 +130,7 @@ end
     # Explicit order of types scheduling
     Random.seed!(12)
     model =
-        ABM(Union{Agent1,Agent0}, scheduler = by_type((Agent1, Agent0), true), warn = false)
+        ABM(Union{Agent1,Agent0}, scheduler = Schedulers.by_type((Agent1, Agent0), true), warn = false)
     for id in 1:3
         a1 = Agent1(id, (0, 0))
         add_agent!(a1, model)

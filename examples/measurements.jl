@@ -38,8 +38,7 @@ end
 # each of these functions do, see the [Daisyworld](@ref) example, as they are copied directly
 # from there.
 
-using AbstractPlotting
-import CairoMakie
+using CairoMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase
@@ -203,7 +202,7 @@ agent_df, model_df =
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
-lb = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :blue)
+lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
 lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
 leg =
     f[1, 1] = Legend(
@@ -219,16 +218,16 @@ leg =
 
 ax2 = f[2, 1] = Axis(f, ylabel = "Temperature")
 highband =
-    Measurements.value.(agent_df[!, aggname(adata[3])]) +
-    Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+    Measurements.value.(agent_df[!, dataname(adata[3])]) +
+    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
 lowband =
-    Measurements.value.(agent_df[!, aggname(adata[3])]) -
-    Measurements.uncertainty.(agent_df[!, aggname(adata[3])])
+    Measurements.value.(agent_df[!, dataname(adata[3])]) -
+    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
 band!(ax2, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
 lines!(
     ax2,
     agent_df.step,
-    Measurements.value.(agent_df[!, aggname(adata[3])]),
+    Measurements.value.(agent_df[!, dataname(adata[3])]),
     linewidth = 2,
     color = :blue,
 )

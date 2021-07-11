@@ -45,8 +45,7 @@
 using Random # hide
 using Agents
 using InteractiveDynamics
-using AbstractPlotting
-import CairoMakie
+using CairoMakie
 
 mutable struct Fighter <: AbstractAgent
     id::Int
@@ -67,7 +66,7 @@ function battle(; fighters = 50)
     model = ABM(
         Fighter,
         GridSpace((100, 100, 10); periodic = false);
-        scheduler = random_activation,
+        scheduler = Schedulers.randomly,
     )
 
     n = 0
@@ -177,7 +176,7 @@ function captor_behavior!(agent, model)
                 model[id].capture_time == 0 && model[id].has_prisoner == false
             ],
         )
-        exploiter.shape = :square
+        exploiter.shape = :rect
         gain = ceil(Int, level(agent) / 2)
         new_lvl = min(level(agent) + rand(model.rng, 1:gain), 10)
         kill_agent!(agent, model)
@@ -347,19 +346,21 @@ e = size(model.space.s)[1:2] .+ 2
 o = zero.(e) .- 2
 clr(agent) = cgrad(:tab10)[level(agent)]
 mkr(a) = a.shape
-colors = Observable(to_color.([clr(model[id]) for id in by_id(model)]))
-markers = Observable([mkr(model[id]) for id in by_id(model)])
-pos = Observable([model[id].pos for id in by_id(model)])
+colors = Observable(to_color.([clr(model[id]) for id in Schedulers.by_id(model)]))
+markers = Observable([mkr(model[id]) for id in Schedulers.by_id(model)])
+pos = Observable([model[id].pos for id in Schedulers.by_id(model)])
 stepper = InteractiveDynamics.ABMStepper(
     clr,
     mkr,
     15,
     nothing,
-    by_id,
+    Schedulers.by_id,
     pos,
     colors,
     Observable(15),
     markers,
+    nothing,
+    nothing
 )
 nothing #hide
 

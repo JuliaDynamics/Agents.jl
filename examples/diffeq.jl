@@ -32,9 +32,8 @@
 
 using Agents
 using Distributions
-using AbstractPlotting
-import CairoMakie
-using Random #hide
+using CairoMakie
+using Random # hide
 
 mutable struct Fisher <: AbstractAgent
     id::Int
@@ -404,7 +403,7 @@ sol = OrdinaryDiffEq.solve(
     OrdinaryDiffEq.Tsit5();
     callback = OrdinaryDiffEq.CallbackSet(fish, reset),
 )
-discrete = reshape(sol(0:365:(365 * 20))[:,:], 21)
+discrete = vcat(sol(0:365:(365 * 20))[:,:]...)
 f = Figure(resolution = (600, 400))
 ax =
     f[1, 1] = Axis(

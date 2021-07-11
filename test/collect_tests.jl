@@ -12,7 +12,7 @@
                 :tick => 0,
                 :flag => false,
                 :container => Float64[],
-                :deep => Nested([20.0, 52.1])
+                :deep => Nested([20.0, 52.1]),
             ),
         )
         add_agent!((4, 3), model, 0.1)
@@ -63,13 +63,21 @@
         @test_throws ErrorException init_agent_dataframe(model, [:UNKNOWN])
     end
 
-    @testset "aggname" begin
-        @test aggname(:weight) == "weight"
-        @test aggname(:weight, mean) == "mean_weight"
-        @test aggname(x_position, length) == "length_x_position"
-        @test aggname((x_position, length)) == "length_x_position"
+    @testset "dataname" begin
+        adata = [(:weight, mean), (x_position, length)]
+        @test dataname(:weight) == "weight"
+        @test dataname((:weight, mean)) == "mean_weight"
+        @test dataname(adata[2]) == "length_x_position"
+        @test dataname((x_position, length)) == "length_x_position"
         ypos(a) = a.pos[2] > 5
-        @test aggname((x_position, length, ypos)) == "length_x_position_ypos"
+        @test dataname((x_position, length, ypos)) == "length_x_position_ypos"
+
+        funcs = Vector{Function}(undef, 2)
+        for i in 1:length(funcs)
+            inline_func(x) = i * x
+            funcs[i] = inline_func
+        end
+        @test dataname(funcs[2]) == "inline_func_i=2"
     end
 
     @testset "Aggregate Collections" begin
@@ -88,7 +96,7 @@
         # renamed mean(weight). ID is meaningless and will therefore be dropped.
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight]
-        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
+        @test df[1, dataname((:weight, mean))] ≈ 0.37333333333
 
         # Add a function as a property
         props = [:weight, x_position]
@@ -103,7 +111,7 @@
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
-        @test df[1, aggname(x_position, mean)] ≈ 4.3333333
+        @test df[1, dataname(props[2])] ≈ 4.3333333
 
         xtest(agent) = agent.pos[1] > 5
         ytest(agent) = agent.pos[2] > 5
@@ -113,23 +121,23 @@
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight_ytest]
-        @test df[1, aggname((:weight, mean, ytest))] ≈ 0.67
+        @test df[1, dataname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
-        @test df[1, aggname(:weight, mean)] ≈ 0.37333333333
-        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
+        @test df[1, dataname(props[1])] ≈ 0.37333333333
+        @test df[1, dataname(props[2])] ≈ 0.67
 
         props = [(:weight, mean, xtest), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props, 1)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
-        @test df[1, aggname(:weight, mean, xtest)] ≈ 0.35
-        @test df[1, aggname(:weight, mean, ytest)] ≈ 0.67
+        @test df[1, dataname(props[1])] ≈ 0.35
+        @test df[1, dataname(props[2])] ≈ 0.67
     end
 
     @testset "High-level API for Collections" begin
@@ -180,6 +188,17 @@
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
+
+        _, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [365 * 5],
+            when = false,
+            mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
+        )
+        @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
     end
 
     @testset "Low-level API for Collections" begin
@@ -189,9 +208,15 @@
         # and yearly data with a yearly `step`.
         model = initialize()
         model_props = [:flag, :year]
+        function model_props_fn(model)
+            flagfn(model) = model.flag
+            yearfn(model) = model.year
+            return [flagfn, yearfn]
+        end
         agent_agg = [(:weight, mean)]
         agent_props = [:weight]
         daily_model_data = init_model_dataframe(model, model_props)
+        daily_model_data_fn = init_model_dataframe(model, model_props_fn)
         daily_agent_aggregate = init_agent_dataframe(model, agent_agg)
         yearly_agent_data = init_agent_dataframe(model, agent_props)
 
@@ -199,6 +224,7 @@
             for day in 1:365
                 step!(model, agent_step!, model_step!, 1)
                 collect_model_data!(daily_model_data, model, model_props, day * year)
+                collect_model_data!(daily_model_data_fn, model, model_props_fn, day * year)
                 collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
             end
             collect_agent_data!(yearly_agent_data, model, agent_props, year)
@@ -207,6 +233,10 @@
         @test size(daily_model_data) == (1825, 3)
         @test propertynames(daily_model_data) == [:step, :flag, :year]
         @test maximum(daily_model_data[!, :step]) == 1825
+
+        @test size(daily_model_data_fn) == (1825, 3)
+        @test propertynames(daily_model_data_fn) == [:step, :flagfn, :yearfn]
+        @test maximum(daily_model_data_fn[!, :step]) == 1825
 
         @test size(daily_agent_aggregate) == (1825, 2)
         @test propertynames(daily_agent_aggregate) == [:step, :mean_weight]
@@ -228,9 +258,9 @@
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3, Agent4}, GridSpace((10,10)); warn = false)
-        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
-        add_agent_pos!(Agent4(2, (10,7), 5),model)
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
+        add_agent_pos!(Agent4(2, (10, 7), 5), model)
 
         # Expect position type (both agents have it)
         props = [:pos]
@@ -258,17 +288,25 @@
         @test df[1, :wpos] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, :wpos])
 
-        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
-        add_agent_pos!(Agent4(4, (4,1), 3),model)
+        # Expect similar output, but using anonymous accessor functions
+        props = [(a) -> (a.pos[i] + a.weight) for i in 1:2]
+        df = init_agent_dataframe(model, props)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 5)
+        @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
+        @test ismissing(df[2, dataname(props[2])])
+
+        add_agent_pos!(Agent3(3, (2, 4), 19.81), model)
+        add_agent_pos!(Agent4(4, (4, 1), 3), model)
 
         props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 7)
-        @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
-        @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
-        @test typeof(df.p) <: Vector{Union{Missing, Int}}
-        @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.pos) <: Vector{Tuple{Int,Int}}
+        @test typeof(df.weight) <: Vector{Union{Missing,Float64}}
+        @test typeof(df.p) <: Vector{Union{Missing,Int}}
+        @test typeof(df.wpos) <: Vector{Union{Missing,Float64}}
 
         # Expect something completely unknown to fail
         props = [:UNKNOWN]
@@ -314,17 +352,17 @@
             pos::Dims{2}
             weight::Int
         end
-        model = ABM(Union{Agent3, Agent3Int}, GridSpace((10,10)); warn = false)
-        add_agent_pos!(Agent3(1, (6,8), 54.65),model)
-        add_agent_pos!(Agent3Int(2, (10,7), 5),model)
-        add_agent_pos!(Agent3(3, (2,4), 19.81),model)
-        add_agent_pos!(Agent3Int(4, (4,1), 3),model)
+        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
+        add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
+        add_agent_pos!(Agent3Int(2, (10, 7), 5), model)
+        add_agent_pos!(Agent3(3, (2, 4), 19.81), model)
+        add_agent_pos!(Agent3Int(4, (4, 1), 3), model)
 
         props = [:weight]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 4)
-        @test typeof(df.weight) <: Vector{Union{Float64, Int}}
+        @test typeof(df.weight) <: Vector{Union{Float64,Int}}
 
         # Expect a1.weight <: Float64, a2.weight <: Int64 to fail in aggregate
         props = [(:weight, sum)]
@@ -362,9 +400,9 @@
         collect_model_data!(model_data, model, model_props, 1; obtainer = deepcopy)
         model.deep.data[1] += 0.9
         collect_model_data!(model_data, model, model_props, 2; obtainer = deepcopy)
-        @test model_data[1,:deep].data[1] ≈ 20.0
-        @test model_data[3,:deep].data[1] ≈ 20.9
-        @test [length(d.data) for d in model_data[!,:deep]] == [3, 4, 4]
+        @test model_data[1, :deep].data[1] ≈ 20.0
+        @test model_data[3, :deep].data[1] ≈ 20.9
+        @test [length(d.data) for d in model_data[!, :deep]] == [3, 4, 4]
 
         model = initialize()
         agent_data, model_data = run!(
@@ -381,75 +419,71 @@
         @test size(agent_data) == (0, 2)
         @test size(model_data) == (2, 5)
     end
+
+    @testset "init_model_dataframe issue #494 fix" begin
+        # Ensure that model_init_dataframe works when properties are specified as a struct.
+        struct Props
+            a::Float64
+            b::Bool
+        end
+
+        model = ABM(
+            Agent3,
+            GridSpace((10, 10));
+            properties=Props(1, false),
+        )
+        mdata = [:a, :b]
+
+        model_data = init_model_dataframe(model, mdata)
+        @test eltype.(eachcol(model_data)) == [Int, Float64, Bool]
+    end
 end
 
 @testset "Parameter scan" begin
     n = 10
-    parameters = Dict(
-        :density => [0.6, 0.7, 0.8],
-        :griddims => (20, 20),
-    )
+    parameters = Dict(:density => [0.6, 0.7, 0.8], :griddims => (20, 20))
 
     forest, agent_step!, forest_step! = Models.forest_fire()
     forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
-    burnt(a) = a.status == :burnt
-    unburnt(a) = a.status == :green
+    burnt(f) = count(t == 3 for t in f.trees)
+    unburnt(f) = count(t == 1 for t in f.trees)
     @testset "Standard Scan" begin
-        adata = [(unburnt, count), (burnt, count)]
-        data, _ = paramscan(
+        mdata = [unburnt, burnt]
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
-            adata = adata,
-            progress = false,
+            mdata,
         )
         # 3 is the number of combinations of changing params
         @test size(data) == ((n + 1) * 3, 4)
-        data, _ = paramscan(
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
             include_constants = true,
-            adata = adata,
-            progress = false,
+            mdata,
         )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
         @test size(data) == ((n + 1) * 3, 5)
 
-        adata = [:status]
-        data, _ = paramscan(
+        mdata = [burnt]
+        _, data = paramscan(
             parameters,
             forest_initiation;
             n = n,
             agent_step! = agent_step!,
             model_step! = forest_step!,
-            adata = adata,
-            progress = false,
+            mdata,
         )
         @test unique(data.step) == 0:10
         @test unique(data.density) == [0.6, 0.7, 0.8]
-    end
-
-    @testset "Scan with replicates" begin
-        adata = [(unburnt, count), (burnt, count)]
-        data, _ = paramscan(
-            parameters,
-            forest_initiation;
-            n = n,
-            agent_step! = dummystep,
-            model_step! = forest_step!,
-            replicates = 3,
-            adata = adata,
-            progress = false,
-        )
-        # the first 3 is the number of combinations of changing params
-        @test size(data) == (((n + 1) * 3) * 3, 5)
     end
 end
 
@@ -463,4 +497,16 @@ end
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
+end
+
+@testset "ensemblerun! and different seeds" begin
+    _, as!, ms! = Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5)
+    generator(seed) =
+        Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5, seed)[1]
+    seeds = [1234, 563, 211]
+    daisy(a) = a isa Models.Daisy
+    adata = [(:age, sum, daisy)]
+    adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
+    @test adf[!, :sum_age_daisy] == unique(adf[!, :sum_age_daisy])
+    @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end

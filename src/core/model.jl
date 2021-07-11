@@ -39,7 +39,7 @@ union_types(x::Type) = (x,)
 union_types(a::Type, b::Union) = (a, union_types(b)...)
 
 """
-    AgentBasedModel(AgentType [, space]; scheduler, properties) → model
+    AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
 Create an agent based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
@@ -48,11 +48,16 @@ The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is ommited then all agents are virtually in one position and have no spatial structure.
+If it is ommited then all agents are virtually in one position and there is no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
 
+**Note:** Agents.jl supports multiple agent types by passing a `Union` of agent types
+as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
+drawbacks of this approach.
+
+## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. If `properties` is a dictionary with
 key type `Symbol`, or of it is a struct, then the syntax
@@ -61,21 +66,22 @@ for structs).
 This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
 which are the fields of `AgentBasedModel`.
 
-`scheduler = fastest` decides the order with which agents are activated
-(see e.g. [`by_id`](@ref) and the scheduler API).
+`scheduler = Schedulers.fastest` decides the order with which agents are activated
+(see e.g. [`Schedulers.by_id`](@ref) and the scheduler API).
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
-or [`run!`](@ref).
+or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
+as illustrated in the [Advanced stepping](@ref) part of the tutorial.
 
 `rng = Random.default_rng()` provides random number generation to the model.
 Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
 
-Type tests for `AgentType` are done, and by default
-warnings are thrown when appropriate. Use keyword `warn=false` to suppress that.
+`warn=true`: Type tests for `AgentType` are done, and by default
+warnings are thrown when appropriate.
 """
 function AgentBasedModel(
     ::Type{A},
     space::S = nothing;
-    scheduler::F = fastest,
+    scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true,
@@ -158,11 +164,15 @@ function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
 end
 
 function Base.setproperty!(m::ABM{S,A,F,P,R}, s::Symbol, x) where {S,A,F,P,R}
+    exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
     properties = getfield(m, :properties)
-    if properties ≠ nothing && haskey(properties, s)
+    properties === nothing && throw(exception)
+    if P <: Dict && haskey(properties, s)
         properties[s] = x
+    elseif hasproperty(properties, s)
+        setproperty!(properties, s, x)
     else
-        throw(ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor."))
+        throw(exception)
     end
 end
 
@@ -225,16 +235,16 @@ allids(model) = keys(model.agents)
 export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
-    iter_agent_groups(order::Int, model::ABM; scheduler = by_id)
+    iter_agent_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
 
 Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
 iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
 e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
 
-Index order is provided by the [`by_id`](@ref) scheduler by default, but can be altered
+Index order is provided by the [`Schedulers.by_id`](@ref) scheduler by default, but can be altered
 with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = by_id) =
+iter_agent_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
@@ -257,13 +267,13 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
     (f(idx) for idx in iter_agent_groups(order, model; kwargs...) if filter(idx))
 
 """
-    index_mapped_groups(order::Int, model::ABM; scheduler = by_id)
-    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id)
+    index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
+    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
 Return an iterable of agent ids in the model, meeting the `filter` criterea if used.
 """
-index_mapped_groups(order::Int, model::ABM; scheduler = by_id) =
+index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = by_id) =
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id) =
     Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
@@ -341,7 +351,12 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     s *= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
-        print(io, "\n properties: ", abm.properties)
+        if typeof(abm.properties) <: Dict
+            props = collect(keys(abm.properties))
+        else
+            props = collect(propertynames(abm.properties))
+        end
+        print(io, "\n properties: ", join(props, ", "))
     end
 end
 schedulername(x::Union{Function,DataType}) = nameof(x)

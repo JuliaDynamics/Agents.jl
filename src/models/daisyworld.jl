@@ -65,8 +65,7 @@ function daisyworld(;
         :scenario => scenario,
         :tick => 0,
     )
-    ## create a scheduler that only schedules Daisies
-    daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
+
     model = ABM(
         Union{Daisy,Land},
         space;
@@ -98,6 +97,9 @@ function daisyworld(;
 
     return model, daisyworld_agent_step!, daisyworld_model_step!
 end
+
+## create a scheduler that only schedules Daisies
+daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
 
 function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
