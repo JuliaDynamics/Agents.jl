@@ -15,16 +15,16 @@ defvel(a, m) = nothing
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
 Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
 while it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
-in conjunction with [`move_agent!`](@ref). See [`ContinuousAgent`](@ref) for convenience.
+in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for convenience.
 
 `ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium.
 There are no "patches". Agent position, orientation, and speed, are true floats.
 In addition, strong support is provided for representing spatial properties in a model
 that contains a `ContinuousSpace`. Spatial properties (which typically are contained in 
-the model properties) can either be functions of the position vector, `f(pos) = val`,
+the model properties) can either be functions of the position vector, `f(pos) = value`,
 or `AbstractArrays`, representing discretizations of 
 spatial data that may not be available as analytic forms. In the latter case,
-the position is mapped into the discretization represented by the array.
+the position is automatically mapped into the discretization represented by the array.
 Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
 `ContinuousSpace`.
 
@@ -422,6 +422,14 @@ end
 #######################################################################################
 # %% Spatial fields
 #######################################################################################
+"""
+    get_spatial_property(pos::NTuple{D, Float64}, property::AbstractArray, model::ABM)
+Convert the continuous agent position into an appropriate `index` of `property`, which
+represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
+Then, return `property[index]`.
+
+The dimensionality of `property` and the continuous space must match.
+"""
 function get_spatial_property(pos, property::AbstractArray, model::ABM)
     spacesize = model.space.extent
     propertysize = size(property)
@@ -435,5 +443,8 @@ function _convert_pos_to_cell(pos, spacesize, propertysize)
     return CartesianIndex(idxs)
 end
 
+"""
+    get_spatial_property(pos::NTuple{D, Float64}, property::Any, model::ABM)
+Literally equivalent with `property(pos)`.
+"""
 get_spatial_property(pos, property, model::ABM) = property(pos)
-
