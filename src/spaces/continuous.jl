@@ -13,6 +13,8 @@ defvel(a, m) = nothing
 """
     ContinuousSpace(extent::NTuple{D, <:Real}, spacing = min(extent...)/10; kwargs...)
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
+
+
 `spacing` configures the compartment spacing that the space is divided in, in order to
 accelerate nearest neighbor functions like [`nearby_ids`](@ref).
 All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
