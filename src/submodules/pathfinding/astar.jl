@@ -277,3 +277,11 @@ function Agents.kill_agent!(
     delete!(model.agents, agent.id)
     Agents.remove_agent_from_space!(agent, model)
 end
+
+"""
+    nearby_walkable(position, model, pathfinder, r = 1)
+Returns an iterable of all [`nearby_positions`](@ref) within "radius" `r` of the given
+`position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
+"""
+nearby_walkable(position, model, pathfinder, r = 1) =
+    Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))

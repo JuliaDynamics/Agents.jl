@@ -35,7 +35,7 @@ export CostMetric,
     delta_cost,
     set_target!,
     set_best_target!,
-    heightmap
-
+    heightmap,
+    nearby_walkable
 
 end
