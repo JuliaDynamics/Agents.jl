@@ -272,6 +272,7 @@ Pathfinding.AStar
 Pathfinding.set_target!
 Pathfinding.set_best_target!
 Pathfinding.heightmap
+Pathfinding.nearby_walkable
 ```
 
 ### Metrics
