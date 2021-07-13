@@ -14,16 +14,16 @@ defvel(a, m) = nothing
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
 Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
-while it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
+and it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
 in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for convenience.
 
-`ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium.
-There are no "patches". Agent position, orientation, and speed, are true floats.
+`ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium
+where agent position, orientation, and speed, are true floats.
 In addition, strong support is provided for representing spatial properties in a model
 that contains a `ContinuousSpace`. Spatial properties (which typically are contained in 
 the model properties) can either be functions of the position vector, `f(pos) = value`,
 or `AbstractArrays`, representing discretizations of 
-spatial data that may not be available as analytic forms. In the latter case,
+spatial data that may not be available in analytic form. In the latter case,
 the position is automatically mapped into the discretization represented by the array.
 Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
 `ContinuousSpace`.
@@ -196,7 +196,7 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
 end
 
 #######################################################################################
-# Continuous space exclusive: agent interctions
+# Continuous space exclusive: agent interactions
 #######################################################################################
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
