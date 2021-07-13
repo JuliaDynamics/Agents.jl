@@ -87,6 +87,7 @@ isempty(::Integer, ::ABM)
 
 ## Continuous space exclusives
 ```@docs
+get_spatial_property
 interacting_pairs
 nearest_neighbor
 elastic_collision!

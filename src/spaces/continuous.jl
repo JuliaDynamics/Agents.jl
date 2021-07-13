@@ -422,6 +422,7 @@ end
 #######################################################################################
 # %% Spatial fields
 #######################################################################################
+export get_spatial_property
 """
     get_spatial_property(pos::NTuple{D, Float64}, property::AbstractArray, model::ABM)
 Convert the continuous agent position into an appropriate `index` of `property`, which
@@ -445,6 +446,7 @@ end
 
 """
     get_spatial_property(pos::NTuple{D, Float64}, property::Any, model::ABM)
-Literally equivalent with `property(pos)`.
+Literally equivalent with `property(pos, model)`, useful when `property` is a function,
+or a function-like object.
 """
-get_spatial_property(pos, property, model::ABM) = property(pos)
+get_spatial_property(pos, property, model::ABM) = property(pos, model)
