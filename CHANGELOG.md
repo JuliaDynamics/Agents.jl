@@ -2,6 +2,8 @@
 ## New features and fixes
 - Provide a generator function to collect `mdata` in `run!` and `ensemblerun!`.
 - Save/load entire models using `save_checkpoint` and `load_checkpoint`
+- New function `get_spatial_property` that allows better handling of spatial fields
+  present in `ContinuousSpace`.
 
 # v4.3
 ## New features and fixes
