@@ -23,7 +23,10 @@ using Agents
 using DataStructures
 using LinearAlgebra
 
+abstract type GridPathfinder{D,P,M} end
+
 include("metrics.jl")
+include("pathfinding_utils.jl")
 include("astar.jl")
 include("astar_grid.jl")
 
