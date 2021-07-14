@@ -30,12 +30,12 @@ include("astar_grid.jl")
 export CostMetric,
     DirectDistance,
     MaxDistance,
-    HeightMap,
+    PenaltyMap,
     AStar,
     delta_cost,
     set_target!,
     set_best_target!,
-    heightmap,
+    penaltymap,
     nearby_walkable
 
 end

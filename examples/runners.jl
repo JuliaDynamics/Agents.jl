@@ -8,7 +8,7 @@
 # Let's consider a race to the top of a mountain. Runners have been scattered about
 # a map in some low lying areas and need to find the best path up to the peak.
 #
-# We'll use [`Pathfinding.AStar`](@ref) and a [`Pathfinding.HeightMap`](@ref) to simulate this.
+# We'll use [`Pathfinding.AStar`](@ref) and a [`Pathfinding.PenaltyMap`](@ref) to simulate this.
 
 # ## Setup
 using Agents, Agents.Pathfinding
@@ -28,7 +28,7 @@ function initialize(map_url; goal = (128, 409), seed = 88)
     space = GridSpace(size(heightmap); periodic = false)
     ## The pathfinder. We use the `MaxDistance` metric since we want the runners
     ## to look for the easiest path to run, not just the most direct.
-    pathfinder = AStar(space; cost_metric = HeightMap(heightmap, MaxDistance{2}()))
+    pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
     model = ABM(
         Runner,
         space;
@@ -81,7 +81,7 @@ abm_video(
     ac = :black,
     as = 8,
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
-    heatarray = model -> heightmap(model.pathfinder),
+    heatarray = model -> penaltymap(model.pathfinder),
     heatkwargs = (colormap = :terrain,),
     static_preplot!
 )

@@ -21,21 +21,21 @@
         cost = AStar(space; cost_metric = MaxDistance{2}()).cost_metric
         @test typeof(cost) <: MaxDistance{2}
 
-        # HeightMap metric
-        @test_throws TypeError AStar(space; cost_metric = HeightMap)
-        @test_throws AssertionError AStar(space; cost_metric = HeightMap([1 1]))
+        # PenaltyMap metric
+        @test_throws TypeError AStar(space; cost_metric = PenaltyMap)
+        @test_throws AssertionError AStar(space; cost_metric = PenaltyMap([1 1]))
         
-        cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5))).cost_metric
-        @test typeof(cost) <: HeightMap{2}
+        cost = AStar(space; cost_metric = PenaltyMap(fill(1, 5, 5))).cost_metric
+        @test typeof(cost) <: PenaltyMap{2}
         @test typeof(cost.base_metric) <: DirectDistance{2}
-        @test cost.hmap == fill(1, 5, 5)
+        @test cost.pmap == fill(1, 5, 5)
 
-        cost = AStar(space; cost_metric = HeightMap(fill(1, 5, 5), MaxDistance{2}())).cost_metric
-        @test typeof(cost) <: HeightMap{2}
+        cost = AStar(space; cost_metric = PenaltyMap(fill(1, 5, 5), MaxDistance{2}())).cost_metric
+        @test typeof(cost) <: PenaltyMap{2}
         @test typeof(cost.base_metric) <: MaxDistance{2}
-        @test cost.hmap == fill(1, 5, 5)
-        hmap = zeros(Int, 1, 1, 1)
-        @test_throws TypeError AStar(space; cost_metric = HeightMap(hmap))
+        @test cost.pmap == fill(1, 5, 5)
+        pmap = zeros(Int, 1, 1, 1)
+        @test_throws TypeError AStar(space; cost_metric = PenaltyMap(pmap))
     end
 
     @testset "API functions" begin
@@ -58,12 +58,12 @@
 
         kill_agent!(a, model, model.pf)
         @test length(model.pf.agent_paths) == 0
-        @test heightmap(model.pf) === nothing
+        @test penaltymap(model.pf) === nothing
 
-        hmap = fill(1, 5, 5)
-        pathfinder = AStar(space; cost_metric = HeightMap(hmap))
+        pmap = fill(1, 5, 5)
+        pathfinder = AStar(space; cost_metric = PenaltyMap(pmap))
         model = ABM(Agent3, space; properties = (pf = pathfinder, ))
-        @test heightmap(model.pf) == hmap
+        @test penaltymap(model.pf) == pmap
     end
 
     @testset "metrics" begin
@@ -99,9 +99,9 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        hmap = fill(0, 10, 10)
-        hmap[:, 6] .= 100
-        hmap[1, 6] = 0
+        pmap = fill(0, 10, 10)
+        pmap[:, 6] .= 100
+        pmap[1, 6] = 0
 
         @test delta_cost(pfinder_2d_np_m, DirectDistance{2}(), (1, 1), (4, 6)) == 62
         @test delta_cost(pfinder_2d_p_m, DirectDistance{2}(), (1, 1), (8, 6)) == 62
@@ -113,10 +113,10 @@
         @test delta_cost(pfinder_2d_np_nm, MaxDistance{2}(), (1, 1), (4, 6)) == 5
         @test delta_cost(pfinder_2d_p_nm, MaxDistance{2}(), (1, 1), (8, 6)) == 5
 
-        @test delta_cost(pfinder_2d_np_m, HeightMap(hmap), (1, 1), (4, 6)) == 162
-        @test delta_cost(pfinder_2d_p_m, HeightMap(hmap), (1, 1), (8, 6)) == 162
-        @test delta_cost(pfinder_2d_np_nm, HeightMap(hmap), (1, 1), (4, 6)) == 180
-        @test delta_cost(pfinder_2d_p_nm, HeightMap(hmap), (1, 1), (8, 6)) == 180
+        @test delta_cost(pfinder_2d_np_m, PenaltyMap(pmap), (1, 1), (4, 6)) == 162
+        @test delta_cost(pfinder_2d_p_m, PenaltyMap(pmap), (1, 1), (8, 6)) == 162
+        @test delta_cost(pfinder_2d_np_nm, PenaltyMap(pmap), (1, 1), (4, 6)) == 180
+        @test delta_cost(pfinder_2d_p_nm, PenaltyMap(pmap), (1, 1), (8, 6)) == 180
     end
 
     @testset "pathing" begin

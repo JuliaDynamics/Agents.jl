@@ -33,23 +33,23 @@ struct MaxDistance{D} <: CostMetric{D} end
 
 Base.show(io::IO, metric::MaxDistance) = print(io, "MaxDistance")
 
-struct HeightMap{D} <: CostMetric{D}
+struct PenaltyMap{D} <: CostMetric{D}
     base_metric::CostMetric{D}
-    hmap::Array{Int,D}
+    pmap::Array{Int,D}
 end
 
 """
-    Pathfinding.HeightMap(hmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
+    Pathfinding.PenaltyMap(hmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
-absolute difference in height. A heightmap of the same size as the corresponding
+absolute difference in penalty. A penalty of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`Pathfinding.DirectDistance`](@ref)
 by default, and can be changed by specifying `base_metric`. An example usage can be found in
 [Mountain Runners](@ref).
 """
-HeightMap(hmap::Array{Int,D}) where {D} = HeightMap{D}(DirectDistance{D}(), hmap)
+PenaltyMap(pmap::Array{Int,D}) where {D} = PenaltyMap{D}(DirectDistance{D}(), pmap)
 
-HeightMap(hmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
-    HeightMap{D}(base_metric, hmap)
+PenaltyMap(pmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
+    PenaltyMap{D}(base_metric, pmap)
 
-Base.show(io::IO, metric::HeightMap) =
+Base.show(io::IO, metric::PenaltyMap) =
     print(io, "HeightMap with base: $(metric.base_metric)")

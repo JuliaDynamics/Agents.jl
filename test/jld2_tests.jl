@@ -25,10 +25,10 @@
     ) where {D} = @test true
 
     function test_costmetric(
-        metric::Pathfinding.HeightMap{D},
-        other::Pathfinding.HeightMap{D}
+        metric::Pathfinding.PenaltyMap{D},
+        other::Pathfinding.PenaltyMap{D}
     ) where {D}
-        @test metric.hmap == other.hmap
+        @test metric.pmap == other.pmap
         test_costmetric(metric.base_metric, other.base_metric)
     end
 
@@ -186,10 +186,10 @@
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
-        hmap = abs.(rand(Int, 10, 10)) .% 10
+        pmap = abs.(rand(Int, 10, 10)) .% 10
         direct = Pathfinding.DirectDistance{2}([0, 10])
         maxd = Pathfinding.MaxDistance{2}()
-        hmm = Pathfinding.HeightMap(hmap)
+        hmm = Pathfinding.PenaltyMap(pmap)
 
         function setup_model(; kwargs...)
             space = GridSpace((10, 10); periodic = false)
@@ -216,9 +216,9 @@
         test_pathfinding_model(setup_model(; cost_metric = direct)...)
         test_pathfinding_model(setup_model(; cost_metric = maxd)...)
         test_pathfinding_model(setup_model(; cost_metric = hmm)...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, direct))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, maxd))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, hmm))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, direct))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, maxd))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, hmm))...)
 
         rm("test.jld2")
     end

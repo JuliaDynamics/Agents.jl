@@ -271,7 +271,7 @@ Pathfinding
 Pathfinding.AStar
 Pathfinding.set_target!
 Pathfinding.set_best_target!
-Pathfinding.heightmap
+Pathfinding.penaltymap
 Pathfinding.nearby_walkable
 ```
 
@@ -279,7 +279,7 @@ Pathfinding.nearby_walkable
 ```@docs
 Pathfinding.DirectDistance
 Pathfinding.MaxDistance
-Pathfinding.HeightMap
+Pathfinding.PenaltyMap
 ```
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.

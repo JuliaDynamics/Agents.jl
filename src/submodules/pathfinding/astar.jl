@@ -23,9 +23,9 @@ struct AStar{D,P,M}
     ) where {D,P,M}
         @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
-        if typeof(cost_metric) == HeightMap{D}
-            @assert size(cost_metric.hmap) == grid_dims "Heightmap dimensions must be same as provided space"
-        elseif typeof(cost_metric) == DirectDistance{D}
+        if cost_metric isa PenaltyMap{D}
+            @assert size(cost_metric.pmap) == grid_dims "Penaltymap dimensions must be same as provided space"
+        elseif cost_metric isa DirectDistance{D}
             if M
                 @assert length(cost_metric.direction_costs) >= D "DirectDistance direction_costs must have as many values as dimensions"
             else
@@ -157,12 +157,12 @@ delta_cost(
 
 delta_cost(
     pathfinder::AStar{D},
-    metric::HeightMap{D},
+    metric::PenaltyMap{D},
     from::Dims{D},
     to::Dims{D},
 ) where {D} =
     delta_cost(pathfinder, metric.base_metric, from, to) +
-    abs(metric.hmap[from...] - metric.hmap[to...])
+    abs(metric.pmap[from...] - metric.pmap[to...])
 
 delta_cost(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D} =
     delta_cost(pathfinder, pathfinder.cost_metric, from, to)
@@ -246,18 +246,18 @@ Agents.is_stationary(
 ) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
 
 """
-    Pathfinding.heightmap(pathfinder)
-Return the heightmap of a [`Pathfinding.AStar`](@ref) if the
-[`Pathfinding.HeightMap`](@ref) metric is in use, `nothing` otherwise.
+    Pathfinding.penaltymap(pathfinder)
+Return the penaltymap of a [`Pathfinding.AStar`](@ref) if the
+[`Pathfinding.PenaltyMap`](@ref) metric is in use, `nothing` otherwise.
 
 It is possible to mutate the map directly, for example
-`Pathfinding.heightmap(pathfinder)[15, 40] = 115`
-or `Pathfinding.heightmap(pathfinder) .= rand(50, 50)`. If this is mutated,
+`Pathfinding.penaltymap(pathfinder)[15, 40] = 115`
+or `Pathfinding.penaltymap(pathfinder) .= rand(50, 50)`. If this is mutated,
 a new path needs to be planned using [`Pathfinding.set_target!`](@ref).
 """
-function heightmap(pathfinder::AStar)
-    if pathfinder.cost_metric isa HeightMap
-        return pathfinder.cost_metric.hmap
+function penaltymap(pathfinder::AStar)
+    if pathfinder.cost_metric isa PenaltyMap
+        return pathfinder.cost_metric.pmap
     else
         return nothing
     end
