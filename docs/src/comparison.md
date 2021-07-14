@@ -33,7 +33,7 @@ The results clearly speak for themselves. Across all four models, Agents.jl's pe
 
 ## Table-based comparison
 
-In an our [paper discussing Agents.jl](https://arxiv.org/abs/2101.10072), we compiled a comparison over a large list of features and metrics from the four frameworks discussed above.
+In our [paper discussing Agents.jl](https://arxiv.org/abs/2101.10072), we compiled a comparison over a large list of features and metrics from the four frameworks discussed above.
 They are shown below in a table-based format:
 
 ![Table 1](assets/table1.png)
