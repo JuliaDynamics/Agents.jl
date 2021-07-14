@@ -247,7 +247,7 @@ Agents.is_stationary(
 
 """
     Pathfinding.penaltymap(pathfinder)
-Return the penaltymap of a [`Pathfinding.AStar`](@ref) if the
+Return the penalty map of a [`Pathfinding.AStar`](@ref) if the
 [`Pathfinding.PenaltyMap`](@ref) metric is in use, `nothing` otherwise.
 
 It is possible to mutate the map directly, for example

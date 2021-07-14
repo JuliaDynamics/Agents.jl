@@ -39,7 +39,7 @@ struct PenaltyMap{D} <: CostMetric{D}
 end
 
 """
-    Pathfinding.PenaltyMap(hmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
+    Pathfinding.PenaltyMap(pmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in penalty. A penalty of the same size as the corresponding
 [`GridSpace{D}`](@ref) is required. Distance is calculated using [`Pathfinding.DirectDistance`](@ref)
