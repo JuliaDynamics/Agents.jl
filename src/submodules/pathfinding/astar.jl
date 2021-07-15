@@ -3,7 +3,7 @@
 Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
-const Path{D,T} = MutableLinkedList{Dims{D,T}}
+const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 
 struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
     agent_paths::Dict{Int,Path{D,T}}
@@ -13,14 +13,14 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
     walkable::BitArray{D}
     cost_metric::CostMetric{D}
 
-    function AStar{D,P,M}(
+    function AStar{D,P,M,T}(
         agent_paths::Dict,
         grid_dims::Dims{D},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
-    ) where {D,P,M}
+    ) where {D,P,M,T}
         @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
@@ -65,7 +65,7 @@ function AStar{T}(
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,diagonal_movement}(
+    return AStar{D,periodic,diagonal_movement,T}(
         Dict{Int,Path{D,T}}(),
         dims,
         neighborhood,

@@ -34,7 +34,7 @@ function set_best_target!(
 ) where {D,A<:AbstractAgent}
     @assert condition ∈ (:shortest, :longest)
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
-    best_path = Path{D}()
+    best_path = Path{D,Int64}()
     best_target = nothing
     for target in targets
         path = find_path(pathfinder, agent.pos, target)
