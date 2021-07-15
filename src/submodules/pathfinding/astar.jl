@@ -3,10 +3,10 @@
 Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
-const Path{D} = MutableLinkedList{Dims{D}}
+const Path{D,T} = MutableLinkedList{Dims{D,T}}
 
-struct AStar{D,P,M} <: GridPathfinder{D,P,M}
-    agent_paths::Dict{Int,Path{D}}
+struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
+    agent_paths::Dict{Int,Path{D,T}}
     grid_dims::Dims{D}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
@@ -56,17 +56,17 @@ struct must be passed into any pathfinding functions.
 
 Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
 """
-function AStar(
+function AStar{T}(
     dims::Dims{D};
     periodic::Bool = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::BitArray{D} = trues(dims),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D}
+) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
     return AStar{D,periodic,diagonal_movement}(
-        Dict{Int,Path{D}}(),
+        Dict{Int,Path{D,T}}(),
         dims,
         neighborhood,
         admissibility,
@@ -82,7 +82,18 @@ AStar(
     walkable::BitArray{D} = trues(size(space.s)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar{Int64}(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+
+AStar(
+    space::ContinuousSpace{D,periodic},
+    granularity::Dims{D};
+    diagonal_movement::Bool = true,
+    admissibility::Float64 = 0.0,
+    walkable::BitArray{D} = trues(granularity),
+    cost_metric::CostMetric{D} = DirectDistance{D}(),
+) where {D,periodic} =
+    AStar{Float64}(granularity; periodic, diagonal_movement, admissibility, walkable, cost_metric)
+
 
 moore_neighborhood(D) = [
     CartesianIndex(a)
@@ -156,7 +167,7 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
         end
     end
 
-    agent_path = Path{D}()
+    agent_path = Path{D,Int64}()
     cur = to
     while true
         haskey(parent, cur) || break

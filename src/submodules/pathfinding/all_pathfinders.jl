@@ -29,6 +29,7 @@ include("metrics.jl")
 include("pathfinding_utils.jl")
 include("astar.jl")
 include("astar_grid.jl")
+include("astar_continuous.jl")
 
 export CostMetric,
     DirectDistance,
