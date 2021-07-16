@@ -21,7 +21,7 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M,T}
-        @assert grid_dims .> 0 "Grid must have valid dimensions"
+        @assert all(grid_dims .> 0) "Grid must have valid dimensions"
         @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
