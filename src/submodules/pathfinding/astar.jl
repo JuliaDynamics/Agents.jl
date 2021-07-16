@@ -21,6 +21,7 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M,T}
+        @assert grid_dims .> 0 "Grid must have valid dimensions"
         @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
@@ -230,5 +231,5 @@ end
 Returns an iterable of all [`nearby_positions`](@ref) within "radius" `r` of the given
 `position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
 """
-nearby_walkable(position, model, pathfinder, r = 1) =
+nearby_walkable(position, model::ABM{<:GridSpace}, pathfinder, r = 1) =
     Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))

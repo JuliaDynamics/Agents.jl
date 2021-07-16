@@ -1,46 +1,56 @@
-@testset "Pathfinding" begin
+@testset "AStar" begin
     using Agents.Pathfinding
 
     moore = Pathfinding.moore_neighborhood(2)
     vonneumann = Pathfinding.vonneumann_neighborhood(2)
-    space = GridSpace((5, 5))
+    gspace = GridSpace((5, 5))
+    cspace = ContinuousSpace((5., 5.))
     @testset "constructors" begin
-        @test_throws AssertionError AStar(space; admissibility = -1.0)
+        # GridSpace
+        @test_throws AssertionError AStar(gspace; admissibility = -1.0)
         # Default/DirectDistance metric
-        cost = AStar(space).cost_metric
+        cost = AStar(gspace).cost_metric
         @test typeof(cost) <: DirectDistance{2}
         @test cost.direction_costs == [10, 14]
-        @test_throws AssertionError AStar(space; cost_metric = DirectDistance{2}([1]))
+        @test_throws AssertionError AStar(gspace; cost_metric = DirectDistance{2}([1]))
         @test_throws AssertionError AStar(
-            space;
+            gspace;
             diagonal_movement = false,
             cost_metric = DirectDistance{2}([])
         )
         
         # MaxDistance metric
-        cost = AStar(space; cost_metric = MaxDistance{2}()).cost_metric
+        cost = AStar(gspace; cost_metric = MaxDistance{2}()).cost_metric
         @test typeof(cost) <: MaxDistance{2}
 
         # PenaltyMap metric
-        @test_throws TypeError AStar(space; cost_metric = PenaltyMap)
-        @test_throws AssertionError AStar(space; cost_metric = PenaltyMap([1 1]))
+        @test_throws TypeError AStar(gspace; cost_metric = PenaltyMap)
+        @test_throws AssertionError AStar(gspace; cost_metric = PenaltyMap([1 1]))
         
-        cost = AStar(space; cost_metric = PenaltyMap(fill(1, 5, 5))).cost_metric
+        cost = AStar(gspace; cost_metric = PenaltyMap(fill(1, 5, 5))).cost_metric
         @test typeof(cost) <: PenaltyMap{2}
         @test typeof(cost.base_metric) <: DirectDistance{2}
         @test cost.pmap == fill(1, 5, 5)
 
-        cost = AStar(space; cost_metric = PenaltyMap(fill(1, 5, 5), MaxDistance{2}())).cost_metric
+        cost = AStar(gspace; cost_metric = PenaltyMap(fill(1, 5, 5), MaxDistance{2}())).cost_metric
         @test typeof(cost) <: PenaltyMap{2}
         @test typeof(cost.base_metric) <: MaxDistance{2}
         @test cost.pmap == fill(1, 5, 5)
         pmap = zeros(Int, 1, 1, 1)
-        @test_throws TypeError AStar(space; cost_metric = PenaltyMap(pmap))
+        @test_throws TypeError AStar(gspace; cost_metric = PenaltyMap(pmap))
+
+        # ContinuousSpace
+        @test_throws ArgumentError AStar(cspace, (-10, -10))
+        @test_throws AssertionError AStar(cspace, (0, 0))
+        @test_throws AssertionError AStar(cspace, (-10, -10); walkable = BitArray(trues((10, 10))))
+        astar = AStar(cspace, (20, 20))
+        @test astar isa AStar{2,true,true,Float64}
     end
 
     @testset "API functions" begin
-        pathfinder = AStar(space)
-        model = ABM(Agent3, space; properties = (pf = pathfinder,))
+        # GridSpace
+        pathfinder = AStar(gspace)
+        model = ABM(Agent3, gspace; properties = (pf = pathfinder,))
         a = add_agent!((5, 2), model, 654.5)
         @test is_stationary(a, model.pf)
         
@@ -58,12 +68,38 @@
 
         kill_agent!(a, model, model.pf)
         @test length(model.pf.agent_paths) == 0
-        @test penaltymap(model.pf) === nothing
 
+        @test isnothing(penaltymap(model.pf))
         pmap = fill(1, 5, 5)
-        pathfinder = AStar(space; cost_metric = PenaltyMap(pmap))
-        model = ABM(Agent3, space; properties = (pf = pathfinder, ))
+        pathfinder = AStar(gspace; cost_metric = PenaltyMap(pmap))
+        model = ABM(Agent3, gspace; properties = (pf = pathfinder, ))
         @test penaltymap(model.pf) == pmap
+
+        # ContinuousSpace
+        pathfinder = AStar(cspace, (10, 10))
+        model = ABM(Agent6, cspace; properties = (pf = pathfinder,))
+        a = add_agent!((0., 0.), model, (0., 0.), 0.)
+        @test is_stationary(a, model.pf)
+
+        set_target!(a, (3., 4.), model.pf, model)
+        @test !is_stationary(a, model.pf)
+        @test length(model.pf.agent_paths) == 1
+
+        move_along_route!(a, 0.3535, model, model.pf)
+        @test a.pos ≈ (4.75, 4.75)
+
+        delete!(model.pf.agent_paths, 1)
+        @test length(model.pf.agent_paths) == 0
+        @test set_best_target!(a, [(2.5, 2.5), (5.,0.), (0., 5.)], model.pf, model) == (2.5, 2.5)
+        @test length(model.pf.agent_paths) == 1
+
+        kill_agent!(a, model, model.pf)
+        @test length(model.pf.agent_paths) == 0
+
+        @test isnothing(penaltymap(model.pf))
+        pmap = fill(1, 10, 10)
+        pathfinder = AStar(cspace; cost_metric = PenaltyMap(pmap))
+        @test penaltymap(pathfinder) == pmap
     end
 
     @testset "metrics" begin

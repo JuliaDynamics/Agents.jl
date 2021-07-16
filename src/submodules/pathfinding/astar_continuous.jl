@@ -10,12 +10,15 @@ function find_continuous_path(
     to::NTuple{D,Float64},
     model::ABM{<:ContinuousSpace{D}}
 ) where {D}
-    discrete_from = floor.(Int, from ./ model.space.extent .* pathfinder.grid_dims)
-    discrete_to = floor.(Int, to ./ model.space.extent .* pathfinder.grid_dims)
+    # used to offset positions, so edge cases get handled properly (i.e. (0., 0.) maps to grid
+    # cell (1, 1))
+    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
+    discrete_from = floor.(Int, (from .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
+    discrete_to = floor.(Int, (to .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
     cts_path = Path{D,Float64}()
     for pos in discrete_path
-        push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent)
+        push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
     end
     last_pos = last(cts_path)
     pop!(cts_path)
@@ -78,6 +81,20 @@ function set_best_target!(
 end
 
 """
+    get_direction(from, to, space)
+Returns the direction vector from `from` to `to` taking into account periodicity of the space
+(for continuous space)
+"""
+function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, space::ContinuousSpace{D,true}) where {D}
+    all_dirs = [to .+ space.extent .* (i, j) .- from for i in -1:1, j in -1:1]
+    return all_dirs[argmin(filter(x -> sum(x .^ 2), all_dirs))]
+end
+
+function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, ::ContinuousSpace{D,false}) where {D}
+    return to .- from
+end
+
+"""
     move_along_route!(agent, model, pathfinder)
 Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
 for agents on a [`GridSpace`](@ref) using a [`Pathfinding.AStar`](@ref).
@@ -87,56 +104,32 @@ function Agents.move_along_route!(
     agent::A,
     speed::Float64,
     model::ABM{<:ContinuousSpace{D},A},
-    pathfinder::AStar{D,false},
+    pathfinder::AStar{D},
     dt::Real = 1.0,
 ) where {D,A<:AbstractAgent}
     isempty(agent.id, pathfinder) && return
+    from = agent.pos
     next_pos = agent.pos
     while true
         next_waypoint = first(pathfinder.agent_paths[agent.id])
-        dir = next_waypoint .- agent.pos
+        dir = get_direction(from, next_waypoint, model.space)
         norm_dir = √sum(dir .^ 2)
         dir = dir ./ norm_dir
         next_pos = agent.pos .+ dir .* speed .* dt
 
         # overshooting means we reached the waypoint
-        if edistance(agent.pos, next_pos, model) > edistance(agent.pos, next_waypoint, model)
-            pop!(pathfinder.agent_paths[agent.id])
-            # if the path is now empty, go directly to the end
-            if isempty(agent.id, pathfinder)
-                next_pos = next_waypoint
-                break
-            end
-        else
-            break
-        end
-    end
-
-    move_agent!(agent, next_pos, model)
-end
-
-
-function Agents.move_along_route!(
-    agent::A,
-    speed::Float64,
-    model::ABM{<:ContinuousSpace{D},A},
-    pathfinder::AStar{D,true},
-    dt::Real = 1.0,
-) where {D,A<:AbstractAgent}
-    isempty(agent.id, pathfinder) && return
-    next_pos = agent.pos
-    space_size = model.space.extent
-    while true
-        next_waypoint = first(pathfinder.agent_paths[agent.id])
-        all_dirs = [next_waypoint .+ space_size .* (i, j) .- agent.pos for i in -1:1, j in -1:1]
-        dir = all_dirs[argmin(filter(x -> sum(x .^ 2), all_dirs))]
-
-        norm_dir = √sum(dir .^ 2)
-        dir = dir ./ norm_dir
-        next_pos = mod.(agent.pos .+ dir .* speed .* dt, space_size)
-
-        # overshooting means we reached the waypoint
-        if edistance(agent.pos, next_pos, model) > edistance(agent.pos, next_waypoint, model)
+        dist_to_target = edistance(from, next_waypoint, model)
+        dist_to_next = edistance(from, next_pos, model)
+        if dist_to_next > dist_to_target
+            # change from and dt so it appears we're coming from the waypoint just skipped, instead
+            # of directly where the agent was. E.g:
+            # agent.pos = (0, 0)
+            # pathfinder.agent_paths[agent.id] = [(1, 0), (1, 1)]
+            # speed = 1
+            # dt = 1.2
+            # without this, agent would end up at (0.85, 0.85) instead of (1, 0.2)
+            from = next_waypoint
+            dt -= dist_to_target / speed
             pop!(pathfinder.agent_paths[agent.id])
             # if the path is now empty, go directly to the end
             if isempty(agent.id, pathfinder)
