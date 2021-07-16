@@ -422,23 +422,29 @@ end
 #######################################################################################
 # %% Spatial fields
 #######################################################################################
-export get_spatial_property
+export get_spatial_property, get_spatial_index
 """
     get_spatial_property(pos::NTuple{D, Float64}, property::AbstractArray, model::ABM)
 Convert the continuous agent position into an appropriate `index` of `property`, which
 represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
-Then, return `property[index]`.
+Then, return `property[index]`. To get the `index` directly, for e.g. mutating the
+`property` in-place, use [`get_spatial_index`](@ref).
 
 The dimensionality of `property` and the continuous space must match.
 """
 function get_spatial_property(pos, property::AbstractArray, model::ABM)
-    spacesize = model.space.extent
-    propertysize = size(property)
-    idxs = _convert_pos_to_cell(pos, spacesize, propertysize)
-    return property[idxs]
+    index = get_spatial_index(pos, property, model)
+    return property[index]
 end
 
-function _convert_pos_to_cell(pos, spacesize, propertysize)
+"""
+    get_spatial_index(pos, property::AbstractArray, model::ABM)
+Convert the continuous agent position into an appropriate `index` of `property`, which
+represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
+"""
+function get_spatial_index(pos, property::AbstractArray, model::ABM)
+    spacesize = model.space.extent
+    propertysize = size(property)
     εs = spacesize ./ propertysize
     idxs = floor.(Int, pos ./ εs) .+ 1
     return CartesianIndex(idxs)
