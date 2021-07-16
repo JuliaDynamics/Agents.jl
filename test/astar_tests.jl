@@ -85,12 +85,13 @@
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
 
-        move_along_route!(a, 0.3535, model, model.pf)
-        @test a.pos ≈ (4.75, 4.75)
+        move_along_route!(a, 0.35355, model, model.pf)
+        @test all(isapprox.(a.pos, (4.75, 4.75); atol = 0.0001))
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
-        @test set_best_target!(a, [(2.5, 2.5), (5.,0.), (0., 5.)], model.pf, model) == (2.5, 2.5)
+        move_agent!(a, (0., 0.), model)
+        @test all(set_best_target!(a, [(2.5, 2.5), (5.,0.), (0., 5.)], model.pf, model) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
 
         kill_agent!(a, model, model.pf)
@@ -98,7 +99,7 @@
 
         @test isnothing(penaltymap(model.pf))
         pmap = fill(1, 10, 10)
-        pathfinder = AStar(cspace; cost_metric = PenaltyMap(pmap))
+        pathfinder = AStar(cspace, (10, 10); cost_metric = PenaltyMap(pmap))
         @test penaltymap(pathfinder) == pmap
     end
 

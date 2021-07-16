@@ -16,6 +16,7 @@ function find_continuous_path(
     discrete_from = floor.(Int, (from .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
     discrete_to = floor.(Int, (to .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
+    isempty(discrete_path) && return Path{D,Float64}()
     cts_path = Path{D,Float64}()
     for pos in discrete_path
         push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
@@ -59,7 +60,7 @@ Returns the position of the chosen target.
 """
 function set_best_target!(
     agent::A,
-    targets::Vector{Dims{D}},
+    targets::Vector{NTuple{D,Float64}},
     pathfinder::AStar{D},
     model::ABM{<:ContinuousSpace{D}};
     condition::Symbol = :shortest,
@@ -85,9 +86,11 @@ end
 Returns the direction vector from `from` to `to` taking into account periodicity of the space
 (for continuous space)
 """
+# TODO: Dispatch on AStar's periodicity, since it's _technically_ possible for it to be different
+# from the space
 function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, space::ContinuousSpace{D,true}) where {D}
     all_dirs = [to .+ space.extent .* (i, j) .- from for i in -1:1, j in -1:1]
-    return all_dirs[argmin(filter(x -> sum(x .^ 2), all_dirs))]
+    return all_dirs[argmin(map(x -> sum(x .^ 2), all_dirs))]
 end
 
 function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, ::ContinuousSpace{D,false}) where {D}
