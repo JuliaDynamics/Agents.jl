@@ -114,3 +114,39 @@ function Agents.move_along_route!(
 
     move_agent!(agent, next_pos, model)
 end
+
+
+function Agents.move_along_route!(
+    agent::A,
+    speed::Float64,
+    model::ABM{<:ContinuousSpace{D},A},
+    pathfinder::AStar{D,true},
+    dt::Real = 1.0,
+) where {D,A<:AbstractAgent}
+    isempty(agent.id, pathfinder) && return
+    next_pos = agent.pos
+    space_size = model.space.extent
+    while true
+        next_waypoint = first(pathfinder.agent_paths[agent.id])
+        all_dirs = [next_waypoint .+ space_size .* (i, j) .- agent.pos for i in -1:1, j in -1:1]
+        dir = all_dirs[argmin(filter(x -> sum(x .^ 2), all_dirs))]
+
+        norm_dir = √sum(dir .^ 2)
+        dir = dir ./ norm_dir
+        next_pos = mod.(agent.pos .+ dir .* speed .* dt, space_size)
+
+        # overshooting means we reached the waypoint
+        if edistance(agent.pos, next_pos, model) > edistance(agent.pos, next_waypoint, model)
+            pop!(pathfinder.agent_paths[agent.id])
+            # if the path is now empty, go directly to the end
+            if isempty(agent.id, pathfinder)
+                next_pos = next_waypoint
+                break
+            end
+        else
+            break
+        end
+    end
+
+    move_agent!(agent, next_pos, model)
+end
