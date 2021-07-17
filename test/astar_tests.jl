@@ -81,7 +81,7 @@
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test is_stationary(a, model.pf)
 
-        set_target!(a, (3., 4.), model.pf, model)
+        set_target!(a, (4., 4.), model.pf, model)
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
 
@@ -90,8 +90,13 @@
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
+
+        pcspace = ContinuousSpace((5., 5.); periodic = false)
+        pathfinder = AStar(pcspace, (10, 10))
+        model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
+        a = add_agent!((0., 0.), model, (0., 0.), 0.)
         move_agent!(a, (0., 0.), model)
-        @test all(set_best_target!(a, [(2.5, 2.5), (5.,0.), (0., 5.)], model.pf, model) .≈ (2.5, 2.5))
+        @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf, model) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
 
         kill_agent!(a, model, model.pf)

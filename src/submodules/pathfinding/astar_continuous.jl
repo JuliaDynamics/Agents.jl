@@ -13,19 +13,21 @@ function find_continuous_path(
     # used to offset positions, so edge cases get handled properly (i.e. (0., 0.) maps to grid
     # cell (1, 1))
     half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
-    discrete_from = floor.(Int, (from .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
-    discrete_to = floor.(Int, (to .+ half_cell_size) ./ model.space.extent .* pathfinder.grid_dims)
+    discrete_from = floor.(Int, from ./ model.space.extent .* pathfinder.grid_dims) .+ 1
+    discrete_to = floor.(Int, to ./ model.space.extent .* pathfinder.grid_dims) .+ 1
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
-    isempty(discrete_path) && return Path{D,Float64}()
+    isempty(discrete_path) && return
     cts_path = Path{D,Float64}()
     for pos in discrete_path
         push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
     end
-    last_pos = last(cts_path)
-    pop!(cts_path)
-    second_last_pos = last(cts_path)
-    if edistance(last_pos, to, model) < edistance(second_last_pos, to, model)
-        push!(cts_path, last_pos)
+    if length(cts_path) > 1
+        last_pos = last(cts_path)
+        pop!(cts_path)
+        second_last_pos = last(cts_path)
+        if edistance(last_pos, to, model) < edistance(second_last_pos, to, model)
+            push!(cts_path, last_pos)
+        end
     end
     push!(cts_path, to)
 end
@@ -43,7 +45,9 @@ function set_target!(
     pathfinder::AStar{D},
     model::ABM{<:ContinuousSpace{D},A},
 ) where {D,A<:AbstractAgent}
-    pathfinder.agent_paths[agent.id] = find_continuous_path(pathfinder, agent.pos, target, model)
+    path = find_continuous_path(pathfinder, agent.pos, target, model)
+    isnothing(path) && return
+    pathfinder.agent_paths[agent.id] = path
 end
 
 """
@@ -71,6 +75,7 @@ function set_best_target!(
     best_target = nothing
     for target in targets
         path = find_continuous_path(pathfinder, agent.pos, target, model)
+        isnothing(path) && continue
         if isempty(best_path) || compare(length(path), length(best_path))
             best_path = path
             best_target = target
