@@ -30,6 +30,7 @@ function find_continuous_path(
         end
     end
     push!(cts_path, to)
+    return cts_path
 end
 
 """

@@ -5,6 +5,7 @@
     vonneumann = Pathfinding.vonneumann_neighborhood(2)
     gspace = GridSpace((5, 5))
     cspace = ContinuousSpace((5., 5.))
+    atol = 0.0001
     @testset "constructors" begin
         # GridSpace
         @test_throws AssertionError AStar(gspace; admissibility = -1.0)
@@ -86,7 +87,7 @@
         @test length(model.pf.agent_paths) == 1
 
         move_along_route!(a, 0.35355, model, model.pf)
-        @test all(isapprox.(a.pos, (4.75, 4.75); atol = 0.0001))
+        @test all(isapprox.(a.pos, (4.75, 4.75); atol))
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
@@ -95,9 +96,10 @@
         pathfinder = AStar(pcspace, (10, 10))
         model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
-        move_agent!(a, (0., 0.), model)
         @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf, model) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
+        move_along_route!(a, 1.0, model, model.pf)
+        @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
         kill_agent!(a, model, model.pf)
         @test length(model.pf.agent_paths) == 0
@@ -213,5 +215,27 @@
         @test p == [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
         p = collect(Pathfinding.find_path(pfinder_2d_p_nm, (1, 1), (6, 6)))
         @test p == [(1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6)]
+
+        # Continuous
+        model = ABM(Agent6, ContinuousSpace((10., 10.)))
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_m, (0.25, 0.25), (8.8, 9.5)))
+        testp = [(0.7143, 2.5), (0.7143, 4.1667), (0.7143, 5.8333), (0.7143, 7.5), (2.1429, 9.1667), (3.5714, 9.1667), (5.0, 9.1667), (6.4286, 9.1667), (7.8571, 9.1667), (8.8, 9.5)]
+        @test length(p) == length(testp)
+        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
+
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_nm, (0.25, 0.25), (8.8, 9.5)))
+        testp = [(0.7143, 2.5), (0.7143, 4.1667), (0.7143, 5.8333), (0.7143, 7.5), (0.7143, 9.1667), (2.1429, 9.1667), (3.5714, 9.1667), (5.0, 9.1667), (6.4286, 9.1667), (7.8571, 9.1667), (8.8, 9.5)]
+        @test length(p) == length(testp)
+        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
+
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, (0.25, 0.25), (8.8, 9.5)))
+        testp = [(2.1429, 9.1667), (3.5714, 9.1667), (5.0, 9.1667), (6.4286, 9.1667), (7.8571, 9.1667), (8.8, 9.5)]
+        @test length(p) == length(testp)
+        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
+
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_nm, (0.25, 0.25), (8.8, 9.5)))
+        testp = [(0.7143, 9.1667), (2.1429, 9.1667), (3.5714, 9.1667), (5.0, 9.1667), (6.4286, 9.1667), (7.8571, 9.1667), (8.8, 9.5)]
+        @test length(p) == length(testp)
+        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
     end
 end
