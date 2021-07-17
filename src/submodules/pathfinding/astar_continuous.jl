@@ -21,13 +21,11 @@ function find_continuous_path(
     for pos in discrete_path
         push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
     end
-    if length(cts_path) > 1
-        last_pos = last(cts_path)
-        pop!(cts_path)
-        second_last_pos = last(cts_path)
-        if edistance(last_pos, to, model) < edistance(second_last_pos, to, model)
-            push!(cts_path, last_pos)
-        end
+    last_pos = last(cts_path)
+    pop!(cts_path)
+    second_last_pos = isempty(cts_path) ? from : last(cts_path)
+    if edistance(last_pos, to, model) < edistance(second_last_pos, to, model)
+        push!(cts_path, last_pos)
     end
     push!(cts_path, to)
     return cts_path
