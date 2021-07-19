@@ -64,3 +64,11 @@ function Agents.move_along_route!(
     move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
     popfirst!(pathfinder.agent_paths[agent.id])
 end
+
+"""
+    nearby_walkable(position, model, pathfinder, r = 1)
+Returns an iterable of all [`nearby_positions`](@ref) within "radius" `r` of the given
+`position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
+"""
+nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1) where {D} =
+    Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))
