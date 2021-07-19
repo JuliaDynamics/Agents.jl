@@ -20,9 +20,9 @@
   @test length(space7.dims) == 3
   @test length(space8.dims) == 3
 
-  @test_throws ArgumentError ContinuousSpace((-1,1), 0.1) # Cannot have negative extent
-  @test_throws MethodError ContinuousSpace([1,1], 0.1) # Must be a tuple
-  @test_throws MethodError ContinuousSpace(("one",1.0), 0.1) # Must contain reals
+  @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
+  @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
+  @test_throws MethodError ContinuousSpace(("one",1.0)) # Must contain reals
 
   @test space1.dims == ContinuousSpace((1,1)).dims
   @test space1.extent == ContinuousSpace((1,1)).extent

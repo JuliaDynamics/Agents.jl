@@ -65,7 +65,7 @@ Complex systems cannot be fully understood using traditional mathematical tools 
 The behavior of a complex system depends on both the behavior of and interactions between its elements (agents).
 Small changes in the input to complex systems or the behavior of its agents can lead to large changes in outcome.
 That is to say, a complex system's behavior is nonlinear, and that it is not only the sum of the behavior of its elements.
-Use of ABMs have become feasible after the availability of computers and has been growing ever since, especially in modeling biological and economical systems, and has extended to social studies and archaeology.
+Use of ABMs have become feasible after the availability of computers and has been growing ever since, especially in modeling biological and economic systems, and has extended to social studies and archaeology.
 
 An ABM consists of autonomous agents that behave given a set of rules.
 A classic example of an ABM is [Schelling's segregation model](https://www.tandfonline.com/doi/abs/10.1080/0022250X.1971.9989794), which we implement as an example here.

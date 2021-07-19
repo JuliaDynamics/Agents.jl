@@ -11,32 +11,39 @@ Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 defvel(a, m) = nothing
 
 """
-    ContinuousSpace(extent::NTuple{D, <:Real}, spacing = min(extent...)/10; kwargs...)
+    ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
-`spacing` configures the compartment spacing that the space is divided in, in order to
-accelerate nearest neighbor functions like [`nearby_ids`](@ref).
-All dimensions in `extent` must be completely divisible by `spacing` (i.e. no
-fractional remainder).
 Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
-use [`ContinuousAgent`](@ref) for convenience.
-In addition it is useful for agents to have a field `vel::NTuple{D, <:Real}` to use
-in conjunction with [`move_agent!`](@ref).
+and it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
+in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for convenience.
 
-The keyword `periodic = true` configures whether the space is periodic or not. If set to
-`false` an error will occur if an agent's position exceeds the boundary.
+`ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium
+where agent position, orientation, and speed, are true floats.
+In addition, strong support is provided for representing spatial properties in a model
+that contains a `ContinuousSpace`. Spatial properties (which typically are contained in 
+the model properties) can either be functions of the position vector, `f(pos) = value`,
+or `AbstractArrays`, representing discretizations of 
+spatial data that may not be available in analytic form. In the latter case,
+the position is automatically mapped into the discretization represented by the array.
+Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
+`ContinuousSpace`.
 
-The keyword argument `update_vel!` is a **function**, `update_vel!(agent, model)` that updates
-the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
-You can of course change the agents' velocities
-during the agent interaction, the `update_vel!` functionality targets spatial force
-fields acting on the agents individually (e.g. some magnetic field).
-By default no update is done this way.
-If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
+See also [Continuous space exclusives](@ref) on the online docs for more functionality.
 
-There is no "best" choice for the value of `spacing`. If you need optimal performance it's
-advised to set up a benchmark over a range of choices. The value matters most when searching
-for neighbors. In [`Models.flocking`](@ref) for example, an optimal value for `spacing` is
-66% of the search distance.
+## Keywords
+* `periodic = true`: Whether the space is periodic or not. If set to
+  `false` an error will occur if an agent's position exceeds the boundary.
+* `spacing = min(extent...)/10`: Configures an internal compartment spacing that is used
+  to accelerate nearest neighbor searches like [`nearby_ids`](@ref).
+  All dimensions in `extent` must be completely divisible by `spacing`.
+  There is no "best" choice for the value of `spacing` and if you need optimal performance
+  it's advised to set up a benchmark over a range of choices.
+* `update_vel!`: A **function**, `update_vel!(agent, model)` that updates
+  the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
+  You can of course change the agents' velocities
+  during the agent interaction, the `update_vel!` functionality targets spatial force
+  fields acting on the agents individually (e.g. some magnetic field).
+  If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
 """
 function ContinuousSpace(
     extent::NTuple{D,X},
@@ -189,7 +196,7 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
 end
 
 #######################################################################################
-# Continuous space exclusive
+# Continuous space exclusive: agent interactions
 #######################################################################################
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
@@ -410,3 +417,42 @@ function Base.iterate(iter::PairIterator, i = 1)
     id1, id2 = p
     return (iter.agents[id1], iter.agents[id2]), i + 1
 end
+
+
+#######################################################################################
+# %% Spatial fields
+#######################################################################################
+export get_spatial_property, get_spatial_index
+"""
+    get_spatial_property(pos::NTuple{D, Float64}, property::AbstractArray, model::ABM)
+Convert the continuous agent position into an appropriate `index` of `property`, which
+represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
+Then, return `property[index]`. To get the `index` directly, for e.g. mutating the
+`property` in-place, use [`get_spatial_index`](@ref).
+
+The dimensionality of `property` and the continuous space must match.
+"""
+function get_spatial_property(pos, property::AbstractArray, model::ABM)
+    index = get_spatial_index(pos, property, model)
+    return property[index]
+end
+
+"""
+    get_spatial_index(pos, property::AbstractArray, model::ABM)
+Convert the continuous agent position into an appropriate `index` of `property`, which
+represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
+"""
+function get_spatial_index(pos, property::AbstractArray, model::ABM)
+    spacesize = model.space.extent
+    propertysize = size(property)
+    εs = spacesize ./ propertysize
+    idxs = floor.(Int, pos ./ εs) .+ 1
+    return CartesianIndex(idxs)
+end
+
+"""
+    get_spatial_property(pos::NTuple{D, Float64}, property::Any, model::ABM)
+Literally equivalent with `property(pos, model)`, useful when `property` is a function,
+or a function-like object.
+"""
+get_spatial_property(pos, property, model::ABM) = property(pos, model)
