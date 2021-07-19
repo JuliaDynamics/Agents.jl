@@ -16,13 +16,11 @@ end
 
 """
     Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Int}}, pathfinder)
-
 Calculate and store the best path to move the agent from its current position to
-a chosen target position taken from `targets` for models using [`Pathfinding`](@ref).
+a chosen target position taken from `targets` using `pathfinder`.
 
-The `condition = :shortest` keyword retuns the shortest path which is shortest
-(allowing for the conditions of the models pathfinder) out of the possible target
-positions. Alternatively, the `:longest` path may also be requested.
+The `condition = :shortest` keyword retuns the shortest path which is shortest out of the
+possible target positions. Alternatively, the `:longest` path may also be requested.
 
 Returns the position of the chosen target.
 """
