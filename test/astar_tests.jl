@@ -88,10 +88,14 @@
 
         move_along_route!(a, 0.35355, model, model.pf)
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
+        # test waypoint skipping
         move_agent!(a, (0.25, 0.25), model)
         set_target!(a, (0.75, 1.25), model.pf, model)
         move_along_route!(a, 0.807106, model, model.pf)
         @test all(isapprox.(a.pos, (0.467156, 0.967156); atol))
+        # make sure it doesn't overshoot the end
+        move_along_route!(a, 20., model, model.pf)
+        @test all(isapprox.(a.pos, (0.75, 1.25); atol))
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0

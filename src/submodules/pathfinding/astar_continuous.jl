@@ -13,8 +13,8 @@ function find_continuous_path(
     # used to offset positions, so edge cases get handled properly (i.e. (0., 0.) maps to grid
     # cell (1, 1))
     half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
-    discrete_from = floor.(Int, from ./ model.space.extent .* pathfinder.grid_dims) .+ 1
-    discrete_to = floor.(Int, to ./ model.space.extent .* pathfinder.grid_dims) .+ 1
+    discrete_from = Tuple(Agents.get_spatial_index(from, pathfinder.walkable, model))
+    discrete_to = Tuple(Agents.get_spatial_index(to, pathfinder.walkable, model))
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
     isempty(discrete_path) && return
     cts_path = Path{D,Float64}()
