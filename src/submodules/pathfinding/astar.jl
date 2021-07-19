@@ -88,12 +88,11 @@ AStar(
 AStar(
     space::ContinuousSpace{D,periodic},
     granularity::Dims{D};
-    diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::BitArray{D} = trues(granularity),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Float64}(granularity; periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar{Float64}(granularity; periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 
 moore_neighborhood(D) = [

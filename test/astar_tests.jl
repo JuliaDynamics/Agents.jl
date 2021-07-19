@@ -88,6 +88,10 @@
 
         move_along_route!(a, 0.35355, model, model.pf)
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
+        move_agent!(a, (0.25, 0.25), model)
+        set_target!(a, (0.75, 1.25), model.pf, model)
+        move_along_route!(a, 0.807106, model, model.pf)
+        @test all(isapprox.(a.pos, (0.467156, 0.967156); atol))
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
@@ -223,18 +227,8 @@
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
 
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_nm, (0.25, 0.25), (7.8, 9.5), model))
-        testp = [(0.71429, 2.5), (0.71429, 4.16667), (0.71429, 5.83333), (0.71429, 7.5), (0.71429, 9.16667), (2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
-        @test length(p) == length(testp)
-        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
-
         p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, (0.25, 0.25), (7.8, 9.5), model))
         testp = [(2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
-        @test length(p) == length(testp)
-        @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
-
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_nm, (0.25, 0.25), (7.8, 9.5), model))
-        testp = [(0.71429, 9.16667), (2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
     end

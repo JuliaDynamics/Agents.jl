@@ -24,10 +24,12 @@ function find_continuous_path(
     last_pos = last(cts_path)
     pop!(cts_path)
     second_last_pos = isempty(cts_path) ? from : last(cts_path)
-    if edistance(last_pos, to, model) < edistance(second_last_pos, to, model)
+    last_to_end = edistance(last_pos, to, model)
+    second_last_to_end = edistance(second_last_pos, to, model)
+    if last_to_end < second_last_to_end
         push!(cts_path, last_pos)
     end
-    push!(cts_path, to)
+    last_to_end ≈ 0. || push!(cts_path, to)
     return cts_path
 end
 
@@ -122,7 +124,7 @@ function Agents.move_along_route!(
         dir = get_direction(from, next_waypoint, model.space)
         norm_dir = √sum(dir .^ 2)
         dir = dir ./ norm_dir
-        next_pos = agent.pos .+ dir .* speed .* dt
+        next_pos = from .+ dir .* speed .* dt
 
         # overshooting means we reached the waypoint
         dist_to_target = edistance(from, next_waypoint, model)
@@ -137,7 +139,7 @@ function Agents.move_along_route!(
             # without this, agent would end up at (0.85, 0.85) instead of (1, 0.2)
             from = next_waypoint
             dt -= dist_to_target / speed
-            pop!(pathfinder.agent_paths[agent.id])
+            popfirst!(pathfinder.agent_paths[agent.id])
             # if the path is now empty, go directly to the end
             if isempty(agent.id, pathfinder)
                 next_pos = next_waypoint
