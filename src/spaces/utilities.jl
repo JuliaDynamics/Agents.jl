@@ -57,7 +57,7 @@ end
 
 """
     get_direction(from, to, model::ABM)
-Returns the direction vector from `from` to `to` taking into account periodicity of the space
+Return the direction vector from `from` to `to` taking into account periodicity of the space
 """
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
 
