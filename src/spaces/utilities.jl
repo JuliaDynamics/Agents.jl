@@ -61,14 +61,17 @@ Return the direction vector from `from` to `to` taking into account periodicity 
 """
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
 
-function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, space::ContinuousSpace{D,true}) where {D}
-    all_dirs = [to .+ space.extent .* (i, j) .- from for i in -1:1, j in -1:1]
-    return all_dirs[argmin(map(x -> sum(x .^ 2), all_dirs))]
-end
-
-function get_direction(from::NTuple{D,Int64}, to::NTuple{D,Int64}, space::GridSpace{D,true}) where {D}
-    all_dirs = [to .+ size(space.s) .* (i, j) .- from for i in -1:1, j in -1:1]
-    return all_dirs[argmin(map(x -> sum(x .^ 2), all_dirs))]
+function get_direction(
+    from::NTuple{D,Float64},
+    to::NTuple{D,Float64},
+    space::Union{ContinuousSpace{D,true}, GridSpace{D,true}}
+) where {D}
+    best = to .- from
+    for offset in Iterators.product([-1:1 for _ in 1:D]...)
+        dir = to .+ offset .* size(space) .- from
+        sum(dir .^ 2) < sum(best .^ 2) && (best = dir)
+    end
+    return best
 end
 
 function get_direction(from, to, ::Union{GridSpace,ContinuousSpace})

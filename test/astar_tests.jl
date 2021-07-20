@@ -86,15 +86,15 @@
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
 
-        move_along_route!(a, 0.35355, model, model.pf)
+        move_along_route!(a, model, model.pf, 0.35355)
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
         # test waypoint skipping
         move_agent!(a, (0.25, 0.25), model)
         set_target!(a, (0.75, 1.25), model.pf, model)
-        move_along_route!(a, 0.807106, model, model.pf)
+        move_along_route!(a, model, model.pf, 0.807106)
         @test all(isapprox.(a.pos, (0.467156, 0.967156); atol))
         # make sure it doesn't overshoot the end
-        move_along_route!(a, 20., model, model.pf)
+        move_along_route!(a, model, model.pf, 20.)
         @test all(isapprox.(a.pos, (0.75, 1.25); atol))
 
         delete!(model.pf.agent_paths, 1)
@@ -106,7 +106,7 @@
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf, model) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
-        move_along_route!(a, 1.0, model, model.pf)
+        move_along_route!(a, model, model.pf, 1.0)
         @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
         kill_agent!(a, model, model.pf)
