@@ -34,9 +34,11 @@ function find_continuous_path(
 end
 
 """
-    Pathfinding.set_target!(agent, target::NTuple{D,Int}, pathfinder)
+    Pathfinding.set_target!(agent, target::NTuple{D,Float64}, pathfinder::AStar{D}, model::ABM{<:ContinuousSpace{D}})
 Calculate and store the shortest path to move the agent from its current position to
-`target` (a grid position e.g. `(1, 5)`) for using the provided `pathfinder`.
+`target` (a continuous position e.g. `(1.2, 5.7)`) using the provided `pathfinder`.
+
+For pathfinding in models with [`ContinuousSpace`](@ref).
 
 Use this method in conjuction with [`move_along_route!`](@ref).
 """
@@ -52,13 +54,14 @@ function set_target!(
 end
 
 """
-    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Int}}, pathfinder)
-
+    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Float64}}, pathfinder::AStar{D}, model::ABM{<:ContinuousSpace{D}})
 Calculate and store the best path to move the agent from its current position to
-a chosen target position taken from `targets` for models using [`Pathfinding`](@ref).
+a chosen target position taken from `targets` for models using the provided `pathfinder`.
 
-The `condition = :shortest` keyword retuns the shortest path which is shortest
-(allowing for the conditions of the models pathfinder) out of the possible target
+For pathfinding in models with [`ContinuousSpace`](@ref).
+
+The `condition = :shortest` keyword retuns the path which is shortest
+(allowing for the conditions of the pathfinder) out of the possible target
 positions. Alternatively, the `:longest` path may also be requested.
 
 Returns the position of the chosen target.
@@ -88,32 +91,19 @@ function set_best_target!(
 end
 
 """
-    get_direction(from, to, space)
-Returns the direction vector from `from` to `to` taking into account periodicity of the space
-(for continuous space)
-"""
-# TODO: Dispatch on AStar's periodicity, since it's _technically_ possible for it to be different
-# from the space
-function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, space::ContinuousSpace{D,true}) where {D}
-    all_dirs = [to .+ space.extent .* (i, j) .- from for i in -1:1, j in -1:1]
-    return all_dirs[argmin(map(x -> sum(x .^ 2), all_dirs))]
-end
+    move_along_route!(agent, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, speed, dt = 1.0)
+Move `agent` for one step along the route toward its target set by
+[`Pathfinding.set_target!`](@ref) at the given `speed` and timestep `dt`.
 
-function get_direction(from::NTuple{D,Float64}, to::NTuple{D,Float64}, ::ContinuousSpace{D,false}) where {D}
-    return to .- from
-end
+For pathfinding in models with [`ContinuousSpace`](@ref)
 
-"""
-    move_along_route!(agent, model, pathfinder)
-Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
-for agents on a [`GridSpace`](@ref) using a [`Pathfinding.AStar`](@ref).
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
 function Agents.move_along_route!(
     agent::A,
-    speed::Float64,
     model::ABM{<:ContinuousSpace{D},A},
     pathfinder::AStar{D},
+    speed::Float64,
     dt::Real = 1.0,
 ) where {D,A<:AbstractAgent}
     isempty(agent.id, pathfinder) && return
@@ -121,7 +111,7 @@ function Agents.move_along_route!(
     next_pos = agent.pos
     while true
         next_waypoint = first(pathfinder.agent_paths[agent.id])
-        dir = get_direction(from, next_waypoint, model.space)
+        dir = get_direction(from, next_waypoint, model)
         norm_dir = √sum(dir .^ 2)
         dir = dir ./ norm_dir
         next_pos = from .+ dir .* speed .* dt
