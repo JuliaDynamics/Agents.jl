@@ -6,11 +6,19 @@
         @test model.maxid.x == other.maxid.x
     end
 
-    function test_grid_space(space, other)
+    function test_space(space::GridSpace, other)
         @test size(space.s) == size(other.s)
         @test all(length(other.s[pos]) == length(space.s[pos]) for pos in eachindex(space.s))
         @test all(all(x in other.s[pos] for x in space.s[pos]) for pos in eachindex(space.s))
         @test space.metric == other.metric
+    end
+
+    function test_space(space::ContinuousSpace, other)
+        test_space(space.grid, other.grid)
+        @test space.update_vel! == other.update_vel!
+        @test space.dims == other.dims
+        @test space.spacing == other.spacing
+        @test space.extent == other.extent
     end
 
     test_costmetric(metric, other) = @test false
@@ -52,7 +60,7 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
         # pathfinder data
         test_astar(model.pathfinder, other.pathfinder)
     end
@@ -98,7 +106,7 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end
@@ -129,11 +137,7 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space.grid, other.space.grid)
-        @test model.space.update_vel! == other.space.update_vel!
-        @test model.space.dims == other.space.dims
-        @test model.space.spacing == other.space.spacing
-        @test model.space.extent == other.space.extent
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end
@@ -181,7 +185,7 @@
         rm("test.jld2")
     end
 
-    @testset "Pathfinder" begin
+    @testset "Grid Pathfinder" begin
         astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
@@ -223,6 +227,47 @@
         rm("test.jld2")
     end
 
+    @testset "Continuous Pathfinder" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+        walk = BitArray(fill(true, 10, 10))
+        walk[2, 2] = false
+        walk[9, 9] = false
+        pmap = abs.(rand(Int, 10, 10)) .% 10
+        direct = Pathfinding.DirectDistance{2}([0, 10])
+        maxd = Pathfinding.MaxDistance{2}()
+        hmm = Pathfinding.PenaltyMap(pmap)
+
+        function setup_model(; kwargs...)
+            space = ContinuousSpace((10., 10.); periodic = false)
+            pathfinder = Pathfinding.AStar(space, (10, 10); kwargs...)
+            model = ABM(
+                Agent6,
+                space;
+                properties = (pathfinder = pathfinder, ),
+                rng = MersenneTwister(42)
+            )
+            add_agent!((1.3, 1.5), model, (0., 0.), 0.)
+            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder, model)
+            step!(model, astep!, dummystep)
+
+            AgentsIO.save_checkpoint("test.jld2", model)
+            other = AgentsIO.load_checkpoint("test.jld2")
+            return model, other
+        end
+
+        test_pathfinding_model(setup_model()...)
+        test_pathfinding_model(setup_model(; admissibility = 0.5)...)
+        test_pathfinding_model(setup_model(; walkable = walk)...)
+        test_pathfinding_model(setup_model(; cost_metric = direct)...)
+        test_pathfinding_model(setup_model(; cost_metric = maxd)...)
+        test_pathfinding_model(setup_model(; cost_metric = hmm)...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, direct))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, maxd))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, hmm))...)
+
+        rm("test.jld2")
+    end
+    
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -246,7 +291,7 @@
         # model data
         test_model_data(model, other)
         # space data
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end

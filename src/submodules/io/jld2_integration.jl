@@ -81,8 +81,8 @@ struct SerializableOSMSpace
     agents::Vector{OSMAgentPositionData}
 end
 
-struct SerializableAStar{D,P,M}
-    agent_paths::Vector{Tuple{Int,Vector{Dims{D}}}}
+struct SerializableAStar{D,P,M,T}
+    agent_paths::Vector{Tuple{Int,Vector{NTuple{D,T}}}}
     grid_dims::Dims{D}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
@@ -90,7 +90,7 @@ struct SerializableAStar{D,P,M}
     cost_metric::Pathfinding.CostMetric{D}
 end
 
-JLD2.writeas(::Type{Pathfinding.AStar{D,P,M}}) where {D,P,M} = SerializableAStar{D,P,M}
+JLD2.writeas(::Type{Pathfinding.AStar{D,P,M,T}}) where {D,P,M,T} = SerializableAStar{D,P,M,T}
 
 function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
@@ -139,8 +139,8 @@ to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
 to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([])
 
-JLD2.wconvert(::Type{SerializableAStar{D,P,M}}, t::Pathfinding.AStar{D,P,M}) where {D,P,M} =
-    SerializableAStar{D,P,M}(
+JLD2.wconvert(::Type{SerializableAStar{D,P,M,T}}, t::Pathfinding.AStar{D,P,M,T}) where {D,P,M,T} =
+    SerializableAStar{D,P,M,T}(
         [(k, collect(v)) for (k, v) in t.agent_paths],
         t.grid_dims,
         map(Tuple, t.neighborhood),
@@ -214,10 +214,10 @@ function from_serializable(t::SerializableOSMSpace; kwargs...)
     )
 end
 
-JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M}}, t::SerializableAStar{D,P,M}) where {D,P,M} =
-    Pathfinding.AStar{D,P,M}(
-        Dict{Int,Pathfinding.Path{D}}(
-            k => Pathfinding.Path{D}(v...) for (k, v) in t.agent_paths
+JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T}}, t::SerializableAStar{D,P,M,T}) where {D,P,M,T} =
+    Pathfinding.AStar{D,P,M,T}(
+        Dict{Int,Pathfinding.Path{D,T}}(
+            k => Pathfinding.Path{D,T}(v...) for (k, v) in t.agent_paths
         ),
         t.grid_dims,
         map(CartesianIndex, t.neighborhood),
