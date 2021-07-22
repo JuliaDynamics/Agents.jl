@@ -76,6 +76,12 @@
         model = ABM(Agent3, gspace; properties = (pf = pathfinder, ))
         @test penaltymap(model.pf) == pmap
 
+        pathfinder.walkable[:, 3] .= false
+        npos = collect(nearby_walkable((5, 4), model, model.pf))
+        ans = [(4, 4), (5, 5), (1, 4), (4, 5), (1, 5)]
+        @test length(npos) == length(ans)
+        @test all(x in npos for x in ans)
+
         # ContinuousSpace
         pathfinder = AStar(cspace, (10, 10))
         model = ABM(Agent6, cspace; properties = (pf = pathfinder,))
