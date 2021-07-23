@@ -73,6 +73,7 @@ Return an iterator over all [`nearby_positions`](@ref) within "radius" `r` of th
 nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1) where {D} =
     Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))
 
+
 """
     random_walkable(model, pathfinder::AStar{D})
 Return a random position in the given `model` that is walkable as specified by the given

@@ -142,3 +142,40 @@ function Agents.move_along_route!(
 
     move_agent!(agent, next_pos, model)
 end
+
+function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}) where {D}
+    discrete_pos = rand(
+        model.rng,
+        filter(x -> pathfinder.walkable(x), CartesianIndices(pathfinder.walkable))
+    )
+    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
+    return discrete_pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size .+
+        Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
+end
+
+"""
+    Pathfinding.random_walkable(pos, mode::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
+Return a random position within radius `r` of `pos` which is walkable, as specified by `pathfinder`.
+"""
+function random_walkable(
+    pos,
+    model::ABM{<:ContinuousSpace{D}},
+    pathfinder::AStar{D},
+    r = 1.0,
+) where {D}
+    discrete_r = r ./ model.space.extent .* pathfinder.grid_dims
+    discrete_pos = Tuple(Agents.get_spatial_index(pos, pathfinder.walkable, model))
+    discrete_rand = rand(
+        model.rng,
+        filter(
+            x -> pathfinder.walkable(discrete_pos .+ x) && sum(x .^ 2) <= r*r,
+            Iterators.product([-discrete_r:discrete_r for _ in 1:D]...)
+        )
+    )
+    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
+    cts_rand = discrete_rand ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size .+
+        Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
+    sq_dist = sum(cts_rand .^ 2)
+    sq_dist > r*r && (cts_rand = cts_rand ./ √sq_dist .* r)
+    return cts_rand
+end
