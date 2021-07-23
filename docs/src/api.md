@@ -275,6 +275,7 @@ Pathfinding.set_target!
 Pathfinding.set_best_target!
 Pathfinding.penaltymap
 Pathfinding.nearby_walkable
+Pathfinding.random_walkable
 ```
 
 ### Metrics
