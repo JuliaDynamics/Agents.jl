@@ -67,8 +67,16 @@ end
 
 """
     nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1)
-Returns an iterable of all [`nearby_positions`](@ref) within "radius" `r` of the given
+Return an iterator over all [`nearby_positions`](@ref) within "radius" `r` of the given
 `position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
 """
 nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1) where {D} =
     Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))
+
+"""
+    random_walkable(model, pathfinder::AStar{D})
+Return a random position in the given `model` that is walkable as specified by the given
+`pathfinder`.
+"""
+random_walkable(model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}) where {D} =
+    rand(model.rng, filter(x -> pathfinder.walkable(x), CartesianIndices(model.space.s)))
