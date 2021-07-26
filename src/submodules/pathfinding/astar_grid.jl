@@ -83,4 +83,4 @@ Return a random position in the given `model` that is walkable as specified by t
 `pathfinder`.
 """
 random_walkable(model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}) where {D} =
-    rand(model.rng, filter(x -> pathfinder.walkable(x), CartesianIndices(model.space.s)))
+    Tuple(rand(model.rng, filter(x -> pathfinder.walkable[x], CartesianIndices(model.space.s))))

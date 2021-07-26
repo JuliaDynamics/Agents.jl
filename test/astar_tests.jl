@@ -81,6 +81,7 @@
         ans = [(4, 4), (5, 5), (1, 4), (4, 5), (1, 5)]
         @test length(npos) == length(ans)
         @test all(x in npos for x in ans)
+        @test all(pathfinder.walkable[random_walkable(model, model.pf)...] for _ in 1:10)
 
         sp = GridSpace((5, 5); periodic = false)
         pf = AStar(sp)
@@ -136,6 +137,9 @@
         pathfinder = AStar(cspace, (10, 10); cost_metric = PenaltyMap(pmap))
         @test penaltymap(pathfinder) == pmap
 
+        @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkable, model) for _ in 1:10)
+        rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:10]
+        @test all(get_spatial_property(x, model.pf.walkable, model) && sum((x .- (2.5, 0.75)) .^ 2) <= 4.0 for x in rpos)
     end
 
     @testset "metrics" begin

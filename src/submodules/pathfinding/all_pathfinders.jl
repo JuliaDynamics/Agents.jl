@@ -40,6 +40,7 @@ export CostMetric,
     set_target!,
     set_best_target!,
     penaltymap,
-    nearby_walkable
+    nearby_walkable,
+    random_walkable
 
 end
