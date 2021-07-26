@@ -155,11 +155,6 @@ function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D})
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
 end
 
-filter_condition(offset, pos, pathfinder::AStar{D,false}, r) where {D} =
-    1 .<= (pos .+ offset) .<= pathfinder.grid_dims &&
-    pathfinder.walkable[pos .+ offset] &&
-    sum(offset .^ 2) <= r*r
-
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,false}) where {D} =
     Iterators.filter(
         x -> all(1 .<= x .<= pathfinder.grid_dims) &&
