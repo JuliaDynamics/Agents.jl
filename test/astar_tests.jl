@@ -144,7 +144,7 @@
 
         @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkable, model) for _ in 1:10)
         rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:10]
-        @test all(get_spatial_property(x, model.pf.walkable, model) && sum((x .- (2.5, 0.75)) .^ 2) <= 4.0 for x in rpos)
+        @test all(get_spatial_property(x, model.pf.walkable, model) && edistance(x, (2.5, 0.75), model) <= 2.0 for x in rpos)
     end
 
     @testset "metrics" begin

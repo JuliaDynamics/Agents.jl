@@ -192,6 +192,9 @@ function random_walkable(
     cts_rand = discrete_rand ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
     dist = edistance(pos, cts_rand, model)
-    dist > r && (cts_rand = cts_rand ./ dist .* r)
+    dist > r && (cts_rand = mod1.(
+        pos .+ get_direction(pos, cts_rand, model) ./ dist .* r,
+        model.space.extent
+    ))
     return cts_rand
 end
