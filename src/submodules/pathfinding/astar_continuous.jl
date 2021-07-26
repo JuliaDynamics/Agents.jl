@@ -16,7 +16,8 @@ function find_continuous_path(
     discrete_from = Tuple(Agents.get_spatial_index(from, pathfinder.walkable, model))
     discrete_to = Tuple(Agents.get_spatial_index(to, pathfinder.walkable, model))
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
-    isempty(discrete_path) && return
+    isnothing(discrete_path) && return
+    isempty(discrete_path) && return Path{D,Float64}()
     cts_path = Path{D,Float64}()
     for pos in discrete_path
         push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
@@ -86,6 +87,7 @@ function set_best_target!(
         end
     end
 
+    isnothing(best_target) && return
     pathfinder.agent_paths[agent.id] = best_path
     return best_target
 end

@@ -174,6 +174,7 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
         pushfirst!(agent_path, cur)
         cur = parent[cur]
     end
+    cur == from || return # nothing
     return agent_path
 end
 

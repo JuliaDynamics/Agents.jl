@@ -22,7 +22,8 @@ a chosen target position taken from `targets` using `pathfinder`.
 The `condition = :shortest` keyword retuns the shortest path which is shortest out of the
 possible target positions. Alternatively, the `:longest` path may also be requested.
 
-Returns the position of the chosen target.
+Returns the position of the chosen target, or `nothing` if none of the supplied targets are
+reachable.
 """
 function set_best_target!(
     agent::A,
@@ -36,12 +37,14 @@ function set_best_target!(
     best_target = nothing
     for target in targets
         path = find_path(pathfinder, agent.pos, target)
+        isnothing(path) && continue
         if isempty(best_path) || compare(length(path), length(best_path))
             best_path = path
             best_target = target
         end
     end
 
+    isnothing(best_target) && return
     pathfinder.agent_paths[agent.id] = best_path
     return best_target
 end
