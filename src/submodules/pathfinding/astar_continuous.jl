@@ -1,7 +1,7 @@
 """
     find_continuous_path(pathfinder, from, to, model)
-Functions like find_path, but uses the output of find_path and converts it to the coordinate
-space used by model.space (which is continuous). Also performs checks on the last two waypoints
+Functions like `find_path``, but uses the output of `find_path` and converts it to the coordinate
+space used by `model.space` (which is continuous). Also performs checks on the last two waypoints
 in the discrete path to ensure continuous path is optimal.
 """
 function find_continuous_path(
