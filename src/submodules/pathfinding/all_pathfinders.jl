@@ -29,6 +29,7 @@ include("metrics.jl")
 include("pathfinding_utils.jl")
 include("astar.jl")
 include("astar_grid.jl")
+include("astar_continuous.jl")
 
 export CostMetric,
     DirectDistance,
@@ -39,6 +40,7 @@ export CostMetric,
     set_target!,
     set_best_target!,
     penaltymap,
-    nearby_walkable
+    nearby_walkable,
+    random_walkable
 
 end

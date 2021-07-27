@@ -3,24 +3,25 @@
 Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional [`GridSpace`](@ref).
 """
-const Path{D} = MutableLinkedList{Dims{D}}
+const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 
-struct AStar{D,P,M} <: GridPathfinder{D,P,M}
-    agent_paths::Dict{Int,Path{D}}
+struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
+    agent_paths::Dict{Int,Path{D,T}}
     grid_dims::Dims{D}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
     walkable::BitArray{D}
     cost_metric::CostMetric{D}
 
-    function AStar{D,P,M}(
+    function AStar{D,P,M,T}(
         agent_paths::Dict,
         grid_dims::Dims{D},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
-    ) where {D,P,M}
+    ) where {D,P,M,T}
+        @assert all(grid_dims .> 0) "Grid must have valid dimensions"
         @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
@@ -56,17 +57,17 @@ struct must be passed into any pathfinding functions.
 
 Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
 """
-function AStar(
+function AStar{T}(
     dims::Dims{D};
     periodic::Bool = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkable::BitArray{D} = trues(dims),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D}
+) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,diagonal_movement}(
-        Dict{Int,Path{D}}(),
+    return AStar{D,periodic,diagonal_movement,T}(
+        Dict{Int,Path{D,T}}(),
         dims,
         neighborhood,
         admissibility,
@@ -82,7 +83,17 @@ AStar(
     walkable::BitArray{D} = trues(size(space.s)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar{Int64}(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+
+AStar(
+    space::ContinuousSpace{D,periodic},
+    granularity::Dims{D};
+    admissibility::Float64 = 0.0,
+    walkable::BitArray{D} = trues(granularity),
+    cost_metric::CostMetric{D} = DirectDistance{D}(),
+) where {D,periodic} =
+    AStar{Float64}(granularity; periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+
 
 moore_neighborhood(D) = [
     CartesianIndex(a)
@@ -156,13 +167,14 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
         end
     end
 
-    agent_path = Path{D}()
+    agent_path = Path{D,Int64}()
     cur = to
     while true
         haskey(parent, cur) || break
         pushfirst!(agent_path, cur)
         cur = parent[cur]
     end
+    cur == from || return # nothing
     return agent_path
 end
 
@@ -213,11 +225,3 @@ function Agents.kill_agent!(
     delete!(model.agents, agent.id)
     Agents.remove_agent_from_space!(agent, model)
 end
-
-"""
-    nearby_walkable(position, model, pathfinder, r = 1)
-Returns an iterable of all [`nearby_positions`](@ref) within "radius" `r` of the given
-`position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
-"""
-nearby_walkable(position, model, pathfinder, r = 1) =
-    Iterators.filter(x -> pathfinder.walkable[x...] == 1, nearby_positions(position, model, r))
