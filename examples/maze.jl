@@ -53,8 +53,8 @@ agent_step!(agent, model) = move_along_route!(agent, model, pathfinder)
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
 using InteractiveDynamics
-using CairoMakie
-CairoMakie.activate!(type = "png") # hide
+using GLMakie
+GLMakie.activate!() # hide
 
 # The `heatarray` keyword argument allows plotting the maze as a heatmap behind the agent.
 abm_video(

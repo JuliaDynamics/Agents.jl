@@ -11,8 +11,6 @@ println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 using InteractiveDynamics
-println("Plotting Backend...")
-import CairoMakie
 
 ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples...")

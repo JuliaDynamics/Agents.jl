@@ -75,12 +75,13 @@ Return an iterable of the ids of the agents within "radius" `r` of the given `po
 What the "radius" means depends on the space type:
 - `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer).
   For example, for `r=2` include first and second degree neighbors.
-- `GridSpace, ContinuousSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
+- `GridSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
   in the space of cartesian indices.
 - `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
   extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
   spaces.
-- `OpenStreetMapSpace`: `r` is equivalent with distance (in meters) neeeded to be travelled
+- `ContinuousSpace`: Standard distance according to the space metric.
+- `OpenStreetMapSpace`: `r` is equivalent with distance (in meters) needed to be travelled
   according to existing roads in order to reach given `position`.
 
 ## Keywords

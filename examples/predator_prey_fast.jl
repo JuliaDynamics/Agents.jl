@@ -205,6 +205,7 @@ model = initialize_model()
 # grass patches after each step. First: initialize the model.
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 
 # To view our starting population, we can build an overview plot using [`abm_plot`](@ref).
 # We define the plotting details for the wolves and sheep:

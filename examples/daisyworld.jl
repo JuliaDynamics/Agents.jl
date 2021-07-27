@@ -230,6 +230,7 @@ end
 
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 
 model = daisyworld()
 

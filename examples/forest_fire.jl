@@ -26,6 +26,7 @@
 using Agents, Random
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 
 @agent Automata GridAgent{2} begin end
 nothing # hide

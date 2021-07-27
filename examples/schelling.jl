@@ -207,6 +207,7 @@ data
 # Let's color the two groups orange and blue and make one a square and the other a circle.
 using InteractiveDynamics
 using CairoMakie # choosing a plotting backend
+CairoMakie.activate!() # hide
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
