@@ -38,9 +38,10 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
 end
 
 """
-    AStar(space::GridSpace{D}; kwargs...)
-Enables pathfinding for agents in the provided `space` using the A* algorithm. This
-struct must be passed into any pathfinding functions.
+    AStar(space; kwargs...)
+Enables pathfinding for agents in the provided `space` (which can be a [`GridSpace`](@ref) or
+[`ContinuousSpace`](@ref)) using the A* algorithm. This struct must be passed into any
+pathfinding functions.
 
 ## Keywords
 - `diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
@@ -54,8 +55,7 @@ struct must be passed into any pathfinding functions.
   be found in [Maze Solver](@ref)
 - `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
   metric used to approximate the distance between any two points. See [`CostMetric`](@ref).
-
-Example usage in [Maze Solver](@ref) and [Mountain Runners](@ref).
+  An example usage can be found in [Mountain Runners](@ref).
 """
 function AStar{T}(
     dims::Dims{D};

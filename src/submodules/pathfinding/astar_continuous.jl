@@ -114,12 +114,11 @@ function Agents.move_along_route!(
     while true
         next_waypoint = first(pathfinder.agent_paths[agent.id])
         dir = get_direction(from, next_waypoint, model)
-        norm_dir = √sum(dir .^ 2)
-        dir = dir ./ norm_dir
+        dist_to_target = √sum(dir .^ 2)
+        dir = dir ./ dist_to_target
         next_pos = from .+ dir .* speed .* dt
 
         # overshooting means we reached the waypoint
-        dist_to_target = edistance(from, next_waypoint, model)
         dist_to_next = edistance(from, next_pos, model)
         if dist_to_next > dist_to_target
             # change from and dt so it appears we're coming from the waypoint just skipped, instead

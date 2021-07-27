@@ -41,10 +41,17 @@ end
 """
     Pathfinding.PenaltyMap(pmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
-absolute difference in penalty. A penalty of the same size as the corresponding
-[`GridSpace{D}`](@ref) is required. Distance is calculated using [`Pathfinding.DirectDistance`](@ref)
-by default, and can be changed by specifying `base_metric`. An example usage can be found in
-[Mountain Runners](@ref).
+absolute difference in penalty.
+
+A penalty map (`pmap`) is required. For pathfinding in [`GridSpace`](@ref), this should be the
+same dimensions as the space. For pathfinding in [`ContinuousSpace`](@ref), the size of this map
+determines the granularity of the underlying grid, and should agree with the size of the
+`walkable` map.
+
+Distance is calculated using [`Pathfinding.DirectDistance`](@ref) by default, and can be
+changed by specifying `base_metric`.
+
+An example usage can be found in [Mountain Runners](@ref).
 """
 PenaltyMap(pmap::Array{Int,D}) where {D} = PenaltyMap{D}(DirectDistance{D}(), pmap)
 

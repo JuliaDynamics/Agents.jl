@@ -16,14 +16,14 @@ function set_target!(
 end
 
 """
-    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Int}}, pathfinder::AStar{D})
-Calculate and store the best path to move the agent from its current position to
+    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Int}}, pathfinder::AStar{D}; kwargs...)
+Calculate, store, and return the best path to move the agent from its current position to
 a chosen target position taken from `targets` using `pathfinder`.
 
 The `condition = :shortest` keyword retuns the shortest path which is shortest out of the
 possible target positions. Alternatively, the `:longest` path may also be requested.
 
-Returns the position of the chosen target, or `nothing` if none of the supplied targets are
+Return the position of the chosen target. Return `nothing` if none of the supplied targets are
 reachable.
 """
 function set_best_target!(
