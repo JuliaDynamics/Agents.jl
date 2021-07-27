@@ -9,6 +9,8 @@ println("Agents...")
 using Agents
 println("Literate...")
 import Literate
+println("InteractiveDynamics...")
+using InteractiveDynamics
 
 ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples...")
