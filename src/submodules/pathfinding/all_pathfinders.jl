@@ -8,7 +8,7 @@ Discretization of [`ContinuousSpace`](@ref) is taken care of internally.
 
 You can enable path-finding and set its options by creating an instance of a
 [`Pathfinding.AStar`](@ref) struct. This must be passed to the relevant pathfinding functions
-During the simulation. Call [`Pathfinding.set_target!`](@ref) to set the target
+during the simulation. Call [`Pathfinding.set_target!`](@ref) to set the target
 destination for an agent. This triggers the algorithm to calculate a path from the agent's
 current position to the one specified. You can alternatively use
 [`Pathfinding.set_best_target!`](@ref) to choose the best target from a list. Once a target
