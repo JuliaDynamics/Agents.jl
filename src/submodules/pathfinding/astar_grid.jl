@@ -10,8 +10,9 @@ function set_target!(
     target::Dims{D},
     pathfinder::AStar{D},
 ) where {D,A<:AbstractAgent}
-    pathfinder.agent_paths[agent.id] =
-        find_path(pathfinder, agent.pos, target)
+    path = find_path(pathfinder, agent.pos, target)
+    isnothing(path) && return
+    pathfinder.agent_paths[agent.id] = path
 end
 
 """

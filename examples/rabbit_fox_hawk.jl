@@ -1,5 +1,9 @@
 # # 3D Predator-prey
-#
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# </video>
+# ```
 # This model is a variation on the [Predator-Prey](@ref) example. It uses a 3-dimensional
 # [`GridSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders).
@@ -63,7 +67,7 @@ function initialize_model(
 
     ## Download and load the heightmap. The grayscale value is converted to `Float64` and
     ## scaled from 1 to 40
-    heightmap = floor.(Int, convert.(Float64, load(heightmap_url)) * 39) .+ 1
+    heightmap = floor.(Int, convert.(Float64, load(download(heightmap_url))) * 39) .+ 1
     ## The dimensions of the space is that of the heightmap
     dims = (size(heightmap)..., 40)
     ## Generate the RNG for the model
@@ -92,7 +96,7 @@ function initialize_model(
     )
     properties = (
         ## The pathfinder for rabbits and foxes
-        landfinder = AStar(space; walkable = land_walkmap, cost_metric = DirectDistance{3}()),
+        landfinder = AStar(space; walkable = land_walkmap),
         ## The pathfinder for hawks
         airfinder = AStar(space; walkable = air_walkmap, cost_metric = MaxDistance{3}()),
         Δe_grass = Δe_grass,
@@ -137,7 +141,7 @@ function initialize_model(
 
     ## Get a list of valid places for hawks to spawn
     valid_positions =
-        filter(x -> air_walkmap[x] && x[3] > water_level, CartesianIndices(air_walkmap))
+        filter(x -> air_walkmap[x] && heightmap[x[1], x[2]] > water_level, CartesianIndices(air_walkmap))
     for _ in 1:n_hawks
         add_agent_pos!(
             Hawk(
@@ -355,14 +359,14 @@ function model_step!(model)
     growable .= rand(model.rng, length(growable)) .< model.regrowth_chance
 end
 
-animalmarker(a) =
-    if a.type == :rabbit
-        :circle
-    elseif a.type == :fox
-        :rect
-    else
-        :utriangle
-    end
+# ## Visualization
+#
+# The agents are color-coded according to their `type`, to make them easily identifiable in
+# the visualization.
+
+using InteractiveDynamics
+using GLMakie
+GLMakie.activate!() # hide
 animalcolor(a) =
     if a.type == :rabbit
         :brown
@@ -371,3 +375,36 @@ animalcolor(a) =
     else
         :blue
     end
+
+# We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
+# colormap. `zlims!` overrides the limits set by `InteractiveDynamics` to ensure the
+# terrain surface isn't skewed by the dimensions of the model.
+function static_preplot!(ax, model)
+    zlims!(ax, (0, 164))
+    surface!(ax, model.heightmap; colormap = :terrain)
+end
+
+## The sample heightmap used for this model
+heightmap_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
+model = initialize_model(heightmap_url)
+
+abm_video(
+    "rabbit_fox_hawk.mp4",
+    model,
+    animal_step!,
+    model_step!;
+    resolution = (700, 700),
+    frames = 300,
+    framerate = 30,
+    ac = animalcolor,
+    as = 1.0,
+    static_preplot!
+)
+nothing # hide
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# </video>
+# ```
