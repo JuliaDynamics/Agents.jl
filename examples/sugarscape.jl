@@ -191,6 +191,7 @@ model = sugarscape()
 
 # Let's plot the spatial distribution of sugar capacities in the Sugarscape.
 using CairoMakie
+CairoMakie.activate!() # hide
 
 fig = Figure(resolution = (600, 600))
 ax, hm = heatmap(fig[1,1], model.sugar_capacities; colormap=cgrad(:thermal))

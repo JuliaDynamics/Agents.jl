@@ -46,6 +46,7 @@ using Random # hide
 using Agents
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 
 mutable struct Fighter <: AbstractAgent
     id::Int
