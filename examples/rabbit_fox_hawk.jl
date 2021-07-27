@@ -41,6 +41,11 @@ norm(vec) = √sum(vec .^ 2)
 #   walk over, but it can be flown over
 # - The terrain above `mountain_level` is completely inaccessible
 #
+# Grass is the food source for rabbits. It can grow anywhere from `water_level` to `grass_level`.
+# The spread of grass across the terrain is specified using a BitArray. A value of
+# 1 at a location indicates the presence of grass there, which can be consumed when it is eaten
+# by a rabbit. The probability of grass growing is proportional to how close it is to the water.
+#
 # The `initialize_model` function takes in the URL to our heightmap, the thresholds for the 4
 # regions, and some additional parameters for the model. It then creates and returns a model
 # with the specified heightmap and containing the specified number of rabbits, foxes and hawks.
@@ -81,16 +86,17 @@ function initialize_model(
     air_walkmap = BitArray(falses(dims...))
     for i in 1:dims[1], j in 1:dims[2]
         ## land animals can only walk on top of the terrain between water_level and grass_level
-        water_level < heightmap[i, j] < grass_level &&
-            (land_walkmap[i, j, heightmap[i, j]+1] = true)
+        if water_level < heightmap[i, j] < grass_level
+            land_walkmap[i, j, heightmap[i, j]+1] = true
+        end
         ## air animals can fly at any height upto mountain_level
-        heightmap[i, j] < mountain_level &&
-            (air_walkmap[i, j, (heightmap[i, j]+1):mountain_level] .= true)
+        if heightmap[i, j] < mountain_level
+            air_walkmap[i, j, (heightmap[i, j]+1):mountain_level] .= true
+        end
     end
-    ## The spread of grass across the terrain is specified using a BitArray. A value of
-    ## 1 at a location indicates the presence of grass there.
-    ## The probability of grass growing is proportional to how close it is to the water. Grass
-    ## at or below water_level is ignored since it is not accessible through land_walkmap.
+    ## Generate an array of random numbers, and threshold it by the probability of grass growing
+    ## at that location. Although this causes grass to grow below `water_level`, it is
+    ## effectively ignored by `land_walkmap`
     grass = BitArray(
         rand(rng, dims[1:2]...) .< ((grass_level .- heightmap) ./ (grass_level - water_level)),
     )
@@ -367,6 +373,7 @@ end
 using InteractiveDynamics
 using GLMakie
 GLMakie.activate!() # hide
+
 animalcolor(a) =
     if a.type == :rabbit
         :brown
