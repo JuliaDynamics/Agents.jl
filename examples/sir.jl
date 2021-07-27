@@ -46,6 +46,7 @@ using Agents, Random, DataFrames, LightGraphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using CairoMakie
+CairoMakie.activate!() # hide
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int

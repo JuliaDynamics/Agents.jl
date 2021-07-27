@@ -46,8 +46,8 @@ agent_step!(agent, model) = move_along_route!(agent, model)
 # ## Visualization
 # Visualizing the `Walker` move through the maze is handled through [`InteractiveDynamics.abm_plot`](@ref).
 using InteractiveDynamics
-using CairoMakie
-CairoMakie.activate!(type = "png") # hide
+using GLMakie
+GLMakie.activate!() # hide
 
 ## Our sample walkmap
 map_url =

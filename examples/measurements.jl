@@ -42,6 +42,7 @@ using CairoMakie
 using Statistics: mean
 import DrWatson: @dict
 import StatsBase
+CairoMakie.activate!() # hide
 using Random # hide
 
 const DaisyWorld = ABM{<:GridSpace,Union{Daisy,Land}}

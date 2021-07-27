@@ -203,6 +203,7 @@ end
 # grass patches after each step. First: initialize the model.
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()

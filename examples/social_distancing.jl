@@ -66,6 +66,7 @@ nothing # hide
 # Cool, let's see now how this model evolves.
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 
 abm_video(
     "socialdist1.mp4",
@@ -356,6 +357,7 @@ data1[(end-10):end, :]
 
 # Now, we can plot the number of infected versus time
 using CairoMakie
+CairoMakie.activate!() # hide
 figure = Figure()
 ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
 l1 = lines!(ax, data1[:, dataname((:status, infected))], color = :orange)
