@@ -7,7 +7,7 @@ const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 
 struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
     agent_paths::Dict{Int,Path{D,T}}
-    grid_dims::Dims{D}
+    dims::NTuple{D,T}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
     walkable::BitArray{D}
@@ -15,17 +15,17 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
 
     function AStar{D,P,M,T}(
         agent_paths::Dict,
-        grid_dims::Dims{D},
+        dims::NTuple{D,T},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
         walkable::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M,T}
-        @assert all(grid_dims .> 0) "Grid must have valid dimensions"
-        @assert size(walkable) == grid_dims "Walkmap must be same dimensions as grid"
+        @assert all(dims .> 0) "Invalid pathfinder dimensions: $(dims)"
+        T <: Integer && @assert size(walkable) == dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
-            @assert size(cost_metric.pmap) == grid_dims "Penaltymap dimensions must be same as provided space"
+            @assert size(cost_metric.pmap) == size(walkable) "Penaltymap dimensions must be same as walkable map"
         elseif cost_metric isa DirectDistance{D}
             if M
                 @assert length(cost_metric.direction_costs) >= D "DirectDistance direction_costs must have as many values as dimensions"
@@ -33,7 +33,7 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
                 @assert length(cost_metric.direction_costs) >= 1 "DirectDistance direction_costs must have non-zero length"
             end
         end
-        new(agent_paths, grid_dims, neighborhood, admissibility, walkable, cost_metric)
+        new(agent_paths, dims, neighborhood, admissibility, walkable, cost_metric)
     end
 end
 
@@ -63,7 +63,7 @@ to specify the level of discretisation of the space.
   An example usage can be found in [Mountain Runners](@ref).
 """
 function AStar{T}(
-    dims::Dims{D};
+    dims::NTuple{D,T};
     periodic::Bool = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
@@ -88,7 +88,7 @@ AStar(
     walkable::BitArray{D} = trues(size(space.s)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Int64}(size(space.s); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar{Int64}(size(space); periodic, diagonal_movement, admissibility, walkable, cost_metric)
 
 AStar(
     space::ContinuousSpace{D,periodic},
@@ -96,7 +96,7 @@ AStar(
     admissibility::Float64 = 0.0,
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Float64}(size(walkable); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+    AStar{Float64}(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 AStar(
     space::ContinuousSpace{D,periodic},
@@ -104,7 +104,7 @@ AStar(
     walkable::BitArray{D} = trues(size(cost_metric.pmap)),
     admissibility::Float64 = 0.0,
 ) where {D,periodic} =
-    AStar{Float64}(size(cost_metric.pmap); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+    AStar{Float64}(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 
 moore_neighborhood(D) = [
@@ -191,11 +191,11 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 end
 
 @inline get_neighbors(cur, pathfinder::AStar{D,true}) where {D} =
-    (mod1.(cur .+ β.I, pathfinder.grid_dims) for β in pathfinder.neighborhood)
+    (mod1.(cur .+ β.I, size(pathfinder.walkable)) for β in pathfinder.neighborhood)
 @inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
     (cur .+ β.I for β in pathfinder.neighborhood)
 @inline inbounds(n, pathfinder, closed) =
-    all(1 .<= n .<= pathfinder.grid_dims) && pathfinder.walkable[n...] && n ∉ closed
+    all(1 .<= n .<= size(pathfinder.walkable)) && pathfinder.walkable[n...] && n ∉ closed
     
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])

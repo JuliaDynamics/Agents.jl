@@ -83,7 +83,7 @@ end
 
 struct SerializableAStar{D,P,M,T}
     agent_paths::Vector{Tuple{Int,Vector{NTuple{D,T}}}}
-    grid_dims::Dims{D}
+    dims::NTuple{D,T}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
     walkable::BitArray{D}
@@ -142,7 +142,7 @@ to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([])
 JLD2.wconvert(::Type{SerializableAStar{D,P,M,T}}, t::Pathfinding.AStar{D,P,M,T}) where {D,P,M,T} =
     SerializableAStar{D,P,M,T}(
         [(k, collect(v)) for (k, v) in t.agent_paths],
-        t.grid_dims,
+        t.dims,
         map(Tuple, t.neighborhood),
         t.admissibility,
         t.walkable,
@@ -219,7 +219,7 @@ JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T}}, t::SerializableAStar{D,P,M,T})
         Dict{Int,Pathfinding.Path{D,T}}(
             k => Pathfinding.Path{D,T}(v...) for (k, v) in t.agent_paths
         ),
-        t.grid_dims,
+        t.dims,
         map(CartesianIndex, t.neighborhood),
         t.admissibility,
         t.walkable,

@@ -44,7 +44,7 @@
     function test_astar(astar, other)
         @test typeof(astar) == typeof(other)
         @test astar.agent_paths == other.agent_paths
-        @test astar.grid_dims == other.grid_dims
+        @test astar.dims == other.dims
         @test astar.neighborhood == other.neighborhood
         @test astar.admissibility == other.admissibility
         @test astar.walkable == other.walkable
@@ -246,7 +246,7 @@
                 rng = MersenneTwister(42)
             )
             add_agent!((1.3, 1.5), model, (0., 0.), 0.)
-            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder, model)
+            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)

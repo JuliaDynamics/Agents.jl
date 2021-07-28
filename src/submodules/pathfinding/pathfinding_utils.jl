@@ -4,7 +4,7 @@ Returns the absolute difference in coordinates between `from` and `to` taking in
 periodicity of `pathfinder`.
 """
 position_delta(pathfinder::GridPathfinder{D,true}, from::Dims{D}, to::Dims{D}) where {D} =
-    min.(abs.(to .- from), pathfinder.grid_dims .- abs.(to .- from))
+    min.(abs.(to .- from), size(pathfinder.walkable) .- abs.(to .- from))
 
 position_delta(pathfinder::GridPathfinder{D,false}, from::Dims{D}, to::Dims{D}) where {D} =
     abs.(to .- from)

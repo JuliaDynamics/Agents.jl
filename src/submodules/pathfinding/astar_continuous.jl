@@ -1,3 +1,10 @@
+to_discrete_position(pos, pathfinder) =
+    floor.(Int, pos ./ pathfinder.dims .* size(pathfinder.walkable)) .+ 1
+to_continuous_position(pos, pathfinder) =
+    pos ./ size(pathfinder.walkable) .* pathfinder.dims .-
+    pathfinder.dims ./ size(pathfinder.walkable) ./ 2.
+sqr_distance(from, to, pathfinder) =
+    sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
 """
     find_continuous_path(pathfinder, from, to, model)
 Functions like `find_path``, but uses the output of `find_path` and converts it to the coordinate
@@ -8,25 +15,23 @@ function find_continuous_path(
     pathfinder::AStar{D},
     from::NTuple{D,Float64},
     to::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D}}
 ) where {D}
     # used to offset positions, so edge cases get handled properly (i.e. (0., 0.) maps to grid
     # cell (1, 1))
-    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
-    discrete_from = Tuple(Agents.get_spatial_index(from, pathfinder.walkable, model))
-    discrete_to = Tuple(Agents.get_spatial_index(to, pathfinder.walkable, model))
+    discrete_from = to_discrete_position(from, pathfinder)
+    discrete_to = to_discrete_position(to, pathfinder)
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
     isnothing(discrete_path) && return
     isempty(discrete_path) && return Path{D,Float64}()
     cts_path = Path{D,Float64}()
     for pos in discrete_path
-        push!(cts_path, pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size)
+        push!(cts_path, to_continuous_position(pos, pathfinder))
     end
     last_pos = last(cts_path)
     pop!(cts_path)
     second_last_pos = isempty(cts_path) ? from : last(cts_path)
-    last_to_end = edistance(last_pos, to, model)
-    second_last_to_end = edistance(second_last_pos, to, model)
+    last_to_end = sqr_distance(last_pos, to, pathfinder)
+    second_last_to_end = sqr_distance(second_last_pos, to, pathfinder)
     if last_to_end < second_last_to_end
         push!(cts_path, last_pos)
     end
@@ -46,10 +51,9 @@ Use this method in conjuction with [`move_along_route!`](@ref).
 function set_target!(
     agent::A,
     target::NTuple{D,Float64},
-    pathfinder::AStar{D},
-    model::ABM{<:ContinuousSpace{D},A},
-) where {D,A<:AbstractAgent}
-    path = find_continuous_path(pathfinder, agent.pos, target, model)
+    pathfinder::AStar{D,P,M,Float64},
+) where {A<:AbstractAgent,D,P,M}
+    path = find_continuous_path(pathfinder, agent.pos, target)
     isnothing(path) && return
     pathfinder.agent_paths[agent.id] = path
 end
@@ -70,8 +74,7 @@ Returns the position of the chosen target.
 function set_best_target!(
     agent::A,
     targets::Vector{NTuple{D,Float64}},
-    pathfinder::AStar{D},
-    model::ABM{<:ContinuousSpace{D}};
+    pathfinder::AStar{D};
     condition::Symbol = :shortest,
 ) where {D,A<:AbstractAgent}
     @assert condition ∈ (:shortest, :longest)
@@ -79,7 +82,7 @@ function set_best_target!(
     best_path = Path{D,Float64}()
     best_target = nothing
     for target in targets
-        path = find_continuous_path(pathfinder, agent.pos, target, model)
+        path = find_continuous_path(pathfinder, agent.pos, target)
         isnothing(path) && continue
         if isempty(best_path) || compare(length(path), length(best_path))
             best_path = path
@@ -149,14 +152,14 @@ function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D})
         model.rng,
         filter(x -> pathfinder.walkable[x], CartesianIndices(pathfinder.walkable))
     ))
-    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
-    return discrete_pos ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size .+
+    half_cell_size = model.space.extent ./ size(pathfinder.walkable) ./ 2.
+    return to_continuous_position(discrete_pos, pathfinder) .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
 end
 
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,false}) where {D} =
     Iterators.filter(
-        x -> all(1 .<= x .<= pathfinder.grid_dims) &&
+        x -> all(1 .<= x .<= size(pathfinder.walkable)) &&
             pathfinder.walkable[x...] &&
             sum(((x .- pos) ./ r) .^ 2) <= 1,
         Iterators.product([(pos[i]-r[i]):(pos[i]+r[i]) for i in 1:D]...)
@@ -164,9 +167,9 @@ walkable_cells_in_radius(pos, r, pathfinder::AStar{D,false}) where {D} =
 
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
     Iterators.map(
-        x -> mod1.(x, pathfinder.grid_dims),
+        x -> mod1.(x, size(pathfinder.walkable)),
             Iterators.filter(
-                x -> pathfinder.walkable[mod1.(x, pathfinder.grid_dims)...] && sum(((x .- pos) ./ r) .^ 2) <= 1,
+                x -> pathfinder.walkable[mod1.(x, size(pathfinder.walkable))...] && sum(((x .- pos) ./ r) .^ 2) <= 1,
                 Iterators.product([(pos[i]-r[i]):(pos[i]+r[i]) for i in 1:D]...)
             )
     )
@@ -181,14 +184,14 @@ function random_walkable(
     pathfinder::AStar{D},
     r = 1.0,
 ) where {D}
-    discrete_r = floor.(Int, r ./ model.space.extent .* pathfinder.grid_dims)
-    discrete_pos = Tuple(Agents.get_spatial_index(pos, pathfinder.walkable, model))
+    discrete_r = to_discrete_position(r, pathfinder) .- 1
+    discrete_pos = to_discrete_position(pos, pathfinder)
     discrete_rand = rand(
         model.rng,
         collect(walkable_cells_in_radius(discrete_pos, discrete_r, pathfinder))
     )
-    half_cell_size = model.space.extent ./ pathfinder.grid_dims ./ 2.
-    cts_rand = discrete_rand ./ pathfinder.grid_dims .* model.space.extent .- half_cell_size .+
+    half_cell_size = model.space.extent ./ size(pathfinder.walkable) ./ 2.
+    cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
     dist = edistance(pos, cts_rand, model)
     dist > r && (cts_rand = mod1.(

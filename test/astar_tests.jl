@@ -99,7 +99,7 @@
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test is_stationary(a, model.pf)
 
-        set_target!(a, (4., 4.), model.pf, model)
+        set_target!(a, (4., 4.), model.pf)
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
 
@@ -107,7 +107,7 @@
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
         # test waypoint skipping
         move_agent!(a, (0.25, 0.25), model)
-        set_target!(a, (0.75, 1.25), model.pf, model)
+        set_target!(a, (0.75, 1.25), model.pf)
         move_along_route!(a, model, model.pf, 0.807106)
         @test all(isapprox.(a.pos, (0.467156, 0.967156); atol))
         # make sure it doesn't overshoot the end
@@ -126,15 +126,15 @@
         pathfinder = AStar(pcspace, trues(10, 10))
         model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
-        @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf, model) .≈ (2.5, 2.5))
+        @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
         move_along_route!(a, model, model.pf, 1.0)
         @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
         model.pf.walkable[:, 3] .= 0
         move_agent!(a, (2.5, 2.5), model)
-        @test all(set_best_target!(a, [(3., 0.3), (2.5, 2.5)], model.pf, model) .≈ (2.5, 2.5))
-        @test isnothing(set_best_target!(a, [(3., 0.3), (1., 0.1)], model.pf, model))
+        @test all(set_best_target!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
+        @test isnothing(set_best_target!(a, [(3., 0.3), (1., 0.1)], model.pf))
 
         kill_agent!(a, model, model.pf)
         @test length(model.pf.agent_paths) == 0
@@ -212,33 +212,33 @@
         wlk[4, 3] = false
         wlk[5, 3] = false
 
-        pfinder_2d_np_m = AStar{2,false,true,Int64}(
+        pfinder_2d_np_m = AStar{2,false,true,Float64}(
             Dict(),
-            (7, 6),
+            (10., 10.),
             copy(moore),
             0.0,
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_np_nm = AStar{2,false,false,Int64}(
+        pfinder_2d_np_nm = AStar{2,false,false,Float64}(
             Dict(),
-            (7, 6),
+            (10., 10.),
             copy(vonneumann),
             0.0,
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_m = AStar{2,true,true,Int64}(
+        pfinder_2d_p_m = AStar{2,true,true,Float64}(
             Dict(),
-            (7, 6),
+            (10., 10.),
             copy(moore),
             0.0,
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_nm = AStar{2,true,false,Int64}(
+        pfinder_2d_p_nm = AStar{2,true,false,Float64}(
             Dict(),
-            (7, 6),
+            (10., 10.),
             copy(vonneumann),
             0.0,
             wlk,
@@ -257,12 +257,12 @@
 
         # Continuous
         model = ABM(Agent6, ContinuousSpace((10., 10.)))
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_m, (0.25, 0.25), (7.8, 9.5), model))
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_m, (0.25, 0.25), (7.8, 9.5)))
         testp = [(0.71429, 2.5), (0.71429, 4.16667), (0.71429, 5.83333), (0.71429, 7.5), (2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
 
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, (0.25, 0.25), (7.8, 9.5), model))
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, (0.25, 0.25), (7.8, 9.5)))
         testp = [(2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
