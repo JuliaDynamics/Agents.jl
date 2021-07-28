@@ -1,7 +1,7 @@
 """
-    Path{D}
-Alias of `MutableLinkedList{Dims{D}}`. Used to represent the path to be
-taken by an agent in a `D` dimensional [`GridSpace`](@ref).
+    Path{D,T}
+Alias of `MutableLinkedList{NTuple{D,T}}`. Used to represent the path to be
+taken by an agent in a `D` dimensional space.
 """
 const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 

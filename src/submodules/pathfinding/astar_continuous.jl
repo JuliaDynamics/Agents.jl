@@ -5,10 +5,11 @@ to_continuous_position(pos, pathfinder) =
     pathfinder.dims ./ size(pathfinder.walkable) ./ 2.
 sqr_distance(from, to, pathfinder) =
     sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
+
 """
-    find_continuous_path(pathfinder, from, to, model)
-Functions like `find_path``, but uses the output of `find_path` and converts it to the coordinate
-space used by `model.space` (which is continuous). Also performs checks on the last two waypoints
+    find_continuous_path(pathfinder, from, to)
+Functions like `find_path`, but uses the output of `find_path` and converts it to the coordinate
+space used by the corresponding `ContinuousSpace`. Performs checks on the last two waypoints
 in the discrete path to ensure continuous path is optimal.
 """
 function find_continuous_path(
@@ -16,8 +17,6 @@ function find_continuous_path(
     from::NTuple{D,Float64},
     to::NTuple{D,Float64},
 ) where {D}
-    # used to offset positions, so edge cases get handled properly (i.e. (0., 0.) maps to grid
-    # cell (1, 1))
     discrete_from = to_discrete_position(from, pathfinder)
     discrete_to = to_discrete_position(to, pathfinder)
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
@@ -39,15 +38,6 @@ function find_continuous_path(
     return cts_path
 end
 
-"""
-    Pathfinding.set_target!(agent, target::NTuple{D,Float64}, pathfinder::AStar{D}, model::ABM{<:ContinuousSpace{D}})
-Calculate and store the shortest path to move the agent from its current position to
-`target` (a continuous position e.g. `(1.2, 5.7)`) using the provided `pathfinder`.
-
-For pathfinding in models with [`ContinuousSpace`](@ref).
-
-Use this method in conjuction with [`move_along_route!`](@ref).
-"""
 function set_target!(
     agent::A,
     target::NTuple{D,Float64},
@@ -58,19 +48,6 @@ function set_target!(
     pathfinder.agent_paths[agent.id] = path
 end
 
-"""
-    Pathfinding.set_best_target!(agent, targets::Vector{NTuple{D,Float64}}, pathfinder::AStar{D}, model::ABM{<:ContinuousSpace{D}})
-Calculate and store the best path to move the agent from its current position to
-a chosen target position taken from `targets` for models using the provided `pathfinder`.
-
-For pathfinding in models with [`ContinuousSpace`](@ref).
-
-The `condition = :shortest` keyword retuns the path which is shortest
-(allowing for the conditions of the pathfinder) out of the possible target
-positions. Alternatively, the `:longest` path may also be requested.
-
-Returns the position of the chosen target.
-"""
 function set_best_target!(
     agent::A,
     targets::Vector{NTuple{D,Float64}},
@@ -175,7 +152,7 @@ walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
     )
 
 """
-    Pathfinding.random_walkable(pos, mode::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
+    Pathfinding.random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
 Return a random position within radius `r` of `pos` which is walkable, as specified by `pathfinder`.
 """
 function random_walkable(
