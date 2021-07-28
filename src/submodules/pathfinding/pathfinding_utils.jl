@@ -1,5 +1,5 @@
 """
-    position_delta(pathfinder::AStar{D}, from::NTuple{Int,D}, to::NTuple{Int,D})
+    Pathfinding.position_delta(pathfinder::AStar{D}, from::NTuple{Int,D}, to::NTuple{Int,D})
 Returns the absolute difference in coordinates between `from` and `to` taking into account
 periodicity of `pathfinder`.
 """
@@ -10,7 +10,7 @@ position_delta(pathfinder::GridPathfinder{D,false}, from::Dims{D}, to::Dims{D}) 
     abs.(to .- from)
 
 """
-    delta_cost(pathfinder::GridPathfinder{D}, metric::M, from, to) where {M<:CostMetric}
+    Pathfinding.delta_cost(pathfinder::GridPathfinder{D}, metric::M, from, to) where {M<:CostMetric}
 Calculate an approximation for the cost of travelling from `from` to `to` (both of
 type `NTuple{N,Int}`. Expects a return value of `Float64`.
 """

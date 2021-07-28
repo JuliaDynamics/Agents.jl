@@ -89,7 +89,7 @@ function set_best_target!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, speed, dt = 1.0)
+    Pathfinding.move_along_route!(agent, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, speed, dt = 1.0)
 Move `agent` for one step along the route toward its target set by
 [`Pathfinding.set_target!`](@ref) at the given `speed` and timestep `dt`.
 
@@ -168,7 +168,7 @@ walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
     )
 
 """
-    random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
+    Pathfinding.random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
 Return a random position within radius `r` of `pos` which is walkable, as specified by `pathfinder`.
 """
 function random_walkable(

@@ -1,5 +1,5 @@
 """
-    set_target!(agent, target, pathfinder::AStar{D})
+    Pathfinding.set_target!(agent, target, pathfinder::AStar{D})
 Calculate and store the shortest path to move the agent from its current position to
 `target` (a position e.g. `(1, 5)` or `(1.3, 5.2)`) using the provided `pathfinder`.
 
@@ -16,7 +16,7 @@ function set_target!(
 end
 
 """
-    set_best_target!(agent, targets, pathfinder::AStar{D}; kwargs...)
+    Pathfinding.set_best_target!(agent, targets, pathfinder::AStar{D}; kwargs...)
 Calculate, store, and return the best path to move the agent from its current position to
 a chosen target position taken from `targets` using `pathfinder`.
 
@@ -51,7 +51,7 @@ function set_best_target!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D})
+    Pathfinding.move_along_route!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D})
 Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
 
 For pathfinding in models with [`GridSpace`](@ref).
@@ -70,7 +70,7 @@ function Agents.move_along_route!(
 end
 
 """
-    nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1)
+    Pathfinding.nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 1)
 Return an iterator over all [`nearby_positions`](@ref) within "radius" `r` of the given
 `position` (excluding `position`), which are walkable as specified by the given `pathfinder`.
 """
@@ -79,7 +79,7 @@ nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 
 
 
 """
-    random_walkable(model, pathfinder::AStar{D})
+    Pathfinding.random_walkable(model, pathfinder::AStar{D})
 Return a random position in the given `model` that is walkable as specified by the given
 `pathfinder`.
 """
