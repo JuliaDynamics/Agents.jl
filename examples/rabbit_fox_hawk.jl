@@ -231,12 +231,8 @@ function rabbit_step!(rabbit, model)
             ## Normalize the resultant direction, and get the ideal position to move it
             direction = direction ./ norm(direction)
             ideal_position = rabbit.pos .+ direction
-            ideal_position = random_walkable(ideal_position, model, model.landfinder)
-            #if any(ideal_position .< 0) ||
-            #    any(ideal_position .>= size(model.space)) ||
-            #    get_spatial_property(ideal_position, model.landfinder.walkable, model) == 0
 
-            #end
+            ideal_position = random_walkable(ideal_position, model, model.landfinder)
 
             set_target!(rabbit, ideal_position, model.landfinder)
         end
