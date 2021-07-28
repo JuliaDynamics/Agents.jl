@@ -168,7 +168,7 @@ walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
     )
 
 """
-    Pathfinding.random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
+    random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
 Return a random position within radius `r` of `pos` which is walkable, as specified by `pathfinder`.
 """
 function random_walkable(

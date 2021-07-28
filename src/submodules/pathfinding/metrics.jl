@@ -1,5 +1,5 @@
 """
-    Pathfinding.CostMetric{D}
+    CostMetric{D}
 An abstract type representing a metric that measures the approximate cost of travelling
 between two points in a `D` dimensional grid.
 """
@@ -10,7 +10,7 @@ struct DirectDistance{D} <: CostMetric{D}
 end
 
 """
-    Pathfinding.DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
+    DirectDistance{D}([direction_costs::Vector{Int}]) <: CostMetric{D}
 Distance is approximated as the shortest path between the two points, provided the
 `walkable` property of [`Pathfinding.AStar`](@ref) allows.
 Optionally provide a `Vector{Int}` that represents the cost of going from a tile to the
@@ -25,7 +25,7 @@ Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
 
 """
-    Pathfinding.MaxDistance{D}() <: CostMetric{D}
+    MaxDistance{D}() <: CostMetric{D}
 Distance between two tiles is approximated as the maximum of absolute
 difference in coordinates between them.
 """
@@ -39,7 +39,7 @@ struct PenaltyMap{D} <: CostMetric{D}
 end
 
 """
-    Pathfinding.PenaltyMap(pmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
+    PenaltyMap(pmap::Array{Int,D} [, base_metric::CostMetric]) <: CostMetric{D}
 Distance between two positions is the sum of the shortest distance between them and the
 absolute difference in penalty.
 

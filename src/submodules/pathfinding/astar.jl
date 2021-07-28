@@ -38,9 +38,9 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
 end
 
 """
-    Pathfinding.AStar(space::GridSpace{D}; kwargs...)
-    Pathfinding.AStar(space::ContinuousSpace{D}, walkmap::BitArray{D}; kwargs...)
-    Pathfinding.AStar(space::ContinuousSpace{D}, cost_metric::PenaltyMap{D}; kwargs...)
+    AStar(space::GridSpace{D}; kwargs...)
+    AStar(space::ContinuousSpace{D}, walkmap::BitArray{D}; kwargs...)
+    AStar(space::ContinuousSpace{D}, cost_metric::PenaltyMap{D}; kwargs...)
 Enables pathfinding for agents in the provided `space` (which can be a [`GridSpace`](@ref) or
 [`ContinuousSpace`](@ref)) using the A* algorithm. This struct must be passed into any
 pathfinding functions.
@@ -206,7 +206,7 @@ Agents.is_stationary(
 ) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
 
 """
-    Pathfinding.penaltymap(pathfinder)
+    penaltymap(pathfinder)
 Return the penalty map of a [`Pathfinding.AStar`](@ref) if the
 [`Pathfinding.PenaltyMap`](@ref) metric is in use, `nothing` otherwise.
 

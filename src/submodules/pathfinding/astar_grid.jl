@@ -1,5 +1,5 @@
 """
-    Pathfinding.set_target!(agent, target, pathfinder::AStar{D})
+    set_target!(agent, target, pathfinder::AStar{D})
 Calculate and store the shortest path to move the agent from its current position to
 `target` (a position e.g. `(1, 5)` or `(1.3, 5.2)`) using the provided `pathfinder`.
 
@@ -16,7 +16,7 @@ function set_target!(
 end
 
 """
-    Pathfinding.set_best_target!(agent, targets, pathfinder::AStar{D}; kwargs...)
+    set_best_target!(agent, targets, pathfinder::AStar{D}; kwargs...)
 Calculate, store, and return the best path to move the agent from its current position to
 a chosen target position taken from `targets` using `pathfinder`.
 
