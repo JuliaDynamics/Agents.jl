@@ -111,9 +111,18 @@ function Agents.move_along_route!(
         next_waypoint = first(pathfinder.agent_paths[agent.id])
         dir = get_direction(from, next_waypoint, model)
         dist_to_target = norm(dir)
+        # edge case
+        if dist_to_target ≈ 0.
+            from = next_waypoint
+            popfirst!(pathfinder.agent_paths[agent.id])
+            if isempty(agent.id, pathfinder)
+                next_pos = next_waypoint
+                break
+            end
+            continue
+        end
         dir = dir ./ dist_to_target
         next_pos = from .+ dir .* (speed * dt)
-
         # overshooting means we reached the waypoint
         dist_to_next = edistance(from, next_pos, model)
         if dist_to_next > dist_to_target
@@ -170,6 +179,7 @@ walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
 """
     Pathfinding.random_walkable(pos, model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}, r = 1.0)
 Return a random position within radius `r` of `pos` which is walkable, as specified by `pathfinder`.
+Return `pos` if no such position exists.
 """
 function random_walkable(
     pos,
@@ -179,9 +189,11 @@ function random_walkable(
 ) where {D}
     discrete_r = to_discrete_position(r, pathfinder) .- 1
     discrete_pos = to_discrete_position(pos, pathfinder)
+    options = collect(walkable_cells_in_radius(discrete_pos, discrete_r, pathfinder))
+    isempty(options) && return pos
     discrete_rand = rand(
         model.rng,
-        collect(walkable_cells_in_radius(discrete_pos, discrete_r, pathfinder))
+        options
     )
     half_cell_size = model.space.extent ./ size(pathfinder.walkable) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
