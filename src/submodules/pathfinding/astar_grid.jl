@@ -28,10 +28,10 @@ reachable.
 """
 function set_best_target!(
     agent::A,
-    targets::Vector{Dims{D}},
-    pathfinder::AStar{D};
+    targets,
+    pathfinder::AStar{D,P,M,Int64};
     condition::Symbol = :shortest,
-) where {D,A<:AbstractAgent}
+) where {A<:AbstractAgent,D,P,M}
     @assert condition ∈ (:shortest, :longest)
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
     best_path = Path{D,Int64}()

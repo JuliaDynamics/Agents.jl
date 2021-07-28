@@ -3,8 +3,10 @@ to_discrete_position(pos, pathfinder) =
 to_continuous_position(pos, pathfinder) =
     pos ./ size(pathfinder.walkable) .* pathfinder.dims .-
     pathfinder.dims ./ size(pathfinder.walkable) ./ 2.
-sqr_distance(from, to, pathfinder) =
+sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} =
     sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
+sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
+    sum((from .- to) .^ 2)
 
 """
     find_continuous_path(pathfinder, from, to)
@@ -20,20 +22,34 @@ function find_continuous_path(
     discrete_from = to_discrete_position(from, pathfinder)
     discrete_to = to_discrete_position(to, pathfinder)
     discrete_path = find_path(pathfinder, discrete_from, discrete_to)
+    # find_path returns nothing if no path exists
     isnothing(discrete_path) && return
-    isempty(discrete_path) && return Path{D,Float64}()
+    # if discrete_path is empty, `from` and `to` are in the same grid cell,
+    # so `to` is the only waypoint
+    isempty(discrete_path) && return Path{D,Float64}(to)
+
     cts_path = Path{D,Float64}()
     for pos in discrete_path
         push!(cts_path, to_continuous_position(pos, pathfinder))
     end
+
+    # Handles an edge case to prevent backtracking for a fraction of a grid cell
+    # Consider case where each grid cell is (1., 1.), and the path is to be calculated from
+    # (0.5, 0.5) to (0.5, 1.2). Without this, the resultant path would look like
+    # [(0.5, 0.5), (0.5, 1.5), (0.5, 1.2)], causing the agent to go to the last waypoint and
+    # then backtrack to the target
     last_pos = last(cts_path)
     pop!(cts_path)
+    # It's possible there's only one waypoint in the path, in which case the second last
+    # position is the starting position
     second_last_pos = isempty(cts_path) ? from : last(cts_path)
     last_to_end = sqr_distance(last_pos, to, pathfinder)
     second_last_to_end = sqr_distance(second_last_pos, to, pathfinder)
     if last_to_end < second_last_to_end
         push!(cts_path, last_pos)
     end
+    # If `to` is already at the center of a grid cell, there's no need
+    # to push it to the path
     last_to_end ≈ 0. || push!(cts_path, to)
     return cts_path
 end
@@ -50,10 +66,10 @@ end
 
 function set_best_target!(
     agent::A,
-    targets::Vector{NTuple{D,Float64}},
-    pathfinder::AStar{D};
+    targets,
+    pathfinder::AStar{D,P,M,Float64};
     condition::Symbol = :shortest,
-) where {D,A<:AbstractAgent}
+) where {A<:AbstractAgent,D,P,M}
     @assert condition ∈ (:shortest, :longest)
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
     best_path = Path{D,Float64}()
@@ -94,9 +110,9 @@ function Agents.move_along_route!(
     while true
         next_waypoint = first(pathfinder.agent_paths[agent.id])
         dir = get_direction(from, next_waypoint, model)
-        dist_to_target = √sum(dir .^ 2)
+        dist_to_target = norm(dir)
         dir = dir ./ dist_to_target
-        next_pos = from .+ dir .* speed .* dt
+        next_pos = from .+ dir .* (speed * dt)
 
         # overshooting means we reached the waypoint
         dist_to_next = edistance(from, next_pos, model)

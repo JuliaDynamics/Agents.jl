@@ -62,7 +62,7 @@ to specify the level of discretisation of the space.
   metric used to approximate the distance between any two points. See [`CostMetric`](@ref).
   An example usage can be found in [Mountain Runners](@ref).
 """
-function AStar{T}(
+function AStar(
     dims::NTuple{D,T};
     periodic::Bool = false,
     diagonal_movement::Bool = true,
@@ -88,7 +88,7 @@ AStar(
     walkable::BitArray{D} = trues(size(space.s)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Int64}(size(space); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar(size(space); periodic, diagonal_movement, admissibility, walkable, cost_metric)
 
 AStar(
     space::ContinuousSpace{D,periodic},
@@ -96,7 +96,7 @@ AStar(
     admissibility::Float64 = 0.0,
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Float64}(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 AStar(
     space::ContinuousSpace{D,periodic},
@@ -104,7 +104,7 @@ AStar(
     walkable::BitArray{D} = trues(size(cost_metric.pmap)),
     admissibility::Float64 = 0.0,
 ) where {D,periodic} =
-    AStar{Float64}(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 
 moore_neighborhood(D) = [
