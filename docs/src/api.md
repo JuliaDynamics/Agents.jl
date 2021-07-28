@@ -278,7 +278,7 @@ Pathfinding.nearby_walkable
 Pathfinding.random_walkable
 ```
 
-### Metrics
+### Pathfinding Metrics
 ```@docs
 Pathfinding.DirectDistance
 Pathfinding.MaxDistance
