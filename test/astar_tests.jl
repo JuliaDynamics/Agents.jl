@@ -41,10 +41,12 @@
         @test_throws TypeError AStar(gspace; cost_metric = PenaltyMap(pmap))
 
         # ContinuousSpace
-        @test_throws ArgumentError AStar(cspace, (-10, -10))
-        @test_throws AssertionError AStar(cspace, (0, 0))
-        @test_throws AssertionError AStar(cspace, (-10, -10); walkable = BitArray(trues((10, 10))))
-        astar = AStar(cspace, (20, 20))
+        @test_throws AssertionError AStar(cspace, trues((10, 10)); cost_metric = PenaltyMap(fill(1, 5, 5)))
+        @test_throws AssertionError AStar(cspace, PenaltyMap(fill(1, 5, 5)); walkable = trues((10, 10)))
+
+        astar = AStar(cspace, trues(10, 10))
+        @test astar isa AStar{2,true,true,Float64}
+        astar = AStar(cspace, PenaltyMap(fill(1, 5, 5)))
         @test astar isa AStar{2,true,true,Float64}
     end
 
@@ -92,7 +94,7 @@
         @test isnothing(set_best_target!(a, [(5, 3), (4, 1)], model.pf))
 
         # ContinuousSpace
-        pathfinder = AStar(cspace, (10, 10))
+        pathfinder = AStar(cspace, trues(10, 10))
         model = ABM(Agent6, cspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test is_stationary(a, model.pf)
@@ -121,7 +123,7 @@
         @test all(get_spatial_property(x, model.pf.walkable, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
 
         pcspace = ContinuousSpace((5., 5.); periodic = false)
-        pathfinder = AStar(pcspace, (10, 10))
+        pathfinder = AStar(pcspace, trues(10, 10))
         model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf, model) .≈ (2.5, 2.5))
@@ -139,7 +141,7 @@
 
         @test isnothing(penaltymap(model.pf))
         pmap = fill(1, 10, 10)
-        pathfinder = AStar(cspace, (10, 10); cost_metric = PenaltyMap(pmap))
+        pathfinder = AStar(cspace, PenaltyMap(pmap))
         @test penaltymap(pathfinder) == pmap
 
         @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkable, model) for _ in 1:10)

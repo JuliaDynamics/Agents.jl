@@ -236,13 +236,12 @@
         direct = Pathfinding.DirectDistance{2}([0, 10])
         maxd = Pathfinding.MaxDistance{2}()
         hmm = Pathfinding.PenaltyMap(pmap)
+        space = ContinuousSpace((10., 10.); periodic = false)
 
-        function setup_model(; kwargs...)
-            space = ContinuousSpace((10., 10.); periodic = false)
-            pathfinder = Pathfinding.AStar(space, (10, 10); kwargs...)
+        function setup_model(pathfinder)
             model = ABM(
                 Agent6,
-                space;
+                deepcopy(space);
                 properties = (pathfinder = pathfinder, ),
                 rng = MersenneTwister(42)
             )
@@ -255,15 +254,15 @@
             return model, other
         end
 
-        test_pathfinding_model(setup_model()...)
-        test_pathfinding_model(setup_model(; admissibility = 0.5)...)
-        test_pathfinding_model(setup_model(; walkable = walk)...)
-        test_pathfinding_model(setup_model(; cost_metric = direct)...)
-        test_pathfinding_model(setup_model(; cost_metric = maxd)...)
-        test_pathfinding_model(setup_model(; cost_metric = hmm)...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, direct))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, maxd))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, hmm))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, trues(10, 10)))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, trues(10, 10); admissibility = 0.5))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, walk))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, trues(10, 10); cost_metric = direct))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, trues(10, 10); cost_metric = maxd))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, trues(10, 10); cost_metric = hmm))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, Pathfinding.PenaltyMap(pmap, direct)))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, Pathfinding.PenaltyMap(pmap, maxd)))...)
+        test_pathfinding_model(setup_model(Pathfinding.AStar(space, Pathfinding.PenaltyMap(pmap, hmm)))...)
 
         rm("test.jld2")
     end

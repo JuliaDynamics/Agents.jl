@@ -38,14 +38,19 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
 end
 
 """
-    AStar(space; kwargs...)
+    Pathfinding.AStar(space::GridSpace{D}; kwargs...)
+    Pathfinding.AStar(space::ContinuousSpace{D}, walkmap::BitArray{D}; kwargs...)
+    Pathfinding.AStar(space::ContinuousSpace{D}, cost_metric::PenaltyMap{D}; kwargs...)
 Enables pathfinding for agents in the provided `space` (which can be a [`GridSpace`](@ref) or
 [`ContinuousSpace`](@ref)) using the A* algorithm. This struct must be passed into any
 pathfinding functions.
 
+For [`ContinuousSpace`](@ref), a walkmap or instance of [`PenaltyMap`](@ref) must be provided
+to specify the level of discretisation of the space.
+
 ## Keywords
 - `diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
-  tile, or only orthogonal neighbors.
+  tile, or only orthogonal neighbors. Only available for [`GridSpace`](@ref)
 - `admissibility = 0.0` allows the algorithm to aprroximate paths to speed up pathfinding.
   A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
   length.
@@ -87,12 +92,19 @@ AStar(
 
 AStar(
     space::ContinuousSpace{D,periodic},
-    granularity::Dims{D};
+    walkable::BitArray{D};
     admissibility::Float64 = 0.0,
-    walkable::BitArray{D} = trues(granularity),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar{Float64}(granularity; periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+    AStar{Float64}(size(walkable); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+
+AStar(
+    space::ContinuousSpace{D,periodic},
+    cost_metric::PenaltyMap{D};
+    walkable::BitArray{D} = trues(size(cost_metric.pmap)),
+    admissibility::Float64 = 0.0,
+) where {D,periodic} =
+    AStar{Float64}(size(cost_metric.pmap); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
 
 
 moore_neighborhood(D) = [
