@@ -52,6 +52,7 @@ random_position
 ```@docs
 move_agent!
 walk!
+get_direction
 ```
 
 
@@ -88,6 +89,7 @@ isempty(::Integer, ::ABM)
 ## Continuous space exclusives
 ```@docs
 get_spatial_property
+get_spatial_index
 interacting_pairs
 nearest_neighbor
 elastic_collision!
@@ -269,18 +271,19 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 ## Path-finding
 ```@docs
 Pathfinding
-Pathfinding.Pathfinder
+Pathfinding.AStar
 Pathfinding.set_target!
 Pathfinding.set_best_target!
-Pathfinding.walkmap
-Pathfinding.heightmap
+Pathfinding.penaltymap
+Pathfinding.nearby_walkable
+Pathfinding.random_walkable
 ```
 
-### Metrics
+### Pathfinding Metrics
 ```@docs
 Pathfinding.DirectDistance
 Pathfinding.MaxDistance
-Pathfinding.HeightMap
+Pathfinding.PenaltyMap
 ```
 
 Building a custom metric is straightforward, if the provided ones do not suit your purpose.

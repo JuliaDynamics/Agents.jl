@@ -94,6 +94,7 @@ makedocs(
             "Predator-Prey" => "examples/predator_prey_fast.md",
             "Maze Solver" => "examples/maze.md",
             "Mountain Runners" => "examples/runners.md",
+            "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",

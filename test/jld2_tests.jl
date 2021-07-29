@@ -6,11 +6,19 @@
         @test model.maxid.x == other.maxid.x
     end
 
-    function test_grid_space(space, other)
+    function test_space(space::GridSpace, other)
         @test size(space.s) == size(other.s)
         @test all(length(other.s[pos]) == length(space.s[pos]) for pos in eachindex(space.s))
         @test all(all(x in other.s[pos] for x in space.s[pos]) for pos in eachindex(space.s))
         @test space.metric == other.metric
+    end
+
+    function test_space(space::ContinuousSpace, other)
+        test_space(space.grid, other.grid)
+        @test space.update_vel! == other.update_vel!
+        @test space.dims == other.dims
+        @test space.spacing == other.spacing
+        @test space.extent == other.extent
     end
 
     test_costmetric(metric, other) = @test false
@@ -25,10 +33,10 @@
     ) where {D} = @test true
 
     function test_costmetric(
-        metric::Pathfinding.HeightMap{D},
-        other::Pathfinding.HeightMap{D}
+        metric::Pathfinding.PenaltyMap{D},
+        other::Pathfinding.PenaltyMap{D}
     ) where {D}
-        @test metric.hmap == other.hmap
+        @test metric.pmap == other.pmap
         test_costmetric(metric.base_metric, other.base_metric)
     end
 
@@ -36,10 +44,10 @@
     function test_astar(astar, other)
         @test typeof(astar) == typeof(other)
         @test astar.agent_paths == other.agent_paths
-        @test astar.grid_dims == other.grid_dims
+        @test astar.dims == other.dims
         @test astar.neighborhood == other.neighborhood
         @test astar.admissibility == other.admissibility
-        @test astar.walkable == other.walkable
+        @test astar.walkmap == other.walkmap
         test_costmetric(astar.cost_metric, other.cost_metric)
     end
 
@@ -52,9 +60,9 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
         # pathfinder data
-        test_astar(model.space.pathfinder, other.space.pathfinder)
+        test_astar(model.pathfinder, other.pathfinder)
     end
 
     @testset "No space" begin
@@ -98,7 +106,7 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end
@@ -129,11 +137,7 @@
         test_model_data(model, other)
         # space data
         @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_grid_space(model.space.grid, other.space.grid)
-        @test model.space.update_vel! == other.space.update_vel!
-        @test model.space.dims == other.space.dims
-        @test model.space.spacing == other.space.spacing
-        @test model.space.extent == other.space.extent
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end
@@ -181,20 +185,27 @@
         rm("test.jld2")
     end
 
-    @testset "Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m)
+    @testset "Grid Pathfinder" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
-        hmap = abs.(rand(Int, 10, 10)) .% 10
+        pmap = abs.(rand(Int, 10, 10)) .% 10
         direct = Pathfinding.DirectDistance{2}([0, 10])
         maxd = Pathfinding.MaxDistance{2}()
-        hmm = Pathfinding.HeightMap(hmap)
+        hmm = Pathfinding.PenaltyMap(pmap)
 
         function setup_model(; kwargs...)
-            model = ABM(Agent1, GridSpace((10, 10); periodic = false, pathfinder = Pathfinding.Pathfinder(; kwargs...)), rng = MersenneTwister(42))
+            space = GridSpace((10, 10); periodic = false)
+            pathfinder = Pathfinding.AStar(space; kwargs...)
+            model = ABM(
+                Agent1,
+                space;
+                properties = (pathfinder = pathfinder, ),
+                rng = MersenneTwister(42)
+            )
             add_agent!((1, 1), model)
-            Pathfinding.set_target!(model[1], (10, 10), model)
+            Pathfinding.set_target!(model[1], (10, 10), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -205,17 +216,58 @@
         test_pathfinding_model(setup_model()...)
         test_pathfinding_model(setup_model(; diagonal_movement = true)...)
         test_pathfinding_model(setup_model(; admissibility = 0.5)...)
-        test_pathfinding_model(setup_model(; walkable = walk)...)
+        test_pathfinding_model(setup_model(; walkmap = walk)...)
         test_pathfinding_model(setup_model(; cost_metric = direct)...)
         test_pathfinding_model(setup_model(; cost_metric = maxd)...)
         test_pathfinding_model(setup_model(; cost_metric = hmm)...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, direct))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, maxd))...)
-        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.HeightMap(hmap, hmm))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, direct))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, maxd))...)
+        test_pathfinding_model(setup_model(; cost_metric = Pathfinding.PenaltyMap(pmap, hmm))...)
 
         rm("test.jld2")
     end
 
+    @testset "Continuous Pathfinder" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+        walk = BitArray(fill(true, 10, 10))
+        walk[2, 2] = false
+        walk[9, 9] = false
+        pmap = abs.(rand(Int, 10, 10)) .% 10
+        direct = Pathfinding.DirectDistance{2}([0, 10])
+        maxd = Pathfinding.MaxDistance{2}()
+        hmm = Pathfinding.PenaltyMap(pmap)
+
+        function setup_model(; kwargs...)
+            space = ContinuousSpace((10., 10.); periodic = false)
+            pathfinder = Pathfinding.AStar(space; kwargs...)
+            model = ABM(
+                Agent6,
+                deepcopy(space);
+                properties = (pathfinder = pathfinder, ),
+                rng = MersenneTwister(42)
+            )
+            add_agent!((1.3, 1.5), model, (0., 0.), 0.)
+            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder)
+            step!(model, astep!, dummystep)
+
+            AgentsIO.save_checkpoint("test.jld2", model)
+            other = AgentsIO.load_checkpoint("test.jld2")
+            return model, other
+        end
+
+        test_pathfinding_model(setup_model(walkmap = trues(10, 10))...)
+        test_pathfinding_model(setup_model(walkmap = trues(10, 10), admissibility = 0.5)...)
+        test_pathfinding_model(setup_model(walkmap = walk)...)
+        test_pathfinding_model(setup_model(walkmap = trues(10, 10), cost_metric = direct)...)
+        test_pathfinding_model(setup_model(walkmap = trues(10, 10), cost_metric = maxd)...)
+        test_pathfinding_model(setup_model(walkmap = trues(10, 10), cost_metric = hmm)...)
+        test_pathfinding_model(setup_model(cost_metric = Pathfinding.PenaltyMap(pmap, direct))...)
+        test_pathfinding_model(setup_model(cost_metric = Pathfinding.PenaltyMap(pmap, maxd))...)
+        test_pathfinding_model(setup_model(cost_metric = Pathfinding.PenaltyMap(pmap, hmm))...)
+
+        rm("test.jld2")
+    end
+    
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -239,7 +291,7 @@
         # model data
         test_model_data(model, other)
         # space data
-        test_grid_space(model.space, other.space)
+        test_space(model.space, other.space)
 
         rm("test.jld2")
     end
