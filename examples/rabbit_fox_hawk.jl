@@ -54,24 +54,24 @@ norm(vec) = √sum(vec .^ 2)
 
 function initialize_model(
     heightmap_url,
-    water_level = 10,
+    water_level = 8,
     grass_level = 20,
     mountain_level = 35;
     n_rabbits = 160,  ## initial number of rabbits
     n_foxes = 30,  ## initial number of foxes
     n_hawks = 30,  ## initial number of hawks
     Δe_grass = 25,  ## energy gained from eating grass
-    Δe_rabbit = 40,  ## energy gained from eating one rabbit
+    Δe_rabbit = 30,  ## energy gained from eating one rabbit
     rabbit_repr = 0.06,  ## probability for a rabbit to (asexually) reproduce at any step
     fox_repr = 0.03,  ## probability for a fox to (asexually) reproduce at any step
     hawk_repr = 0.02, ## probability for a hawk to (asexually) reproduce at any step
     rabbit_vision = 6,  ## how far rabbits can see grass and spot predators
-    fox_vision = 12,  ## how far foxes can see rabbits to hunt
-    hawk_vision = 24,  ## how far hawks can see rabbits to hunt
+    fox_vision = 10,  ## how far foxes can see rabbits to hunt
+    hawk_vision = 15,  ## how far hawks can see rabbits to hunt
     rabbit_speed = 1.3, ## movement speed of rabbits
-    fox_speed = 1.4,  ## movement speed of foxes
-    hawk_speed = 1.5, ## movement speed of hawks
-    regrowth_chance = 0.01,  ## probability that a patch of grass regrows at any step
+    fox_speed = 1.1,  ## movement speed of foxes
+    hawk_speed = 1.2, ## movement speed of hawks
+    regrowth_chance = 0.03,  ## probability that a patch of grass regrows at any step
     dt = 0.1,   ## discrete timestep each iteration of the model
     seed = 42,  ## seed for random number generator
 )
@@ -79,13 +79,8 @@ function initialize_model(
     ## Download and load the heightmap. The grayscale value is converted to `Float64` and
     ## scaled from 1 to 40
     heightmap = floor.(Int, convert.(Float64, load(download(heightmap_url))) * 39) .+ 1
-    ## The dimensions of the pathfinder is that of the heightmap
-    dims = (size(heightmap)..., 40)
-    ## Generate the RNG for the model
-    rng = MersenneTwister(seed)
-
-    space = ContinuousSpace((100., 100., 40.); periodic = false)
-
+    ## The x and y dimensions of the pathfinder are that of the heightmap
+    dims = (size(heightmap)..., 100)
     ## The region of the map that is accessible to each type of animal (land-based or flying)
     ## is defined using `BitArrays`
     land_walkmap = BitArray(falses(dims...))
@@ -100,6 +95,14 @@ function initialize_model(
             air_walkmap[i, j, (heightmap[i, j]+1):mountain_level] .= true
         end
     end
+
+    ## Generate the RNG for the model
+    rng = MersenneTwister(seed)
+
+    # Note that the dimensions of the space do not have to correspond to the dimensions
+    # of the pathfinder. Discretisation is handled by the pathfinding methods
+    space = ContinuousSpace((100., 100., 100.); periodic = false)
+
     ## Generate an array of random numbers, and threshold it by the probability of grass growing
     ## at that location. Although this causes grass to grow below `water_level`, it is
     ## effectively ignored by `land_walkmap`
@@ -132,15 +135,13 @@ function initialize_model(
 
     model = ABM(Animal, space; rng, properties)
 
-    ## Get a list of the valid places for rabbits and foxes to spawn
-    valid_positions = filter(x -> land_walkmap[x], CartesianIndices(land_walkmap))
-    ## Factor to convert walkmap index to position in space
-    conversion_factor = size(space) ./ dims
+    # spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
         add_agent_pos!(
             Rabbit(
-                nextid(model),
-                Tuple(rand(model.rng, valid_positions)) .* conversion_factor .- conversion_factor ./ 2.,
+                nextid(model), # Using `nextid` prevents us from having to manually keep track
+                               # of animal IDs
+                random_walkable(model, model.landfinder),
                 rand(model.rng, Δe_grass:2Δe_grass),
             ),
             model,
@@ -150,35 +151,33 @@ function initialize_model(
         add_agent_pos!(
             Fox(
                 nextid(model),
-                Tuple(rand(model.rng, valid_positions)) .* conversion_factor .- conversion_factor ./ 2.,
+                random_walkable(model, model.landfinder),
                 rand(model.rng, Δe_rabbit:2Δe_rabbit),
             ),
             model,
         )
     end
-
-    ## Get a list of valid places for hawks to spawn
-    valid_positions =
-        filter(x -> air_walkmap[x] && heightmap[x[1], x[2]] > water_level, CartesianIndices(air_walkmap))
     for _ in 1:n_hawks
         add_agent_pos!(
             Hawk(
                 nextid(model),
-                Tuple(rand(model.rng, valid_positions)) .* conversion_factor .- conversion_factor ./ 2.,
+                random_walkable(model, model.airfinder),
                 rand(model.rng, Δe_rabbit:2Δe_rabbit),
             ),
             model,
         )
     end
 
-    model
+    return model
 end
 
+# We create a utility function that takes the 3D position of an agent, and returns the
+# corresponding 2D position on the heightmap
 to_heightmap_index(pos, model) =
     floor.(Int, pos[1:2] ./ size(model.space)[1:2] .* size(model.heightmap)) .+ 1
 
 # The `animal_step!` function dispatches to the proper function depending on the type of agent.
-# The stepping functions for each type of agent are similar: They lose one energy per step, and
+# The stepping functions for each type of agent are similar: They lose energy per step, and
 # die if their energy ever reaches 0. They also have a random probability to reproduce at an
 # iteration. Agents all move towards their food. In the case of rabbits, they also move away
 # from any nearby predators.
@@ -196,7 +195,7 @@ end
 # Rabbits eat grass at their position, if it exists. If they see a predator, they run away.
 # The direction in which they flee is dependent on all predators in their vision, with closer
 # ones contributing more to the chosen direction. If there are no predators to flee from,
-# rabbits walk to a random patch of grass within their vision.
+# rabbits walk around randomly.
 
 function rabbit_step!(rabbit, model)
     ## Eat grass at this position, if any
@@ -205,8 +204,10 @@ function rabbit_step!(rabbit, model)
         rabbit.energy += model.Δe_grass
     end
 
-    ## Energy cost per step scales with timestep. All animals die if their energy reaches 0
+    ## The energy cost at each step corresponds to the amount of time that has passed
+    ## since the last step
     rabbit.energy -= model.dt
+    ## All animals die if their energy reaches 0
     if rabbit.energy <= 0
         kill_agent!(rabbit, model, model.landfinder)
         return
@@ -216,32 +217,40 @@ function rabbit_step!(rabbit, model)
     predators = [
         x.pos for x in nearby_agents(rabbit, model, model.rabbit_vision) if
             x.type == :fox || x.type == :hawk
-    ]
+            ]
+    ## If the rabbit sees a predator and isn't already moving somewhere
     if !isempty(predators) && is_stationary(rabbit, model.landfinder)
-        ## If there are predators to run from
+        ## Try and get an ideal direction away from predators
         direction = (0., 0., 0.)
         for predator in predators
             ## Get the direction away from the predator
             away_direction = (rabbit.pos .- predator)
+            ## In case there is already a predator at our location, moving anywhere is
+            ## moving away from it, so it doesn't contribute to `direction`
             all(away_direction .≈ 0.) && continue
-            ## Add this to the overall direction, scaling inversely with distance
+            ## Add this to the overall direction, scaling inversely with distance.
+            ## As a result, closer predators contribute more to the direction to move in
             direction = direction .+ away_direction ./ norm(away_direction) ^ 2
         end
-        if !all(direction .≈ 0.)
+        ## If the only predator is right on top of the rabbit
+        if all(direction .≈ 0.)
+            ## Move anywhere
+            chosen_position = random_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision)
+        else
             ## Normalize the resultant direction, and get the ideal position to move it
             direction = direction ./ norm(direction)
-            ideal_position = rabbit.pos .+ direction
-
-            ideal_position = random_walkable(ideal_position, model, model.landfinder)
-
-            set_target!(rabbit, ideal_position, model.landfinder)
+            ## Move to a random position in the general direction of away from predators
+            position = rabbit.pos .+ direction .* (model.rabbit_vision / 2.)
+            chosen_position = random_walkable(position, model, model.landfinder, model.rabbit_vision / 2.)
         end
+        set_target!(rabbit, chosen_position, model.landfinder)
     end
 
-    ## Reproduce with a random probability
+    ## Reproduce with a random probability, scaling according to the time passed each
+    ## step
     rand(model.rng) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
 
-    ## If the rabbit isn't already moving somewhere
+    ## If the rabbit isn't already moving somewhere, move to a random spot
     if is_stationary(rabbit, model.landfinder)
         set_target!(
             rabbit,
@@ -250,6 +259,7 @@ function rabbit_step!(rabbit, model)
         )
     end
 
+    ## Move along the route planned above
     move_along_route!(rabbit, model, model.landfinder, model.rabbit_speed, model.dt)
 end
 
@@ -263,8 +273,11 @@ function fox_step!(fox, model)
         fox.energy += model.Δe_rabbit
     end
 
-    ## One unit of energy is consumed every step
+
+    ## The energy cost at each step corresponds to the amount of time that has passed
+    ## since the last step
     fox.energy -= model.dt
+    ## All animals die once their energy reaches 0
     if fox.energy <= 0
         kill_agent!(fox, model, model.landfinder)
         return
@@ -273,11 +286,12 @@ function fox_step!(fox, model)
     ## Random chance to reproduce every step
     rand(model.rng) <= model.fox_repr * model.dt && reproduce!(fox, model)
 
-    ## This movement logic is similar to that of rabbits looking for grass, except foxes
-    ## look for rabbits
+    ## If the fox isn't alreadu moving somewhere
     if is_stationary(fox, model.landfinder)
+        ## Look for any nearby rabbits
         prey = [x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
         if isempty(prey)
+            ## Move anywhere if no rabbits were found
             set_target!(
                 fox,
                 random_walkable(fox.pos, model, model.landfinder, model.fox_vision),
@@ -285,7 +299,7 @@ function fox_step!(fox, model)
             )
             return
         end
-        ## Instead of moving toward a random rabbit, move toward the closest one
+        ## Move toward a random rabbit
         set_target!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
     end
 
@@ -303,7 +317,7 @@ function hawk_step!(hawk, model)
         kill_agent!(rand(model.rng, food), model, model.airfinder)
         hawk.energy += model.Δe_rabbit
         ## Fly back up
-        set_target!(hawk, hawk.pos .+ (0, 0, 3), model.airfinder)
+        set_target!(hawk, hawk.pos .+ (0., 0., 7.), model.airfinder)
     end
 
     ## The rest of the stepping function is similar to that of foxes, except hawks use a
@@ -349,11 +363,13 @@ function model_step!(model)
         model.grass,
         model.grass .== 0 .& model.water_level .< model.heightmap .<= model.grass_level,
     )
-    ## Grass regrows with a random probability
-    growable .= rand(model.rng, length(growable)) .< model.regrowth_chance
+    ## Grass regrows with a random probability, scaling with the amount of time passing
+    ## each step of the model
+    growable .= rand(model.rng, length(growable)) .< model.regrowth_chance * model.dt
 end
 
 # ## Visualization
+# Now we use `InteractiveDynamics` to create a visualization of the model running in 3D space
 #
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
@@ -372,14 +388,14 @@ animalcolor(a) =
     end
 
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
-# colormap. `zlims!` overrides the limits set by `InteractiveDynamics` to ensure the
-# terrain surface isn't skewed by the dimensions of the model.
+# colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
+# we explicitly provide ranges to specify where the heightmap should be plotted.
 function static_preplot!(ax, model)
-    zlims!(ax, (0, 164))
     surface!(ax, (100/205):(100/205):100, (100/205):(100/205):100, model.heightmap; colormap = :terrain)
 end
 
-## The sample heightmap used for this model
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
 heightmap_url =
     "https://raw.githubusercontent.com/JuliaDynamics/" *
     "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
@@ -392,7 +408,7 @@ abm_video(
     model_step!;
     resolution = (700, 700),
     frames = 300,
-    framerate = 30,
+    framerate = 20,
     ac = animalcolor,
     as = 1.0,
     static_preplot!
