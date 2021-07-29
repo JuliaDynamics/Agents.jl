@@ -170,11 +170,6 @@ function initialize_model(
     return model
 end
 
-# We create a utility function that takes the 3D position of an agent, and returns the
-# corresponding 2D position on the heightmap
-to_heightmap_index(pos, model) =
-    floor.(Int, pos[1:2] ./ size(model.space)[1:2] .* size(model.heightmap)) .+ 1
-
 # The `animal_step!` function dispatches to the proper function depending on the type of agent.
 # The stepping functions for each type of agent are similar: They lose energy per step, and
 # die if their energy ever reaches 0. They also have a random probability to reproduce at an
@@ -198,8 +193,8 @@ end
 
 function rabbit_step!(rabbit, model)
     ## Eat grass at this position, if any
-    if model.grass[to_heightmap_index(rabbit.pos, model)...] == 1
-        model.grass[to_heightmap_index(rabbit.pos, model)...] = 0
+    if get_spatial_property(rabbit.pos, model.grass, model) == 1
+        model.grass[get_spatial_index(rabbit.pos, model.grass, model)] = 0
         rabbit.energy += model.Δe_grass
     end
 
