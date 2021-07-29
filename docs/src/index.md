@@ -12,7 +12,7 @@ To get started, please read the [Tutorial](@ref) page.
       * New functions [`get_spatial_property`](@ref) and [`get_spatial_index`](@ref) for easier usage of spatially distributed properties in [`ContinuousSpace`](@ref).
       * Breaking rework of the pathfinding API to offer greater control over pathfinding, including the possiblity of multiple pathfinding profiles in the same model.
       * Add support for pathfinding using the A* algorithm to [`ContinuousSpace`](@ref). Refer to the [Rabbit, Fox, Hawk](@ref) example for a demonstration of this and the new pathfinding capabilities.
-      * New utility functions [`nearby_walkable`](@ref) and [`random_walkable`](@ref) for use in models with pathfinding.
+      * New utility functions [`Pathfinding.nearby_walkable`](@ref) and [`Pathfinding.random_walkable`](@ref) for use in models with pathfinding.
 
 ## Features
 * Free, open source and extremely transparent.
