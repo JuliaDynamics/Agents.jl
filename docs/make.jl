@@ -62,7 +62,7 @@ ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(
     modules = [Agents, InteractiveDynamics],
     sitename = "Agents.jl",
-    authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
+    authors = "Tim DuBois, George Datseris, Aayush Sabharwal, Ali R. Vahdati and contributors.",
     doctest = false,
     format = Documenter.HTML(
         prettyurls = CI,
