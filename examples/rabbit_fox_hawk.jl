@@ -99,8 +99,8 @@ function initialize_model(
     ## Generate the RNG for the model
     rng = MersenneTwister(seed)
 
-    # Note that the dimensions of the space do not have to correspond to the dimensions
-    # of the pathfinder. Discretisation is handled by the pathfinding methods
+    ## Note that the dimensions of the space do not have to correspond to the dimensions
+    ## of the pathfinder. Discretisation is handled by the pathfinding methods
     space = ContinuousSpace((100., 100., 100.); periodic = false)
 
     ## Generate an array of random numbers, and threshold it by the probability of grass growing
@@ -135,7 +135,7 @@ function initialize_model(
 
     model = ABM(Animal, space; rng, properties)
 
-    # spawn each animal at a random walkable position according to its pathfinder
+    ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
         add_agent_pos!(
             Rabbit(
