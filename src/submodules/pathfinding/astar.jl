@@ -188,7 +188,7 @@ end
 @inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
     (cur .+ β.I for β in pathfinder.neighborhood)
 @inline inbounds(n, pathfinder, closed) =
-    all(1 .<= n .<= size(pathfinder.walkable)) && pathfinder.walkable[n...] && n ∉ closed
+    all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
     
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])

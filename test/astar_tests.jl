@@ -41,12 +41,12 @@
         @test_throws TypeError AStar(gspace; cost_metric = PenaltyMap(pmap))
 
         # ContinuousSpace
-        @test_throws AssertionError AStar(cspace, trues((10, 10)); cost_metric = PenaltyMap(fill(1, 5, 5)))
-        @test_throws AssertionError AStar(cspace, PenaltyMap(fill(1, 5, 5)); walkable = trues((10, 10)))
+        @test_throws AssertionError AStar(cspace; walkmap = trues((10, 10)), cost_metric = PenaltyMap(fill(1, 5, 5)))
+        @test_throws AssertionError AStar(cspace; walkmap = trues((10, 10)), cost_metric = PenaltyMap(fill(1, 5, 5)))
 
-        astar = AStar(cspace, trues(10, 10))
+        astar = AStar(cspace; walkmap = trues(10, 10))
         @test astar isa AStar{2,true,true,Float64}
-        astar = AStar(cspace, PenaltyMap(fill(1, 5, 5)))
+        astar = AStar(cspace; cost_metric = PenaltyMap(fill(1, 5, 5)))
         @test astar isa AStar{2,true,true,Float64}
     end
 
@@ -78,23 +78,23 @@
         model = ABM(Agent3, gspace; properties = (pf = pathfinder, ))
         @test penaltymap(model.pf) == pmap
 
-        pathfinder.walkable[:, 3] .= false
+        pathfinder.walkmap[:, 3] .= false
         npos = collect(nearby_walkable((5, 4), model, model.pf))
         ans = [(4, 4), (5, 5), (1, 4), (4, 5), (1, 5)]
         @test length(npos) == length(ans)
         @test all(x in npos for x in ans)
-        @test all(pathfinder.walkable[random_walkable(model, model.pf)...] for _ in 1:10)
+        @test all(pathfinder.walkmap[random_walkable(model, model.pf)...] for _ in 1:10)
 
         sp = GridSpace((5, 5); periodic = false)
         pf = AStar(sp)
         model = ABM(Agent3, sp; properties = (pf = pf,))
-        model.pf.walkable[3, :] .= 0
+        model.pf.walkmap[3, :] .= 0
         a = add_agent!((1, 3), model, 0.)
         @test set_best_target!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
         @test isnothing(set_best_target!(a, [(5, 3), (4, 1)], model.pf))
 
         # ContinuousSpace
-        pathfinder = AStar(cspace, trues(10, 10))
+        pathfinder = AStar(cspace; walkmap = trues(10, 10))
         model = ABM(Agent6, cspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test is_stationary(a, model.pf)
@@ -117,13 +117,13 @@
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
 
-        model.pf.walkable[:, 3] .= 0
-        @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkable, model) for _ in 1:10)
+        model.pf.walkmap[:, 3] .= 0
+        @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
         rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-        @test all(get_spatial_property(x, model.pf.walkable, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+        @test all(get_spatial_property(x, model.pf.walkmap, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
 
         pcspace = ContinuousSpace((5., 5.); periodic = false)
-        pathfinder = AStar(pcspace, trues(10, 10))
+        pathfinder = AStar(pcspace; walkmap = trues(10, 10))
         model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf) .≈ (2.5, 2.5))
@@ -131,7 +131,7 @@
         move_along_route!(a, model, model.pf, 1.0)
         @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
-        model.pf.walkable[:, 3] .= 0
+        model.pf.walkmap[:, 3] .= 0
         move_agent!(a, (2.5, 2.5), model)
         @test all(set_best_target!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
         @test isnothing(set_best_target!(a, [(3., 0.3), (1., 0.1)], model.pf))
@@ -141,12 +141,12 @@
 
         @test isnothing(penaltymap(model.pf))
         pmap = fill(1, 10, 10)
-        pathfinder = AStar(cspace, PenaltyMap(pmap))
+        pathfinder = AStar(cspace; cost_metric = PenaltyMap(pmap))
         @test penaltymap(pathfinder) == pmap
 
-        @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkable, model) for _ in 1:10)
+        @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
         rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-        @test all(get_spatial_property(x, model.pf.walkable, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+        @test all(get_spatial_property(x, model.pf.walkmap, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
     end
 
     @testset "metrics" begin
