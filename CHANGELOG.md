@@ -6,7 +6,7 @@
 - New utility functions `nearby_walkable` and `random_walkable` for use in models with pathfinding.
 - Fixed bug where there was no differentiation between empty paths and paths to unreachable nodes.
 
-## Deprecated
+## BREAKING
 - The old pathfinding system is now deprecated. Pathfinding structs are not saved as part of the
   space, and instead are stored by the user.
 
