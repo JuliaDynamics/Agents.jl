@@ -5,7 +5,7 @@
 # </video>
 # ```
 # Consider a scenario where a walker agent is stuck in a maze. Finding the shortest path through an
-# arbitrary maze or map is simulated using a [`Pathfinding.AStar`](@ref) and its `walkable` map property.
+# arbitrary maze or map is simulated using a [`Pathfinding.AStar`](@ref) and its `walkmap` map property.
 
 # ## Setup
 using Agents, Agents.Pathfinding
@@ -23,12 +23,12 @@ function initalize_model(map_url)
     ## The size of the space is the size of the maze
     space = GridSpace(size(maze); periodic = false)
     ## Create a pathfinder using the AStar algorithm by providing the space and specifying
-    ## the `walkable` parameter for the pathfinder.
+    ## the `walkmap` parameter for the pathfinder.
     ## Since we are interested in the most direct path to the end, the default
     ## `DirectDistance` is appropriate.
     ## `diagonal_movement` is set to false to prevent cutting corners by going along
     ## diagonals.
-    pathfinder = AStar(space; walkable=maze, diagonal_movement=false)
+    pathfinder = AStar(space; walkmap=maze, diagonal_movement=false)
     model = ABM(Walker, space)
     ## Place a walker at the start of the maze
     walker = Walker(1, (1, 4))
@@ -66,7 +66,7 @@ abm_video(
     framerate=30,
     ac=:red,
     as=11,
-    heatarray = _ -> pathfinder.walkable,
+    heatarray = _ -> pathfinder.walkmap,
     add_colorbar = false,
 )
 nothing # hide
