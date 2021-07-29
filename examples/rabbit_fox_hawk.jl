@@ -5,7 +5,7 @@
 # </video>
 # ```
 # This model is a variation on the [Predator-Prey](@ref) example. It uses a 3-dimensional
-# [`GridSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
+# [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders).
 #
 # Agents in this model are one of three species of animals: rabbits, foxes and hawks. Rabbits
@@ -18,8 +18,7 @@
 # reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
 using Random
-using FileIO
-using ImageMagick # hide
+using FileIO # To load images you also need ImageMagick available to your project
 
 mutable struct Animal <: AbstractAgent
     id::Int
@@ -80,7 +79,7 @@ function initialize_model(
     ## scaled from 1 to 40
     heightmap = floor.(Int, convert.(Float64, load(download(heightmap_url))) * 39) .+ 1
     ## The x and y dimensions of the pathfinder are that of the heightmap
-    dims = (size(heightmap)..., 100)
+    dims = (size(heightmap)..., 50)
     ## The region of the map that is accessible to each type of animal (land-based or flying)
     ## is defined using `BitArrays`
     land_walkmap = BitArray(falses(dims...))
@@ -101,7 +100,7 @@ function initialize_model(
 
     ## Note that the dimensions of the space do not have to correspond to the dimensions
     ## of the pathfinder. Discretisation is handled by the pathfinding methods
-    space = ContinuousSpace((100., 100., 100.); periodic = false)
+    space = ContinuousSpace((100., 100., 50.); periodic = false)
 
     ## Generate an array of random numbers, and threshold it by the probability of grass growing
     ## at that location. Although this causes grass to grow below `water_level`, it is
