@@ -139,8 +139,8 @@ function initialize_model(
     for _ in 1:n_rabbits
         add_agent_pos!(
             Rabbit(
-                nextid(model), # Using `nextid` prevents us from having to manually keep track
-                               # of animal IDs
+                nextid(model), ## Using `nextid` prevents us from having to manually keep track
+                               ## of animal IDs
                 random_walkable(model, model.landfinder),
                 rand(model.rng, Δe_grass:2Δe_grass),
             ),
@@ -391,7 +391,13 @@ animalcolor(a) =
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
 # we explicitly provide ranges to specify where the heightmap should be plotted.
 function static_preplot!(ax, model)
-    surface!(ax, (100/205):(100/205):100, (100/205):(100/205):100, model.heightmap; colormap = :terrain)
+    surface!(
+        ax,
+        (100/205):(100/205):100,
+        (100/205):(100/205):100,
+        model.heightmap;
+        colormap = :terrain
+    )
 end
 
 # Passing in a sample heightmap to the `initialize_model` function we created returns the generated
