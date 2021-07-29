@@ -86,7 +86,7 @@ struct SerializableAStar{D,P,M,T}
     dims::NTuple{D,T}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
-    walkable::BitArray{D}
+    walkmap::BitArray{D}
     cost_metric::Pathfinding.CostMetric{D}
 end
 
@@ -145,7 +145,7 @@ JLD2.wconvert(::Type{SerializableAStar{D,P,M,T}}, t::Pathfinding.AStar{D,P,M,T})
         t.dims,
         map(Tuple, t.neighborhood),
         t.admissibility,
-        t.walkable,
+        t.walkmap,
         t.cost_metric,
     )
 
@@ -222,7 +222,7 @@ JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T}}, t::SerializableAStar{D,P,M,T})
         t.dims,
         map(CartesianIndex, t.neighborhood),
         t.admissibility,
-        t.walkable,
+        t.walkmap,
         t.cost_metric,
     )
 

@@ -10,7 +10,7 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
     dims::NTuple{D,T}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
-    walkable::BitArray{D}
+    walkmap::BitArray{D}
     cost_metric::CostMetric{D}
 
     function AStar{D,P,M,T}(
@@ -18,14 +18,14 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
         dims::NTuple{D,T},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
-        walkable::BitArray{D},
+        walkmap::BitArray{D},
         cost_metric::CostMetric{D},
     ) where {D,P,M,T}
         @assert all(dims .> 0) "Invalid pathfinder dimensions: $(dims)"
-        T <: Integer && @assert size(walkable) == dims "Walkmap must be same dimensions as grid"
+        T <: Integer && @assert size(walkmap) == dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
-            @assert size(cost_metric.pmap) == size(walkable) "Penaltymap dimensions must be same as walkable map"
+            @assert size(cost_metric.pmap) == size(walkmap) "Penaltymap dimensions must be same as walkable map"
         elseif cost_metric isa DirectDistance{D}
             if M
                 @assert length(cost_metric.direction_costs) >= D "DirectDistance direction_costs must have as many values as dimensions"
@@ -33,14 +33,12 @@ struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
                 @assert length(cost_metric.direction_costs) >= 1 "DirectDistance direction_costs must have non-zero length"
             end
         end
-        new(agent_paths, dims, neighborhood, admissibility, walkable, cost_metric)
+        new(agent_paths, dims, neighborhood, admissibility, walkmap, cost_metric)
     end
 end
 
 """
-    Pathfinding.AStar(space::GridSpace{D}; kwargs...)
-    Pathfinding.AStar(space::ContinuousSpace{D}, walkmap::BitArray{D}; kwargs...)
-    Pathfinding.AStar(space::ContinuousSpace{D}, cost_metric::PenaltyMap{D}; kwargs...)
+    Pathfinding.AStar(space; kwargs...)
 Enables pathfinding for agents in the provided `space` (which can be a [`GridSpace`](@ref) or
 [`ContinuousSpace`](@ref)) using the A* algorithm. This struct must be passed into any
 pathfinding functions.
@@ -54,7 +52,7 @@ to specify the level of discretisation of the space.
 - `admissibility = 0.0` allows the algorithm to aprroximate paths to speed up pathfinding.
   A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
   length.
-- `walkable = trues(size(space))` specifies the (un)walkable positions of the
+- `walkmap = trues(size(space))` specifies the (un)walkable positions of the
   space. If specified, it should be a `BitArray` of the same size as the corresponding
   `GridSpace`. By default, agents can walk anywhere in the space. An example usage can
   be found in [Maze Solver](@ref)
@@ -67,7 +65,7 @@ function AStar(
     periodic::Bool = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkable::BitArray{D} = trues(dims),
+    walkmap::BitArray{D} = trues(dims),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
@@ -76,7 +74,7 @@ function AStar(
         dims,
         neighborhood,
         admissibility,
-        walkable,
+        walkmap,
         cost_metric,
     )
 end
@@ -85,26 +83,21 @@ AStar(
     space::GridSpace{D,periodic};
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkable::BitArray{D} = trues(size(space.s)),
+    walkmap::BitArray{D} = trues(size(space.s)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
-    AStar(size(space); periodic, diagonal_movement, admissibility, walkable, cost_metric)
+    AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
 
-AStar(
-    space::ContinuousSpace{D,periodic},
-    walkable::BitArray{D};
+function AStar(
+    space::ContinuousSpace{D,periodic};
+    walkmap::Union{BitArray{D},Nothing} = nothing,
     admissibility::Float64 = 0.0,
     cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D,periodic} =
-    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
-
-AStar(
-    space::ContinuousSpace{D,periodic},
-    cost_metric::PenaltyMap{D};
-    walkable::BitArray{D} = trues(size(cost_metric.pmap)),
-    admissibility::Float64 = 0.0,
-) where {D,periodic} =
-    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkable, cost_metric)
+) where {D,periodic}
+    @assert walkmap isa BitArray{D} || cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
+    isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
+    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
+end
 
 
 moore_neighborhood(D) = [
@@ -191,7 +184,7 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 end
 
 @inline get_neighbors(cur, pathfinder::AStar{D,true}) where {D} =
-    (mod1.(cur .+ β.I, size(pathfinder.walkable)) for β in pathfinder.neighborhood)
+    (mod1.(cur .+ β.I, size(pathfinder.walkmap)) for β in pathfinder.neighborhood)
 @inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
     (cur .+ β.I for β in pathfinder.neighborhood)
 @inline inbounds(n, pathfinder, closed) =

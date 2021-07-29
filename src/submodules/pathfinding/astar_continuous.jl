@@ -1,8 +1,8 @@
 to_discrete_position(pos, pathfinder) =
-    floor.(Int, pos ./ pathfinder.dims .* size(pathfinder.walkable)) .+ 1
+    floor.(Int, pos ./ pathfinder.dims .* size(pathfinder.walkmap)) .+ 1
 to_continuous_position(pos, pathfinder) =
-    pos ./ size(pathfinder.walkable) .* pathfinder.dims .-
-    pathfinder.dims ./ size(pathfinder.walkable) ./ 2.
+    pos ./ size(pathfinder.walkmap) .* pathfinder.dims .-
+    pathfinder.dims ./ size(pathfinder.walkmap) ./ 2.
 sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} =
     sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
 sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
@@ -152,26 +152,26 @@ end
 function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}) where {D}
     discrete_pos = Tuple(rand(
         model.rng,
-        filter(x -> pathfinder.walkable[x], CartesianIndices(pathfinder.walkable))
+        filter(x -> pathfinder.walkmap[x], CartesianIndices(pathfinder.walkmap))
     ))
-    half_cell_size = model.space.extent ./ size(pathfinder.walkable) ./ 2.
+    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
     return to_continuous_position(discrete_pos, pathfinder) .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
 end
 
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,false}) where {D} =
     Iterators.filter(
-        x -> all(1 .<= x .<= size(pathfinder.walkable)) &&
-            pathfinder.walkable[x...] &&
+        x -> all(1 .<= x .<= size(pathfinder.walkmap)) &&
+            pathfinder.walkmap[x...] &&
             sum(((x .- pos) ./ r) .^ 2) <= 1,
         Iterators.product([(pos[i]-r[i]):(pos[i]+r[i]) for i in 1:D]...)
     )
 
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,true}) where {D} =
     Iterators.map(
-        x -> mod1.(x, size(pathfinder.walkable)),
+        x -> mod1.(x, size(pathfinder.walkmap)),
             Iterators.filter(
-                x -> pathfinder.walkable[mod1.(x, size(pathfinder.walkable))...] && sum(((x .- pos) ./ r) .^ 2) <= 1,
+                x -> pathfinder.walkmap[mod1.(x, size(pathfinder.walkmap))...] && sum(((x .- pos) ./ r) .^ 2) <= 1,
                 Iterators.product([(pos[i]-r[i]):(pos[i]+r[i]) for i in 1:D]...)
             )
     )
@@ -195,7 +195,7 @@ function random_walkable(
         model.rng,
         options
     )
-    half_cell_size = model.space.extent ./ size(pathfinder.walkable) ./ 2.
+    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
     dist = edistance(pos, cts_rand, model)
