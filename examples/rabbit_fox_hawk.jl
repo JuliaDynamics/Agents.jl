@@ -110,9 +110,9 @@ function initialize_model(
     )
     properties = (
         ## The pathfinder for rabbits and foxes
-        landfinder = AStar(space, land_walkmap),
+        landfinder = AStar(space; walkmap = land_walkmap),
         ## The pathfinder for hawks
-        airfinder = AStar(space, air_walkmap; cost_metric = MaxDistance{3}()),
+        airfinder = AStar(space; walkmap = air_walkmap, cost_metric = MaxDistance{3}()),
         Δe_grass = Δe_grass,
         Δe_rabbit = Δe_rabbit,
         rabbit_repr = rabbit_repr,
