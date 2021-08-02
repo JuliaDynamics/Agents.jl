@@ -344,7 +344,7 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
     if abm.space === nothing
-        s *= "\n no space"
+        s *= "\n space: no space"
     else
         s *= "\n space: $(sprint(show, abm.space))"
     end
