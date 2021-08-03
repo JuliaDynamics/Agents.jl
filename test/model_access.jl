@@ -74,7 +74,7 @@ end
 
 @testset "Display" begin
     model = ABM(Agent0)
-    @test sprint(show, model)[47:54] == "no space"
+    @test "nothing" in sprint(show, model)
     model = ABM(Agent3, GridSpace((5,5)))
     @test sprint(show, model)[1:29] == "AgentBasedModel with 0 agents"
     @test sprint(show, model.space) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
