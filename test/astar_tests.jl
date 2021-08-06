@@ -150,7 +150,7 @@
     end
 
     @testset "metrics" begin
-        pfinder_2d_np_m = AStar{2,false,true,Int64}(
+        pfinder_2d_np_m = AStar{2,false,true,Int64,DirectDistance{2}}(
             Dict(),
             (10, 10),
             copy(moore),
@@ -158,7 +158,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_np_nm = AStar{2,false,false,Int64}(
+        pfinder_2d_np_nm = AStar{2,false,false,Int64,DirectDistance{2}}(
             Dict(),
             (10, 10),
             copy(vonneumann),
@@ -166,7 +166,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_p_m = AStar{2,true,true,Int64}(
+        pfinder_2d_p_m = AStar{2,true,true,Int64,DirectDistance{2}}(
             Dict(),
             (10, 10),
             copy(moore),
@@ -174,7 +174,7 @@
             trues(10, 10),
             DirectDistance{2}(),
         )
-        pfinder_2d_p_nm = AStar{2,true,false,Int64}(
+        pfinder_2d_p_nm = AStar{2,true,false,Int64,DirectDistance{2}}(
             Dict(),
             (10, 10),
             copy(vonneumann),
@@ -212,7 +212,7 @@
         wlk[4, 3] = false
         wlk[5, 3] = false
 
-        pfinder_2d_np_m = AStar{2,false,true,Float64}(
+        pfinder_2d_np_m = AStar{2,false,true,Float64,DirectDistance{2}}(
             Dict(),
             (10., 10.),
             copy(moore),
@@ -220,7 +220,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_np_nm = AStar{2,false,false,Float64}(
+        pfinder_2d_np_nm = AStar{2,false,false,Float64,DirectDistance{2}}(
             Dict(),
             (10., 10.),
             copy(vonneumann),
@@ -228,7 +228,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_m = AStar{2,true,true,Float64}(
+        pfinder_2d_p_m = AStar{2,true,true,Float64,DirectDistance{2}}(
             Dict(),
             (10., 10.),
             copy(moore),
@@ -236,7 +236,7 @@
             wlk,
             DirectDistance{2}(),
         )
-        pfinder_2d_p_nm = AStar{2,true,false,Float64}(
+        pfinder_2d_p_nm = AStar{2,true,false,Float64,DirectDistance{2}}(
             Dict(),
             (10., 10.),
             copy(vonneumann),

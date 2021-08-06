@@ -24,6 +24,13 @@ using Agents
 using DataStructures
 using LinearAlgebra
 
+"""
+    Pathfinding.CostMetric{D}
+An abstract type representing a metric that measures the approximate cost of travelling
+between two points in a `D` dimensional grid.
+"""
+abstract type CostMetric{D} end
+
 abstract type GridPathfinder{D,P,M} end
 
 include("metrics.jl")

@@ -5,22 +5,22 @@ taken by an agent in a `D` dimensional space.
 """
 const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 
-struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
+struct AStar{D,P,M,T,C<:CostMetric{D}} <: GridPathfinder{D,P,M}
     agent_paths::Dict{Int,Path{D,T}}
     dims::NTuple{D,T}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
     walkmap::BitArray{D}
-    cost_metric::CostMetric{D}
+    cost_metric::C
 
-    function AStar{D,P,M,T}(
+    function AStar{D,P,M,T,C}(
         agent_paths::Dict,
         dims::NTuple{D,T},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
         walkmap::BitArray{D},
-        cost_metric::CostMetric{D},
-    ) where {D,P,M,T}
+        cost_metric::C,
+    ) where {D,P,M,C,T}
         @assert all(dims .> 0) "Invalid pathfinder dimensions: $(dims)"
         T <: Integer && @assert size(walkmap) == dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
@@ -69,7 +69,7 @@ function AStar(
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,diagonal_movement,T}(
+    return AStar{D,periodic,diagonal_movement,T,typeof(cost_metric)}(
         Dict{Int,Path{D,T}}(),
         dims,
         neighborhood,

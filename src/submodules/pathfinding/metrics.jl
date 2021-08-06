@@ -1,9 +1,4 @@
-"""
-    Pathfinding.CostMetric{D}
-An abstract type representing a metric that measures the approximate cost of travelling
-between two points in a `D` dimensional grid.
-"""
-abstract type CostMetric{D} end
+
 
 struct DirectDistance{D} <: CostMetric{D}
     direction_costs::Vector{Int}
