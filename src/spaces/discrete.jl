@@ -82,9 +82,24 @@ end
 Return a random position without any agents, or `nothing` if no such positions exist.
 """
 function random_empty(model::ABM{<:DiscreteSpace})
-    empty = empty_positions(model)
-    isempty(empty) && return nothing
-    rand(model.rng, collect(empty))
+    # This switch assumes the worst case (for this algorithm) of one
+    # agent per position, which is not true in general but is appropriate
+    # here.
+    if nagents(model) / prod(size(model.space)) < 0.998
+        # 0.998 has been benchmarked as a performant branching point
+        # It sits close to where the maximum return time is better
+        # than the code in the else loop runs. So we guarantee
+        # an increase in performance overall, not just when we
+        # get lucky with the random rolls.
+        while true
+            pos = random_position(model)
+            isempty(pos, model) && return pos
+        end
+    else
+        empty = empty_positions(model)
+        isempty(empty) && return nothing
+        return rand(model.rng, collect(empty))
+    end
 end
 
 #######################################################################################
@@ -174,9 +189,9 @@ function move_agent_single!(
     agent::A,
     model::ABM{<:DiscreteSpace,A},
 ) where {A<:AbstractAgent}
-    empty = collect(empty_positions(model))
-    if length(empty) > 0
-        move_agent!(agent, rand(model.rng, empty), model)
+    pos = random_empty(model)
+    if pos !== nothing
+        move_agent!(agent, pos, model)
     end
     return agent
 end
