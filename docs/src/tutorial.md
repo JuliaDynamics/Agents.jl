@@ -66,6 +66,7 @@ step!
 dummystep
 ```
 
+### Advanced stepping
 !!! note "Current step number"
     Notice that the current step number is not explicitly given to the `model_step!`
     function, because this is useful only for a subset of ABMs. If you need the
@@ -74,7 +75,6 @@ dummystep
     An example can be seen in the `model_step!` function of [Daisyworld](@ref),
     where a `tick` is increased at each step.
 
-### Advanced stepping
 The interface of [`step!`](@ref), which allows the option of both `agent_step!` and `model_step!` is driven mostly by convenience. In principle, the `model_step!` function by itself can perform all operations related with stepping the ABM.
 However, for many models, this simplified approach offers the benefit of not having to write an explicit loop over existing agents inside the `model_step!`.
 Most of the examples in our documentation can be expressed using an independent `agent_step!` and `model_step!` function.
@@ -86,12 +86,15 @@ Notice that if you follow this road, the argument `scheduler` given to [`AgentBa
 Here is an example:
 ```julia
 function complex_step!(model)
-    for a in scheduler1(model)
-        agent_step1!(a, model)
+    for id in scheduler1(model)
+        agent_step1!(model[id], model)
     end
     intermediate_model_action!(model)
-    for a in scheduler2(model)
-        agent_step2!(a, model)
+    for id in scheduler2(model)
+        agent_step2!(model[id], model)
+    end
+    if model.step_counter % 100 == 0
+        model_action_every_100_steps!(model)
     end
     final_model_action!(model)
 end
