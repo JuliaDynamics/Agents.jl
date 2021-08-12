@@ -86,7 +86,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
-    if nagents(model) / prod(size(model.space)) < cutoff
+    if nagents(model) / prod(size(model.space.s)) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee
