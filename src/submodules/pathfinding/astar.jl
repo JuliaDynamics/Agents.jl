@@ -130,7 +130,7 @@ GridCell(g::Int, h::Int, admissibility::Float64) =
 
 GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
 
-ordering(cell) = (cell.f, cell.h)
+ordering(cell) = cell.f
 
 """
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
@@ -138,6 +138,12 @@ Calculate the shortest path from `from` to `to` using the A* algorithm.
 If a path does not exist between the given positions, an empty linked list is returned.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
+    if !all(1 .<= from .<= size(pathfinder.walkmap)) ||
+        !all(1 .<= to .<= size(pathfinder.walkmap)) ||
+        !pathfinder.walkmap[from...] ||
+        !pathfinder.walkmap[to...]
+        return # nothing
+    end
     parent = Dict{Dims{D},Dims{D}}()
 
     open_list = PriorityQueue{Dims{D},GridCell}(Base.By(ordering))
