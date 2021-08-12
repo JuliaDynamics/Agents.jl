@@ -78,14 +78,15 @@ function has_empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    random_empty(model::ABM{<:DiscreteSpace})
+    random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
 Return a random position without any agents, or `nothing` if no such positions exist.
+`cutoff` switches the search algorithm from probabalistic to a filter.
 """
-function random_empty(model::ABM{<:DiscreteSpace})
+function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
-    if nagents(model) / prod(size(model.space)) < 0.998
+    if nagents(model) / prod(size(model.space)) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee
@@ -117,7 +118,7 @@ This function does nothing if there aren't any empty positions.
 """
 function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
     position = random_empty(model)
-    isnothing(position) && return agent
+    isnothing(position) && return nothing
     agent.pos = position
     add_agent_pos!(agent, model)
     return agent
@@ -129,10 +130,10 @@ Same as `add_agent!(model, properties...; kwargs...)` but ensures that it adds a
 into a position with no other agents (does nothing if no such position exists).
 """
 function add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
-    empty = collect(empty_positions(model))
-    if length(empty) > 0
-        add_agent!(rand(model.rng, empty), model, properties...; kwargs...)
-    end
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent = add_agent!(position, model, properties...; kwargs...)
+    return agent
 end
 
 """
@@ -184,14 +185,16 @@ end
 
 Move agent to a random position while respecting a maximum of one agent
 per position. If there are no empty positions, the agent won't move.
+
+The keyword `cutoff = 0.998` is sent to [`random_empty`](@ref).
 """
 function move_agent_single!(
     agent::A,
-    model::ABM{<:DiscreteSpace,A},
+    model::ABM{<:DiscreteSpace,A};
+    cutoff = 0.998,
 ) where {A<:AbstractAgent}
-    pos = random_empty(model)
-    if pos !== nothing
-        move_agent!(agent, pos, model)
-    end
+    position = random_empty(model, cutoff)
+    isnothing(position) && return nothing
+    move_agent!(agent, position, model)
     return agent
 end
