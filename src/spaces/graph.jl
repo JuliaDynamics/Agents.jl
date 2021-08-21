@@ -77,8 +77,13 @@ ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, args...; kwargs...)
     np = nearby_positions(pos, model, args...; kwargs...)
-    # This call is faster than reduce(vcat, ..), or Iterators.flatten
-    vcat(model.space.s[pos], model.space.s[np]...)
+    t = sum(length(model.space.s[n]) for n in np) + length(model.space.s[pos])
+    ret = copy(model.space.s[pos])
+    sizehint!(ret, t)
+    for n in np
+        append!(ret, model.space.s[n])
+    end
+    return ret
 end
 
 function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, args...; kwargs...) where {A<:AbstractAgent}
