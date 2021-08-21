@@ -97,16 +97,15 @@ function nearby_positions(
     neighbor_type::Symbol = :default,
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
-    neighborfn = if neighbor_type == :default
-        LightGraphs.neighbors
+    if neighbor_type == :default
+        LightGraphs.neighbors(model.space.graph, position)
     elseif neighbor_type == :in
-        LightGraphs.inneighbors
+        LightGraphs.inneighbors(model.space.graph, position)
     elseif neighbor_type == :out
-        LightGraphs.outneighbors
+        LightGraphs.outneighbors(model.space.graph, position)
     else
-        LightGraphs.all_neighbors
+        LightGraphs.all_neighbors(model.space.graph, position)
     end
-    neighborfn(model.space.graph, position)
 end
 
 #######################################################################################
