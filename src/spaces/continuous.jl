@@ -189,6 +189,9 @@ end
 ################################################################################
 ### Pretty printing
 ################################################################################
+
+Base.size(space::ContinuousSpace) = space.extent
+
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
     space.update_vel! ≠ defvel && (s *= " with velocity updates")

@@ -62,7 +62,7 @@ ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(
     modules = [Agents, InteractiveDynamics],
     sitename = "Agents.jl",
-    authors = "Tim DuBois, George Datseris, Ali R. Vahdati and contributors.",
+    authors = "Tim DuBois, George Datseris, Aayush Sabharwal, Ali R. Vahdati and contributors.",
     doctest = false,
     format = Documenter.HTML(
         prettyurls = CI,
@@ -94,6 +94,7 @@ makedocs(
             "Predator-Prey" => "examples/predator_prey_fast.md",
             "Maze Solver" => "examples/maze.md",
             "Mountain Runners" => "examples/runners.md",
+            "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
             "Bacteria Growth" => "examples/growing_bacteria.md",
             "Opinion spread" => "examples/opinion_spread.md",
             "Battle Royale" => "examples/battle.md",

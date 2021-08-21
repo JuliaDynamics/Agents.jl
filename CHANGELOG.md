@@ -1,4 +1,16 @@
-# v4.4 (UNRELEASED)
+# v4.5 (UNRELEASED)
+## New features and fixes
+- Add `get_spatial_property` and `get_spatial_index` for easier usage of spatially distributed properties in `ContinuousSpace`.
+- Rework the pathfinding system to be more streamlined and offer greater control over the its details.
+- Add support for pathfinding in `ContinuousSpace`.
+- New utility functions `nearby_walkable` and `random_walkable` for use in models with pathfinding.
+- Fixed bug where there was no differentiation between empty paths and paths to unreachable nodes.
+
+## BREAKING
+- The old pathfinding system is now deprecated. Pathfinding structs are not saved as part of the
+  space, and instead are stored by the user.
+
+# v4.4
 ## New features and fixes
 - Provide a generator function to collect `mdata` in `run!` and `ensemblerun!`.
 - Save/load entire models using `save_checkpoint` and `load_checkpoint`

@@ -1,4 +1,4 @@
-export edistance, walk!
+export edistance, get_direction, walk!
 
 #######################################################################################
 # %% (Mostly) space agnostic helper functions
@@ -53,6 +53,30 @@ function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) 
         total += delta^2
     end
     sqrt(total)
+end
+
+"""
+    get_direction(from, to, model::ABM)
+Return the direction vector from the position `from` to position `to` taking into account
+periodicity of the space.
+"""
+get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
+
+function get_direction(
+    from::NTuple{D,Float64},
+    to::NTuple{D,Float64},
+    space::Union{ContinuousSpace{D,true}, GridSpace{D,true}}
+) where {D}
+    best = to .- from
+    for offset in Iterators.product([-1:1 for _ in 1:D]...)
+        dir = to .+ offset .* size(space) .- from
+        sum(dir .^ 2) < sum(best .^ 2) && (best = dir)
+    end
+    return best
+end
+
+function get_direction(from, to, ::Union{GridSpace,ContinuousSpace})
+    return to .- from
 end
 
 """
