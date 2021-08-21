@@ -75,8 +75,11 @@ ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
 #######################################################################################
 # Neighbors
 #######################################################################################
-function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, args...; kwargs...)
-    np = nearby_positions(pos, model, args...; kwargs...)
+function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r; kwargs...)
+    if r == 0
+        return ids_in_position(pos, model)
+    end
+    np = nearby_positions(pos, model, r; kwargs...)
     t = sum(length(model.space.s[n]) for n in np) + length(model.space.s[pos])
     ret = copy(model.space.s[pos])
     sizehint!(ret, t)
@@ -86,8 +89,8 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, args...; kwargs...)
     return ret
 end
 
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = nearby_ids(agent.pos, model, args...; kwargs...)
+function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r; kwargs...) where {A<:AbstractAgent}
+    all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
 
