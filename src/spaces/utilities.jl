@@ -1,9 +1,8 @@
 export edistance, get_direction, walk!
 
 #######################################################################################
-# %% (Mostly) space agnostic helper functions
+# %% Distances and directions in Grid/Continuous space
 #######################################################################################
-
 """
     edistance(a, b, model::ABM)
 
@@ -79,27 +78,29 @@ function get_direction(from, to, ::Union{GridSpace,ContinuousSpace})
     return to .- from
 end
 
+#######################################################################################
+# %% Utilities for graph-based spaces (Graph/OpenStreetMap)
+#######################################################################################
+GraphBasedSpace = GraphBasedSpace
+_get_graph(space::GraphSpace) = space.graph
+_get_graph(space::OpenStreetMapSpace) = space.m.g
 """
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-LightGraphs.nv(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.nv(abm.space)
-LightGraphs.nv(space::S) where {S<:GraphSpace} = LightGraphs.nv(space.graph)
-LightGraphs.nv(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.nv(space.m.g)
+LightGraphs.nv(abm::ABM{<:GraphBasedSpace}) = LightGraphs.nv(_get_graph(abm.space))
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.ne(abm::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = LightGraphs.ne(abm.space)
-LightGraphs.ne(space::S) where {S<:GraphSpace} = LightGraphs.ne(space.graph)
-LightGraphs.ne(space::S) where {S<:OpenStreetMapSpace} = LightGraphs.ne(space.m.g)
+LightGraphs.ne(abm::ABM{<:GraphBasedSpace}) = LightGraphs.ne(_get_graph(abm.space))
 
-positions(model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}}) = 1:nv(model)
+positions(model::ABM{<:GraphBasedSpace}) = 1:nv(model)
 
 function nearby_positions(
     position::Integer,
-    model::ABM{<:Union{GraphSpace,OpenStreetMapSpace}},
+    model::ABM{<:GraphBasedSpace},
     radius::Integer;
     kwargs...,
 )
@@ -112,6 +113,9 @@ function nearby_positions(
     filter!(i -> i != position, output)
 end
 
+#######################################################################################
+# %% Walking
+#######################################################################################
 """
     walk!(agent, direction::NTuple, model; ifempty = false)
 
