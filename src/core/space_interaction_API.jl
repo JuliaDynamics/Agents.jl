@@ -73,8 +73,10 @@ Return an iterable of the ids of the agents within "radius" `r` of the given `po
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer).
+- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
+  always including ids of the same node as `position`.
   For example, for `r=2` include first and second degree neighbors.
+  If `r=0`, only ids in the same node as `position` are returned.
 - `GridSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
   in the space of cartesian indices.
 - `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
@@ -310,10 +312,10 @@ Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 function nearby_ids(
     agent::A,
     model::ABM{S,A},
-    args...;
+    r = 1;
     kwargs...,
 ) where {S,A<:AbstractAgent}
-    all = nearby_ids(agent.pos, model, args...; kwargs...)
+    all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
 
@@ -325,18 +327,18 @@ Same as `nearby_positions(agent.pos, model, r)`.
 function nearby_positions(
     agent::A,
     model::ABM{S,A},
-    args...;
+    r = 1;
     kwargs...,
 ) where {S,A<:AbstractAgent}
-    nearby_positions(agent.pos, model, args...; kwargs...)
+    nearby_positions(agent.pos, model, r; kwargs...)
 end
 
 """
-    nearby_agents(agent, model::ABM, args...; kwargs...) -> agent
+    nearby_agents(agent, model::ABM, r = 1; kwargs...) -> agent
 
 Return an iterable of the agents near the position of the given `agent`.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_agents(a, model, args...; kwargs...) =
-    (model[id] for id in nearby_ids(a, model, args...; kwargs...))
+nearby_agents(a, model, r = 1; kwargs...) =
+    (model[id] for id in nearby_ids(a, model, r; kwargs...))

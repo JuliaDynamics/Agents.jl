@@ -68,21 +68,24 @@ function add_agent_to_space!(
     return agent
 end
 
-# The following two is for the discrete space API:
+# The following is for the discrete space API:
 ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################
 # Neighbors
 #######################################################################################
-function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, args...; kwargs...)
-    np = nearby_positions(pos, model, args...; kwargs...)
-    # This call is faster than reduce(vcat, ..), or Iterators.flatten
+function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
+    if r == 0
+        return ids_in_position(pos, model)
+    end
+    np = nearby_positions(pos, model, r; kwargs...)
     vcat(model.space.s[pos], model.space.s[np]...)
 end
 
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, args...; kwargs...) where {A<:AbstractAgent}
-    all = nearby_ids(agent.pos, model, args...; kwargs...)
+# This function is here purely because of performance reasons
+function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A<:AbstractAgent}
+    all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
 
@@ -92,16 +95,15 @@ function nearby_positions(
     neighbor_type::Symbol = :default,
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
-    neighborfn = if neighbor_type == :default
-        LightGraphs.neighbors
+    if neighbor_type == :default
+        LightGraphs.neighbors(model.space.graph, position)
     elseif neighbor_type == :in
-        LightGraphs.inneighbors
+        LightGraphs.inneighbors(model.space.graph, position)
     elseif neighbor_type == :out
-        LightGraphs.outneighbors
+        LightGraphs.outneighbors(model.space.graph, position)
     else
-        LightGraphs.all_neighbors
+        LightGraphs.all_neighbors(model.space.graph, position)
     end
-    neighborfn(model.space.graph, position)
 end
 
 #######################################################################################

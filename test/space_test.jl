@@ -1,7 +1,7 @@
 @testset "Space" begin
     @testset "Graphs" begin
         model = ABM(Agent5, GraphSpace(path_graph(5)))
-        @test Agents.nv(model.space) == 5
+        @test Agents.nv(model) == 5
         @test Agents.ne(model) == 4
     end
 
