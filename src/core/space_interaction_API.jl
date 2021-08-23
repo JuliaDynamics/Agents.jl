@@ -312,10 +312,10 @@ Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 function nearby_ids(
     agent::A,
     model::ABM{S,A},
-    args...;
+    r = 1;
     kwargs...,
 ) where {S,A<:AbstractAgent}
-    all = nearby_ids(agent.pos, model, args...; kwargs...)
+    all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
 
@@ -327,18 +327,18 @@ Same as `nearby_positions(agent.pos, model, r)`.
 function nearby_positions(
     agent::A,
     model::ABM{S,A},
-    args...;
+    r = 1;
     kwargs...,
 ) where {S,A<:AbstractAgent}
-    nearby_positions(agent.pos, model, args...; kwargs...)
+    nearby_positions(agent.pos, model, r; kwargs...)
 end
 
 """
-    nearby_agents(agent, model::ABM, args...; kwargs...) -> agent
+    nearby_agents(agent, model::ABM, r = 1; kwargs...) -> agent
 
 Return an iterable of the agents near the position of the given `agent`.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_agents(a, model, args...; kwargs...) =
-    (model[id] for id in nearby_ids(a, model, args...; kwargs...))
+nearby_agents(a, model, r = 1; kwargs...) =
+    (model[id] for id in nearby_ids(a, model, r; kwargs...))
