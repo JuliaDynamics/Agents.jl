@@ -73,7 +73,8 @@ Return an iterable of the ids of the agents within "radius" `r` of the given `po
 (which must match type with the spatial structure of the `model`).
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer).
+- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
+  always including ids of the same node as `position`.
   For example, for `r=2` include first and second degree neighbors.
   If `r=0`, only ids in the same node as `position` are returned.
 - `GridSpace`: Either Chebyshev (also called Moore) or Euclidean distance,

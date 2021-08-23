@@ -110,7 +110,7 @@ function nearby_positions(
         append!(output, reduce(vcat, newnps))
         unique!(output)
     end
-    filter!(i -> i != position, output)
+    filter!(i -> i ≠ position, output)
 end
 
 #######################################################################################
