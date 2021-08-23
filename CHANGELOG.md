@@ -3,6 +3,10 @@
 - Small performance boost of `nearby_ids` for `GraphSpace`.
 
 # v4.5
+# v4.5.3
+- Performance enhancements for `random_empty`.
+
+# v4.5
 ## New features and fixes
 - Add `get_spatial_property` and `get_spatial_index` for easier usage of spatially distributed properties in `ContinuousSpace`.
 - Rework the pathfinding system to be more streamlined and offer greater control over the its details.
