@@ -14,6 +14,7 @@ end
 rem_node!(abm, 2)
 @test nv(abm) == 4
 @test nagents(abm) == 20
+# Last node became 2nd node (swapped places as per LightGraphs.jl)
 @test abm.space.s[2] == 21:25
 @test length(abm.space.s) == 4
 
@@ -26,7 +27,7 @@ add_edge!(abm, n, 2)
 
 a = add_agent!(n, abm, rand(abm.rng))
 ids = nearby_ids(a, abm)
-@test ids == 21:25
+@test sort(ids) == 21:25
 
 model = ABM(Agent5, GraphSpace(SimpleGraph()))
 @test_throws ArgumentError add_agent!(model, rand(model.rng))

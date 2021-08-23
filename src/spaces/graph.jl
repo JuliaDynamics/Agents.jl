@@ -83,7 +83,8 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     vcat(model.space.s[pos], model.space.s[np]...)
 end
 
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r; kwargs...) where {A<:AbstractAgent}
+# This function is here purely because of performance reasons
+function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
