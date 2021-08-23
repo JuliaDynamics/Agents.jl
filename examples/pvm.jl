@@ -94,7 +94,7 @@ steps = Int(round(time/dt))
 props = Dict("dt" => dt, "sigma" => σ, "η" => η)
 model = initialize(properties=props) # Initialise model
 adata = [:pos, :polarity] # Choose traits to track through simulation data
-agent_df,model_df = Agents.run!(model, agent_step!, steps; adata)
+agent_df, _ = Agents.run!(model, agent_step!, steps; adata)
 
 # Plot initial positions of each vortex as a green cross
 fig,ax = scatter(agent_df.pos[1:model.agents.count];
@@ -129,14 +129,14 @@ vpathP =  @from i in agent_df begin
 
 # Plot negative vortex path with varying alpha to better illustrate motion
 plot!(vpathN;
-color=tuple.(:red, sin.(LinRange(π/4,π/2,steps+1))),
+color=tuple.(:red, sin.(LinRange(0,π/2,steps+1))),
 markersize=1,
 label=""
 )
 
 # Plot positive vortex path with varying alpha to better illustrate motion
 plot!(vpathP;
-color=tuple.(:blue, sin.(LinRange(π/8,π/2,steps+1))),
+color=tuple.(:blue, sin.(LinRange(0,π/2,steps+1))),
 markersize=1,
 label=""
 )
