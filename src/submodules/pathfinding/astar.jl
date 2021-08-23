@@ -5,22 +5,22 @@ taken by an agent in a `D` dimensional space.
 """
 const Path{D,T} = MutableLinkedList{NTuple{D,T}}
 
-struct AStar{D,P,M,T} <: GridPathfinder{D,P,M}
+struct AStar{D,P,M,T,C<:CostMetric{D}} <: GridPathfinder{D,P,M}
     agent_paths::Dict{Int,Path{D,T}}
     dims::NTuple{D,T}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
     walkmap::BitArray{D}
-    cost_metric::CostMetric{D}
+    cost_metric::C
 
-    function AStar{D,P,M,T}(
+    function AStar{D,P,M,T,C}(
         agent_paths::Dict,
         dims::NTuple{D,T},
         neighborhood::Vector{CartesianIndex{D}},
         admissibility::Float64,
         walkmap::BitArray{D},
-        cost_metric::CostMetric{D},
-    ) where {D,P,M,T}
+        cost_metric::C,
+    ) where {D,P,M,C,T}
         @assert all(dims .> 0) "Invalid pathfinder dimensions: $(dims)"
         T <: Integer && @assert size(walkmap) == dims "Walkmap must be same dimensions as grid"
         @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
@@ -69,7 +69,7 @@ function AStar(
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,diagonal_movement,T}(
+    return AStar{D,periodic,diagonal_movement,T,typeof(cost_metric)}(
         Dict{Int,Path{D,T}}(),
         dims,
         neighborhood,
@@ -130,44 +130,48 @@ GridCell(g::Int, h::Int, admissibility::Float64) =
 
 GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
 
+ordering(cell) = cell.f
+
 """
     find_path(pathfinder::AStar{D}, from::NTuple{D,Int}, to::NTuple{D,Int})
 Calculate the shortest path from `from` to `to` using the A* algorithm.
 If a path does not exist between the given positions, an empty linked list is returned.
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
-    grid = Dict{Dims{D},GridCell}()
+    if !all(1 .<= from .<= size(pathfinder.walkmap)) ||
+        !all(1 .<= to .<= size(pathfinder.walkmap)) ||
+        !pathfinder.walkmap[from...] ||
+        !pathfinder.walkmap[to...]
+        return # nothing
+    end
     parent = Dict{Dims{D},Dims{D}}()
 
-    open_list = MutableBinaryMinHeap{Tuple{Int,Dims{D}}}()
-    open_list_handles = Dict{Dims{D},Int64}()
+    open_list = PriorityQueue{Dims{D},GridCell}(Base.By(ordering))
     closed_list = Set{Dims{D}}()
 
-    grid[from] = GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
-    push!(open_list, (grid[from].f, from))
+    enqueue!(
+        open_list,
+        from,
+        GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
+    )
 
     while !isempty(open_list)
-        _, cur = pop!(open_list)
+        cur, cell = dequeue_pair!(open_list)
         cur == to && break
         push!(closed_list, cur)
 
         nbors = get_neighbors(cur, pathfinder)
         for nbor in Iterators.filter(n -> inbounds(n, pathfinder, closed_list), nbors)
-            nbor_cell = haskey(grid, nbor) ? grid[nbor] : GridCell()
-            new_g_cost = grid[cur].g + delta_cost(pathfinder, cur, nbor)
+            nbor_cell = haskey(open_list, nbor) ? open_list[nbor] : GridCell()
+            new_g_cost = cell.g + delta_cost(pathfinder, cur, nbor)
 
             if new_g_cost < nbor_cell.g
                 parent[nbor] = cur
-                grid[nbor] = GridCell(
+                open_list[nbor] = GridCell(
                     new_g_cost,
                     delta_cost(pathfinder, nbor, to),
                     pathfinder.admissibility,
                 )
-                if haskey(open_list_handles, nbor)
-                    update!(open_list, open_list_handles[nbor], (grid[nbor].f, nbor))
-                else
-                    open_list_handles[nbor] = push!(open_list, (grid[nbor].f, nbor))
-                end
             end
         end
     end

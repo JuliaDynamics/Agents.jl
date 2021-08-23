@@ -25,7 +25,7 @@ struct GridSpace{D,P} <: DiscreteSpace
 end
 
 """
-    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev, pathfinder = nothing)
+    GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
 Optionally decide whether the space will be periodic and what will be the distance metric
 used, which decides the behavior of e.g. [`nearby_ids`](@ref).
@@ -40,9 +40,6 @@ the origin position.
 `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
-
-`pathfinder`: Optionally provide an instance of [`Pathfinding.Pathfinder`](@ref) to enable
-pathfinding capabilities based on the A* algorithm, see [Path-finding](@ref) in the docs.
 
 An example using `GridSpace` is the [Forest fire](@ref).
 """
