@@ -1,10 +1,11 @@
-# v4.5 (UNRELEASED)
+# v4.5
 ## New features and fixes
 - Add `get_spatial_property` and `get_spatial_index` for easier usage of spatially distributed properties in `ContinuousSpace`.
 - Rework the pathfinding system to be more streamlined and offer greater control over the its details.
 - Add support for pathfinding in `ContinuousSpace`.
 - New utility functions `nearby_walkable` and `random_walkable` for use in models with pathfinding.
 - Fixed bug where there was no differentiation between empty paths and paths to unreachable nodes.
+- Performance enhancements for `random_empty`.
 
 ## BREAKING
 - The old pathfinding system is now deprecated. Pathfinding structs are not saved as part of the
