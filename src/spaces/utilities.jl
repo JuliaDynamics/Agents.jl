@@ -81,7 +81,7 @@ end
 #######################################################################################
 # %% Utilities for graph-based spaces (Graph/OpenStreetMap)
 #######################################################################################
-GraphBasedSpace = GraphBasedSpace
+GraphBasedSpace = Union{GraphSpace, OpenStreetMapSpace}
 _get_graph(space::GraphSpace) = space.graph
 _get_graph(space::OpenStreetMapSpace) = space.m.g
 """
