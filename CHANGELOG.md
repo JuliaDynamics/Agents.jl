@@ -1,6 +1,5 @@
 # v4.5.4
 - Previously `nearby_ids` with `r=0` for `GraphSpace` was undefined. Now it returns ids only in the same position as given.
-- Small performance boost of `nearby_ids` for `GraphSpace`.
 
 # v4.5.3
 - Performance enhancements for `random_empty`.

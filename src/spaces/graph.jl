@@ -80,13 +80,7 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r; kwargs...)
         return ids_in_position(pos, model)
     end
     np = nearby_positions(pos, model, r; kwargs...)
-    t = sum(length(model.space.s[n]) for n in np) + length(model.space.s[pos])
-    ret = copy(model.space.s[pos])
-    sizehint!(ret, t)
-    for n in np
-        append!(ret, model.space.s[n])
-    end
-    return ret
+    vcat(model.space.s[pos], model.space.s[np]...)
 end
 
 function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r; kwargs...) where {A<:AbstractAgent}
