@@ -125,7 +125,7 @@ nothing # hide
 init_wealth = 4
 model = wealth_model_2D(; wealth = init_wealth)
 adata = [:wealth, :pos]
-data, _ = run!(model, agent_step!, 10; adata = adata, when = [1, 5, 9])
+data, _ = run!(model, agent_step_2d!, 10; adata = adata, when = [1, 5, 9])
 data[(end-20):end, :]
 
 # Okay, now we want to get the 2D spatial wealth distribution of the model.
