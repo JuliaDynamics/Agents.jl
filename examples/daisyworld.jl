@@ -8,9 +8,9 @@
 # Study this example to learn about
 # - Simple agent properties with complex model interactions
 # - Diffusion of a quantity in a `GridSpace`
-# - Including a "surface property" in the model
-# - counting time in the model and having time-dependent dynamics
-# - performing interactive scientific research
+# - Including and plotting a "surface property" in the model
+# - Counting time in the model and having time-dependent dynamics
+# - Performing interactive scientific research
 #
 # ## Overview of Daisyworld
 #
@@ -18,11 +18,11 @@
 # which considers the Earth as a single, self-regulating system including both living and
 # non-living parts.
 #
-# Daisyworld is filled with black and white daisies.
-# Their albedo's differ, with black daisies absorbing light and heat,
+# Daisyworld is a grid world filled with black and white daisies.
+# Their albedo differ, with black daisies absorbing light and heat,
 # warming the area around them; white daisies doing the opposite.
 # Daisies can only reproduce within a certain temperature range, meaning too much
-# (or too little) heat coming from the sun and/or surrounds will ultimately halt daisy
+# (or too little) heat coming from the sun and/or surroundings will ultimately halt daisy
 # propagation.
 #
 # When the climate is too cold it is necessary for the black daisies to propagate in order
@@ -33,38 +33,33 @@
 # forcing, the daisies will not be able to regulate the temperature of the planet
 # and eventually go extinct.
 
-# ## Defining the agent types
+# Daisyworld is also available from the `Models` module as [`Models.daisyworld`](@ref).
+
+# ## Defining the agent type
 
 # `Daisy` has three values (other than the required
 # `id` and `pos` for an agent that lives on a [`GridSpace`](@ref). Each daisy has an `age`,
 # confined later by a maximum age set by the user, a `breed` (either `:black` or `:white`)
 # and an associated `albedo` value, again set by the user.
-# `Land` represents the surface. We could make `Land` also have an albedo field, but
-# in this world, the entire surface has the same albedo and thus we make it a model parameter.
 
-# Notice that the `Land` does not necessarily have to be an agent, and one could represent
-# surface temperature via a matrix (parameter of the model). This is done in an older version,
-# see file `examples/daisyworld_matrix.jl`. The old version has a slight performance advantage.
-# However, the advantage of making the surface composed of
-# agents is that visualization is simple and one can use the interactive application to also
-# visualize surface temperature.
-# It is also available from the `Models` module as [`Models.daisyworld`](@ref).
-
+# There are no other agent types. Potentially one could make a `Land` type that
+# represents the surface, but in Agents.jl that is not necessary. Spatial properties
+# can be handled conveniently as model properties (and in fact this is also more performant).
 using Agents
 using Statistics: mean
-using Random # hide
 
 mutable struct Daisy <: AbstractAgent
     id::Int
-    pos::Dims{2}
+    pos::NTuple{2, Int}
     breed::Symbol
     age::Int
     albedo::Float64 # 0-1 fraction
 end
 
+# This is an alias we can define and use for code clarity
 const DaisyWorld = ABM{<:GridSpace, Daisy};
 
-# ## World heating
+# ## World heating (model step)
 
 # The surface temperature of the world is heated by its sun, but daisies growing upon it
 # absorb or reflect the starlight -- altering the local temperature.
@@ -96,58 +91,6 @@ function diffuse_temperature!(pos, model::DaisyWorld)
         sum(model.temperature[p...] for p in npos) * 0.125 * ratio
 end
 
-# ## Daisy dynamics
-
-# The final piece of the puzzle is the life-cycle of each daisy. This method defines an
-# optimal temperature for growth. If the temperature gets too hot or too cold, daisies
-# will not wish to propagate. So long as the temperature is favorable,
-# daisies compete for land and attempt to spawn a new plant of their `breed` in locations
-# close to them.
-
-function propagate!(pos, model::DaisyWorld)
-    ids = ids_in_position(pos, model)
-    if !isempty(ids)
-        daisy = model[ids[1]]
-        temperature = model.temperature[pos...]
-        ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
-        seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand(model.rng) < seed_threshold
-            ## Collect all adjacent position that have no daisies
-            empty_neighbors = Tuple{Int,Int}[]
-            neighbors = nearby_positions(pos, model)
-            for n in neighbors
-                if isempty(ids_in_position(n, model))
-                    push!(empty_neighbors, n)
-                end
-            end
-            if !isempty(empty_neighbors)
-                ## Seed a new daisy in one of those position
-                seeding_place = rand(model.rng, empty_neighbors)
-                add_agent!(seeding_place, model, daisy.breed, 0, daisy.albedo)
-            end
-        end
-    end
-end
-
-# And if the daisies cross an age threshold, they die out.
-# Death is controlled by the `agent_step` function
-function agent_step!(agent::Daisy, model::DaisyWorld)
-    agent.age += 1
-    agent.age >= model.max_age && kill_agent!(agent, model)
-end
-
-# The model step function advances Daisyworld's dynamics:
-
-function model_step!(model)
-    for p in positions(model)
-        update_surface_temperature!(p, model)
-        diffuse_temperature!(p, model)
-        propagate!(p, model)
-    end
-    model.tick += 1
-    solar_activity!(model)
-end
-
 # Notice that `solar_activity!` changes the incoming solar radiation over time,
 # if the given "scenario" (a model parameter) is `:ramp`.
 # The parameter `tick` of the model keeps track of time.
@@ -163,6 +106,56 @@ function solar_activity!(model::DaisyWorld)
     elseif model.scenario == :change
         model.solar_luminosity += model.solar_change
     end
+end
+
+# Now let's group all these into a `model_step!` function
+
+function model_step!(model)
+    for p in positions(model)
+        update_surface_temperature!(p, model)
+        diffuse_temperature!(p, model)
+    end
+    model.tick += 1
+    solar_activity!(model)
+end
+
+
+# ## Daisy life cycle (agent step)
+
+# The final piece of the puzzle is the life cycle of each daisy. This method defines an
+# optimal temperature for growth. If the temperature gets too hot or too cold, daisies
+# will not be able to propagate offsprings. So long as the temperature is favorable,
+# daisies compete for land and attempt to spawn a new plant of their `breed` in locations
+# close to them.
+
+function propagate!(daisy, model::DaisyWorld)
+    T = model.temperature[daisy.pos...]
+    ## Set optimum growth rate to 22.5 ᵒC, with bounds of [5, 40]
+    ## (this is just a parabola)
+    seed_threshold = (0.1457 * T - 0.0032 * T^2) - 0.6443
+    if rand(model.rng) < seed_threshold
+        ## Collect all adjacent position that have no daisies
+        empty_neighbors = Tuple{Int,Int}[]
+        np = nearby_positions(pos, model)
+        for p in np
+            if isempty(ids_in_position(p, model))
+                push!(empty_neighbors, p)
+            end
+        end
+        if !isempty(empty_neighbors)
+            ## Seed a new daisy in one of those empty positions
+            seeding_place = rand(model.rng, empty_neighbors)
+            add_agent!(seeding_place, model, daisy.breed, 0, daisy.albedo)
+        end
+    end
+end
+
+# And if the daisies cross an age threshold, they die out.
+# Death is directly in the `agent_step!` function
+function agent_step!(agent::Daisy, model::DaisyWorld)
+    propagate!(daisy, model)
+    agent.age += 1
+    agent.age >= model.max_age && kill_agent!(agent, model)
 end
 
 # ## Initialising Daisyworld
@@ -254,7 +247,7 @@ fig
 
 # And after a couple of steps
 Agents.step!(model, agent_step!, model_step!, 5)
-fig, _ = abm_plot(model; heatarray = model.temperature, plotkwargs...)
+fig, _ = abm_plot(model; plotkwargs...)
 fig
 
 # Let's do some animation now
