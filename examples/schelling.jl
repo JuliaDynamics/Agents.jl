@@ -163,40 +163,6 @@ step!(model, agent_step!)
 # Or for three steps
 step!(model, agent_step!, 3)
 
-# ## Running the model and collecting data
-
-# We can use the [`run!`](@ref) function with keywords to run the model for
-# multiple steps and collect values of our desired fields from every agent
-# and put these data in a `DataFrame` object.
-# We define vector of `Symbols`
-# for the agent fields that we want to collect as data
-adata = [:pos, :mood, :group]
-
-model = initialize()
-data, _ = run!(model, agent_step!, 5; adata)
-data[1:10, :] # print only a few rows
-
-# We could also use functions in `adata`, for example we can define
-x(agent) = agent.pos[1]
-model = initialize()
-adata = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata)
-data[1:10, :]
-
-# With the above `adata` vector, we collected all agent's data.
-# We can instead collect aggregated data for the agents.
-# For example, let's only get the number of happy individuals, and the
-# average of the "x" (not very interesting, but anyway!)
-using Statistics: mean
-model = initialize();
-adata = [(:mood, sum), (x, mean)]
-data, _ = run!(model, agent_step!, 5; adata)
-data
-
-# Other examples in the documentation are more realistic, with more meaningful
-# collected data. Don't forget to use the function [`dataname`](@ref) to access the
-# columns of the resulting dataframe by name.
-
 # ## Visualizing the data
 
 # We can use the [`abm_plot`](@ref) function to plot the distribution of agents on a
@@ -233,6 +199,40 @@ abm_video(
 # <source src="../schelling.mp4" type="video/mp4">
 # </video>
 # ```
+
+# ## Collecting data during time evolution
+
+# We can use the [`run!`](@ref) function with keywords to run the model for
+# multiple steps and collect values of our desired fields from every agent
+# and put these data in a `DataFrame` object.
+# We define a vector of `Symbols`
+# for the agent fields that we want to collect as data
+adata = [:pos, :mood, :group]
+
+model = initialize()
+data, _ = run!(model, agent_step!, 5; adata)
+data[1:10, :] # print only a few rows
+
+# We could also use functions in `adata`, for example we can define
+x(agent) = agent.pos[1]
+model = initialize()
+adata = [x, :mood, :group]
+data, _ = run!(model, agent_step!, 5; adata)
+data[1:10, :]
+
+# With the above `adata` vector, we collected all agent's data.
+# We can instead collect aggregated data for the agents.
+# For example, let's only get the number of happy individuals, and the
+# average of the "x" (not very interesting, but anyway!)
+using Statistics: mean
+model = initialize();
+adata = [(:mood, sum), (x, mean)]
+data, _ = run!(model, agent_step!, 5; adata)
+data
+
+# Other examples in the documentation are more realistic, with more meaningful
+# collected data. Don't forget to use the function [`dataname`](@ref) to access the
+# columns of the resulting dataframe by name.
 
 # ## Launching the interactive application
 # Given the definitions we have already created for a normally plotting or animating the ABM
