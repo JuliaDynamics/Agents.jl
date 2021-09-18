@@ -11,7 +11,8 @@ To set up an ABM simulation in Agents.jl, a user only needs to follow these step
 1. Define the agent type (or types, for mixed models) that will populate the ABM. This is defined as a standard Julia `struct` and contains two mandatory fields `id, pos`, with the position field being appropriate for the chosen space.
 3. The created agent type, the chosen space, and optional additional model level properties (typically in the form of a dictionary) are provided in our universal structure [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation. Further options are also available, regarding schedulers and random number generation.
 4. Provide functions that govern the time evolution of the ABM. A user can provide an agent-stepping function, that acts on each agent one by one, and/or model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
-5. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model, for example `[:mood, :wealth]`. The outputted data are in the form of a `DataFrame`.
+5. [Optional] Visualize the model and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
+6. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, and another one for the model, for example `[:mood, :wealth]`. The outputted data are in the form of a `DataFrame`.
 
 If you're planning of running massive simulations, it might be worth having a look at the [Performance Tips](@ref) after familiarizing yourself with Agents.jl.
 
@@ -104,7 +105,10 @@ step!(model, dummystep, complex_step!, n)
 
 For defining your own schedulers, see [Schedulers](@ref).
 
-## 5. Collecting data
+## 5. Visualizations
+Once we have defined a model and the stepping functions we can visualize the model statically or animate its time evolution. This is discussed in a different page: [Plotting and interactive application](@ref). Furthermore, all models in the Examples showcase plotting.
+
+## 6. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection, while scanning ranges of the parameters of the model.
 
 ```@docs

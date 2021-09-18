@@ -1,7 +1,7 @@
 # Plotting and interactive application
 Plotting and interaction functionality comes from [`InteractiveDynamics`](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/), another package of JuliaDynamics, which uses Makie.jl.
 
-Plotting, and the interactive application of Agents.jl, are _model-agnostic_ and _simple to use_. Defining simple functions that map agents to colors, and shapes, is the only thing you need to do. If you have already defined an ABM and functions for stepping the model, you typically need to write only an extra couple of lines of code to get your visualizations going.
+Plotting, and the interactive application of Agents.jl, are _model-agnostic_ and _simple to use_. Defining simple functions that map agents to colors, and shapes, is the only thing you need to do. If you have already defined an ABM and functions for stepping the model, you typically need to write only an extra couple of lines of code to get your visualizations going. All models in the Examples showcase plotting.
 
 You need to install both `InteractiveDynamics`, as well as a plotting backend (we recommend `GLMakie`) to use the following functions.
 
