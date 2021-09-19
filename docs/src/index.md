@@ -79,6 +79,15 @@ If they are unhappy, they keep moving to new locations until they are happy.
 Schelling's model shows that even small preferences of agents to have neighbors belonging to the same group (e.g. preferring that at least 30% of neighbors to be in the same group) could lead to total segregation of neighborhoods.
 This is an example of emergent behavior from simple interactions of agents that can only be captured in an agent-based model.
 
+## Getting help
+You're looking for support for Agents.jl? Look no further! Here's the three things you can do to resolve your questions about Agents.jl:
+
+1. Read the online documentation! It is likely that the thing you want to know is already documented, so use the search bar and search away!
+2. Chat with us in the channel `#dynamics-bridged` in the [Julia Slack](https://julialang.org/slack/)!
+3. Post a question in the [Julia discourse](https://discourse.julialang.org/) in the category “Modelling and simulations”, using “agent” as a tag!
+4. If you believe that you have encountered unexpected behavior or a bug in Agents.jl, then please do open an issue on our [GitHub page](https://github.com/JuliaDynamics/Agents.jl) providing a minimal working example!
+
+
 ## Citation
 
 If you use this package in work that leads to a publication, then please cite the paper below:
