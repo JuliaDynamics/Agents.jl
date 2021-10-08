@@ -54,7 +54,7 @@ function populate_from_csv!(
     col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
     row_number_is_id = false,
     kwargs...,
-) where {A,B<:Union{Type{<:A},Function},S}
+) where {A,B <: Union{Type{<:A},Function},S}
     @assert(
         agent_type isa Function || !(agent_type isa Union),
         "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent"
@@ -63,8 +63,7 @@ function populate_from_csv!(
         kwargs = (
             kwargs...,
             types = Dict(
-                fieldname(agent_type, i) => fieldtype(agent_type, i) for
-                i in 1:fieldcount(agent_type)
+                fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type)
             ),
         )
         for (k, v) in kwargs.types
@@ -79,21 +78,21 @@ function populate_from_csv!(
 
     if isempty(col_map)
         if row_number_is_id
-            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...))
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
                 add_agent_pos!(agent_type(id, row...), model)
             end
         else
-            for row in CSV.Rows(read(filename); kwargs...)
+            for row in CSV.Rows(read(filename); kwargs..., validate = false)
                 add_agent_pos!(agent_type(row...), model)
             end
         end
     else
         if row_number_is_id
-            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...))
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
                 add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
             end
         else
-            for row in CSV.Rows(read(filename); kwargs...)
+            for row in CSV.Rows(read(filename); kwargs..., validate = false)
                 add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
             end
         end
