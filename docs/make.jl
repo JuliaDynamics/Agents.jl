@@ -17,7 +17,7 @@ println("Converting Examples...")
 
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
-rm(outdir; force=true, recursive=true) # cleans up previous examples
+rm(outdir; force = true, recursive = true) # cleans up previous examples
 mkpath(outdir)
 toskip = ("predator_prey_multiagent.jl", "siroptim.jl")
 for file in readdir(indir)
@@ -28,7 +28,7 @@ end
 # %%
 # download the themes
 println("Theme-ing")
-using DocumenterTools: Themes
+using DocumenterTools:Themes
 import Downloads
 for file in (
     "juliadynamics-lightdefs.scss",
@@ -107,7 +107,7 @@ makedocs(
         "Ecosystem Integration" => [
             "BlackBoxOptim.jl" => "examples/optim.md",
             "DifferentialEquations.jl" => "examples/diffeq.md",
-            "LightGraphs.jl" => "examples/schoolyard.md",
+            "Graphs.jl" => "examples/schoolyard.md",
             "Measurements.jl" => "examples/measurements.md",
         ],
         "Performance Tips" => "performance_tips.md",

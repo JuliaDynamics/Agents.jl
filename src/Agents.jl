@@ -3,7 +3,7 @@ module Agents
 using Requires
 using Distributed
 using DataStructures
-using LightGraphs
+using Graphs
 using DataFrames
 using Random
 import ProgressMeter

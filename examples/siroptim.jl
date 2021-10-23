@@ -1,7 +1,7 @@
-using Agents, Random, DataFrames, LightGraphs
+using Agents, Random, DataFrames, Graphs
 using Distributions: Poisson, DiscreteNonParametric
-using DrWatson: @dict
-using LinearAlgebra: diagind
+using DrWatson:@dict
+using LinearAlgebra:diagind
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int

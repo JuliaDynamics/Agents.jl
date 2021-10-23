@@ -8,8 +8,8 @@ See the docstring of the space for more info.
 module OSM # OpenStreetMap
 using Agents
 using OpenStreetMapX
-using LightGraphs
-using LinearAlgebra: dot
+using Graphs
+using LinearAlgebra:dot
 
 export TEST_MAP,
     random_road_position,
@@ -195,7 +195,7 @@ function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     end
 end
 
-latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A <: AbstractAgent} =
     latlon(agent.pos, model)
 
 """
@@ -296,7 +296,7 @@ function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return agent.pos == agent.destination && isempty(agent.route)
 end
 
-#HELPERS, NOT EXPORTED
+# HELPERS, NOT EXPORTED
 function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
     bounds = model.space.m.bounds
     return (
@@ -324,7 +324,7 @@ end
 function Agents.add_agent_to_space!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
-) where {A<:AbstractAgent}
+) where {A <: AbstractAgent}
     push!(model.space.s[agent.pos[1]], agent.id)
     return agent
 end
@@ -332,7 +332,7 @@ end
 function Agents.remove_agent_from_space!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
-) where {A<:AbstractAgent}
+) where {A <: AbstractAgent}
     prev = model.space.s[agent.pos[1]]
     ai = findfirst(i -> i == agent.id, prev)
     deleteat!(prev, ai)
@@ -358,8 +358,8 @@ function Agents.move_along_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
     distance::Real,
-) where {A<:AbstractAgent}
-
+) where {A <: AbstractAgent}
+        
     if is_stationary(agent, model)
         return nothing
     end
@@ -636,7 +636,7 @@ function Agents.nearby_ids(
     model::ABM{<:OpenStreetMapSpace,A},
     args...;
     kwargs...,
-) where {A<:AbstractAgent}
+) where {A <: AbstractAgent}
     all = nearby_ids(agent.pos, model, args...; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -651,13 +651,13 @@ function Agents.nearby_positions(
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn = if neighbor_type == :default
-        LightGraphs.neighbors
+        Graphs.neighbors
     elseif neighbor_type == :in
-        LightGraphs.inneighbors
+        Graphs.inneighbors
     elseif neighbor_type == :out
-        LightGraphs.outneighbors
+        Graphs.outneighbors
     else
-        LightGraphs.all_neighbors
+        Graphs.all_neighbors
     end
     neighborfn(model.space.m.g, position)
 end
@@ -689,7 +689,7 @@ If your solution can tolerate routes to and from intersections only without cari
 continuity of the roads in between, a faster implementation can be achieved by using the
 [graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
 of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
-integration example: [Social networks with LightGraphs.jl](@ref).
+integration example: [Social networks with Graphs.jl](@ref).
 
 ## The OSMAgent
 
