@@ -48,7 +48,7 @@ agents in some other manner is. A [`GraphSpace`](@ref) may be the answer.
 populations.
 
 Using graphs in conjunction with grid spaces is also possible, we discuss this in one
-of our integration pages: [Social networks with LightGraphs.jl](@ref).
+of our integration pages: [Social networks with Graphs.jl](@ref).
 
 Finally, [Battle Royale](@ref) is an advanced example which leverages a 3-dimensional
 grid space, but only uses 2 of those dimensions for space. The third represents an
