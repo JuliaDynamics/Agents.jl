@@ -1,5 +1,5 @@
 [deps]
 Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"

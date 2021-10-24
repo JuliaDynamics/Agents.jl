@@ -3,7 +3,7 @@ module Agents
 using Requires
 using Distributed
 using DataStructures
-using LightGraphs
+using Graphs
 using DataFrames
 using Random
 import ProgressMeter
@@ -45,7 +45,7 @@ export Models
 # Update messages:
 using Scratch
 display_update = true
-version_number = "4.5"
+version_number = "4.6"
 update_name = "update_v$(version_number)"
 
 if display_update
@@ -58,11 +58,7 @@ if display_update
             \nUpdate message: Agents v$(version_number)
             Please see the changelog online. Some key features:
 
-            * `get_spatial_property` and `get_spatial_index` functions have been added for easier usage of spatially distributed properties in `ContinuousSpace`.
-            * The old pathfinding API has been deprecated in favour of a complete rework:
-              Pathfinding structs are no longer stored by the space. Instead, `AStar` structs should be created by passing in the space and other parameters. All pathfinding functions now require the `AStar` struct to be passed in.
-            * Pathfinding is now supported for `ContinuousSpace` using the A* algorithm.
-            * Additional utility functions `nearby_walkable` and `random_walkable` for use with pathfinding.
+            * Agents.jl now uses [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl) instead of LightGraphs.jl
             """;
             color = :light_magenta,
         )

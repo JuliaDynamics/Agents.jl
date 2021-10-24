@@ -1,4 +1,4 @@
-# # Social networks with LightGraphs.jl
+# # Social networks with Graphs.jl
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -16,7 +16,7 @@
 # in their [documentation](https://cs.gmu.edu/~eclab/projects/mason/manual.pdf).
 
 # Rather than implementing an Agents.jl⸺specific graph structure, we can interface with
-# [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl): a high class library for managing
+# [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl): a high class library for managing
 # and implementing graphs, which can be re-used to establish social networks within existing spaces.
 
 # To begin, we load in some dependencies
@@ -80,7 +80,7 @@ function schoolyard(;
     model
 end
 
-# Our model contains the `buddies` property, which is our LightGraphs.jl directed, weighted graph.
+# Our model contains the `buddies` property, which is our Graphs.jl directed, weighted graph.
 # As we can see in the loop, we choose one `friend` and one `foe` at random for each `student` and
 # assign their relationship as a weighted edge on the graph.
 
@@ -131,7 +131,7 @@ end
 # that force should be in a positive or negative direction (*friend* or *foe*?).
 
 # The `findnz` function is something that may require some further explanation.
-# LightGraphs uses sparse vectors internally to efficiently represent data.
+# Graphs uses sparse vectors internally to efficiently represent data.
 # When we find the `network` of our `student`, we want to convert the result to
 # a dense representation by **find**ing the **n**on-**z**ero (`findnz`) elements.
 

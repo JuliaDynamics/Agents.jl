@@ -16,7 +16,7 @@ edistance(
     a::A,
     b::B,
     model::ABM{<:Union{ContinuousSpace,GridSpace}},
-) where {A<:AbstractAgent,B<:AbstractAgent} = edistance(a.pos, b.pos, model)
+) where {A <: AbstractAgent,B <: AbstractAgent} = edistance(a.pos, b.pos, model)
 
 function edistance(
     a::ValidPos,
@@ -64,12 +64,12 @@ get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
 function get_direction(
     from::NTuple{D,Float64},
     to::NTuple{D,Float64},
-    space::Union{ContinuousSpace{D,true}, GridSpace{D,true}}
+    space::Union{ContinuousSpace{D,true},GridSpace{D,true}}
 ) where {D}
     best = to .- from
     for offset in Iterators.product([-1:1 for _ in 1:D]...)
         dir = to .+ offset .* size(space) .- from
-        sum(dir .^ 2) < sum(best .^ 2) && (best = dir)
+        sum(dir.^2) < sum(best.^2) && (best = dir)
     end
     return best
 end
@@ -81,20 +81,20 @@ end
 #######################################################################################
 # %% Utilities for graph-based spaces (Graph/OpenStreetMap)
 #######################################################################################
-GraphBasedSpace = Union{GraphSpace, OpenStreetMapSpace}
+GraphBasedSpace = Union{GraphSpace,OpenStreetMapSpace}
 _get_graph(space::GraphSpace) = space.graph
 _get_graph(space::OpenStreetMapSpace) = space.m.g
 """
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-LightGraphs.nv(abm::ABM{<:GraphBasedSpace}) = LightGraphs.nv(_get_graph(abm.space))
+Graphs.nv(abm::ABM{<:GraphBasedSpace}) = Graphs.nv(_get_graph(abm.space))
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-LightGraphs.ne(abm::ABM{<:GraphBasedSpace}) = LightGraphs.ne(_get_graph(abm.space))
+Graphs.ne(abm::ABM{<:GraphBasedSpace}) = Graphs.ne(_get_graph(abm.space))
 
 positions(model::ABM{<:GraphBasedSpace}) = 1:nv(model)
 

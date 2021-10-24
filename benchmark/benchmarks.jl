@@ -1,4 +1,4 @@
-using BenchmarkTools, Agents, LightGraphs
+using BenchmarkTools, Agents, Graphs
 
 const SUITE = BenchmarkGroup(["Agents"])
 
