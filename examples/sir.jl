@@ -42,7 +42,7 @@
 # ## Making the model in Agents.jl
 # We start by defining the `PoorSoul` agent type and the ABM
 cd(@__DIR__) #src
-using Agents, Random, DataFrames, LightGraphs
+using Agents, Random, DataFrames, Graphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using CairoMakie
