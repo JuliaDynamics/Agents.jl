@@ -65,12 +65,13 @@ nothing # hide
 # ## Stepping functions
 
 function model_step!(model)
+    extent = model.space.extent
     for a in allagents(model)
         if a.growthprog ≥ 1
             ## When a cell has matured, it divides into two daughter cells on the
-            ## positions of its nodes.
-            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
-            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            ## positions of its nodes. Only place a cell when it is in the extend
+            all(0 .≤ a.p1 .≤ extent) && add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            all(0 .≤ a.p2 .≤ extent) && add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
             kill_agent!(a, model)
         else
             ## The rest lengh of the internal spring grows with time. This causes
