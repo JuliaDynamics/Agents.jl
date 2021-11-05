@@ -48,6 +48,7 @@ display_update = true
 version_number = "4.6"
 update_name = "update_v$(version_number)"
 
+function __init__()
 if display_update
     # Get scratch space for this package
     versions_dir = @get_scratch!("versions")
@@ -64,6 +65,7 @@ if display_update
         )
         touch(joinpath(versions_dir, update_name))
     end
+end
 end
 
 end # module
