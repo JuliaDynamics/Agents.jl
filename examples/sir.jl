@@ -20,7 +20,7 @@
 # * `Ns`: a vector of population sizes per city. The amount of cities is just `C=length(Ns)`.
 # * `β_und`: a vector for transmission probabilities β of the infected but undetected per city.
 #   Transmission probability is how many susceptible are infected per day by an infected individual.
-#   If social distancing is practiced, this number increases.
+#   If social distancing is practiced, this number decreases.
 # * `β_det`: an array for transmission probabilities β of the infected and detected per city.
 #   If hospitals are full, this number increases.
 # * `infection_period = 30`: how many days before a person dies or recovers.
