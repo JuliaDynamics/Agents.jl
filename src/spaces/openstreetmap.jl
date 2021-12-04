@@ -7,7 +7,7 @@ See the docstring of the space for more info.
 """
 module OSM # OpenStreetMap
 using Agents
-using OpenStreetMapX
+using LightOSM
 using Graphs
 using LinearAlgebra:dot
 
@@ -22,17 +22,15 @@ export TEST_MAP,
     road
 
 struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
-    m::OpenStreetMapX.MapData
+    m::OSMGraph
     s::Vector{Vector{Int}}
 end
 
 function OpenStreetMapSpace(
     path::AbstractString;
-    use_cache = false,
-    trim_to_connected_graph = true,
 )
-    m = get_map_data(path; use_cache, trim_to_connected_graph)
-    agent_positions = [Int[] for i in 1:Agents.nv(m.g)]
+    m = get_map_data(path) 
+    agent_positions = [Int[] for i in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions)
 end
 
@@ -44,8 +42,8 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
-const TEST_MAP =
-    joinpath(dirname(pathof(OpenStreetMapX)), "..", "test", "data", "reno_east3.osm")
+#const TEST_MAP =
+#    joinpath(dirname(pathof(OpenStreetMapX)), "..", "test", "data", "reno_east3.osm")
 
 #######################################################################################
 # Custom functions for OSMSpace
@@ -175,21 +173,14 @@ end
 
 Return (latitude, longitude) of current road or intersection position.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
-    OpenStreetMapX.latlon(model.space.m, pos)
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.nodes[pos]
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
-        start = get_EastNorthUp_coordinate(pos[1], model)
-        finish = get_EastNorthUp_coordinate(pos[2], model)
-        travelled = pos[3] / road_length(pos, model)
-        enu_coord = ENU(
-            getX(start) * (1 - travelled) + getX(finish) * travelled,
-            getY(start) * (1 - travelled) + getY(finish) * travelled,
-            getZ(start) * (1 - travelled) + getZ(finish) * travelled,
-        )
-        lla = LLA(enu_coord, model.space.m.bounds)
-        return (lla.lat, lla.lon)
+      dir = heading(pos[1], pos[2])
+      dist = pos[3] * road_length(pos, model)
+      geoloc = calculate_location(pos[1], dir, dist)
+      return (geoloc.lat, geoloc.lon)
     else
         return OpenStreetMapX.latlon(model.space.m, pos[1])
     end
@@ -205,7 +196,7 @@ Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    idx = getindex(model.space.m.v, point_to_nodes(ll, model.space.m))
+    idx = nearest_node(model.space.m, [GeoLocation(ll..., 0.)])[1][1][1]
     return (idx, idx, 0.0)
 end
 
@@ -290,7 +281,7 @@ Return the road length (in meters) between two intersections given by intersecti
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
-road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.w[p1, p2]
+road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.weights[p1, p2]
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return agent.pos == agent.destination && isempty(agent.route)
@@ -298,10 +289,10 @@ end
 
 # HELPERS, NOT EXPORTED
 function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
-    bounds = model.space.m.bounds
+    bounds = model.space.m.kdtree.hyper_rec
     return (
-        rand(model.rng) * (bounds.max_y - bounds.min_y) + bounds.min_y,
-        rand(model.rng) * (bounds.max_x - bounds.min_x) + bounds.min_x
+        rand(model.rng) * (bounds.max[1] - bounds.min[1]) + bounds.min[1],
+        rand(model.rng) * (bounds.max[2] - bounds.min[2]) + bounds.min[2],
     )
 end
 
