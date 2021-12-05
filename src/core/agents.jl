@@ -65,7 +65,7 @@ macro agent(name, base, fields)
     base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_types)]
     res = :(mutable struct $(esc(name)) <: AbstractAgent end)
     push!(res.args[end].args, base_fields...)
-    push!(res.args[end].args, map(esc,fields.args)...)
+    push!(res.args[end].args, map(esc, fields.args)...)
     return res
 end
 
@@ -113,6 +113,5 @@ to the start of the agent type.
 mutable struct OSMAgent <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int,Float64}
-    route::Vector{Int}
     destination::Tuple{Int,Int,Float64}
 end

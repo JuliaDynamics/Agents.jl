@@ -9,11 +9,11 @@ module OSM # OpenStreetMap
 using Agents
 using LightOSM
 using Graphs
-using LinearAlgebra:dot
+using LinearAlgebra: cross, dot, norm
 
 export TEST_MAP,
     random_road_position,
-    plan_route,
+    plan_route!,
     map_coordinates,
     road_length,
     random_route!,
@@ -21,24 +21,34 @@ export TEST_MAP,
     intersection,
     road
 
+struct OpenStreetMapPath
+    route::Vector{Int}
+    start::Tuple{Int,Int,Float64}
+    dest::Tuple{Int,Int,Float64}
+    return_route::Vector{Int}
+    current_target::Int
+end
+
+# NOTE: All positions are indexed by node id and _not_ vertex number
 struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
     m::OSMGraph
     s::Vector{Vector{Int}}
+    routes::Dict{Int,OpenStreetMapPath}
 end
 
 function OpenStreetMapSpace(
     path::AbstractString;
 )
-    m = get_map_data(path) 
-    agent_positions = [Int[] for i in 1:Agents.nv(m.graph)]
-    return OpenStreetMapSpace(m, agent_positions)
+    m = get_map_data(path)
+    agent_positions = [Int[] for i = 1:Agents.nv(m.graph)]
+    return OpenStreetMapSpace(m, agent_positions, Dict())
 end
 
 function Base.show(io::IO, s::OpenStreetMapSpace)
     print(
         io,
-        "OpenStreetMapSpace with $(length(s.m.roadways)) roadways " *
-        "and $(length(s.m.intersections)) intersections",
+        "OpenStreetMapSpace with $(length(s.m.highways)) roadways " *
+        "and $(length(s.m.nodes)) intersections",
     )
 end
 
@@ -57,8 +67,11 @@ Similar to [`random_position`](@ref), but rather than providing only intersectio
 returns a location somewhere on a road heading in a random direction.
 """
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
-    ll = random_point_in_bounds(model)
-    return road(ll, model)
+    # pick a random source and destination, and then a random distance on that edge
+    s = rand(model.rng, 1:Agents.nv(model))
+    d = rand(model.rng, outneighbors(model.space.m.graph, s))
+    dist = rand(model.rng)
+    return (model.space.m.index_to_node(s), model.space.m.index_to_node(d), dist)
 end
 
 """
@@ -67,10 +80,13 @@ end
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any current route.
 """
-function random_route!(agent, model::ABM{<:OpenStreetMapSpace})
-    agent.destination = random_road_position(model)
-    agent.route = plan_route(agent.pos, agent.destination, model)
-    return nothing
+function random_route!(
+    agent::A,
+    model::ABM{<:OpenStreetMapSpace,A};
+    return_trip = false,
+    kwargs...
+) where {A<:AbstractAgent}
+    plan_route!(agent, random_road_position(model), model; return_trip, kwargs...)
 end
 
 """
@@ -84,88 +100,49 @@ Generate a list of intersections between `start` and `finish` points on the map.
 When either point is a position, the associated intersection index will be removed from
 the route to avoid double counting.
 
-Route is planned via the shortest path by default (`by = :shortest`), but can also be
-planned `by = :fastest`. Road speeds are needed for this method which can be passed in via
-extra keyword arguments. Consult the OpenStreetMapX documentation for more details.
-
 If `return_trip = true`, a route will be planned from start -> finish -> start.
 """
-function plan_route(
-    start::Int,
-    finish::Int,
-    model::ABM{<:OpenStreetMapSpace};
-    by = :shortest,
+function plan_route!(
+    agent::A,
+    dest::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace,A};
     return_trip = false,
-    kwargs...,
-)
-    @assert by ∈ (:shortest, :fastest) "Can only plan route by :shortest or :fastest"
-    planner = by == :shortest ? shortest_route : fastest_route
-    route = if return_trip
-        planner(
-            model.space.m,
-            model.space.m.n[start],
-            model.space.m.n[finish],
-            model.space.m.n[start];
-            kwargs...,
-        )[1]
-    else
-        planner(model.space.m, model.space.m.n[start], model.space.m.n[finish]; kwargs...)[1]
-    end
-    map(p -> getindex(model.space.m.v, p), route)
-end
-
-function plan_route(
-    start::Tuple{Int,Int,Float64},
-    finish::Int,
-    model::ABM{<:OpenStreetMapSpace};
-    return_trip = false,
-    kwargs...,
-)
-    path = if return_trip
-        plan_return_route(start[2], finish, start[1], model; kwargs...)
-    else
-        plan_route(start[2], finish, model; kwargs...)
-    end
-    ## Since we start on an edge, there are two possibilities here.
-    ## 1. The route wants us to turn around, thus next id en-route will
-    ## be pos[1]. That's fine.
-    ## 2. The route wants us to move on, but start will be in the list,
-    ## so we need to drop that.
-    if !isempty(path) && path[1] == start[2]
-        popfirst!(path)
-    end
-    return path
-end
-
-function plan_route(
-    start,
-    finish::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace};
-    kwargs...,
-)
-    path = plan_route(start, finish[1], model; kwargs...)
-    isempty(path) || pop!(path)
-    return path
-end
-
-function plan_return_route(
-    start::Int,
-    middle::Int,
-    finish::Int,
-    model::ABM{<:OpenStreetMapSpace};
-    by = :shortest,
-    kwargs...,
-)
-    planner = by == :shortest ? shortest_route : fastest_route
-    route = planner(
+    kwargs...
+) where {A<:AbstractAgent}
+    # get route to destination
+    route = shortest_path(
         model.space.m,
-        model.space.m.n[start],
-        model.space.m.n[middle],
-        model.space.m.n[finish];
-        kwargs...,
-    )[1]
-    map(p -> getindex(model.space.m.v, p), route)
+        agent.pos[2],
+        dest[1];
+        kwargs...
+    )
+    # reverse, so we can pop nodes off the end as they are visited
+    reverse!(route)
+    # get return route
+    return_route = if return_trip
+        shortest_path(
+            model.space.m,
+            dest[1],
+            agent.pos[2];
+            kwargs...
+        )
+    else
+        Int[]
+    end
+    reverse!(return_route)
+    model.space.routes[agent.id] = OpenStreetMapPath(
+        route,
+        agent.pos,
+        dest,
+        return_route,
+        length(route)
+    )
+    return nothing
 end
+
+# Allos passing destination as an index
+plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
+    plan_route!(a, (dest, dest, 0.0), model; kwargs...)
 
 """
     OSM.latlon(pos, model)
@@ -173,20 +150,23 @@ end
 
 Return (latitude, longitude) of current road or intersection position.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.nodes[pos]
+function latlon(pos::Int, model::ABM{<:OpenStreetMapSpace})
+    loc = model.space.m.nodes[pos].location
+    return (loc.lat, loc.lon)
+end
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
-      dir = heading(pos[1], pos[2])
-      dist = pos[3] * road_length(pos, model)
-      geoloc = calculate_location(pos[1], dir, dist)
-      return (geoloc.lat, geoloc.lon)
+        dir = heading(pos[1], pos[2])
+        dist = pos[3] * road_length(pos, model)
+        geoloc = calculate_location(pos[1], dir, dist)
+        return (geoloc.lat, geoloc.lon)
     else
         return OpenStreetMapX.latlon(model.space.m, pos[1])
     end
 end
 
-latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A <: AbstractAgent} =
+latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
 
 """
@@ -196,8 +176,8 @@ Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    idx = nearest_node(model.space.m, [GeoLocation(ll..., 0.)])[1][1][1]
-    return (idx, idx, 0.0)
+    node = nearest_node(model.space.m, [GeoLocation(ll..., 0.0)])[1][1][1]
+    return (node, node, 0.0)
 end
 
 """
@@ -207,50 +187,32 @@ Return a location on a road nearest to (latitude, longitude).
 Slower, but more precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    ll_enu = ENU(LLA(ll...), model.space.m.bounds)
-    P = (ll_enu.east, ll_enu.north, ll_enu.up)
-
-    # This is one index, close to the position.
-    idx = getindex(model.space.m.v, point_to_nodes(ll, model.space.m))
-    idx_enu = get_EastNorthUp_coordinate(idx, model)
-
-    candidates = Tuple{Tuple{Int,Int,Float64},Float64}[]
-    # This separation is only useful for one-way street situations.
-    # In case of two way streets, either side may be returned with
-    # little penalty.
-    if abs(ll_enu.east - idx_enu.east) > abs(ll_enu.north - idx_enu.north)
-        # idx is the first position
-        nps = nearby_positions(idx, model; neighbor_type = :out)
-        isempty(nps) && return (idx, idx, 0.0)
-        np_enus = map(np -> get_EastNorthUp_coordinate(np, model), nps)
-        A = (idx_enu.east, idx_enu.north, idx_enu.up)
-        for (np_enu, np) in zip(np_enus, nps)
-            B = (np_enu.east, np_enu.north, np_enu.up)
-            closest = orthognonal_projection(A, B, P)
-            candidate = (idx, np, distance(np_enu, ENU(closest...)))
-            push!(candidates, (candidate, sum(abs.(latlon(candidate, model) .- ll))))
-        end
-    else
-        # idx is the second position
-        nps = nearby_positions(idx, model; neighbor_type = :in)
-        isempty(nps) && return (idx, idx, 0.0)
-        np_enus = map(np -> get_EastNorthUp_coordinate(np, model), nps)
-        B = (idx_enu.east, idx_enu.north, idx_enu.up)
-        for (np_enu, np) in zip(np_enus, nps)
-            A = (np_enu.east, np_enu.north, np_enu.up)
-            closest = orthognonal_projection(A, B, P)
-            candidate = (np, idx, distance(np_enu, ENU(closest...)))
-            push!(candidates, (candidate, sum(abs.(latlon(candidate, model) .- ll))))
+    best_dist = Inf
+    best = (-1, -1, -1.0)
+    for e in edges(model.space.m.graph)
+        s = model.space.m.node_coordinates[src(e)]
+        d = model.space.m.node_coordinates[dst(d)]
+        dist = point_to_geodesic_line_dist(ll, s, d)
+        if dist < best_dist
+            best_dist = dist
+            best = (
+                model.space.m.index_to_node[src(e)],
+                model.space.m.index_to_node[dst(e)],)
+            # TODO:
         end
     end
-    bestidx = findmin(last.(candidates))[2]
-    return first(candidates[bestidx])
 end
 
-function orthognonal_projection(A, B, P)
-    M = B .- A
-    t0 = dot(M, P .- A) / dot(M, M)
-    return A .+ t0 .* M
+
+# distance between pt and geodesic line joining points p and q on a unit sphere
+# see: https://math.stackexchange.com/a/23612
+function point_to_geodesic_line_dist(pt, p, q)
+    x = to_cartesian(pt[1], pt[2], 1.0)
+    a = to_cartesian(p[1], p[2], 1.0)
+    b = to_cartesian(q[1], q[2], 1.0)
+    vec = cross(a, b)
+    vec = vec ./ norm(vec)
+    return asin(abs(dot(vec, x)))
 end
 
 """
@@ -315,7 +277,7 @@ end
 function Agents.add_agent_to_space!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
-) where {A <: AbstractAgent}
+) where {A<:AbstractAgent}
     push!(model.space.s[agent.pos[1]], agent.id)
     return agent
 end
@@ -323,7 +285,7 @@ end
 function Agents.remove_agent_from_space!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
-) where {A <: AbstractAgent}
+) where {A<:AbstractAgent}
     prev = model.space.s[agent.pos[1]]
     ai = findfirst(i -> i == agent.id, prev)
     deleteat!(prev, ai)
@@ -349,8 +311,8 @@ function Agents.move_along_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
     distance::Real,
-) where {A <: AbstractAgent}
-        
+) where {A<:AbstractAgent}
+
     if is_stationary(agent, model)
         return nothing
     end
@@ -476,7 +438,7 @@ function Agents.nearby_ids(
     model::ABM{<:OpenStreetMapSpace},
     distance::Real,
     args...;
-    kwargs...,
+    kwargs...
 )
     current_road = road_length(pos, model)
     nearby = Int[]
@@ -626,8 +588,8 @@ function Agents.nearby_ids(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
     args...;
-    kwargs...,
-) where {A <: AbstractAgent}
+    kwargs...
+) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, args...; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -638,7 +600,7 @@ Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) 
 function Agents.nearby_positions(
     position::Int,
     model::ABM{<:OpenStreetMapSpace};
-    neighbor_type::Symbol = :default,
+    neighbor_type::Symbol = :default
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn = if neighbor_type == :default
