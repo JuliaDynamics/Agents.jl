@@ -21,11 +21,13 @@ export TEST_MAP,
     intersection,
     road
 
+
+# Stores information about an agent's path
 struct OpenStreetMapPath
-    route::Vector{Int}
-    start::Tuple{Int,Int,Float64}
-    dest::Tuple{Int,Int,Float64}
-    return_route::Vector{Int}
+    route::Vector{Int}      # node IDs along path from `start` to `dest`
+    start::Tuple{Int,Int,Float64} # Initial position of the agent
+    dest::Tuple{Int,Int,Float64}    # Destination. `dest[1] == dest[2]` if this is an intersection
+    return_route::Vector{Int}   # node IDs along return path. Empty if `return_trip = false` in `plan_route!`
     current_target::Int
 end
 
@@ -33,7 +35,7 @@ end
 struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
     m::OSMGraph
     s::Vector{Vector{Int}}
-    routes::Dict{Int,OpenStreetMapPath}
+    routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
 end
 
 function OpenStreetMapSpace(
@@ -90,17 +92,14 @@ function random_route!(
 end
 
 """
-    OSM.plan_route(start, finish, model::ABM{<:OpenStreetMapSpace};
-                   by = :shortest, return_trip = false, kwargs...)
+    OSM.plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
+                   return_trip = false, kwargs...)
 
-Generate a list of intersections between `start` and `finish` points on the map.
-`start` and `finish` can either be intersections (`Int`) or positions
-(`Tuple{Int,Int,Float64}`).
+Plan a route from the current position of `agent` to the location specified in `dest`, which
+can be an intersection or a point on a road.
 
-When either point is a position, the associated intersection index will be removed from
-the route to avoid double counting.
-
-If `return_trip = true`, a route will be planned from start -> finish -> start.
+If `return_trip = true`, a route will be planned from start -> finish -> start. All other
+keywords are passed to [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path)
 """
 function plan_route!(
     agent::A,
@@ -140,7 +139,7 @@ function plan_route!(
     return nothing
 end
 
-# Allos passing destination as an index
+# Allows passing destination as an index
 plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     plan_route!(a, (dest, dest, 0.0), model; kwargs...)
 
@@ -204,7 +203,7 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 end
 
 
-# distance between pt and geodesic line joining points p and q on a unit sphere
+# distance between `pt` and geodesic line joining points `p` and `q` on a unit sphere
 # see: https://math.stackexchange.com/a/23612
 function point_to_geodesic_line_dist(pt, p, q)
     x = to_cartesian(pt[1], pt[2], 1.0)
