@@ -8,11 +8,9 @@ To get started, please read the [Tutorial](@ref) page.
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v4.5"
-      * New functions [`get_spatial_property`](@ref) and [`get_spatial_index`](@ref) for easier usage of spatially distributed properties in [`ContinuousSpace`](@ref).
-      * Breaking rework of the pathfinding API to offer greater control over pathfinding, including the possiblity of multiple pathfinding profiles in the same model.
-      * Add support for pathfinding using the A* algorithm to [`ContinuousSpace`](@ref). Refer to the [Rabbit, Fox, Hawk](@ref) example for a demonstration of this and the new pathfinding capabilities.
-      * New utility functions [`Pathfinding.nearby_walkable`](@ref) and [`Pathfinding.random_walkable`](@ref) for use in models with pathfinding.
+!!! tip "Latest news: Agents.jl v4.5.7"
+      * The [Tutorial](@ref) page is now also available as a YouTube video: https://youtu.be/fgwAfAa4kt0 
+
 
 ## Features
 * Free, open source and extremely transparent.
