@@ -32,6 +32,61 @@ struct OpenStreetMapPath
 end
 
 # NOTE: All positions are indexed by node id and _not_ vertex number
+
+"""
+    OpenStreetMapSpace(path::AbstractString; kwargs...)
+Create a space residing on the Open Street Map (OSM) file provided via `path`.
+The functionality related to Open Street Map spaces is in the submodule `OSM`.
+
+This space represents the underlying map as a *continuous* entity choosing accuracy over
+performance by explicitly taking into account that every intersection is connected by
+a road with a finite length in meters.
+An example of its usage can be found in [Zombie Outbreak](@ref).
+Nevertheless, all functions that target `DiscreteSpace`s apply here as well, e.g.
+[`positions`](@ref). The discrete part are the underlying road intersections, that
+are represented by a graph.
+
+Much of the functionality of this space is provided by interfacing with
+[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
+keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
+passed into the `OpenStreetMapX.get_map_data` function.
+
+For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
+README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
+
+If your solution can tolerate routes to and from intersections only without caring for the
+continuity of the roads in between, a faster implementation can be achieved by using the
+[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
+of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
+integration example: [Social networks with Graphs.jl](@ref).
+
+## The OSMAgent
+
+The base properties for an agent residing on an `OSMSpace` are as follows:
+```julia
+mutable struct OSMAgent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
+end
+```
+
+Current `pos`ition and `destination` tuples are represented as
+`(start intersection index, finish intersection index, distance travelled in meters)`.
+The `route` is an ordered list of intersections, providing a path to reach `destination`.
+
+Further details can be found in [`OSMAgent`](@ref).
+
+## Routing
+
+There are two ways to generate a route, depending on the situation.
+1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
+   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
+   between intersections or positions.
+2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
+   overriding the current route (if any).
+"""
 struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
     m::OSMGraph
     s::Vector{Vector{Int}}
@@ -42,7 +97,7 @@ function OpenStreetMapSpace(
     path::AbstractString;
 )
     m = get_map_data(path)
-    agent_positions = [Int[] for i = 1:Agents.nv(m.graph)]
+    agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
 
@@ -72,7 +127,7 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
     s = rand(model.rng, 1:Agents.nv(model))
     d = rand(model.rng, outneighbors(model.space.m.graph, s))
-    dist = rand(model.rng)
+    dist = rand(model.rng) * road_length(s, d, model)
     return (model.space.m.index_to_node(s), model.space.m.index_to_node(d), dist)
 end
 
@@ -147,12 +202,10 @@ plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     OSM.latlon(pos, model)
     OSM.latlon(agent, model)
 
-Return (latitude, longitude) of current road or intersection position.
+Return `(latitude, longitude)` of current road or intersection position.
 """
-function latlon(pos::Int, model::ABM{<:OpenStreetMapSpace})
-    loc = model.space.m.nodes[pos].location
-    return (loc.lat, loc.lon)
-end
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+    (model.space.m.nodes[pos].location.lat, model.space.m.nodes[pos].location.lon)
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
@@ -161,7 +214,7 @@ function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
         geoloc = calculate_location(pos[1], dir, dist)
         return (geoloc.lat, geoloc.lon)
     else
-        return OpenStreetMapX.latlon(model.space.m, pos[1])
+        return latlon(pos[1], model)
     end
 end
 
@@ -189,29 +242,24 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     best_dist = Inf
     best = (-1, -1, -1.0)
     for e in edges(model.space.m.graph)
-        s = model.space.m.node_coordinates[src(e)]
-        d = model.space.m.node_coordinates[dst(d)]
-        dist = point_to_geodesic_line_dist(ll, s, d)
+        s = to_cartesian(model.space.m.node_coordinates[src(e)])
+        d = to_cartesian(model.space.m.node_coordinates[dst(d)])
+        dist = sum((s .- d) .^ 2)
         if dist < best_dist
             best_dist = dist
+            m = (s[2] - d[2]) / (s[1] - d[1])
+            c = s[2] - m * s[1]
+            int_pt = ((m * ll[2] + ll[1] - c * m) / (m^2 + 1), (m^2 * ll[2] + m * ll[1] + c) / (m^2 + 1))
+
             best = (
                 model.space.m.index_to_node[src(e)],
-                model.space.m.index_to_node[dst(e)],)
-            # TODO:
+                model.space.m.index_to_node[dst(e)],
+                norm(int_pt .- s) / norm(d .- s)
+            )
         end
     end
-end
 
-
-# distance between `pt` and geodesic line joining points `p` and `q` on a unit sphere
-# see: https://math.stackexchange.com/a/23612
-function point_to_geodesic_line_dist(pt, p, q)
-    x = to_cartesian(pt[1], pt[2], 1.0)
-    a = to_cartesian(p[1], p[2], 1.0)
-    b = to_cartesian(q[1], q[2], 1.0)
-    vec = cross(a, b)
-    vec = vec ./ norm(vec)
-    return asin(abs(dot(vec, x)))
+    return best
 end
 
 """
@@ -221,16 +269,12 @@ Return a set of coordinates for an agent on the underlying map. Useful for plott
 """
 function map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
-        start = get_EastNorthUp_coordinate(agent.pos[1], model)
-        finish = get_EastNorthUp_coordinate(agent.pos[2], model)
-        travelled = agent.pos[3] / road_length(agent.pos, model)
-        (
-            getX(start) * (1 - travelled) + getX(finish) * travelled,
-            getY(start) * (1 - travelled) + getY(finish) * travelled,
-        )
+        a = to_cartesian(get_geoloc(agent.pos[1], model))
+        b = to_cartesian(get_geoloc(agent.pos[2], model))
+        dist = norm(b .- a)
+        return a + (b .- a) * agent.pos[3] / dist
     else
-        position = get_EastNorthUp_coordinate(agent.pos[1], model)
-        (getX(position), getY(position))
+        return to_cartesian(get_geoloc(agent.pos[1], model))
     end
 end
 
@@ -242,10 +286,11 @@ Return the road length (in meters) between two intersections given by intersecti
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
-road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) = model.space.m.weights[p1, p2]
+road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
+    model.space.m.weights[get_graph_vertex(p1, model), get_graph_vertex(p2, model)]
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
-    return agent.pos == agent.destination && isempty(agent.route)
+    return agent.pos == model.space.routes[agent.id].dest && !haskey(model.space.routes, agent.id)
 end
 
 # HELPERS, NOT EXPORTED
@@ -258,24 +303,31 @@ function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    get_EastNorthUp_coordinate(pos::Int, model)
+    get_geoloc(pos::Int, model::ABM{OpenStreetMapSpace})
 
-Return an East-North-Up coordinate value for index `pos`.
+Return `GeoLocation` corresponding to node `pos`
 """
-get_EastNorthUp_coordinate(pos::Int, model) = model.space.m.nodes[model.space.m.n[pos]]
+get_geoloc(pos::Int, model::ABM{OpenStreetMapSpace}) = model.space.m.nodes[pos].location
+
+"""
+    get_graph_vertex(pos::Int, model::ABM{OpenStreetMapSpace})
+
+Return graph vertex corresponding to node `pos`
+"""
+get_graph_vertex(pos::Int, model::ABM{OpenStreetMapSpace}) = model.space.m.node_to_index[pos]
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
 
-function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
+function Agents.random_position(model::ABM{OpenStreetMapSpace})
     ll = random_point_in_bounds(model)
     return intersection(ll, model)
 end
 
 function Agents.add_agent_to_space!(
     agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
+    model::ABM{OpenStreetMapSpace,A},
 ) where {A<:AbstractAgent}
     push!(model.space.s[agent.pos[1]], agent.id)
     return agent
@@ -283,7 +335,7 @@ end
 
 function Agents.remove_agent_from_space!(
     agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
+    model::ABM{OpenStreetMapSpace,A},
 ) where {A<:AbstractAgent}
     prev = model.space.s[agent.pos[1]]
     ai = findfirst(i -> i == agent.id, prev)
@@ -294,15 +346,19 @@ end
 function move_agent!(
     agent::A,
     pos::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace,A},
-) where {A}
+    model::ABM{OpenStreetMapSpace,A},
+) where {A<:AbstractAgent}
+    if pos[1] == agent.pos[1]
+        agent.pos = pos
+        return agent
+    end
     Agents.remove_agent_from_space!(agent, model)
     agent.pos = pos
     Agents.add_agent_to_space!(agent, model)
 end
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
+    move_along_route!(agent, model::ABM{OpenStreetMapSpace}, distance::Real)
 
 Move an agent by `distance` in meters along its planned route.
 """
@@ -311,7 +367,6 @@ function Agents.move_along_route!(
     model::ABM{<:OpenStreetMapSpace,A},
     distance::Real,
 ) where {A<:AbstractAgent}
-
     if is_stationary(agent, model)
         return nothing
     end
@@ -616,60 +671,6 @@ end
 
 end # module OSM
 
-"""
-    OpenStreetMapSpace(path::AbstractString; kwargs...)
-Create a space residing on the Open Street Map (OSM) file provided via `path`.
-The functionality related to Open Street Map spaces is in the submodule `OSM`.
-
-This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance by explicitly taking into account that every intersection is connected by
-a road with a finite length in meters.
-An example of its usage can be found in [Zombie Outbreak](@ref).
-Nevertheless, all functions that target `DiscreteSpace`s apply here as well, e.g.
-[`positions`](@ref). The discrete part are the underlying road intersections, that
-are represented by a graph.
-
-Much of the functionality of this space is provided by interfacing with
-[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
-keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
-passed into the `OpenStreetMapX.get_map_data` function.
-
-For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
-
-If your solution can tolerate routes to and from intersections only without caring for the
-continuity of the roads in between, a faster implementation can be achieved by using the
-[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
-of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
-integration example: [Social networks with Graphs.jl](@ref).
-
-## The OSMAgent
-
-The base properties for an agent residing on an `OSMSpace` are as follows:
-```julia
-mutable struct OSMAgent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-    route::Vector{Int}
-    destination::Tuple{Int,Int,Float64}
-end
-```
-
-Current `pos`ition and `destination` tuples are represented as
-`(start intersection index, finish intersection index, distance travelled in meters)`.
-The `route` is an ordered list of intersections, providing a path to reach `destination`.
-
-Further details can be found in [`OSMAgent`](@ref).
-
-## Routing
-
-There are two ways to generate a route, depending on the situation.
-1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
-   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
-   between intersections or positions.
-2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
-   overriding the current route (if any).
-"""
 const OpenStreetMapSpace = OSM.OpenStreetMapSpace
 
 const OSMSpace = OSM.OpenStreetMapSpace
