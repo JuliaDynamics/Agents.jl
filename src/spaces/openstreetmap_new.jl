@@ -450,7 +450,7 @@ function Agents.move_along_route!(
         end
         # don't need an else clause, since everything going inside the if clause will break
         # or continue
-        
+
         # distance left till next node
         dist_left = road_length(agent.pos, model) - agent.pos[3]
         if dist_left < distance # can overshoot
@@ -502,85 +502,6 @@ function Agents.move_along_route!(
         move_agent!(agent, (agent.pos[1:2], result_pos), model)
         ## return
         break
-    end
-end
-
-function travel!(start, finish, distance, agent, model)
-    # Assumes we have just reached the intersection of `start` and `finish`,
-    # and have `distance` left to travel.
-    edge_distance = road_length(start, finish, model)
-    if edge_distance <= distance
-        if !isempty(agent.route)
-            return travel!(
-                finish,
-                popfirst!(agent.route),
-                distance - edge_distance,
-                agent,
-                model,
-            )
-        else
-            #######################################
-            # TODO: The code here can be simplified by using the existing `park`.
-            # alright, so here we're in a situation where the agent is imagined to be at
-            # 'start' with 'distance left to travel.
-            # the route is empty, but (start,finish) does not equal agent.destination[1:2]
-            # what follows is the srouce code of the function "park", but the 'virtual'
-            # agent in it has position
-            # pos=(start,finish,distance-edge_distance)
-            # so I replaced that and nothing else.
-            distance -= edge_distance
-            if finish != agent.destination[1]
-                # At the end of the route, we must travel
-                last_distance = road_length(finish, agent.destination[1], model)
-                if distance >= last_distance + agent.destination[3]
-                    # We reach the destination
-                    return agent.destination
-                elseif distance >= last_distance
-                    # We reach the final road, but not the destination
-                    return (agent.destination[1:2]..., distance - last_distance)
-                else
-                    # We travel the final leg
-                    return (finish, agent.destination[1], distance)
-                end
-            else
-                # Reached final road
-                if distance >= agent.destination[3]
-                    return agent.destination
-                else
-                    return (agent.destination[1:2]..., distance)
-                end
-            end
-            #######################################
-        end
-    else
-        return (start, finish, distance)
-    end
-end
-
-function park(distance, agent, model)
-    # We have no route left but have not quite yet arrived at our destination.
-    # Assumes that when this is called, we have just completed the current leg
-    # in `agent.pos`, and we have `distance` left to travel.
-    if agent.pos[2] != agent.destination[1]
-        # At the end of the route, we must travel
-        last_distance = road_length(agent.pos[2], agent.destination[1], model)
-        if distance >= last_distance + agent.destination[3]
-            # We reach the destination
-            return agent.destination
-        elseif distance >= last_distance
-            # We reach the final road, but not the destination
-            return (agent.destination[1:2]..., distance - last_distance)
-        else
-            # We travel the final leg
-            return (agent.pos[2], agent.destination[1], distance)
-        end
-    else
-        # Reached final road
-        if distance >= agent.destination[3]
-            return agent.destination
-        else
-            return (agent.destination[1:2]..., distance)
-        end
     end
 end
 
