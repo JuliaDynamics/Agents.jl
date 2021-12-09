@@ -690,7 +690,7 @@ function Agents.nearby_positions(
     else
         Graphs.all_neighbors
     end
-    neighborfn(model.space.m.g, position)
+    neighborfn(model.space.m.graph, get_graph_vertex(position, model))
 end
 
 end # module OSM
