@@ -47,6 +47,16 @@ function remove_agent_from_space!(
     return model
 end
 
+function move_agent(
+    agent::A,
+    pos::ValidPos,
+    model::ABM{<:GraphSpace,A}
+) where {A <: AbstractAgent}
+    remove_agent_from_space!(agent, model)
+    agent.pos = pos
+    add_agent_to_space!(agent, model)
+end
+
 function add_agent_to_space!(
     agent::A,
     model::ABM{<:DiscreteSpace,A},
