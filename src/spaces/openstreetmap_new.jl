@@ -276,7 +276,7 @@ Return a location on a road nearest to (latitude, longitude).
 Slower, but more precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    best_dist = Inf
+    best_sq_dist = Inf
     best = (-1, -1, -1.0)
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.))
     for e in edges(model.space.map.graph)
@@ -285,13 +285,15 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
         road_vec = d .- s
         int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
         sq_dist = dot(int_pt .- pt, int_pt .- pt)
-        if sq_dist < best_dist
-            best_dist = sq_dist
-            rd_dist = norm(int_pt .- s)
+        if sq_dist < best_sq_dist
+            best_sq_dist = sq_dist
+            node_a = model.space.map.index_to_node[src(e)]
+            node_b = model.space.map.index_to_node[dst(e)]
+            rd_dist = norm(int_pt .- s) / norm(road_vec) * road_length(node_a, node_b, model)
 
             best = (
-                model.space.map.index_to_node[src(e)],
-                model.space.map.index_to_node[dst(e)],
+                node_a,
+                node_b,
                 rd_dist,
             )
         end
@@ -325,19 +327,13 @@ Return the road length (in meters) between two intersections given by intersecti
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
 road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
-    disance(model.space.map.nodes[p1], model.space.map.nodes[p2])
+    model.space.map.weights[
+        model.space.map.node_to_index[p1],
+        model.space.map.node_to_index[p2]
+    ]
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return !haskey(model.space.routes, agent.id)
-end
-
-# HELPERS, NOT EXPORTED
-function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
-    bounds = model.space.map.kdtree.hyper_rec
-    return (
-        rand(model.rng) * (bounds.maxes[1] - bounds.mins[1]) + bounds.mins[1],
-        rand(model.rng) * (bounds.maxes[2] - bounds.mins[2]) + bounds.mins[2],
-    )
 end
 
 """
@@ -366,10 +362,8 @@ get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpa
 # Agents.jl space API
 #######################################################################################
 
-function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
-    ll = random_point_in_bounds(model)
-    return intersection(ll, model)
-end
+Agents.random_position(model::ABM{<:OpenStreetMapSpace}) =
+    model.space.map.index_to_node[rand(model.rng, 1:Agents.nv(model))]
 
 function Agents.add_agent_to_space!(
     agent::A,

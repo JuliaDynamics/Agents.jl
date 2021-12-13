@@ -83,7 +83,7 @@ end
 #######################################################################################
 GraphBasedSpace = Union{GraphSpace,OpenStreetMapSpace}
 _get_graph(space::GraphSpace) = space.graph
-_get_graph(space::OpenStreetMapSpace) = space.m.graph
+_get_graph(space::OpenStreetMapSpace) = space.map.graph
 """
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
