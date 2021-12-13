@@ -9,6 +9,7 @@ module OSM # OpenStreetMap
 using Agents
 using LightOSM
 using Graphs
+using Pkg.Artifacts
 using LinearAlgebra: cross, dot, norm
 
 export TEST_MAP,
@@ -96,7 +97,7 @@ end
 function OpenStreetMapSpace(
     path::AbstractString;
 )
-    m = get_map_data(path)
+    m = graph_from_file(path)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
@@ -109,6 +110,23 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
+function OSM_test_map()
+    artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
+    map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
+    if isnothing(map_hash) || !artifact_exists(map_hash)
+        map_hash = create_artifact() do artifact_dir
+            download_osm_network(
+                :place_name;
+                save_to_file_location = joinpath(artifact_dir, "osm_map_gottingen.json"),
+                place_name = "Gottingen"
+            )
+        end
+
+        bind_artifact!(artifact_toml, "osm_map_gottingen", map_hash)
+    end
+
+    return joinpath(artifact_path(map_hash), "osm_map_gottingen.json")
+end
 #const TEST_MAP =
 #    joinpath(dirname(pathof(OpenStreetMapX)), "..", "test", "data", "reno_east3.osm")
 
@@ -126,9 +144,11 @@ returns a location somewhere on a road heading in a random direction.
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
     s = rand(model.rng, 1:Agents.nv(model))
-    d = rand(model.rng, outneighbors(model.space.m.graph, s))
+    d = Int(rand(model.rng, outneighbors(model.space.m.graph, s)))
+    s = model.space.m.index_to_node[s]
+    d = model.space.m.index_to_node[d]
     dist = rand(model.rng) * road_length(s, d, model)
-    return (model.space.m.index_to_node(s), model.space.m.index_to_node(d), dist)
+    return (s, d, dist)
 end
 
 """
@@ -227,8 +247,10 @@ latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if pos[1] != pos[2]
-        dir = heading(pos[1], pos[2])
-        geoloc = calculate_location(pos[1], dir, pos[3])
+        gloc1 = get_geoloc(pos[1], model)
+        gloc2 = get_geoloc(pos[2], model)
+        dir = heading(gloc1, gloc2)
+        geoloc = calculate_location(gloc1, dir, pos[3])
         return (geoloc.lat, geoloc.lon)
     else
         return latlon(pos[1], model)
@@ -258,20 +280,21 @@ Slower, but more precise than [`OSM.intersection`](@ref).
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     best_dist = Inf
     best = (-1, -1, -1.0)
+    pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.))
     for e in edges(model.space.m.graph)
-        s = to_cartesian(model.space.m.node_coordinates[src(e)])
-        d = to_cartesian(model.space.m.node_coordinates[dst(d)])
-        dist = sum((s .- d) .^ 2)
-        if dist < best_dist
-            best_dist = dist
-            m = (s[2] - d[2]) / (s[1] - d[1])
-            c = s[2] - m * s[1]
-            int_pt = ((m * ll[2] + ll[1] - c * m) / (m^2 + 1), (m^2 * ll[2] + m * ll[1] + c) / (m^2 + 1))
+        s = LightOSM.to_cartesian(GeoLocation(model.space.m.node_coordinates[src(e)]..., 0.))
+        d = LightOSM.to_cartesian(GeoLocation(model.space.m.node_coordinates[dst(e)]..., 0.))
+        road_vec = d .- s
+        int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
+        sq_dist = dot(int_pt .- pt, int_pt .- pt)
+        if sq_dist < best_dist
+            best_dist = sq_dist
+            rd_dist = norm(int_pt .- s)
 
             best = (
                 model.space.m.index_to_node[src(e)],
                 model.space.m.index_to_node[dst(e)],
-                norm(int_pt .- s)
+                rd_dist,
             )
         end
     end
@@ -286,12 +309,12 @@ Return a set of coordinates for an agent on the underlying map. Useful for plott
 """
 function map_coordinates(agent, model)
     if agent.pos[1] != agent.pos[2]
-        a = to_cartesian(get_geoloc(agent.pos[1], model))
-        b = to_cartesian(get_geoloc(agent.pos[2], model))
+        a = LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
+        b = LightOSM.to_cartesian(get_geoloc(agent.pos[2], model))
         dist = norm(b .- a)
         return a + (b .- a) * agent.pos[3] / dist
     else
-        return to_cartesian(get_geoloc(agent.pos[1], model))
+        return LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
     end
 end
 
@@ -304,7 +327,7 @@ Return the road length (in meters) between two intersections given by intersecti
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
 road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
-    model.space.m.weights[get_graph_vertex(p1, model), get_graph_vertex(p2, model)]
+    disance(model.space.m.nodes[p1], model.space.m.nodes[p2])
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return !haskey(model.space.routes, agent.id)
@@ -314,8 +337,8 @@ end
 function random_point_in_bounds(model::ABM{<:OpenStreetMapSpace})
     bounds = model.space.m.kdtree.hyper_rec
     return (
-        rand(model.rng) * (bounds.max[1] - bounds.min[1]) + bounds.min[1],
-        rand(model.rng) * (bounds.max[2] - bounds.min[2]) + bounds.min[2],
+        rand(model.rng) * (bounds.maxes[1] - bounds.mins[1]) + bounds.mins[1],
+        rand(model.rng) * (bounds.maxes[2] - bounds.mins[2]) + bounds.mins[2],
     )
 end
 

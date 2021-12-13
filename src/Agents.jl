@@ -22,7 +22,7 @@ include("spaces/graph.jl")
 include("spaces/grid.jl")
 include("spaces/discrete.jl")
 include("spaces/continuous.jl")
-include("spaces/openstreetmap.jl")
+include("spaces/openstreetmap_new.jl")
 include("spaces/utilities.jl")
 
 # Stepping and data collection functionality
