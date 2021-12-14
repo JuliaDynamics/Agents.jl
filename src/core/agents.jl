@@ -107,11 +107,10 @@ end
     OSMAgent
 Combine with [`@agent`](@ref) to create an agent type for [`OpenStreetMapSpace`](@ref).
 It attributes the fields
-`id::Int, pos::Tuple{Int,Int,Float64}, route::Vector{Int}, destination::Tuple{Int,Int,Float64}`
+`id::Int, pos::Tuple{Int,Int,Float64}`
 to the start of the agent type.
 """
 mutable struct OSMAgent <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int,Float64}
-    destination::Tuple{Int,Int,Float64}
 end
