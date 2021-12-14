@@ -105,8 +105,8 @@ end
 function Base.show(io::IO, s::OpenStreetMapSpace)
     print(
         io,
-        "OpenStreetMapSpace with $(length(s.map.highways)) roadways " *
-        "and $(length(s.map.nodes)) intersections",
+        "OpenStreetMapSpace with $(length(s.map.highways)) ways " *
+        "and $(length(s.map.nodes)) nodes",
     )
 end
 
@@ -244,14 +244,17 @@ latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     (model.space.map.nodes[pos].location.lat, model.space.map.nodes[pos].location.lon)
 
 function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-    if pos[1] != pos[2]
+    # extra checks to ensure consistency between both versions of `latlon`
+    if pos[3] == 0.0 || pos[1] == pos[2]
+        return latlon(pos[1], model)
+    elseif pos[3] == road_length(pos, model)
+        return latlon(pos[2], model)
+    else
         gloc1 = get_geoloc(pos[1], model)
         gloc2 = get_geoloc(pos[2], model)
         dir = heading(gloc1, gloc2)
         geoloc = calculate_location(gloc1, dir, pos[3])
         return (geoloc.lat, geoloc.lon)
-    else
-        return latlon(pos[1], model)
     end
 end
 
@@ -265,7 +268,7 @@ Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    node = nearest_node(model.space.m, [GeoLocation(ll..., 0.0)])[1][1][1]
+    node = nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]
     return (node, node, 0.0)
 end
 
@@ -283,8 +286,19 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
         s = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[src(e)]..., 0.))
         d = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[dst(e)]..., 0.))
         road_vec = d .- s
-        int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
+        
+        # closest point on line segment requires checking if perpendicular from point lies on line
+        # segment. If not, use the closest end of the line segment
+        if dot(pt .- s, road_vec) < 0.
+            int_pt = s
+        elseif dot(pt .- d, road_vec) > 0.
+            int_pt = d
+        else
+            int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
+        end
+        
         sq_dist = dot(int_pt .- pt, int_pt .- pt)
+        
         if sq_dist < best_sq_dist
             best_sq_dist = sq_dist
             node_a = model.space.map.index_to_node[src(e)]
