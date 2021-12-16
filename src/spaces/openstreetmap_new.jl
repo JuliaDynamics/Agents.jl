@@ -139,7 +139,7 @@ returns a location somewhere on a road heading in a random direction.
 """
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
-    s = rand(model.rng, 1:Agents.nv(model))
+    s = Int(rand(model.rng, 1:Agents.nv(model)))
     d = Int(rand(model.rng, outneighbors(model.space.map.graph, s)))
     dist = rand(model.rng) * road_length(s, d, model)
     return (s, d, dist)
@@ -268,14 +268,14 @@ function plan_route!(
 
     route = shortest_path(
         model.space.map,
-        model.space.map.index_to_node(start_node),
-        model.space.map.index_to_node(end_node);
+        model.space.map.index_to_node[start_node],
+        model.space.map.index_to_node[end_node];
         kwargs...
     )
 
     # convert back to graph indices
     for i in 1:length(route)
-        route[i] = model.space.map.node_to_index[route[i]]
+        route[i] = Int(model.space.map.node_to_index[route[i]])
     end
 
     # route won't be empty, those cases are already handled
@@ -285,15 +285,15 @@ function plan_route!(
     if agent.pos[1] == agent.pos[2]
         pop!(route)
     # move in reverse direction
-    elseif agent.pos[1] == start_node
+    elseif length(route) > 1 && agent.pos[1] == route[end] && agent.pos[2] != route[end - 1]
         move_agent!(agent, get_reverse_direction(agent.pos, model), model)
     end
 
     return_route = if return_trip
         shortest_path(
             model.space.map,
-            model.space.map.index_to_node(end_node),
-            model.space.map.index_to_node(start_node);
+            model.space.map.index_to_node[end_node],
+            model.space.map.index_to_node[start_node];
             kwargs...
         )
     else
@@ -303,7 +303,7 @@ function plan_route!(
     if return_trip
         # convert back to graph indices
         for i in 1:length(return_route)
-            return_route[i] = model.space.map.node_to_index[return_route[i]]
+            return_route[i] = Int(model.space.map.node_to_index[return_route[i]])
         end
 
         reverse!(return_route)
@@ -362,7 +362,7 @@ Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    vert = model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]]
+    vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
     return (vert, vert, 0.0)
 end
 
@@ -395,11 +395,11 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
         
         if sq_dist < best_sq_dist
             best_sq_dist = sq_dist
-            rd_dist = norm(int_pt .- s) / norm(road_vec) * road_length(src(e), dst(e), model)
+            rd_dist = norm(int_pt .- s) / norm(road_vec) * road_length(Int(src(e)), Int(dst(e)), model)
 
             best = (
-                src(e),
-                dst(e),
+                Int(src(e)),
+                Int(dst(e)),
                 rd_dist,
             )
         end
@@ -418,7 +418,7 @@ function map_coordinates(agent, model)
         a = LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
         b = LightOSM.to_cartesian(get_geoloc(agent.pos[2], model))
         dist = norm(b .- a)
-        return a + (b .- a) * agent.pos[3] / dist
+        return a .+ (b .- a) .* (agent.pos[3] / dist)
     else
         return LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
     end
@@ -458,7 +458,10 @@ get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpa
 # Agents.jl space API
 #######################################################################################
 
-Agents.random_position(model::ABM{<:OpenStreetMapSpace}) = rand(model.rng, 1:Agents.nv(model))
+function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
+    vert = Int(rand(model.rng, 1:Agents.nv(model)))
+    return (vert, vert, 0.0)
+end
 
 function Agents.add_agent_to_space!(
     agent::A,
@@ -478,7 +481,7 @@ function Agents.remove_agent_from_space!(
     return agent
 end
 
-function move_agent!(
+function Agents.move_agent!(
     agent::A,
     pos::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace,A},
@@ -824,7 +827,7 @@ function Agents.nearby_positions(
     else
         Graphs.all_neighbors
     end
-    neighborfn(model.space.map.graph, position, model)
+    Int.(neighborfn(model.space.map.graph, position))
 end
 
 end # module OSM

@@ -1,8 +1,10 @@
+using LightOSM
+
 @testset "OpenStreetMap space" begin
-    space = OpenStreetMapSpace(OSM.TEST_MAP)
-    @test length(space.s) == 1799
+    space = OpenStreetMapSpace(OSM.OSM_test_map())
+    @test length(space.s) == 20521
     @test sprint(show, space) ==
-          "OpenStreetMapSpace with 1456 roadways and 1799 intersections"
+          "OpenStreetMapSpace with 1456 ways and 20521 nodes"
 
     Random.seed!(689)
     model = ABM(Agent10, space)
@@ -14,34 +16,35 @@
     ll = OSM.latlon(intersection, model)
     @test intersection == OSM.intersection(ll, model)
 
-    start_latlon = (39.534773980413505, -119.78937575923226)
+    start_latlon = (51.5328328, 9.9351811)
     start_i = OSM.intersection(start_latlon, model)
     i_diff = sum(abs.(OSM.latlon(start_i, model) .- start_latlon))
     start_r = OSM.road(start_latlon, model)
     r_diff = sum(abs.(OSM.latlon(start_r, model) .- start_latlon))
-    @test i_diff > r_diff
+    @test i_diff >= r_diff
 
-    finish_latlon = (39.52530416953533, -119.76949287425508)
+    finish_latlon = (51.53530349140799, 9.939184637154902)
     finish_i = OSM.intersection(finish_latlon, model)
     finish_r = OSM.road(finish_latlon, model)
 
-    route = OSM.plan_route(start_r, finish_r, model)
-    @test length(route) == 20
-    add_agent!(start_r, model, route, finish_r)
-    add_agent!(finish_i, model, [], finish_i)
+    add_agent!(start_r, model)
+    OSM.plan_route!(model[1], finish_r, model)
+    @test length(model.space.routes[1].route) == 52
+    add_agent!(finish_i, model)
 
     @test OSM.latlon(model[2], model) == OSM.latlon(finish_i[1], model)
     np = nearby_positions(model[2], model)
     @test length(np) == 3
-    @test OSM.latlon(np[1], model) == (39.5259267, -119.76681090000002)
+    @test all(OSM.latlon(np[1], model) .≈ (51.535028, 9.9393778))
 
     rand_road = OSM.random_road_position(model)
     rand_intersection = random_position(model)
-    rand_route = OSM.plan_route(rand_road, rand_intersection, model; return_trip = true)
-    @test length(rand_route) == 18
+    move_agent!(model[2], rand_road, model)
+    OSM.plan_route!(model[2], rand_intersection, model; return_trip = true)
+    @test length(model.space.routes[2].route) == 357
 
-    @test OSM.road_length(model[1].pos, model) ≈ 106.49016546202557
-    @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 395.8120895006937
+    @test OSM.road_length(model[1].pos, model) ≈ 0.00011942893648990791
+    @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.0006626492380229374
 
     @test length(OSM.plan_route(start_r[2], finish_r[1], model)) == 22
     @test length(OSM.plan_route(start_r, finish_r[1], model)) == 21
