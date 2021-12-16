@@ -19,6 +19,7 @@ using InteractiveDynamics # plotting agents
 using CairoMakie # for static plotting
 CairoMakie.activate!() # hide
 using Random # hide
+using StatsBase
 
 # ## Building the model
 # ### 1. Model creation
@@ -45,8 +46,8 @@ function create_model(; dims = (10, 10), nopinions = 3, levels_per_opinion = 4)
             pos,
             model,
             false,
-            rand(model.rng, 1:levels_per_opinion, nopinions),
-            rand(model.rng, 1:levels_per_opinion, nopinions),
+            sample(model.rng, 1:levels_per_opinion, nopinions, replace = false),
+            sample(model.rng, 1:levels_per_opinion, nopinions, replace = false)
         )
     end
     return model
@@ -55,12 +56,15 @@ end
 # ### 2. Stepping functions
 
 function adopt!(agent, model)
-    neighbor = rand(model.rng, collect(nearby_ids(agent, model)))
-    matches = model[neighbor].opinion .== agent.opinion
-    nmatches = count(matches)
+    neighbor = sample(model.rng, collect(nearby_ids(agent, model))) # Randomly select a neighbor.
+    neighbor_opinions = model[neighbor].opinion # Look up neighbor's opinions.
+    agent_opinions = agent.opinion # Look up agent's opinions.
+    nmatches = length(intersect(neighbor_opinions, agent_opinions)) # Count how many opinions the neighbor and agent have in common.
+    
     if nmatches < model.nopinions && rand(model.rng) < nmatches / model.nopinions
-        switchId = rand(model.rng, findall(x -> x == false, matches))
-        agent.opinion[switchId] = model[neighbor].opinion[switchId]
+        neighbor_opinion = sample(model.rng, setdiff(neighbor_opinions, agent_opinions)) # Find which opinions the neighbor has that the agent doesn't and randomly pick one for the agent to adopt.
+        agent_opinion = sample(model.rng, setdiff(agent_opinions, neighbor_opinions)) # Find which opinions the agent has that the neighbour doesn't a randomly pick one to change.
+        replace!(agent.opinion, agent_opinion => neighbor_opinion) # Replace agent's opinion with neighbor's opinion.
     end
 end
 
@@ -118,9 +122,8 @@ f
 # Here is an animation that shows change of agent opinions over time.
 # The first three opinions of an agent determines its color in RGB.
 Random.seed!(648) # hide
-levels_per_opinion = 3
-ac(agent) = CairoMakie.RGB((agent.opinion[1:3] ./ levels_per_opinion)...)
-model = create_model(nopinions = 3, levels_per_opinion = levels_per_opinion)
+ac(agent) = agent.stabilized == true ? :purple : :yellow
+model = create_model(nopinions = 3, levels_per_opinion = 4)
 
 abm_video(
     "opinion.mp4",
@@ -130,7 +133,7 @@ abm_video(
     am = '■',
     as = 20,
     framerate = 20,
-    frames = 265,
+    frames = 150,
     title = "Opinion Spread",
 )
 nothing # hide
