@@ -4,7 +4,7 @@ using LightOSM
     space = OpenStreetMapSpace(OSM.OSM_test_map())
     @test length(space.s) == 20521
     @test sprint(show, space) ==
-          "OpenStreetMapSpace with 1456 ways and 20521 nodes"
+          "OpenStreetMapSpace with 4393 ways and 20521 nodes"
 
     Random.seed!(689)
     model = ABM(Agent10, space)
@@ -23,19 +23,19 @@ using LightOSM
     r_diff = sum(abs.(OSM.latlon(start_r, model) .- start_latlon))
     @test i_diff >= r_diff
 
-    finish_latlon = (51.53530349140799, 9.939184637154902)
+    finish_latlon = (51.530876112711745, 9.945125635913511)
     finish_i = OSM.intersection(finish_latlon, model)
     finish_r = OSM.road(finish_latlon, model)
 
     add_agent!(start_r, model)
     OSM.plan_route!(model[1], finish_r, model)
-    @test length(model.space.routes[1].route) == 52
+    @test length(model.space.routes[1].route) == 74
     add_agent!(finish_i, model)
 
     @test OSM.latlon(model[2], model) == OSM.latlon(finish_i[1], model)
     np = nearby_positions(model[2], model)
-    @test length(np) == 3
-    @test all(OSM.latlon(np[1], model) .≈ (51.535028, 9.9393778))
+    @test length(np) == 4
+    @test all(OSM.latlon(np[1], model) .≈ (51.5308349, 9.9449474))
 
     rand_road = OSM.random_road_position(model)
     rand_intersection = random_position(model)
@@ -44,53 +44,51 @@ using LightOSM
     @test length(model.space.routes[2].route) == 357
 
     @test OSM.road_length(model[1].pos, model) ≈ 0.00011942893648990791
-    @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.0006626492380229374
+    @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.00030269737299400725
 
-    @test length(OSM.plan_route(start_r[2], finish_r[1], model)) == 22
-    @test length(OSM.plan_route(start_r, finish_r[1], model)) == 21
-    @test length(OSM.plan_route(start_r[2], finish_r, model)) == 21
-    @test OSM.plan_route(start_r, finish_r[1], model) !=
-          OSM.plan_route(start_r[2], finish_r, model)
-    @test length(OSM.plan_route(start_r, finish_r, model)) == 20
+    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model);
+    OSM.plan_route!(model[1], finish_r[1], model)
+    @test length(model.space.routes[1].route) == 71
 
-    @test OSM.map_coordinates(model[1], model) == (-2904.337825035879, 1444.5549163962387)
-    @test OSM.map_coordinates(model[2], model) == (-1475.8022717621393, 461.34058791100955)
+    move_agent!(model[1], start_r, model);
+    OSM.plan_route!(model[1], finish_r[1], model)
+    @test length(model.space.routes[1].route) == 73
+
+    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model);
+    OSM.plan_route!(model[1], finish_r, model)
+    @test length(model.space.routes[1].route) == 72
+
+    move_agent!(model[2], start_r, model)
+    OSM.plan_route!(model[2], finish_r[1], model)
+    @test model.space.routes[1].route != model.space.routes[2].route
+
+    OSM.plan_route!(model[2], finish_r, model)
+    @test length(model.space.routes[2].route) == 74
 
     @test !is_stationary(model[1], model)
-    move_along_route!(model[1], model, 403.2)
-    @test length(model[1].route) == 16
+    move_along_route!(model[1], model, 0.01)
+    @test length(model.space.routes[1].route) == 53
     move_along_route!(model[1], model, 1500)
-    @test isempty(model[1].route)
-    @test !is_stationary(model[1], model)
-    move_along_route!(model[1], model, 200)
-    @test !is_stationary(model[1], model)
-    move_along_route!(model[1], model, 200)
-    @test !is_stationary(model[1], model)
-    move_along_route!(model[1], model, 200)
     @test is_stationary(model[1], model)
 
-    @test is_stationary(model[2], model)
-    @test move_along_route!(model[2], model, 50) === nothing
-
-    add_agent!(start_r, model, route, finish_r)
-    OSM.random_route!(model[3], model)
-    @test model[3].destination != finish_r
-    move_along_route!(model[3], model, 100.0)
-
     for i in 1:5
-        s = (start_r[1:2]..., start_r[3] - i)
-        route = OSM.plan_route(s, finish_r, model)
-        add_agent!(s, model, route, finish_r)
+        s = (start_r[1:2]..., i / 5 * OSM.road_length(start_r, model))
+        add_agent!(s, model)
+        route = OSM.plan_route!(model[2+i], finish_r, model)
     end
 
-    @test sort!(nearby_ids(model[6], model, 2)) == [4, 5, 7, 8]
-    @test sort!(nearby_ids(model[6], model, 800.0)) == [3, 4, 5, 7, 8]
+    @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
+    # @test sort!(nearby_ids(model[6], model, 2.0)) == [1, 2, 3, 4, 5]
 
     # Test long moves
     start = random_position(model)
     finish = OSM.random_road_position(model)
-    route = OSM.plan_route(start, finish, model)
-    long = add_agent!(start, model, route, finish)
-    move_along_route!(long, model, 10^5)
-    @test long.pos == long.destination
+    move_agent!(model[1], start, model)
+    OSM.plan_route!(model[1], finish, model)
+    move_along_route!(model[1], model, 10^5)
+    @test all(model[1].pos .≈ finish)
+    move_agent!(model[1], start, model)
+    OSM.plan_route!(model[1], finish, model; return_trip = true)
+    move_along_route!(model[1], model, 10^5)
+    @test all(model[1].pos .≈ start)
 end

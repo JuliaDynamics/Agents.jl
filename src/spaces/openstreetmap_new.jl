@@ -325,7 +325,7 @@ end
 
 # Allows passing destination as an index
 plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
-    plan_route!(a, (dest, dest, 0.0), model; kwargs...)
+    plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 """
     OSM.latlon(pos, model)
@@ -406,22 +406,6 @@ function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     end
 
     return best
-end
-
-"""
-    OSM.map_coordinates(agent, model::ABM{<:OpenStreetMapSpace})
-
-Return a set of coordinates for an agent on the underlying map. Useful for plotting.
-"""
-function map_coordinates(agent, model)
-    if agent.pos[1] != agent.pos[2]
-        a = LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
-        b = LightOSM.to_cartesian(get_geoloc(agent.pos[2], model))
-        dist = norm(b .- a)
-        return a .+ (b .- a) .* (agent.pos[3] / dist)
-    else
-        return LightOSM.to_cartesian(get_geoloc(agent.pos[1], model))
-    end
 end
 
 """
@@ -612,6 +596,8 @@ function Agents.move_along_route!(
                         ## return Agents.move_along_route!(agent, model, distance)
                         continue
                     end
+                    # move to end
+                    move_agent!(agent, osmpath.dest, model)
                     # remove route so agent is marked as stationary
                     delete!(model.space.routes, agent.id)
                     ## return
@@ -620,7 +606,7 @@ function Agents.move_along_route!(
 
                 # destination is on an outgoing road from this last waypoint
                 # move to beginning of this road
-                move_agent!(agent, (osmpath.dest[1:2], 0.0), model)
+                move_agent!(agent, (osmpath.dest[1:2]..., 0.0), model)
                 # move rest of distance to destination
                 ## return Agents.move_along_route!(agent, model, distance)
                 continue
@@ -636,7 +622,7 @@ function Agents.move_along_route!(
 
         # will not overshoot
         result_pos = min(agent.pos[3] + distance, road_length(agent.pos, model))
-        move_agent!(agent, (agent.pos[1:2], result_pos), model)
+        move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
         ## return
         break
     end
