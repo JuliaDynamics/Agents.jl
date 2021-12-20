@@ -300,35 +300,40 @@
         @agent Zombie OSMAgent begin
             infected::Bool
         end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
+        model = ABM(Zombie, OpenStreetMapSpace(OSM.OSM_test_map()))
         
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
-            route = OSM.plan_route(start, finish, model)
-            human = Zombie(id, start, route, finish, false)
+            human = Zombie(id, start, false)
             add_agent_pos!(human, model)
+            OSM.plan_route!(human, finish, model)
         end
         
-        start = OSM.road((39.52320181536525, -119.78917553184259), model)
-        finish = OSM.intersection((39.510773, -119.75916700000002), model)
-        route = OSM.plan_route(start, finish, model)
-        zombie = add_agent!(start, model, route, finish, true)
+        start = OSM.road((51.530876112711745, 9.945125635913511), model)
+        finish = OSM.intersection((51.5328328, 9.9351811), model)
+        zombie = add_agent!(start, model, true)
+        OSM.plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
-        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.TEST_MAP)
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.OSM_test_map())
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
         @test all(OSM.latlon(model[i].destination, model) == OSM.latlon(other[i].destination, other) for i in allids(model))
-        @test all(length(model[i].route) == length(other[i].route) for i in allids(model))
         @test all(all(OSM.latlon(model[i].route[j], model) == OSM.latlon(other[i].route[j], other) for j in 1:length(model[i].route)) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)
+        @test sort(collect(keys(model.space.routes))) == sort(collect(other.space.routes))
+        @test all(model.space.routes[i].route == other.space.routes[i].route for i in keys(model.space.routes))
+        @test all(model.space.routes[i].start == other.space.routes[i].start for i in keys(model.space.routes))
+        @test all(model.space.routes[i].dest == other.space.routes[i].dest for i in keys(model.space.routes))
+        @test all(model.space.routes[i].return_route == other.space.routes[i].return_route for i in keys(model.space.routes))
+        @test all(model.space.routes[i].has_to_return == other.space.routes[i].has_to_return for i in keys(model.space.routes))
 
         rm("test.jld2")
     end

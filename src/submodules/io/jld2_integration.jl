@@ -69,16 +69,8 @@ end
 struct SerializableGraphSpace{G}
     graph::G
 end
-
-struct OSMAgentPositionData
-    id::Int
-    pos::Tuple{NTuple{2,Float64},NTuple{2,Float64},Float64}
-    dest::Tuple{NTuple{2,Float64},NTuple{2,Float64},Float64}
-    route::Vector{NTuple{2,Float64}}
-end
-
 struct SerializableOSMSpace
-    agents::Vector{OSMAgentPositionData}
+    routes::Vector{Tuple{Int,OSM.OpenStreetMapPath}}
 end
 
 struct SerializableAStar{D,P,M,T,C}
@@ -100,32 +92,6 @@ function to_serializable(t::ABM{S}) where {S}
         t.rng,
         t.maxid.x,
     )
-    if S <: OSM.OpenStreetMapSpace
-        for i in 1:nagents(t)
-            sabm.agents[i] = typeof(sabm.agents[i])(
-                (
-                    getproperty(sabm.agents[i], x) for x in fieldnames(typeof(sabm.agents[i]))
-                )...,
-            )
-            sabm.agents[i].route = []
-        end
-
-        for a in allagents(t)
-            push!(
-                sabm.space.agents,
-                OSMAgentPositionData(
-                    a.id,
-                    (OSM.latlon(a.pos[1], t), OSM.latlon(a.pos[2], t), a.pos[3]),
-                    (
-                        OSM.latlon(a.destination[1], t),
-                        OSM.latlon(a.destination[2], t),
-                        a.destination[3],
-                    ),
-                    [OSM.latlon(i, t) for i in a.route],
-                ),
-            )
-        end
-    end
     return sabm
 end
 
@@ -137,7 +103,7 @@ to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
 
 to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([])
+to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([(k, v) for (k, v) in t.routes])
 
 JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T,C}) where {D,P,M,T,C} =
     SerializableAStar{D,P,M,T,C}(
@@ -159,23 +125,6 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         warn = get(kwargs, :warn, true),
     )
     abm.maxid[] = t.maxid
-
-    if S <: SerializableOSMSpace
-        agentdata = Dict(a.id => a for a in t.space.agents)
-        for a in t.agents
-            a.pos = (
-                OSM.intersection(agentdata[a.id].pos[1], abm)[1],
-                OSM.intersection(agentdata[a.id].pos[2], abm)[1],
-                agentdata[a.id].pos[3],
-            )
-            a.destination = (
-                OSM.intersection(agentdata[a.id].dest[1], abm)[1],
-                OSM.intersection(agentdata[a.id].dest[2], abm)[1],
-                agentdata[a.id].dest[3],
-            )
-            a.route = [OSM.intersection(i, abm)[1] for i in agentdata[a.id].route]
-        end
-    end
 
     for a in t.agents
         add_agent_pos!(a, abm)
@@ -207,11 +156,13 @@ from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
 function from_serializable(t::SerializableOSMSpace; kwargs...)
     @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
 
-    OSM.OpenStreetMapSpace(
-        get(kwargs, :map, OSM.TEST_MAP);   # Should never need default value
-        use_cache = get(kwargs, :use_cache, false),
-        trim_to_connected_graph = get(kwargs, :trim_to_connected_graph, true),
+    space = OSM.OpenStreetMapSpace(
+        get(kwargs, :map, OSM.OSM_test_map());   # Should never need default value
     )
+    for (k, v) in t.routes
+        space.routes[k] = v
+    end
+    return space
 end
 
 JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T,C}}, t::SerializableAStar{D,P,M,T,C}) where {D,P,M,T,C} =

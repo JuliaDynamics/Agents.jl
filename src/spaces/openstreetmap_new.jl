@@ -12,7 +12,6 @@ using Graphs
 using Pkg.Artifacts
 using LinearAlgebra: dot, norm
 using DataStructures
-using Debugger
 
 export TEST_MAP,
     random_road_position,

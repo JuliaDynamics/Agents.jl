@@ -47,7 +47,7 @@ function remove_agent_from_space!(
     return model
 end
 
-function move_agent(
+function move_agent!(
     agent::A,
     pos::ValidPos,
     model::ABM{<:GraphSpace,A}
