@@ -11,6 +11,8 @@ using LightOSM
 using Graphs
 using Pkg.Artifacts
 using LinearAlgebra: dot, norm
+using DataStructures
+using Debugger
 
 export TEST_MAP,
     random_road_position,
@@ -641,149 +643,113 @@ function Agents.nearby_ids(
     args...;
     kwargs...
 )
-    current_road = road_length(pos, model)
+    distances = Dict{Int,Float64}()
+    queue = Queue{Int}()
     nearby = Int[]
 
-    close = ids_on_road(pos[1], pos[2], model)
-    pos_search = pos[3] + distance
-    if distance > current_road - pos[3]
-        # Local search distance
-        pos_search = current_road
+    if pos[1] == pos[2]
+        distances[pos[1]] = 0.0
+        enqueue!(queue, pos[1])
+    else
+        dist_1 = pos[3]
+        dist_2 = road_length(pos, model) - pos[3]
 
-        # Check outgoing
-        search_distance = distance - (current_road - pos[3])
-        search_outward_ids!(nearby, search_distance, pos[1], pos[2], model)
-    end
-    # Check anyone close in the forward direction
-    if !isempty(close)
-        for (id, dist) in close
-            if pos[3] <= dist <= pos_search
-                push!(nearby, id)
+        if dist_1 <= distance && dist_2 <= distance
+            # just add to queue, all IDs on this road will be covered
+            distances[pos[1]] = dist_1
+            enqueue!(queue, pos[1])
+            distances[pos[2]] = dist_2
+            enqueue!(queue, pos[2])
+        elseif dist_1 <= distance   # && dist_2 > distance
+            # BFS covers IDs `distance` away from `pos[1]`, but not those in range
+            # `(distance, dist_1 + distance)` away
+            distances[pos[2]] = dist_2
+            enqueue!(queue, pos[2])
+            # push IDs that won't be covered
+            for id in forward_ids_on_road(pos[1], pos[2], model)
+                dist_1 < model[id].pos[3] <= dist_1 + distance && push!(nearby, id)
+            end
+            for id in reverse_ids_on_road(pos[1], pos[2], model)
+                dist = road_length(pos, model) - model[id].pos[3]
+                dist_1 < dist <= dist_1 + distance && push!(nearby, id)
+            end
+        elseif dist_2 <= distance # && dist_1 > distance
+            # BFS covers IDs `distance` away from `pos[2]`, but not those in range
+            # `(distance, dist_2 + distance)` away
+            distances[pos[2]] = dist_2
+            enqueue!(queue, pos[2])
+            # push IDs that won't be covered
+            for id in forward_ids_on_road(pos[1], pos[2], model)
+                dist = road_length(pos, model) - model[id].pos[3]
+                dist_2 < dist <= dist_2 + distance && push!(nearby, id)
+            end
+            for id in reverse_ids_on_road(pos[1], pos[2], model)
+                dist_2 < model[id].pos[3] < dist_2 + distance && push!(nearby, id)
+            end
+        else    # neither node is within `distance` of `pos`, so simply filter IDs on this road
+            for id in forward_ids_on_road(pos[1], pos[2], model)
+                abs(model[id].pos[3] - dist_1) <= distance && push!(nearby, id)
+            end
+            for id in reverse_ids_on_road(pos[1], pos[2], model)
+                abs(model[id].pos[3] - dist_2) <= distance && push!(nearby, id)
             end
         end
     end
-    rev_search = pos[3] - distance
-    if rev_search < 0
-        # Local search distance
-        rev_search = 0.0
 
-        # Check incoming
-        search_distance = distance - pos[3]
-        search_inward_ids!(nearby, search_distance, pos[1], pos[2], model)
-    end
-    # Check anyone close in the reverse direction
-    if !isempty(close)
-        for (id, dist) in close
-            if rev_search <= dist <= pos[3]
-                push!(nearby, id)
+    # NOTE: During BFS, each node is only explored once. From each node, every outgoing and incoming edge is
+    # considered and the node on the other end is added to the queue if it is close enough. The edge is explored
+    # for IDs by the node with the lower index (to prevent the same edge from being explored twice).
+    # If the node on the other end can't be reached, then the current node explores however far it can on
+    # this road. If the other node is reached through another path, it takes this into account and only explores
+    # the unexplored part of this edge.
+    while !isempty(queue)
+        node = dequeue!(queue)
+        for nb in nearby_positions(node, model; neighbor_type = :all)
+            rd_len = road_length(node, nb, model)
+            if rd_len == 0.0 || rd_len == Inf
+                rd_len = road_length(nb, node, model)
+            end
+
+            if rd_len <= distance - distances[node]  # can reach pos_2 from this node
+                if !haskey(distances, nb) # mark for exploration if not visited
+                    distances[nb] = distances[node] + rd_len
+                    enqueue!(queue, nb)
+                end
+                if node < nb # road is explored by smaller indexed node
+                    append!(nearby, ids_on_road(node, nb, model))
+                end
+            else
+                # cannot reach pos_2 from this node
+                dist_to_explore = distance - distances[node]
+                if haskey(distances, nb)
+                    # part of it is already explored, so only explore remaining part
+                    dist_to_explore = max(min(dist_to_explore, rd_len - distances[nb]), 0.0)
+                end
+                for id in forward_ids_on_road(node, nb, model)
+                    model[id].pos[3] <= dist_to_explore && push!(nearby, id)
+                end
+                for id in reverse_ids_on_road(node, nb, model)
+                    dist = rd_len - model[id].pos[3]
+                    dist <= dist_to_explore && push!(nearby, id)
+                end
             end
         end
     end
+
     return nearby
 end
 
-function ids_on_road(
-    pos1::Int,
-    pos2::Int,
-    model::ABM{<:OpenStreetMapSpace},
-    reverse = false,
-)
-    distance = road_length(pos1, pos2, model)
-    dist_front(d) = reverse ? distance - d : d
-    dist_back(d) = reverse ? d : distance - d
-    # Agents listed in the current position, filtered to current road
-    # (id, distance)
-    res = [
-        (model[i].id, dist_front(model[i].pos[3]))
-        for i in model.space.s[pos1] if model[i].pos[2] == pos2
-    ]
-    # Opposite direction. We must invert the distances here to obtain a relative
-    # distance from `pos`
-    # NOTE: I think a complication happens here when we're looking at divided roads.
-    # They don't end up having
-    # the same ids, so this comparison isn't possible. Unsure if we can do something
-    # about that using OpenStreetMapX or not.
-    append!(
-        res,
-        [
-            (model[i].id, dist_back(model[i].pos[3]))
-            for i in model.space.s[pos2] if model[i].pos[2] == pos1
-        ],
-    )
-    res
-end
+forward_ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
+    Iterators.filter(i -> model[i].pos[2] == pos_2, model.space.s[pos_1])
 
-function search_outward_ids!(
-    nearby::Vector{Int},
-    distance::Real,
-    pos1::Int,
-    pos2::Int,
-    model,
-)
-    # find all intersections the current end position connects to
-    outgoing = filter(i -> i != pos1, nearby_positions(pos2, model; neighbor_type = :out))
-    # Distances for each road
-    outdist = [road_length(pos2, o, model) for o in outgoing]
-    # Identify roads that are shorter than the search distance
-    go_deeper = findall(i -> i < distance, outdist)
-    # Those in the `go_deeper` category are completely covered by the distance search.
-    # Any agent found in the heading or opposite directions along this road are counted.
-    for i in go_deeper
-        finish = outgoing[i]
-        for (id, _) in ids_on_road(pos2, finish, model)
-            push!(nearby, id)
-        end
-        # We must recursively look up branches until the search distance is met
-        search_outward_ids!(nearby, distance - outdist[i], pos2, finish, model)
-    end
-    # Those not in the `go_deeper` category are searched in the positive direction
-    setdiff!(outgoing, outgoing[go_deeper])
-    to_collect = map(i -> ids_on_road(pos2, i, model), outgoing)
-    filter!(!isempty, to_collect)
-    if !isempty(to_collect)
-        for (id, dist) in vcat(to_collect...)
-            if dist <= distance
-                push!(nearby, id)
-            end
-        end
-    end
-end
+reverse_ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
+    forward_ids_on_road(pos_2, pos_1, model)
 
-function search_inward_ids!(
-    nearby::Vector{Int},
-    distance::Real,
-    pos1::Int,
-    pos2::Int,
-    model,
-)
-    # find all intersections the current start position connects to
-    incoming = filter(i -> i != pos2, nearby_positions(pos1, model; neighbor_type = :in))
-    # Distances for each road
-    indist = [road_length(i, pos1, model) for i in incoming]
-    # Identify roads that are shorter than the search distance
-    go_deeper = findall(i -> i < distance, indist)
-    # Those in the `go_deeper` category are completely covered by the distance search.
-    # Any agent found in the heading or opposite directions along this road are counted.
-    for i in go_deeper
-        start = incoming[i]
-        for (id, _) in ids_on_road(start, pos1, model)
-            push!(nearby, id)
-        end
-        # We must recursively look up branches until the search distance is met
-        search_inward_ids!(nearby, distance - indist[i], start, pos1, model)
-    end
-    # Those not in the `go_deeper` category are searched in the positive direction
-    setdiff!(incoming, incoming[go_deeper])
-    to_collect = map(i -> ids_on_road(i, pos1, model, true), incoming)
-    filter!(!isempty, to_collect)
-    if !isempty(to_collect)
-        for (id, dist) in vcat(to_collect...)
-            if dist <= distance
-                push!(nearby, id)
-            end
-        end
-    end
-end
+ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
+    Iterators.flatten((
+        forward_ids_on_road(pos_1, pos_2, model),
+        reverse_ids_on_road(pos_1, pos_2, model),
+    ))
 
 function Agents.nearby_ids(
     agent::A,

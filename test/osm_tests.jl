@@ -78,7 +78,7 @@ using LightOSM
     end
 
     @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
-    # @test sort!(nearby_ids(model[6], model, 2.0)) == [1, 2, 3, 4, 5]
+    @test sort!(nearby_ids(model[6].pos, model, 2.0)) == [1, 2, 3, 4, 5, 6, 7]
 
     # Test long moves
     start = random_position(model)
