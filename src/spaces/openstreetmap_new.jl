@@ -41,26 +41,21 @@ Create a space residing on the Open Street Map (OSM) file provided via `path`.
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance by explicitly taking into account that every intersection is connected by
-a road with a finite length in meters.
+performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
+are not necessarily intersections, and there may be multiple nodes on a road joining two
+intersections. The length of an edge between two nodes is specified in the units of the
+map's `weight_type` as listed in the documentation for
+[`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
 An example of its usage can be found in [Zombie Outbreak](@ref).
-Nevertheless, all functions that target `DiscreteSpace`s apply here as well, e.g.
-[`positions`](@ref). The discrete part are the underlying road intersections, that
-are represented by a graph.
 
 Much of the functionality of this space is provided by interfacing with
-[OpenStreetMapX.jl](https://github.com/pszufe/OpenStreetMapX.jl), for example the two
-keyword arguments `use_cache = false` and `trim_to_connected_graph = true` can be
-passed into the `OpenStreetMapX.get_map_data` function.
+[LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
 
-For details on how to obtain an OSM file for your use case, consult the OpenStreetMapX.jl
-README. We provide a variable `OSM.TEST_MAP` to use as a `path` for testing.
+For details on how to obtain an OSM file for your use case, consult the LightOSM.jl documentation.
+We provide a function `OSM.OSM_test_map` to use for testing.
 
-If your solution can tolerate routes to and from intersections only without caring for the
-continuity of the roads in between, a faster implementation can be achieved by using the
-[graph representation](https://pszufe.github.io/OpenStreetMapX.jl/stable/reference/#OpenStreetMapX.MapData)
-of your map provided by OpenStreetMapX.jl. For tips on how to implement this, see our
-integration example: [Social networks with Graphs.jl](@ref).
+All keywords are passed on to
+[`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
 ## The OSMAgent
 
@@ -72,22 +67,22 @@ mutable struct OSMAgent <: AbstractAgent
 end
 ```
 
-Current `pos`ition and `destination` tuples are represented as
-`(start intersection index, finish intersection index, distance travelled in meters)`.
-The `route` is an ordered list of intersections, providing a path to reach `destination`.
+Current `pos`ition tuple is represented as
+`(start intersection index, finish intersection index, distance travelled)`.
+The distance travelled is in the units of `weight_type`.
 
 Further details can be found in [`OSMAgent`](@ref).
 
 ## Routing
 
 There are two ways to generate a route, depending on the situation.
-1. Assign the value of [`OSM.plan_route`](@ref) to the `.route` field of an Agent.
-   This provides `:shortest` and `:fastest` paths (with the option of a `return_trip`)
-   between intersections or positions.
-2. [`OSM.random_route!`](@ref), choses a new `destination` an plans a new path to it;
-   overriding the current route (if any).
+1. Use [`OSM.plan_route!`](@ref) to plan a route from an agent's current position to a target
+   destination. This also has the option of planning a return trip.
+2. [`OSM.random_route!`](@ref), choses a new random `destination` and plans a path to it.
+
+Both of these functions override any pre-existing route that may exist for an agent.
 """
-struct OpenStreetMapSpace <: Agents.DiscreteSpace # TODO: Why is this a discrete space?
+struct OpenStreetMapSpace
     map::OSMGraph
     s::Vector{Vector{Int}}
     routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
@@ -95,8 +90,9 @@ end
 
 function OpenStreetMapSpace(
     path::AbstractString;
+    kwargs...
 )
-    m = graph_from_file(path)
+    m = graph_from_file(path; kwargs...)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
@@ -109,6 +105,12 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
+"""
+    OSM_test_map()
+
+Download a small test map of [`Göttingen`](https://nominatim.openstreetmap.org/ui/details.html?osmtype=R&osmid=191361&class=boundary)
+as an artifact. Return a path to the downloaded file.
+"""
 function OSM_test_map()
     artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
     map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
@@ -168,8 +170,9 @@ end
 Plan a route from the current position of `agent` to the location specified in `dest`, which
 can be an intersection or a point on a road.
 
-If `return_trip = true`, a route will be planned from start -> finish -> start. All other
-keywords are passed to [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
+If `return_trip = true`, a route will be planned from start ⟶ finish ⟶ start. All other
+keywords are passed to
+[`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
 
 Returns `true` if a path to `dest` exists, and `false` if it doesn't. Specifying
 `return_trip = true` also requires the existence of a return path for a route to be
@@ -383,8 +386,8 @@ end
 """
     OSM.road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to (latitude, longitude).
-Slower, but more precise than [`OSM.intersection`](@ref).
+Return a location on a road nearest to (latitude, longitude). Significantly slower, but more
+precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     best_sq_dist = Inf
@@ -426,7 +429,10 @@ end
     OSM.road_length(start::Int, finish::Int, model)
     OSM.road_length(pos::Tuple{Int,Int,Float64}, model)
 
-Return the road length (in meters) between two intersections given by intersection ids.
+Return the road length between two intersections. This takes into account the
+direction of the road, so `OSM.road_length(pos_1, pos_2, model)` may not be the
+same as `OSM.road_length(pos_2, pos_1, mode)`. Units of the returned quantity
+are as specified by the underlying graph's `weight_type`.
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
@@ -496,7 +502,8 @@ end
 """
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
 
-Move an agent by `distance` in meters along its planned route.
+Move an agent by `distance` along its planned route. Units of distance are as specified
+by the underlying graph's weight_type.
 """
 function Agents.move_along_route!(
     agent::A,
