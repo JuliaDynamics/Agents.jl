@@ -169,7 +169,11 @@ Plan a route from the current position of `agent` to the location specified in `
 can be an intersection or a point on a road.
 
 If `return_trip = true`, a route will be planned from start -> finish -> start. All other
-keywords are passed to [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path)
+keywords are passed to [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
+
+Returns `true` if a path to `dest` exists, and `false` if it doesn't. Specifying
+`return_trip = true` also requires the existence of a return path for a route to be
+planned.
 """
 function plan_route!(
     agent::A,
@@ -182,7 +186,7 @@ function plan_route!(
         agent.pos == dest ||
         agent.pos == get_reverse_direction(dest, model)
 
-        return
+        return true
     end
 
     if agent.pos[1:2] == dest[1:2] || agent.pos[1:2] == dest[2:-1:1]  # start and end on same road
@@ -207,7 +211,7 @@ function plan_route!(
                 return_trip,
             )
         end
-        return
+        return true
     end
 
     start_node = if agent.pos[1] == agent.pos[2] || 2.0 * agent.pos[3] < road_length(agent.pos, model)
@@ -264,15 +268,20 @@ function plan_route!(
                 return_trip,
             )
         end
-        return
+        return true
     end
+    route = Int[]
 
-    route = shortest_path(
-        model.space.map,
-        model.space.map.index_to_node[start_node],
-        model.space.map.index_to_node[end_node];
-        kwargs...
-    )
+    try
+        route = shortest_path(
+            model.space.map,
+            model.space.map.index_to_node[start_node],
+            model.space.map.index_to_node[end_node];
+            kwargs...
+        )
+    catch
+        return false
+    end
 
     # convert back to graph indices
     for i in 1:length(route)
@@ -290,15 +299,19 @@ function plan_route!(
         move_agent!(agent, get_reverse_direction(agent.pos, model), model)
     end
 
-    return_route = if return_trip
-        shortest_path(
-            model.space.map,
-            model.space.map.index_to_node[end_node],
-            model.space.map.index_to_node[start_node];
-            kwargs...
-        )
-    else
-        Int[]
+    return_route = Int[]
+    if return_trip
+        try
+            return_route = 
+                shortest_path(
+                    model.space.map,
+                    model.space.map.index_to_node[end_node],
+                    model.space.map.index_to_node[start_node];
+                    kwargs...
+                )
+        catch
+            return false
+        end
     end
 
     if return_trip
@@ -321,7 +334,7 @@ function plan_route!(
         return_route,
         return_trip,
     )
-    return # nothing
+    return true
 end
 
 # Allows passing destination as an index

@@ -300,7 +300,7 @@
         @agent Zombie OSMAgent begin
             infected::Bool
         end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.OSM_test_map()))
+        model = ABM(Zombie, OpenStreetMapSpace(OSM.OSM_test_map()); rng = MersenneTwister(42))
         
         for id in 1:100
             start = random_position(model)
@@ -323,12 +323,10 @@
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
-        @test all(OSM.latlon(model[i].destination, model) == OSM.latlon(other[i].destination, other) for i in allids(model))
-        @test all(all(OSM.latlon(model[i].route[j], model) == OSM.latlon(other[i].route[j], other) for j in 1:length(model[i].route)) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)
-        @test sort(collect(keys(model.space.routes))) == sort(collect(other.space.routes))
+        @test sort(collect(keys(model.space.routes))) == sort(collect(keys(other.space.routes)))
         @test all(model.space.routes[i].route == other.space.routes[i].route for i in keys(model.space.routes))
         @test all(model.space.routes[i].start == other.space.routes[i].start for i in keys(model.space.routes))
         @test all(model.space.routes[i].dest == other.space.routes[i].dest for i in keys(model.space.routes))
