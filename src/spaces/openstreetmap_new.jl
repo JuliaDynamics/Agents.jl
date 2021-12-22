@@ -122,7 +122,7 @@ function OSM_test_map()
             )
         end
 
-        bind_artifact!(artifact_toml, "osm_map_gottingen", map_hash)
+        bind_artifact!(artifact_toml, "osm_map_gottingen", map_hash; force = true)
     end
 
     return joinpath(artifact_path(map_hash), "osm_map_gottingen.json")
