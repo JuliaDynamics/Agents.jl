@@ -81,7 +81,7 @@ There are two ways to generate a route, depending on the situation.
 
 Both of these functions override any pre-existing route that may exist for an agent.
 """
-struct OpenStreetMapSpace
+struct OpenStreetMapSpace <: Agents.AbstractSpace
     map::OSMGraph
     s::Vector{Vector{Int}}
     routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
