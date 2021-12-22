@@ -13,10 +13,9 @@ using Pkg.Artifacts
 using LinearAlgebra: dot, norm
 using DataStructures
 
-export TEST_MAP,
+export OSM_test_map,
     random_road_position,
     plan_route!,
-    map_coordinates,
     road_length,
     random_route!,
     latlon,
