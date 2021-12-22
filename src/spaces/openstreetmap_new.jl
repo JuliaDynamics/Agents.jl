@@ -149,18 +149,33 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    OSM.random_route!(agent, model::ABM{<:OpenStreetMapSpace})
+    OSM.random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
 Plan a new random route for the agent, by selecting a random destination and
-planning a route from the agent's current position. Overwrite any current route.
+planning a route from the agent's current position. Overwrite any existing route.
+
+The keyword `limit = 10` specifies the limit on the number of attempts at planning
+a random route. Returns `true` if a route was successfully planned, `false` otherwise.
 """
 function random_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A};
     return_trip = false,
+    limit = 10,
     kwargs...
 ) where {A<:AbstractAgent}
-    plan_route!(agent, random_road_position(model), model; return_trip, kwargs...)
+    tries = 0
+    while tries < limit && !plan_route!(
+            agent,
+            random_road_position(model),
+            model;
+            return_trip,
+            kwargs...
+        )
+        tries += 1
+    end
+    
+    return tries < limit
 end
 
 """

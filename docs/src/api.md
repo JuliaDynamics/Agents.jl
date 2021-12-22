@@ -57,7 +57,7 @@ get_direction
 
 
 ### Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)s using [`Pathfinding.Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding.Pathfinder`](@ref), a special
 movement method is available.
 
 ```@docs
@@ -109,10 +109,10 @@ OSM.latlon
 OSM.intersection
 OSM.road
 OSM.random_road_position
-OSM.plan_route
+OSM.plan_route!
 OSM.random_route!
 OSM.road_length
-OSM.map_coordinates
+OSM.OSM_test_map
 ```
 
 ## Local area

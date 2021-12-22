@@ -12,8 +12,8 @@ using Agents
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
 # satisfies the OSMSpace conditions of having a `pos`ition of type
-# `Tuple{Int,Int,Float64}`, a `route` vector and a `destination` with the same type as
-# `pos`. For simplicity though we shall build this with the [`@agent`](@ref) macro.
+# `Tuple{Int,Int,Float64}`. For simplicity though we shall build this with the [`@agent`](@ref)
+# macro.
 
 @agent Zombie OSMAgent begin
     infected::Bool
@@ -24,13 +24,11 @@ end
 # mutable struct Zombie <: AbstractAgent
 #     id::Int
 #     pos::Tuple{Int,Int,Float64}
-#     route::Vector{Int}
-#     destination::Tuple{Int,Int,Float64}
 #     infected::Bool
 # end
 # ```
 # where a tuple `(i, j, x)::Tuple{Int,Int,Float64}` means a position
-# on the road between nodes `i, j` of the map, having progressed `x` meters along the road.
+# on the road between nodes `i, j` of the map, having progressed `x` distance along the road.
 
 # The model constructor we build consists of a map, and 100 agents scattered randomly
 # around it. They have their own agenda and need to travel to some new destination.
@@ -42,17 +40,16 @@ function initialise(; map_path = OSM.TEST_MAP)
 
     for id in 1:100
         start = random_position(model) # At an intersection
-        finish = OSM.random_road_position(model) # Somewhere on a road
-        route = OSM.plan_route(start, finish, model)
-        human = Zombie(id, start, route, finish, false)
+        human = Zombie(id, start, false)
         add_agent_pos!(human, model)
+        OSM.random_route!(agent, model; limit = 25) # try 25 times to find a random route
     end
     ## We'll add patient zero at a specific (latitude, longitude)
-    start = OSM.road((39.52320181536525, -119.78917553184259), model)
-    finish = OSM.intersection((39.510773, -119.75916700000002), model)
-    route = OSM.plan_route(start, finish, model)
+    start = OSM.road((51.5328328, 9.9351811), model)
+    finish = OSM.intersection((51.530876112711745, 9.945125635913511), model)
+    zombie = add_agent!(start, model, true)
+    OSM.plan_route!(zombie, finish, model)
     ## This function call creates & adds an agent, see `add_agent!`
-    zombie = add_agent!(start, model, route, finish, true)
     return model
 end
 
@@ -61,19 +58,19 @@ end
 # for city commuting.
 
 function agent_step!(agent, model)
-    ## Each agent will progress 25 meters along their route
-    move_along_route!(agent, model, 25)
+    ## Each agent will progress slightly along their route
+    move_along_route!(agent, model, 0.005)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.random_route!(agent, model)
         ## Start on new route
-        move_along_route!(agent, model, 25)
+        move_along_route!(agent, model, 0.005)
     end
 
     if agent.infected
-        ## Agents will be infected if they get within 50 meters of a zombie.
-        map(i -> model[i].infected = true, nearby_ids(agent, model, 50))
+        ## Agents will be infected if they get too close to a zombie.
+        map(i -> model[i].infected = true, nearby_ids(agent, model, 0.01))
     end
 end
 
