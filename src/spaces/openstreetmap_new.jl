@@ -117,7 +117,7 @@ function OSM_test_map()
     if isnothing(map_hash) || !artifact_exists(map_hash)
         map_hash = create_artifact() do artifact_dir
             Downloads.download(
-                "https://github.com/JuliaDynamics/JuliaDynamics/blob/master/artifacts/agents/osm_map_gottingen.json",
+                "https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/artifacts/agents/osm_map_gottingen.json",
                 joinpath(artifact_dir, "osm_map_gottingen.json")
             )
         end
