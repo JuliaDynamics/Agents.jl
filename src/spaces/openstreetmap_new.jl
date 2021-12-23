@@ -12,6 +12,7 @@ using Graphs
 using Pkg.Artifacts
 using LinearAlgebra: dot, norm
 using DataStructures
+using Downloads
 
 export OSM_test_map,
     random_road_position,
@@ -115,10 +116,9 @@ function OSM_test_map()
     map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
     if isnothing(map_hash) || !artifact_exists(map_hash)
         map_hash = create_artifact() do artifact_dir
-            download_osm_network(
-                :place_name;
-                save_to_file_location = joinpath(artifact_dir, "osm_map_gottingen.json"),
-                place_name = "Gottingen"
+            Downloads.download(
+                "https://github.com/JuliaDynamics/JuliaDynamics/blob/master/artifacts/agents/osm_map_gottingen.json",
+                joinpath(artifact_dir, "osm_map_gottingen.json")
             )
         end
 
