@@ -359,6 +359,127 @@ plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 """
+    function distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace})
+
+Return the distance between the two positions along the shortest path joining them in the given
+model. Returns `Inf` if no such path exists.
+"""
+function distance(
+    pos_1::Tuple{Int,Int,Float64},
+    pos_2::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace}
+)
+    # positions are identical
+    if pos_1[1] == pos_1[2] == pos_2[1] == pos_2[2] ||
+        pos_1 == pos_2 ||
+        pos_1 == get_reverse_direction(pos_2, model)
+        return 0.
+    end
+
+    # positions on same road
+    if pos_1[1:2] == pos_2[1:2]
+        return abs(pos_1[3] - pos_2[3])
+    elseif pos_1[1:2] == pos_2[2:-1:1]
+        return abs(pos_1[3] - get_reverse_direction(pos_2, model)[3])
+    end
+
+    # starting vertex
+    st_node = if pos_1[1] == pos_1[2] || pos_1[3] < road_length(pos_1, model) / 2
+        pos_1[1]
+    else
+        pos_1[2]
+    end
+
+    # ending vertex
+    en_node = if pos_2[1] == pos_2[2] || pos_2[3] < road_length(pos_2, model) / 2
+        pos_2[1]
+    else
+        pos_2[2]
+    end
+
+    # Case where they are same
+    if st_node == en_node
+        r1 = (pos_1[1] == pos_1[2] ? 0. : pos_1[3])
+        r2 = (pos_2[1] == pos_2[2] ? 0. : pos_2[3])
+        if pos_1[1] != pos_1[2] && st_node == pos_1[2]
+            r1 = road_length(pos_1, model) - r1
+        end
+        if pos_2[1] != pos_2[2] && en_node == pos_2[2]
+            r2 = road_length(pos_2, model) - r2
+        end
+        return r1 + r2
+    end
+
+    route = Int[]
+
+    # get route
+    try
+        route = shortest_path(
+            model.space.map,
+            model.space.map.index_to_node[st_node],
+            model.space.map.index_to_node[en_node],
+        )
+    catch
+        return Inf
+    end
+
+    # distance along route
+    dist = sum(weights_from_path(model.space.map, route))
+
+    # cases where starting or ending position is partway along a road
+    # route may or may not pass through that road, so all cases need to be handled
+    if pos_1[1] != pos_1[2]
+        if route[1] == pos_1[1]
+            if route[2] == pos_1[2]
+                dist -= pos_1[3]
+            else
+                dist += pos_1[3]
+            end
+        else
+            if route[2] == pos_1[1]
+                dist -= road_length(pos_1, model) - pos_1[3]
+            else
+                dist += road_length(pos_1, model) - pos_1[3]
+            end
+        end
+    end
+
+    if pos_2[1] != pos_2[2]
+        if route[end] == pos_2[1]
+            if route[end-1] == pos_2[2]
+                dist -= pos_2[3]
+            else
+                dist += pos_2[3]
+            end
+        else
+            if route[end - 1] == pos_2[1]
+                dist -= road_length(pos_2, model) - pos_2[3]
+            else
+                dist += road_length(pos_2, model) - pos_2[3]
+            end
+        end
+    end
+
+    return dist
+end
+
+function distance(
+    pos_1::Int,
+    pos_2::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace}
+)
+    distance((pos_1, pos_1, 0.), pos_2, model)
+end
+
+function distance(
+    pos_1,
+    pos_2::Int,
+    model::ABM{<:OpenStreetMapSpace}
+)
+    distance(pos_1, (pos_2, pos_2, 0.), model)
+end
+
+"""
     OSM.latlon(pos, model)
     OSM.latlon(agent, model)
 
