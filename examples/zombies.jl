@@ -35,14 +35,14 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; map_path = OSM.TEST_MAP)
+function initialise(; map_path = OSM.OSM_test_map())
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for id in 1:100
         start = random_position(model) # At an intersection
         human = Zombie(id, start, false)
         add_agent_pos!(human, model)
-        OSM.random_route!(agent, model; limit = 25) # try 25 times to find a random route
+        OSM.random_route!(human, model; limit = 25) # try 25 times to find a random route
     end
     ## We'll add patient zero at a specific (latitude, longitude)
     start = OSM.road((51.5328328, 9.9351811), model)
