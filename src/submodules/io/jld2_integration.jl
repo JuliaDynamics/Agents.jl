@@ -122,7 +122,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
-        warn = get(kwargs, :warn, true),
+        warn = get(kwargs, :warn, true)
     )
     abm.maxid[] = t.maxid
 
@@ -157,7 +157,7 @@ function from_serializable(t::SerializableOSMSpace; kwargs...)
     @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
 
     space = OSM.OpenStreetMapSpace(
-        get(kwargs, :map, OSM.OSM_test_map());   # Should never need default value
+        get(kwargs, :map, OSM.test_map());   # Should never need default value
     )
     for (k, v) in t.routes
         space.routes[k] = v

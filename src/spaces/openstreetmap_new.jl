@@ -14,14 +14,15 @@ using LinearAlgebra: dot, norm
 using DataStructures
 using Downloads
 
-export OSM_test_map,
+export test_map,
     random_road_position,
     plan_route!,
-    road_length,
-    random_route!,
-    latlon,
-    intersection,
-    road
+    distance
+road_length,
+random_route!,
+latlon,
+intersection,
+road
 
 
 # Stores information about an agent's path
@@ -52,7 +53,7 @@ Much of the functionality of this space is provided by interfacing with
 [LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
 
 For details on how to obtain an OSM file for your use case, consult the LightOSM.jl documentation.
-We provide a function `OSM.OSM_test_map` to use for testing.
+We provide a function `OSM.test_map` to use for testing.
 
 All keywords are passed on to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
@@ -106,12 +107,12 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
 end
 
 """
-    OSM_test_map()
+    OSM.test_map()
 
 Download a small test map of [`Göttingen`](https://nominatim.openstreetmap.org/ui/details.html?osmtype=R&osmid=191361&class=boundary)
 as an artifact. Return a path to the downloaded file.
 """
-function OSM_test_map()
+function test_map()
     artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
     map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
     if isnothing(map_hash) || !artifact_exists(map_hash)
@@ -165,15 +166,15 @@ function random_route!(
 ) where {A<:AbstractAgent}
     tries = 0
     while tries < limit && !plan_route!(
-            agent,
-            random_road_position(model),
-            model;
-            return_trip,
-            kwargs...
-        )
+        agent,
+        random_road_position(model),
+        model;
+        return_trip,
+        kwargs...
+    )
         tries += 1
     end
-    
+
     return tries < limit
 end
 
@@ -200,8 +201,8 @@ function plan_route!(
     kwargs...
 ) where {A<:AbstractAgent}
     if agent.pos[1] == agent.pos[2] == dest[1] == dest[2] ||    # identical start and end
-        agent.pos == dest ||
-        agent.pos == get_reverse_direction(dest, model)
+       agent.pos == dest ||
+       agent.pos == get_reverse_direction(dest, model)
 
         return true
     end
@@ -267,7 +268,7 @@ function plan_route!(
                 Int[],
                 return_trip,
             )
-        # or both are edges incident on a common node
+            # or both are edges incident on a common node
         else
             # swap around directions so that agent is moving toward common node
             # and destination is in the direction from common node to other node
@@ -311,15 +312,15 @@ function plan_route!(
     # starting from this intersection, so remove it from route
     if agent.pos[1] == agent.pos[2]
         pop!(route)
-    # move in reverse direction
-    elseif length(route) > 1 && agent.pos[1] == route[end] && agent.pos[2] != route[end - 1]
+        # move in reverse direction
+    elseif length(route) > 1 && agent.pos[1] == route[end] && agent.pos[2] != route[end-1]
         move_agent!(agent, get_reverse_direction(agent.pos, model), model)
     end
 
     return_route = Int[]
     if return_trip
         try
-            return_route = 
+            return_route =
                 shortest_path(
                     model.space.map,
                     model.space.map.index_to_node[end_node],
@@ -359,7 +360,7 @@ plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 """
-    function distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace})
+    OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace})
 
 Return the distance between the two positions along the shortest path joining them in the given
 model. Returns `Inf` if no such path exists.
@@ -371,9 +372,9 @@ function distance(
 )
     # positions are identical
     if pos_1[1] == pos_1[2] == pos_2[1] == pos_2[2] ||
-        pos_1 == pos_2 ||
-        pos_1 == get_reverse_direction(pos_2, model)
-        return 0.
+       pos_1 == pos_2 ||
+       pos_1 == get_reverse_direction(pos_2, model)
+        return 0.0
     end
 
     # positions on same road
@@ -399,8 +400,8 @@ function distance(
 
     # Case where they are same
     if st_node == en_node
-        r1 = (pos_1[1] == pos_1[2] ? 0. : pos_1[3])
-        r2 = (pos_2[1] == pos_2[2] ? 0. : pos_2[3])
+        r1 = (pos_1[1] == pos_1[2] ? 0.0 : pos_1[3])
+        r2 = (pos_2[1] == pos_2[2] ? 0.0 : pos_2[3])
         if pos_1[1] != pos_1[2] && st_node == pos_1[2]
             r1 = road_length(pos_1, model) - r1
         end
@@ -452,7 +453,7 @@ function distance(
                 dist += pos_2[3]
             end
         else
-            if route[end - 1] == pos_2[1]
+            if route[end-1] == pos_2[1]
                 dist -= road_length(pos_2, model) - pos_2[3]
             else
                 dist += road_length(pos_2, model) - pos_2[3]
@@ -468,7 +469,7 @@ function distance(
     pos_2::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace}
 )
-    distance((pos_1, pos_1, 0.), pos_2, model)
+    distance((pos_1, pos_1, 0.0), pos_2, model)
 end
 
 function distance(
@@ -476,7 +477,7 @@ function distance(
     pos_2::Int,
     model::ABM{<:OpenStreetMapSpace}
 )
-    distance(pos_1, (pos_2, pos_2, 0.), model)
+    distance(pos_1, (pos_2, pos_2, 0.0), model)
 end
 
 """
@@ -508,7 +509,7 @@ latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
 
 """
-    intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Return the nearest intersection position to (latitude, longitude).
 Quicker, but less precise than [`OSM.road`](@ref).
@@ -527,24 +528,24 @@ precise than [`OSM.intersection`](@ref).
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     best_sq_dist = Inf
     best = (-1, -1, -1.0)
-    pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.))
+    pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
     for e in edges(model.space.map.graph)
-        s = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[src(e)]..., 0.))
-        d = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[dst(e)]..., 0.))
+        s = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[src(e)]..., 0.0))
+        d = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[dst(e)]..., 0.0))
         road_vec = d .- s
-        
+
         # closest point on line segment requires checking if perpendicular from point lies on line
         # segment. If not, use the closest end of the line segment
-        if dot(pt .- s, road_vec) < 0.
+        if dot(pt .- s, road_vec) < 0.0
             int_pt = s
-        elseif dot(pt .- d, road_vec) > 0.
+        elseif dot(pt .- d, road_vec) > 0.0
             int_pt = d
         else
             int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
         end
-        
+
         sq_dist = dot(int_pt .- pt, int_pt .- pt)
-        
+
         if sq_dist < best_sq_dist
             best_sq_dist = sq_dist
             rd_dist = norm(int_pt .- s) / norm(road_vec) * road_length(Int(src(e)), Int(dst(e)), model)
@@ -579,14 +580,14 @@ function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
+    OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
 
 Return `GeoLocation` corresponding to node `pos`
 """
 get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) = GeoLocation(model.space.map.node_coordinates[pos]..., 0.0)
 
 """
-    get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Returns the same position, but with `pos[1]` and `pos[2]` swapped and `pos[3]` updated accordingly
 """

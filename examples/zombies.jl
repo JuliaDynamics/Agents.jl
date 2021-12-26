@@ -35,7 +35,7 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; map_path = OSM.OSM_test_map())
+function initialise(; map_path = OSM.test_map())
     model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for id in 1:100
@@ -104,7 +104,7 @@ function plotagents(model)
         label = "",
         markerstrokewidth = 0.5,
         markerstrokecolor = :black,
-        markeralpha = 0.7,
+        markeralpha = 0.7
     )
 end
 

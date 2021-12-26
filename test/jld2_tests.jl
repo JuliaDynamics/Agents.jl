@@ -90,7 +90,7 @@
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.by_property(:type))
-        
+
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
@@ -152,12 +152,12 @@
         model = ABM(
             Agent7,
             GraphSpace(complete_graph(10));
-            properties = ModelData(3, 4.2f32, Dict(1=>"foo", 2=>"bar")),
+            properties = ModelData(3, 4.2f32, Dict(1 => "foo", 2 => "bar")),
             rng = MersenneTwister(42)
         )
 
         for i in 1:30
-            add_agent_pos!(Agent7(i, i%10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
+            add_agent_pos!(Agent7(i, i % 10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -201,7 +201,7 @@
             model = ABM(
                 Agent1,
                 space;
-                properties = (pathfinder = pathfinder, ),
+                properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
@@ -212,7 +212,7 @@
             other = AgentsIO.load_checkpoint("test.jld2")
             return model, other
         end
-        
+
         test_pathfinding_model(setup_model()...)
         test_pathfinding_model(setup_model(; diagonal_movement = true)...)
         test_pathfinding_model(setup_model(; admissibility = 0.5)...)
@@ -238,15 +238,15 @@
         hmm = Pathfinding.PenaltyMap(pmap)
 
         function setup_model(; kwargs...)
-            space = ContinuousSpace((10., 10.); periodic = false)
+            space = ContinuousSpace((10.0, 10.0); periodic = false)
             pathfinder = Pathfinding.AStar(space; kwargs...)
             model = ABM(
                 Agent6,
                 deepcopy(space);
-                properties = (pathfinder = pathfinder, ),
+                properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
-            add_agent!((1.3, 1.5), model, (0., 0.), 0.)
+            add_agent!((1.3, 1.5), model, (0.0, 0.0), 0.0)
             Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder)
             step!(model, astep!, dummystep)
 
@@ -267,7 +267,7 @@
 
         rm("test.jld2")
     end
-    
+
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -300,8 +300,8 @@
         @agent Zombie OSMAgent begin
             infected::Bool
         end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.OSM_test_map()); rng = MersenneTwister(42))
-        
+        model = ABM(Zombie, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
+
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
@@ -309,7 +309,7 @@
             add_agent_pos!(human, model)
             OSM.plan_route!(human, finish, model)
         end
-        
+
         start = OSM.road((51.530876112711745, 9.945125635913511), model)
         finish = OSM.intersection((51.5328328, 9.9351811), model)
         zombie = add_agent!(start, model, true)
@@ -317,7 +317,7 @@
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
-        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.OSM_test_map())
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map())
 
         # agent data
         @test nagents(other) == nagents(model)

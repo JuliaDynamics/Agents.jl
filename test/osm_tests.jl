@@ -1,7 +1,7 @@
 using LightOSM
 
 @testset "OpenStreetMap space" begin
-    space = OpenStreetMapSpace(OSM.OSM_test_map())
+    space = OpenStreetMapSpace(OSM.test_map())
     @test length(space.s) == 20521
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 4393 ways and 20521 nodes"
@@ -46,15 +46,15 @@ using LightOSM
     @test OSM.road_length(model[1].pos, model) ≈ 0.00011942893648990791
     @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.00030269737299400725
 
-    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model);
+    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
     OSM.plan_route!(model[1], finish_r[1], model)
     @test length(model.space.routes[1].route) == 71
 
-    move_agent!(model[1], start_r, model);
+    move_agent!(model[1], start_r, model)
     OSM.plan_route!(model[1], finish_r[1], model)
     @test length(model.space.routes[1].route) == 73
 
-    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model);
+    move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
     OSM.plan_route!(model[1], finish_r, model)
     @test length(model.space.routes[1].route) == 72
 

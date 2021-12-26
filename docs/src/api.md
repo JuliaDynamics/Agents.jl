@@ -112,7 +112,7 @@ OSM.random_road_position
 OSM.plan_route!
 OSM.random_route!
 OSM.road_length
-OSM.OSM_test_map
+OSM.test_map
 ```
 
 ## Local area
