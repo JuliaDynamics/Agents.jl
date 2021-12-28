@@ -17,12 +17,12 @@ using Downloads
 export test_map,
     random_road_position,
     plan_route!,
-    distance
-road_length,
-random_route!,
-latlon,
-intersection,
-road
+    distance,
+    road_length,
+    random_route!,
+    latlon,
+    intersection,
+    road
 
 
 # Stores information about an agent's path
