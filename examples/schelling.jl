@@ -251,6 +251,8 @@ alabels = ["happy", "avg. x"]
 model = initialize(; numagents = 300) # fresh model, noone happy
 
 # ```julia
+# using GLMakie # using a different plotting backend that enables interactive plots
+#
 # figure, adf, mdf = abm_data_exploration(
 #     model, agent_step!, dummystep, parange;
 #     ac = groupcolor, am = groupmarker, as = 10,
