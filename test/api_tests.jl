@@ -100,9 +100,22 @@ end
     @test A3.types == Agent3.types
 end
 
-@testset "Random Pool" begin
-    Random.seed!(54)
+@testset "Random Number Generation" begin
     model = ABM(Agent2)
+    @test model.rng == GLOBAL_RNG
+    rng = StableRNG(54)
+    rng0 = StableRNG(54)
+
+    model = ABM(Agent1, GridSpace(3,3); rng)
+    agent = Agent1(1, (1,1))
+    add_agent_pos!(agent, model)
+    agent = Agent1(2, (1,1))
+    add_agent_single!(agent, model)
+    # Test that model rng pool was used
+    @test model.rng ≠ rng0
+    @test agent.pos ≠ (1,1)
+
+    # WIP from here on
     add_agent!(model, rand(model.rng))
     @test model[1].weight ≈ 0.5330409816783452
     model[1].weight = rand(model.rng)
