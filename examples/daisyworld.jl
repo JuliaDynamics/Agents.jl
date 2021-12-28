@@ -153,7 +153,7 @@ end
 # And if the daisies cross an age threshold, they die out.
 # Death is directly in the `agent_step!` function
 function agent_step!(agent::Daisy, model::DaisyWorld)
-    propagate!(daisy, model)
+    propagate!(agent, model)
     agent.age += 1
     agent.age >= model.max_age && kill_agent!(agent, model)
 end
