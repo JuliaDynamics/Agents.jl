@@ -61,6 +61,8 @@ For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@r
 movement method is available.
 
 ```@docs
+plan_route!
+plan_best_route!
 move_along_route!
 is_stationary
 ```
@@ -109,7 +111,6 @@ OSM.latlon
 OSM.intersection
 OSM.road
 OSM.random_road_position
-OSM.plan_route!
 OSM.random_route!
 OSM.road_length
 OSM.test_map
@@ -272,8 +273,6 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 ```@docs
 Pathfinding
 Pathfinding.AStar
-Pathfinding.set_target!
-Pathfinding.set_best_target!
 Pathfinding.penaltymap
 Pathfinding.nearby_walkable
 Pathfinding.random_walkable

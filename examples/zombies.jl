@@ -48,7 +48,7 @@ function initialise(; map_path = OSM.test_map())
     start = OSM.road((51.5328328, 9.9351811), model)
     finish = OSM.intersection((51.530876112711745, 9.945125635913511), model)
     zombie = add_agent!(start, model, true)
-    OSM.plan_route!(zombie, finish, model)
+    plan_route!(zombie, finish, model)
     ## This function call creates & adds an agent, see `add_agent!`
     return model
 end
@@ -77,52 +77,33 @@ end
 # ## Visualising the fall of humanity
 #
 # Plotting this space in a seamless manner is a work in progress. For now we
-# use [OpenStreetMapXPlot](https://github.com/pszufe/OpenStreetMapXPlot.jl) and
+# use [OSMMakie.jl](https://github.com/fbanning/OSMMakie.jl) and
 # a custom routine.
 
-# ```julia
-# using OpenStreetMapXPlot
-# using Plots
-# gr()
-# ```
-
+using OSMMakie
+using CairoMakie
 ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
 
-function plotagents(model)
+model = initialise()
+
+fig, ax, plot = osmplot(model.space.map)
+ids = model.scheduler(model)
+colors = Node([ac(model[i]) for i in ids])
+sizes = Node([as(model[i]) for i in ids])
+marker = :circle
+pos = Node(Point2f[OSM.latlon(model[i].pos, model) for i in ids])
+scatter!(pos; markercolor = colors, markersize = sizes, marker)
+
+record(fig, "outbreak.mp4", 1:200; framerate = 15) do i
+    Agents.step!(model, agent_step!, 1)
     ids = model.scheduler(model)
-    colors = [ac(model[i]) for i in ids]
-    sizes = [as(model[i]) for i in ids]
-    markers = :circle
-    pos = [OSM.map_coordinates(model[i], model) for i in ids]
-
-    scatter!(
-        pos;
-        markercolor = colors,
-        markersize = sizes,
-        markershapes = markers,
-        label = "",
-        markerstrokewidth = 0.5,
-        markerstrokecolor = :black,
-        markeralpha = 0.7
-    )
+    colors[] = [ac(model[i]) for i in ids]
+    sizes[] = [as(model[i]) for i in ids]
+    pos[] = Point2f[OSM.latlon(model[i].pos, model) for i in ids]
 end
-
-# Let's see how this plays out!
-# ```julia
-# model = initialise()
-#
-# frames = @animate for i in 0:200
-#     i > 0 && step!(model, agent_step!, 1)
-#     plotmap(model.space.m)
-#     plotagents(model)
-# end
-#
-# gif(frames, "outbreak.gif", fps = 15)
-# ```
-#
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+# <source src="../outbreak.mp4" type="video/mp4">
 # </video>
 # ```

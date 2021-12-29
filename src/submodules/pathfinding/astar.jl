@@ -210,7 +210,7 @@ Return the penalty map of a [`Pathfinding.AStar`](@ref) if the
 It is possible to mutate the map directly, for example
 `Pathfinding.penaltymap(pathfinder)[15, 40] = 115`
 or `Pathfinding.penaltymap(pathfinder) .= rand(50, 50)`. If this is mutated,
-a new path needs to be planned using [`Pathfinding.set_target!`](@ref).
+a new path needs to be planned using [`plan_route!`](@ref).
 """
 function penaltymap(pathfinder::AStar)
     if pathfinder.cost_metric isa PenaltyMap

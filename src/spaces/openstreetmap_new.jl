@@ -39,6 +39,8 @@ end
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
+A sample file is provided using [`OSM.test_map`](@ref). Additional maps can
+be downloaded using the [functions provided by LightOSM.jl](https://deloittedigitalapac.github.io/LightOSM.jl/docs/download_network/).
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
@@ -47,6 +49,11 @@ are not necessarily intersections, and there may be multiple nodes on a road joi
 intersections. The length of an edge between two nodes is specified in the units of the
 map's `weight_type` as listed in the documentation for
 [`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
+The possible `weight_type`s are:
+- `:distance`: The distance in kilometers of an edge
+- `:time`: The time in hours to travel along an edge
+- `:lane_efficiency`: Time scaled by number of lanes
+
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
 Much of the functionality of this space is provided by interfacing with
@@ -77,9 +84,9 @@ Further details can be found in [`OSMAgent`](@ref).
 ## Routing
 
 There are two ways to generate a route, depending on the situation.
-1. Use [`OSM.plan_route!`](@ref) to plan a route from an agent's current position to a target
+1. Use [`plan_route!`](@ref) to plan a route from an agent's current position to a target
    destination. This also has the option of planning a return trip.
-2. [`OSM.random_route!`](@ref), choses a new random `destination` and plans a path to it.
+2. [`random_route!`](@ref), choses a new random destination and plans a path to it.
 
 Both of these functions override any pre-existing route that may exist for an agent.
 """
@@ -109,7 +116,7 @@ end
 """
     OSM.test_map()
 
-Download a small test map of [`Göttingen`](https://nominatim.openstreetmap.org/ui/details.html?osmtype=R&osmid=191361&class=boundary)
+Download a small test map of [Göttingen](https://nominatim.openstreetmap.org/ui/details.html?osmtype=R&osmid=191361&class=boundary)
 as an artifact. Return a path to the downloaded file.
 """
 function test_map()
@@ -179,7 +186,7 @@ function random_route!(
 end
 
 """
-    OSM.plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
+    plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
                    return_trip = false, kwargs...)
 
 Plan a route from the current position of `agent` to the location specified in `dest`, which
@@ -193,7 +200,7 @@ Returns `true` if a path to `dest` exists, and `false` if it doesn't. Specifying
 `return_trip = true` also requires the existence of a return path for a route to be
 planned.
 """
-function plan_route!(
+function Agents.plan_route!(
     agent::A,
     dest::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace,A};
@@ -356,7 +363,7 @@ function plan_route!(
 end
 
 # Allows passing destination as an index
-plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
+Agents.plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 """
@@ -381,7 +388,7 @@ function distance(
     if pos_1[1:2] == pos_2[1:2]
         return abs(pos_1[3] - pos_2[3])
     elseif pos_1[1:2] == pos_2[2:-1:1]
-        return abs(pos_1[3] - get_reverse_direction(pos_2, model)[3])
+        return abs(pos_1[3] - road_length(pos_1, model) + pos_2[3])
     end
 
     # starting vertex
@@ -572,8 +579,13 @@ are as specified by the underlying graph's `weight_type`.
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
-road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace}) =
-    model.space.map.weights[p1, p2]
+function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
+    len = model.space.map.weights[p1, p2]
+    if len == 0.0 || len == Inf
+        len = model.space.map.weights[p2, p1]
+    end
+    return len
+end
 
 function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
     return !haskey(model.space.routes, agent.id)

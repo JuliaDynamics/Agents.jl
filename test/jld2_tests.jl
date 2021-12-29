@@ -186,7 +186,7 @@
     end
 
     @testset "Grid Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
+        astep!(a, m) = move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -205,7 +205,7 @@
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
-            Pathfinding.set_target!(model[1], (10, 10), model.pathfinder)
+            plan_route!(model[1], (10, 10), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -228,7 +228,7 @@
     end
 
     @testset "Continuous Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+        astep!(a, m) = move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -247,7 +247,7 @@
                 rng = MersenneTwister(42)
             )
             add_agent!((1.3, 1.5), model, (0.0, 0.0), 0.0)
-            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder)
+            plan_route!(model[1], (9.7, 4.8), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -307,13 +307,13 @@
             finish = OSM.random_road_position(model)
             human = Zombie(id, start, false)
             add_agent_pos!(human, model)
-            OSM.plan_route!(human, finish, model)
+            plan_route!(human, finish, model)
         end
 
         start = OSM.road((51.530876112711745, 9.945125635913511), model)
         finish = OSM.intersection((51.5328328, 9.9351811), model)
         zombie = add_agent!(start, model, true)
-        OSM.plan_route!(zombie, finish, model)
+        plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")

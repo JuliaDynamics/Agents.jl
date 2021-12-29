@@ -1,4 +1,5 @@
 using LightOSM
+using Graphs
 
 @testset "OpenStreetMap space" begin
     space = OpenStreetMapSpace(OSM.test_map())
@@ -28,7 +29,7 @@ using LightOSM
     finish_r = OSM.road(finish_latlon, model)
 
     add_agent!(start_r, model)
-    OSM.plan_route!(model[1], finish_r, model)
+    plan_route!(model[1], finish_r, model)
     @test length(model.space.routes[1].route) == 74
     add_agent!(finish_i, model)
 
@@ -40,29 +41,29 @@ using LightOSM
     rand_road = OSM.random_road_position(model)
     rand_intersection = random_position(model)
     move_agent!(model[2], rand_road, model)
-    OSM.plan_route!(model[2], rand_intersection, model; return_trip = true)
+    plan_route!(model[2], rand_intersection, model; return_trip = true)
     @test length(model.space.routes[2].route) == 357
 
     @test OSM.road_length(model[1].pos, model) ≈ 0.00011942893648990791
     @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.00030269737299400725
 
     move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
-    OSM.plan_route!(model[1], finish_r[1], model)
+    plan_route!(model[1], finish_r[1], model)
     @test length(model.space.routes[1].route) == 71
 
     move_agent!(model[1], start_r, model)
-    OSM.plan_route!(model[1], finish_r[1], model)
+    plan_route!(model[1], finish_r[1], model)
     @test length(model.space.routes[1].route) == 73
 
     move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
-    OSM.plan_route!(model[1], finish_r, model)
+    plan_route!(model[1], finish_r, model)
     @test length(model.space.routes[1].route) == 72
 
     move_agent!(model[2], start_r, model)
-    OSM.plan_route!(model[2], finish_r[1], model)
+    plan_route!(model[2], finish_r[1], model)
     @test model.space.routes[1].route != model.space.routes[2].route
 
-    OSM.plan_route!(model[2], finish_r, model)
+    plan_route!(model[2], finish_r, model)
     @test length(model.space.routes[2].route) == 74
 
     @test !is_stationary(model[1], model)
@@ -74,7 +75,7 @@ using LightOSM
     for i in 1:5
         s = (start_r[1:2]..., i / 5 * OSM.road_length(start_r, model))
         add_agent!(s, model)
-        route = OSM.plan_route!(model[2+i], finish_r, model)
+        route = plan_route!(model[2+i], finish_r, model)
     end
 
     @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
@@ -84,11 +85,28 @@ using LightOSM
     start = random_position(model)
     finish = OSM.random_road_position(model)
     move_agent!(model[1], start, model)
-    OSM.plan_route!(model[1], finish, model)
+    plan_route!(model[1], finish, model)
     move_along_route!(model[1], model, 10^5)
     @test all(model[1].pos .≈ finish)
     move_agent!(model[1], start, model)
-    OSM.plan_route!(model[1], finish, model; return_trip = true)
+    plan_route!(model[1], finish, model; return_trip = true)
     move_along_route!(model[1], model, 10^5)
     @test all(model[1].pos .≈ start)
+
+    # distance checks
+    pos_1 = start_i[1]
+    nbor = Int(outneighbors(model.space.map.graph, pos_1[1])[1])
+    rl = OSM.road_length(pos_1, nbor, model)
+    @test OSM.distance(pos_1, nbor, model) ≈ rl
+    @test OSM.distance(pos_1, pos_1, model) == 0.
+    @test OSM.distance((pos_1, nbor, 0.), (nbor, pos_1, rl), model) == 0.
+    @test OSM.distance((pos_1, nbor, rl / 4), (nbor, pos_1, rl / 4), model) ≈ rl / 2
+    move_agent!(model[1], (pos_1, pos_1, 0.), model)
+    plan_route!(model[1], finish_i, model)
+    len = sum(LightOSM.weights_from_path(
+        model.space.map,
+        reverse([model.space.map.index_to_node[i] for i in model.space.routes[1].route]),
+    ))
+    len += OSM.road_length(pos_1, model.space.routes[1].route[end], model)
+    @test OSM.distance(pos_1, finish_i, model) ≈ len
 end

@@ -1,34 +1,34 @@
 """
-    Pathfinding.set_target!(agent, target, pathfinder::AStar{D})
+    plan_route!(agent, dest, pathfinder::AStar{D})
 Calculate and store the shortest path to move the agent from its current position to
-`target` (a position e.g. `(1, 5)` or `(1.3, 5.2)`) using the provided `pathfinder`.
+`dest` (a position e.g. `(1, 5)` or `(1.3, 5.2)`) using the provided `pathfinder`.
 
 Use this method in conjuction with [`move_along_route!`](@ref).
 """
-function set_target!(
+function Agents.plan_route!(
     agent::A,
-    target::Dims{D},
+    dest::Dims{D},
     pathfinder::AStar{D},
 ) where {D,A<:AbstractAgent}
-    path = find_path(pathfinder, agent.pos, target)
+    path = find_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
     pathfinder.agent_paths[agent.id] = path
 end
 
 """
-    Pathfinding.set_best_target!(agent, targets, pathfinder::AStar{D}; kwargs...)
+    plan_best_route!(agent, dests, pathfinder::AStar{D}; kwargs...)
 Calculate, store, and return the best path to move the agent from its current position to
-a chosen target position taken from `targets` using `pathfinder`.
+a chosen destination taken from `dests` using `pathfinder`.
 
 The `condition = :shortest` keyword retuns the shortest path which is shortest out of the
-possible target positions. Alternatively, the `:longest` path may also be requested.
+possible destinations. Alternatively, the `:longest` path may also be requested.
 
-Return the position of the chosen target. Return `nothing` if none of the supplied targets are
-reachable.
+Return the position of the chosen destination. Return `nothing` if none of the supplied
+destinations are reachable.
 """
-function set_best_target!(
+function Agents.plan_best_route!(
     agent::A,
-    targets,
+    dests,
     pathfinder::AStar{D,P,M,Int64};
     condition::Symbol = :shortest,
 ) where {A<:AbstractAgent,D,P,M}
@@ -36,7 +36,7 @@ function set_best_target!(
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
     best_path = Path{D,Int64}()
     best_target = nothing
-    for target in targets
+    for target in dests
         path = find_path(pathfinder, agent.pos, target)
         isnothing(path) && continue
         if isempty(best_path) || compare(length(path), length(best_path))
@@ -51,8 +51,8 @@ function set_best_target!(
 end
 
 """
-    Pathfinding.move_along_route!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D})
-Move `agent` for one step along the route toward its target set by [`Pathfinding.set_target!`](@ref)
+    move_along_route!(agent, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D})
+Move `agent` for one step along the route toward its target set by [`plan_route!`](@ref)
 
 For pathfinding in models with [`GridSpace`](@ref).
 
