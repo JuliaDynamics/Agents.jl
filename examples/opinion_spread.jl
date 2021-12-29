@@ -11,8 +11,8 @@
 # They can change their opinion by changing the numbers in the list.
 
 # Agents can change their opinion at each step.
-# They choose one of their neighbors randomly, and adopt one of the neighbor's opinion.
-# They are more likely to adopt their neighbors opinion if the share more opinions with each other.
+# They choose one of their neighbors randomly, and adopt one of the neighbor's opinions.
+# They are more likely to adopt their neighbor's opinion if they share more opinions with each other.
 
 using Agents
 using InteractiveDynamics # plotting agents
@@ -63,7 +63,7 @@ function adopt!(agent, model)
     
     if nmatches < model.nopinions && rand(model.rng) < nmatches / model.nopinions
         neighbor_opinion = sample(model.rng, setdiff(neighbor_opinions, agent_opinions)) # Find which opinions the neighbor has that the agent doesn't and randomly pick one for the agent to adopt.
-        agent_opinion = sample(model.rng, setdiff(agent_opinions, neighbor_opinions)) # Find which opinions the agent has that the neighbour doesn't a randomly pick one to change.
+        agent_opinion = sample(model.rng, setdiff(agent_opinions, neighbor_opinions)) # Find which opinions the agent has that the neighbour doesn't and randomly pick one to change.
         replace!(agent.opinion, agent_opinion => neighbor_opinion) # Replace agent's opinion with neighbor's opinion.
     end
 end
@@ -119,8 +119,7 @@ f
 
 # ### Animation
 
-# Here is an animation that shows change of agent opinions over time.
-# The first three opinions of an agent determines its color in RGB.
+# Here is an animation that shows the stabilization of agent opinions over time.
 Random.seed!(648) # hide
 ac(agent) = agent.stabilized == true ? :purple : :yellow
 model = create_model(nopinions = 3, levels_per_opinion = 4)
