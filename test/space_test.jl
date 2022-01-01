@@ -369,11 +369,11 @@
         walk!(a, rand, model)
         @test a.pos == (5, 4)
 
-        Random.seed!(65)
-        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2))
+        rng0 = StableRNG(42)
+        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2); rng = rng0)
         a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
         walk!(a, rand, model)
-        @test a.pos[1] ≈ 7.6625082546
-        @test a.pos[2] ≈ 4.6722771144
+        @test a.pos[1] ≈ 6.58248
+        @test a.pos[2] ≈ 4.84226
     end
 end
