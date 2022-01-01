@@ -22,6 +22,8 @@ export move_agent!,
     nearby_positions,
     nearby_ids,
     nearby_agents,
+    plan_route!,
+    plan_best_route!,
     move_along_route!,
     is_stationary
 
@@ -83,8 +85,8 @@ What the "radius" means depends on the space type:
   extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
   spaces.
 - `ContinuousSpace`: Standard distance according to the space metric.
-- `OpenStreetMapSpace`: `r` is equivalent with distance (in meters) needed to be travelled
-  according to existing roads in order to reach given `position`.
+- `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
+  needed to be travelled according to existing roads in order to reach given `position`.
 
 ## Keywords
 Keyword arguments are space-specific.
@@ -124,6 +126,12 @@ nearby_positions(position, model, r = 1) = notimplemented(model)
 #######################################################################################
 # %% IMPLEMENT: Advanced functionality for route planning
 #######################################################################################
+
+plan_route!(agent, dest, model_or_pathfinder; kwargs...) = notimplemented(model_or_pathfinder)
+
+plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
+    notimplemented(model_or_pathfinder)
+
 # """
 #     move_along_route!(agent, model, args...; kwargs...)
 # Move `agent` along the route planned for it. Used in situations like path-finding

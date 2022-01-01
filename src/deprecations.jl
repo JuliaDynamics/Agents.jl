@@ -1,10 +1,10 @@
 function ContinuousSpace(
     extent,
     spacing;
-    kwargs...,
+    kwargs...
 )
-    @warn "Giving `spacing` as a positional argument to `ContinuousSpace` is "*
-    "deprecated, provide it as a keyword instead."
+    @warn "Giving `spacing` as a positional argument to `ContinuousSpace` is " *
+          "deprecated, provide it as a keyword instead."
     return ContinuousSpace(extend; spacing, kwargs...)
 end
 
@@ -42,7 +42,7 @@ end
 @deprecate by_type Schedulers.by_type
 
 @deprecate osm_random_road_position OSM.random_road_position
-@deprecate osm_plan_route OSM.plan_route
+@deprecate osm_plan_route OSM.plan_route!
 @deprecate osm_map_coordinates OSM.map_coordinates
 @deprecate osm_road_length OSM.road_length
 @deprecate osm_random_route! OSM.random_route!

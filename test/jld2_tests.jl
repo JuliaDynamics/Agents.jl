@@ -90,7 +90,7 @@
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.by_property(:type))
-        
+
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
@@ -152,12 +152,12 @@
         model = ABM(
             Agent7,
             GraphSpace(complete_graph(10));
-            properties = ModelData(3, 4.2f32, Dict(1=>"foo", 2=>"bar")),
+            properties = ModelData(3, 4.2f32, Dict(1 => "foo", 2 => "bar")),
             rng = MersenneTwister(42)
         )
 
         for i in 1:30
-            add_agent_pos!(Agent7(i, i%10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
+            add_agent_pos!(Agent7(i, i % 10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -186,7 +186,7 @@
     end
 
     @testset "Grid Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
+        astep!(a, m) = move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -201,18 +201,18 @@
             model = ABM(
                 Agent1,
                 space;
-                properties = (pathfinder = pathfinder, ),
+                properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
-            Pathfinding.set_target!(model[1], (10, 10), model.pathfinder)
+            plan_route!(model[1], (10, 10), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
             other = AgentsIO.load_checkpoint("test.jld2")
             return model, other
         end
-        
+
         test_pathfinding_model(setup_model()...)
         test_pathfinding_model(setup_model(; diagonal_movement = true)...)
         test_pathfinding_model(setup_model(; admissibility = 0.5)...)
@@ -228,7 +228,7 @@
     end
 
     @testset "Continuous Pathfinder" begin
-        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+        astep!(a, m) = move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -238,16 +238,16 @@
         hmm = Pathfinding.PenaltyMap(pmap)
 
         function setup_model(; kwargs...)
-            space = ContinuousSpace((10., 10.); periodic = false)
+            space = ContinuousSpace((10.0, 10.0); periodic = false)
             pathfinder = Pathfinding.AStar(space; kwargs...)
             model = ABM(
                 Agent6,
                 deepcopy(space);
-                properties = (pathfinder = pathfinder, ),
+                properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
-            add_agent!((1.3, 1.5), model, (0., 0.), 0.)
-            Pathfinding.set_target!(model[1], (9.7, 4.8), model.pathfinder)
+            add_agent!((1.3, 1.5), model, (0.0, 0.0), 0.0)
+            plan_route!(model[1], (9.7, 4.8), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -267,7 +267,7 @@
 
         rm("test.jld2")
     end
-    
+
     @testset "Multi-agent" begin
         model, _ = Models.daisyworld()
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -300,35 +300,38 @@
         @agent Zombie OSMAgent begin
             infected::Bool
         end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.TEST_MAP))
-        
+        model = ABM(Zombie, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
+
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
-            route = OSM.plan_route(start, finish, model)
-            human = Zombie(id, start, route, finish, false)
+            human = Zombie(id, start, false)
             add_agent_pos!(human, model)
+            plan_route!(human, finish, model)
         end
-        
-        start = OSM.road((39.52320181536525, -119.78917553184259), model)
-        finish = OSM.intersection((39.510773, -119.75916700000002), model)
-        route = OSM.plan_route(start, finish, model)
-        zombie = add_agent!(start, model, route, finish, true)
+
+        start = OSM.road((51.530876112711745, 9.945125635913511), model)
+        finish = OSM.intersection((51.5328328, 9.9351811), model)
+        zombie = add_agent!(start, model, true)
+        plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
-        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.TEST_MAP)
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map())
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
-        @test all(OSM.latlon(model[i].destination, model) == OSM.latlon(other[i].destination, other) for i in allids(model))
-        @test all(length(model[i].route) == length(other[i].route) for i in allids(model))
-        @test all(all(OSM.latlon(model[i].route[j], model) == OSM.latlon(other[i].route[j], other) for j in 1:length(model[i].route)) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)
+        @test sort(collect(keys(model.space.routes))) == sort(collect(keys(other.space.routes)))
+        @test all(model.space.routes[i].route == other.space.routes[i].route for i in keys(model.space.routes))
+        @test all(model.space.routes[i].start == other.space.routes[i].start for i in keys(model.space.routes))
+        @test all(model.space.routes[i].dest == other.space.routes[i].dest for i in keys(model.space.routes))
+        @test all(model.space.routes[i].return_route == other.space.routes[i].return_route for i in keys(model.space.routes))
+        @test all(model.space.routes[i].has_to_return == other.space.routes[i].has_to_return for i in keys(model.space.routes))
 
         rm("test.jld2")
     end
