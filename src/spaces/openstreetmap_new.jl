@@ -150,7 +150,10 @@ returns a location somewhere on a road heading in a random direction.
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
     s = Int(rand(model.rng, 1:Agents.nv(model)))
-    d = Int(rand(model.rng, outneighbors(model.space.map.graph, s)))
+    if isempty(all_neighbors(model.space.map.graph, s))
+        return (s, s, 0.0)
+    end
+    d = Int(rand(model.rng, all_neighbors(model.space.map.graph, s)))
     dist = rand(model.rng) * road_length(s, d, model)
     return (s, d, dist)
 end

@@ -3,12 +3,11 @@ using Graphs
 
 @testset "OpenStreetMap space" begin
     space = OpenStreetMapSpace(OSM.test_map())
-    @test length(space.s) == 20521
+    @test length(space.s) == 1483
     @test sprint(show, space) ==
-          "OpenStreetMapSpace with 4393 ways and 20521 nodes"
+          "OpenStreetMapSpace with 401 ways and 1483 nodes"
 
-    Random.seed!(689)
-    model = ABM(Agent10, space)
+    model = ABM(Agent10, space; rng = MersenneTwister(42))
 
     @test OSM.random_road_position(model) != OSM.random_road_position(model)
     intersection = random_position(model)
@@ -38,18 +37,12 @@ using Graphs
     @test length(np) == 4
     @test all(OSM.latlon(np[1], model) .≈ (51.5308349, 9.9449474))
 
-    rand_road = OSM.random_road_position(model)
-    rand_intersection = random_position(model)
-    move_agent!(model[2], rand_road, model)
-    plan_route!(model[2], rand_intersection, model; return_trip = true)
-    @test length(model.space.routes[2].route) == 357
-
-    @test OSM.road_length(model[1].pos, model) ≈ 0.00011942893648990791
+    @test OSM.road_length(model[1].pos, model) ≈ 0.0001465463972062248
     @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.00030269737299400725
 
     move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
     plan_route!(model[1], finish_r[1], model)
-    @test length(model.space.routes[1].route) == 71
+    @test length(model.space.routes[1].route) == 72
 
     move_agent!(model[1], start_r, model)
     plan_route!(model[1], finish_r[1], model)
@@ -57,7 +50,7 @@ using Graphs
 
     move_agent!(model[1], (start_r[2], start_r[2], 0.0), model)
     plan_route!(model[1], finish_r, model)
-    @test length(model.space.routes[1].route) == 72
+    @test length(model.space.routes[1].route) == 73
 
     move_agent!(model[2], start_r, model)
     plan_route!(model[2], finish_r[1], model)
@@ -68,7 +61,7 @@ using Graphs
 
     @test !is_stationary(model[1], model)
     move_along_route!(model[1], model, 0.01)
-    @test length(model.space.routes[1].route) == 53
+    @test length(model.space.routes[1].route) == 54
     move_along_route!(model[1], model, 1500)
     @test is_stationary(model[1], model)
 
@@ -82,16 +75,14 @@ using Graphs
     @test sort!(nearby_ids(model[6].pos, model, 2.0)) == [1, 2, 3, 4, 5, 6, 7]
 
     # Test long moves
-    start = random_position(model)
-    finish = OSM.random_road_position(model)
-    move_agent!(model[1], start, model)
-    plan_route!(model[1], finish, model)
-    move_along_route!(model[1], model, 10^5)
-    @test all(model[1].pos .≈ finish)
-    move_agent!(model[1], start, model)
-    plan_route!(model[1], finish, model; return_trip = true)
-    move_along_route!(model[1], model, 10^5)
-    @test all(model[1].pos .≈ start)
+    move_agent!(model[1], start_i, model)
+    plan_route!(model[1], finish_i, model)
+    move_along_route!(model[1], model, 1e5)
+    @test all(model[1].pos .≈ finish_i)
+    move_agent!(model[1], start_i, model)
+    plan_route!(model[1], finish_i, model; return_trip = true)
+    move_along_route!(model[1], model, 1e5)
+    @test all(model[1].pos .≈ start_i)
 
     # distance checks
     pos_1 = start_i[1]

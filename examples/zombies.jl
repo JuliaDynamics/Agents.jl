@@ -42,7 +42,7 @@ function initialise(; map_path = OSM.test_map())
         start = random_position(model) # At an intersection
         human = Zombie(id, start, false)
         add_agent_pos!(human, model)
-        OSM.random_route!(human, model; limit = 25) # try 25 times to find a random route
+        OSM.random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     ## We'll add patient zero at a specific (latitude, longitude)
     start = OSM.road((51.5328328, 9.9351811), model)
@@ -63,14 +63,14 @@ function agent_step!(agent, model)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
-        OSM.random_route!(agent, model)
+        OSM.random_route!(agent, model; limit = 50)
         ## Start on new route
-        move_along_route!(agent, model, 0.005)
+        move_along_route!(agent, model, 0.0001)
     end
 
     if agent.infected
         ## Agents will be infected if they get too close to a zombie.
-        map(i -> model[i].infected = true, nearby_ids(agent, model, 0.01))
+        map(i -> model[i].infected = true, nearby_ids(agent, model, 0.0003))
     end
 end
 
@@ -80,20 +80,20 @@ end
 # use [OSMMakie.jl](https://github.com/fbanning/OSMMakie.jl) and
 # a custom routine.
 
-using OSMMakie
+# using OSMMakie
 using CairoMakie
 ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
 
 model = initialise()
 
-fig, ax, plot = osmplot(model.space.map)
+# fig, ax, plot = osmplot(model.space.map)
 ids = model.scheduler(model)
 colors = Node([ac(model[i]) for i in ids])
 sizes = Node([as(model[i]) for i in ids])
 marker = :circle
 pos = Node(Point2f[OSM.latlon(model[i].pos, model) for i in ids])
-scatter!(pos; markercolor = colors, markersize = sizes, marker)
+fig, _= scatter(pos; color = colors, size = sizes, marker)
 
 record(fig, "outbreak.mp4", 1:200; framerate = 15) do i
     Agents.step!(model, agent_step!, 1)
