@@ -8,12 +8,11 @@ Discretization of [`ContinuousSpace`](@ref) is taken care of internally.
 
 You can enable path-finding and set its options by creating an instance of a
 [`Pathfinding.AStar`](@ref) struct. This must be passed to the relevant pathfinding functions
-during the simulation. Call [`Pathfinding.set_target!`](@ref) to set the target
-destination for an agent. This triggers the algorithm to calculate a path from the agent's
-current position to the one specified. You can alternatively use
-[`Pathfinding.set_best_target!`](@ref) to choose the best target from a list. Once a target
-has been set, you can move an agent one step along its precalculated path using the
-[`move_along_route!`](@ref) function.
+during the simulation. Call [`plan_route!`](@ref) to set the destination for an agent. This
+triggers the algorithm to calculate a path from the agent's current position to the one
+specified. You can alternatively use [`plan_best_route!`](@ref) to choose the best target
+from a list. Once a target has been set, you can move an agent one step along its
+precalculated path using the [`move_along_route!`](@ref) function.
 
 Refer to the [Maze Solver](@ref), [Mountain Runners](@ref) and [Rabbit, Fox, Hawk](@ref)
 examples using path-finding and see the available functions below as well.
@@ -38,8 +37,6 @@ export CostMetric,
     PenaltyMap,
     AStar,
     delta_cost,
-    set_target!,
-    set_best_target!,
     penaltymap,
     nearby_walkable,
     random_walkable

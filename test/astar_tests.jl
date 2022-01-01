@@ -57,7 +57,7 @@
         a = add_agent!((5, 2), model, 654.5)
         @test is_stationary(a, model.pf)
         
-        set_target!(a, (1, 3), model.pf)
+        plan_route!(a, (1, 3), model.pf)
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
         
@@ -66,7 +66,7 @@
 
         delete!(model.pf.agent_paths, 1)
         @test length(model.pf.agent_paths) == 0
-        @test set_best_target!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
+        @test plan_best_route!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
         @test length(model.pf.agent_paths) == 1
 
         kill_agent!(a, model, model.pf)
@@ -90,8 +90,8 @@
         model = ABM(Agent3, sp; properties = (pf = pf,))
         model.pf.walkmap[3, :] .= 0
         a = add_agent!((1, 3), model, 0.)
-        @test set_best_target!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
-        @test isnothing(set_best_target!(a, [(5, 3), (4, 1)], model.pf))
+        @test plan_best_route!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
+        @test isnothing(plan_best_route!(a, [(5, 3), (4, 1)], model.pf))
 
         # ContinuousSpace
         pathfinder = AStar(cspace; walkmap = trues(10, 10))
@@ -99,7 +99,7 @@
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
         @test is_stationary(a, model.pf)
 
-        set_target!(a, (4., 4.), model.pf)
+        plan_route!(a, (4., 4.), model.pf)
         @test !is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
 
@@ -107,7 +107,7 @@
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
         # test waypoint skipping
         move_agent!(a, (0.25, 0.25), model)
-        set_target!(a, (0.75, 1.25), model.pf)
+        plan_route!(a, (0.75, 1.25), model.pf)
         move_along_route!(a, model, model.pf, 0.807106)
         @test all(isapprox.(a.pos, (0.75, 0.849999); atol)) || all(isapprox.(a.pos, (0.467156, 0.967156); atol))
         # make sure it doesn't overshoot the end
@@ -126,15 +126,15 @@
         pathfinder = AStar(pcspace; walkmap = trues(10, 10))
         model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
         a = add_agent!((0., 0.), model, (0., 0.), 0.)
-        @test all(set_best_target!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf) .≈ (2.5, 2.5))
+        @test all(plan_best_route!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf) .≈ (2.5, 2.5))
         @test length(model.pf.agent_paths) == 1
         move_along_route!(a, model, model.pf, 1.0)
         @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
         model.pf.walkmap[:, 3] .= 0
         move_agent!(a, (2.5, 2.5), model)
-        @test all(set_best_target!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
-        @test isnothing(set_best_target!(a, [(3., 0.3), (1., 0.1)], model.pf))
+        @test all(plan_best_route!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
+        @test isnothing(plan_best_route!(a, [(3., 0.3), (1., 0.1)], model.pf))
 
         kill_agent!(a, model, model.pf)
         @test length(model.pf.agent_paths) == 0
