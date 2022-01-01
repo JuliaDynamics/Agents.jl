@@ -1,18 +1,19 @@
+using Random
 
 @testset "Random Number Generation" begin
     model = ABM(Agent2)
-    @test model.rng == GLOBAL_RNG
+    @test model.rng == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = ABM(Agent1, GridSpace(3,3); rng)
+    model = ABM(Agent1, GridSpace((3,3)); rng)
     agent = Agent1(1, (1,1))
     add_agent_pos!(agent, model)
     agent = Agent1(2, (1,1))
     add_agent_single!(agent, model)
     # Test that model rng pool was used
     @test model.rng ≠ rng0
-    @test agent.pos ≠ (1,1)
+    @test agent.pos == (2,1)
     seed!(model, 42)
     @test model.rng == rng0
 
