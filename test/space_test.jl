@@ -373,7 +373,7 @@
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2); rng = rng0)
         a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
         walk!(a, rand, model)
-        @test a.pos[1] ≈ 6.58248
-        @test a.pos[2] ≈ 4.84226
+        @test a.pos[1] ≈ 6.5824829589163665
+        @test a.pos[2] ≈ 4.842266936412905
     end
 end
