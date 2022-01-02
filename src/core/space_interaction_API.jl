@@ -146,7 +146,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A})
+function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A}) where {A}
     @assert typeof(agent.pos) == typeof(pos)
     remove_agent_from_space!(agent, model)
     agent.pos = pos
