@@ -6,32 +6,33 @@
 # </video>
 # ```
 
-# In this introductory example we demonstrate Agents.jl's architecture and
-# features through building
+# In this introductory example we parallelize the main [Tutorial](@ref) while building
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional grid with a Chebyshev metric.
+# * The agents live in a two-dimensional grid. For each agent we care about
+#   finding all of its 8 nearest neighbors (cardinal and diagonal directions).
+#   To do this, we will create a [`DiscreteSpace`](@ref)
+#   with a Chebyshev metric, and when searching for nearby agents we will use a radius
+#   of 1 (which is also the default).
 #   This leads to 8 neighboring positions per position (except at the edges of the grid).
 # * Each position of the grid can be occupied by at most one agent.
-# * If an agent has at least `3` neighbors belonging to the same group, then it is happy.
+# * If an agent has at least `k=3` neighbors belonging to the same group, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy.
 
 # Schelling's model shows that even small preferences of agents to have neighbors
 # belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
-# be in the same group) could lead to total segregation of neighborhoods.
+# be in the same group) could still lead to total segregation of neighborhoods.
 
 # This model is also available as [`Models.schelling`](@ref).
 
 # ## Creating a space
 
-# For this example, we will be using a Chebyshev 2D grid, e.g.
-
 using Agents
 
 space = GridSpace((10, 10); periodic = false)
-
-# Agents belonging in this type of space must have a position field that is a
+# Notice that by default the `GridSpace` has `metric = Chebyshev()`, which is what we want.
+# Agents existing in this type of space must have a position field that is a
 # `NTuple{2, Int}`. We ensure this below.
 
 # ## Defining the agent type
@@ -117,6 +118,8 @@ end
 
 # Finally, we define a _step_ function to determine what happens to an
 # agent when activated.
+# For the purpose of this implementation of Schelling's segregation model,
+# we only need an agent step function and not a model stepping function.
 
 function agent_step!(agent, model)
     minhappy = model.min_to_be_happy
@@ -140,9 +143,6 @@ function agent_step!(agent, model)
     end
     return
 end
-
-# For the purpose of this implementation of Schelling's segregation model,
-# we only need an agent step function.
 
 # When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
 # such as [`nearby_positions`](@ref) that returns the neighboring position
@@ -266,17 +266,16 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # </video>
 # ```
 
-# ## Saving the model state
+# ## Saving/loading the model state
 # It is often useful to save a model after running it, so that multiple branching
 # scenarios can be simulated from that point onwards. For example, once most of
 # the population is happy, let's see what happens if some more agents occupy the
 # empty cells. The new agents could all be of one group, or belong to a third, new, group.
-# Simulating this needs multiple copies of the model. `Agents.jl` provides the
+# Simulating this needs multiple copies of the model. Agents.jl provides the
 # functions [`AgentsIO.save_checkpoint`](@ref) and [`AgentsIO.load_checkpoint`](@ref)
 # to save and load models to JLD2 files respectively.
 
 # First, let's create a model with 200 agents and run it for 40 iterations.
-
 @eval Main __atexample__named__schelling = $(@__MODULE__) # hide
 
 model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
@@ -286,43 +285,36 @@ figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # Most of the agents have settled happily. Now, let's save the model.
-
 AgentsIO.save_checkpoint("schelling.jld2", model)
 
 # Note that we can now leave the REPL, and come back later to run the model,
 # right from where we left off.
-
 model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
 
 # Since functions are not saved, the scheduler has to be passed while loading
 # the model. Let's now verify that we loaded back exactly what we saved.
-
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # For starters, let's see what happens if we add 100 more agents of group 1
-
 for i in 1:100
     agent = SchellingAgent(nextid(model), (1, 1), false, 1)
     add_agent_single!(agent, model)
 end
 
 # Let's see what our model looks like now.
-
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # And then run it for 40 iterations.
-
 run!(model, agent_step!, 40)
 
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
-# It looks like they eventually cluster again. What if the agents are of a new group?
+# It looks like the agents eventually cluster again. What if the agents are of a new group?
 # We can start by loading the model back in from the file, thus resetting the
 # changes we made.
-
 model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.randomly)
 
 for i in 1:100
@@ -332,7 +324,6 @@ end
 
 # To visualize the model, we need to redefine `groupcolor` and `groupmarker`
 # to handle a third group.
-
 groupcolor(a) = (:blue, :orange, :green)[a.group]
 groupmarker(a) = (:circle, :rect, :cross)[a.group]
 
@@ -340,7 +331,6 @@ figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # The new agents are scattered randomly, as expected. Now let's run the model.
-
 run!(model, agent_step!, 40)
 
 figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
