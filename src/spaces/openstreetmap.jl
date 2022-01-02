@@ -62,7 +62,7 @@ Much of the functionality of this space is provided by interfacing with
 For details on how to obtain an OSM file for your use case, consult the LightOSM.jl documentation.
 We provide a function `OSM.test_map` to use for testing.
 
-All keywords are passed on to
+All keywords are passed to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
 ## The OSMAgent
@@ -166,6 +166,7 @@ planning a route from the agent's current position. Overwrite any existing route
 
 The keyword `limit = 10` specifies the limit on the number of attempts at planning
 a random route. Returns `true` if a route was successfully planned, `false` otherwise.
+All other keywords are passed to [`plan_route!`](@ref)
 """
 function random_route!(
     agent::A,
@@ -370,15 +371,19 @@ Agents.plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgen
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 """
-    OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace})
+    OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
 Return the distance between the two positions along the shortest path joining them in the given
 model. Returns `Inf` if no such path exists.
+
+All keywords are passed to
+[`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
 """
 function distance(
     pos_1::Tuple{Int,Int,Float64},
     pos_2::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace}
+    model::ABM{<:OpenStreetMapSpace};
+    kwargs...
 )
     # positions are identical
     if pos_1[1] == pos_1[2] == pos_2[1] == pos_2[2] ||
@@ -428,7 +433,8 @@ function distance(
         route = shortest_path(
             model.space.map,
             model.space.map.index_to_node[st_node],
-            model.space.map.index_to_node[en_node],
+            model.space.map.index_to_node[en_node];
+            kwargs...
         )
     catch
         return Inf
@@ -477,7 +483,7 @@ end
 function distance(
     pos_1::Int,
     pos_2::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace}
+    model::ABM{<:OpenStreetMapSpace};
 )
     distance((pos_1, pos_1, 0.0), pos_2, model)
 end
