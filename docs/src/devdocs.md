@@ -19,10 +19,10 @@ In principle, the following should be done:
 1. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
 1. Extend `random_position(model)`.
 1. Think about how the positions of agents will be updated as agents are moved, added or killed.
-1. Extend `move_agent!(agent, pos, model), add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`.
+1. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`.
 1. Extend `nearby_ids(position, model, r)`.
 
-And that's it!
+And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` for performance reasons.
 
 ## Designing a new Pathfinder Cost Metric
 

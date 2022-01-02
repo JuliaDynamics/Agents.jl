@@ -40,16 +40,6 @@ Return a random position in the model's space (always with appropriate Type).
 random_position(model) = notimplemented(model)
 
 """
-    move_agent!(agent [, pos], model::ABM) → agent
-
-Move agent to the given position, or to a random one if a position is not given.
-`pos` must have the appropriate position type depending on the space type.
-
-The agent's position is updated to match `pos` after the move.
-"""
-move_agent!(agent, pos, model) = notimplemented(model)
-
-"""
     add_agent_to_space!(agent, model)
 Add the agent to the underlying space structure at the agent's own position.
 This function is called after the agent is already inserted into the model dictionary
@@ -124,9 +114,8 @@ given position.
 nearby_positions(position, model, r = 1) = notimplemented(model)
 
 #######################################################################################
-# %% IMPLEMENT: Advanced functionality for route planning
+# %% OPTIONAL IMPLEMENT
 #######################################################################################
-
 plan_route!(agent, dest, model_or_pathfinder; kwargs...) = notimplemented(model_or_pathfinder)
 
 plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
@@ -149,6 +138,21 @@ is_stationary(agent, model) = notimplemented(model)
 #######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
+"""
+    move_agent!(agent [, pos], model::ABM) → agent
+
+Move agent to the given position, or to a random one if a position is not given.
+`pos` must have the appropriate position type depending on the space type.
+
+The agent's position is updated to match `pos` after the move.
+"""
+function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A})
+    @assert typeof(agent.pos) == typeof(pos)
+    remove_agent_from_space!(agent, model)
+    agent.pos = pos
+    add_agent_to_space!(agent, model)
+end
+
 """
     kill_agent!(agent::AbstractAgent, model::ABM)
     kill_agent!(id::Int, model::ABM)
