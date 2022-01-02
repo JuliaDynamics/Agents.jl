@@ -4,7 +4,7 @@
 end
 
 """
-``` julia
+```julia
 schelling(;
     numagents = 320,
     griddims = (20, 20),
