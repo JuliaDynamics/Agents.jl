@@ -83,7 +83,7 @@ makedocs(
             "Flocking" => "examples/flock.md",
             "Zombie Outbreak" => "examples/zombies.md",
             "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
-            "More examples" => "examples.md"
+            "More Examples for Agents.jl" => "examples.md"
         ],
         "Predefined Models" => "models.md",
         "API" => "api.md",
