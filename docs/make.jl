@@ -83,9 +83,9 @@ makedocs(
             "Flocking" => "examples/flock.md",
             "Zombie Outbreak" => "examples/zombies.md",
             "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
+            "Predefined Models" => "models.md",
             "More Examples for Agents.jl" => "examples.md"
         ],
-        "Predefined Models" => "models.md",
         "API" => "api.md",
         "Plotting and interactive application" => "interact.md",
         "Ecosystem Integration" => [
