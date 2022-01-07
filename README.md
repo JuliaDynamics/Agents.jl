@@ -4,7 +4,7 @@
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/dev)
-[![](https://img.shields.io/badge/arXiv-2101.10072-red)](https://arxiv.org/abs/2101.10072)
+[![](https://img.shields.io/badge/DOI-10.1177/00375497211068820-purple)](https://journals.sagepub.com/doi/10.1177/00375497211068820)
 [![CI](https://github.com/JuliaDynamics/Agents.jl/workflows/CI/badge.svg)](https://github.com/JuliaDynamics/Agents.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/JuliaDynamics/Agents.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaDynamics/Agents.jl)
 
