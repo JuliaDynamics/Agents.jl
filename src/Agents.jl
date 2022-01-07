@@ -33,14 +33,13 @@ include("simulations/sample.jl")
 include("simulations/ensemblerun.jl")
 
 # Other features that exist in submodules
-include("submodules/pathfinding/all_pathfinders.jl")
+include("submodules/pathfinding/Pathfinding.jl")
 include("submodules/schedulers.jl")
 include("submodules/io/AgentsIO.jl")
-include("deprecations.jl")
-
-# Predefined models
 include("models/Models.jl")
-export Models
+
+# Don't forget to update deprecations between versions!
+include("deprecations.jl")
 
 # Update messages:
 using Scratch

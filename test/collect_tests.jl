@@ -440,11 +440,31 @@
 end
 
 @testset "Parameter scan" begin
+    @agent Automata GridAgent{2} begin end
+    function forest_fire(; density = 0.7, griddims = (100, 100))
+        space = GridSpace(griddims; periodic = false, metric = :euclidean)
+        forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
+        for I in CartesianIndices(forest.trees)
+            if rand(forest.rng) < density
+                forest.trees[I] = I[1] == 1 ? 2 : 1
+            end
+        end
+        return forest
+    end
+    
+    function forest_model_step!(forest)
+        for I in findall(isequal(2), forest.trees)
+            for idx in nearby_positions(I.I, forest)
+                if forest.trees[idx...] == 1
+                    forest.trees[idx...] = 2
+                end
+            end
+            forest.trees[I] = 3
+        end
+    end
+
     n = 10
     parameters = Dict(:density => [0.6, 0.7, 0.8], :griddims => (20, 20))
-
-    forest, agent_step!, forest_step! = Models.forest_fire()
-    forest_initiation(; kwargs...) = Models.forest_fire(; kwargs...)[1]
 
     burnt(f) = count(t == 3 for t in f.trees)
     unburnt(f) = count(t == 1 for t in f.trees)
@@ -452,20 +472,18 @@ end
         mdata = [unburnt, burnt]
         _, data = paramscan(
             parameters,
-            forest_initiation;
+            forest_fire;
             n = n,
-            agent_step! = agent_step!,
-            model_step! = forest_step!,
+            model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
         @test size(data) == ((n + 1) * 3, 4)
         _, data = paramscan(
             parameters,
-            forest_initiation;
+            forest_fire;
             n = n,
-            agent_step! = agent_step!,
-            model_step! = forest_step!,
+            model_step! = forest_model_step!,
             include_constants = true,
             mdata,
         )
@@ -476,10 +494,9 @@ end
         mdata = [burnt]
         _, data = paramscan(
             parameters,
-            forest_initiation;
+            forest_fire;
             n = n,
-            agent_step! = agent_step!,
-            model_step! = forest_step!,
+            model_step! = forest_model_step!,
             mdata,
         )
         @test unique(data.step) == 0:10
@@ -500,13 +517,15 @@ end
 end
 
 @testset "ensemblerun! and different seeds" begin
-    _, as!, ms! = Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5)
-    generator(seed) =
-        Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5, seed)[1]
+    function fake_model(seed)
+        abm = ABM(Agent4, GridSpace((4, 4)); rng = MersenneTwister(seed))
+        fill_space!(abm, _ -> rand(abm.rng, 1:1000))
+        abm
+    end
+    as!(agent, model) = (agent.p = rand(model.rng, 1:1000))
     seeds = [1234, 563, 211]
-    daisy(a) = a isa Models.Daisy
-    adata = [(:age, sum, daisy)]
-    adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
-    @test adf[!, :sum_age_daisy] == unique(adf[!, :sum_age_daisy])
+    adata = [(:p, sum)]
+    adf, _ = ensemblerun!(fake_model, as!, dummystep, 2; adata, seeds)
+    @test adf[!, :sum_p] == unique(adf[!, :sum_p])
     @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end

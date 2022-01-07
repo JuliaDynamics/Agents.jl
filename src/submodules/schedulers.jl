@@ -2,6 +2,7 @@ export schedule, Schedulers
 """
     schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
+Literally equivalent with `model.scheduler(model)`.
 """
 schedule(model::ABM) = model.scheduler(model)
 

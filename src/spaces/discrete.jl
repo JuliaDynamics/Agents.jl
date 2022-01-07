@@ -143,12 +143,10 @@ Add one agent to each position in the model's space. Similarly with [`add_agent!
 the function creates the necessary agents and
 the `args...; kwargs...` are propagated into agent creation.
 If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
-applying `f` where `pos` is each position (tuple for grid, index for graph).
+applying `f` where `pos` is each position (tuple for grid, integer index for graph).
 
 An optional first argument is an agent **type** to be created, and targets mixed agent
 models where the agent constructor cannot be deduced (since it is a union).
-
-Example usage in [Daisyworld](@ref).
 """
 fill_space!(model::ABM{S,A}, args...; kwargs...) where {S,A<:AbstractAgent} =
     fill_space!(A, model, args...; kwargs...)

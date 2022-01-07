@@ -1,4 +1,4 @@
-# # Flock model
+# # Flocking model
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

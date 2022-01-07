@@ -66,18 +66,19 @@
     end
 
     @testset "No space" begin
-        model, _ = Models.hk()
+        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42))
+        for i in 1:100
+            add_agent!(model, rand(model.rng))
+        end
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2")
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].old_opinion == other[i].old_opinion for i in allids(model))
-        @test all(model[i].new_opinion == other[i].new_opinion for i in allids(model))
-        @test all(model[i].previous_opinion == other[i].previous_opinion for i in allids(model))
+        @test all(model[i].weight == other[i].weight for i in allids(model))
         # properties
-        @test model.ϵ == other.ϵ
+        @test model.abc == other.abc
         # model data
         test_model_data(model, other)
 
@@ -86,22 +87,18 @@
 
     @testset "GridSpace" begin
         # predator_prey used since properties is a NamedTuple, and contains an Array
-        model, astep, mstep = Models.predator_prey()
+        model, astep, mstep = Models.schelling()
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.by_property(:type))
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].type == other[i].type for i in allids(model))
-        @test all(model[i].energy == other[i].energy for i in allids(model))
-        @test all(model[i].reproduction_prob == other[i].reproduction_prob for i in allids(model))
-        @test all(model[i].Δenergy == other[i].Δenergy for i in allids(model))
+        @test all(model[i].mood == other[i].mood for i in allids(model))
+        @test all(model[i].group == other[i].group for i in allids(model))
         # properties
-        @test model.fully_grown == other.fully_grown
-        @test model.countdown == other.countdown
-        @test model.regrowth_time == other.regrowth_time
+        @test model.min_to_be_happy == other.min_to_be_happy
         # model data
         test_model_data(model, other)
         # space data
@@ -112,27 +109,22 @@
     end
 
     @testset "ContinuousSpace" begin
-        model, astep, mstep = Models.social_distancing(N = 300)
+        model, astep, mstep = Models.flocking(n_birds = 300)
         step!(model, astep, mstep, 100)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].vel == other[i].vel for i in allids(model))
-        @test all(model[i].mass == other[i].mass for i in allids(model))
-        @test all(model[i].days_infected == other[i].days_infected for i in allids(model))
-        @test all(model[i].status == other[i].status for i in allids(model))
-        @test all(model[i].β == other[i].β for i in allids(model))
-        # properties
-        @test model.infection_period == other.infection_period
-        @test model.reinfection_probability == other.reinfection_probability
-        @test model.detection_time == other.detection_time
-        @test model.death_rate == other.death_rate
-        @test model.interaction_radius == other.interaction_radius
-        @test model.dt == other.dt
+        @test all(model[i].speed == other[i].speed for i in allids(model))
+        @test all(model[i].cohere_factor == other[i].cohere_factor for i in allids(model))
+        @test all(model[i].separation == other[i].separation for i in allids(model))
+        @test all(model[i].separate_factor == other[i].separate_factor for i in allids(model))
+        @test all(model[i].match_factor == other[i].match_factor for i in allids(model))
+        @test all(model[i].visual_distance == other[i].visual_distance for i in allids(model))
         # model data
         test_model_data(model, other)
         # space data
@@ -269,25 +261,15 @@
     end
 
     @testset "Multi-agent" begin
-        model, _ = Models.daisyworld()
+        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; scheduler = Models.daisysched, warn = false)
+        other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; warn = false)
 
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(other.agents, i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
-        @test all(model[i].temperature == other[i].temperature for i in allids(model) if model[i] isa Models.Land)
-        @test all(model[i].breed == other[i].breed for i in allids(model) if model[i] isa Models.Daisy)
-        @test all(model[i].age == other[i].age for i in allids(model) if model[i] isa Models.Daisy)
-        @test all(model[i].albedo == other[i].albedo for i in allids(model) if model[i] isa Models.Daisy)
-        # properties
-        @test model.max_age == other.max_age
-        @test model.surface_albedo == other.surface_albedo
-        @test model.solar_luminosity == other.solar_luminosity
-        @test model.solar_change == other.solar_change
-        @test model.scenario == other.scenario
-        @test model.tick == other.tick
+        @test all(model[i].weight == other[i].weight for i in allids(model) if model[i] isa Agent3)
         # model data
         test_model_data(model, other)
         # space data

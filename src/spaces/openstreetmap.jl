@@ -46,7 +46,9 @@ The functionality related to Open Street Map spaces is in the submodule `OSM`.
 This space represents the underlying map as a *continuous* entity choosing accuracy over
 performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
 are not necessarily intersections, and there may be multiple nodes on a road joining two
-intersections. The length of an edge between two nodes is specified in the units of the
+intersections. Agents move along the available roads of the map using routing, see below.
+
+The length of an edge between two nodes is specified in the units of the
 map's `weight_type` as listed in the documentation for
 [`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
 The possible `weight_type`s are:
@@ -56,30 +58,26 @@ The possible `weight_type`s are:
 
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
-Much of the functionality of this space is provided by interfacing with
-[LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
-
-For details on how to obtain an OSM file for your use case, consult the LightOSM.jl documentation.
-We provide a function `OSM.test_map` to use for testing.
-
-All keywords are passed to
+All `kwargs` are propagated to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
-## The OSMAgent
+## The `OSMAgent`
 
 The base properties for an agent residing on an `OSMSpace` are as follows:
 ```julia
-mutable struct OSMAgent <: AbstractAgent
+mutable struct Agent <: AbstractAgent
     id::Int
     pos::Tuple{Int,Int,Float64}
 end
 ```
 
 Current `pos`ition tuple is represented as
-`(start intersection index, finish intersection index, distance travelled)`.
-The distance travelled is in the units of `weight_type`.
+`(first intersection index, second intersection index, distance travelled)`.
+The distance travelled is in the units of `weight_type`. This ensures that the map
+is a *continuous* kind of space, as an agent can truly be at any possible point on 
+an existing road.
 
-Further details can be found in [`OSMAgent`](@ref).
+Use [`OSMAgent`](@ref) for convenience.
 
 ## Routing
 
@@ -89,6 +87,7 @@ There are two ways to generate a route, depending on the situation.
 2. [`random_route!`](@ref), choses a new random destination and plans a path to it.
 
 Both of these functions override any pre-existing route that may exist for an agent.
+To actually move along a planned route use [`move_along_route!`](@ref).
 """
 struct OpenStreetMapSpace <: Agents.AbstractSpace
     map::OSMGraph

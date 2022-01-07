@@ -41,7 +41,7 @@ the origin position.
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
 
-An example using `GridSpace` is the [Forest fire](@ref).
+An example using `GridSpace` is [Schelling's segregation model](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};
@@ -227,7 +227,8 @@ Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -1:1), (3, 1:2)]` searche
 dimension 1 one step either side of the current position (as well as the current
 position) and the third dimension searches two positions above current.
 
-For a complete tutorial on how to use this method, see [Battle Royale](@ref).
+For a complete tutorial on how to use this advanced method, see
+[Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
 """
 function nearby_ids(
     pos::ValidPos,

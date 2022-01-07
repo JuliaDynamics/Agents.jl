@@ -16,7 +16,7 @@ this agent will be chosen in the new sampling.
 * `replace = true` : whether sampling is performed with replacement, i.e. all agents can
 be chosen more than once.
 
-Example usage in [Wright-Fisher model of evolution](@ref).
+Example usage in [Wright-Fisher model of evolution](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/wright-fisher/).
 """
 function sample!(
     model::ABM,
