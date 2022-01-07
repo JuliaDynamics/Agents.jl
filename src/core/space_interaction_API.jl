@@ -62,7 +62,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
     nearby_ids(position, model::ABM, r; kwargs...) → ids
 
 Return an iterable of the ids of the agents within "radius" `r` of the given `position`
-(which must match type with the spatial structure of the `model`).
+(which must match type with the spatial structure of the `model`)
 
 What the "radius" means depends on the space type:
 - `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
@@ -91,6 +91,9 @@ neighbors depending on the underlying graph directionality type.
 For `ContinuousSpace`, the keyword `exact=false` controls whether the found neighbors are
 exactly accurate or approximate (with approximate always being a strict over-estimation),
 see [`ContinuousSpace`](@ref).
+
+In periodic discrete or continuous spaces, when used with a radius larger than half of the entire space, this function may find the same agent(s) more than once.
+See Issue #566 online for more information.
 """
 nearby_ids(position, model, r = 1) = notimplemented(model)
 
