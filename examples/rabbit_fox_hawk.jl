@@ -4,16 +4,18 @@
 # <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
 # </video>
 # ```
-# This model is a variation on the [Predator-prey dynamics](@ref) example. It uses a 3-dimensional
+# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example. 
+# It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
-# pathfinders).
+# pathfinders). It should be considered an advanced example for showcasing pathfinding.
 #
 # Agents in this model are one of three species of animals: rabbits, foxes and hawks. Rabbits
 # eat grass, and are hunted by foxes and hawks. While rabbits and foxes are restricted to
 # walk on suitable portions of the map, hawks are capable of flight and can fly over a much
 # larger region of the map.
 #
-# Similar to the [Predator-prey dynamics](@ref) example, agent types are distinguished using a
+# Similar to the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/)
+# example, agent types are distinguished using a
 # `type` field. Agents also have an additional `energy` field, which is consumed to move around
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding

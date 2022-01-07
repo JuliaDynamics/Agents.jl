@@ -18,6 +18,7 @@ The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](
 `GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
 amount of agents, and each agent can move between the nodes of the graph.
 An example of its usage can be found in [SIR model for the spread of COVID-19](@ref).
+
 If you want to model social networks, where each agent is equivalent with a node of
 a graph, you're better of using `nothing` (or other spaces) as the model space, and using
 a graph from Graphs.jl directly in the model parameters, as shown in the

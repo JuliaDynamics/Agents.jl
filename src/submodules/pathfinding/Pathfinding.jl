@@ -14,7 +14,9 @@ specified. You can alternatively use [`plan_best_route!`](@ref) to choose the be
 from a list. Once a target has been set, you can move an agent one step along its
 precalculated path using the [`move_along_route!`](@ref) function.
 
-Refer to the [Maze Solver](@ref), [Mountain Runners](@ref) and [Rabbit, Fox, Hawk](@ref)
+Refer to the [Maze Solver](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/maze/),
+[Mountain Runners](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/runners/)
+and [Rabbit, Fox, Hawk](@ref)
 examples using path-finding and see the available functions below as well.
 """
 module Pathfinding

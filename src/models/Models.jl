@@ -1,3 +1,5 @@
+export Models
+
 """
 Sub-module of the module `Agents`, which contains pre-defined
 agent based models shown the the Examples section of the documentation.
@@ -10,4 +12,5 @@ using Agents
 
 include("flocking.jl")
 include("schelling.jl")
+include("sir.jl")
 end

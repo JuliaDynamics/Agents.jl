@@ -51,7 +51,7 @@ determines the granularity of the underlying grid, and should agree with the siz
 Distance is calculated using [`Pathfinding.DirectDistance`](@ref) by default, and can be
 changed by specifying `base_metric`.
 
-An example usage can be found in [Mountain Runners](@ref).
+An example usage can be found in [Mountain Runners](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/runners/).
 """
 PenaltyMap(pmap::Array{Int,D}) where {D} = PenaltyMap{D}(DirectDistance{D}(), pmap)
 

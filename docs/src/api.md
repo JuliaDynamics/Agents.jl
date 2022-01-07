@@ -232,7 +232,7 @@ Schedulers.by_type
 ```
 
 ### Advanced scheduling
-You can use [Function-like-objects](https://docs.julialang.org/en/v1.5/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
+You can use [Function-like objects](https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
 ```julia
 mutable struct MyScheduler

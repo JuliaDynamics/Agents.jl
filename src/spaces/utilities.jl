@@ -10,7 +10,7 @@ Return the euclidean distance between `a` and `b` (either agents or agent positi
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `GridSpace` and `ContinuousSpace`.
 
-Example usage in the [Flock model](@ref).
+Example usage in the [Flocking model](@ref).
 """
 edistance(
     a::A,
@@ -132,7 +132,7 @@ Velocity is ignored for this operation in `ContinuousSpace`.
 ## Keywords
 - `ifempty` will check that the target position is unnocupied and only move if that's true. Available only on `GridSpace`.
 
-Example usage in [Battle Royale](@ref).
+Example usage in [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
 """
 function walk!(
     agent::AbstractAgent,

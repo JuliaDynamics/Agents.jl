@@ -29,6 +29,7 @@ Use [`get_spatial_property`](@ref) to access spatial properties in conjuction wi
 `ContinuousSpace`.
 
 See also [Continuous space exclusives](@ref) on the online docs for more functionality.
+An example using continuous space is the [Flocking model](@ref).
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -244,7 +245,7 @@ One of the two agents can have infinite "mass", and then acts as an immovable ob
 that specularly reflects the other agent. In this case of course momentum is not
 conserved, but kinetic energy is still conserved.
 
-Example usage in [Continuous space social distancing for COVID-19](@ref).
+Example usage in [Continuous space social distancing](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
 """
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
@@ -307,7 +308,7 @@ The argument `method` provides three pairing scenarios
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, *i.e.*: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
 
-Example usage in [Bacterial Growth](@ref).
+Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
 """
 function interacting_pairs(
     model::ABM{<:ContinuousSpace},

@@ -23,7 +23,7 @@ flocking(;
     spacing = visual_distance / 1.5
 )
 ```
-Same as in [Flock model](@ref).
+Same as in [Flocking model](@ref).
 """
 function flocking(;
     n_birds = 100,

@@ -54,11 +54,11 @@ to specify the level of discretisation of the space.
   length.
 - `walkmap = trues(size(space))` specifies the (un)walkable positions of the
   space. If specified, it should be a `BitArray` of the same size as the corresponding
-  `GridSpace`. By default, agents can walk anywhere in the space. An example usage can
-  be found in [Maze Solver](@ref)
+  `GridSpace`. By default, agents can walk anywhere in the space.
 - `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
-  metric used to approximate the distance between any two points. See [`CostMetric`](@ref).
-  An example usage can be found in [Mountain Runners](@ref).
+  metric used to approximate the distance between any two points.
+
+Utilization of all features of `AStar` occurs in the [Rabbit, Fox, Hawk](@ref) example.
 """
 function AStar(
     dims::NTuple{D,T};
