@@ -90,7 +90,7 @@
         model, astep, mstep = Models.schelling()
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.by_property(:type))
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -112,7 +112,7 @@
         model, astep, mstep = Models.flocking(n_birds = 300)
         step!(model, astep, mstep, 100)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -261,7 +261,7 @@
     end
 
     @testset "Multi-agent" begin
-        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)))
+        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; warn = false)
 
