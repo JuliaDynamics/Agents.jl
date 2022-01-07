@@ -465,7 +465,7 @@ end
 
     n = 10
     parameters = Dict(:density => [0.6, 0.7, 0.8], :griddims => (20, 20))
-    
+
     burnt(f) = count(t == 3 for t in f.trees)
     unburnt(f) = count(t == 1 for t in f.trees)
     @testset "Standard Scan" begin
@@ -517,13 +517,15 @@ end
 end
 
 @testset "ensemblerun! and different seeds" begin
-    _, as!, ms! = Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5)
-    generator(seed) =
-        Models.daisyworld(; griddims = (4, 4), init_black = 0.5, init_white = 0.5, seed)[1]
+    function fake_model(seed)
+        abm = ABM(Agent4, GridSpace((4, 4)); rng = MersenneTwister(seed))
+        fill_space!(abm, _ -> rand(abm.rng, 1:1000))
+        abm
+    end
+    as!(agent, model) = (agent.p = rand(model.rng, 1:1000))
     seeds = [1234, 563, 211]
-    daisy(a) = a isa Models.Daisy
-    adata = [(:age, sum, daisy)]
-    adf, _ = ensemblerun!(generator, as!, ms!, 2; adata, seeds)
-    @test adf[!, :sum_age_daisy] == unique(adf[!, :sum_age_daisy])
+    adata = [(:p, sum)]
+    adf, _ = ensemblerun!(fake_model, as!, dummystep, 2; adata, seeds)
+    @test adf[!, :sum_p] == unique(adf[!, :sum_p])
     @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end
