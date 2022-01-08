@@ -1,3 +1,5 @@
+using Random
+
 @agent Zombie OSMAgent begin
     infected::Bool
 end
@@ -7,7 +9,7 @@ end
 Same as in the [Zombie Outbreak](@ref) example.
 """
 function zombies(; seed = 1234)
-
+    map_path = OSM.test_map()
     model = ABM(Zombie, OpenStreetMapSpace(map_path); rng = Random.MersenneTwister(seed))
 
     for id in 1:100
@@ -22,7 +24,7 @@ function zombies(; seed = 1234)
     zombie = add_agent!(start, model, true)
     plan_route!(zombie, finish, model)
     ## This function call creates & adds an agent, see `add_agent!`
-    return model
+    return model, zombie_agent_step!, dummystep
 end
 
 function zombie_agent_step!(agent, model)
