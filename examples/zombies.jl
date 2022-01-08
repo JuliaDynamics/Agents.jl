@@ -35,8 +35,9 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; map_path = OSM.test_map())
-    model = ABM(Zombie, OpenStreetMapSpace(map_path))
+function initialise(; seed = 1234)
+    map_path = OSM.test_map()
+    model = ABM(Zombie, OpenStreetMapSpace(map_path); rng = Random.MersenneTwister(seed))
 
     for id in 1:100
         start = random_position(model) # At an intersection
@@ -72,6 +73,7 @@ function agent_step!(agent, model)
         ## Agents will be infected if they get too close to a zombie.
         map(i -> model[i].infected = true, nearby_ids(agent, model, 0.0003))
     end
+    return
 end
 
 # ## Visualising the fall of humanity
