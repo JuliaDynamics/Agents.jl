@@ -22,7 +22,8 @@ export test_map,
     random_route!,
     latlon,
     intersection,
-    road
+    road,
+    download_osm_network    # re-exported from LightOSM.jl
 
 
 # Stores information about an agent's path
@@ -115,7 +116,7 @@ end
 """
     OSM.test_map()
 
-Download a small test map of [Göttingen](https://nominatim.openstreetmap.org/ui/details.html?osmtype=R&osmid=191361&class=boundary)
+Download a small test map of [Göttingen](https://www.openstreetmap.org/export#map=16/51.5333/9.9363)
 as an artifact. Return a path to the downloaded file.
 """
 function test_map()
