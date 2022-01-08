@@ -38,7 +38,6 @@ end
 function initialise(; seed = 1234)
     map_path = OSM.test_map()
     model = ABM(Zombie, OpenStreetMapSpace(map_path); rng = Random.MersenneTwister(seed))
-    model = ABM(Zombie, OpenStreetMapSpace(map_path))
 
     for id in 1:100
         start = random_position(model) # At an intersection
