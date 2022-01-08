@@ -135,14 +135,14 @@ end
 # When we find the `network` of our `student`, we want to convert the result to
 # a dense representation by **find**ing the **n**on-**z**ero (`findnz`) elements.
 
+model = schoolyard()
+
 # ## Visualising the system
 
 # Now, we can watch the dynamics of the social system unfold:
 using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!() # hide
-
-model = schoolyard()
 
 function static_preplot!(ax, model)
     obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
