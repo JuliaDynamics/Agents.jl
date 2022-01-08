@@ -60,7 +60,7 @@ Themes.compile(
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(
-    modules = [Agents, InteractiveDynamics],
+    modules = [Agents, InteractiveDynamics, LightOSM],
     sitename = "Agents.jl",
     authors = "Tim DuBois, George Datseris, Aayush Sabharwal, Ali R. Vahdati and contributors.",
     doctest = false,
