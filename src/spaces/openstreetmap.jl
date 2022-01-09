@@ -118,6 +118,9 @@ end
 
 Download a small test map of [Göttingen](https://www.openstreetmap.org/export#map=16/51.5333/9.9363)
 as an artifact. Return a path to the downloaded file.
+
+Using this map requires `network_type = :none` to be passed as a keyword
+to [`OSMSpace`](@ref).
 """
 function test_map()
     artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
