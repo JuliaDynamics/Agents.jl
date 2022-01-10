@@ -11,6 +11,8 @@ println("Literate...")
 import Literate
 println("InteractiveDynamics...")
 using InteractiveDynamics
+println("LightOSM...")
+using LightOSM
 
 ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples...")
@@ -60,7 +62,7 @@ Themes.compile(
 println("Documentation Build")
 ENV["JULIA_DEBUG"] = "Documenter"
 makedocs(
-    modules = [Agents, InteractiveDynamics],
+    modules = [Agents, InteractiveDynamics, LightOSM],
     sitename = "Agents.jl",
     authors = "Tim DuBois, George Datseris, Aayush Sabharwal, Ali R. Vahdati and contributors.",
     doctest = false,

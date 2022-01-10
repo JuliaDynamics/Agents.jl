@@ -114,6 +114,7 @@ OSM.random_road_position
 OSM.random_route!
 OSM.road_length
 OSM.test_map
+OSM.download_osm_network
 ```
 
 ## Local area
