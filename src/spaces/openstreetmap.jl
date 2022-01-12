@@ -509,7 +509,7 @@ In case `(latitude, longitude)` format is desired, `reverse()` can be
 applied to the return value.
 """
 lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
-    Tuple(model.space.map.node_coordinates[pos])
+    Tuple(reverse(model.space.map.node_coordinates[pos]))
 
 function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     # extra checks to ensure consistency between both versions of `lonlat`
