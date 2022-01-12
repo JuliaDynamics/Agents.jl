@@ -123,7 +123,7 @@ Using this map requires `network_type = :none` to be passed as a keyword
 to [`OSMSpace`](@ref).
 """
 function test_map()
-    artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
+    artifact_toml = joinpath(@__DIR__, "..", "..", "Artifacts.toml")
     map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
     if isnothing(map_hash) || !artifact_exists(map_hash)
         map_hash = create_artifact() do artifact_dir
