@@ -108,6 +108,7 @@ rem_node!
 ```@docs
 OSM
 OSM.latlon
+OSM.lonlat
 OSM.intersection
 OSM.road
 OSM.random_road_position
