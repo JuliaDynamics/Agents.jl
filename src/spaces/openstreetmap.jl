@@ -501,45 +501,35 @@ function distance(
 end
 
 """
-    OSM.latlon(pos, model)
-    OSM.latlon(agent, model)
+    OSM.lonlat(pos, model)
+    OSM.lonlat(agent, model)
 
-Return `(latitude, longitude)` of current road or intersection position.
+Return `(longitude, latitude)` of current road or intersection position.
+
+In case `(latitude, longitude)` format is desired, `reverse()` can be 
+applied to the return value.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(model.space.map.node_coordinates[pos])
 
-function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-    # extra checks to ensure consistency between both versions of `latlon`
+function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    # extra checks to ensure consistency between both versions of `lonlat`
     if pos[3] == 0.0 || pos[1] == pos[2]
-        return latlon(pos[1], model)
+        return lonlat(pos[1], model)
     elseif pos[3] == road_length(pos, model)
-        return latlon(pos[2], model)
+        return lonlat(pos[2], model)
     else
         gloc1 = get_geoloc(pos[1], model)
         gloc2 = get_geoloc(pos[2], model)
         dist = norm(LightOSM.to_cartesian(gloc1) .- LightOSM.to_cartesian(gloc2))
         dir = heading(gloc1, gloc2)
         geoloc = calculate_location(gloc1, dir, pos[3] / road_length(pos, model) * dist)
-        return (geoloc.lat, geoloc.lon)
+        return (geoloc.lon, geoloc.lat)
     end
 end
 
-latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
-    latlon(agent.pos, model)
-
-"""
-    OSM.lonlat(pos, model)
-    OSM.lonlat(agent, model)
-
-Return `(longitude, latitude)` of current road or intersection position.
-"""
-lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) = reverse.(latlon(pos, model))
-
-lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) = reverse.(latlon(pos, model))
-
-lonlat(agent::A, model::ABM{<:OpenStreetMapSpace}) where {A<:AbstractAgent} = 
-    reverse.(latlon(agent.pos, model))
+lonlat(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+    lonlat(agent.pos, model)
 
 """
     OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
