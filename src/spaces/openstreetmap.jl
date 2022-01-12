@@ -21,6 +21,7 @@ export test_map,
     road_length,
     random_route!,
     latlon,
+    lonlat,
     intersection,
     road,
     download_osm_network    # re-exported from LightOSM.jl
@@ -526,6 +527,19 @@ end
 
 latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
+
+"""
+    OSM.lonlat(pos, model)
+    OSM.lonlat(agent, model)
+
+Return `(longitude, latitude)` of current road or intersection position.
+"""
+lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) = reverse.(latlon(pos, model))
+
+lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) = reverse.(latlon(pos, model))
+
+lonlat(agent::A, model::ABM{<:OpenStreetMapSpace}) where {A<:AbstractAgent} = 
+    reverse.(latlon(agent.pos, model))
 
 """
     OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
