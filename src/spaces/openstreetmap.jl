@@ -504,9 +504,6 @@ end
     OSM.lonlat(agent, model)
 
 Return `(longitude, latitude)` of current road or intersection position.
-
-In case `(latitude, longitude)` format is desired, `reverse()` can be 
-applied to the return value.
 """
 lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(reverse(model.space.map.node_coordinates[pos]))
@@ -529,6 +526,13 @@ end
 
 lonlat(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     lonlat(agent.pos, model)
+
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = 
+    Tuple(model.space.map.node_coordinates[pos])
+latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    reverse(lonlat(pos, model))
+latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+    latlon(agent.pos, model)
 
 """
     OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
