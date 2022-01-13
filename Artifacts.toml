@@ -1,2 +1,7 @@
 [osm_map_gottingen]
-git-tree-sha1 = "992999e92c27565d43f947db31dfb78d24cfec73"
+git-tree-sha1 = "d76ce2a1e7d9391f335065cbab546eb7d8f89a97"
+lazy = true
+
+    [[osm_map_gottingen.download]]
+    url = "https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/artifacts/agents/osm_map_gottingen.json.tar.gz"
+    sha256 = "d995edcf18c519659d9aaf7a9b938177d8b719bc549135d693f6b6bb510ae8fd"

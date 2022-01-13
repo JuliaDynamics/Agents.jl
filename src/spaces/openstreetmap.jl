@@ -9,7 +9,7 @@ module OSM # OpenStreetMap
 using Agents
 using LightOSM
 using Graphs
-using Pkg.Artifacts
+using LazyArtifacts
 using LinearAlgebra: dot, norm
 using DataStructures
 using Downloads
@@ -122,22 +122,7 @@ as an artifact. Return a path to the downloaded file.
 Using this map requires `network_type = :none` to be passed as a keyword
 to [`OSMSpace`](@ref).
 """
-function test_map()
-    artifact_toml = joinpath(@__DIR__, "../../Artifacts.toml")
-    map_hash = artifact_hash("osm_map_gottingen", artifact_toml)
-    if isnothing(map_hash) || !artifact_exists(map_hash)
-        map_hash = create_artifact() do artifact_dir
-            Downloads.download(
-                "https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/artifacts/agents/osm_map_gottingen.json",
-                joinpath(artifact_dir, "osm_map_gottingen.json")
-            )
-        end
-
-        bind_artifact!(artifact_toml, "osm_map_gottingen", map_hash; force = true)
-    end
-
-    return joinpath(artifact_path(map_hash), "osm_map_gottingen.json")
-end
+test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 
 #######################################################################################
 # Custom functions for OSMSpace
