@@ -20,7 +20,7 @@ export test_map,
     distance,
     road_length,
     random_route!,
-    latlon,
+    lonlat,
     intersection,
     road,
     download_osm_network    # re-exported from LightOSM.jl
@@ -485,51 +485,60 @@ function distance(
 end
 
 """
-    OSM.latlon(pos, model)
-    OSM.latlon(agent, model)
+    OSM.lonlat(pos, model)
+    OSM.lonlat(agent, model)
 
-Return `(latitude, longitude)` of current road or intersection position.
+Return `(longitude, latitude)` of current road or intersection position.
 """
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
-    Tuple(model.space.map.node_coordinates[pos])
+lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+    Tuple(reverse(model.space.map.node_coordinates[pos]))
 
-function latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-    # extra checks to ensure consistency between both versions of `latlon`
+function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    # extra checks to ensure consistency between both versions of `lonlat`
     if pos[3] == 0.0 || pos[1] == pos[2]
-        return latlon(pos[1], model)
+        return lonlat(pos[1], model)
     elseif pos[3] == road_length(pos, model)
-        return latlon(pos[2], model)
+        return lonlat(pos[2], model)
     else
         gloc1 = get_geoloc(pos[1], model)
         gloc2 = get_geoloc(pos[2], model)
         dist = norm(LightOSM.to_cartesian(gloc1) .- LightOSM.to_cartesian(gloc2))
         dir = heading(gloc1, gloc2)
         geoloc = calculate_location(gloc1, dir, pos[3] / road_length(pos, model) * dist)
-        return (geoloc.lat, geoloc.lon)
+        return (geoloc.lon, geoloc.lat)
     end
 end
 
+lonlat(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
+    lonlat(agent.pos, model)
+
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = 
+    Tuple(model.space.map.node_coordinates[pos])
+latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    reverse(lonlat(pos, model))
 latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
 
 """
-    OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.intersection(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return the nearest intersection position to (latitude, longitude).
+Return the nearest intersection position to **(longitude, latitude)**.
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    ll = reverse(ll)
     vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
     return (vert, vert, 0.0)
 end
 
 """
-    OSM.road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to (latitude, longitude). Significantly slower, but more
+Return a location on a road nearest to **(longitude, latitude)**. Significantly slower, but more
 precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    ll = reverse(ll)
     best_sq_dist = Inf
     best = (-1, -1, -1.0)
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))

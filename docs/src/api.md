@@ -107,7 +107,7 @@ rem_node!
 ## OpenStreetMap space exclusives
 ```@docs
 OSM
-OSM.latlon
+OSM.lonlat
 OSM.intersection
 OSM.road
 OSM.random_road_position

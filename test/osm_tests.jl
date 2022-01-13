@@ -13,29 +13,34 @@ using Graphs
     intersection = random_position(model)
     @test intersection[1] == intersection[2]
     @test intersection[3] == 0.0
-    ll = OSM.latlon(intersection, model)
+    ll = OSM.lonlat(intersection, model)
     @test intersection == OSM.intersection(ll, model)
 
-    start_latlon = (51.5328328, 9.9351811)
-    start_i = OSM.intersection(start_latlon, model)
-    i_diff = sum(abs.(OSM.latlon(start_i, model) .- start_latlon))
-    start_r = OSM.road(start_latlon, model)
-    r_diff = sum(abs.(OSM.latlon(start_r, model) .- start_latlon))
+    start_lonlat = (9.9351811, 51.5328328)
+    start_i = OSM.intersection(start_lonlat, model)
+    i_diff = sum(abs.(OSM.lonlat(start_i, model) .- start_lonlat))
+    start_r = OSM.road(start_lonlat, model)
+    r_diff = sum(abs.(OSM.lonlat(start_r, model) .- start_lonlat))
     @test i_diff >= r_diff
 
-    finish_latlon = (51.530876112711745, 9.945125635913511)
-    finish_i = OSM.intersection(finish_latlon, model)
-    finish_r = OSM.road(finish_latlon, model)
+    finish_lonlat = (9.945125635913511, 51.530876112711745)
+    finish_i = OSM.intersection(finish_lonlat, model)
+    finish_r = OSM.road(finish_lonlat, model)
 
     add_agent!(start_r, model)
     plan_route!(model[1], finish_r, model)
     @test length(model.space.routes[1].route) == 85
     add_agent!(finish_i, model)
 
+    @test OSM.lonlat(model[2], model) == OSM.lonlat(finish_i[1], model)
+    np_lonlat = nearby_positions(model[2], model)
+    @test length(np_lonlat) == 5
+    @test all(OSM.lonlat(np_lonlat[1], model) .≈ (9.9451386, 51.5307792))
+    
     @test OSM.latlon(model[2], model) == OSM.latlon(finish_i[1], model)
-    np = nearby_positions(model[2], model)
-    @test length(np) == 5
-    @test all(OSM.latlon(np[1], model) .≈ (51.5307792, 9.9451386))
+    np_latlon = nearby_positions(model[2], model)
+    @test length(np_latlon) == 5
+    @test all(OSM.latlon(np_latlon[1], model) .≈ (51.5307792, 9.9451386))
 
     @test OSM.road_length(model[1].pos, model) ≈ 0.0002591692620559716
     @test OSM.road_length(finish_r[1], finish_r[2], model) ≈ 0.00030269737299400725
