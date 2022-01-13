@@ -535,23 +535,25 @@ latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
 
 """
-    OSM.intersection(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.intersection(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return the nearest intersection position to (latitude, longitude).
+Return the nearest intersection position to **(longitude, latitude)**.
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    reverse!(ll)
     vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
     return (vert, vert, 0.0)
 end
 
 """
-    OSM.road(latlon::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to (latitude, longitude). Significantly slower, but more
+Return a location on a road nearest to **(longitude, latitude)**. Significantly slower, but more
 precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    reverse!(ll)
     best_sq_dist = Inf
     best = (-1, -1, -1.0)
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
