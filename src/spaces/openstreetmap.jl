@@ -9,7 +9,7 @@ module OSM # OpenStreetMap
 using Agents
 using LightOSM
 using Graphs
-using Artifacts
+using LazyArtifacts
 using LinearAlgebra: dot, norm
 using DataStructures
 using Downloads
