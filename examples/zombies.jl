@@ -60,7 +60,7 @@ end
 
 function agent_step!(agent, model)
     ## Each agent will progress slightly along their route
-    move_along_route!(agent, model, 0.005)
+    move_along_route!(agent, model, 0.002)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
