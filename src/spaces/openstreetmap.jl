@@ -541,7 +541,7 @@ Return the nearest intersection position to **(longitude, latitude)**.
 Quicker, but less precise than [`OSM.road`](@ref).
 """
 function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    reverse!(ll)
+    ll = reverse(ll)
     vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
     return (vert, vert, 0.0)
 end
@@ -553,7 +553,7 @@ Return a location on a road nearest to **(longitude, latitude)**. Significantly 
 precise than [`OSM.intersection`](@ref).
 """
 function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    reverse!(ll)
+    ll = reverse(ll)
     best_sq_dist = Inf
     best = (-1, -1, -1.0)
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
