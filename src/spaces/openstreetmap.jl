@@ -122,9 +122,7 @@ as an artifact. Return a path to the downloaded file.
 Using this map requires `network_type = :none` to be passed as a keyword
 to [`OSMSpace`](@ref).
 """
-function test_map()
-    return artifact"osm_map_gottingen"
-end
+test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 
 #######################################################################################
 # Custom functions for OSMSpace
