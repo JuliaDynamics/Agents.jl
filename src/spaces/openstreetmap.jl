@@ -120,7 +120,7 @@ Download a small test map of [Göttingen](https://www.openstreetmap.org/export#m
 as an artifact. Return a path to the downloaded file.
 
 Using this map requires `network_type = :none` to be passed as a keyword
-to [`OSMSpace`](@ref).
+to [`OSMSpace`](@ref). The unit of distance used for this map is `:time`.
 """
 test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 

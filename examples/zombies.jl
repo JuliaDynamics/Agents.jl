@@ -9,6 +9,7 @@
 #
 # ## Constructing the end of days
 using Agents
+using Random
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
 # satisfies the OSMSpace conditions of having a `pos`ition of type
@@ -37,7 +38,7 @@ end
 
 function initialise(; seed = 1234)
     map_path = OSM.test_map()
-    model = ABM(Zombie, OpenStreetMapSpace(map_path); rng = Random.MersenneTwister(seed))
+    model = ABM(Zombie, OpenStreetMapSpace(map_path; network_type = :none); rng = MersenneTwister(seed))
 
     for id in 1:100
         start = random_position(model) # At an intersection
