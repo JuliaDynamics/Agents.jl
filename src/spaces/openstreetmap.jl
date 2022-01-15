@@ -43,6 +43,16 @@ Create a space residing on the Open Street Map (OSM) file provided via `path`.
 A sample file is provided using [`OSM.test_map`](@ref). Additional maps can
 be downloaded using the [functions provided by LightOSM.jl](https://deloittedigitalapac.github.io/LightOSM.jl/docs/download_network/).
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
+Agents.jl also re-exports [`OSM.download_osm_network`](@ref). An example usage
+to download the map of London to "london.json":
+
+```julia
+OSM.download_osm_network(
+    :place_name;
+    place_name = "London",
+    save_to_file_location = "london.json"
+)
+```
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
 performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
@@ -54,8 +64,10 @@ map's `weight_type` as listed in the documentation for
 [`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
 The possible `weight_type`s are:
 - `:distance`: The distance in kilometers of an edge
-- `:time`: The time in hours to travel along an edge
+- `:time`: The time in hours to travel along an edge at a speed of 30km/h
 - `:lane_efficiency`: Time scaled by number of lanes
+
+The default `weight_type` used is `:distance`.
 
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
@@ -100,7 +112,7 @@ function OpenStreetMapSpace(
     path::AbstractString;
     kwargs...
 )
-    m = graph_from_file(path; kwargs...)
+    m = graph_from_file(path; weight_type = :distance, kwargs...)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
