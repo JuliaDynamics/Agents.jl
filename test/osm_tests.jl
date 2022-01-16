@@ -2,7 +2,7 @@ using LightOSM
 using Graphs
 
 @testset "OpenStreetMap space" begin
-    space = OpenStreetMapSpace(OSM.test_map(); network_type = :none)
+    space = OpenStreetMapSpace(OSM.test_map(); network_type = :none, weight_type = :time)
     @test length(space.s) == 9753
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 3353 ways and 9753 nodes"

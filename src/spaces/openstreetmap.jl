@@ -64,7 +64,7 @@ map's `weight_type` as listed in the documentation for
 [`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
 The possible `weight_type`s are:
 - `:distance`: The distance in kilometers of an edge
-- `:time`: The time in hours to travel along an edge at a speed of 30km/h
+- `:time`: The time in hours to travel along an edge at the maximum speed allowed on that road
 - `:lane_efficiency`: Time scaled by number of lanes
 
 The default `weight_type` used is `:distance`.
