@@ -44,7 +44,7 @@ include("deprecations.jl")
 # Update messages:
 using Scratch
 display_update = true
-version_number = "4.6"
+version_number = "5"
 update_name = "update_v$(version_number)"
 
 function __init__()
@@ -56,9 +56,18 @@ if display_update
             stdout,
             """
             \nUpdate message: Agents v$(version_number)
-            Please see the changelog online. Some key features:
+            Welcome to this new major version of Agents.jl!
+            Noteworthy changes:
 
-            * Agents.jl now uses [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl) instead of LightGraphs.jl
+            * LightGraphs.jl dependency has been replaced by Graphs.jl.
+              No change was done to `GraphSpace`, you only need to replace
+              `using LightGraphs` with `using Graphs`.
+            * The `OpenStreetMapSpace` now uses a new depepdency, LightOSM.jl,
+              which is much more performant than the previous OpenStreetMapX.jl.
+              This meas that initializing a new space is slightly different, see
+              the docstring of `OpenStreetMapSpace` for more.
+            * Agents.jl + InteractiveDynamics.jl now support native plotting for
+              open street map spaces, which is integrated in all interactive apps as well!
             """;
             color = :light_magenta,
         )
