@@ -71,13 +71,15 @@ end
 
 function agent_step!(agent, model)
     ## Each agent will progress along their route
-    move_along_route!(agent, model, agent.speed * model.dt)
+    ## Keep track of distance left to move this step, in case the agent reaches its
+    ## destination early
+    distance_left = move_along_route!(agent, model, agent.speed * model.dt)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.random_route!(agent, model; limit = 50)
-        ## Start on new route
-        move_along_route!(agent, model, agent.speed * model.dt)
+        ## Start on new route, moving the remaining distance
+        move_along_route!(agent, model, distance_left)
     end
 
     if agent.infected

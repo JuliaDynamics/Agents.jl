@@ -669,7 +669,8 @@ end
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
-by the underlying graph's weight_type.
+by the underlying graph's weight_type. If the provided `distance` is greater than the
+distance to the end of the route, return the remaining distance. Otherwise, return 0.
 """
 function Agents.move_along_route!(
     agent::A,
@@ -740,6 +741,8 @@ function Agents.move_along_route!(
             # ensure we don't overshoot the destination
             result_pos = min(agent.pos[3] + distance, osmpath.dest[3])
             move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+            # distance left to move is 0
+            distance = 0.0
             break
             ## return
         end
@@ -810,9 +813,13 @@ function Agents.move_along_route!(
         # will not overshoot
         result_pos = min(agent.pos[3] + distance, road_length(agent.pos, model))
         move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+        # distance left to move is 0
+        distance = 0.0
         ## return
         break
     end
+
+    return distance
 end
 
 # Nearby positions must be intersections, since edges imply a direction.
