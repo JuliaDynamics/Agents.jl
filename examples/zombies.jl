@@ -52,7 +52,7 @@ function initialise(; seed = 1234)
         speed = rand(model.rng) * 5.0 + 2.0 # Random speed from 2-7kmph
         human = Zombie(id, start, false, speed)
         add_agent_pos!(human, model)
-        OSM.random_route!(human, model; limit = 50) # try 50 times to find a random route
+        OSM.plan_random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     ## We'll add patient zero at a specific (latitude, longitude)
     start = OSM.road((51.5328328, 9.9351811), model)
@@ -71,13 +71,15 @@ end
 
 function agent_step!(agent, model)
     ## Each agent will progress along their route
-    move_along_route!(agent, model, agent.speed * model.dt)
+    ## Keep track of distance left to move this step, in case the agent reaches its
+    ## destination early
+    distance_left = move_along_route!(agent, model, agent.speed * model.dt)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
-        OSM.random_route!(agent, model; limit = 50)
-        ## Start on new route
-        move_along_route!(agent, model, agent.speed * model.dt)
+        OSM.plan_random_route!(agent, model; limit = 50)
+        ## Start on new route, moving the remaining distance
+        move_along_route!(agent, model, distance_left)
     end
 
     if agent.infected

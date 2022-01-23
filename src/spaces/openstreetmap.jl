@@ -19,7 +19,7 @@ export test_map,
     plan_route!,
     distance,
     road_length,
-    random_route!,
+    plan_random_route!,
     lonlat,
     intersection,
     road,
@@ -97,7 +97,7 @@ Use [`OSMAgent`](@ref) for convenience.
 There are two ways to generate a route, depending on the situation.
 1. Use [`plan_route!`](@ref) to plan a route from an agent's current position to a target
    destination. This also has the option of planning a return trip.
-2. [`random_route!`](@ref), choses a new random destination and plans a path to it.
+2. [`plan_random_route!`](@ref), choses a new random destination and plans a path to it.
 
 Both of these functions override any pre-existing route that may exist for an agent.
 To actually move along a planned route use [`move_along_route!`](@ref).
@@ -159,7 +159,7 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    OSM.random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
+    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any existing route.
@@ -168,7 +168,7 @@ The keyword `limit = 10` specifies the limit on the number of attempts at planni
 a random route. Returns `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
-function random_route!(
+function plan_random_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A};
     return_trip = false,
@@ -666,10 +666,11 @@ function Agents.move_agent!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
+    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) -> remaining
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
-by the underlying graph's weight_type.
+by the underlying graph's weight_type. If the provided `distance` is greater than the
+distance to the end of the route, return the remaining distance. Otherwise, return 0.
 """
 function Agents.move_along_route!(
     agent::A,
@@ -740,6 +741,8 @@ function Agents.move_along_route!(
             # ensure we don't overshoot the destination
             result_pos = min(agent.pos[3] + distance, osmpath.dest[3])
             move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+            # distance left to move is 0
+            distance = 0.0
             break
             ## return
         end
@@ -810,9 +813,13 @@ function Agents.move_along_route!(
         # will not overshoot
         result_pos = min(agent.pos[3] + distance, road_length(agent.pos, model))
         move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+        # distance left to move is 0
+        distance = 0.0
         ## return
         break
     end
+
+    return distance
 end
 
 # Nearby positions must be intersections, since edges imply a direction.
