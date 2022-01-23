@@ -21,8 +21,8 @@ export test_map,
     road_length,
     plan_random_route!,
     lonlat,
-    intersection,
-    road,
+    nearest_node,
+    nearest_road,
     download_osm_network    # re-exported from LightOSM.jl
 
 
@@ -532,24 +532,24 @@ latlon(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     latlon(agent.pos, model)
 
 """
-    OSM.intersection(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.nearest_node(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Return the nearest intersection position to **(longitude, latitude)**.
-Quicker, but less precise than [`OSM.road`](@ref).
+Quicker, but less precise than [`OSM.nearest_road`](@ref).
 """
-function intersection(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
     vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
     return (vert, vert, 0.0)
 end
 
 """
-    OSM.road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Return a location on a road nearest to **(longitude, latitude)**. Significantly slower, but more
-precise than [`OSM.intersection`](@ref).
+precise than [`OSM.nearest_node`](@ref).
 """
-function road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
     best_sq_dist = Inf
     best = (-1, -1, -1.0)
