@@ -11,7 +11,9 @@
 - Functions for planning and moving along routes have had their names 
   unified across Pathfinding and OpenStreetMap modules. The names now are
   `plan_route!` and `move_along_route!` and are accessible from the top
-  level scope.  
+  level scope. 
+- `OSM.intersection` is renamed to `OSM.nearest_node`
+- `OSM.road` is renamed to `OSM.nearest_road`
 
 # v4.5.4
 - Previously `nearby_ids` with `r=0` for `GraphSpace` was undefined. Now it returns ids only in the same position as given.
