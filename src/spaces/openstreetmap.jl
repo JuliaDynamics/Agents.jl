@@ -19,7 +19,7 @@ export test_map,
     plan_route!,
     distance,
     road_length,
-    random_route!,
+    plan_random_route!,
     lonlat,
     intersection,
     road,
@@ -43,6 +43,16 @@ Create a space residing on the Open Street Map (OSM) file provided via `path`.
 A sample file is provided using [`OSM.test_map`](@ref). Additional maps can
 be downloaded using the [functions provided by LightOSM.jl](https://deloittedigitalapac.github.io/LightOSM.jl/docs/download_network/).
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
+Agents.jl also re-exports [`OSM.download_osm_network`](@ref). An example usage
+to download the map of London to "london.json":
+
+```julia
+OSM.download_osm_network(
+    :place_name;
+    place_name = "London",
+    save_to_file_location = "london.json"
+)
+```
 
 This space represents the underlying map as a *continuous* entity choosing accuracy over
 performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
@@ -54,8 +64,10 @@ map's `weight_type` as listed in the documentation for
 [`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
 The possible `weight_type`s are:
 - `:distance`: The distance in kilometers of an edge
-- `:time`: The time in hours to travel along an edge
+- `:time`: The time in hours to travel along an edge at the maximum speed allowed on that road
 - `:lane_efficiency`: Time scaled by number of lanes
+
+The default `weight_type` used is `:distance`.
 
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
@@ -85,7 +97,7 @@ Use [`OSMAgent`](@ref) for convenience.
 There are two ways to generate a route, depending on the situation.
 1. Use [`plan_route!`](@ref) to plan a route from an agent's current position to a target
    destination. This also has the option of planning a return trip.
-2. [`random_route!`](@ref), choses a new random destination and plans a path to it.
+2. [`plan_random_route!`](@ref), choses a new random destination and plans a path to it.
 
 Both of these functions override any pre-existing route that may exist for an agent.
 To actually move along a planned route use [`move_along_route!`](@ref).
@@ -100,7 +112,7 @@ function OpenStreetMapSpace(
     path::AbstractString;
     kwargs...
 )
-    m = graph_from_file(path; kwargs...)
+    m = graph_from_file(path; weight_type = :distance, kwargs...)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
@@ -120,7 +132,7 @@ Download a small test map of [Göttingen](https://www.openstreetmap.org/export#m
 as an artifact. Return a path to the downloaded file.
 
 Using this map requires `network_type = :none` to be passed as a keyword
-to [`OSMSpace`](@ref).
+to [`OSMSpace`](@ref). The unit of distance used for this map is `:time`.
 """
 test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 
@@ -147,7 +159,7 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    OSM.random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
+    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any existing route.
@@ -156,7 +168,7 @@ The keyword `limit = 10` specifies the limit on the number of attempts at planni
 a random route. Returns `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
-function random_route!(
+function plan_random_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A};
     return_trip = false,
@@ -654,10 +666,11 @@ function Agents.move_agent!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real)
+    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) -> remaining
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
-by the underlying graph's weight_type.
+by the underlying graph's weight_type. If the provided `distance` is greater than the
+distance to the end of the route, return the remaining distance. Otherwise, return 0.
 """
 function Agents.move_along_route!(
     agent::A,
@@ -728,6 +741,8 @@ function Agents.move_along_route!(
             # ensure we don't overshoot the destination
             result_pos = min(agent.pos[3] + distance, osmpath.dest[3])
             move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+            # distance left to move is 0
+            distance = 0.0
             break
             ## return
         end
@@ -798,9 +813,13 @@ function Agents.move_along_route!(
         # will not overshoot
         result_pos = min(agent.pos[3] + distance, road_length(agent.pos, model))
         move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
+        # distance left to move is 0
+        distance = 0.0
         ## return
         break
     end
+
+    return distance
 end
 
 # Nearby positions must be intersections, since edges imply a direction.

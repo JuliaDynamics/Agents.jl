@@ -22,7 +22,7 @@ Scratch = "6c6a2e73-6563-6170-7368-637461726353"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-CSV = "0.9.7"
+CSV = "0.9.7, 0.10"
 DataFrames = "0.21, 0.22, 1"
 DataStructures = "0.18"
 Graphs = "1.4"
