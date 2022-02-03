@@ -292,8 +292,8 @@
             plan_route!(human, finish, model)
         end
 
-        start = OSM.road((51.530876112711745, 9.945125635913511), model)
-        finish = OSM.intersection((51.5328328, 9.9351811), model)
+        start = OSM.nearest_road((51.530876112711745, 9.945125635913511), model)
+        finish = OSM.nearest_node((51.5328328, 9.9351811), model)
         zombie = add_agent!(start, model, true)
         plan_route!(zombie, finish, model)
 
