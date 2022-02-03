@@ -539,7 +539,8 @@ Quicker, but less precise than [`OSM.nearest_road`](@ref).
 """
 function nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
-    vert = Int(model.space.map.node_to_index[nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]])
+    nearest_node_id = LightOSM.nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]
+    vert = Int(model.space.map.node_to_index[nearest_node_id])
     return (vert, vert, 0.0)
 end
 
