@@ -23,8 +23,7 @@ Any contribution to Agents.jl is welcome! For example you can:
 
 If you use this package in a publication, please cite the paper below:
 ```
-@article{Agents2021,
-@article{Datseris2022,
+@article{Agents.jl,
   doi = {10.1177/00375497211068820},
   url = {https://doi.org/10.1177/00375497211068820},
   year = {2022},
@@ -33,6 +32,8 @@ If you use this package in a publication, please cite the paper below:
   pages = {003754972110688},
   author = {George Datseris and Ali R. Vahdati and Timothy C. DuBois},
   title = {Agents.jl: a performant and feature-full agent-based modeling software of minimal code complexity},
-  journal = {{SIMULATION}}
+  journal = {{SIMULATION}},
+  volume = {0},
+  number = {0},
 }
 ```
