@@ -19,7 +19,7 @@ The following functions allow you to plot an ABM, animate it via play/pause butt
 ```@docs
 InteractiveDynamics.abm_plot
 InteractiveDynamics.abm_play
-InteractiveDynamics.abm_video
+InteractiveDynamics.abmvideo
 ```
 
 ## Interactive application

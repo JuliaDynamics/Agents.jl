@@ -4,7 +4,7 @@
 # <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
 # </video>
 # ```
-# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example. 
+# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example.
 # It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders). It should be considered an advanced example for showcasing pathfinding.
@@ -403,7 +403,7 @@ heightmap_url =
     "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
 model = initialize_model(heightmap_url)
 
-abm_video(
+abmvideo(
     "rabbit_fox_hawk.mp4",
     model,
     animal_step!,
