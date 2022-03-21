@@ -244,19 +244,19 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (m, s) -> "step = $(s), infected = $(infected_fraction(m, allid(m)))%",
+    (s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
     abmobs.s, abmobs.model
 )
 
 # And lastly we use them to plot things in a figure
 fig = Figure(resolution = (600, 400))
 ax = Axis(fig[1, 1]; title, xlabel = "City", ylabel = "Population")
-barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1; color)
+barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
 fig
 
 # Now we can even make an animation of it
 record(fig, "covid_evolution.mp4"; framerate = 5) do io
-    for j in 1:40
+    for j in 1:30
         recordframe!(io)
         Agents.step!(abmobs, 1)
     end
