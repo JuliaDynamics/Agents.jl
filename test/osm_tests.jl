@@ -14,18 +14,18 @@ using Graphs
     @test intersection[1] == intersection[2]
     @test intersection[3] == 0.0
     ll = OSM.lonlat(intersection, model)
-    @test intersection == OSM.intersection(ll, model)
+    @test intersection == OSM.nearest_node(ll, model)
 
     start_lonlat = (9.9351811, 51.5328328)
-    start_i = OSM.intersection(start_lonlat, model)
+    start_i = OSM.nearest_node(start_lonlat, model)
     i_diff = sum(abs.(OSM.lonlat(start_i, model) .- start_lonlat))
-    start_r = OSM.road(start_lonlat, model)
+    start_r = OSM.nearest_road(start_lonlat, model)
     r_diff = sum(abs.(OSM.lonlat(start_r, model) .- start_lonlat))
     @test i_diff >= r_diff
 
     finish_lonlat = (9.945125635913511, 51.530876112711745)
-    finish_i = OSM.intersection(finish_lonlat, model)
-    finish_r = OSM.road(finish_lonlat, model)
+    finish_i = OSM.nearest_node(finish_lonlat, model)
+    finish_r = OSM.nearest_road(finish_lonlat, model)
 
     add_agent!(start_r, model)
     plan_route!(model[1], finish_r, model)

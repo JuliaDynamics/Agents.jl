@@ -1,6 +1,6 @@
 # API
 
-The API of Agents.jl is defined on top of the fundamental structures  [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
+The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
 ## `@agent` macro
@@ -55,7 +55,6 @@ walk!
 get_direction
 ```
 
-
 ### Movement with paths
 For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding.Pathfinder`](@ref), a special
 movement method is available.
@@ -108,8 +107,8 @@ rem_node!
 ```@docs
 OSM
 OSM.lonlat
-OSM.intersection
-OSM.road
+OSM.nearest_node
+OSM.nearest_road
 OSM.random_road_position
 OSM.plan_random_route!
 OSM.road_length
@@ -147,7 +146,7 @@ for id in ids_in_position((1, 1, 1, 1), model)
 end
 collect(allids(model))
 ```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 *during* iteration.
+You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
 To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
