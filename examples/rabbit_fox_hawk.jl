@@ -1,9 +1,10 @@
 # # Rabbit, Fox, Hawk
 # ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
+
 # This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example.
 # It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
@@ -371,9 +372,10 @@ end
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
 
-using InteractiveDynamics
-using GLMakie
-GLMakie.activate!() # hide
+# ```julia
+# using InteractiveDynamics
+# using GLMakie # CairoMakie doesn't do 3D plots
+# ```
 
 animalcolor(a) =
     if a.type == :rabbit
@@ -404,22 +406,22 @@ heightmap_url =
     "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
 model = initialize_model(heightmap_url)
 
-abmvideo(
-    "rabbit_fox_hawk.mp4",
-    model, animal_step!, model_step!;
-    figure = (resolution = (800, 700),),
-    frames = 300,
-    framerate = 20,
-    ac = animalcolor,
-    as = 1.0,
-    static_preplot!,
-    title = "Rabbit Fox Hawk with pathfinding"
-)
-
-nothing # hide
+# ```juia
+# abmvideo(
+#     "rabbit_fox_hawk.mp4",
+#     model, animal_step!, model_step!;
+#     figure = (resolution = (800, 700),),
+#     frames = 300,
+#     framerate = 15,
+#     ac = animalcolor,
+#     as = 1.0,
+#     static_preplot!,
+#     title = "Rabbit Fox Hawk with pathfinding"
+# )
+# ```
 
 # ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```

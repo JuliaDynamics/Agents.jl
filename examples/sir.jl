@@ -240,7 +240,7 @@ abmobs = ABMObservable(model; agent_step!)
 
 # We then initialize elements that are lifted observables from `abmobs`:
 infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
-infected_fractions(m) = [infected_fraction(m, ids_in_position(m, p)) for p in positions(m)]
+infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
