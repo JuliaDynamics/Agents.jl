@@ -27,6 +27,12 @@ for file in readdir(indir)
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
+# Also bring in visualizations from interactive dynamics docs:
+using Literate
+infile = joinpath(pkgdir(InteractiveDynamics), "docs", "src", "agents.jl")
+outdir = joinpath(@__DIR__, "src")
+Literate.markdown(infile, outdir; credit = false, name = "agents_visualizations")
+
 # %%
 # download the themes
 println("Theme-ing")
@@ -89,7 +95,7 @@ makedocs(
             "More Examples for Agents.jl" => "examples.md"
         ],
         "API" => "api.md",
-        "Plotting and interactive application" => "interact.md",
+        "Plotting and Interactivity" => "agents_visualizations.md",
         "Ecosystem Integration" => [
             "BlackBoxOptim.jl" => "examples/optim.md",
             "DifferentialEquations.jl" => "examples/diffeq.md",

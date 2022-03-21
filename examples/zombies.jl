@@ -57,7 +57,7 @@ function initialise(; seed = 1234)
     ## We'll add patient zero at a specific (latitude, longitude)
     start = OSM.road((51.5328328, 9.9351811), model)
     finish = OSM.intersection((51.530876112711745, 9.945125635913511), model)
-    
+
     speed = rand(model.rng) * 5.0 + 2.0 # Random speed from 2-7kmph
     zombie = add_agent!(start, model, true, speed)
     plan_route!(zombie, finish, model)
@@ -90,33 +90,15 @@ function agent_step!(agent, model)
 end
 
 # ## Visualising the fall of humanity
-#
-# Plotting this space in a seamless manner is a work in progress. For now we
-# use [OSMMakie.jl](https://github.com/fbanning/OSMMakie.jl) and
-# a custom routine.
-
-# using OSMMakie
+using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!() # hide
 ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
-
 model = initialise()
 
-# fig, ax, plot = osmplot(model.space.map)
-ids = model.scheduler(model)
-colors = Node([ac(model[i]) for i in ids])
-sizes = Node([as(model[i]) for i in ids])
-marker = :circle
-pos = Node(Point2f[OSM.latlon(model[i].pos, model) for i in ids])
-fig, _= scatter(pos; color = colors, size = sizes, marker)
+abmvideo("outbreak.mp4", model, agent_step!; framerate = 15, frames = 200)
 
-record(fig, "outbreak.mp4", 1:200; framerate = 15) do i
-    Agents.step!(model, agent_step!, 1)
-    ids = model.scheduler(model)
-    colors[] = [ac(model[i]) for i in ids]
-    sizes[] = [as(model[i]) for i in ids]
-    pos[] = Point2f[OSM.latlon(model[i].pos, model) for i in ids]
-end
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../outbreak.mp4" type="video/mp4">

@@ -230,28 +230,35 @@ end
 nothing # hide
 
 # ## Example animation
+# At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
+# utilize the [`ABMObservable`](@ref). We do not need to collect data here,
+# only the current status of the model will be used in visualization
+using InteractiveDynamics
+using CairoMakie
+CairoMakie.activate!() # hide
+abmobs = ABMObservable(model; agent_step!)
 
-# First, we'll define a few variables that look over aspects of the model
-total_infected(m) = count(a.status == :I for a in allagents(m))
-infected_fraction(x) = cgrad(:inferno)[count(model[id].status == :I for id in x) / length(x)]
-s = Observable(0) # Current step
-total = Observable(total_infected(model)) # Number of infected across all cities
-color = Observable(infected_fraction.(model.space.s)) # Percentage of infected people per city
-title = lift((c, t) -> "Step = "*string(c)*", Infected = "*string(t), s, total)
+# We then initialize elements that are lifted observables from `abmobs`:
+infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
+infected_fractions(m) = [infected_fraction(m, ids_in_position(m, p)) for p in positions(m)]
+fracs = lift(infected_fractions, abmobs.model)
+color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
+title = lift(
+    (m, s) -> "step = $(s), infected = $(infected_fraction(m, allid(m)))%",
+    abmobs.s, abmobs.model
+)
 
-# Then, initialise the model and view the contagion:
+# And lastly we use them to plot things in a figure
+fig = Figure(resolution = (600, 400))
+ax = Axis(fig[1, 1]; title, xlabel = "City", ylabel = "Population")
+barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1; color)
+fig
 
-model = model_initiation(; params...)
-figure = Figure(resolution = (600, 400))
-ax = figure[1, 1] = Axis(figure; title, xlabel = "City", ylabel = "Population")
-barplot!(ax, model.Ns, strokecolor = :black, strokewidth = 1; color)
-record(figure, "covid_evolution.mp4"; framerate = 5) do io
+# Now we can even make an animation of it
+record(fig, "covid_evolution.mp4"; framerate = 5) do io
     for j in 1:40
         recordframe!(io)
-        Agents.step!(model, agent_step!, 1)
-        color[] = infected_fraction.(model.space.s)
-        s[] += 1
-        total[] = total_infected(model)
+        Agents.step!(abmobs, 1)
     end
     recordframe!(io)
 end
@@ -285,14 +292,14 @@ data[1:10, :]
 
 N = sum(model.Ns) # Total initial population
 x = data.step
-figure = Figure(resolution = (600, 400))
-ax = figure[1, 1] = Axis(figure, xlabel = "steps", ylabel = "log10(count)")
+fig = Figure(resolution = (600, 400))
+ax = fig[1, 1] = Axis(fig, xlabel = "steps", ylabel = "log10(count)")
 li = lines!(ax, x, log10.(data[:, aggname(:status, infected)]), color = :blue)
 lr = lines!(ax, x, log10.(data[:, aggname(:status, recovered)]), color = :red)
 dead = log10.(N .- data[:, aggname(:status, length)])
 ld = lines!(ax, x, dead, color = :green)
-figure[1, 2] = Legend(figure, [li, lr, ld], ["infected", "recovered", "dead"], textsize = 12)
-figure
+fig[1, 2] = Legend(fig, [li, lr, ld], ["infected", "recovered", "dead"], textsize = 12)
+fig
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases
 # linearly, until everyone is infected.
