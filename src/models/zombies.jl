@@ -39,13 +39,13 @@ end
 
 function zombie_agent_step!(agent, model)
     ## Each agent will progress slightly along their route
-    move_along_route!(agent, model, agent.speed * model.dt)
+    distance_left = move_along_route!(agent, model, agent.speed * model.dt)
 
     if is_stationary(agent, model) && rand(model.rng) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.plan_random_route!(agent, model; limit = 50)
         ## Start on new route
-        move_along_route!(agent, model, agent.speed * model.dt)
+        move_along_route!(agent, model, distance_left)
     end
 
     if agent.infected

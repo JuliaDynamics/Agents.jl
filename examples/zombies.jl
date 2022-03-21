@@ -97,7 +97,7 @@ ac(agent) = agent.infected ? :green : :black
 as(agent) = agent.infected ? 6 : 5
 model = initialise()
 
-abmvideo("outbreak.mp4", model, agent_step!; framerate = 15, frames = 200)
+abmvideo("outbreak.mp4", model, agent_step!; framerate = 15, frames = 200, as, ac)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

@@ -87,7 +87,7 @@ end
 Current `pos`ition tuple is represented as
 `(first intersection index, second intersection index, distance travelled)`.
 The distance travelled is in the units of `weight_type`. This ensures that the map
-is a *continuous* kind of space, as an agent can truly be at any possible point on 
+is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
 
 Use [`OSMAgent`](@ref) for convenience.
@@ -524,7 +524,7 @@ end
 lonlat(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     lonlat(agent.pos, model)
 
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = 
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(model.space.map.node_coordinates[pos])
 latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     reverse(lonlat(pos, model))
@@ -666,19 +666,20 @@ function Agents.move_agent!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) -> remaining
+    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
 by the underlying graph's weight_type. If the provided `distance` is greater than the
-distance to the end of the route, return the remaining distance. Otherwise, return 0.
+distance to the end of the route, return the remaining distance. Otherwise, return `0`.
+`0` is also returned if `is_stationary(agent, model)`.
 """
 function Agents.move_along_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
     distance::Real,
 ) where {A<:AbstractAgent}
-    if is_stationary(agent, model)
-        return nothing
+    if is_stationary(agent, model) || distance == 0
+        return 0
     end
 
     # branching here corresponds to nesting of the following cases:
