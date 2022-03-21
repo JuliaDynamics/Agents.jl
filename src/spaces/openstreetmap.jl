@@ -986,6 +986,16 @@ function Agents.nearby_positions(
     Int.(neighborfn(model.space.map.graph, position))
 end
 
+# Deprecations
+function latlon(args...)
+    @warn "`latlon` is deprecated in favor of `lonlat`."
+    return reverse(lonlat(args...))
+end
+
+@deprecate random_route! plan_random_route!
+@deprecate intersection nearest_node
+@deprecate road nearest_road
+
 end # module OSM
 
 const OpenStreetMapSpace = OSM.OpenStreetMapSpace

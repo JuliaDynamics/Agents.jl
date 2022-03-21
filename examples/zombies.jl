@@ -27,6 +27,7 @@ end
 #     id::Int
 #     pos::Tuple{Int,Int,Float64}
 #     infected::Bool
+#     speed::Float64
 # end
 # ```
 # where a tuple `(i, j, x)::Tuple{Int,Int,Float64}` means a position
