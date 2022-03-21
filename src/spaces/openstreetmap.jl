@@ -159,13 +159,14 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
+    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...) → success
 
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any existing route.
 
 The keyword `limit = 10` specifies the limit on the number of attempts at planning
-a random route. Returns `true` if a route was successfully planned, `false` otherwise.
+a random route, as no connection may be possible given the random start and end.
+Return `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
 function plan_random_route!(
@@ -302,6 +303,8 @@ function Agents.plan_route!(
     route = Int[]
 
     try
+        # TODO: Try-catch blocks are bad for performance. This has to be changed
+        # to something else in the future.
         route = shortest_path(
             model.space.map,
             model.space.map.index_to_node[start_node],
