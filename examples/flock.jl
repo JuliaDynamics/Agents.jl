@@ -115,27 +115,27 @@ using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!() # hide
 
-# The great thing about [`abm_plot`](@ref) is its flexibility. We can incorporate the
+# The great thing about [`abmplot`](@ref) is its flexibility. We can incorporate the
 # direction of the birds when plotting them, by making the "marker" function `am`
 # create a `Polygon`: a triangle with same orientation as the bird's velocity.
 # It is as simple as defining the following function:
 
-const bird_polygon = Polygon(Point2f0[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
+const bird_polygon = Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
 function bird_marker(b::Bird)
     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
     scale(rotate2D(bird_polygon, φ), 2)
 end
 
 # Where we have used the utility functions `scale` and `rotate2D` to act on a
-# predefined polygon. We now give `bird_marker` to `abm_plot`, and notice how
+# predefined polygon. We now give `bird_marker` to `abmplot`, and notice how
 # the `as` keyword is meaningless when using polygons as markers.
 
 model = initialize_model()
-figure, = abm_plot(model; am = bird_marker)
+figure, = abmplot(model; am = bird_marker)
 figure
 
 # And let's also do a nice little video for it:
-abm_video(
+abmvideo(
     "flocking.mp4", model, agent_step!;
     am = bird_marker,
     framerate = 20, frames = 100,

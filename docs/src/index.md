@@ -8,8 +8,11 @@ To get started, please read the [Tutorial](@ref) page.
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v4.5.7"
-      * The [Tutorial](@ref) page is now also available as a YouTube video: https://youtu.be/fgwAfAa4kt0 
+!!! tip "Latest news: Agents.jl v5"
+    New Major release with a lot of improvements!
+    * New packages used for Graph and OpenStreetMap spaces: Graphs.jl and LightOSM.jl.
+    * Native plotting of `OpenStreetMapSpace` through InteractiveDynamics.jl! This includes the interactive apps!
+    * Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
 
 
 ## Features
@@ -91,16 +94,17 @@ You're looking for support for Agents.jl? Look no further! Here's the three thin
 If you use this package in work that leads to a publication, then please cite the paper below:
 
 ```
-@article{Agents2021,
-author = {George Datseris and Ali R. Vahdati and Timothy C. DuBois},
-title ={Agents.jl: a performant and feature-full agent-based modeling software of minimal code complexity},
-journal = {SIMULATION},
-volume = {0},
-number = {0},
-pages = {00375497211068820},
-year = {0},
-doi = {10.1177/00375497211068820},
-URL = {https://doi.org/10.1177/00375497211068820},
-eprint = {https://doi.org/10.1177/00375497211068820},
+@article{Agents.jl,
+  doi = {10.1177/00375497211068820},
+  url = {https://doi.org/10.1177/00375497211068820},
+  year = {2022},
+  month = jan,
+  publisher = {{SAGE} Publications},
+  pages = {003754972110688},
+  author = {George Datseris and Ali R. Vahdati and Timothy C. DuBois},
+  title = {Agents.jl: a performant and feature-full agent-based modeling software of minimal code complexity},
+  journal = {{SIMULATION}},
+  volume = {0},
+  number = {0},
 }
 ```

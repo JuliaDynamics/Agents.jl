@@ -1,10 +1,11 @@
 # # Rabbit, Fox, Hawk
 # ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
-# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example. 
+
+# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example.
 # It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders). It should be considered an advanced example for showcasing pathfinding.
@@ -29,11 +30,12 @@ mutable struct Animal <: AbstractAgent
     energy::Float64
 end
 
-## Some utility functions to create specific types of agents, and find the norm of a vector
+## Some utility functions to create specific types of agents,
+# and find the euclidean norm of a vector
 Rabbit(id, pos, energy) = Animal(id, pos, :rabbit, energy)
 Fox(id, pos, energy) = Animal(id, pos, :fox, energy)
 Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
-norm(vec) = √sum(vec .^ 2)
+eunorm(vec) = √sum(vec .^ 2)
 
 # The environment is generated from a heightmap: a 2D matrix, where each value denotes the
 # height of the terrain at that point. We segregate the model into 4 regions based on the
@@ -226,7 +228,7 @@ function rabbit_step!(rabbit, model)
             all(away_direction .≈ 0.) && continue
             ## Add this to the overall direction, scaling inversely with distance.
             ## As a result, closer predators contribute more to the direction to move in
-            direction = direction .+ away_direction ./ norm(away_direction) ^ 2
+            direction = direction .+ away_direction ./ eunorm(away_direction) ^ 2
         end
         ## If the only predator is right on top of the rabbit
         if all(direction .≈ 0.)
@@ -234,7 +236,7 @@ function rabbit_step!(rabbit, model)
             chosen_position = random_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision)
         else
             ## Normalize the resultant direction, and get the ideal position to move it
-            direction = direction ./ norm(direction)
+            direction = direction ./ eunorm(direction)
             ## Move to a random position in the general direction of away from predators
             position = rabbit.pos .+ direction .* (model.rabbit_vision / 2.)
             chosen_position = random_walkable(position, model, model.landfinder, model.rabbit_vision / 2.)
@@ -370,9 +372,10 @@ end
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
 
-using InteractiveDynamics
-using GLMakie
-GLMakie.activate!() # hide
+# ```julia
+# using InteractiveDynamics
+# using GLMakie # CairoMakie doesn't do 3D plots
+# ```
 
 animalcolor(a) =
     if a.type == :rabbit
@@ -403,22 +406,22 @@ heightmap_url =
     "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
 model = initialize_model(heightmap_url)
 
-abm_video(
-    "rabbit_fox_hawk.mp4",
-    model,
-    animal_step!,
-    model_step!;
-    resolution = (700, 700),
-    frames = 300,
-    framerate = 20,
-    ac = animalcolor,
-    as = 1.0,
-    static_preplot!
-)
+# ```juia
+# abmvideo(
+#     "rabbit_fox_hawk.mp4",
+#     model, animal_step!, model_step!;
+#     figure = (resolution = (800, 700),),
+#     frames = 300,
+#     framerate = 15,
+#     ac = animalcolor,
+#     as = 1.0,
+#     static_preplot!,
+#     title = "Rabbit Fox Hawk with pathfinding"
+# )
+# ```
 
-nothing # hide
 # ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+# <video width="100%" height="auto" controls autoplay loop>
+# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```

@@ -1,3 +1,17 @@
+# v5
+- Agents.jl + InteractiveDynamics.jl now support native plotting for
+  open street map spaces, which is integrated in all interactive apps as well!
+- Most examples have been moved to AgentsExampleZoo.jl. Additional examples will now be added there.
+
+## BREAKING
+- Plotting, animating, and interacting GUIs based on InteractiveDynamics.jl have changed. Please see online docs for the new format.
+- LightGraphs.jl dependency is now replaced by Graphs.jl
+- OpenStreetMapX.jl dependency now replaced by LightOSM.jl. This mean initializing the space is different, and some API methods have changed. Check documentation for more details. Note that this also means checkpoints using the old `OpenStreetMapSpace` cannot be read in this version.
+- Functions for planning and moving along routes have had their names unified across Pathfinding and OpenStreetMap modules. The names now are `plan_route!` and `move_along_route!` and are accessible from the top level scope.
+- `OSM.intersection` is renamed to `OSM.nearest_node`
+- `OSM.road` is renamed to `OSM.nearest_road`
+- `latlon` is removed in favor of `OSM.lonlat`
+
 # v4.5.4
 - Previously `nearby_ids` with `r=0` for `GraphSpace` was undefined. Now it returns ids only in the same position as given.
 

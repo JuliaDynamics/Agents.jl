@@ -87,7 +87,7 @@ end
 Current `pos`ition tuple is represented as
 `(first intersection index, second intersection index, distance travelled)`.
 The distance travelled is in the units of `weight_type`. This ensures that the map
-is a *continuous* kind of space, as an agent can truly be at any possible point on 
+is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
 
 Use [`OSMAgent`](@ref) for convenience.
@@ -159,13 +159,14 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 """
-    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...)
+    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...) → success
 
 Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any existing route.
 
 The keyword `limit = 10` specifies the limit on the number of attempts at planning
-a random route. Returns `true` if a route was successfully planned, `false` otherwise.
+a random route, as no connection may be possible given the random start and end.
+Return `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
 function plan_random_route!(
@@ -302,6 +303,8 @@ function Agents.plan_route!(
     route = Int[]
 
     try
+        # TODO: Try-catch blocks are bad for performance. This has to be changed
+        # to something else in the future.
         route = shortest_path(
             model.space.map,
             model.space.map.index_to_node[start_node],
@@ -524,7 +527,7 @@ end
 lonlat(agent::A, model::ABM{<:OpenStreetMapSpace,A}) where {A<:AbstractAgent} =
     lonlat(agent.pos, model)
 
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) = 
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(model.space.map.node_coordinates[pos])
 latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     reverse(lonlat(pos, model))
@@ -539,7 +542,8 @@ Quicker, but less precise than [`OSM.nearest_road`](@ref).
 """
 function nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
-    nearest_node_id = LightOSM.nearest_node(model.space.map, [GeoLocation(ll..., 0.0)])[1][1][1]
+    nearest_node_id = LightOSM.nearest_node(model.space.map,
+        [GeoLocation(ll..., 0.0)])[1][1][1]
     vert = Int(model.space.map.node_to_index[nearest_node_id])
     return (vert, vert, 0.0)
 end
@@ -547,8 +551,8 @@ end
 """
     OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to **(longitude, latitude)**. Significantly slower, but more
-precise than [`OSM.nearest_node`](@ref).
+Return a location on a road nearest to **(longitude, latitude)**.
+Significantly slower, but more precise than [`OSM.nearest_node`](@ref).
 """
 function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
@@ -556,12 +560,14 @@ function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
     best = (-1, -1, -1.0)
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
     for e in edges(model.space.map.graph)
-        s = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[src(e)]..., 0.0))
-        d = LightOSM.to_cartesian(GeoLocation(model.space.map.node_coordinates[dst(e)]..., 0.0))
+        s = LightOSM.to_cartesian(GeoLocation(
+                model.space.map.node_coordinates[src(e)]..., 0.0))
+        d = LightOSM.to_cartesian(GeoLocation(
+                model.space.map.node_coordinates[dst(e)]..., 0.0))
         road_vec = d .- s
 
-        # closest point on line segment requires checking if perpendicular from point lies on line
-        # segment. If not, use the closest end of the line segment
+        # closest point on line segment requires checking if perpendicular
+        # from point lies on line segment. If not, use the closest end of the line segment
         if dot(pt .- s, road_vec) < 0.0
             int_pt = s
         elseif dot(pt .- d, road_vec) > 0.0
@@ -574,7 +580,8 @@ function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
 
         if sq_dist < best_sq_dist
             best_sq_dist = sq_dist
-            rd_dist = norm(int_pt .- s) / norm(road_vec) * road_length(Int(src(e)), Int(dst(e)), model)
+            rd_dist = norm(int_pt .- s) / norm(road_vec) *
+                road_length(Int(src(e)), Int(dst(e)), model)
 
             best = (
                 Int(src(e)),
@@ -615,12 +622,13 @@ end
 
 Return `GeoLocation` corresponding to node `pos`
 """
-get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) = GeoLocation(model.space.map.node_coordinates[pos]..., 0.0)
+get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+    GeoLocation(model.space.map.node_coordinates[pos]..., 0.0)
 
 """
     OSM.get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Returns the same position, but with `pos[1]` and `pos[2]` swapped and `pos[3]` updated accordingly
+Return the same position, but with `pos[1]` and `pos[2]` swapped and `pos[3]` updated.
 """
 get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     (pos[2], pos[1], road_length(pos, model) - pos[3])
@@ -628,7 +636,6 @@ get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpa
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-
 function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
     vert = Int(rand(model.rng, 1:Agents.nv(model)))
     return (vert, vert, 0.0)
@@ -667,19 +674,20 @@ function Agents.move_agent!(
 end
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) -> remaining
+    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
 by the underlying graph's weight_type. If the provided `distance` is greater than the
-distance to the end of the route, return the remaining distance. Otherwise, return 0.
+distance to the end of the route, return the remaining distance. Otherwise, return `0`.
+`0` is also returned if `is_stationary(agent, model)`.
 """
 function Agents.move_along_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A},
     distance::Real,
 ) where {A<:AbstractAgent}
-    if is_stationary(agent, model)
-        return nothing
+    if is_stationary(agent, model) || distance == 0
+        return 0
     end
 
     # branching here corresponds to nesting of the following cases:
@@ -756,7 +764,8 @@ function Agents.move_along_route!(
             distance -= dist_left   # leftover distance
             node_a = pop!(osmpath.route)    # remove the node we just reached
             if isempty(osmpath.route)
-                # this was the last node, so either we reached the end or dest is on an outgoing road
+                # this was the last node, so either we reached the end
+                # or dest is on an outgoing road
                 if osmpath.dest[1] == osmpath.dest[2]   # we reached the end
                     if osmpath.has_to_return    # need to return from here
                         # empty return route, so reverse along same edge
@@ -879,7 +888,7 @@ function Agents.nearby_ids(
             for id in reverse_ids_on_road(pos[1], pos[2], model)
                 dist_2 < model[id].pos[3] < dist_2 + distance && push!(nearby, id)
             end
-        else    # neither node is within `distance` of `pos`, so simply filter IDs on this road
+        else # neither node is within `distance` of `pos`, so simply filter IDs on this road
             for id in forward_ids_on_road(pos[1], pos[2], model)
                 abs(model[id].pos[3] - dist_1) <= distance && push!(nearby, id)
             end
@@ -889,11 +898,13 @@ function Agents.nearby_ids(
         end
     end
 
-    # NOTE: During BFS, each node is only explored once. From each node, every outgoing and incoming edge is
-    # considered and the node on the other end is added to the queue if it is close enough. The edge is explored
-    # for IDs by the node with the lower index (to prevent the same edge from being explored twice).
-    # If the node on the other end can't be reached, then the current node explores however far it can on
-    # this road. If the other node is reached through another path, it takes this into account and only explores
+    # NOTE: During BFS, each node is only explored once.
+    # From each node, every outgoing and incoming edge is considered and the node on the
+    # other end is added to the queue if it is close enough. The edge is explored
+    # for IDs by the node with the lower index (to prevent the same edge from being
+    # explored twice). If the node on the other end can't be reached, then the current
+    # node explores however far it can on this road. If the other node is reached through
+    # another path, it takes this into account and only explores
     # the unexplored part of this edge.
     while !isempty(queue)
         node = dequeue!(queue)
@@ -974,6 +985,16 @@ function Agents.nearby_positions(
     end
     Int.(neighborfn(model.space.map.graph, position))
 end
+
+# Deprecations
+function latlon(args...)
+    @warn "`latlon` is deprecated in favor of `lonlat`."
+    return reverse(lonlat(args...))
+end
+
+@deprecate random_route! plan_random_route!
+@deprecate intersection nearest_node
+@deprecate road nearest_road
 
 end # module OSM
 

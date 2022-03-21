@@ -164,8 +164,10 @@ step!(model, agent_step!)
 step!(model, agent_step!, 3)
 
 # ## Visualizing the data
+# There is a dedicated tutorial for visualization, animation, and interaction for
+# agent based models. See [Visualizations and Animations for Agent Based Models](@ref).
 
-# We can use the [`abm_plot`](@ref) function to plot the distribution of agents on a
+# We can use the [`abmplot`](@ref) function to plot the distribution of agents on a
 # 2D grid at every generation, via the
 # [InteractiveDynamics.jl](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/) package
 # and the [Makie.jl](http://makie.juliaplots.org/stable/) plotting ecosystem.
@@ -177,17 +179,17 @@ CairoMakie.activate!() # hide
 
 groupcolor(a) = a.group == 1 ? :blue : :orange
 groupmarker(a) = a.group == 1 ? :circle : :rect
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure # returning the figure displays it
 
 # ## Animating the evolution
 
-# The function [`abm_video`](@ref) can be used to save an animation of the ABM into a
-# video. You could of course also explicitly use `abm_plot` in a `record` loop for
+# The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a
+# video. You could of course also explicitly use `abmplot` in a `record` loop for
 # finer control over additional plot elements.
 
 model = initialize();
-abm_video(
+abmvideo(
     "schelling.mp4", model, agent_step!;
     ac = groupcolor, am = groupmarker, as = 10,
     framerate = 4, frames = 20,
@@ -281,7 +283,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
 run!(model, agent_step!, 40)
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # Most of the agents have settled happily. Now, let's save the model.
@@ -293,7 +295,7 @@ model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.random
 
 # Since functions are not saved, the scheduler has to be passed while loading
 # the model. Let's now verify that we loaded back exactly what we saved.
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # For starters, let's see what happens if we add 100 more agents of group 1
@@ -303,13 +305,13 @@ for i in 1:100
 end
 
 # Let's see what our model looks like now.
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # And then run it for 40 iterations.
 run!(model, agent_step!, 40)
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # It looks like the agents eventually cluster again. What if the agents are of a new group?
@@ -327,13 +329,13 @@ end
 groupcolor(a) = (:blue, :orange, :green)[a.group]
 groupmarker(a) = (:circle, :rect, :cross)[a.group]
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # The new agents are scattered randomly, as expected. Now let's run the model.
 run!(model, agent_step!, 40)
 
-figure, _ = abm_plot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # The new agents also form their own clusters, despite being completely scattered.

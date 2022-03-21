@@ -150,7 +150,7 @@ function static_preplot!(ax, model)
     CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
 end
 
-abm_video(
+abmvideo(
     "schoolyard.mp4", model, agent_step!, dummystep;
     framerate = 15, frames = 40,
     title = "Playgound dynamics",

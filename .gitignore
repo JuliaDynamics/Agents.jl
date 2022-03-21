@@ -9,3 +9,4 @@ Manifest.toml
 /.benchmarkci
 *.osm.cache
 src/update_*
+agents_visualizations.md

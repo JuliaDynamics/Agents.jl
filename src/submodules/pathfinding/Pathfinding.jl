@@ -43,4 +43,8 @@ export CostMetric,
     nearby_walkable,
     random_walkable
 
-end
+# Deprecations
+@deprecate set_target! plan_route!
+@deprecate set_best_target! plan_best_route!
+
+end # module
