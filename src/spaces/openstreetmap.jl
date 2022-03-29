@@ -235,17 +235,9 @@ function Agents.plan_route!(
         return true
     end
 
-    start_node = if agent.pos[1] == agent.pos[2] || 2.0 * agent.pos[3] < road_length(agent.pos, model)
-        agent.pos[1]
-    else
-        agent.pos[2]
-    end
+    start_node = closest_node_on_edge(agent.pos, model)
 
-    end_node = if dest[1] == dest[2] || 2.0 * dest[3] < road_length(dest, model)
-        dest[1]
-    else
-        dest[2]
-    end
+    end_node = closest_node_on_edge(dest, model)
 
     if start_node == end_node   # LightOSM doesn't like this case
         if agent.pos[1] == agent.pos[2] # start at node
@@ -342,32 +334,22 @@ function distance(
     kwargs...
 )
     # positions are identical
-    if pos_1[1] == pos_1[2] == pos_2[1] == pos_2[2] ||
-       pos_1 == pos_2 ||
-       pos_1 == get_reverse_direction(pos_2, model)
-        return 0.0
-    end
+    identical_position(pos_1, pos_2, model) && return 0.0
 
     # positions on same road
-    if pos_1[1:2] == pos_2[1:2]
-        return abs(pos_1[3] - pos_2[3])
-    elseif pos_1[1:2] == pos_2[2:-1:1]
-        return abs(pos_1[3] - road_length(pos_1, model) + pos_2[3])
+    if identical_edge(pos_1, pos_2)
+        if pos_1[1] == pos_2[1]
+            return abs(pos_1[3] - pos_2[3])
+        else
+            return abs(pos_1[3] - road_length(pos_1, model) + pos_2[3])
+        end
     end
 
     # starting vertex
-    st_node = if pos_1[1] == pos_1[2] || pos_1[3] < road_length(pos_1, model) / 2
-        pos_1[1]
-    else
-        pos_1[2]
-    end
+    st_node = closest_node_on_edge(pos_1, model)
 
     # ending vertex
-    en_node = if pos_2[1] == pos_2[2] || pos_2[3] < road_length(pos_2, model) / 2
-        pos_2[1]
-    else
-        pos_2[2]
-    end
+    en_node = closest_node_on_edge(pos_2, model)
 
     # Case where they are same
     if st_node == en_node
@@ -622,6 +604,13 @@ identical_edge(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
 ) = (a[1] == b[1] && a[2] == b[2]) || (a[1] == b[2] && a[2] == b[1])
+
+closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    if a[1] == a[2] || 2.0 * a[3] < road_length(a, model)
+        a[1]
+    else
+        a[2]
+    end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
