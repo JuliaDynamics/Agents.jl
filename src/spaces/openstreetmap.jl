@@ -619,33 +619,57 @@ same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<
     _same_position_node(a, b, model) || _same_position_node(b, a, model) ||
     _same_position_edge(a, b, model) || _same_position_internal(a, b, model)
 
-_same_position_node(
+# Handles the case when `a` is a node
+function _same_position_node(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace}
-) =
-    (a[1] == a[2]) && ((a[1] == b[1] == b[2]) || (a[1] == b[1] && b[3] ≈ 0.0) ||
-                       (a[1] == b[2] && b[3] ≈ road_length(b, model)))
+)
+    a[1] != a[2] && return false    # this case handles when `a` is a node
+    if a[1] == b[1] == b[2] # b is also an intersection point
+        return true
+    elseif a[1] == b[1] && b[3] ≈ 0.0 # the source vertex of edge `b` is `a` and position is nearby
+        return true
+    elseif a[1] == b[2] && b[3] ≈ road_length(b, model) # destination vertex is `a` and position nearby
+        return true
+    end
+    return false
+end
 
-_same_position_edge(
+# Handles the case when both points are on edges with a common node, and close to that end of the edge
+function _same_position_edge(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace}
-) =
-    (a[3] ≈ 0.0 &&
-     (a[1] == b[1] && b[3] ≈ 0.0 || a[1] == b[2] && b[3] ≈ road_length(b, model))
-    ) ||
-    (a[3] ≈ road_length(a, model) &&
-     (a[2] == b[1] && b[3] ≈ 0.0 || a[2] == b[2] && b[3] ≈ road_length(b, model))
-    )
+    model::ABM{<:OpenStreetMapSpace},
+)
+    # common node could be either end of either edge, so 4 cases total + the checks to ensure the position
+    # along the edge (index 3) is also at that end
 
+    if a[3] ≈ 0.0 # point `a` is near source node
+        if a[1] == b[1] && b[3] ≈ 0.0 # source vertex of `b` is same and it is near that end
+            return true
+        elseif a[1] == b[2] && b[3] ≈ road_length(b, model) # destination vertex of `b` is same
+            return true
+        end
+    elseif a[3] ≈ road_length(a, model)
+        if a[2] == b[1] && b[3] ≈ 0.0 # source vertex of `b` is same
+            return true
+        elseif a[2] == b[2] && b[3] ≈ road_length(b, model) # destination vertex of `b` is same
+            return true
+        end
+    end
+    # either there is no common vertex or either one is not near the common vertex
+    return false
+end
+
+# Handles case when both points are on the same edge (facing either direction)
 _same_position_internal(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace},
 ) =
-    (a[1] == b[1] && a[2] == b[2] && a[3] ≈ b[3]) ||
-    (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])
+    (a[1] == b[1] && a[2] == b[2] && a[3] ≈ b[3]) ||    # facing same direction
+    (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])   # facing opposite direction
 
 """
     OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
@@ -662,12 +686,13 @@ same_road(
 
 Return the node that the given point is closest to on its edge
 """
-closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+function closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if a[1] == a[2] || 2.0 * a[3] < road_length(a, model)
-        a[1]
+        return a[1]
     else
-        a[2]
+        return a[2]
     end
+end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
