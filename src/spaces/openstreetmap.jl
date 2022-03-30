@@ -31,7 +31,7 @@ struct OpenStreetMapPath
     route::Vector{Int}      # node IDs along path from `start` to `dest`
     start::Tuple{Int,Int,Float64} # Initial position of the agent
     dest::Tuple{Int,Int,Float64}    # Destination. `dest[1] == dest[2]` if this is an intersection
-    return_route::Vector{Int}
+    return_route::Vector{Int}   # node IDs along path from `dest` to `start`
     has_to_return::Bool
 end
 
@@ -172,8 +172,8 @@ All other keywords are passed to [`plan_route!`](@ref)
 function plan_random_route!(
     agent::A,
     model::ABM{<:OpenStreetMapSpace,A};
-    return_trip=false,
-    limit=10,
+    return_trip = false,
+    limit = 10,
     kwargs...
 ) where {A<:AbstractAgent}
     tries = 0
@@ -209,7 +209,7 @@ function Agents.plan_route!(
     agent::A,
     dest::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace,A};
-    return_trip=false,
+    return_trip = false,
     kwargs...
 ) where {A<:AbstractAgent}
     delete!(model.space.routes, agent.id)   # clear old route
@@ -876,7 +876,7 @@ function Agents.nearby_ids(
     # the unexplored part of this edge.
     while !isempty(queue)
         node = dequeue!(queue)
-        for nb in nearby_positions(node, model; neighbor_type=:all)
+        for nb in nearby_positions(node, model; neighbor_type = :all)
             rd_len = road_length(node, nb, model)
             if rd_len == 0.0 || rd_len == Inf
                 rd_len = road_length(nb, node, model)
@@ -939,7 +939,7 @@ Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) 
 function Agents.nearby_positions(
     position::Int,
     model::ABM{<:OpenStreetMapSpace};
-    neighbor_type::Symbol=:default
+    neighbor_type::Symbol = :default
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn = if neighbor_type == :default
