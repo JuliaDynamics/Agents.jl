@@ -23,6 +23,7 @@ export test_map,
     lonlat,
     nearest_node,
     nearest_road,
+    same_position,
     download_osm_network    # re-exported from LightOSM.jl
 
 
@@ -214,9 +215,9 @@ function Agents.plan_route!(
 ) where {A<:AbstractAgent}
     delete!(model.space.routes, agent.id)   # clear old route
 
-    identical_position(agent.pos, dest, model) && return true
+    same_position(agent.pos, dest, model) && return true
 
-    if identical_edge(agent.pos, dest)
+    if same_road(agent.pos, dest)
         if agent.pos[1] == dest[2] # opposite orientations
             dest = get_reverse_direction(dest, model)
         end
@@ -268,7 +269,7 @@ function Agents.plan_route!(
         end
         # start and end in middle of edge, but edges have common node
         start_node == agent.pos[1] &&
-            move_agent(agent, get_reverse_direction(agent.pos, model), model)
+            move_agent!(agent, get_reverse_direction(agent.pos, model), model)
         end_node == dest[2] &&
             (dest = get_reverse_direction(dest, model))
         model.space.routes[agent.id] = OpenStreetMapPath(
@@ -372,10 +373,10 @@ function distance(
     kwargs...
 )
     # positions are identical
-    identical_position(pos_1, pos_2, model) && return 0.0
+    same_position(pos_1, pos_2, model) && return 0.0
 
     # positions on same road
-    if identical_edge(pos_1, pos_2)
+    if same_road(pos_1, pos_2)
         if pos_1[1] == pos_2[1]
             return abs(pos_1[3] - pos_2[3])
         else
@@ -610,15 +611,15 @@ get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpa
     (pos[2], pos[1], road_length(pos, model) - pos[3])
 
 """
-    OSM.identical_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    OSM.same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
 
 Return `true` if the given positions `a` and `b` are (approximately) identical
 """
-identical_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
-    _identical_position_node(a, b, model) || _identical_position_node(b, a, model) ||
-    _identical_position_edge(a, b, model) || _identical_position_internal(a, b, model)
+same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    _same_position_node(a, b, model) || _same_position_node(b, a, model) ||
+    _same_position_edge(a, b, model) || _same_position_internal(a, b, model)
 
-_identical_position_node(
+_same_position_node(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace}
@@ -626,7 +627,7 @@ _identical_position_node(
     (a[1] == a[2]) && ((a[1] == b[1] == b[2]) || (a[1] == b[1] && b[3] ≈ 0.0) ||
                        (a[1] == b[2] && b[3] ≈ road_length(b, model)))
 
-_identical_position_edge(
+_same_position_edge(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace}
@@ -638,7 +639,7 @@ _identical_position_edge(
      (a[2] == b[1] && b[3] ≈ 0.0 || a[2] == b[2] && b[3] ≈ road_length(b, model))
     )
 
-_identical_position_internal(
+_same_position_internal(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
     model::ABM{<:OpenStreetMapSpace},
@@ -647,11 +648,11 @@ _identical_position_internal(
     (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])
 
 """
-    OSM.identical_edge(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
+    OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
 
-Return `true` if both points lie on the same edge of the graph
+Return `true` if both points lie on the same road of the graph
 """
-identical_edge(
+same_road(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
 ) = (a[1] == b[1] && a[2] == b[2]) || (a[1] == b[2] && a[2] == b[1])
@@ -721,7 +722,7 @@ function Agents.move_along_route!(
     distance::Real,
 ) where {A<:AbstractAgent}
     if is_stationary(agent, model) || distance == 0
-        return 0
+        return 0.0
     end
 
     # branching here corresponds to nesting of the following cases:
@@ -736,7 +737,7 @@ function Agents.move_along_route!(
     osmpath = model.space.routes[agent.id]
     while distance > 0.0
         # check if reached end
-        if identical_position(agent.pos, osmpath.dest, model)
+        if same_position(agent.pos, osmpath.dest, model)
             if osmpath.has_to_return
                 if agent.pos[1] == agent.pos[2]
                     osmpath.return_route[end] == agent.pos[1] && pop!(osmpath.return_route)
