@@ -112,6 +112,8 @@ OSM.nearest_road
 OSM.random_road_position
 OSM.plan_random_route!
 OSM.road_length
+OSM.same_position
+OSM.same_road
 OSM.test_map
 OSM.download_osm_network
 ```

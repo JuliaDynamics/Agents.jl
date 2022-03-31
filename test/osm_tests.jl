@@ -87,7 +87,7 @@ using Graphs
     move_agent!(model[1], start_i, model)
     plan_route!(model[1], finish_i, model; return_trip = true)
     move_along_route!(model[1], model, 1e5)
-    @test all(model[1].pos .≈ start_i)
+    @test OSM.same_position(model[1].pos, start_i, model)
     @test OSM.plan_random_route!(model[1], model; limit = 100)
     @test !is_stationary(model[1], model)
     move_along_route!(model[1], model, 1e5)

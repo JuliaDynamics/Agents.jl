@@ -23,6 +23,8 @@ export test_map,
     lonlat,
     nearest_node,
     nearest_road,
+    same_position,
+    same_road,
     download_osm_network    # re-exported from LightOSM.jl
 
 
@@ -212,96 +214,76 @@ function Agents.plan_route!(
     return_trip = false,
     kwargs...
 ) where {A<:AbstractAgent}
-    if agent.pos[1] == agent.pos[2] == dest[1] == dest[2] ||    # identical start and end
-       agent.pos == dest ||
-       agent.pos == get_reverse_direction(dest, model)
+    delete!(model.space.routes, agent.id)   # clear old route
 
-        return true
-    end
+    same_position(agent.pos, dest, model) && return true
 
-    if agent.pos[1:2] == dest[1:2] || agent.pos[1:2] == dest[2:-1:1]  # start and end on same road
-        if agent.pos[1:2] == dest[2:-1:1]
+    if same_road(agent.pos, dest)
+        if agent.pos[1] == dest[2] # opposite orientations
             dest = get_reverse_direction(dest, model)
         end
-        if agent.pos[3] < dest[3]   # same direction
-            model.space.routes[agent.id] = OpenStreetMapPath(
-                Int[],
-                agent.pos,
-                dest,
-                Int[],
-                return_trip
-            )
-        else    # opposite direction
+
+        if agent.pos[3] > dest[3]   # wrong orientation
             move_agent!(agent, get_reverse_direction(agent.pos, model), model)
-            model.space.routes[agent.id] = OpenStreetMapPath(
-                Int[],
-                agent.pos,
-                get_reverse_direction(dest, model),
-                Int[],
-                return_trip,
-            )
+            dest = get_reverse_direction(dest, model)
         end
+
+        model.space.routes[agent.id] = OpenStreetMapPath(
+            Int[],
+            agent.pos,
+            dest,
+            Int[],
+            return_trip,
+        )
+
         return true
     end
 
-    start_node = if agent.pos[1] == agent.pos[2] || 2.0 * agent.pos[3] < road_length(agent.pos, model)
-        agent.pos[1]
-    else
-        agent.pos[2]
-    end
-    end_node = if dest[1] == dest[2] || 2.0 * dest[3] < road_length(dest, model)
-        dest[1]
-    else
-        dest[2]
-    end
+    start_node = closest_node_on_edge(agent.pos, model)
 
-    if start_node == end_node   # LightOSM.shortest_path fails in this case
-        # either one of start or end is a node and the other an edge incident on it
-        if agent.pos[1] == agent.pos[2]
-            if dest[2] == agent.pos[1]
-                dest = get_reverse_direction(dest, model)
-            end
+    end_node = closest_node_on_edge(dest, model)
+
+    if start_node == end_node   # LightOSM doesn't like this case
+        if agent.pos[1] == agent.pos[2] # start at node
+            end_node == dest[2] && (dest = get_reverse_direction(dest, model))
             move_agent!(agent, (dest[1], dest[2], 0.0), model)
             model.space.routes[agent.id] = OpenStreetMapPath(
                 Int[],
                 agent.pos,
                 dest,
-                return_trip ? Int[dest[1]] : Int[],
+                return_trip ? Int[agent.pos[1]] : Int[],
                 return_trip,
             )
-        elseif dest[1] == dest[2]
-            if agent.pos[1] == dest[1]
-                move_agent!(agent, get_reverse_direction(agent.pos, model), model)
-            end
+            return true
+        end
+        if dest[1] == dest[2]   # end at node
+            start_node == agent.pos[1] && move_agent!(agent, get_reverse_direction(agent.pos, model), model)
+            dest = (agent.pos[1], agent.pos[2], road_length(agent.pos, model))
             model.space.routes[agent.id] = OpenStreetMapPath(
-                Int[dest[1]],
+                Int[],
                 agent.pos,
                 dest,
                 Int[],
                 return_trip,
             )
-            # or both are edges incident on a common node
-        else
-            # swap around directions so that agent is moving toward common node
-            # and destination is in the direction from common node to other node
-            if agent.pos[1] == dest[2] || agent.pos[2] == dest[2]
-                dest = get_reverse_direction(dest, model)
-            end
-            if agent.pos[1] == dest[1]
-                move_agent!(agent, get_reverse_direction(agent.pos, model), model)
-            end
-            model.space.routes[agent.id] = OpenStreetMapPath(
-                Int[dest[1]],
-                agent.pos,
-                dest,
-                return_trip ? Int[dest[1]] : Int[],
-                return_trip,
-            )
+            return true
         end
+        # start and end in middle of edge, but edges have common node
+        start_node == agent.pos[1] &&
+            move_agent!(agent, get_reverse_direction(agent.pos, model), model)
+        end_node == dest[2] &&
+            (dest = get_reverse_direction(dest, model))
+        model.space.routes[agent.id] = OpenStreetMapPath(
+            Int[start_node],
+            agent.pos,
+            dest,
+            return_trip ? Int[start_node] : Int[],
+            return_trip,
+        )
         return true
     end
-    route = Int[]
 
+    route = Int[]
     try
         # TODO: Try-catch blocks are bad for performance. This has to be changed
         # to something else in the future.
@@ -315,48 +297,51 @@ function Agents.plan_route!(
         return false
     end
 
-    # convert back to graph indices
     for i in 1:length(route)
         route[i] = Int(model.space.map.node_to_index[route[i]])
     end
 
-    # route won't be empty, those cases are already handled
     reverse!(route)
 
-    # starting from this intersection, so remove it from route
-    if agent.pos[1] == agent.pos[2]
+    if agent.pos[1] == agent.pos[2] ||
+       length(route) > 1 && (
+           route[end] == agent.pos[1] && route[end-1] == agent.pos[2] ||
+           route[end] == agent.pos[2] && route[end-1] == agent.pos[1]
+       )
         pop!(route)
-        # move in reverse direction
-    elseif length(route) > 1 && agent.pos[1] == route[end] && agent.pos[2] != route[end-1]
+    end
+
+    if length(route) > 1 && route[end] == agent.pos[1]
         move_agent!(agent, get_reverse_direction(agent.pos, model), model)
     end
 
     return_route = Int[]
     if return_trip
         try
-            return_route =
-                shortest_path(
-                    model.space.map,
-                    model.space.map.index_to_node[end_node],
-                    model.space.map.index_to_node[start_node];
-                    kwargs...
-                )
+            # TODO: Try-catch blocks are bad for performance. This has to be changed
+            # to something else in the future.
+            return_route = shortest_path(
+                model.space.map,
+                model.space.map.index_to_node[end_node],
+                model.space.map.index_to_node[start_node];
+                kwargs...
+            )
         catch
             return false
         end
-    end
 
-    if return_trip
-        # convert back to graph indices
         for i in 1:length(return_route)
             return_route[i] = Int(model.space.map.node_to_index[return_route[i]])
         end
 
         reverse!(return_route)
-        # analogous case to forward route
-        dest[1] == dest[2] && pop!(return_route)
-        # will not check other case since dest shouldn't be flipped until
-        # actually doing return trip
+        if dest[1] == dest[2] ||
+            length(return_route) > 1 && (
+                return_route[end] == dest[1] && return_route[end-1] == dest[2] ||
+                return_route[end] == dest[2] && return_route[end-1] == dest[1]
+            )
+            pop!(return_route)
+        end
     end
 
     model.space.routes[agent.id] = OpenStreetMapPath(
@@ -389,32 +374,22 @@ function distance(
     kwargs...
 )
     # positions are identical
-    if pos_1[1] == pos_1[2] == pos_2[1] == pos_2[2] ||
-       pos_1 == pos_2 ||
-       pos_1 == get_reverse_direction(pos_2, model)
-        return 0.0
-    end
+    same_position(pos_1, pos_2, model) && return 0.0
 
     # positions on same road
-    if pos_1[1:2] == pos_2[1:2]
-        return abs(pos_1[3] - pos_2[3])
-    elseif pos_1[1:2] == pos_2[2:-1:1]
-        return abs(pos_1[3] - road_length(pos_1, model) + pos_2[3])
+    if same_road(pos_1, pos_2)
+        if pos_1[1] == pos_2[1]
+            return abs(pos_1[3] - pos_2[3])
+        else
+            return abs(pos_1[3] - road_length(pos_1, model) + pos_2[3])
+        end
     end
 
     # starting vertex
-    st_node = if pos_1[1] == pos_1[2] || pos_1[3] < road_length(pos_1, model) / 2
-        pos_1[1]
-    else
-        pos_1[2]
-    end
+    st_node = closest_node_on_edge(pos_1, model)
 
     # ending vertex
-    en_node = if pos_2[1] == pos_2[2] || pos_2[3] < road_length(pos_2, model) / 2
-        pos_2[1]
-    else
-        pos_2[2]
-    end
+    en_node = closest_node_on_edge(pos_2, model)
 
     # Case where they are same
     if st_node == en_node
@@ -561,9 +536,9 @@ function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
     pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
     for e in edges(model.space.map.graph)
         s = LightOSM.to_cartesian(GeoLocation(
-                model.space.map.node_coordinates[src(e)]..., 0.0))
+            model.space.map.node_coordinates[src(e)]..., 0.0))
         d = LightOSM.to_cartesian(GeoLocation(
-                model.space.map.node_coordinates[dst(e)]..., 0.0))
+            model.space.map.node_coordinates[dst(e)]..., 0.0))
         road_vec = d .- s
 
         # closest point on line segment requires checking if perpendicular
@@ -581,7 +556,7 @@ function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
         if sq_dist < best_sq_dist
             best_sq_dist = sq_dist
             rd_dist = norm(int_pt .- s) / norm(road_vec) *
-                road_length(Int(src(e)), Int(dst(e)), model)
+                      road_length(Int(src(e)), Int(dst(e)), model)
 
             best = (
                 Int(src(e)),
@@ -601,11 +576,14 @@ end
 Return the road length between two intersections. This takes into account the
 direction of the road, so `OSM.road_length(pos_1, pos_2, model)` may not be the
 same as `OSM.road_length(pos_2, pos_1, mode)`. Units of the returned quantity
-are as specified by the underlying graph's `weight_type`.
+are as specified by the underlying graph's `weight_type`. If `start` and `finish`
+are the same or `pos[1]` and `pos[2]` are the same, then return 0.
 """
 road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
 function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
+    p1 == p2 && return 0.0
+
     len = model.space.map.weights[p1, p2]
     if len == 0.0 || len == Inf
         len = model.space.map.weights[p2, p1]
@@ -633,6 +611,89 @@ Return the same position, but with `pos[1]` and `pos[2]` swapped and `pos[3]` up
 get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     (pos[2], pos[1], road_length(pos, model) - pos[3])
 
+"""
+    OSM.same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return `true` if the given positions `a` and `b` are (approximately) identical
+"""
+same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+    _same_position_node(a, b, model) || _same_position_node(b, a, model) ||
+    _same_position_edge(a, b, model) || _same_position_internal(a, b, model)
+
+# Handles the case when `a` is a node
+function _same_position_node(
+    a::Tuple{Int,Int,Float64},
+    b::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace}
+)
+    a[1] != a[2] && return false    # this case handles when `a` is a node
+    if a[1] == b[1] == b[2] # b is also an intersection point
+        return true
+    elseif a[1] == b[1] && b[3] ≈ 0.0 # the source vertex of edge `b` is `a` and position is nearby
+        return true
+    elseif a[1] == b[2] && b[3] ≈ road_length(b, model) # destination vertex is `a` and position nearby
+        return true
+    end
+    return false
+end
+
+# Handles the case when both points are on edges with a common node, and close to that end of the edge
+function _same_position_edge(
+    a::Tuple{Int,Int,Float64},
+    b::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace},
+)
+    # common node could be either end of either edge, so 4 cases total + the checks to ensure the position
+    # along the edge (index 3) is also at that end
+
+    if a[3] ≈ 0.0 # point `a` is near source node
+        if a[1] == b[1] && b[3] ≈ 0.0 # source vertex of `b` is same and it is near that end
+            return true
+        elseif a[1] == b[2] && b[3] ≈ road_length(b, model) # destination vertex of `b` is same
+            return true
+        end
+    elseif a[3] ≈ road_length(a, model)
+        if a[2] == b[1] && b[3] ≈ 0.0 # source vertex of `b` is same
+            return true
+        elseif a[2] == b[2] && b[3] ≈ road_length(b, model) # destination vertex of `b` is same
+            return true
+        end
+    end
+    # either there is no common vertex or either one is not near the common vertex
+    return false
+end
+
+# Handles case when both points are on the same edge (facing either direction)
+_same_position_internal(
+    a::Tuple{Int,Int,Float64},
+    b::Tuple{Int,Int,Float64},
+    model::ABM{<:OpenStreetMapSpace},
+) =
+    (a[1] == b[1] && a[2] == b[2] && a[3] ≈ b[3]) ||    # facing same direction
+    (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])   # facing opposite direction
+
+"""
+    OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
+
+Return `true` if both points lie on the same road of the graph
+"""
+same_road(
+    a::Tuple{Int,Int,Float64},
+    b::Tuple{Int,Int,Float64},
+) = (a[1] == b[1] && a[2] == b[2]) || (a[1] == b[2] && a[2] == b[1])
+
+"""
+    OSM.closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return the node that the given point is closest to on its edge
+"""
+function closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    if a[1] == a[2] || 2.0 * a[3] < road_length(a, model)
+        return a[1]
+    else
+        return a[2]
+    end
+end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
@@ -687,7 +748,7 @@ function Agents.move_along_route!(
     distance::Real,
 ) where {A<:AbstractAgent}
     if is_stationary(agent, model) || distance == 0
-        return 0
+        return 0.0
     end
 
     # branching here corresponds to nesting of the following cases:
@@ -700,133 +761,67 @@ function Agents.move_along_route!(
     # instead of the loop this currently runs in. These annotations are marked with `##` just to make it clear.
 
     osmpath = model.space.routes[agent.id]
-    while distance > 0
-        if isempty(osmpath.route)   # last leg of route, to the middle of a road
-            # distance left to reach dest
-            dist_left = osmpath.dest[3] - agent.pos[3]
-            if dist_left < distance # can overshoot destination
-                distance -= dist_left
-                move_agent!(agent, osmpath.dest, model) # reach destination
-                if osmpath.has_to_return    # if we have to return
-                    # empty return route implies we just have to go reverse on this edge
-                    if isempty(osmpath.return_route)
-                        osmpath = OpenStreetMapPath(
-                            osmpath.return_route,
-                            get_reverse_direction(osmpath.dest, model),
-                            get_reverse_direction(osmpath.start, model),
-                            Int[],
-                            false,
-                        )
-                        move_agent!(agent, get_reverse_direction(agent.pos, model), model)
-                        break
-                        ## return
-                    end
+    while distance > 0.0
+        # check if reached end
+        if same_position(agent.pos, osmpath.dest, model)
+            if osmpath.has_to_return
+                if agent.pos[1] == agent.pos[2]
+                    osmpath.return_route[end] == agent.pos[1] && pop!(osmpath.return_route)
 
-                    # non-empty return route
-                    osmpath = OpenStreetMapPath(    # construct return path
-                        osmpath.return_route,
-                        osmpath.dest,
-                        osmpath.start,
-                        Int[],
-                        false
-                    )
-                    # get next waypoint on return path
-                    # this will either one of the endpoints of this road
-                    next_wp = osmpath.route[end]
-                    if next_wp == agent.pos[1]
-                        # need to go back along same road, so reverse direction
-                        move_agent!(agent, get_reverse_direction(agent.pos, model), model)
-                    end
-                    # move remaining distance along return path
-                    continue
-                    ## return Agents.move_along_route!(agent, model, distance)
+                    move_agent!(agent, (agent.pos[1], osmpath.return_route[end], 0.0), model)
+                elseif osmpath.return_route[end] == agent.pos[1]
+                    move_agent!(agent, get_reverse_direction(agent.pos, model), model)
                 end
-                # delete path data so this agent is recognized as stationary
-                delete!(model.space.routes, agent.id)
-                break
-                ## return
-            end
-            # can't directly reach destination, so move distance along road
-            # ensure we don't overshoot the destination
-            result_pos = min(agent.pos[3] + distance, osmpath.dest[3])
-            move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
-            # distance left to move is 0
-            distance = 0.0
-            break
-            ## return
-        end
-        # don't need an else clause, since everything going inside the if clause will break
-        # or continue
-
-        # distance left till next node
-        dist_left = road_length(agent.pos, model) - agent.pos[3]
-        if dist_left < distance # can overshoot
-            distance -= dist_left   # leftover distance
-            node_a = pop!(osmpath.route)    # remove the node we just reached
-            if isempty(osmpath.route)
-                # this was the last node, so either we reached the end
-                # or dest is on an outgoing road
-                if osmpath.dest[1] == osmpath.dest[2]   # we reached the end
-                    if osmpath.has_to_return    # need to return from here
-                        # empty return route, so reverse along same edge
-                        if isempty(osmpath.return_route)
-                            move_agent!(agent, (dest[1], agent.pos[1], 0.0), model)
-                            osmpath = OpenStreetMapPath(
-                                osmpath.return_route,
-                                osmpath.dest,
-                                get_reverse_direction(osmpath.start, model),
-                                Int[],
-                                false,
-                            )
-                            break
-                            ## return
-                        end
-                        osmpath = OpenStreetMapPath(
-                            osmpath.return_route,
-                            osmpath.dest,
-                            osmpath.start,
-                            Int[],
-                            false,
-                        )
-                        # next node on return path
-                        node_b = osmpath.route[end]
-                        # set to move along reverse path
-                        move_agent!(agent, (node_a, node_b, 0.0), model)
-                        # move rest of distance along return route
-                        ## return Agents.move_along_route!(agent, model, distance)
-                        continue
-                    end
-                    # move to end
-                    move_agent!(agent, osmpath.dest, model)
-                    # remove route so agent is marked as stationary
-                    delete!(model.space.routes, agent.id)
-                    ## return
-                    break
-                end
-
-                # destination is on an outgoing road from this last waypoint
-                # move to beginning of this road
-                move_agent!(agent, (osmpath.dest[1:2]..., 0.0), model)
-                # move rest of distance to destination
-                ## return Agents.move_along_route!(agent, model, distance)
+                osmpath = model.space.routes[agent.id] = OpenStreetMapPath(
+                    osmpath.return_route,
+                    agent.pos,
+                    osmpath.start,
+                    Int[],
+                    false,
+                )
                 continue
             end
 
-            # there is a further waypoint
-            node_b = osmpath.route[end]
-            move_agent!(agent, (node_a, node_b, 0.0), model)
-            # move rest of distance to next waypoint
-            ## return Agents.move_along_route!(agent, model, distance)
-            continue
+            delete!(model.space.routes, agent.id)
+            break
         end
 
-        # will not overshoot
-        result_pos = min(agent.pos[3] + distance, road_length(agent.pos, model))
-        move_agent!(agent, (agent.pos[1:2]..., result_pos), model)
-        # distance left to move is 0
-        distance = 0.0
-        ## return
-        break
+        if isempty(osmpath.route) # last leg
+            distance_to_end = if osmpath.dest[1] == agent.pos[1]
+                osmpath.dest[3] - agent.pos[3]
+            else
+                road_length(osmpath.dest, model) - osmpath.dest[3] - agent.pos[3]
+            end
+            if distance_to_end <= distance
+                distance -= distance_to_end
+                move_agent!(agent, osmpath.dest, model)
+                continue
+            end
+
+            move_agent!(agent, (agent.pos[1], agent.pos[2], agent.pos[3] + distance), model)
+            distance = 0.0
+        else
+            distance_to_next_waypoint = road_length(agent.pos, model) - agent.pos[3]
+            if distance_to_next_waypoint <= distance
+                distance -= distance_to_next_waypoint
+                a = pop!(osmpath.route)
+                
+                if isempty(osmpath.route)
+                    if osmpath.dest[1] == agent.pos[2]
+                        move_agent!(agent, (osmpath.dest[1], osmpath.dest[2], 0.0), model)
+                    else
+                        move_agent!(agent, (osmpath.dest[2], osmpath.dest[1], 0.0), model)
+                    end
+                    continue
+                end
+
+                b = osmpath.route[end]
+                move_agent!(agent, (a, b, 0.0), model)
+            else
+                move_agent!(agent, (agent.pos[1], agent.pos[2], agent.pos[3] + distance), model)
+                distance = 0.0
+            end
+        end
     end
 
     return distance
