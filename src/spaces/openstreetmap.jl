@@ -24,6 +24,7 @@ export test_map,
     nearest_node,
     nearest_road,
     same_position,
+    same_road,
     download_osm_network    # re-exported from LightOSM.jl
 
 
