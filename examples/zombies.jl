@@ -1,7 +1,7 @@
 # # Zombie Outbreak
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+# <source src="../outbreak.mp4" type="video/mp4">
 # </video>
 # ```
 #
@@ -95,10 +95,11 @@ using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!() # hide
 ac(agent) = agent.infected ? :green : :black
-as(agent) = agent.infected ? 6 : 5
+as(agent) = agent.infected ? 10 : 8
 model = initialise()
 
-abmvideo("outbreak.mp4", model, agent_step!; framerate = 15, frames = 200, as, ac)
+abmvideo("outbreak.mp4", model, agent_step!;
+title = "Zombie outbreak", framerate = 15, frames = 200, as, ac)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

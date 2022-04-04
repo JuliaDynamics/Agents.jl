@@ -59,13 +59,13 @@ end
 
 function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     @assert models[1] isa ABM
-    df_agent, df_model = _run!(models[1], agent_step!, model_step!, n; kwargs...)
+    df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
     add_ensemble_index!(df_agent, 1)
     add_ensemble_index!(df_model, 1)
 
     for m in 2:length(models)
         df_agentTemp, df_modelTemp =
-            _run!(models[m], agent_step!, model_step!, n; kwargs...)
+            run!(models[m], agent_step!, model_step!, n; kwargs...)
         add_ensemble_index!(df_agentTemp, m)
         add_ensemble_index!(df_modelTemp, m)
         append!(df_agent, df_agentTemp)
@@ -76,7 +76,7 @@ end
 
 function parallel_ensemble(models, agent_step!, model_step!, n; kwargs...)
     all_data = pmap(
-        j -> _run!(models[j], agent_step!, model_step!, n; kwargs...),
+        j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
         1:length(models),
     )
 

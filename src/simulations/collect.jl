@@ -66,32 +66,33 @@ two `DataFrame`s, one for agent-level data and one for model-level data.
 * `mdata::Vector` means "model data to collect" and works exactly like `adata`.
   For the model, no aggregation is possible (nothing to aggregate over).
 
-* `mdata::Function` use a generator function that accepts `model` as input and
-  provides a `Vector`. Useful in combination with an [`ensemblerun!`](@ref) call that
+  Alternatively, `mdata` can also be a function. This is a "generator" function,
+  that accepts `model` as input and provides a `Vector` that represents `mdata`.
+  Useful in combination with an [`ensemblerun!`](@ref) call that
   requires a generator function.
 
 By default both keywords are `nothing`, i.e. nothing is collected/aggregated.
 
 ## Mixed-Models
 
-  For mixed-models, the `adata` keyword has some additional options & properties.
-  An additional column `agent_type` will be placed in the output
-  dataframe.
+For mixed-models, the `adata` keyword has some additional options & properties.
+An additional column `agent_type` will be placed in the output
+dataframe.
 
-  In the case that data is needed for one agent type that does not exist
-  in a second agent type, `missing` values will be added to the dataframe.
+In the case that data is needed for one agent type that does not exist
+in a second agent type, `missing` values will be added to the dataframe.
 
-  **Warning:** Since this option is inherently type unstable, try to avoid this
-  in a performance critical situation.
+**Warning:** Since this option is inherently type unstable, try to avoid this
+in a performance critical situation.
 
-  Aggregate functions will fail if `missing` values are not handled explicitly.
-  If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
-  `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
+Aggregate functions will fail if `missing` values are not handled explicitly.
+If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
+`a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
 ## Other keywords
 * `when=true` : at which steps `s` to perform the data collection and processing.
-  A lot of flexibility is offered based on the type of `when`. If `when::Vector`,
-  then data are collect if `s ∈ when`. Otherwise data are collected if `when(model, s)`
+  A lot of flexibility is offered based on the type of `when`. If `when::AbstractVector`,
+  then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
   returns `true`. By default data are collected in every step.
 * `when_model = when` : same as `when` but for model data.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
@@ -107,41 +108,6 @@ run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
     run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
 function run!(
-    model::ABM,
-    agent_step!,
-    model_step!,
-    n;
-    replicates::Int = 0,
-    parallel::Bool = false,
-    kwargs...,
-)
-
-    r = replicates
-    if r > 0
-        @warn("""
-        Running replicate simulations with `run!` is deprecated. It will be removed in a
-        future version of Agents.jl. Please use the new `ensemblerun!` function instead.
-        """)
-        models = [deepcopy(model) for _ in 1:r]
-        adf, mdf = ensemblerun!(models, agent_step!, model_step!, n; parallel, kwargs...)
-        rename!(adf, :ensemble => :replicate)
-        rename!(mdf, :ensemble => :replicate)
-        return adf, mdf
-    else
-        # TODO: When deprecations are removed, the _run! function has no reason to exist,
-        # it can be internalized inside `run!`.
-        return _run!(model, agent_step!, model_step!, n; kwargs...)
-    end
-end
-
-###################################################
-# Core data collection loop
-###################################################
-"""
-  _run!(model, agent_step!, model_step!, n; kwargs...)
-Core function that loops over stepping a model and collecting data at each step.
-"""
-function _run!(
     model,
     agent_step!,
     model_step!,
