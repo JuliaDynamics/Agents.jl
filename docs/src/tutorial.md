@@ -1,7 +1,7 @@
 # Tutorial
 
 !!! tip "YouTube video"
-      * This Tutorial is also available as a YouTube video: https://youtu.be/fgwAfAa4kt0 
+      * This Tutorial is also available as a YouTube video: https://youtu.be/fgwAfAa4kt0
 
 
 In Agents.jl a central structure maps unique IDs (integers) to agent instances, similar to a dictionary. During the simulation, the model evolves in discrete steps. During one step, the user decides which agents will act, how will they act, how many times, and whether any model-level properties will be adjusted.
@@ -119,12 +119,12 @@ Running the model and collecting data while the model runs is done with the [`ru
 run!
 ```
 
-The [`run!`](@ref) function has been designed for maximum flexibility: nearly all scenarios of data collection are possible whether you need agent data, model data, aggregating model data, or arbitrary combinations.
+The [`run!`](@ref) function has been designed for maximum flexibility: nearly all scenarios of data collection are possible whether you need agent data, model data, aggregated data, or arbitrary combinations.
 
-This means that [`run!`](@ref) has not been designed for maximum performance (or minimum memory allocation). However, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
+Nevertheless, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
 
 As your models become more complex, it may not be advantageous to use lots of helper functions in the global scope to assist with data collection.
-If this is the case in your model, here's a helpful tip to keep things clean: use a generator function to collect data.
+If this is the case in your model, here's a helpful tip to keep things clean: use a generator function to collect data as instructed in the documentation string of [`run!`](@ref). For example:
 
 ```julia
 function assets(model)
@@ -147,10 +147,9 @@ Each model created by [`AgentBasedModel`](@ref) provides a random number generat
 For performance reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)` or `rand(model.rng, 1:10, 100)`, etc.
 
 Another benefit of this approach is deterministic models that can be ran again and yield the same output.
-To do this, either always pass a specifically seeded RNG to the model creation, e.g. `MersenneTwister(1234)`, or call `seed!(model, 1234)` (with any number) after creating the model but before actually running the simulation.
+To do this, either always pass a specifically seeded RNG to the model creation, e.g. `MersenneTwister(1234)`, or call `seed!(model, 1234)` after creating the model but before actually running the simulation.
 
 Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but avoid potential biases of pseudo-randomness.
 
 ## An educative example
-A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref), also discussing in detail how to visualize your ABMs.
-For a quick reference concerning the main concepts of agent based modelling, and how the Agents.jl examples implement each one, take a look at the [Overview of Examples](@ref) page.
+A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref).
