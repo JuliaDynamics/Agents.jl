@@ -125,7 +125,7 @@ function agent_step!(agent, model)
     minhappy = model.min_to_be_happy
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
-    ## and increment count_neighbors_same_group as appropriately.
+    ## and increment `count_neighbors_same_group` as appropriately.
     ## Here `nearby_agents` (with default arguments) will provide an iterator
     ## over the nearby agents one grid point away, which are at most 8.
     for neighbor in nearby_agents(agent, model)
@@ -135,10 +135,12 @@ function agent_step!(agent, model)
     end
     ## After counting the neighbors, decide whether or not to move the agent.
     ## If count_neighbors_same_group is at least the min_to_be_happy, set the
-    ## mood to true. Otherwise, move the agent to a random position.
+    ## mood to true. Otherwise, move the agent to a random position, and set
+    ## mood to false.
     if count_neighbors_same_group ≥ minhappy
         agent.mood = true
     else
+        agent.mood = false
         move_agent_single!(agent, model)
     end
     return
