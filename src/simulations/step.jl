@@ -39,10 +39,10 @@ Use instead of `agent_step!` in [`step!`](@ref) if no function is useful to be d
 """
 dummystep(agent, model) = nothing
 
-until(s, n::Int, model) = s < n
+until(s, n::Real, model) = s < n
 until(s, n, model) = !n(model, s)
 
-step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
+step!(model::ABM, agent_step!, n::Real=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
 
 function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
     s = 0
