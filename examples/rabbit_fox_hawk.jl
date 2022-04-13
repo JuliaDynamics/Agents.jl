@@ -21,7 +21,7 @@
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
 using Random
-using FileIO # To load images you also need ImageMagick available to your project
+using ImageMagick: load
 
 mutable struct Animal <: AbstractAgent
     id::Int
