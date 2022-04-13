@@ -22,6 +22,9 @@ struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
     maxid::Base.RefValue{Int64}
 end
 
+"""
+`ABM` is an alias for `AgentBasedModel`.
+"""
 const ABM = AgentBasedModel
 
 agenttype(::ABM{S,A}) where {S,A} = A
