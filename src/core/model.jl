@@ -28,15 +28,11 @@ agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
 
 """
-    union_types(U)
-Return a set of types within a `Union`. Preserves order.
+    union_types(U::Type)
+Return a tuple of types within a `Union`.
 """
-union_types(x::Union) = union_types(x.a, x.b)
-union_types(a::Union, b::Type) = (union_types(a)..., b)
-union_types(a::Type, b::Type) = (a, b)
-union_types(x::Type) = (x,)
-# For completeness
-union_types(a::Type, b::Union) = (a, union_types(b)...)
+union_types(T::Type) = (T,)
+union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
     AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
