@@ -44,18 +44,33 @@ until(s, n, model) = !n(model, s)
 
 step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
 
-function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
+function step!(model::ABM{S,A}, agent_step!, model_step!, n = 1, agents_first=true) where {S, A}
     s = 0
+    types = Agents.union_types(A)
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
-            activation_order = schedule(model)
-            for index in activation_order
-                haskey(model.agents, index) || continue
-                agent_step!(model.agents[index], model)
-            end
+            activation_order = schedule(model) # TODO make scheduling type stable
+            # until then, a function barrier can recover most of the performance loss
+            _inner_step!(activation_order, model, types, agent_step!)
         end
         agents_first && model_step!(model)
         s += 1
+    end
+end
+
+function _inner_step(activation_order, model, types, agent_step!)
+    for index in activation_order
+        haskey(model.agents, index) || continue
+        agent = model[index]
+        stepped = false
+        for t in types
+            if agent isa t
+                agent_step!(agent, model)
+                stepped = true
+                break
+            end
+        end
+        @assert stepped
     end
 end
