@@ -26,7 +26,7 @@ Notice that schedulers can be given directly to model creation, and thus become 
 """
 module Schedulers
 using Agents
-using Random: shuffle!, randsubseq
+using Random: shuffle!, randsubseq, randperm
 
 export randomly, by_id, fastest, partially, by_property, by_type
 
@@ -100,20 +100,18 @@ the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM{S,A}) where {S,A}
         types = Agents.union_types(A)
-        sets = [Integer[] for _ in types]
-        for agent in allagents(model)
-            idx = findfirst(t -> t == typeof(agent), types)
-            push!(sets[idx], agent.id)
-        end
-        shuffle_types && shuffle!(model.rng, sets)
+        agents = collect(keys(model.agents))
+        shuffle_agents && shuffle!(agents)
+        ks = [_myfindfirst(agent, types) for agent in agents]
         if shuffle_agents
-            for set in sets
-                shuffle!(model.rng, set)
-            end
+            ks = randperm(length(types))[ks]
         end
-        vcat(sets...)
+        agents[sortperm(ks)] # TODO use base's new sorting interface when it comes out
     end
 end
+
+_myfindfirst(x, t, ts...) = x isa t ? 1 : _myfindfirst(x, ts...) + 1
+_myfindfirst(x, t) = 1
 
 """
     Schedulers.by_type((C, B, A), shuffle_agents::Bool)
