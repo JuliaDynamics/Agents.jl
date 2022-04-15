@@ -241,6 +241,23 @@
         # Checks for type instability #208
         @test typeof(collect(nearby_ids(a, continuousspace, 0.1))) <: Vector{Int}
         @test typeof(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) <: Vector{Int}
+
+        # Test random_nearby_*
+        abm = ABM(Agent1, GridSpace((10, 10)); rng = MersenneTwister(42))
+        for i in 1:10, j in 1:10
+            add_agent!((i, j), abm)
+        end
+
+        nearby_id = random_nearby_id(abm[1], abm, 5)
+        valid_ids = collect(nearby_ids(abm[1], abm, 5))
+        @test nearby_id in valid_ids
+        nearby_agent = random_nearby_agent(abm[1], abm, 5)
+        @test nearby_agent.id in valid_ids
+
+        genocide!(abm)
+        a = add_agent!((1, 1), abm)
+        @test isnothing(random_nearby_id(a, abm))
+        @test isnothing(random_nearby_agent(a, abm))
     end
 
     @testset "Discrete space mutability" begin

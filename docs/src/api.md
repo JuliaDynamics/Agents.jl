@@ -118,11 +118,13 @@ OSM.test_map
 OSM.download_osm_network
 ```
 
-## Local area
+## Nearby Agents
 ```@docs
 nearby_ids
 nearby_agents
 nearby_positions
+random_nearby_id
+random_nearby_agent
 edistance
 ```
 

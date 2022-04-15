@@ -1,26 +1,3 @@
-mutable struct BadAgent <: AbstractAgent
-    useless::Int
-    pos::Int
-end
-mutable struct BadAgentId <: AbstractAgent
-    id::Float64
-end
-struct ImmutableAgent <: AbstractAgent
-    id::Int
-end
-mutable struct DiscreteVelocity <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Int}
-    diameter::Float64
-end
-mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
-    id::T
-    pos::NTuple{2,T}
-    weight::T
-    info::String
-end
-
 @testset "Model construction" begin
     # Shouldn't use ImmutableAgent since it cannot be edited
     agent = ImmutableAgent(1)
