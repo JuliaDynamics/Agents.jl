@@ -22,6 +22,8 @@ export move_agent!,
     nearby_positions,
     nearby_ids,
     nearby_agents,
+    random_nearby_id,
+    random_nearby_agent,
     plan_route!,
     plan_best_route!,
     move_along_route!,
@@ -357,3 +359,48 @@ The value of the argument `r` and possible keywords operate identically to [`nea
 """
 nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
+
+"""
+    random_nearby_id(agent, model::ABM, r = 1; kwargs...) -> agent
+
+Return the `id` of a random agent near the position of the given `agent`.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+"""
+function random_nearby_id(a, model, r = 1; kwargs...)
+    # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
+    iter = nearby_ids(a, model, r; kwargs...)
+
+    res = iterate(iter)
+    isnothing(res) && return    # `iterate` returns `nothing` when it ends
+
+    choice, state = res         # random ID to return, and the state of the iterator
+    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
+    
+    skip_counter = 0            # skip entries in the iterator
+    while !isnothing(state) && !isnothing(iter)
+        res = iterate(iter, state)
+        isnothing(res) && break
+
+        if skip_counter == 0
+            choice, state = res
+            skip_counter = floor(log(rand(model.rng)) / log(1 - w)) + 1
+            w *= max(rand(model.rng), eps())
+        else
+            _, state = res
+            skip_counter -= 1
+        end
+    end
+
+    return choice
+end
+
+"""
+    random_nearby_id(agent, model::ABM, r = 1; kwargs...) -> agent
+
+Return the a random agent near the position of the given `agent`.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+"""
+random_nearby_agent(a, model, r = 1; kwargs...) =
+    model[random_nearby_id(a, model, r; kwargs...)]
