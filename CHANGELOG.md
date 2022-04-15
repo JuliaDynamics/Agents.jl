@@ -1,3 +1,7 @@
+# v5.2
+- Add `random_nearby_id` and `random_nearby_agent` for efficient random agent access
+- Stop condition for `step!` allows using `Integer`s
+
 # v5
 - Agents.jl + InteractiveDynamics.jl now support native plotting for
   open street map spaces, which is integrated in all interactive apps as well!
