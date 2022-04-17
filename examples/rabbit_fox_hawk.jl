@@ -40,7 +40,7 @@ eunorm(vec) = √sum(vec .^ 2)
 # The environment is generated from a heightmap: a 2D matrix, where each value denotes the
 # height of the terrain at that point. We segregate the model into 4 regions based on the
 # height:
-# - Anything below `water_level` is waster and cannot be walked on
+# - Anything below `water_level` is water and cannot be walked on
 # - The region between `water_level` and `grass_level` is flatland, that can be walked on
 # - The part of the map between `grass_level` and `mountain_level` is too high for animals to
 #   walk over, but it can be flown over
