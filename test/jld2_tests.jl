@@ -1,7 +1,7 @@
 @testset "JLD2" begin
 
     function test_model_data(model, other)
-        @test (model.scheduler isa Schedulers.AbstractScheduler && typeof(model.scheduler) == typeof(other.scheduler)) || model.scheduler == other.scheduler
+        @test model.scheduler == other.scheduler
         @test model.rng == other.rng
         @test model.maxid.x == other.maxid.x
     end
@@ -90,7 +90,7 @@
         model, astep, mstep = Models.schelling()
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly())
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -112,7 +112,7 @@
         model, astep, mstep = Models.flocking(n_birds = 300)
         step!(model, astep, mstep, 100)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly())
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.randomly)
 
         # agent data
         @test nagents(other) == nagents(model)

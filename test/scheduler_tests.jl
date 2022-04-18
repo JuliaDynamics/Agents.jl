@@ -4,7 +4,7 @@
     N = 1000
 
     # Schedulers.by_id
-    model = ABM(Agent0; scheduler = Schedulers.by_id())
+    model = ABM(Agent0; scheduler = Schedulers.by_id)
     for i in 1:N
         add_agent!(model)
     end
@@ -20,7 +20,7 @@
     @test sort!(collect(model.scheduler(model))) == 1:N
 
     # random
-    model = ABM(Agent0; scheduler = Schedulers.randomly(), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.randomly, rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
@@ -48,7 +48,7 @@
     ids = collect(keys(model.agents))
     properties = [model.agents[id].weight for id in ids]
 
-    @test ids[sortperm(properties)] == collect(a)
+    @test ids[sortperm(properties)] == a
 end
 
 @testset "Union Types" begin
@@ -97,10 +97,9 @@ end
 
     # shuffling types scheduler
     Random.seed!(12)
-    model = init_mixed_model(scheduler = Schedulers.by_type(true, false, Union{Agent0,Agent1,Agent2,Agent3}))
+    model = init_mixed_model(scheduler = Schedulers.by_type(true, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
-    
     @test unique([typeof(model[id]) for id in s1]) != unique([typeof(model[id]) for id in s2])
     @test count(model[id] isa Agent2 for id in model.scheduler(model)) == 3
     c = begin
@@ -114,16 +113,16 @@ end
 
     # NOT shuffling types scheduler
     Random.seed!(12)
-    model = init_mixed_model(scheduler = Schedulers.by_type(false, false, Union{Agent0,Agent1,Agent2,Agent3}))
+    model = init_mixed_model(scheduler = Schedulers.by_type(false, false))
     s1 = model.scheduler(model)
     s2 = model.scheduler(model)
     @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
     # Not shuffling types, but shuffling agents
     Random.seed!(12)
-    model = init_mixed_model(scheduler = Schedulers.by_type(false, true, Union{Agent0,Agent1,Agent2,Agent3}))
-    s1 = collect(model.scheduler(model))
-    s2 = collect(model.scheduler(model))
+    model = init_mixed_model(scheduler = Schedulers.by_type(false, true))
+    s1 = model.scheduler(model)
+    s2 = model.scheduler(model)
     @test [typeof(model[id]) for id in s1] == [typeof(model[id]) for id in s2]
     # here we actually check whether agents of same type are shuffled
     @test model[s1[1]].id ≠ model[s2[1]] || model[s1[2]].id ≠ model[s2[2]]
@@ -140,7 +139,7 @@ end
         a0 = Agent0(id)
         add_agent!(a0, model)
     end
-    s = collect(model.scheduler(model))
+    s = model.scheduler(model)
     @test [typeof(model[id]) for id in s] ==
           [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
     @test all(x -> x < 4, s[1:3])

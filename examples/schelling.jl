@@ -97,7 +97,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     rng = Random.MersenneTwister(seed)
     model = ABM(
         SchellingAgent, space;
-        properties, rng, scheduler = Schedulers.randomly()
+        properties, rng, scheduler = Schedulers.randomly
     )
 
     ## populate the model with agents, adding equal amount of the two types of agents

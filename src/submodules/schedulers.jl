@@ -26,9 +26,9 @@ Notice that schedulers can be given directly to model creation, and thus become 
 """
 module Schedulers
 using Agents
-using Random: shuffle!, randsubseq!
+using Random: shuffle!, randsubseq, randsubseq!
 
-export randomly, by_id, fastest, partially, by_property, by_type
+export Randomly, by_id, fastest, Partially, ByProperty, ByType
 
 ####################################
 # Schedulers
@@ -53,13 +53,22 @@ fastest(model::ABM) = keys(model.agents)
     Schedulers.by_id
 A scheduler that activates all agents agents at each step according to their id.
 """
-struct by_id
+function by_id(model::ABM)
+    agent_ids = sort(collect(keys(model.agents)))
+    return agent_ids
+end
+
+struct ByID
     ids::Vector{Int}
 end
 
-by_id() = by_id(Int[])
+"""
+    Schedulers.ByID
+A scheduler that activates all agents agents at each step according to their id.
+"""
+ByID() = ByID(Int[])
 
-function (sched::by_id)(model::ABM)
+function (sched::ByID)(model::ABM)
     get_ids!(sched.ids, model)
     sort!(sched.ids)
 end
@@ -69,12 +78,21 @@ end
 A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
-struct randomly
+function randomly(model::ABM)
+    order = shuffle!(model.rng, collect(keys(model.agents)))
+end
+
+struct Randomly
     ids::Vector{Int}
 end
 
-randomly() = randomly(Int[])
-function (sched::randomly)(model::ABM)
+"""
+    Schedulers.Randomly
+A scheduler that activates all agents once per step in a random order.
+Different random ordering is used at each different step.
+"""
+Randomly() = Randomly(Int[])
+function (sched::Randomly)(model::ABM)
     get_ids!(sched.ids, model)
     shuffle!(model.rng, sched.ids)
 end
@@ -83,19 +101,30 @@ end
     Schedulers.partially(p)
 A scheduler that at each step activates only `p` percentage of randomly chosen agents.
 """
-struct partially{R<:Real}
+function partially(p::Real)
+    function partial(model::ABM)
+        ids = collect(keys(model.agents))
+        return randsubseq(model.rng, ids, p)
+    end
+    return partial
+end
+
+struct Partially{R<:Real}
     p::R
     all_ids::Vector{Int}
     schedule::Vector{Int}
 end
 
-partially(p::R) where {R<:Real} = partially{R}(p, Int[], Int[])
+"""
+    Schedulers.Partially(p)
+A scheduler that at each step activates only `p` percentage of randomly chosen agents.
+"""
+Partially(p::R) where {R<:Real} = Partially{R}(p, Int[], Int[])
 
-function (sched::partially)(model::ABM)
+function (sched::Partially)(model::ABM)
     get_ids!(sched.all_ids, model)
     randsubseq!(model.rng, sched.schedule, sched.all_ids, sched.p)
 end
-
 
 """
     Schedulers.by_property(property)
@@ -104,16 +133,32 @@ with agents with greater `property` acting first. `property` can be a `Symbol`, 
 just dictates which field of the agents to compare, or a function which inputs an agent
 and outputs a real number.
 """
-struct by_property{P}
+function by_property(p)
+    function property(model::ABM)
+        ids = collect(keys(model.agents))
+        properties = [Agents.get_data(model[id], p) for id in ids]
+        s = sortperm(properties)
+        return ids[s]
+    end
+end
+
+struct ByProperty{P}
     p::P
     properties::Vector{Float64} # TODO: don't assume Float64
     ids::Vector{Int}
     perm::Vector{Int}
 end
 
-by_property(p::P) where {P} = by_property{P}(p, Float64[], Int[], Int[])
+"""
+    Schedulers.ByProperty(property)
+A scheduler that at each step activates the agents in an order dictated by their `property`,
+with agents with greater `property` acting first. `property` can be a `Symbol`, which
+just dictates which field of the agents to compare, or a function which inputs an agent
+and outputs a real number.
+"""
+ByProperty(p::P) where {P} = ByProperty{P}(p, Float64[], Int[], Int[])
 
-function (sched::by_property)(model::ABM)
+function (sched::ByProperty)(model::ABM)
     get_ids!(sched.ids, model)
     resize!(sched.properties, length(sched.ids))
 
@@ -131,31 +176,30 @@ function (sched::by_property)(model::ABM)
     return Iterators.map(i -> sched.ids[i], sched.perm)
 end
 
-
-
-struct by_type
-    shuffle_types::Bool
-    shuffle_agents::Bool
-    type_inds::Dict{DataType,Int}
-    ids::Vector{Vector{Int}}
-end
-
 """
-    Schedulers.by_type(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
-A scheduler useful only for mixed agent models using `Union` types (`agent_union`).
+    Schedulers.by_type(shuffle_types::Bool, shuffle_agents::Bool)
+A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
 the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
-function by_type(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
-    types = Agents.union_types(agent_union)
-    return by_type(
-        shuffle_types,
-        shuffle_agents,
-        Dict(t => i for (i, t) in enumerate(types)),
-        [Int[] for _ in 1:length(types)]
-    )
+function by_type(shuffle_types::Bool, shuffle_agents::Bool)
+    function by_union(model::ABM{S,A}) where {S,A}
+        types = Agents.union_types(A)
+        sets = [Integer[] for _ in types]
+        for agent in allagents(model)
+            idx = findfirst(t -> t == typeof(agent), types)
+            push!(sets[idx], agent.id)
+        end
+        shuffle_types && shuffle!(model.rng, sets)
+        if shuffle_agents
+            for set in sets
+                shuffle!(model.rng, set)
+            end
+        end
+        vcat(sets...)
+    end
 end
 
 """
@@ -164,7 +208,58 @@ A scheduler that activates agents by type in specified order (since `Union`s are
 preserving). `shuffle_agents = true` randomizes the order of agents within each group.
 """
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
-    return by_type(
+    function by_ordered_union(model::ABM{S,A}) where {S,A}
+        types = Agents.union_types(A)
+        if order !== nothing
+            @assert length(types) == length(order) "Invalid dimension for `order`"
+            types = order
+        end
+        sets = [Integer[] for _ in types]
+        for agent in allagents(model)
+            idx = findfirst(t -> t == typeof(agent), types)
+            push!(sets[idx], agent.id)
+        end
+        if shuffle_agents
+            for set in sets
+                shuffle!(model.rng, set)
+            end
+        end
+        vcat(sets...)
+    end
+end
+
+struct ByType
+    shuffle_types::Bool
+    shuffle_agents::Bool
+    type_inds::Dict{DataType,Int}
+    ids::Vector{Vector{Int}}
+end
+
+"""
+    Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
+A scheduler useful only for mixed agent models using `Union` types (`agent_union`).
+- Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
+Otherwise returns agents grouped in order of appearance in the `Union`.
+- `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
+the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+"""
+function ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
+    types = Agents.union_types(agent_union)
+    return ByType(
+        shuffle_types,
+        shuffle_agents,
+        Dict(t => i for (i, t) in enumerate(types)),
+        [Int[] for _ in 1:length(types)]
+    )
+end
+
+"""
+    Schedulers.ByType((C, B, A), shuffle_agents::Bool)
+A scheduler that activates agents by type in specified order (since `Union`s are not order
+preserving). `shuffle_agents = true` randomizes the order of agents within each group.
+"""
+function ByType(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+    return ByType(
         false,
         shuffle_agents,
         Dict(t => i for (i, t) in enumerate(order)),
@@ -172,7 +267,7 @@ function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     )
 end
 
-function (sched::by_type)(model::ABM)
+function (sched::ByType)(model::ABM)
     for i in 1:length(sched.ids)
         empty!(sched.ids[i])
     end
