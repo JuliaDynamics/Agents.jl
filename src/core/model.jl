@@ -347,7 +347,7 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     else
         s *= "\n space: $(sprint(show, abm.space))"
     end
-    s *= "\n scheduler: $(nameof(abm.scheduler))"
+    s *= "\n scheduler: $(schedulername(abm.scheduler))"
     print(io, s)
     if abm.properties ≠ nothing
         if typeof(abm.properties) <: Dict
@@ -358,3 +358,6 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
         print(io, "\n properties: ", join(props, ", "))
     end
 end
+
+schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x) = Symbol(typeof(x))
