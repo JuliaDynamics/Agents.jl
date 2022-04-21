@@ -17,8 +17,8 @@ To get started, please read the [Tutorial](@ref) page.
 
 ## Features
 * Free, open source and extremely transparent.
-* Intuitive and simple-to-learn.
-* Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref)
+* Intuitive simple-to-learn software with high quality, extensive documentation.
+* Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).
 * Powerful, feature-full and extendable [API](@ref).
 * Modular, function-based design.
 * Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
@@ -28,8 +28,8 @@ To get started, please read the [Tutorial](@ref) page.
 * Aggregating collected data during model evolution
 * Distributed computing
 * Batch running and batch data collection
-* Visualize agent distributions on regular grids or continuous space.
-* Interactive applications for any agent based model (in continuous or grid space), which are created with only 5 lines of code and look like this:
+* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem.
+* Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:
 
 ```@raw html
 <video width="auto" controls autoplay loop>
@@ -81,7 +81,7 @@ Schelling's model shows that even small preferences of agents to have neighbors 
 This is an example of emergent behavior from simple interactions of agents that can only be captured in an agent-based model.
 
 ## Getting help
-You're looking for support for Agents.jl? Look no further! Here's the three things you can do to resolve your questions about Agents.jl:
+You're looking for support for Agents.jl? Look no further! Here's some things you can do to resolve your questions about Agents.jl:
 
 1. Read the online documentation! It is likely that the thing you want to know is already documented, so use the search bar and search away!
 2. Chat with us in the channel `#dynamics-bridged` in the [Julia Slack](https://julialang.org/slack/)!
