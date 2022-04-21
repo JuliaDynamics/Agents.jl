@@ -85,8 +85,8 @@ SUITE["graph"]["add_union"]["agent"] =
     @benchmarkable add_agent!($graph_agent, $graph_union_model) samples = 100
 SUITE["graph"]["add_union"]["agent_pos"] =
     @benchmarkable add_agent_pos!($graph_agent, $graph_union_model) samples = 100
-SUITE["graph"]["add_union"]["agent_single"] =
-    @benchmarkable add_agent_single!($graph_agent, $graph_union_model) samples = 100
+# SUITE["graph"]["add_union"]["agent_single"] =
+#     @benchmarkable add_agent_single!($graph_agent, $graph_union_model) samples = 100
 
 graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(100)))
 for position in 1:100
@@ -251,3 +251,6 @@ SUITE["grid"]["collect"]["store_agent"] =
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
 
+#### SCHEDULERS ###
+include("schedulers/schedulers.jl")
+SUITE["schedulers"] = SCHED_SUITE
