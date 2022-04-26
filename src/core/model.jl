@@ -39,7 +39,7 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
     AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
-Create an agent based model from the given agent type and `space`.
+Create an agent-based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
 
@@ -59,8 +59,8 @@ drawbacks of this approach.
 ## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. If `properties` is a dictionary with
-key type `Symbol`, or of it is a struct, then the syntax
-`model.name` is short hand for `model.properties[:name]` (or `model.properties.name`
+key type `Symbol`, or if it is a struct, then the syntax
+`model.name` is shorthand for `model.properties[:name]` (or `model.properties.name`
 for structs).
 This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
 which are the fields of `AgentBasedModel`.
@@ -268,7 +268,7 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
 """
     index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
     index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
-Return an iterable of agent ids in the model, meeting the `filter` criterea if used.
+Return an iterable of agent ids in the model, meeting the `filter` criteria if used.
 """
 index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
