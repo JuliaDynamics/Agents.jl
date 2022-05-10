@@ -15,8 +15,18 @@ value counting the ensemble member. The function returns `agent_df, model_df, mo
 The keyword `parallel = false`, when `true`, will run the simulations in parallel using
 Julia's `Distributed.pmap` (you need to have loaded `Agents` with `@everywhere`, see
 docs online). Use keyword `batch_size` to specify the `pmap` batch size, which can
-reduce parallelization overhead especially when each model run finishes
-quickly relative to the time it takes to run all models.
+reduce parallelization overhead by increasing the `batch_size` to be greater
+than the default of 1.  The `batch_size` specifies the number of tasks 
+sent at a time by the coordinating processor
+to each worker processor, after which the worker processor sends back all the
+data it accumulated. If, for example, you have 20 processors and 10k models
+to run, and use the default `batch_size` of 1, 
+you will have the overhead of 10k data transfers between processors. 
+If you set `batch_size` to 500 in this example,
+each processor will get 500 models to run before returning the data to the
+coordinating processor, so there will only be 20 data transfers. This is
+typically much faster even if more data is being transferred at a time. Choosing
+the best `batch_size` can be done through trial-and-error.
 
 All other keywords are propagated to [`run!`](@ref) as-is.
 
@@ -82,7 +92,7 @@ function parallel_ensemble(models, agent_step!, model_step!, n, batch_size; kwar
     all_data = pmap(
         j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
         1:length(models);
-        batch_size = batch_size
+        batch_size
     )
 
     df_agent = DataFrame()
