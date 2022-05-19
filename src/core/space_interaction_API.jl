@@ -75,7 +75,11 @@ What the "radius" means depends on the space type:
   in the space of cartesian indices.
 - `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
   extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
-  spaces.
+  spaces. This can be useful when different coordinates in the space need to be searched
+  with different ranges, e.g., if the space corresponds to a full building, with the
+  third dimension the floor number. See also the 
+  [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
+  for advanced usage where one dimension is used as a categorical one.
 - `ContinuousSpace`: Standard distance according to the space metric.
 - `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
   needed to be travelled according to existing roads in order to reach given `position`.
@@ -94,7 +98,8 @@ For `ContinuousSpace`, the keyword `exact=false` controls whether the found neig
 exactly accurate or approximate (with approximate always being a strict over-estimation),
 see [`ContinuousSpace`](@ref).
 
-In periodic discrete or continuous spaces, when used with a radius larger than half of the entire space, this function may find the same agent(s) more than once.
+In periodic discrete or continuous spaces, when used with a radius larger than half of the entire
+space, this function may find the same agent(s) more than once.
 See Issue #566 online for more information.
 """
 nearby_ids(position, model, r = 1) = notimplemented(model)
