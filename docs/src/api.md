@@ -229,15 +229,10 @@ Some useful schedulers are available below as part of the Agents.jl API:
 ```@docs
 Schedulers.fastest
 Schedulers.ByID
-Schedulers.by_id
 Schedulers.Randomly
-Schedulers.randomly
 Schedulers.Partially
-Schedulers.partially
 Schedulers.ByProperty
-Schedulers.by_property
 Schedulers.ByType
-Schedulers.by_type
 ```
 
 ### Advanced scheduling
