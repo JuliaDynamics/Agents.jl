@@ -1,6 +1,6 @@
 using BenchmarkTools, Agents
 
-const SUITE = BenchmarkGroup(["Schedulers"])
+const SCHED_SUITE = BenchmarkGroup(["Schedulers"])
 
 mutable struct FakeAgent <: AbstractAgent
     id::Int
