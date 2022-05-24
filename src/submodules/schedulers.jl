@@ -63,8 +63,8 @@ struct ByID
 end
 
 """
-    Schedulers.ByID
-A scheduler that activates all agents agents at each step according to their id.
+    Schedulers.ByID()
+A non-allocating scheduler that activates all agents agents at each step according to their id.
 """
 ByID() = ByID(Int[])
 
@@ -87,8 +87,8 @@ struct Randomly
 end
 
 """
-    Schedulers.Randomly
-A scheduler that activates all agents once per step in a random order.
+    Schedulers.Randomly()
+A non-allocating scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 Randomly() = Randomly(Int[])
@@ -117,7 +117,8 @@ end
 
 """
     Schedulers.Partially(p)
-A scheduler that at each step activates only `p` percentage of randomly chosen agents.
+A non-allocating scheduler that at each step activates only `p` percentage of randomly
+chosen agents.
 """
 Partially(p::R) where {R<:Real} = Partially{R}(p, Int[], Int[])
 
@@ -151,10 +152,10 @@ end
 
 """
     Schedulers.ByProperty(property)
-A scheduler that at each step activates the agents in an order dictated by their `property`,
-with agents with greater `property` acting first. `property` can be a `Symbol`, which
-just dictates which field of the agents to compare, or a function which inputs an agent
-and outputs a real number.
+A non-allocating scheduler that at each step activates the agents in an order dictated by
+their `property`, with agents with greater `property` acting first. `property` can be a
+`Symbol`, which just dictates which field of the agents to compare, or a function which
+inputs an agent and outputs a real number.
 """
 ByProperty(p::P) where {P} = ByProperty{P}(p, Float64[], Int[], Int[])
 
@@ -237,11 +238,12 @@ end
 
 """
     Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
-A scheduler useful only for mixed agent models using `Union` types (`agent_union`).
+A non-allocating scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
 the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+- `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref))
 """
 function ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
     types = Agents.union_types(agent_union)
@@ -255,8 +257,9 @@ end
 
 """
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)
-A scheduler that activates agents by type in specified order (since `Union`s are not order
-preserving). `shuffle_agents = true` randomizes the order of agents within each group.
+A non-allocating scheduler that activates agents by type in specified order (since
+`Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
+agents within each group.
 """
 function ByType(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     return ByType(
@@ -286,5 +289,11 @@ function (sched::ByType)(model::ABM)
 
     return Iterators.flatten(it for it in sched.ids)
 end
+
+@deprecate by_id ById
+@deprecate randomly Randomly
+@deprecate partially Partially
+@deprecate by_property ByProperty
+@deprecate by_type ByType
 
 end # Schedulers submodule
