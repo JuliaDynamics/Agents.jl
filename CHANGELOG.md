@@ -1,3 +1,6 @@
+# v5.3
+- Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance
+
 # v5.2
 - Add `random_nearby_id` and `random_nearby_agent` for efficient random agent access
 - Stop condition for `step!` allows using `Integer`s
