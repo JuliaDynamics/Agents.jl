@@ -1,3 +1,11 @@
+# v5.3
+- Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:
+  - `Schedulers.by_id` is now `Schedulers.ByID`
+  - `Schedulers.randomly` is now `Schedulers.Randomly`
+  - `Schedulers.partially` is now `Schedulers.Partially`
+  - `Schedulers.by_property` is now `Schedulers.ByProperty`
+  - `Schedulers.by_type` is now `Schedulers.ByType`
+
 # v5.2
 - Add `random_nearby_id` and `random_nearby_agent` for efficient random agent access
 - Stop condition for `step!` allows using `Integer`s

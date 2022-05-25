@@ -358,4 +358,6 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
         print(io, "\n properties: ", join(props, ", "))
     end
 end
+
 schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x) = Symbol(typeof(x))

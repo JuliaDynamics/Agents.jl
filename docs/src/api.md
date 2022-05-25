@@ -228,11 +228,11 @@ Schedulers
 Some useful schedulers are available below as part of the Agents.jl API:
 ```@docs
 Schedulers.fastest
-Schedulers.by_id
-Schedulers.randomly
-Schedulers.partially
-Schedulers.by_property
-Schedulers.by_type
+Schedulers.ByID
+Schedulers.Randomly
+Schedulers.Partially
+Schedulers.ByProperty
+Schedulers.ByType
 ```
 
 ### Advanced scheduling
