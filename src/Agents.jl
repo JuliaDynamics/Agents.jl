@@ -60,7 +60,9 @@ if display_update
             Noteworthy changes:
 
             * Schedulers have been reworked to be more performant and allocate
-              less
+              less. This means that most scheduler names have been deprecated from
+              functions to types, such as `by_type` -> `ByType`. See changelog for
+              full list!
             * See the CHANGELOG.md or online docs for more!
             """;
             color = :light_magenta,
