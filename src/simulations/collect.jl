@@ -101,6 +101,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
+* `showprogress=true` : Whether to show progress
 """
 function run! end
 
@@ -117,7 +118,8 @@ function run!(
     mdata=nothing,
     adata=nothing,
     obtainer=identity,
-    agents_first=true
+    agents_first=true,
+    showprogress=true
 )
 
     df_agent = init_agent_dataframe(model, adata)
@@ -136,7 +138,7 @@ function run!(
     end
 
     s = 0
-    p = ProgressMeter.Progress(n, 1)
+    p = showprogress ? typeof(n) <: Int ? ProgressMeter.Progress(n, 1) : [0] : nothing
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
@@ -146,7 +148,7 @@ function run!(
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
-        ProgressMeter.next!(p)
+        next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
@@ -512,3 +514,20 @@ collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = 
 ###################################################
 # Parallel / replicates
 ###################################################
+
+
+###################################################
+# ProgressMeter 
+###################################################
+
+"""
+Show number of passed steps when `n` in `run!` is a function.
+"""
+function next!(p::Vector{Int})
+    p[1] += 1
+    print("\u1b[1G")
+    print("Passed steps: $(p[1])")
+    print("\u1b[K")
+end
+
+next!(x::Nothing) = nothing
