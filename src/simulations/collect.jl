@@ -112,12 +112,12 @@ function run!(
     agent_step!,
     model_step!,
     n;
-    when = true,
-    when_model = when,
-    mdata = nothing,
-    adata = nothing,
-    obtainer = identity,
-    agents_first = true,
+    when=true,
+    when_model=when,
+    mdata=nothing,
+    adata=nothing,
+    obtainer=identity,
+    agents_first=true
 )
 
     df_agent = init_agent_dataframe(model, adata)
@@ -136,6 +136,7 @@ function run!(
     end
 
     s = 0
+    p = ProgressMeter.Progress(n, 1)
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
@@ -145,6 +146,7 @@ function run!(
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
+        ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
