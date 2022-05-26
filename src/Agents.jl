@@ -7,7 +7,6 @@ using Graphs
 using DataFrames
 using Random
 import ProgressMeter
-import ProgressMeter: next!
 import Base.length
 import LinearAlgebra
 

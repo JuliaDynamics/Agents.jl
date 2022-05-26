@@ -113,13 +113,13 @@ function run!(
     agent_step!,
     model_step!,
     n;
-    when=true,
-    when_model=when,
-    mdata=nothing,
-    adata=nothing,
-    obtainer=identity,
-    agents_first=true,
-    showprogress=true
+    when = true,
+    when_model = when,
+    mdata = nothing,
+    adata = nothing,
+    obtainer = identity,
+    agents_first = true,
+    showprogress = true
 )
 
     df_agent = init_agent_dataframe(model, adata)
@@ -138,7 +138,7 @@ function run!(
     end
 
     s = 0
-    p = showprogress ? typeof(n) <: Int ? ProgressMeter.Progress(n, 1) : [0] : nothing
+    p = typeof(n) <: Int ? ProgressMeter.Progress(n; enabled=showprogress) : ProgressMeter.ProgressUnknown("Steps passed: "; enabled=showprogress)
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
@@ -148,7 +148,7 @@ function run!(
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
-        next!(p)
+        ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
@@ -156,6 +156,7 @@ function run!(
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
     end
+    ProgressMeter.finish!(p)
     return df_agent, df_model
 end
 
@@ -514,20 +515,3 @@ collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = 
 ###################################################
 # Parallel / replicates
 ###################################################
-
-
-###################################################
-# ProgressMeter 
-###################################################
-
-"""
-Show number of passed steps when `n` in `run!` is a function.
-"""
-function next!(p::Vector{Int})
-    p[1] += 1
-    print("\u1b[1G")
-    print("Passed steps: $(p[1])")
-    print("\u1b[K")
-end
-
-next!(x::Nothing) = nothing
