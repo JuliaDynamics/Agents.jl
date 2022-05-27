@@ -7,7 +7,6 @@ using Graphs
 using DataFrames
 using Random
 import ProgressMeter
-
 import Base.length
 import LinearAlgebra
 
@@ -48,28 +47,28 @@ version_number = "5"
 update_name = "update_v$(version_number)"
 
 function __init__()
-if display_update
-    # Get scratch space for this package
-    versions_dir = @get_scratch!("versions")
-    if !isfile(joinpath(versions_dir, update_name))
-        printstyled(
-            stdout,
-            """
-            \nUpdate message: Agents v$(version_number)
-            Welcome to this new major version of Agents.jl!
-            Noteworthy changes:
+    if display_update
+        # Get scratch space for this package
+        versions_dir = @get_scratch!("versions")
+        if !isfile(joinpath(versions_dir, update_name))
+            printstyled(
+                stdout,
+                """
+                \nUpdate message: Agents v$(version_number)
+                Welcome to this new major version of Agents.jl!
+                Noteworthy changes:
 
-            * Schedulers have been reworked to be more performant and allocate
-              less. This means that most scheduler names have been deprecated from
-              functions to types, such as `by_type` -> `ByType`. See changelog for
-              full list!
-            * See the CHANGELOG.md or online docs for more!
-            """;
-            color = :light_magenta,
-        )
-        touch(joinpath(versions_dir, update_name))
+                * Schedulers have been reworked to be more performant and allocate
+                  less. This means that most scheduler names have been deprecated from
+                  functions to types, such as `by_type` -> `ByType`. See changelog for
+                  full list!
+                * See the CHANGELOG.md or online docs for more!
+                """;
+                color=:light_magenta
+            )
+            touch(joinpath(versions_dir, update_name))
+        end
     end
-end
 end
 
 end # module
