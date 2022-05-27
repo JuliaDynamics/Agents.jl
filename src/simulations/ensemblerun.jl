@@ -74,11 +74,19 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, agent_step!, model_step!, n; kwargs...)
-    all_data = pmap(
-        j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
-        1:length(models),
-    )
+function parallel_ensemble(models, agent_step!, model_step!, n; 
+                           version = :current, kwargs...)
+    if version == :current
+        all_data = pmap(
+            j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
+            1:length(models),
+        )
+    elseif version == :darray
+        all_data = @DArray [
+            run!(models[idx], agent_step!, model_step!, n; kwargs...)
+            for idx in 1:length(models)
+        ]
+    end
 
     df_agent = DataFrame()
     df_model = DataFrame()
