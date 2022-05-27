@@ -119,7 +119,7 @@ function run!(
     adata = nothing,
     obtainer = identity,
     agents_first = true,
-    showprogress = true
+    showprogress = false
 )
 
     df_agent = init_agent_dataframe(model, adata)
