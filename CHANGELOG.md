@@ -1,7 +1,5 @@
-# v5.4
-- New keyword `showprogress` in `run!` function that displays a progress bar.
-
 # v5.3
+- New keyword `showprogress` in `run!` function that displays a progress bar.
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:
   - `Schedulers.by_id` is now `Schedulers.ByID`
   - `Schedulers.randomly` is now `Schedulers.Randomly`
