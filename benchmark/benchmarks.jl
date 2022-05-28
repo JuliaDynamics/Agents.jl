@@ -251,3 +251,6 @@ SUITE["grid"]["collect"]["store_agent"] =
 SUITE["continuous"]["collect"]["store_agent"] =
     @benchmarkable collect_agent_data!($continuous_df, $continuous_model, $adata, 0)
 
+#### SCHEDULERS ###
+include("schedulers.jl")
+SUITE["schedulers"] = SCHED_SUITE
