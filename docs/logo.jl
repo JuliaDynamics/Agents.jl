@@ -1,9 +1,8 @@
 cd(@__DIR__)
-
-using Agents, Random, Plots, AgentsPlots, FreeTypeAbstraction
-using DrWatson: @dict
+using Agents, Random, FreeTypeAbstraction
 using StatsBase: sample
-using Plots.PlotMeasures
+using DrWatson: @dict
+using GLMakie
 
 "#765db4" # JuliaDynamics color
 # %% Input
@@ -21,7 +20,7 @@ SPEED = 0.002
 # %% Run the script
 logo_dims = (900, 300)
 x, y = logo_dims
-font = FTFont(joinpath(@__DIR__, fontname))
+font = findfont("helvetica" )
 m = transpose(zeros(UInt8, logo_dims...))
 
 renderstring!(
@@ -64,7 +63,7 @@ end
 
 function sir_model_step!(model)
     r = model.interaction_radius
-    for (a1, a2) in interacting_pairs(model, r)
+    for (a1, a2) in interacting_pairs(model, r, :all)
         transmit!(a1, a2, model.reinfection_probability)
         elastic_collision!(a1, a2, :mass)
     end
@@ -120,7 +119,7 @@ function sir_initiation(;
         interaction_radius,
         dt,
     )
-    space = ContinuousSpace(2)
+    space = ContinuousSpace((900.0, 300.0))
     model = ABM(PoorSoul, space, properties = properties)
 
     ## Add pre-defined static individuals
@@ -148,24 +147,42 @@ function sir_initiation(;
         β = (βmax - βmin) * rand() + βmin
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
-
-    Agents.index!(model)
     return model
 end
 
 sir = sir_initiation(; N = 200, init_static = positions)
 
-anim = @animate for i in 1:1300
-    p1 = plotabm(sir; ac = sir_colors, as = 3)
-    plot!(
-        p1;
-        size = logo_dims,
-        right_margin = -2mm,
-        top_margin = -2mm,
-        bottom_margin = -5mm,
-        left_margin = -11.5mm,
-    )
-    step!(sir, sir_agent_step!, sir_model_step!, 1)
-end
-gif(anim, "agents.gif", fps = 45)
+function init_plot(
+    model::ABM{<:Union{GridSpace,ContinuousSpace}};
+    ac = sir_colors,
+    as = 10,
+    am = :circle,
+)
+    ids = model.scheduler(model)
+    colors = Observable(typeof(ac) <: Function ? [ac(model[i]) for i in ids] : ac)
+    sizes = typeof(as) <: Function ? [as(model[i]) for i in ids] : as
+    markers = typeof(am) <: Function ? [am(model[i]) for i in ids] : am
+    pos = Observable([model[i].pos for i in ids])
 
+    fig, ax, plot = scatter(
+        pos;
+        color = colors,
+        markersize = sizes,
+        marker = markers,
+        figure = (resolution = logo_dims, )
+        );
+    return fig, colors, pos
+end
+
+function animstep!(pos, colors; ac = sir_colors)
+    step!(sir, sir_agent_step!, sir_model_step!)
+    ids = sir.scheduler(sir)
+    pos[] = [sir[i].pos for i in ids]
+    colors[] = typeof(ac) <: Function ? [ac(sir[i]) for i in ids] : ac
+end
+
+fig, colors, pos = init_plot(sir);
+
+record(fig, "agents.gif", 1:1300; framerate=60) do i
+    animstep!(pos, colors)
+end
