@@ -15,7 +15,7 @@ juliadynamics = Dict(
     :R => JULIADYNAMICS_COLORS[2],
 )
 
-backgroundcolor = :black # :black or :white
+backgroundcolor = "#1e1e20" # `"#1e1e20"` or `:white`
 
 colors_used = pink_green_dark
 

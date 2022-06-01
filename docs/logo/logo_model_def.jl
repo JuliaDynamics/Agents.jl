@@ -100,7 +100,7 @@ function sir_logo_initiation(;
         status = :S
         mass = Inf
         vel = (0.0, 0.0)
-        p = round(Int, recovery_period*(rand(rng)*0.2 + 0.9))
+        p = round(Int, recovery_period*(rand(rng)*0.4 + 0.8))
         add_agent!(pos, model, vel, mass, 0, status, β, p)
     end
     #--------------------------------------
@@ -110,7 +110,7 @@ function sir_logo_initiation(;
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
         vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(rng)) .* speed
-        p = round(Int, recovery_period*(rand(rng)*0.2 + 0.9))
+        p = round(Int, recovery_period*(rand(rng)*0.4 + 0.8))
         add_agent!(model, vel, mass, 0, status, β, p)
     end
     return model
