@@ -1,0 +1,1 @@
+Personal Use Only - Commercial licences available.
