@@ -1,12 +1,12 @@
 const SEED = 44
-const PERIOD = 18
+const RECOVERY_PERIOD = 25
 # very high transmission probability
 # we are modelling close encounters after all
 const BETA = 0.99
 const REINFECT = 0.00
 const DEATH = 0.2
 const INITINFECT = 0.5
-const SPEED = 0.002
+const SPEED = 0.003
 const AGENTS_IN_TEXT = 800 # how many agents to create inside the text
 const steps_per_day = 24
 
@@ -18,6 +18,7 @@ mutable struct PoorSoul <: AbstractAgent
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
     β::Float64
+    recovery_period::Int
 end
 
 function transmit!(a1, a2, rp, rng)
@@ -50,7 +51,7 @@ end
 update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.infection_period
+    if agent.days_infected ≥ agent.recovery_period
         if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
@@ -61,10 +62,10 @@ function recover_or_die!(agent, model)
 end
 
 function sir_logo_initiation(;
-        infection_period = PERIOD * steps_per_day,
+        recovery_period = RECOVERY_PERIOD * steps_per_day,
         reinfection_probability = REINFECT,
         isolated = 0.0, # in percentage
-        interaction_radius = 0.011,
+        interaction_radius = 0.014,
         dt = 1.0,
         speed = SPEED,
         death_rate = 0.044, # from website of WHO
@@ -83,7 +84,6 @@ function sir_logo_initiation(;
     )
 
     properties = (;
-        infection_period,
         reinfection_probability,
         death_rate,
         interaction_radius,
@@ -100,7 +100,8 @@ function sir_logo_initiation(;
         status = :S
         mass = Inf
         vel = (0.0, 0.0)
-        add_agent!(pos, model, vel, mass, 0, status, β)
+        p = round(Int, recovery_period*(rand(rng)*0.2 + 0.9))
+        add_agent!(pos, model, vel, mass, 0, status, β, p)
     end
     #--------------------------------------
     ## Add initial individuals
@@ -109,8 +110,8 @@ function sir_logo_initiation(;
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
         vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(rng)) .* speed
-
-        add_agent!(model, vel, mass, 0, status, β)
+        p = round(Int, recovery_period*(rand(rng)*0.2 + 0.9))
+        add_agent!(model, vel, mass, 0, status, β, p)
     end
     return model
 end
