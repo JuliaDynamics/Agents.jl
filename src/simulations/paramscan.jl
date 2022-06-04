@@ -86,14 +86,17 @@ function paramscan(
     end
 
     combs = dict_list(parameters)
-
     if parallel
-        all_data = ProgressMeter.@showprogress pmap(combs) do i
-            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+        ncombs = length(combs)
+        all_data = @DArray [[DataFrame(), DataFrame()] for _ in 1:ncombs]
+        ProgressMeter.@showprogress @distributed for idx in 1:ncombs
+            all_data[idx][1], all_data[idx][2] = 
+                run_single(combs[idx], output_params, initialize; 
+                           agent_step!, model_step!, n, kwargs...)
         end
     else
-        all_data = ProgressMeter.@showprogress map(combs) do i
-            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
+        all_data = ProgressMeter.@showprogress map(combs) do comb
+            run_single(comb, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     end
 

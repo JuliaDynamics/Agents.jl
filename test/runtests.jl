@@ -1,6 +1,15 @@
-using Test, Agents, Random, Graphs, DataFrames
-using StatsBase:mean
-using StableRNGs
+using Distributed
+addprocs(2)
+
+@everywhere begin
+    using Pkg; Pkg.activate(".")
+end
+
+@everywhere begin
+    using Test, Agents, Random, Graphs, DataFrames, DistributedArrays
+    using StatsBase:mean
+    using StableRNGs
+end
 
 mutable struct Agent0 <: AbstractAgent
     id::Int
@@ -95,18 +104,18 @@ mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
 end
 
 @testset "Agents.jl Tests" begin
-    include("model_creation_tests.jl")
-    include("api_tests.jl")
-    include("randomness_tests.jl")
-    include("scheduler_tests.jl")
-    include("model_access.jl")
-    include("space_test.jl")
+    # include("model_creation_tests.jl")
+    # include("api_tests.jl")
+    # include("randomness_tests.jl")
+    # include("scheduler_tests.jl")
+    # include("model_access.jl")
+    # include("space_test.jl")
     include("collect_tests.jl")
-    include("continuousSpace_tests.jl")
-    include("osm_tests.jl")
-    include("astar_tests.jl")
-    include("collisions_tests.jl")
-    include("graph_tests.jl")
-    include("csv_tests.jl")
-    include("jld2_tests.jl")
+    # include("continuousSpace_tests.jl")
+    # include("osm_tests.jl")
+    # include("astar_tests.jl")
+    # include("collisions_tests.jl")
+    # include("graph_tests.jl")
+    # include("csv_tests.jl")
+    # include("jld2_tests.jl")
 end

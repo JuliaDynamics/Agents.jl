@@ -63,7 +63,7 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
     add_ensemble_index!(df_agent, 1)
     add_ensemble_index!(df_model, 1)
 
-    for m in 2:length(models)
+    ProgressMeter.@showprogress for m in 2:length(models)
         df_agentTemp, df_modelTemp =
             run!(models[m], agent_step!, model_step!, n; kwargs...)
         add_ensemble_index!(df_agentTemp, m)
@@ -71,6 +71,7 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
         append!(df_agent, df_agentTemp)
         append!(df_model, df_modelTemp)
     end
+    
     return df_agent, df_model, models
 end
 
@@ -81,20 +82,35 @@ function parallel_ensemble(models, agent_step!, model_step!, n;
             j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
             1:length(models),
         )
-    elseif version == :darray
-        all_data = @DArray [
-            run!(models[idx], agent_step!, model_step!, n; kwargs...)
-            for idx in 1:length(models)
-        ]
-    end
+        df_agent = DataFrame()
+        df_model = DataFrame()
+        for (m, d) in enumerate(all_data)
+            add_ensemble_index!(d[1], m)
+            add_ensemble_index!(d[2], m)
+            append!(df_agent, d[1])
+            append!(df_model, d[2])
+        end
 
-    df_agent = DataFrame()
-    df_model = DataFrame()
-    for (m, d) in enumerate(all_data)
-        add_ensemble_index!(d[1], m)
-        add_ensemble_index!(d[2], m)
-        append!(df_agent, d[1])
-        append!(df_model, d[2])
+    elseif version == :darray
+
+        # Initialize distributed array for collecting distributed results.
+        all_data = @DArray [[DataFrame(), DataFrame()] for _ in 1:nmodels]
+
+        # Distributed for-loops automate batch distribution across cpus;in a distributed loop,
+        # we collect agent and model dataframes as the loop procedes.
+        ProgressMeter.@showprogress @distributed for idx in 1:nmodels
+            all_data[idx][1], all_data[idx][2] = 
+                run!(models[idx], agent_step!, model_step!, n; kwargs...)
+        end
+
+        df_agent = DataFrame()
+        df_model = DataFrame()
+        for (m, d) in enumerate(all_data)
+            add_ensemble_index!(d[1], m)
+            add_ensemble_index!(d[2], m)
+            append!(df_agent, d[1])
+            append!(df_model, d[2])
+        end
     end
 
     return df_agent, df_model, models
