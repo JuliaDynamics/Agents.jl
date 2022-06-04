@@ -1,14 +1,13 @@
 using Agents, Random
 using StatsBase: sample
 using GLMakie
-using Makie.FreeTypeAbstraction
 using InteractiveDynamics
 
 # Input
 
 # Some nice colors:
 pink_green = Dict(:S => "#2b2b33", :I => "#a533d6", :R => "#338c54")
-pink_green_dark = Dict(:S => "#f0f0f0", :I => "#d068fc", :R => "#72cc94")
+pink_green_dark = Dict(:S => "#d068fc", :I =>  "#72cc94", :R => "#f0f0f0")
 juliadynamics = Dict(
     :S => JULIADYNAMICS_COLORS[3],
     :I => JULIADYNAMICS_COLORS[1],
@@ -21,13 +20,13 @@ colors_used = pink_green_dark
 
 BLACK = colors_used[:S]
 sir_colors(a) = colors_used[a.status]
-fontname = "Moon2.0-Regular.otf"
+fontname = "Overlock-Regular.otf"
 logo_dims = (1200, 400)
 x, y = logo_dims
-font = FreeTypeAbstraction.FTFont(joinpath(@__DIR__, fontname))
+font = Makie.to_font(joinpath(@__DIR__, fontname))
 font_matrix = transpose(zeros(UInt8, logo_dims...))
 
-FreeTypeAbstraction.renderstring!(
+Makie.renderstring!(
     font_matrix,
     "Agents.jl",
     font,
@@ -39,7 +38,7 @@ FreeTypeAbstraction.renderstring!(
 )
 
 # Use this to test how the font looks like:
-# heatmap(font_matrix; yflip=true, aspect_ratio=1)
+# fig, = heatmap(font_matrix; yflip=true, aspect_ratio=1)
 
 # Need to finetune the agent size, the interaction radius,
 # the figure size, and the speed of the agents for a smooth video
@@ -62,7 +61,7 @@ ax_kwargs = (;
 # Test:
 sir = sir_logo_initiation(; N = 400, interaction_radius = 0.035)
 fig, ax = abmplot(sir;
-    agent_step! = sir_agent_step!, model_step! = sir_model_step!,
+    # agent_step! = sir_agent_step!, model_step! = sir_model_step!,
     enable_inspection = false,
     ac = sir_colors, as = 9, static_preplot!,
     figure = (resolution = logo_dims, ), axis = ax_kwargs,
@@ -70,7 +69,7 @@ fig, ax = abmplot(sir;
 display(fig)
 
 # %% actually make the video
-sir = sir_logo_initiation(; N = 400, interaction_radius = 0.035)
+sir = sir_logo_initiation(; N = 600, interaction_radius = 0.035)
 abmvideo("agents_logo.mp4", sir, sir_agent_step!, sir_model_step!;
     ac = sir_colors, as = 9, static_preplot!,
     figure = (resolution = logo_dims, backgroundcolor),

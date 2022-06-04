@@ -2,11 +2,11 @@ const SEED = 44
 const RECOVERY_PERIOD = 25
 # very high transmission probability
 # we are modelling close encounters after all
-const BETA = 0.99
+const BETA = 1.0 # 0.999
 const REINFECT = 0.00
 const DEATH = 0.2
-const INITINFECT = 0.5
-const SPEED = 0.003
+const INITINFECT = 0.75
+const SPEED = 0.004
 const AGENTS_IN_TEXT = 800 # how many agents to create inside the text
 const steps_per_day = 24
 
@@ -51,8 +51,11 @@ end
 update!(agent) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
+    # For visuals, if an agent is "movable", it always dies
     if agent.days_infected ≥ agent.recovery_period
-        if rand(model.rng) ≤ model.death_rate
+        if agent.mass ≠ Inf
+            kill_agent!(agent, model)
+        elseif rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
