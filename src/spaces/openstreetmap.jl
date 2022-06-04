@@ -42,11 +42,21 @@ end
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
-A sample file is provided using [`OSM.test_map`](@ref). Additional maps can
-be downloaded using the [functions provided by LightOSM.jl](https://deloittedigitalapac.github.io/LightOSM.jl/docs/download_network/).
+This space represents the underlying map as a *continuous* entity choosing accuracy over
+performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
+are not necessarily intersections, and there may be multiple nodes on a road joining two
+intersections. Agents move along the available roads of the map using routing, see below.
+
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
-Agents.jl also re-exports [`OSM.download_osm_network`](@ref). An example usage
-to download the map of London to "london.json":
+An example of its usage can be found in [Zombie Outbreak](@ref).
+
+## Obtaining map files
+
+Maps files can be downloaded using the functions provided by
+[LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
+Agents.jl also re-exports [`OSM.download_osm_network`](@ref), the main function used
+to download maps and provides a test map in [`OSM.test_map`](@ref).
+An example usage to download the map of London to `"london.json"`:
 
 ```julia
 OSM.download_osm_network(
@@ -55,11 +65,6 @@ OSM.download_osm_network(
     save_to_file_location = "london.json"
 )
 ```
-
-This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
-are not necessarily intersections, and there may be multiple nodes on a road joining two
-intersections. Agents move along the available roads of the map using routing, see below.
 
 The length of an edge between two nodes is specified in the units of the
 map's `weight_type` as listed in the documentation for
@@ -70,8 +75,6 @@ The possible `weight_type`s are:
 - `:lane_efficiency`: Time scaled by number of lanes
 
 The default `weight_type` used is `:distance`.
-
-An example of its usage can be found in [Zombie Outbreak](@ref).
 
 All `kwargs` are propagated to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
@@ -87,14 +90,14 @@ end
 ```
 
 Current `pos`ition tuple is represented as
-`(first intersection index, second intersection index, distance travelled)`.
+(first intersection index, second intersection index, distance travelled).
 The distance travelled is in the units of `weight_type`. This ensures that the map
 is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
 
 Use [`OSMAgent`](@ref) for convenience.
 
-## Routing
+## Routing with OSM
 
 There are two ways to generate a route, depending on the situation.
 1. Use [`plan_route!`](@ref) to plan a route from an agent's current position to a target
@@ -805,7 +808,7 @@ function Agents.move_along_route!(
             if distance_to_next_waypoint <= distance
                 distance -= distance_to_next_waypoint
                 a = pop!(osmpath.route)
-                
+
                 if isempty(osmpath.route)
                     if osmpath.dest[1] == agent.pos[2]
                         move_agent!(agent, (osmpath.dest[1], osmpath.dest[2], 0.0), model)
