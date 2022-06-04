@@ -18,7 +18,7 @@ backgroundcolor = "#1e1e20" # `"#1e1e20"` or `:white`
 
 colors_used = pink_green_dark
 
-BLACK = colors_used[:S]
+BLACK = colors_used[:R]
 sir_colors(a) = colors_used[a.status]
 fontname = "Overlock-Regular.otf"
 logo_dims = (1200, 400)
