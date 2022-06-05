@@ -1,4 +1,4 @@
-using LightOSM
+using Agents.LightOSM
 using Graphs
 
 @testset "OpenStreetMap space" begin
@@ -36,7 +36,7 @@ using Graphs
     np_lonlat = nearby_positions(model[2], model)
     @test length(np_lonlat) == 5
     @test all(OSM.lonlat(np_lonlat[1], model) .≈ (9.9451386, 51.5307792))
-    
+
     @test OSM.latlon(model[2], model) == OSM.latlon(finish_i[1], model)
     np_latlon = nearby_positions(model[2], model)
     @test length(np_latlon) == 5
@@ -100,9 +100,9 @@ using Graphs
     rl = OSM.road_length(pos_1, nbor, model)
     @test OSM.distance(pos_1, nbor, model) ≈ rl
     @test OSM.distance(pos_1, pos_1, model) == 0.
-    @test OSM.distance((pos_1, nbor, 0.), (nbor, pos_1, rl), model) == 0.
-    @test OSM.distance((pos_1, nbor, rl / 4), (nbor, pos_1, rl / 4), model) ≈ rl / 2
-    move_agent!(model[1], (pos_1, pos_1, 0.), model)
+    @test OSM.distance((pos_1, nbor, 0.0), (nbor, pos_1, rl), model) == 0.0
+    @test OSM.distance((pos_1, nbor, rl/4), (nbor, pos_1, rl/4), model) ≈ rl/2
+    move_agent!(model[1], (pos_1, pos_1, 0.0), model)
     plan_route!(model[1], finish_i, model)
     len = sum(LightOSM.weights_from_path(
         model.space.map,
@@ -110,4 +110,6 @@ using Graphs
     ))
     len += OSM.road_length(pos_1, model.space.routes[1].route[end], model)
     @test OSM.distance(pos_1, finish_i, model) ≈ len
+
+
 end

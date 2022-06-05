@@ -19,6 +19,7 @@ export test_map,
     plan_route!,
     distance,
     road_length,
+    route_length,
     plan_random_route!,
     lonlat,
     nearest_node,
@@ -32,10 +33,10 @@ export test_map,
 ###########################################################################################
 # Stores information about an agent's path
 struct OpenStreetMapPath
-    route::Vector{Int}      # node IDs along path from `start` to `dest`
-    start::Tuple{Int,Int,Float64} # Initial position of the agent
-    dest::Tuple{Int,Int,Float64}    # Destination. `dest[1] == dest[2]` if this is an intersection
-    return_route::Vector{Int}   # node IDs along path from `dest` to `start`
+    route::Vector{Int}            # node IDs along path from `start` to `dest`
+    start::Tuple{Int,Int,Float64} # initial position of the agent
+    dest::Tuple{Int,Int,Float64}  # destination
+    return_route::Vector{Int}     # node IDs along path from `dest` to `start`
     has_to_return::Bool
 end
 
@@ -146,8 +147,6 @@ test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 #######################################################################################
 # Route planning
 #######################################################################################
-
-# EXPORTED
 """
     OSM.random_road_position(model::ABM{<:OpenStreetMapSpace})
 
@@ -172,34 +171,31 @@ Plan a new random route for the agent, by selecting a random destination and
 planning a route from the agent's current position. Overwrite any existing route.
 
 The keyword `limit = 10` specifies the limit on the number of attempts at planning
-a random route, as no connection may be possible given the random start and end.
+a random route, as no connection may be possible given the random destination.
 Return `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
 function plan_random_route!(
         agent::A,
         model::ABM{<:OpenStreetMapSpace,A};
-        return_trip = false,
         limit = 10,
         kwargs...
     ) where {A<:AbstractAgent}
     tries = 0
-    while tries < limit && !plan_route!(
-        agent,
-        random_road_position(model),
-        model;
-        return_trip,
-        kwargs...
-    )
-        tries += 1
+    while tries < limit
+        success = plan_route!(agent, random_road_position(model), model; kwargs...)
+        if success
+            return true
+        else
+            tries += 1
+        end
     end
-
-    return tries < limit
+    return false
 end
 
 """
     plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
-                return_trip = false, kwargs...)
+                return_trip = false, kwargs...) → success
 
 Plan a route from the current position of `agent` to the location specified in `dest`, which
 can be an intersection or a point on a road.
@@ -208,9 +204,9 @@ If `return_trip = true`, a route will be planned from start ⟶ finish ⟶ start
 keywords are passed to
 [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
 
-Returns `true` if a path to `dest` exists, and `false` if it doesn't. Specifying
-`return_trip = true` also requires the existence of a return path for a route to be
-planned.
+Return `true` if a path to `dest` exists, and hence the route planning was successful.
+Otherwise return `false`. Specifying `return_trip = true` also requires the existence
+of a return path for a route to be planned.
 """
 function Agents.plan_route!(
         agent::A,
@@ -356,7 +352,7 @@ function Agents.plan_route!(
     return true
 end
 
-# Allows passing destination as an index
+# Allows passing destination as a node number
 Agents.plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgent} =
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
@@ -461,7 +457,7 @@ function distance(
 end
 
 ###########################################################################################
-# Distances, nearest roads
+# Distances, road lengths, nearest roads
 ###########################################################################################
 function distance(
         pos_1::Int,
@@ -580,7 +576,7 @@ end
 
 Return the road length between two intersections. This takes into account the
 direction of the road, so `OSM.road_length(pos_1, pos_2, model)` may not be the
-same as `OSM.road_length(pos_2, pos_1, mode)`. Units of the returned quantity
+same as `OSM.road_length(pos_2, pos_1, model)`. Units of the returned quantity
 are as specified by the underlying graph's `weight_type`. If `start` and `finish`
 are the same or `pos[1]` and `pos[2]` are the same, then return 0.
 """
@@ -588,7 +584,6 @@ road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
 function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
     p1 == p2 && return 0.0
-
     len = model.space.map.weights[p1, p2]
     if len == 0.0 || len == Inf
         len = model.space.map.weights[p2, p1]
@@ -596,9 +591,30 @@ function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
     return len
 end
 
-function Agents.is_stationary(agent, model::ABM{<:OpenStreetMapSpace})
+function Agents.is_stationary(agent::A, model::ABM{<:OpenStreetMapSpace, A}) where {A}
     return !haskey(model.space.routes, agent.id)
 end
+
+"""
+    OSM.route_length(agent, model::ABM{<:OpenStreetMapSpace})
+Return the length of the route planned for the given `agent`, correctly taking
+into account the amount of route already traversed by the `agent`.
+Return 0 if `is_stationary(agent, model)`.
+"""
+function route_length(agent::A, model::ABM{<:OpenStreetMapSpace, A}) where {A}
+    is_stationary(agent, model) && return 0.0
+    prev_node, next_node = agent.pos
+    length = road_length(prev_node, next_node, model)
+    for node in model.space.routes[agent.id].route
+        prev_node = next_node
+        next_node = node
+        length += road_length(prev_node, next_node, model)
+    end
+    # Subtract road already traversed from starting road
+    length -= agent.pos[3]
+    return length
+end
+
 
 """
     OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
@@ -712,17 +728,17 @@ function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
 end
 
 function Agents.add_agent_to_space!(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{<:OpenStreetMapSpace,A},
+    ) where {A<:AbstractAgent}
     push!(model.space.s[agent.pos[1]], agent.id)
     return agent
 end
 
 function Agents.remove_agent_from_space!(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{<:OpenStreetMapSpace,A},
+    ) where {A<:AbstractAgent}
     prev = model.space.s[agent.pos[1]]
     ai = findfirst(i -> i == agent.id, prev)
     deleteat!(prev, ai)
@@ -730,10 +746,10 @@ function Agents.remove_agent_from_space!(
 end
 
 function Agents.move_agent!(
-    agent::A,
-    pos::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace,A},
-) where {A<:AbstractAgent}
+        agent::A,
+        pos::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace,A},
+    ) where {A<:AbstractAgent}
     if pos[1] == agent.pos[1]
         agent.pos = pos
         return agent
@@ -756,9 +772,8 @@ function Agents.move_along_route!(
         model::ABM{<:OpenStreetMapSpace,A},
         distance::Real,
     ) where {A<:AbstractAgent}
-    if is_stationary(agent, model) || distance == 0
-        return 0.0
-    end
+
+    (is_stationary(agent, model) || distance == 0) && return 0.0
 
     # branching here corresponds to nesting of the following cases:
     # - Is the agent moving to the end of the road or somewhere in the middle (isempty(osmpath.route))
@@ -801,7 +816,7 @@ function Agents.move_along_route!(
             else
                 road_length(osmpath.dest, model) - osmpath.dest[3] - agent.pos[3]
             end
-            if distance_to_end <= distance
+            if distance_to_end ≤ distance
                 distance -= distance_to_end
                 move_agent!(agent, osmpath.dest, model)
                 continue
@@ -809,7 +824,7 @@ function Agents.move_along_route!(
 
             move_agent!(agent, (agent.pos[1], agent.pos[2], agent.pos[3] + distance), model)
             distance = 0.0
-        else
+        else # there is more than one nodes to cover
             distance_to_next_waypoint = road_length(agent.pos, model) - agent.pos[3]
             if distance_to_next_waypoint <= distance
                 distance -= distance_to_next_waypoint
@@ -843,12 +858,12 @@ end
 # Default is searching both backwards and forwards.
 # I assume it would be useful to turn off one or the other at some point.
 function Agents.nearby_ids(
-    pos::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace},
-    distance::Real,
-    args...;
-    kwargs...
-)
+        pos::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace},
+        distance::Real,
+        args...;
+        kwargs...
+    )
     distances = Dict{Int,Float64}()
     queue = Queue{Int}()
     nearby = Int[]
@@ -960,11 +975,11 @@ ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
     ))
 
 function Agents.nearby_ids(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
-    args...;
-    kwargs...
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{<:OpenStreetMapSpace,A},
+        args...;
+        kwargs...
+    ) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, args...; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -973,10 +988,10 @@ Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) 
     nearby_positions(pos[1], model, args...; kwargs...)
 
 function Agents.nearby_positions(
-    position::Int,
-    model::ABM{<:OpenStreetMapSpace};
-    neighbor_type::Symbol = :default
-)
+        position::Int,
+        model::ABM{<:OpenStreetMapSpace};
+        neighbor_type::Symbol = :default
+    )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     neighborfn = if neighbor_type == :default
         Graphs.neighbors
