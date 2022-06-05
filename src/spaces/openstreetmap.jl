@@ -27,7 +27,9 @@ export test_map,
     same_road,
     download_osm_network    # re-exported from LightOSM.jl
 
-
+###########################################################################################
+# Type definitions
+###########################################################################################
 # Stores information about an agent's path
 struct OpenStreetMapPath
     route::Vector{Int}      # node IDs along path from `start` to `dest`
@@ -142,7 +144,7 @@ to [`OSMSpace`](@ref). The unit of distance used for this map is `:time`.
 test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 
 #######################################################################################
-# Custom functions for OSMSpace
+# Route planning
 #######################################################################################
 
 # EXPORTED
@@ -175,12 +177,12 @@ Return `true` if a route was successfully planned, `false` otherwise.
 All other keywords are passed to [`plan_route!`](@ref)
 """
 function plan_random_route!(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A};
-    return_trip = false,
-    limit = 10,
-    kwargs...
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{<:OpenStreetMapSpace,A};
+        return_trip = false,
+        limit = 10,
+        kwargs...
+    ) where {A<:AbstractAgent}
     tries = 0
     while tries < limit && !plan_route!(
         agent,
@@ -197,7 +199,7 @@ end
 
 """
     plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
-                   return_trip = false, kwargs...)
+                return_trip = false, kwargs...)
 
 Plan a route from the current position of `agent` to the location specified in `dest`, which
 can be an intersection or a point on a road.
@@ -211,26 +213,24 @@ Returns `true` if a path to `dest` exists, and `false` if it doesn't. Specifying
 planned.
 """
 function Agents.plan_route!(
-    agent::A,
-    dest::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace,A};
-    return_trip = false,
-    kwargs...
-) where {A<:AbstractAgent}
-    delete!(model.space.routes, agent.id)   # clear old route
+        agent::A,
+        dest::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace,A};
+        return_trip = false,
+        kwargs...
+    ) where {A<:AbstractAgent}
 
+    delete!(model.space.routes, agent.id) # clear old route
     same_position(agent.pos, dest, model) && return true
 
     if same_road(agent.pos, dest)
         if agent.pos[1] == dest[2] # opposite orientations
             dest = get_reverse_direction(dest, model)
         end
-
         if agent.pos[3] > dest[3]   # wrong orientation
             move_agent!(agent, get_reverse_direction(agent.pos, model), model)
             dest = get_reverse_direction(dest, model)
         end
-
         model.space.routes[agent.id] = OpenStreetMapPath(
             Int[],
             agent.pos,
@@ -238,7 +238,6 @@ function Agents.plan_route!(
             Int[],
             return_trip,
         )
-
         return true
     end
 
@@ -246,7 +245,7 @@ function Agents.plan_route!(
 
     end_node = closest_node_on_edge(dest, model)
 
-    if start_node == end_node   # LightOSM doesn't like this case
+    if start_node == end_node # LightOSM doesn't like this case
         if agent.pos[1] == agent.pos[2] # start at node
             end_node == dest[2] && (dest = get_reverse_direction(dest, model))
             move_agent!(agent, (dest[1], dest[2], 0.0), model)
@@ -259,7 +258,7 @@ function Agents.plan_route!(
             )
             return true
         end
-        if dest[1] == dest[2]   # end at node
+        if dest[1] == dest[2] # end at node
             start_node == agent.pos[1] && move_agent!(agent, get_reverse_direction(agent.pos, model), model)
             dest = (agent.pos[1], agent.pos[2], road_length(agent.pos, model))
             model.space.routes[agent.id] = OpenStreetMapPath(
@@ -365,17 +364,17 @@ Agents.plan_route!(agent::A, dest::Int, model; kwargs...) where {A<:AbstractAgen
     OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
 Return the distance between the two positions along the shortest path joining them in the given
-model. Returns `Inf` if no such path exists.
+model. Return `Inf` if no such path exists.
 
 All keywords are passed to
 [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
 """
 function distance(
-    pos_1::Tuple{Int,Int,Float64},
-    pos_2::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace};
-    kwargs...
-)
+        pos_1::Tuple{Int,Int,Float64},
+        pos_2::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace};
+        kwargs...
+    )
     # positions are identical
     same_position(pos_1, pos_2, model) && return 0.0
 
@@ -461,19 +460,22 @@ function distance(
     return dist
 end
 
+###########################################################################################
+# Distances, nearest roads
+###########################################################################################
 function distance(
-    pos_1::Int,
-    pos_2::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace};
-)
+        pos_1::Int,
+        pos_2::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace};
+    )
     distance((pos_1, pos_1, 0.0), pos_2, model)
 end
 
 function distance(
-    pos_1,
-    pos_2::Int,
-    model::ABM{<:OpenStreetMapSpace}
-)
+        pos_1,
+        pos_2::Int,
+        model::ABM{<:OpenStreetMapSpace}
+    )
     distance(pos_1, (pos_2, pos_2, 0.0), model)
 end
 
@@ -601,7 +603,7 @@ end
 """
     OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
 
-Return `GeoLocation` corresponding to node `pos`
+Return `GeoLocation` corresponding to node `pos`.
 """
 get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     GeoLocation(model.space.map.node_coordinates[pos]..., 0.0)
@@ -625,10 +627,10 @@ same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<
 
 # Handles the case when `a` is a node
 function _same_position_node(
-    a::Tuple{Int,Int,Float64},
-    b::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace}
-)
+        a::Tuple{Int,Int,Float64},
+        b::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace}
+    )
     a[1] != a[2] && return false    # this case handles when `a` is a node
     if a[1] == b[1] == b[2] # b is also an intersection point
         return true
@@ -667,13 +669,16 @@ function _same_position_edge(
 end
 
 # Handles case when both points are on the same edge (facing either direction)
-_same_position_internal(
-    a::Tuple{Int,Int,Float64},
-    b::Tuple{Int,Int,Float64},
-    model::ABM{<:OpenStreetMapSpace},
-) =
-    (a[1] == b[1] && a[2] == b[2] && a[3] ≈ b[3]) ||    # facing same direction
-    (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])   # facing opposite direction
+function _same_position_internal(
+        a::Tuple{Int,Int,Float64},
+        b::Tuple{Int,Int,Float64},
+        model::ABM{<:OpenStreetMapSpace},
+    )
+    # facing same direction
+    (a[1] == b[1] && a[2] == b[2] && a[3] ≈ b[3]) ||
+    # facing opposite direction
+    (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])
+end
 
 """
     OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
@@ -697,6 +702,7 @@ function closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreet
         return a[2]
     end
 end
+
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
@@ -746,10 +752,10 @@ distance to the end of the route, return the remaining distance. Otherwise, retu
 `0` is also returned if `is_stationary(agent, model)`.
 """
 function Agents.move_along_route!(
-    agent::A,
-    model::ABM{<:OpenStreetMapSpace,A},
-    distance::Real,
-) where {A<:AbstractAgent}
+        agent::A,
+        model::ABM{<:OpenStreetMapSpace,A},
+        distance::Real,
+    ) where {A<:AbstractAgent}
     if is_stationary(agent, model) || distance == 0
         return 0.0
     end
