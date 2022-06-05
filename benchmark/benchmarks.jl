@@ -1,4 +1,11 @@
-using BenchmarkTools, Agents, Graphs
+@everywhere begin
+    using Pkg
+    Pkg.activate(".")
+end
+
+@everywhere begin
+    using BenchmarkTools, Agents, Graphs
+end
 
 const SUITE = BenchmarkGroup(["Agents"])
 
@@ -256,5 +263,5 @@ include("schedulers.jl")
 SUITE["schedulers"] = SCHED_SUITE
 
 #### SERIAL AND PARALLEL ENSEMBLE RUNS (ensemblerun! and paramscan!) ####
-include("ensemble.jl")
+include("ensembles.jl")
 SUITE["ensembles"] = ENSEMBLES_SUITE

@@ -28,14 +28,17 @@ function ensemblerun!(
     models::Vector_or_Tuple,
     agent_step!,
     model_step!,
-    n;
+    n::Int;
+    showprogress = false,
     parallel = false,
     kwargs...,
 )
     if parallel
-        return parallel_ensemble(models, agent_step!, model_step!, n; kwargs...)
+        return parallel_ensemble(models, agent_step!, model_step!, n; 
+                                 showprogress, kwargs...)
     else
-        return series_ensemble(models, agent_step!, model_step!, n; kwargs...)
+        return series_ensemble(models, agent_step!, model_step!, n; 
+                               showprogress, kwargs...)
     end
 end
 
@@ -57,17 +60,29 @@ function ensemblerun!(
     ensemblerun!(models, args...; kwargs...)
 end
 
-function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
+function series_ensemble(models, agent_step!, model_step!, n; 
+                         showprogress=false, kwargs...)
+
     @assert models[1] isa ABM
+
+    nmodels = length(models)
+    progress = ProgressMeter.Progress(nmodels; enabled=showprogress)
+
     df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
+    
+    ProgressMeter.next!(progress)
+
     add_ensemble_index!(df_agent, 1)
     add_ensemble_index!(df_model, 1)
 
-    ProgressMeter.@showprogress for m in 2:length(models)
+    ProgressMeter.progress_map(2:nmodels; progress) do midx 
+
         df_agentTemp, df_modelTemp =
-            run!(models[m], agent_step!, model_step!, n; kwargs...)
-        add_ensemble_index!(df_agentTemp, m)
-        add_ensemble_index!(df_modelTemp, m)
+            run!(models[midx], agent_step!, model_step!, n; kwargs...)
+
+        add_ensemble_index!(df_agentTemp, midx)
+        add_ensemble_index!(df_modelTemp, midx)
+
         append!(df_agent, df_agentTemp)
         append!(df_model, df_modelTemp)
     end
@@ -76,41 +91,21 @@ function series_ensemble(models, agent_step!, model_step!, n; kwargs...)
 end
 
 function parallel_ensemble(models, agent_step!, model_step!, n; 
-                           version = :current, kwargs...)
-    if version == :current
-        all_data = pmap(
-            j -> run!(models[j], agent_step!, model_step!, n; kwargs...),
-            1:length(models),
-        )
-        df_agent = DataFrame()
-        df_model = DataFrame()
-        for (m, d) in enumerate(all_data)
-            add_ensemble_index!(d[1], m)
-            add_ensemble_index!(d[2], m)
-            append!(df_agent, d[1])
-            append!(df_model, d[2])
-        end
+                           showprogress = false, kwargs...)
 
-    elseif version == :darray
+    progress = ProgressMeter.Progress(length(models); enabled=showprogress)
+    all_data = ProgressMeter.progress_pmap(models; progress) do model
+        run!(model, agent_step!, model_step!, n; kwargs...)
+    end
 
-        # Initialize distributed array for collecting distributed results.
-        all_data = @DArray [[DataFrame(), DataFrame()] for _ in 1:nmodels]
+    df_agent = DataFrame()
+    df_model = DataFrame()
 
-        # Distributed for-loops automate batch distribution across cpus;in a distributed loop,
-        # we collect agent and model dataframes as the loop procedes.
-        ProgressMeter.@showprogress @distributed for idx in 1:nmodels
-            all_data[idx][1], all_data[idx][2] = 
-                run!(models[idx], agent_step!, model_step!, n; kwargs...)
-        end
-
-        df_agent = DataFrame()
-        df_model = DataFrame()
-        for (m, d) in enumerate(all_data)
-            add_ensemble_index!(d[1], m)
-            add_ensemble_index!(d[2], m)
-            append!(df_agent, d[1])
-            append!(df_model, d[2])
-        end
+    for (m, d) in enumerate(all_data)
+        add_ensemble_index!(d[1], m)
+        add_ensemble_index!(d[2], m)
+        append!(df_agent, d[1])
+        append!(df_model, d[2])
     end
 
     return df_agent, df_model, models

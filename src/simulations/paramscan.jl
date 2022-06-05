@@ -33,7 +33,8 @@ The following keywords modify the `paramscan` function:
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
-to [`run!`](@ref) as arguments. Naturally, `agent_step!, model_step!, n` and at least one
+to [`run!`](@ref) as arguments. Naturally, stepping functions and the
+number of time steps (`agent_step!`, `model_step!`, and `n`) and at least one
 of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
@@ -43,12 +44,12 @@ A runnable example that uses `paramscan` is shown in [Schelling's segregation mo
 There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpace(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
                 properties = properties, scheduler = Schedulers.randomly)
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+    for aidx in 1:numagents
+        agent = SchellingAgent(aidx, (1, 1), false, aidx < numagents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
     return model
@@ -65,7 +66,7 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n=3)
 ```
 """
 function paramscan(
@@ -76,6 +77,7 @@ function paramscan(
     agent_step! = dummystep,
     model_step! = dummystep,
     n = 1,
+    showprogress = false,
     kwargs...,
 )
 
@@ -86,18 +88,12 @@ function paramscan(
     end
 
     combs = dict_list(parameters)
-    if parallel
-        ncombs = length(combs)
-        all_data = @DArray [[DataFrame(), DataFrame()] for _ in 1:ncombs]
-        ProgressMeter.@showprogress @distributed for idx in 1:ncombs
-            all_data[idx][1], all_data[idx][2] = 
-                run_single(combs[idx], output_params, initialize; 
-                           agent_step!, model_step!, n, kwargs...)
-        end
-    else
-        all_data = ProgressMeter.@showprogress map(combs) do comb
-            run_single(comb, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-        end
+
+    progress = ProgressMeter.Progress(length(combs); enabled=showprogress)
+    mapfun = parallel ? pmap : map
+    all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
+        run_single(comb, output_params, initialize; 
+                   agent_step!, model_step!, n, kwargs...)
     end
 
     df_agent = DataFrame()

@@ -2,7 +2,6 @@ module Agents
 
 using Requires
 using Distributed
-using DistributedArrays
 using DataStructures
 using Graphs
 using DataFrames
