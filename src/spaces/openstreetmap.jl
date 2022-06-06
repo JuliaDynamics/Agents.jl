@@ -31,12 +31,32 @@ export test_map,
 ###########################################################################################
 # Type definitions
 ###########################################################################################
-# Stores information about an agent's path
+"""
+    OpenStreetMapPath
+This struct stores information about the path of an agent via route planning.
+It also serves as developer's docs for some of the internals of `OpenStreetMapSpace`.
+
+## Storage of map nodes
+Each node has a node ID from the OpenStreetMap API.
+The map is stored as a `Graph` by `LightOSM`, and hence each node also has a vertex index
+corresponding to the vertex representing it in this graph. Hence each node can be referred
+to by either the node ID or its graph index, and we can convert either way, using
+the function `LightOSM.index_to_node`.
+We use graph vertex indices consistently in [`OSMSpace`](@ref), because
+we access graph data more often than OSM data.
+
+## Fields of `OpenStreetMapPath`
+- `route::Vector{Int}`: Vertex indices along the planned route from `start` to `dest`.
+- `start::Tuple{Int,Int,Float64}`: Initial position of the agent.
+- `dest::Tuple{Int,Int,Float64}`: Destination.
+- `return_route::Vector{Int}`: Same as `route` but for the return trip.
+- `has_to_return::Bool`: `true` if there is an actual return trip.
+"""
 struct OpenStreetMapPath
-    route::Vector{Int}            # node IDs along path from `start` to `dest`
-    start::Tuple{Int,Int,Float64} # initial position of the agent
-    dest::Tuple{Int,Int,Float64}  # destination
-    return_route::Vector{Int}     # node IDs along path from `dest` to `start`
+    route::Vector{Int}
+    start::Tuple{Int,Int,Float64}
+    dest::Tuple{Int,Int,Float64}
+    return_route::Vector{Int}
     has_to_return::Bool
 end
 
