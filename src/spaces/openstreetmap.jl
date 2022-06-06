@@ -74,7 +74,6 @@ The functionality related to Open Street Map spaces is in the submodule `OSM`.
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
 ## The `OSMAgent`
-
 The base properties for an agent residing on an `OSMSpace` are as follows:
 ```julia
 mutable struct Agent <: AbstractAgent
@@ -94,9 +93,7 @@ an existing road.
 
 Use [`OSMAgent`](@ref) for convenience.
 
-
 ## Obtaining map files
-
 Maps files can be downloaded using the functions provided by
 [LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
 Agents.jl also re-exports [`OSM.download_osm_network`](@ref), the main function used
@@ -125,13 +122,7 @@ All `kwargs` are propagated to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
 ## Routing with OSM
-
-There are two ways to generate a route, depending on the situation.
-1. Use [`plan_route!`](@ref) to plan a route from an agent's current position to a target
-   destination. This also has the option of planning a return trip.
-2. [`plan_random_route!`](@ref), choses a new random destination and plans a path to it.
-
-Both of these functions override any pre-existing route that may exist for an agent.
+You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref).
 To actually move along a planned route use [`move_along_route!`](@ref).
 """
 struct OpenStreetMapSpace <: Agents.AbstractSpace
@@ -219,7 +210,7 @@ end
                 return_trip = false, kwargs...) → success
 
 Plan a route from the current position of `agent` to the location specified in `dest`, which
-can be an intersection or a point on a road.
+can be an intersection or a point on a road. Overwrite any existing route.
 
 If `return_trip = true`, a route will be planned from start ⟶ finish ⟶ start. All other
 keywords are passed to
