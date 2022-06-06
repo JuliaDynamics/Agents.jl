@@ -60,7 +60,7 @@ struct OpenStreetMapPath
     has_to_return::Bool
 end
 
-# NOTE: All positions are indexed by vertex number and _not_ node id
+# NOTE: All positions are indexed by vertex number and _not_ OSM node id
 
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
@@ -72,6 +72,28 @@ intersections. Agents move along the available roads of the map using routing, s
 
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
 An example of its usage can be found in [Zombie Outbreak](@ref).
+
+## The `OSMAgent`
+
+The base properties for an agent residing on an `OSMSpace` are as follows:
+```julia
+mutable struct Agent <: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+end
+```
+
+Current `pos`ition tuple is represented as
+(first intersection index, second intersection index, distance travelled).
+The indices are the indices of the nodes of the graph that internally represents the map.
+Functions like [`OSM.nearest_node`](@ref) or [`OSM.nearest_road`](@ref)
+can help find those node indices from a (lon, lat) real world coordinate.
+The distance travelled is in the units of `weight_type`. This ensures that the map
+is a *continuous* kind of space, as an agent can truly be at any possible point on
+an existing road.
+
+Use [`OSMAgent`](@ref) for convenience.
+
 
 ## Obtaining map files
 
@@ -102,24 +124,6 @@ The default `weight_type` used is `:distance`.
 All `kwargs` are propagated to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
-## The `OSMAgent`
-
-The base properties for an agent residing on an `OSMSpace` are as follows:
-```julia
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-end
-```
-
-Current `pos`ition tuple is represented as
-(first intersection index, second intersection index, distance travelled).
-The distance travelled is in the units of `weight_type`. This ensures that the map
-is a *continuous* kind of space, as an agent can truly be at any possible point on
-an existing road.
-
-Use [`OSMAgent`](@ref) for convenience.
-
 ## Routing with OSM
 
 There are two ways to generate a route, depending on the situation.
@@ -136,10 +140,7 @@ struct OpenStreetMapSpace <: Agents.AbstractSpace
     routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
 end
 
-function OpenStreetMapSpace(
-    path::AbstractString;
-    kwargs...
-)
+function OpenStreetMapSpace(path::AbstractString; kwargs...)
     m = graph_from_file(path; weight_type = :distance, kwargs...)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
