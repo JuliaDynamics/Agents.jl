@@ -5,6 +5,7 @@ using Distributed
 using DataStructures
 using Graphs
 using DataFrames
+using CSV
 using Random
 import ProgressMeter
 import Base.length

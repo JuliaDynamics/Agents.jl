@@ -102,6 +102,10 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
 * `showprogress=true` : Whether to show progress
+* `write_during_run= false` : Whether to write the collected data during the simulation. Use it if the collected data do not fit in the memory.
+* `writing_interval=1` : write to file every `writing_interval` times you collect the data. Use as large a number as possible to improve speed because writing to file is expensive.
+* `adata_savefile="adata.csv"` : A file to write agent data on.
+* `mdata_savefile="mdata.csv"`: A file to write the model data on.
 """
 function run! end
 
@@ -119,7 +123,11 @@ function run!(
     adata = nothing,
     obtainer = identity,
     agents_first = true,
-    showprogress = false
+    showprogress = false,
+    write_during_run = false,
+    writing_interval = 1,
+    adata_savefile = "adata.csv",
+    mdata_savefile = "mdata.csv"
 )
 
     df_agent = init_agent_dataframe(model, adata)
@@ -137,25 +145,71 @@ function run!(
         end
     end
 
+    if write_during_run
+        close(open(adata_savefile, "w"))
+        close(open(mdata_savefile, "w"))
+        model_appendtocsv = false
+        agent_appendtocsv = false
+    end
+
+    agent_count_collections = 0
+    model_count_collections = 0
+    agent_collected = false
+    model_collected = false
+
     s = 0
     p = typeof(n) <: Int ? ProgressMeter.Progress(n; enabled=showprogress) : ProgressMeter.ProgressUnknown("Steps passed: "; enabled=showprogress)
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
+            agent_count_collections += 1
+            agent_collected = true
         end
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
+            model_count_collections += 1
+            model_collected = true
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
+
+        if write_during_run
+            if model_collected && model_count_collections % writing_interval == 0
+                CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+                df_model = init_model_dataframe(model, mdata)
+                model_collected = false
+                model_appendtocsv = true
+            end
+            if agent_collected && agent_count_collections % writing_interval == 0
+                CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+                df_agent = init_agent_dataframe(model, adata)
+                agent_collected = false
+                agent_appendtocsv = true
+            end
+        end
+
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
+        agent_collected = true
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_collected = true
     end
+
+    if write_during_run
+        if model_collected
+            CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+            df_model = init_model_dataframe(model, mdata)
+        end
+        if agent_collected
+            CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+            df_agent = init_agent_dataframe(model, adata)
+        end
+    end
+
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end

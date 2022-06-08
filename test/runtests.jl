@@ -1,4 +1,4 @@
-using Test, Agents, Random, Graphs, DataFrames
+using Test, Agents, Random, Graphs, DataFrames, CSV
 using StatsBase:mean
 using StableRNGs
 
