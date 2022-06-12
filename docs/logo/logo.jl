@@ -69,10 +69,12 @@ fig, ax = abmplot(sir;
 display(fig)
 
 # %% actually make the video
+using CairoMakie
+CairoMakie.activate!()
 sir = sir_logo_initiation(; N = 600, interaction_radius = 0.035)
 abmvideo("agents_logo.mp4", sir, sir_agent_step!, sir_model_step!;
     ac = sir_colors, as = 9, static_preplot!,
     figure = (resolution = logo_dims, backgroundcolor),
     axis = ax_kwargs,
-    spf = 2, framerate = 60, frames = 600, showstep = false,
+    spf = 2, framerate = 60, frames = 900, showstep = false,
 )
