@@ -140,7 +140,7 @@ end
 function Base.show(io::IO, s::OpenStreetMapSpace)
     print(
         io,
-        "OpenStreetMapSpace with $(length(s.map.highways)) ways " *
+        "OpenStreetMapSpace with $(length(s.map.ways)) ways " *
         "and $(length(s.map.nodes)) nodes",
     )
 end
@@ -293,19 +293,14 @@ function Agents.plan_route!(
         return true
     end
 
-    route = Int[]
-    try
-        # TODO: Try-catch blocks are bad for performance. This has to be changed
-        # to something else in the future.
-        route = shortest_path(
-            model.space.map,
-            model.space.map.index_to_node[start_node],
-            model.space.map.index_to_node[end_node];
-            kwargs...
-        )
-    catch
-        return false
-    end
+    route = shortest_path(
+        model.space.map,
+        model.space.map.index_to_node[start_node],
+        model.space.map.index_to_node[end_node];
+        kwargs...
+    )
+
+    isnothing(route) && return false
 
     for i in 1:length(route)
         route[i] = Int(model.space.map.node_to_index[route[i]])
@@ -327,18 +322,14 @@ function Agents.plan_route!(
 
     return_route = Int[]
     if return_trip
-        try
-            # TODO: Try-catch blocks are bad for performance. This has to be changed
-            # to something else in the future.
-            return_route = shortest_path(
-                model.space.map,
-                model.space.map.index_to_node[end_node],
-                model.space.map.index_to_node[start_node];
-                kwargs...
-            )
-        catch
-            return false
-        end
+        return_route = shortest_path(
+            model.space.map,
+            model.space.map.index_to_node[end_node],
+            model.space.map.index_to_node[start_node];
+            kwargs...
+        )
+
+        isnothing(return_route) && return false
 
         for i in 1:length(return_route)
             return_route[i] = Int(model.space.map.node_to_index[return_route[i]])

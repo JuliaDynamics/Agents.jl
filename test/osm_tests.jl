@@ -1,7 +1,9 @@
-using Agents.LightOSM
 using Graphs
 
 @testset "OpenStreetMap space" begin
+    # `using` here because it gets scoped to this testset, and LightOSM.AStar doesn't conflict
+    # with Pathfinding.AStar
+    using LightOSM
     space = OpenStreetMapSpace(OSM.test_map(); network_type = :none, weight_type = :time)
     @test length(space.s) == 9753
     @test sprint(show, space) ==
