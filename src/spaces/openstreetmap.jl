@@ -46,7 +46,9 @@ We use graph vertex indices consistently in [`OSMSpace`](@ref), because
 we access graph data more often than OSM data.
 
 ## Fields of `OpenStreetMapPath`
-- `route::Vector{Int}`: Vertex indices along the planned route from `start` to `dest`.
+- `route::Vector{Int}`: Vertex indices along the planned route. They are
+  actually stored in inverse sequence, from `dest` to `start`, because it is more efficient
+  to pop the off this way while traversing the route.
 - `start::Tuple{Int,Int,Float64}`: Initial position of the agent.
 - `dest::Tuple{Int,Int,Float64}`: Destination.
 - `return_route::Vector{Int}`: Same as `route` but for the return trip.
