@@ -610,7 +610,7 @@ function route_length(agent::A, model::ABM{<:OpenStreetMapSpace, A}) where {A}
     is_stationary(agent, model) && return 0.0
     prev_node, next_node = agent.pos
     length = road_length(prev_node, next_node, model)
-    for node in model.space.routes[agent.id].route
+    for node in reverse(model.space.routes[agent.id].route)
         prev_node = next_node
         next_node = node
         length += road_length(prev_node, next_node, model)
