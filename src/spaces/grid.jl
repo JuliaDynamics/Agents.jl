@@ -37,6 +37,10 @@ Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
 positions within the hypercube having side length of `2*floor(r)` and being centered in
 the origin position.
 
+`:manhattan` metric means that the `r`-neighborhood of a position are all positions whose 
+cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given 
+position.
+
 `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
 cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
 position.
