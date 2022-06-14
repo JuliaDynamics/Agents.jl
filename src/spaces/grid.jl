@@ -118,11 +118,14 @@ end
 function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     d = size(space.s)
     r0 = floor(Int, r)
-    if space.metric in (:euclidean, :manhattan)
+    if space.metric == :euclidean
         # hypercube of indices
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         # select subset of hc which is in Hypersphere
         βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
+    elseif space.metric == :manhattan
+        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
+        βs = [β for β ∈ hypercube if sum(abs.(β.I)) <= r0]
     elseif space.metric == :chebyshev
         βs = vec([CartesianIndex(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
     else
