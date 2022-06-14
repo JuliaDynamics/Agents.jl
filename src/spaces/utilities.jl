@@ -1,10 +1,10 @@
-export edistance, mdistance, get_direction, walk!
+export euclidean_distance, manhattan_distance, get_direction, walk!
 
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
 #######################################################################################
 """
-    edistance(a, b, model::ABM)
+    euclidean_distance(a, b, model::ABM)
 
 Return the euclidean distance between `a` and `b` (either agents or agent positions),
 respecting periodic boundary conditions (if in use). Works with any space where it makes
@@ -12,13 +12,13 @@ sense: currently `GridSpace` and `ContinuousSpace`.
 
 Example usage in the [Flocking model](@ref).
 """
-edistance(
+euclidean_distance(
     a::A,
     b::B,
     model::ABM{<:Union{ContinuousSpace,GridSpace}},
-) where {A <: AbstractAgent,B <: AbstractAgent} = edistance(a.pos, b.pos, model)
+) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model)
 
-function edistance(
+function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
     model::ABM{<:Union{ContinuousSpace{D,false},GridSpace{D,false}}},
@@ -26,7 +26,7 @@ function edistance(
     sqrt(sum(abs2.(p1 .- p2)))
 end
 
-function edistance(
+function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
     model::ABM{<:ContinuousSpace{D,true}},
@@ -42,7 +42,7 @@ function edistance(
     sqrt(total)
 end
 
-function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) where {D}
+function euclidean_distance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) where {D}
     total = 0.0
     for (a, b, d) in zip(p1, p2, size(model.space))
         delta = abs(b - a)
@@ -55,19 +55,19 @@ function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) 
 end
 
 """
-    mdistance(a, b, model::ABM)
+    manhattan_distance(a, b, model::ABM)
 
 Return the manhattan distance between `a` and `b` (either agents or agent positions),
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `GridSpace` and `ContinuousSpace`.
 """
-mdistance(
+manhattan_distance(
     a::A,
     b::B,
     model::ABM{<:Union{ContinuousSpace,GridSpace}},
-) where {A <: AbstractAgent,B <: AbstractAgent} = mdistance(a.pos, b.pos, model)
+) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model)
 
-function mdistance(
+function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
     model::ABM{<:Union{ContinuousSpace{D,false},GridSpace{D,false}}},
@@ -75,7 +75,7 @@ function mdistance(
     sum(abs.(p1 .- p2))
 end
 
-function mdistance(
+function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
     model::ABM{<:Union{ContinuousSpace{D,true},GridSpace{D,true}}}
