@@ -118,7 +118,7 @@ end
 function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
     d = size(space.s)
     r0 = floor(Int, r)
-    if space.metric == :euclidean
+    if space.metric in (:euclidean, :manhattan)
         # hypercube of indices
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         # select subset of hc which is in Hypersphere
@@ -135,7 +135,7 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
 end
 
 function initialize_neighborhood!(space::GridSpace{D}, r::NTuple{D,Real}) where {D}
-    @assert space.metric == :chebyshev "Cannot use tuple based neighbor search with the Euclidean metric."
+    @assert space.metric == :chebyshev "Can only use tuple based neighbor search with the Chebyshev metric."
     d = size(space.s)
     r0 = (floor(Int, i) for i in r)
     βs = vec([CartesianIndex(a) for a in Iterators.product([(-ri):ri for ri in r0]...)])
