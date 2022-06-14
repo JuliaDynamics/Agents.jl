@@ -30,6 +30,7 @@ The following keywords modify the `paramscan` function:
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
   in parallel. This must be used in conjunction with `@everywhere` (see
   [Performance Tips](@ref)).
+- `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
@@ -66,8 +67,10 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n=3)
+adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
+
+
 """
 function paramscan(
     parameters::Dict,
@@ -76,8 +79,8 @@ function paramscan(
     parallel::Bool = false,
     agent_step! = dummystep,
     model_step! = dummystep,
-    n = 1,
-    showprogress = false,
+    n::Int = 1,
+    showprogress::Bool = false,
     kwargs...,
 )
 
@@ -89,7 +92,7 @@ function paramscan(
 
     combs = dict_list(parameters)
 
-    progress = ProgressMeter.Progress(length(combs); enabled=showprogress)
+    progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
     mapfun = parallel ? pmap : map
     all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
         run_single(comb, output_params, initialize; 

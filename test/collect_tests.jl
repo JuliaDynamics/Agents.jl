@@ -486,7 +486,6 @@ end
     end
 end
 
-
 @testset "Parameter scan" begin
     @everywhere @agent Automata GridAgent{2} begin end
     function forest_fire(; density = 0.7, griddims = (100, 100))
@@ -586,7 +585,6 @@ end
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
     end
 end
-
 
 @testset "Issue #179 fix" begin
     # only ids sorted, not properties

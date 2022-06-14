@@ -12,13 +12,17 @@ Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:ensemble`, which has an integer
 value counting the ensemble member. The function returns `agent_df, model_df, models`.
 
-The keyword `parallel = false`, when `true`, will run the simulations in parallel using
-Julia's `Distributed.pmap` (you need to have loaded `Agents` with `@everywhere`, see
-docs online).
+## Keywords
+The following keywords modify the `ensemblerun!` function:
+- `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
+  in parallel. This must be used in conjunction with `@everywhere` (see
+  [Performance Tips](@ref)).
+- `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated to [`run!`](@ref) as-is.
 
-Example usage in [Schelling's segregation model](@ref).
+## Example
+See example usage in [Schelling's segregation model](@ref).
 
 If you want to scan parameters and at the same time run multiple simulations at each
 parameter combination, simply use `seed` as a parameter, and use that parameter to
@@ -61,12 +65,12 @@ function ensemblerun!(
 end
 
 function series_ensemble(models, agent_step!, model_step!, n; 
-                         showprogress=false, kwargs...)
+                         showprogress = false, kwargs...)
 
     @assert models[1] isa ABM
 
     nmodels = length(models)
-    progress = ProgressMeter.Progress(nmodels; enabled=showprogress)
+    progress = ProgressMeter.Progress(nmodels; enabled = showprogress)
 
     df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
     
@@ -93,7 +97,7 @@ end
 function parallel_ensemble(models, agent_step!, model_step!, n; 
                            showprogress = false, kwargs...)
 
-    progress = ProgressMeter.Progress(length(models); enabled=showprogress)
+    progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
         run!(model, agent_step!, model_step!, n; kwargs...)
     end
