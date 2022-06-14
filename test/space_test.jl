@@ -122,6 +122,23 @@
         @test_throws MethodError euclidean_distance(a, b, model)
     end
 
+    @testset "Manhattan Distance" begin
+        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = true))
+        a = add_agent!((1.0, 6.0), model, 2.0)
+        b = add_agent!((11.0, 4.0), model, 3.0)
+        @test manhattan_distance(a, b, model) ≈ 4
+
+        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = false))
+        a = add_agent!((1.0, 6.0), model, 2.0)
+        b = add_agent!((11.0, 4.0), model, 3.0)
+        @test manhattan_distance(a, b, model) ≈ 12
+
+        model = ABM(Agent5, GraphSpace(path_graph(5)))
+        a = add_agent!(1, model, rand(model.rng))
+        b = add_agent!(2, model, rand(model.rng))
+        @test_throws MethodError manhattan_distance(a, b, model)
+    end
+
     @testset "Nearby Agents" begin
         undirected = ABM(Agent5, GraphSpace(path_graph(5)))
         @test nearby_positions(3, undirected) == [2, 4]
