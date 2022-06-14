@@ -1,3 +1,3 @@
 # Some deprecations exist in submodules Pathfinding, OSM
 
-@deprecate edistance euclidean_distance
+@deprecate euclidean_distance euclidean_distance

@@ -99,27 +99,27 @@
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = true))
         a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
         b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test edistance(a, b, model) ≈ 2.82842712
+        @test euclidean_distance(a, b, model) ≈ 2.82842712
 
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
         a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
         b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test edistance(a, b, model) ≈ 10.198039
+        @test euclidean_distance(a, b, model) ≈ 10.198039
 
         model = ABM(Agent3, GridSpace((12, 10); periodic = true))
         a = add_agent!((1.0, 6.0), model, 2.0)
         b = add_agent!((11.0, 4.0), model, 3.0)
-        @test edistance(a, b, model) ≈ 2.82842712
+        @test euclidean_distance(a, b, model) ≈ 2.82842712
 
         model = ABM(Agent3, GridSpace((12, 10); periodic = false))
         a = add_agent!((1.0, 6.0), model, 2.0)
         b = add_agent!((11.0, 4.0), model, 3.0)
-        @test edistance(a, b, model) ≈ 10.198039
+        @test euclidean_distance(a, b, model) ≈ 10.198039
 
         model = ABM(Agent5, GraphSpace(path_graph(5)))
         a = add_agent!(1, model, rand(model.rng))
         b = add_agent!(2, model, rand(model.rng))
-        @test_throws MethodError edistance(a, b, model)
+        @test_throws MethodError euclidean_distance(a, b, model)
     end
 
     @testset "Nearby Agents" begin
