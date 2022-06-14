@@ -1,5 +1,7 @@
 # v5.4
 - New keyword `showprogress` in `run!` function that displays a progress bar.
+- New `:manhattan` metric for `GridSpace` models.
+- New `manhattan_distance` utility function.
 
 # v5.3
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:
