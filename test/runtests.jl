@@ -66,11 +66,6 @@ mutable struct Agent9 <: AbstractAgent
     f1::Union{Int,Nothing}
 end
 
-mutable struct Agent10 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-end
-
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
