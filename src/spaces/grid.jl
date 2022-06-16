@@ -31,7 +31,9 @@ Optionally decide whether the space will be periodic and what will be the distan
 The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
 Valid positions have indices in the range `1:d[i]` for the `i`-th dimension.
 
-## Distance metric
+An example using `GridSpace` is [Schelling's segregation model](@ref).
+
+## Distance specification
 The typical terminology when searching neighbors in agent based modelling is
 "Von Neumann" neighborhood or "Moore" neighborhoods. However, because Agents.jl
 provides a much more powerful infastructure for finding neighbors, both in
@@ -47,14 +49,12 @@ The allowed metrics are (and see docs online for a plotted example):
   the origin position. This is similar to "Moore" for `r = 1` and two dimensions.
 
 - `:manhattan` metric means that the `r`-neighborhood of a position are all positions whose
-  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given
+  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the origin
   position. This similar to "Von Neumann" for `r = 1` and two dimensions.
 
 - `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
-  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the origin
   position.
-
-An example using `GridSpace` is [Schelling's segregation model](@ref).
 """
 function GridSpace(
     d::NTuple{D,Int};
