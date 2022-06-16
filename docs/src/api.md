@@ -34,6 +34,11 @@ GraphSpace
 GridSpace
 ```
 
+Here is a specification of how the metrics look like:
+```@example
+include("distances_example_plot.jl") # hide
+```
+
 ### Continuous spaces
 ```@docs
 ContinuousSpace
