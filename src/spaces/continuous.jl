@@ -148,14 +148,14 @@ function nearby_ids(
                 Iterators.flatten(ids_in_position(cell, model) for cell in uncertain_cells)
 
             additional_ids = Iterators.filter(
-                i -> edistance(pos, model[i].pos, model) ≤ r,
+                i -> euclidean_distance(pos, model[i].pos, model) ≤ r,
                 uncertain_ids,
             )
 
             return Iterators.flatten((certain_ids, additional_ids))
         else
             all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
-            return Iterators.filter(i -> edistance(pos, model[i].pos, model) ≤ r, all_ids)
+            return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, all_ids)
         end
     else
         δ = distance_from_cell_center(pos, cell_center(pos, model))
@@ -219,7 +219,7 @@ function nearest_neighbor(
     length(n) == 0 && return nothing
     d, j = Inf, 1
     for i in 1:length(n)
-        @inbounds dnew = edistance(agent.pos, model[n[i]].pos, model)
+        @inbounds dnew = euclidean_distance(agent.pos, model[n[i]].pos, model)
         if dnew < d
             d, j = dnew, i
         end
@@ -355,7 +355,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
             # We also need to check if our current pair is closer to each
             # other than any pair using our first id already in the list,
             # so we keep track of nn distances.
-            dist = edistance(a.pos, nn.pos, model)
+            dist = euclidean_distance(a.pos, nn.pos, model)
 
             idx = findfirst(x -> first(new_pair) == x, first.(pairs))
             if idx === nothing

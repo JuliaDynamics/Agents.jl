@@ -63,7 +63,7 @@ function flocking_agent_step!(bird, model)
         neighbor = model[id].pos
         heading = neighbor .- bird.pos
         cohere = cohere .+ heading
-        if edistance(bird.pos, neighbor, model) < bird.separation
+        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
             separate = separate .- heading
         end
         match = match .+ model[id].vel

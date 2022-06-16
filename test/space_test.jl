@@ -99,27 +99,44 @@
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = true))
         a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
         b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test edistance(a, b, model) ≈ 2.82842712
+        @test euclidean_distance(a, b, model) ≈ 2.82842712
 
         model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
         a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
         b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test edistance(a, b, model) ≈ 10.198039
+        @test euclidean_distance(a, b, model) ≈ 10.198039
 
         model = ABM(Agent3, GridSpace((12, 10); periodic = true))
         a = add_agent!((1.0, 6.0), model, 2.0)
         b = add_agent!((11.0, 4.0), model, 3.0)
-        @test edistance(a, b, model) ≈ 2.82842712
+        @test euclidean_distance(a, b, model) ≈ 2.82842712
 
         model = ABM(Agent3, GridSpace((12, 10); periodic = false))
         a = add_agent!((1.0, 6.0), model, 2.0)
         b = add_agent!((11.0, 4.0), model, 3.0)
-        @test edistance(a, b, model) ≈ 10.198039
+        @test euclidean_distance(a, b, model) ≈ 10.198039
 
         model = ABM(Agent5, GraphSpace(path_graph(5)))
         a = add_agent!(1, model, rand(model.rng))
         b = add_agent!(2, model, rand(model.rng))
-        @test_throws MethodError edistance(a, b, model)
+        @test_throws MethodError euclidean_distance(a, b, model)
+    end
+
+    @testset "Manhattan Distance" begin
+        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = true))
+        a = add_agent!((1.0, 6.0), model, 2.0)
+        b = add_agent!((11.0, 4.0), model, 3.0)
+        @test manhattan_distance(a, b, model) ≈ 4
+
+        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = false))
+        a = add_agent!((1.0, 6.0), model, 2.0)
+        b = add_agent!((11.0, 4.0), model, 3.0)
+        @test manhattan_distance(a, b, model) ≈ 12
+
+        model = ABM(Agent5, GraphSpace(path_graph(5)))
+        a = add_agent!(1, model, rand(model.rng))
+        b = add_agent!(2, model, rand(model.rng))
+        @test_throws MethodError manhattan_distance(a, b, model)
     end
 
     @testset "Nearby Agents" begin
@@ -162,18 +179,35 @@
         @test sort!(collect(nearby_ids(directed[2], directed; neighbor_type = :all))) ==
               [1, 3]
 
-        gridspace = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
-        @test collect(nearby_positions((2, 2), gridspace)) ==
+        grid_euclidean = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
+        @test collect(nearby_positions((2, 2), grid_euclidean)) ==
               [(2, 1), (1, 2), (3, 2), (2, 3)]
-        @test collect(nearby_positions((1, 1), gridspace)) == [(2, 1), (1, 2)]
-        a = add_agent!((2, 2), gridspace, rand(gridspace.rng))
-        add_agent!((3, 2), gridspace, rand(gridspace.rng))
-        @test collect(nearby_ids((1, 2), gridspace)) == [1]
-        @test sort!(collect(nearby_ids((1, 2), gridspace, 2))) == [1, 2]
-        @test sort!(collect(nearby_ids((2, 2), gridspace))) == [1, 2]
-        @test collect(nearby_ids(a, gridspace)) == [2]
+        @test collect(nearby_positions((1, 1), grid_euclidean)) == [(2, 1), (1, 2)]
+        a = add_agent!((2, 2), grid_euclidean, rand(grid_euclidean.rng))
+        add_agent!((3, 2), grid_euclidean, rand(grid_euclidean.rng))
+        @test collect(nearby_ids((1, 2), grid_euclidean)) == [1]
+        @test sort!(collect(nearby_ids((1, 2), grid_euclidean, 2))) == [1, 2]
+        @test sort!(collect(nearby_ids((2, 2), grid_euclidean))) == [1, 2]
+        @test collect(nearby_ids(a, grid_euclidean)) == [2]
 
-        @test_throws AssertionError nearby_positions((2, 2), gridspace, (1, 2))
+        @test_throws AssertionError nearby_positions((2, 2), grid_euclidean, (1, 2))
+
+        grid_manhattan = ABM(Agent3, GridSpace((6, 6); metric = :manhattan, periodic = false))
+        @test sort!(collect(nearby_positions((3, 3), grid_manhattan))) == 
+            [(2, 3), (3, 2), (3, 4), (4, 3)]
+        @test sort!(collect(nearby_positions((3, 3), grid_manhattan, 3))) ==
+            [(1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2),
+             (3, 4), (3, 5), (3, 6), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (5, 2), (5, 3),
+             (5, 4), (6, 3)]
+        @test collect(nearby_positions((1, 1), grid_manhattan)) == [(2, 1), (1, 2)]
+        a = add_agent!((2, 2), grid_manhattan, rand(grid_manhattan.rng))
+        add_agent!((3, 2), grid_manhattan, rand(grid_manhattan.rng))
+        @test collect(nearby_ids((1, 2), grid_manhattan)) == [1]
+        @test collect(nearby_ids((4, 3), grid_manhattan)) == []
+        @test sort!(collect(nearby_ids((4, 3), grid_manhattan, 3))) == [1, 2]
+        @test collect(nearby_ids(a, grid_manhattan)) == [2]
+
+        @test_throws AssertionError nearby_positions((2, 2), grid_manhattan, (1, 2))
 
         model = ABM(Agent3, GridSpace((10, 5); periodic = false))
         nearby_positions((5, 5), model, (1, 2))

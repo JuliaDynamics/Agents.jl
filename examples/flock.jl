@@ -91,7 +91,7 @@ function agent_step!(bird, model)
 
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
-        if edistance(bird.pos, neighbor, model) < bird.separation
+        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
             ## `separate` repels the bird away from neighboring birds
             separate = separate .- heading
         end
