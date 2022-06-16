@@ -27,23 +27,32 @@ end
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
-Optionally decide whether the space will be periodic and what will be the distance metric
-used, which decides the behavior of e.g. [`nearby_ids`](@ref).
+Optionally decide whether the space will be periodic and what will be the distance metric.
 The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
-In our examples we typically use `Dims{D}` instead of `NTuple{D, Int}` (they are equivalent).
-Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
+Valid positions have indices in the range `1:d[i]` for the `i`-th dimension.
 
-`:chebyshev` metric means that the `r`-neighborhood of a position are all
-positions within the hypercube having side length of `2*floor(r)` and being centered in
-the origin position.
+## Distance metric
+The typical terminology when searching neighbors in agent based modelling is
+"Von Neumann" neighborhood or "Moore" neighborhoods. However, because Agents.jl
+provides a much more powerful infastructure for finding neighbors, both in
+arbitrary dimensions but also of arbitrary neighborhood size, this established
+terminology is no longer appropriate.
+Instead, distances that define neighborhoods are specified according to a proper metric
+space, that is both well defined for any distance, and applicable to any dimensionality.
 
-`:manhattan` metric means that the `r`-neighborhood of a position are all positions whose 
-cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given 
-position.
+The allowed metrics are (and see docs online for a plotted example):
 
-`:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
-cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
-position.
+- `:chebyshev` metric means that the `r`-neighborhood of a position are all
+  positions within the hypercube having side length of `2*floor(r)` and being centered in
+  the origin position. This is similar to "Moore" for `r = 1` and two dimensions.
+
+- `:manhattan` metric means that the `r`-neighborhood of a position are all positions whose
+  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given
+  position. This similar to "Von Neumann" for `r = 1` and two dimensions.
+
+- `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
+  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+  position.
 
 An example using `GridSpace` is [Schelling's segregation model](@ref).
 """
