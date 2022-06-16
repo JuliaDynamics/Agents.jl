@@ -23,6 +23,12 @@ If you want to model social networks, where each agent is equivalent with a node
 a graph, you're better of using `nothing` (or other spaces) as the model space, and using
 a graph from Graphs.jl directly in the model parameters, as shown in the
 [Social networks with Graphs.jl](@ref) integration example.
+
+## Distance specification
+In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
+the degree of neighbors in the graph (thus distance is always an integer).
+For example, for `r=2` includes first and second degree neighbors.
+For 0 distance, the search occurs only on the origin node.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
     agent_positions = [Int[] for i in 1:Graphs.nv(graph)]
