@@ -71,7 +71,6 @@ in each space's documentation string.
 `nearby_ids` always includes IDs with 0 distance to `position`.
 
 What the "radius" means depends on the space type:
-- `ContinuousSpace`: Standard distance according to the space metric.
 - `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
   needed to be travelled according to existing roads in order to reach given `position`.
 

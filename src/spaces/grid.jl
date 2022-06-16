@@ -248,7 +248,8 @@ function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     Iterators.flatten((s[i...] for i in nn))
 end
 
-# This case is rather special. Its the dimension-specific search range
+# This case is rather special. Its the dimension-specific search range.
+# TODO: Make it use the `Hood` code infastructure
 function nearby_ids(
     pos::ValidPos,
     model::ABM{<:GridSpace},
