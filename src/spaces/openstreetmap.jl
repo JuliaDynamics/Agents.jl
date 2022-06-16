@@ -66,13 +66,16 @@ end
 
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
-Create a space residing on the Open Street Map (OSM) file provided via `path`.
+Create a space from the Open Street Map (OSM) file provided via `path`.
 This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
-are not necessarily intersections, and there may be multiple nodes on a road joining two
-intersections. Agents move along the available roads of the map using routing, see below.
+performance. The map is represented as a graph, consisting of nodes connected by edges.
+Nodes are not necessarily intersections, and there may be multiple nodes on a road joining
+two intersections.
+Agents move along the available roads of the map using routing, see below.
 
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
+The internal representation of the map is provided by
+[LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
 An example of its usage can be found in [Zombie Outbreak](@ref).
 
 ## The `OSMAgent`
@@ -96,10 +99,8 @@ an existing road.
 Use [`OSMAgent`](@ref) for convenience.
 
 ## Obtaining map files
-Maps files can be downloaded using the functions provided by
-[LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
-Agents.jl also re-exports [`OSM.download_osm_network`](@ref), the main function used
-to download maps and provides a test map in [`OSM.test_map`](@ref).
+Maps files can be downloaded using the functions [`OSM.download_osm_network`](@ref).
+A test map of Gottingen can be obtained from [`OSM.test_map`](@ref).
 An example usage to download the map of London to `"london.json"`:
 
 ```julia
@@ -110,18 +111,23 @@ OSM.download_osm_network(
 )
 ```
 
+## Distance specification
 The length of an edge between two nodes is specified in the units of the
-map's `weight_type` as listed in the documentation for
-[`LightOSM.OSMGraph`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/types/#LightOSM.OSMGraph).
-The possible `weight_type`s are:
+map's `weight_type`. The possible `weight_type`s are:
 - `:distance`: The distance in kilometers of an edge
-- `:time`: The time in hours to travel along an edge at the maximum speed allowed on that road
+- `:time`: The time in hours to travel along an edge at
+  the maximum speed allowed on that road
 - `:lane_efficiency`: Time scaled by number of lanes
 
 The default `weight_type` used is `:distance`.
+All `kwargs` given to `OpenStreetMapSpace` are propagated to `LightOSM.graph_from_file`,
+and this includes the `weight_type` keyword. Notice that the same keywords must also
+be given to [`OSM.download_osm_network`](@ref) if this is how you obtained the map file.
 
-All `kwargs` are propagated to
-[`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
+In functions like [`nearby_ids`](@ref), `r` represents the distance
+(in the `weight_type` of the space) needed to be travelled according to existing roads
+in order to reach the given origin position. Notice that nodes that cannot be
+connected via a path do not belong in the same neighborhood in functions like [`nearby_ids`](@ref).
 
 ## Routing with OSM
 You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref).

@@ -61,7 +61,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_ids(position, model::ABM, r; kwargs...) → ids
+    nearby_ids(position, model::ABM, r = 1; kwargs...) → ids
 
 Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
 `position`. The `position` must match type with the spatial structure of the `model`.
@@ -70,26 +70,22 @@ in each space's documentation string.
 
 `nearby_ids` always includes IDs with 0 distance to `position`.
 
-What the "radius" means depends on the space type:
-- `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
-  needed to be travelled according to existing roads in order to reach given `position`.
-
 ## Keywords
 Keyword arguments are space-specific.
 For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
 neighbors depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex (position). If graph is directed, this is equivalent
-  to `:out`. For undirected graphs, all options are equivalent to `:out`.
+- `:default` returns neighbors of a vertex (position). If graph is directed, this is
+  equivalent to `:out`. For undirected graphs, all options are equivalent to `:out`.
 - `:all` returns both `:in` and `:out` neighbors.
 - `:in` returns incoming vertex neighbors.
 - `:out` returns outgoing vertex neighbors.
 
 For `ContinuousSpace`, the keyword `exact=false` controls whether the found neighbors are
-exactly accurate or approximate (with approximate always being a strict over-estimation),
+exactly accurate or approximate (with approximate always being a possible over-estimation),
 see [`ContinuousSpace`](@ref).
 
-In periodic discrete or continuous spaces, when used with a radius larger than half of the entire
-space, this function may find the same agent(s) more than once.
+In periodic discrete or continuous spaces, when used with a radius larger than half of the
+entire space, this function may find the same agent(s) more than once.
 See Issue #566 online for more information.
 """
 nearby_ids(position, model, r = 1) = notimplemented(model)
@@ -116,7 +112,8 @@ nearby_positions(position, model, r = 1) = notimplemented(model)
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
 #######################################################################################
-plan_route!(agent, dest, model_or_pathfinder; kwargs...) = notimplemented(model_or_pathfinder)
+plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
+    notimplemented(model_or_pathfinder)
 
 plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
     notimplemented(model_or_pathfinder)
