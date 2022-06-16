@@ -63,22 +63,14 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 """
     nearby_ids(position, model::ABM, r; kwargs...) → ids
 
-Return an iterable of the ids of the agents within radius `r` (inclusive) of the given
+Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
 `position`. The `position` must match type with the spatial structure of the `model`.
+The specification of what "distance" means depends on the space, hence it is explained
+in each space's documentation string.
+
+`nearby_ids` always includes IDs with 0 distance to `position`.
 
 What the "radius" means depends on the space type:
-- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
-  always including ids of the same node as `position`.
-  For example, for `r=2` include first and second degree neighbors.
-  If `r=0`, only ids in the same node as `position` are returned.
-- `GridSpace`: Distance of position indices according to the space metric.
-- `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, meaning
-  a distance of 5 in the x direction and 2 in the y. Only possible with `:chebyshev`
-  metric. This can be useful when different coordinates in the space need to be searched
-  with different ranges, e.g., if the space corresponds to a full building, with the
-  third dimension the floor number. See also the
-  [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
-  for advanced usage where one dimension is used as a categorical one.
 - `ContinuousSpace`: Standard distance according to the space metric.
 - `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
   needed to be travelled according to existing roads in order to reach given `position`.
