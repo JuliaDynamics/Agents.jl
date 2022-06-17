@@ -385,9 +385,6 @@ function random_nearby_id(a, model, r = 1; kwargs...)
 
     skip_counter = 0            # skip entries in the iterator
     while !isnothing(state) && !isnothing(iter)
-        res = iterate(iter, state)
-        isnothing(res) && break
-
         if skip_counter == 0
             choice, state = res
             skip_counter = floor(log(rand(model.rng)) / log(1 - w)) + 1
@@ -396,6 +393,9 @@ function random_nearby_id(a, model, r = 1; kwargs...)
             _, state = res
             skip_counter -= 1
         end
+        
+        res = iterate(iter, state)
+        isnothing(res) && break
     end
 
     return choice
