@@ -292,6 +292,10 @@
         a = add_agent!((1, 1), abm)
         @test isnothing(random_nearby_id(a, abm))
         @test isnothing(random_nearby_agent(a, abm))
+        add_agent!((1,2), abm)
+        add_agent!((2,1), abm)
+        rand_nearby_ids = Set([random_nearby_id(a, abm, 2) for _ in 1:100])
+        @test length(rand_nearby_ids) == 2
     end
 
     @testset "Discrete space mutability" begin
