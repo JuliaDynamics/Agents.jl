@@ -445,8 +445,8 @@ end
 @testset "Ensemble runs" begin
 
     nsteps = 100
-    nreplicates = 10
-    numagents_low = 200
+    nreplicates = 2
+    numagents_low = 280
     numagents_high = 300
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1) 
     function genmodels()
@@ -478,10 +478,11 @@ end
         adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
                                    parallel = true, 
                                    adata = [:pos, :mood, :group],
-                                   mdata = [:numagents, :min_to_be_happy])
+                                   mdata = [:numagents, :min_to_be_happy],
+                                   when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
-        @test length(unique(adf.step)) == nsteps + 1
+        @test length(unique(adf.step)) == (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 end
