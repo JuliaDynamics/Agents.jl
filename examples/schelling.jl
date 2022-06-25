@@ -241,7 +241,7 @@ data
 # ## Launching the interactive application
 # Given the definitions we have already created for a normally plotting or animating the ABM
 # it is almost trivial to launch an interactive application for it, through the function
-# [`abm_data_exploration`](@ref).
+# [`abmexploration`](@ref).
 
 # We define a dictionary that maps some model-level parameters to a range of potential
 # values, so that we can interactively change them.
@@ -257,7 +257,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # ```julia
 # using GLMakie # using a different plotting backend that enables interactive plots
 #
-# figure, adf, mdf = abm_data_exploration(
+# figure, adf, mdf = abmexploration(
 #     model, agent_step!, dummystep, parange;
 #     ac = groupcolor, am = groupmarker, as = 10,
 #     adata, alabels

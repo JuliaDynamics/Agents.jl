@@ -81,7 +81,7 @@ function agent_step!(agent::GridAgentFour, model1)
 end
 function agent_step!(agent::GridAgentFive, model1)
     targets = filter!(a->a.one > 0.8, collect(nearby_agents(agent, model1, 3)))
-    idx = argmax(map(t->edistance(agent, t, model1), targets))
+    idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
     farthest = targets[idx]
     walk!(agent, sign.(farthest.pos .- agent.pos), model1)
 end
@@ -146,7 +146,7 @@ end
 function agent_step_five!(agent, model2)
     targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
     if !isempty(targets)
-        idx = argmax(map(t->edistance(agent, t, model2), targets))
+        idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
         farthest = targets[idx]
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end

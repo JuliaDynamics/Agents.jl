@@ -120,7 +120,7 @@
         model.pf.walkmap[:, 3] .= 0
         @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
         rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-        @test all(get_spatial_property(x, model.pf.walkmap, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+        @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
 
         pcspace = ContinuousSpace((5., 5.); periodic = false)
         pathfinder = AStar(pcspace; walkmap = trues(10, 10))
@@ -146,7 +146,7 @@
 
         @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
         rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-        @test all(get_spatial_property(x, model.pf.walkmap, model) && edistance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+        @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
     end
 
     @testset "metrics" begin
