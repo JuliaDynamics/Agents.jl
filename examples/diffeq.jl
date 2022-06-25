@@ -280,7 +280,7 @@ nothing #hide
 # Users may switch this to any subcomponent of the `DifferentialEquations` ecosystem,
 # or use `DifferentialEquations` directly. Since we don't need other components for this
 # example, we'll stick with the subcomponent but speak in general terms since the
-# packages are interchangable in this context.
+# packages are interchangeable in this context.
 #
 # This implementation uses `import` to explicitly identify which functions are from
 # `DifferentialEquations` and not `Agents`. However, since both `Agents` and

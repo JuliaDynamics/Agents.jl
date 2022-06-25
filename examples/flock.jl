@@ -36,12 +36,12 @@ end
 # The fields `id` and `pos` are required for every agent.
 # The field `vel` is required for using [`move_agent!`](@ref) in `ContinuousSpace`.
 # `speed` defines how far the bird travels in the direction defined by `vel` per `step`.
-# `seperation` defines the minimum distance a bird must maintain from its neighbors.
+# `separation` defines the minimum distance a bird must maintain from its neighbors.
 # `visual_distance` refers to the distance a bird can see and defines a radius of neighboring birds.
-# The contribution of each rule defined above recieves an importance weight: `cohere_factor`
+# The contribution of each rule defined above receives an importance weight: `cohere_factor`
 # is the importance of maintaining the average position of neighbors,
 # `match_factor` is the importance of matching the average trajectory of neighboring birds,
-# and `separate_factor` is the importance of maining the minimum
+# and `separate_factor` is the importance of maintaining the minimum
 # distance from neighboring birds.
 
 # The function `initialize_model` generates birds and returns a model object using default values.

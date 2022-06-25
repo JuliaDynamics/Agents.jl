@@ -284,7 +284,7 @@ function fox_step!(fox, model)
     ## Random chance to reproduce every step
     rand(model.rng) <= model.fox_repr * model.dt && reproduce!(fox, model)
 
-    ## If the fox isn't alreadu moving somewhere
+    ## If the fox isn't already moving somewhere
     if is_stationary(fox, model.landfinder)
         ## Look for any nearby rabbits
         prey = [x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
