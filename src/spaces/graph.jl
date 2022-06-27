@@ -57,7 +57,7 @@ end
 
 function add_agent_to_space!(
     agent::A,
-    model::ABM{<:DiscreteSpace,A},
+    model::ABM{<:GraphSpace,A},
 ) where {A <: AbstractAgent}
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent

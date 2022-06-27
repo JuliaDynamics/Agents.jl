@@ -26,7 +26,7 @@ struct Hood{D}
 end
 
 # type P stands for Periodic and is a boolean
-struct GridSpace{D,P} <: AbstractGridSpace
+struct GridSpace{D,P} <: AbstractGridSpace{D,P}
     s::Array{Vector{Int},D}
     metric::Symbol
     hoods::Dict{Float64,Hood{D}}

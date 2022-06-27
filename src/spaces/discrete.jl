@@ -7,8 +7,8 @@ All these functions are granted "for free" to discrete spaces by simply extendin
 - ids_in_position(position, model)
 =#
 
-export positions,
-    ids_in_position, agents_in_position, empty_positions, random_empty, has_empty_positions
+export positions, ids_in_position, agents_in_position,
+       empty_positions, random_empty, has_empty_positions
 
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
@@ -81,11 +81,16 @@ end
     random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
 Return a random position without any agents, or `nothing` if no such positions exist.
 `cutoff` switches the search algorithm from probabalistic to a filter.
+Specifically, when `clamp(nagents(model)/total_positions, 0.0, 1.0) < cutoff`,
+then the algorithm is probabilistic.
 """
 function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
+    # TODO: We shouldn't be using `model.space.s` here.
+    # For `DiscreteSpace`s we should define `npositions` that
+    # returns the total possible number of positions in the space...
     if clamp(nagents(model) / prod(size(model.space.s)), 0.0, 1.0) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
@@ -179,7 +184,7 @@ function fill_space!(
 end
 
 """
-    move_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
+    move_agent_single!(agent, model::ABM{<:DiscreteSpace}; cutoff) → agent
 
 Move agent to a random position while respecting a maximum of one agent
 per position. If there are no empty positions, the agent won't move.
