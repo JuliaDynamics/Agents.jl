@@ -63,21 +63,20 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 """
     nearby_ids(position, model::ABM, r; kwargs...) → ids
 
-Return an iterable of the ids of the agents within "radius" `r` of the given `position`
-(which must match type with the spatial structure of the `model`)
+Return an iterable of the ids of the agents within radius `r` (inclusive) of the given
+`position`. The `position` must match type with the spatial structure of the `model`.
 
 What the "radius" means depends on the space type:
 - `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
   always including ids of the same node as `position`.
   For example, for `r=2` include first and second degree neighbors.
   If `r=0`, only ids in the same node as `position` are returned.
-- `GridSpace`: Either Chebyshev (also called Moore) or Euclidean distance,
-  in the space of cartesian indices.
-- `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, which
-  extends 5 positions in the x direction and 2 in the y. Only possible with Chebyshev
-  spaces. This can be useful when different coordinates in the space need to be searched
+- `GridSpace`: Distance of position indices according to the space metric.
+- `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, meaning
+  a distance of 5 in the x direction and 2 in the y. Only possible with `:chebyshev`
+  metric. This can be useful when different coordinates in the space need to be searched
   with different ranges, e.g., if the space corresponds to a full building, with the
-  third dimension the floor number. See also the 
+  third dimension the floor number. See also the
   [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
   for advanced usage where one dimension is used as a categorical one.
 - `ContinuousSpace`: Standard distance according to the space metric.
@@ -383,20 +382,20 @@ function random_nearby_id(a, model, r = 1; kwargs...)
 
     choice, state = res         # random ID to return, and the state of the iterator
     w = max(rand(model.rng), eps())  # rand returns in range [0,1)
-    
+
     skip_counter = 0            # skip entries in the iterator
     while !isnothing(state) && !isnothing(iter)
-        res = iterate(iter, state)
-        isnothing(res) && break
-
         if skip_counter == 0
             choice, state = res
-            skip_counter = floor(log(rand(model.rng)) / log(1 - w)) + 1
+            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
             w *= max(rand(model.rng), eps())
         else
             _, state = res
             skip_counter -= 1
         end
+        
+        res = iterate(iter, state)
+        isnothing(res) && break
     end
 
     return choice

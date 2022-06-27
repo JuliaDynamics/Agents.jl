@@ -34,6 +34,11 @@ GraphSpace
 GridSpace
 ```
 
+Here is a specification of how the metrics look like:
+```@example
+include("distances_example_plot.jl") # hide
+```
+
 ### Continuous spaces
 ```@docs
 ContinuousSpace
@@ -126,7 +131,8 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
-edistance
+euclidean_distance
+manhattan_distance
 ```
 
 ## A note on iteration

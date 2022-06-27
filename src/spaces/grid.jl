@@ -27,19 +27,32 @@ end
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
 Create a `GridSpace` that has size given by the tuple `d`, having `D ≥ 1` dimensions.
-Optionally decide whether the space will be periodic and what will be the distance metric
-used, which decides the behavior of e.g. [`nearby_ids`](@ref).
+Optionally decide whether the space will be periodic and what will be the distance metric.
 The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
-In our examples we typically use `Dims{D}` instead of `NTuple{D, Int}` (they are equivalent).
-Valid positions have indices in the range `1:d[i]` for the `i`th dimension.
+Valid positions have indices in the range `1:d[i]` for the `i`-th dimension.
 
-`:chebyshev` metric means that the `r`-neighborhood of a position are all
-positions within the hypercube having side length of `2*floor(r)` and being centered in
-the origin position.
+## Distance metric
+The typical terminology when searching neighbors in agent based modelling is
+"Von Neumann" neighborhood or "Moore" neighborhoods. However, because Agents.jl
+provides a much more powerful infastructure for finding neighbors, both in
+arbitrary dimensions but also of arbitrary neighborhood size, this established
+terminology is no longer appropriate.
+Instead, distances that define neighborhoods are specified according to a proper metric
+space, that is both well defined for any distance, and applicable to any dimensionality.
 
-`:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
-cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
-position.
+The allowed metrics are (and see docs online for a plotted example):
+
+- `:chebyshev` metric means that the `r`-neighborhood of a position are all
+  positions within the hypercube having side length of `2*floor(r)` and being centered in
+  the origin position. This is similar to "Moore" for `r = 1` and two dimensions.
+
+- `:manhattan` metric means that the `r`-neighborhood of a position are all positions whose
+  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given
+  position. This similar to "Von Neumann" for `r = 1` and two dimensions.
+
+- `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
+  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+  position.
 
 An example using `GridSpace` is [Schelling's segregation model](@ref).
 """
@@ -123,6 +136,9 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         # select subset of hc which is in Hypersphere
         βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
+    elseif space.metric == :manhattan
+        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
+        βs = [β for β ∈ hypercube if sum(abs.(β.I)) <= r0]
     elseif space.metric == :chebyshev
         βs = vec([CartesianIndex(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
     else
@@ -135,7 +151,7 @@ function initialize_neighborhood!(space::GridSpace{D}, r::Real) where {D}
 end
 
 function initialize_neighborhood!(space::GridSpace{D}, r::NTuple{D,Real}) where {D}
-    @assert space.metric == :chebyshev "Cannot use tuple based neighbor search with the Euclidean metric."
+    @assert space.metric == :chebyshev "Can only use tuple based neighbor search with the Chebyshev metric."
     d = size(space.s)
     r0 = (floor(Int, i) for i in r)
     βs = vec([CartesianIndex(a) for a in Iterators.product([(-ri):ri for ri in r0]...)])
