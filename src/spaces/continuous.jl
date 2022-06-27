@@ -20,9 +20,9 @@ in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for con
 `ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium
 where agent position, orientation, and speed, are true floats.
 In addition, strong support is provided for representing spatial properties in a model
-that contains a `ContinuousSpace`. Spatial properties (which typically are contained in 
+that contains a `ContinuousSpace`. Spatial properties (which typically are contained in
 the model properties) can either be functions of the position vector, `f(pos) = value`,
-or `AbstractArrays`, representing discretizations of 
+or `AbstractArrays`, representing discretizations of
 spatial data that may not be available in analytic form. In the latter case,
 the position is automatically mapped into the discretization represented by the array.
 Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
@@ -30,6 +30,10 @@ Use [`get_spatial_property`](@ref) to access spatial properties in conjuction wi
 
 See also [Continuous space exclusives](@ref) on the online docs for more functionality.
 An example using continuous space is the [Flocking model](@ref).
+
+## Distance specification
+Distances specified by `r` in functions like [`nearby_ids`](@ref) are always based
+on the Euclidean distance between two points in `ContinuousSpace`.
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -253,6 +257,8 @@ function elastic_collision!(a, b, f = nothing)
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2
+    n = norm(r1)^2
+    n == 0 && return false # do nothing if they are at the same position
     r2 = x2 .- x1
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
@@ -273,13 +279,9 @@ function elastic_collision!(a, b, f = nothing)
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
-    ken = norm(v1)^2 + norm(v2)^2
-    dx = a.pos .- b.pos
     dv = a.vel .- b.vel
-    n = norm(dx)^2
-    n == 0 && return false # do nothing if they are at the same position
-    a.vel = v1 .- f1 .* (dot(v1 .- v2, r1) / n) .* (r1)
-    b.vel = v2 .- f2 .* (dot(v2 .- v1, r2) / n) .* (r2)
+    a.vel = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
+    b.vel = v2 .- f2 .* (dot(dv, r2) / n) .* (r2)
     return true
 end
 
@@ -440,13 +442,19 @@ function get_spatial_property(pos, property::AbstractArray, model::ABM)
 end
 
 """
+    get_spatial_property(pos::NTuple{D, Float64}, property::Function, model::ABM)
+Literally equivalent with `property(pos, model)`, provided just for syntax consistency.
+"""
+get_spatial_property(pos, property, model::ABM) = property(pos, model)
+
+"""
     get_spatial_index(pos, property::AbstractArray, model::ABM)
 Convert the continuous agent position into an appropriate `index` of `property`, which
 represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
 
 The dimensionality of `property` and the continuous space do not have to match.
-If `property` has lower dimensionalty than the space (e.g. representing some surface 
-property in 3D space) then the necessary starting dimensions of `pos` will be used to index.
+If `property` has lower dimensionalty than the space (e.g. representing some surface
+property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}
     spacesize = model.space.extent
@@ -457,10 +465,3 @@ function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where 
     idxs = floor.(Int, upos ./ εs) .+ 1
     return CartesianIndex(idxs)
 end
-
-"""
-    get_spatial_property(pos::NTuple{D, Float64}, property, model::ABM)
-Literally equivalent with `property(pos, model)`, useful when `property` is a function,
-or a function-like object.
-"""
-get_spatial_property(pos, property, model::ABM) = property(pos, model)

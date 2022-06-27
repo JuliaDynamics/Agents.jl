@@ -17,12 +17,19 @@ The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](
 
 `GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
 amount of agents, and each agent can move between the nodes of the graph.
-An example of its usage can be found in [SIR model for the spread of COVID-19](@ref).
+
+An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
 
 If you want to model social networks, where each agent is equivalent with a node of
-a graph, you're better of using `nothing` (or other spaces) as the model space, and using
+a graph, you're better of using `nothing` as the model space, and using
 a graph from Graphs.jl directly in the model parameters, as shown in the
 [Social networks with Graphs.jl](@ref) integration example.
+
+## Distance specification
+In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
+the degree of neighbors in the graph (thus distance is always an integer).
+For example, for `r=2` includes first and second degree neighbors.
+For 0 distance, the search occurs only on the origin node.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
     agent_positions = [Int[] for i in 1:Graphs.nv(graph)]

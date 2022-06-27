@@ -31,7 +31,9 @@ Optionally decide whether the space will be periodic and what will be the distan
 The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
 Valid positions have indices in the range `1:d[i]` for the `i`-th dimension.
 
-## Distance metric
+An example using `GridSpace` is [Schelling's segregation model](@ref).
+
+## Distance specification
 The typical terminology when searching neighbors in agent based modelling is
 "Von Neumann" neighborhood or "Moore" neighborhoods. However, because Agents.jl
 provides a much more powerful infastructure for finding neighbors, both in
@@ -47,27 +49,42 @@ The allowed metrics are (and see docs online for a plotted example):
   the origin position. This is similar to "Moore" for `r = 1` and two dimensions.
 
 - `:manhattan` metric means that the `r`-neighborhood of a position are all positions whose
-  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the given
+  cartesian indices have Manhattan distance `≤ r` from the cartesian index of the origin
   position. This similar to "Von Neumann" for `r = 1` and two dimensions.
 
 - `:euclidean` metric means that the `r`-neighborhood of a position are all positions whose
-  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the given
+  cartesian indices have Euclidean distance `≤ r` from the cartesian index of the origin
   position.
 
-An example using `GridSpace` is [Schelling's segregation model](@ref).
+## Advanced dimension-dependent distances in Chebyshev metric
+If `metric = :chebyshev`, some advanved specification of distances is allowed when providing
+`r` to functions like [`nearby_ids`](@ref).
+1. `r::NTuple{Int,D}` such as `r = (5, 2)`. This would mean a distance of 5 in the first
+   dimension and 2 in the second. This can be useful when different coordinates in the space
+   need to be searched with different ranges, e.g., if the space corresponds to a full
+   building, with the third dimension the floor number.
+2. `r::Vector{Tuple{Int,UnitRange{Int}}}` such as `r = [(1, -1:1), (3, 1:2)]`.
+   This allows explicitly specifying the difference between position indices in each
+   specified dimension. The example `r = [(1, -1:1), (3, 1:2)]` when given to e.g.,
+   [`nearby_ids`](@ref), would search dimension 1 one step of either side of the current
+   position (as well as the current position since `0 ∈ -1:1`) and would search
+   the third dimension one and two positions above current.
+   Unspecified dimensions (like the second in this example) are
+   searched throughout all their possible ranges.
+
+See the
+[Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
+example for usage of this advanced specification of dimension-dependent distances
+where one dimension is used as a categorical one.
 """
 function GridSpace(
     d::NTuple{D,Int};
     periodic::Bool = true,
     metric::Symbol = :chebyshev,
     pathfinder = nothing,
-    moore = nothing,
 ) where {D,W}
     s = Array{Vector{Int},D}(undef, d)
-    if moore ≠ nothing
-        @warn "Keyword `moore` is deprecated, use `metric` instead."
-        metric = moore == true ? :chebyshev : :euclidean
-    end
+
     if !isnothing(pathfinder)
         @error "Pathfinders are no longer part of GridSpace"
     end
@@ -231,26 +248,14 @@ function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     Iterators.flatten((s[i...] for i in nn))
 end
 
-"""
-    nearby_ids(pos, model::ABM{<:GridSpace}, r::Vector{Tuple{Int,UnitRange{Int}}})
-
-Return an iterable of ids over specified dimensions of `space` with fine grained control
-of distances from `pos` using each value of `r` via the (dimension, range) pattern.
-
-**Note:** Only available for use with non-periodic chebyshev grids.
-
-Example, with a `GridSpace((100, 100, 10))`: `r = [(1, -1:1), (3, 1:2)]` searches
-dimension 1 one step either side of the current position (as well as the current
-position) and the third dimension searches two positions above current.
-
-For a complete tutorial on how to use this advanced method, see
-[Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
-"""
+# This case is rather special. Its the dimension-specific search range.
+# TODO: Make it use the `Hood` code infastructure
 function nearby_ids(
     pos::ValidPos,
     model::ABM{<:GridSpace},
     r::Vector{Tuple{Int,UnitRange{Int}}},
 )
+    @assert model.space.metric == :chebyshev
     dims = first.(r)
     vidx = []
     for d in 1:ndims(model.space.s)

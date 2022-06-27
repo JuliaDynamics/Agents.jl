@@ -68,9 +68,10 @@ end
     OpenStreetMapSpace(path::AbstractString; kwargs...)
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
 This space represents the underlying map as a *continuous* entity choosing accuracy over
-performance. The map is represented as a graph, consisting of nodes connected by edges. Nodes
-are not necessarily intersections, and there may be multiple nodes on a road joining two
-intersections. Agents move along the available roads of the map using routing, see below.
+performance. The map is represented as a graph, consisting of nodes connected by edges.
+Nodes are not necessarily intersections, and there may be multiple nodes on a road joining
+two intersections.
+Agents move along the available roads of the map using routing, see below.
 
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
 An example of its usage can be found in [Zombie Outbreak](@ref).
