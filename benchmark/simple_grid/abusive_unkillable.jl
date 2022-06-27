@@ -36,14 +36,7 @@ end
 function simulate_abusiveunkillable!(model)
     for i in eachindex(model.agents)
         agent = model.agents[i]
-        same_count = 0
-        for offset in moore
-            new_pos = agent.pos .+ offset
-            if checkbounds(Bool, model.space, new_pos...) && model.space[new_pos...] != 0 && model.agents[model.space[new_pos...]].group == agent.group
-                same_count += 1
-            end
-        end
-
+        same_count = count_nearby_same_abusiveunkillable(agent, model)
         if same_count >= min_to_be_happy
             agent.happy = true
         else
@@ -59,6 +52,22 @@ function simulate_abusiveunkillable!(model)
     end
 end
 
+function count_nearby_same_abusiveunkillable(agent, model)
+    same_count = 0
+    for offset in moore
+        new_pos = agent.pos .+ offset
+        if checkbounds(Bool, model.space, new_pos...) && model.space[new_pos...] != 0
+            if model.agents[model.space[new_pos...]].group == agent.group
+                same_count += 1
+            end
+        end
+    end
+    return same_count
+end
+
 model_abusiveunkillable = initialize_abusiveunkillable()
 println("Benchmarking abusive unkillable version")
 @btime simulate_abusiveunkillable!($model_abusiveunkillable) setup = (model_abusiveunkillable = initialize_abusiveunkillable())
+println("Benchmarking abusive unkillable version: count nearby same")
+model_abusiveunkillable = initialize_abusiveunkillable()
+@btime count_nearby_same_abusiveunkillable($agent, $model_abusiveunkillable) setup = (agent = rand(model_abusiveunkillable.agents))
