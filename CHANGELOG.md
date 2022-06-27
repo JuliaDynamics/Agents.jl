@@ -1,5 +1,6 @@
 # v5.4
 - New keyword `showprogress` in `run!` function that displays a progress bar.
+- New function `OSM.route_length`.
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
 

@@ -57,3 +57,6 @@ type during serialization. For OpenStreetMap agents, the position, destination a
 saved separately. These values will be loaded back in during deserialization of the model and
 override any values in the agent structs. To save space, the agents in the serialized model
 will have empty `route` fields.
+
+## OpenStreetMapSpace internals
+Details about the internal details of the OSMSpace are discussed in the docstring of `OSM.OpenStreetMapPath`.
