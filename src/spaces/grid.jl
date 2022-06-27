@@ -70,7 +70,7 @@ If `metric = :chebyshev`, some advanved specification of distances is allowed wh
    position (as well as the current position since `0 ∈ -1:1`) and would search
    the third dimension one and two positions above current.
    Unspecified dimensions (like the second in this example) are
-   search throughout all their possible ranges.
+   searched throughout all their possible ranges.
 
 See the
 [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
