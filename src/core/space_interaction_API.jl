@@ -144,7 +144,6 @@ Move agent to the given position, or to a random one if a position is not given.
 The agent's position is updated to match `pos` after the move.
 """
 function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A}) where {A}
-    @assert typeof(agent.pos) == typeof(pos)
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -381,7 +380,7 @@ function random_nearby_id(a, model, r = 1; kwargs...)
             _, state = res
             skip_counter -= 1
         end
-        
+
         res = iterate(iter, state)
         isnothing(res) && break
     end
