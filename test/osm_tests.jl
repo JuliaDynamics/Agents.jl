@@ -7,7 +7,6 @@ mutable struct AgentOSM <: AbstractAgent
     pos::Tuple{Int,Int,Float64}
 end
 
-
 @testset "OpenStreetMap space" begin
     goettingen = OSM.test_map()
     space = OpenStreetMapSpace(goettingen; network_type = :none, weight_type = :time)
@@ -123,7 +122,7 @@ end
         @test all(model[1].pos .!= start_intersection)
     end
 
-    @testset "Distances" begin
+    @testset "Distances, road/route lengths" begin
         pos_1 = start_intersection[1]
         nbor = Int(outneighbors(model.space.map.graph, pos_1[1])[1])
         rl = OSM.road_length(pos_1, nbor, model)
@@ -139,5 +138,6 @@ end
         ))
         len += OSM.road_length(pos_1, model.space.routes[1].route[end], model)
         @test OSM.distance(pos_1, finish_intersection, model) ≈ len
+        @test OSM.route_length(model[1], model) ≈ len
     end
 end
