@@ -57,7 +57,7 @@ end
 function initialize_sologridspace()
     space = SoloGridSpace(grid_size; periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.Xoshiro(1234)
+    rng = Random.Xoshiro(rand(UInt))
     model = ABM(SoloGridSpaceAgent, space; properties, rng)
     N = grid_size[1]*grid_size[2]*grid_occupation
     for n in 1:N
@@ -85,4 +85,4 @@ end
 
 model_sologridspace = initialize_sologridspace()
 println("Benchmarking SoloGridSpace version")
-@btime step!($model_sologridspace, agent_step_sologridspace!)
+@btime step!($model_sologridspace, agent_step_sologridspace!) setup = (model_sologridspace = initialize_sologridspace())

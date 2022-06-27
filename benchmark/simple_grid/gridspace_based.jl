@@ -8,7 +8,7 @@ end
 function initialize_gridspace()
     space = GridSpace(grid_size; periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.Xoshiro(1234)
+    rng = Random.Xoshiro(rand(UInt))
     model = ABM(GridSpaceAgent, space; properties, rng)
     N = grid_size[1]*grid_size[2]*grid_occupation
     for n in 1:N
@@ -36,4 +36,4 @@ end
 
 model_gridspace = initialize_gridspace()
 println("Benchmarking GridSpace version")
-@btime step!($model_gridspace, agent_step_gridspace!)
+@btime step!($model_gridspace, agent_step_gridspace!) setup = (model_gridspace = initialize_gridspace())

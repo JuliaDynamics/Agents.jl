@@ -1,4 +1,3 @@
-Random.seed!(1234)
 mutable struct DictAgent
     group::Int
     happy::Bool
@@ -25,8 +24,8 @@ function simulation_step!(model)
     for pos in filled_positions # loop over all locations on grid
         agent = model[pos]
         same = 0
-        neighboring_indices = [pos .+ n for n in moore]
-        for npos in neighboring_indices
+        for moore_index in moore
+            npos = pos .+ moore_index
             if !haskey(model, npos)
                 continue
             end
@@ -50,4 +49,4 @@ end
 
 model_dict = initialize_dict()
 println("benchmarking dict-based step")
-@btime simulation_step!($model_dict)
+@btime simulation_step!($model_dict) setup = (model_dict = initialize_dict())

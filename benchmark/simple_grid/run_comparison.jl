@@ -1,4 +1,5 @@
 using Random, BenchmarkTools, Agents
+Random.seed!(1234)
 # shared constants
 const min_to_be_happy = 3 # how many nearby agents you need of same group
 const grid_occupation = 0.8 # percentage of space occupied by agents
