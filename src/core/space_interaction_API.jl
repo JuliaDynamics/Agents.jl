@@ -317,12 +317,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(
-    agent::A,
-    model::ABM{S,A},
-    r = 1;
-    kwargs...,
-) where {S,A<:AbstractAgent}
+function nearby_ids(agent::A, model::ABM{S,A}, r = 1; kwargs...) where {S,A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
