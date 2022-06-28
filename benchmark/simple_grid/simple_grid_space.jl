@@ -141,4 +141,4 @@ println("Benchmarking SoloGridSpace version")
 
 println("Benchmarking SoloGridSpace version: count nearby same")
 model = initialize_sologridspace()
-@btime count_nearby_same($agent, $model) setup = (agent = random_agent(model))
+@btime count_nearby_same(agent, model) setup = (agent = random_agent(model))
