@@ -13,11 +13,12 @@ struct SoloGridSpace{D,P} <: AbstractGridSpace{D,P}
     s::Array{Int,D}
     metric::Symbol
     neighboring_indices::Dict{Float64,Vector{NTuple{D,Int}}}
+    neighboring_indices_no_origin::Dict{Float64,Vector{NTuple{D,Int}}}
 end
 function SoloGridSpace(d::NTuple{D,Int}; periodic = true, metric = :chebyshev) where {D}
     s = zeros(Int, d)
     return SoloGridSpace{D,periodic}(s, metric,
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
+        Dict{Float64,Vector{NTuple{D,Int}}}(), Dict{Float64,Vector{NTuple{D,Int}}}(),
     )
 end
 
@@ -36,19 +37,38 @@ end
 Base.isempty(pos, model::ABM{<:SoloGridSpace}) = model.space.s[pos...] == 0
 
 # Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
-indices_within_radius(model::ABM, r::Real) = indices_within_radius(model.space, r::Real)
-function indices_within_radius(space::SoloGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.neighboring_indices, r)
-        space.neighboring_indices[r]
+indices_within_radius(model::ABM, args...) = indices_within_radius(model.space, args...)
+indices_within_radius_no_origin(model::ABM, args...) =
+indices_within_radius_no_origin(model.space, args...)
+
+@inline function indices_within_radius(space::SoloGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
+    dict = space.neighboring_indices
+    if haskey(dict, r)
+        nindices = dict[r]
     else
-        initialize_neighborhood!(space, r)
+        nindices = init_neighborhood(space, r)
+        dict[r] = nindices
     end
+    return nindices
+end
+
+@inline function indices_within_radius_no_origin(
+    space::SoloGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
+    dict = space.neighboring_indices_no_origin
+    if haskey(dict, r)
+        nindices = dict[r]
+    else
+        nindices = init_neighborhood(space, r)
+        zero_pos = ntuple(x -> 0, Val{D}())
+        filter!(x -> x ≠ zero_pos, nindices)
+        dict[r] = nindices
+    end
+    return nindices
 end
 
 # Make grid space Abstract if indeed faster
-function initialize_neighborhood!(space::SoloGridSpace{D}, r::Real) where {D}
-    d = size(space.s)
-    r0 = floor(Int, r)
+function init_neighborhood(space::SoloGridSpace{D}, r::Real) where {D}
+    r0 = floor(Int, r) # TODO: Is this correct? Shouldn't it be `ceil`?
     if space.metric == :euclidean
         # hypercube of indices
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
@@ -56,20 +76,22 @@ function initialize_neighborhood!(space::SoloGridSpace{D}, r::Real) where {D}
         βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
     elseif space.metric == :manhattan
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        βs = [β for β ∈ hypercube if sum(abs.(β.I)) <= r0]
+        βs = [β for β ∈ hypercube if sum(abs.(β.I)) ≤ r0]
     elseif space.metric == :chebyshev
         βs = vec([Tuple(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
     else
         error("Unknown metric type")
     end
-    space.neighboring_indices[float(r)] = βs
     return βs
 end
 
 # And finally extend `nearby_ids` given a position
 # TODO: Check if making functionals instead of closures is faster
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
+function nearby_ids(
+        pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r = 1,
+        get_nearby_indices = indices_within_radius
+    ) where {D}
+    nindices = get_nearby_indices(model, r)
     space_array = model.space.s
     space_size = size(space_array)
     array_accesses_iterator = (space_array[(mod1.(pos .+ β, space_size))...] for β in nindices)
@@ -78,8 +100,11 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r 
     return valid_pos_iterator
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
+function nearby_ids(
+        pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r = 1,
+        get_nearby_indices = indices_within_radius
+    ) where {D}
+    nindices = get_nearby_indices(model, r)
     space_array = model.space.s
     positions_iterator = (pos .+ β for β in nindices)
     # Here we combine in one filtering step both valid accesses to the space array
@@ -90,6 +115,13 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r
     )
     return (space_array[pos...] for pos in valid_pos_iterator)
 end
+
+# Notice that for performance reasons, we also extend the following function,
+# because by definition neighborhoods in `SoloGridSpace` do not include origin
+function nearby_ids(a::A, model::ABM{<:SoloGridSpace, A}, r = 1) where {A<:AbstractAgent}
+    return nearby_ids(a.pos, model, r, indices_within_radius_no_origin)
+end
+
 
 ##########################################################################################
 # Recreated Schelling
