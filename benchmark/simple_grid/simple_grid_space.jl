@@ -60,7 +60,6 @@ end
 
 # Make grid space Abstract if indeed faster
 function initialize_neighborhood(space::SoloGridSpace{D}, r::Real) where {D}
-    d = size(space.s)
     r0 = floor(Int, r)
     if space.metric == :euclidean
         # hypercube of indices
@@ -80,8 +79,9 @@ end
 
 # And finally extend `nearby_ids` given a position
 # TODO: Check if making functionals instead of closures is faster
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r = 1;
+    get_nearby_indices = indices_within_radius) where {D}
+    nindices = get_nearby_indices(model, r)
     space_array = model.space.s
     space_size = size(space_array)
     array_accesses_iterator = (space_array[(mod1.(pos .+ β, space_size))...] for β in nindices)
@@ -90,8 +90,9 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r 
     return valid_pos_iterator
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r = 1;
+    get_nearby_indices = indices_within_radius) where {D}
+    nindices = get_nearby_indices(model, r)
     space_array = model.space.s
     positions_iterator = (pos .+ β for β in nindices)
     # Here we combine in one filtering step both valid accesses to the space array
@@ -104,19 +105,8 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r
 end
 
 function nearby_ids(a::A, model::ABM{<:SoloGridSpace{D,false},A}, r = 1) where {D,A<:AbstractAgent}
-    pos = a.pos
-    nindices = indices_within_radius_no_0(model, r)
-    space_array = model.space.s
-    positions_iterator = (pos .+ β for β in nindices)
-    # Here we combine in one filtering step both valid accesses to the space array
-    # but also that the accessed location is not empty (i.e., id is not 0)
-    valid_pos_iterator = Base.Iterators.filter(
-        pos -> checkbounds(Bool, space_array, pos...) && space_array[pos...] ≠ 0,
-        positions_iterator
-    )
-    return (space_array[pos...] for pos in valid_pos_iterator)
+    return nearby_ids(a.pos, model, r; get_nearby_indices = indices_within_radius_no_0)
 end
-
 
 
 ##########################################################################################
