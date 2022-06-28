@@ -36,13 +36,13 @@ end
 Base.isempty(pos, model::ABM{<:SoloGridSpace}) = model.space.s[pos...] == 0
 
 # Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
-function grid_space_neighborhood(α::Tuple, space::SoloGridSpace, r::Real)
-    nindices = if haskey(space.neighboring_indices, r)
+indices_within_radius(model::ABM, r::Real) = indices_within_radius(model.space, r::Real)
+function indices_within_radius(space::SoloGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
+    if haskey(space.neighboring_indices, r)
         space.neighboring_indices[r]
     else
         initialize_neighborhood!(space, r)
     end
-    fast_grid_space_neighborhood(α, space, nindices)
 end
 
 # Make grid space Abstract if indeed faster
@@ -65,28 +65,30 @@ function initialize_neighborhood!(space::SoloGridSpace{D}, r::Real) where {D}
     space.neighboring_indices[float(r)] = βs
     return βs
 end
-# Periodic version
-function fast_grid_space_neighborhood(
-        α::NTuple{D, Int}, space::SoloGridSpace{D,true}, nindices::Vector{NTuple{D, Int}}
-    ) where {D}
-    s = size(space.s)
-    return ((mod1.(α .+ β, s)) for β in nindices)
-end
-# Non-periodic, skips based on bound checking
-function fast_grid_space_neighborhood(
-        α::NTuple{D, Int}, space::SoloGridSpace{D,false}, nindices::Vector{NTuple{D, Int}}
-    ) where {D}
-    space_array = space.s
-    return Base.Iterators.filter(
-        pos -> checkbounds(Bool, space_array, pos...), (α .+ β for β in nindices)
-    )
-end
 
 # And finally extend `nearby_ids` given a position
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D}}, r = 1) where {D}
-    nn = grid_space_neighborhood(pos, model, r)
-    iterator = (model.space.s[i...] for i in nn)
-    return Base.Iterators.filter(x -> x ≠ 0, iterator)
+# TODO: Check if making functionals instead of closures is faster
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,true}}, r = 1) where {D}
+    nindices = indices_within_radius(model, r)
+    space_array = model.space.s
+    space_size = size(space_array)
+    array_accesses_iterator = (space_array[(mod1.(pos .+ β, space_size))...] for β in nindices)
+    # Notice that not all positions are valid; some are empty! Need to filter:
+    valid_pos_iterator = Base.Iterators.filter(x -> x ≠ 0, array_accesses_iterator)
+    return valid_pos_iterator
+end
+
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:SoloGridSpace{D,false}}, r = 1) where {D}
+    nindices = indices_within_radius(model, r)
+    space_array = model.space.s
+    positions_iterator = (pos .+ β for β in nindices)
+    # Here we combine in one filtering step both valid accesses to the space array
+    # but also that the accessed location is not empty (i.e., id is not 0)
+    valid_pos_iterator = Base.Iterators.filter(
+        pos -> checkbounds(Bool, space_array, pos...) && space_array[pos...] ≠ 0,
+        positions_iterator
+    )
+    return (space_array[pos...] for pos in valid_pos_iterator)
 end
 
 ##########################################################################################
