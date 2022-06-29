@@ -43,6 +43,12 @@ end
 
         # Also test ids_in_position stuff for GridSpace
         if SpaceType == GridSpace
+            pos1 = ids_in_position((1, 3), model)
+            @test isempty(pos1)
+            pos2 = ids_in_position((1, 1), model)
+            @test length(pos2) == 1
+            @test pos2[1].id == 1
+
             @test positions(model, :population) ==
                 [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
             @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
