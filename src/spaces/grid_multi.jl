@@ -94,47 +94,52 @@ function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:Abs
 end
 
 ##########################################################################################
-# %% Structures for collecting neighbors on a grid
+# nearby_stuff for GridSpace
 ##########################################################################################
 # `indices_within_radius` and creating them comes from the spaces/grid_general.jl.
-# The code for `nearby_ids(pos, model, r::Real)` is very similar to `GridSpaceSingle`.
-
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,true}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
-    stored_ids = model.space.stored_ids
-    space_size = size(stored_ids)
-    array_accesses_iterator = (stored_ids[(mod1.(pos .+ β, space_size))...] for β in nindices)
-    return Iterators.flatten(stored_ids[i...] for i in array_accesses_iterator)
-end
-
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,false}}, r = 1) where {D}
-    nindices = indices_within_radius(model, r)
-    stored_ids = model.space.stored_ids
-
-    return GridSpaceIdIterator{D}(stored_ids, nindices, length(nindices), pos)
-
-    # positions_iterator = (pos .+ β for β in nindices)
-    # return Iterators.flatten(@inbounds(stored_ids[i...]) for i in positions_iterator if checkbounds(Bool, stored_ids, i...))
-end
-
+# `nearby_positions` is super easy, given the code in spaces/grid_general.jl
 function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     nindices = indices_within_radius_no_0(model, r)
     Iterators.filter(!isequal(pos), nindices)
 end
 
-# # What should state be...?
-# # state should be `(pos_i, inner_i)` with `pos_i` the index to the nearby indices
-struct GridSpaceIdIterator{D}
+# The code for `nearby_ids(pos, model, r::Real)` is different from `GridSpaceSingle`.
+# Turns out, nested calls to `Iterators.flatten` were bad for performance,
+# and Julia couldn't completely optimize everything.
+# Instead, here we create a dedicated iterator for going over IDs.
+
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,P}}, r = 1) where {D,P}
+    nindices = indices_within_radius(model, r)
+    stored_ids = model.space.stored_ids
+    return GridSpaceIdIterator{P}(stored_ids, nindices, pos)
+end
+
+# Iterator struct. State is `(pos_i, inner_i)` with `pos_i` the index to the nearby indices
+# P is Boolean, and means "periodic".
+struct GridSpaceIdIterator{P,D}
     stored_ids::Array{Vector{Int},D}  # Reference to array in grid space
     indices::Vector{NTuple{D,Int}}    # Result of `indices_within_radius` pretty much
-    L::Int                            # length of `indices`
     origin::NTuple{D,Int}             # origin position nearby is measured from
+    L::Int                            # length of `indices`
+    space_size::NTuple{D,Int}         # size of `stored_ids`
+end
+function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D,Int}) where {P,D}
+    L = length(indices)
+    @assert L > 0
+    space_size = size(stored_ids)
+    return GridSpaceIdIterator{P,D}(stored_ids, indices, origin, L, space_size)
 end
 Base.eltype(::Type{<:GridSpaceIdIterator}) = Int # It returns IDs
 Base.IteratorSize(::Type{<:GridSpaceIdIterator}) = Base.SizeUnknown()
 
+# Instructs how to combine two positions. Just to avoid code duplication
+combine_positions(pos, origin, ::GridSpaceIdIterator{false}) = pos .+ origin
+function combine_positions(pos, origin, iter::GridSpaceIdIterator{true})
+    mod1.(pos .+ origin, iter.space_size)
+end
+
 # Initialize iteration
-function Base.iterate(iter::GridSpaceIdIterator{D}) where {D}
+function Base.iterate(iter::GridSpaceIdIterator)
     stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i = 1
@@ -154,17 +159,20 @@ function Base.iterate(iter::GridSpaceIdIterator{D}) where {D}
 end
 
 # Must return `true` if the access is invalid
-function invalid_access(pos_index, iter)
+function invalid_access(pos_index, iter::GridSpaceIdIterator{false})
     valid_bounds = checkbounds(Bool, iter.stored_ids, pos_index...)
     empty_pos = valid_bounds && isempty(iter.stored_ids[pos_index...])
     valid = valid_bounds && !empty_pos
     return !valid
 end
+function invalid_access(pos_index, iter::GridSpaceIdIterator{true})
+    isempty(iter.stored_ids[pos_index...])
+end
 
 # For performance we need a different method of starting the iteration
 # and another one that continues iteration. Second case uses the explicitly
 # known knowledge of `pos_i` being a valid position index.
-function Base.iterate(iter::GridSpaceIdIterator{D}, state) where {D}
+function Base.iterate(iter::GridSpaceIdIterator, state)
     stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i, inner_i = state
