@@ -126,7 +126,7 @@ end
 Base.eltype(::Type{<:GridSpaceIdIterator}) = Int # It returns IDs
 Base.IteratorSize(::Type{<:GridSpaceIdIterator}) = Base.SizeUnknown()
 
-# Instructs how to combine two positions. Just to avoid code duplication
+# Instructs how to combine two positions. Just to avoid code duplication for periodic
 combine_positions(pos, origin, ::GridSpaceIdIterator{false}) = pos .+ origin
 function combine_positions(pos, origin, iter::GridSpaceIdIterator{true})
     mod1.(pos .+ origin, iter.space_size)
@@ -138,14 +138,14 @@ function Base.iterate(iter::GridSpaceIdIterator)
         stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i = 1
-    pos_index = indices[pos_i] .+ origin
+    pos_index = combine_positions(indices[pos_i], origin, iter)
     # First, check if the position index is valid (bounds checking)
     # AND whether the position is empty. If not, proceed to next position index.
     while invalid_access(pos_index, iter)
         pos_i += 1
         # Stop iteration if `pos_index` exceeded the amount of positions
         pos_i > L && return nothing
-        pos_index = indices[pos_i] .+ origin
+        pos_index = combine_positions(indices[pos_i], origin, iter)
     end
     # We have a valid position index and a non-empty position
     ids_in_pos = stored_ids[pos_index...]
@@ -173,7 +173,7 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
     stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i, inner_i = state
-    pos_index = indices[pos_i] .+ origin
+    pos_index = combine_positions(indices[pos_i], origin, iter)
     # We know guaranteed from previous iteration that `pos_index` is valid index
     ids_in_pos = stored_ids[pos_index...]
     X = length(ids_in_pos)
@@ -183,12 +183,12 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
         # Stop iteration if `pos_index` exceeded the amount of positions
         pos_i > L && return nothing
         inner_i = 1
-        pos_index = indices[pos_i] .+ origin
+        pos_index = combine_positions(indices[pos_i], origin, iter)
         # Of course, we need to check if we have valid index
         while invalid_access(pos_index, iter)
             pos_i += 1
             pos_i > L && return nothing
-            pos_index = indices[pos_i] .+ origin
+            pos_index = combine_positions(indices[pos_i], origin, iter)
         end
         ids_in_pos = stored_ids[pos_index...]
     end

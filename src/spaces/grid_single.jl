@@ -55,8 +55,12 @@ end
 # Implementation of nearby_stuff
 #######################################################################################
 # The following functions utilize the 1-agent-per-posiiton knowledge,
-# hence giving much faster nearby looping than `GridSpace`.
-# Keyword `get_nearby_indices` exists because of last function in the file.
+# hence giving faster nearby looping than `GridSpace`.
+# Notice that the code here is a near duplication of `nearby_positions`
+# defined in spaces/grid_general.jl. Unfortunately
+# the duplication is necessary because `nearby_ids(pos, ...)` should in principle
+# contain the id at the given `pos` as well.
+
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, r = 1;
     get_nearby_indices = indices_within_radius) where {D}
     nindices = get_nearby_indices(model, r)
@@ -76,7 +80,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     # Here we combine in one filtering step both valid accesses to the space array
     # but also that the accessed location is not empty (i.e., id is not 0)
     array_accesses_iterator = Base.Iterators.filter(
-        pos -> checkbounds(Bool, stored_ids, pos...) && @inbounds(stored_ids[pos...]) ≠ 0,
+        pos -> checkbounds(Bool, stored_ids, pos...) && stored_ids[pos...] ≠ 0,
         positions_iterator
     )
     return (stored_ids[pos...] for pos in array_accesses_iterator)

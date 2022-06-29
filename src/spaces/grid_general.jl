@@ -46,15 +46,17 @@ end
 
 # Make grid space Abstract if indeed faster
 function initialize_neighborhood(space::AbstractGridSpace{D}, r::Real) where {D}
-    r0 = floor(Int, r) # TODO: Is this correct? Shouldn't it be `ceil`?
     if space.metric == :euclidean
+        r0 = ceil(Int, r)
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        # select subset of hc which is in Hypersphere
+        # select subset which is in Hypersphere
         βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
     elseif space.metric == :manhattan
+        r0 = floor(Int, r)
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r0]
     elseif space.metric == :chebyshev
+        r0 = floor(Int, r)
         βs = vec([Tuple(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
     else
         error("Unknown metric type")

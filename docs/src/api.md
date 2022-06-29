@@ -32,6 +32,7 @@ Here we list the spaces that are available "out of the box" from Agents.jl. To c
 ```@docs
 GraphSpace
 GridSpace
+GridSpaceSingle
 ```
 
 Here is a specification of how the metrics look like:
