@@ -20,12 +20,7 @@ function initialize_gridspace()
 end
 
 function agent_step_gridspace!(agent, model)
-    nearby_same = 0
-    for neighbor in nearby_agents(agent, model)
-        if agent.group == neighbor.group
-            nearby_same += 1
-        end
-    end
+    nearby_same = count_nearby_same(agent, model)
     if nearby_same ≥ model.min_to_be_happy
         agent.happy = true
     else
@@ -33,7 +28,20 @@ function agent_step_gridspace!(agent, model)
     end
     return
 end
+function count_nearby_same(agent, model)
+    nearby_same = 0
+    for neighbor in nearby_agents(agent, model)
+        if agent.group == neighbor.group
+            nearby_same += 1
+        end
+    end
+    return nearby_same
+end
 
 model_gridspace = initialize_gridspace()
 println("Benchmarking GridSpace version")
 @btime step!($model_gridspace, agent_step_gridspace!) setup = (model_gridspace = initialize_gridspace())
+
+println("Benchmarking GridSpace version: count nearby same")
+model = initialize_gridspace()
+@btime count_nearby_same(agent, model) setup = (agent = random_agent(model))

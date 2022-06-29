@@ -7,7 +7,7 @@ using Graphs
 using DataFrames
 using Random
 import ProgressMeter
-import Base.length
+import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra
 
 # Core structures of Agents.jl
@@ -18,6 +18,7 @@ include("core/space_interaction_API.jl")
 # Existing spaces
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
+include("spaces/grid_general.jl")
 include("spaces/grid_multi.jl")
 include("spaces/grid_single.jl")
 include("spaces/discrete.jl")

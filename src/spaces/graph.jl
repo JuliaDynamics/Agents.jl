@@ -5,7 +5,7 @@ export GraphSpace
 #######################################################################################
 struct GraphSpace{G} <: DiscreteSpace
     graph::G
-    s::Vector{Vector{Int}}
+    stored_ids::Vector{Vector{Int}}
 end
 
 """
@@ -64,7 +64,7 @@ function add_agent_to_space!(
 end
 
 # The following is for the discrete space API:
-ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
+ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################
@@ -75,7 +75,7 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
         return ids_in_position(pos, model)
     end
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(model.space.s[pos], model.space.s[np]...)
+    vcat(model.space.stored_ids[pos], model.space.stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
@@ -122,7 +122,7 @@ function rem_node!(model::ABM{<:GraphSpace}, n::Int)
     V = nv(model)
     success = Graphs.rem_vertex!(model.space.graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.s
+    s = model.space.stored_ids
     s[V], s[n] = s[n], s[V]
     pop!(s)
 end
@@ -134,7 +134,7 @@ You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
 function add_node!(model::ABM{<:GraphSpace})
     add_vertex!(model.space.graph)
-    push!(model.space.s, Int[])
+    push!(model.space.stored_ids, Int[])
     return nv(model)
 end
 

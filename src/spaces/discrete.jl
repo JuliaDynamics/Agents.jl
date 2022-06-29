@@ -91,7 +91,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # TODO: We shouldn't be using `model.space.s` here.
     # For `DiscreteSpace`s we should define `npositions` that
     # returns the total possible number of positions in the space...
-    if clamp(nagents(model) / prod(size(model.space.s)), 0.0, 1.0) < cutoff
+    if clamp(nagents(model) / prod(size(model.space.stored_ids)), 0.0, 1.0) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee

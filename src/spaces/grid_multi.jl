@@ -1,36 +1,12 @@
-"""
-    AbstractGridSpace{D,P}
-Abstract type for grid-based spaces.
-All instances have a field `s` which is simply the array
-whose size is the same as the size of the space and whose cartesian
-indices are the possible positions in the space.
-`D` is the dimension and `P` is whether the space is periodic (boolean).
-"""
-abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 export GridSpace
-
-struct Region{D}
-    mini::NTuple{D,Int}
-    maxi::NTuple{D,Int}
-end
-
-"""
-    Hood{D}
-Internal struct for efficiently finding neighboring positions to a given position.
-It contains pre-initialized neighbor cartesian indices and delimiters of when the
-neighboring indices would exceed the size of the underlying array.
-"""
-struct Hood{D}
-    whole::Region{D} # allowed values (only useful for non periodic)
-    βs::Vector{CartesianIndex{D}} # neighborhood cartesian indices
-end
 
 # type P stands for Periodic and is a boolean
 struct GridSpace{D,P} <: AbstractGridSpace{D,P}
-    s::Array{Vector{Int},D}
+    stored_ids::Array{Vector{Int},D}
     metric::Symbol
-    hoods::Dict{Float64,Hood{D}}
-    hoods_tuple::Dict{NTuple{D,Float64},Hood{D}}
+    indices_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
+    indices_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    indices_within_radius_tuple::Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}
 end
 
 """
@@ -87,43 +63,31 @@ example for usage of this advanced specification of dimension-dependent distance
 where one dimension is used as a categorical one.
 """
 function GridSpace(
-    d::NTuple{D,Int};
-    periodic::Bool = true,
-    metric::Symbol = :chebyshev,
-    pathfinder = nothing,
-) where {D,W}
-    s = Array{Vector{Int},D}(undef, d)
-
-    if !isnothing(pathfinder)
-        @error "Pathfinders are no longer part of GridSpace"
+        d::NTuple{D,Int}; periodic::Bool = true, metric::Symbol = :chebyshev
+    ) where {D}
+    stored_ids = Array{Vector{Int},D}(undef, d)
+    for i in eachindex(stored_ids)
+        stored_ids[i] = Int[]
     end
-
-    for i in eachindex(s)
-        s[i] = Int[]
-    end
-
     return GridSpace{D,periodic}(
-        s,
+        stored_ids,
         metric,
-        Dict{Float64,Hood{D}}(),
-        Dict{NTuple{D,Float64},Hood{D}}(),
+        Dict{Float64,Vector{NTuple{D,Int}}}(),
+        Dict{Float64,Vector{NTuple{D,Int}}}(),
+        Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}(),
     )
 end
 
 #######################################################################################
 # %% Implementation of space API
 #######################################################################################
-function random_position(model::ABM{<:AbstractGridSpace})
-    Tuple(rand(model.rng, CartesianIndices(model.space.s)))
-end
-
 function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
-    push!(model.space.s[a.pos...], a.id)
+    push!(model.space.stored_ids[a.pos...], a.id)
     return a
 end
 
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
-    prev = model.space.s[a.pos...]
+    prev = model.space.stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
@@ -132,124 +96,36 @@ end
 ##########################################################################################
 # %% Structures for collecting neighbors on a grid
 ##########################################################################################
-# Most of the source code in this section comes from TimeseriesPrediction.jl, specifically
-# the file github.com/JuliaDynamics/TimeseriesPrediction.jl/src/spatiotemporalembedding.jl
-# It creates a performant envinroment where the cartesian indices of a given neighborhood
-# of given radious and metric type are stored and re-used for each search.
+# `indices_within_radius` and creating them comes from the spaces/grid_general.jl.
+# The code for `nearby_ids(pos, model, r::Real)` is very similar to `GridSpaceSingle`.
 
-Base.length(r::Region{D}) where {D} = prod(r.maxi .- r.mini .+ 1)
-
-function Base.in(idx, r::Region{D}) where {D}
-    @inbounds for φ in 1:D
-        r.mini[φ] <= idx[φ] <= r.maxi[φ] || return false
-    end
-    return true
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,true}}, r = 1) where {D}
+    nindices = get_nearby_indices(model, r)
+    stored_ids = model.space.stored_ids
+    space_size = size(stored_ids)
+    array_accesses_iterator = (stored_ids[(mod1.(pos .+ β, space_size))...] for β in nindices)
+    return Iterators.flatten(stored_ids[i...] for i in array_accesses_iterator)
 end
 
-# This function initializes the standard cartesian indices that needs to be added to some
-# index `α` to obtain its neighborhood
-function initialize_neighborhood!(space::AbstractGridSpace{D}, r::Real) where {D}
-    d = size(space.s)
-    r0 = floor(Int, r)
-    if space.metric == :euclidean
-        # hypercube of indices
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        # select subset of hc which is in Hypersphere
-        βs = [β for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
-    elseif space.metric == :manhattan
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        βs = [β for β ∈ hypercube if sum(abs.(β.I)) <= r0]
-    elseif space.metric == :chebyshev
-        βs = vec([CartesianIndex(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
-    else
-        error("Unknown metric type")
-    end
-    whole = Region(map(one, d), d)
-    hood = Hood{D}(whole, βs)
-    space.hoods[float(r)] = hood
-    return hood
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,false}}, r = 1;
+    get_nearby_indices = indices_within_radius) where {D}
+    nindices = get_nearby_indices(model, r)
+    stored_ids = model.space.stored_ids
+    positions_iterator = (pos .+ β for β in nindices)
+    # Not sure if this will work:
+    return Iterators.flatten(@inbounds(stored_ids[i...]) for i in positions_iterator if checkbounds(Bool, stored_ids, i...))
 end
 
-function initialize_neighborhood!(space::AbstractGridSpace{D}, r::NTuple{D,Real}) where {D}
-    @assert space.metric == :chebyshev "Can only use tuple based neighbor search with the Chebyshev metric."
-    d = size(space.s)
-    r0 = (floor(Int, i) for i in r)
-    βs = vec([CartesianIndex(a) for a in Iterators.product([(-ri):ri for ri in r0]...)])
-    whole = Region(map(one, d), d)
-    hood = Hood{D}(whole, βs)
-    push!(space.hoods_tuple, float.(r) => hood)
-    return hood
-end
+function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
+    nindices = get_nearby_indices(model, r)
 
-"""
-    grid_space_neighborhood(α::CartesianIndex, space::AbstractGridSpace, r::Real)
-
-Return an iterator over all positions within distance `r` from `α` according to the `space`.
-
-The only reason this function is not equivalent with `nearby_positions` is because
-`nearby_positions` skips the current position `α`, while `α` is always included in the
-returned iterator (because the `0` index is always included in `βs`).
-
-This function re-uses the source code of TimeseriesPrediction.jl, along with the
-helper struct `Hood` and generates neighboring cartesian indices on the fly,
-reducing the amount of computations necessary (i.e. we don't "find" new indices,
-we only add a pre-determined amount of indices to `α`).
-"""
-function grid_space_neighborhood(α::CartesianIndex, space::AbstractGridSpace, r::Real)
-    hood = if haskey(space.hoods, r)
-        space.hoods[r]
-    else
-        initialize_neighborhood!(space, r)
-    end
-    _grid_space_neighborhood(α, space, hood)
-end
-
-"""
-    grid_space_neighborhood(α::CartesianIndex, space::AbstractGridSpace, r::NTuple)
-
-Return an iterator over all positions within distances of the tuple `r`, from `α`
-according to the `space`. `r` must have as many elements as `space` has dimensions.
-For example, with a `GridSpace((10, 10, 10))` : `r = (1, 7, 9)`.
-"""
-function grid_space_neighborhood(
-    α::CartesianIndex,
-    space::GridSpace{D},
-    r::NTuple{D,Real},
-) where {D}
-    hood = if haskey(space.hoods_tuple, r)
-        space.hoods_tuple[r]
-    else
-        initialize_neighborhood!(space, r)
-    end
-    _grid_space_neighborhood(α, space, hood)
-end
-
-function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::AbstractGridSpace{D,true},
-    hood,
-) where {D}
-    return ((mod1.(Tuple(α + β), hood.whole.maxi)) for β in hood.βs)
-end
-
-function _grid_space_neighborhood(
-    α::CartesianIndex,
-    space::AbstractGridSpace{D,false},
-    hood,
-) where {D}
-    return Iterators.filter(x -> x ∈ hood.whole, (Tuple(α + β) for β in hood.βs))
-end
-
-grid_space_neighborhood(α, model::ABM, r) = grid_space_neighborhood(α, model.space, r)
-
-##########################################################################################
-# %% Extend neighbors API for spaces
-##########################################################################################
-function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
-    s = model.space.s
-    Iterators.flatten((s[i...] for i in nn))
+    Iterators.filter(!isequal(pos), nn)
 end
+
+
+
+# TODO: Re-write this to create its own `indices_within_radius_tuple` like GridSpaceSinelg
 
 # This case is rather special. It's the dimension-specific search range.
 # TODO: Make it use the `Hood` code infastructure
@@ -261,13 +137,13 @@ function nearby_ids(
     @assert model.space.metric == :chebyshev
     dims = first.(r)
     vidx = []
-    for d in 1:ndims(model.space.s)
+    for d in 1:ndims(model.space.stored_ids)
         idx = findall(dim -> dim == d, dims)
         dim_range = isempty(idx) ? Colon() :
             bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
         push!(vidx, dim_range)
     end
-    s = view(model.space.s, vidx...)
+    s = view(model.space.stored_ids, vidx...)
     Iterators.flatten(s)
 end
 
@@ -275,29 +151,10 @@ function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
     return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
 end
 
-function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
-    Iterators.filter(!isequal(pos), nn)
-end
 
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
-function positions(model::ABM{<:AbstractGridSpace})
-    x = CartesianIndices(model.space.s)
-    return (Tuple(y) for y in x)
-end
-
 function ids_in_position(pos::ValidPos, model::ABM{<:GridSpace})
-    return model.space.s[pos...]
-end
-
-###################################################################
-# %% pretty printing
-###################################################################
-Base.size(space::GridSpace) = size(space.s)
-
-function Base.show(io::IO, space::GridSpace{D,P}) where {D,P}
-    s = "GridSpace with size $(size(space)), metric=$(space.metric), periodic=$(P)"
-    print(io, s)
+    return model.space.stored_ids[pos...]
 end
