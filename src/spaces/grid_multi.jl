@@ -44,7 +44,7 @@ The allowed metrics are (and see docs online for a plotted example):
 ## Advanced dimension-dependent distances in Chebyshev metric
 If `metric = :chebyshev`, some advanved specification of distances is allowed when providing
 `r` to functions like [`nearby_ids`](@ref).
-1. `r::NTuple{Int,D}` such as `r = (5, 2)`. This would mean a distance of 5 in the first
+1. `r::NTuple{D,Int}` such as `r = (5, 2)`. This would mean a distance of 5 in the first
    dimension and 2 in the second. This can be useful when different coordinates in the space
    need to be searched with different ranges, e.g., if the space corresponds to a full
    building, with the third dimension the floor number.
@@ -140,7 +140,8 @@ end
 
 # Initialize iteration
 function Base.iterate(iter::GridSpaceIdIterator)
-    stored_ids, indices, L, origin = getproperty.(
+    @inbounds begin
+        stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i = 1
     pos_index = indices[pos_i] .+ origin
@@ -156,23 +157,25 @@ function Base.iterate(iter::GridSpaceIdIterator)
     ids_in_pos = stored_ids[pos_index...]
     id = ids_in_pos[1]
     return (id, (pos_i, 2))
+    end
 end
 
 # Must return `true` if the access is invalid
 function invalid_access(pos_index, iter::GridSpaceIdIterator{false})
     valid_bounds = checkbounds(Bool, iter.stored_ids, pos_index...)
-    empty_pos = valid_bounds && isempty(iter.stored_ids[pos_index...])
+    empty_pos = valid_bounds && @inbounds isempty(iter.stored_ids[pos_index...])
     valid = valid_bounds && !empty_pos
     return !valid
 end
 function invalid_access(pos_index, iter::GridSpaceIdIterator{true})
-    isempty(iter.stored_ids[pos_index...])
+    @inbounds isempty(iter.stored_ids[pos_index...])
 end
 
 # For performance we need a different method of starting the iteration
 # and another one that continues iteration. Second case uses the explicitly
 # known knowledge of `pos_i` being a valid position index.
 function Base.iterate(iter::GridSpaceIdIterator, state)
+    @inbounds begin
     stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
     pos_i, inner_i = state
@@ -198,14 +201,23 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
     # We reached the next valid position and non-empty position
     id = ids_in_pos[inner_i]
     return (id, (pos_i, inner_i + 1))
+    end
 end
 
 
 
-# TODO: Re-write this to create its own `indices_within_radius_tuple` like GridSpaceSinelg
+##########################################################################################
+# nearby_stuff with special access r::Tuple
+##########################################################################################
+# TODO: We can re-write this to create its own `indices_within_radius_tuple`.
+# This would also allow it to work for any metric, not just Chebyshev!
 
-# This case is rather special. It's the dimension-specific search range.
-# TODO: Make it use the `Hood` code infastructure
+function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r::NTuple{D,Int}) where {D}
+    # simply transform `r` to the Vector format expected by the below function
+    newr = [(-r[i]:r[i], i) for i in 1:D]
+    nearby_ids(pos, model, newr)
+end
+
 function nearby_ids(
     pos::ValidPos,
     model::ABM{<:GridSpace},

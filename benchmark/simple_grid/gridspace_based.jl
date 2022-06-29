@@ -38,9 +38,10 @@ function count_nearby_same(agent, model)
     return nearby_same
 end
 
-model_gridspace = initialize_gridspace()
+model = initialize_gridspace()
+agent = model[1]
 println("Benchmarking GridSpace version")
-@btime step!($model_gridspace, agent_step_gridspace!) setup = (model_gridspace = initialize_gridspace())
+@btime step!($model, agent_step_gridspace!) setup = (model = initialize_gridspace())
 
 println("Benchmarking GridSpace version: count nearby same")
 model = initialize_gridspace()
