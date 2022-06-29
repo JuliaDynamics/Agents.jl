@@ -45,3 +45,13 @@ println("Benchmarking GridSpace version")
 println("Benchmarking GridSpace version: count nearby same")
 model = initialize_gridspace()
 @btime count_nearby_same(agent, model) setup = (agent = random_agent(model))
+
+function profile_nearby_same(model, agent = random_agent(model))
+    x = 0
+    N = 1000000
+    for i in 1:N
+        x += count_nearby_same(agent, model)
+    end
+    return x/N
+end
+# Then use @profview in VSCode

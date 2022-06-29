@@ -41,7 +41,7 @@ function indices_within_radius(
         βs = initialize_neighborhood(space, r)
         space.indices_within_radius[float(r)] = βs
     end
-    return βs
+    return βs::Vector{NTuple{D, Int}}
 end
 
 # Make grid space Abstract if indeed faster
@@ -59,7 +59,7 @@ function initialize_neighborhood(space::AbstractGridSpace{D}, r::Real) where {D}
     else
         error("Unknown metric type")
     end
-    return βs
+    return βs::Vector{NTuple{D, Int}}
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
@@ -71,13 +71,14 @@ indices_within_radius_no_0(model::ABM, r::Real) = indices_within_radius_no_0(mod
 function indices_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
     if haskey(space.indices_within_radius_no_0, r)
-        space.indices_within_radius_no_0[r]
+        βs = space.indices_within_radius_no_0[r]
     else
         βs = initialize_neighborhood(space, r)
         z = ntuple(i -> 0, Val{D}())
         filter!(x -> x ≠ z, βs)
         space.indices_within_radius_no_0[float(r)] = βs
     end
+    return βs::Vector{NTuple{D, Int}}
 end
 
 ###################################################################

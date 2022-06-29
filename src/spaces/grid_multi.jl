@@ -100,27 +100,23 @@ end
 # The code for `nearby_ids(pos, model, r::Real)` is very similar to `GridSpaceSingle`.
 
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,true}}, r = 1) where {D}
-    nindices = get_nearby_indices(model, r)
+    nindices = indices_within_radius(model, r)
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
     array_accesses_iterator = (stored_ids[(mod1.(pos .+ β, space_size))...] for β in nindices)
     return Iterators.flatten(stored_ids[i...] for i in array_accesses_iterator)
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,false}}, r = 1;
-    get_nearby_indices = indices_within_radius) where {D}
-    nindices = get_nearby_indices(model, r)
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,false}}, r = 1) where {D}
+    nindices = indices_within_radius(model, r)
     stored_ids = model.space.stored_ids
     positions_iterator = (pos .+ β for β in nindices)
-    # Not sure if this will work:
     return Iterators.flatten(@inbounds(stored_ids[i...]) for i in positions_iterator if checkbounds(Bool, stored_ids, i...))
 end
 
 function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
-    nindices = get_nearby_indices(model, r)
-
-    nn = grid_space_neighborhood(CartesianIndex(pos), model, r)
-    Iterators.filter(!isequal(pos), nn)
+    nindices = indices_within_radius_no_0(model, r)
+    Iterators.filter(!isequal(pos), nindices)
 end
 
 
