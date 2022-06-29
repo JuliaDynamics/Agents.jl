@@ -3,13 +3,18 @@ This file implements functions shared by all discrete spaces.
 Discrete spaces are by definition spaces with a finite amount of possible positions.
 
 All these functions are granted "for free" to discrete spaces by simply extending:
-- positions(model)
+- positions(space)
 - ids_in_position(position, model)
+
+Notice that the default version of the remaining functions assumes that
+agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, ids_in_position, agents_in_position,
        empty_positions, random_empty, has_empty_positions
 
+
+positions(model::ABM) = positions(model.space)
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
 Return an iterator over all positions of a model with a discrete space.
@@ -23,7 +28,7 @@ using the argument `by` which can be:
 """
 function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
-    itr = reshape(n, length(n))
+    itr = vec(n)
     if by == :random
         shuffle!(model.rng, itr)
     elseif by == :population
@@ -74,7 +79,7 @@ Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
 Return `true` if there are any positions in the model without agents.
 """
 function has_empty_positions(model::ABM{<:DiscreteSpace})
-    return any(i -> length(i) == 0, model.space.s)
+    return any(pos -> !isempty(pos, model), positions(model))
 end
 
 """
@@ -88,10 +93,10 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
-    # TODO: We shouldn't be using `model.space.s` here.
+    # TODO: We shouldn't be using `model.space.stored_ids` here.
     # For `DiscreteSpace`s we should define `npositions` that
     # returns the total possible number of positions in the space...
-    if clamp(nagents(model) / prod(size(model.space.stored_ids)), 0.0, 1.0) < cutoff
+    if clamp(nagents(model) / length(positions(model)), 0.0, 1.0) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee

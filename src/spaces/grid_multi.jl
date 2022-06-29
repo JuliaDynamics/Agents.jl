@@ -97,12 +97,6 @@ end
 # nearby_stuff for GridSpace
 ##########################################################################################
 # `indices_within_radius` and creating them comes from the spaces/grid_general.jl.
-# `nearby_positions` is super easy, given the code in spaces/grid_general.jl
-function nearby_positions(pos::ValidPos, model::ABM{<:GridSpace}, r = 1)
-    nindices = indices_within_radius_no_0(model, r)
-    Iterators.filter(!isequal(pos), nindices)
-end
-
 # The code for `nearby_ids(pos, model, r::Real)` is different from `GridSpaceSingle`.
 # Turns out, nested calls to `Iterators.flatten` were bad for performance,
 # and Julia couldn't completely optimize everything.

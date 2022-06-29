@@ -1,4 +1,5 @@
 export GraphSpace
+using Graphs: nv, ne
 
 #######################################################################################
 # Basic space definition
@@ -32,7 +33,7 @@ For example, for `r=2` includes first and second degree neighbors.
 For 0 distance, the search occurs only on the origin node.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
-    agent_positions = [Int[] for i in 1:Graphs.nv(graph)]
+    agent_positions = [Int[] for i in 1:nv(graph)]
     return GraphSpace{G}(graph, agent_positions)
 end
 
@@ -64,6 +65,7 @@ function add_agent_to_space!(
 end
 
 # The following is for the discrete space API:
+positions(space::GraphSpace) = 1:nv(space)
 ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 

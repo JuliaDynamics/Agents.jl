@@ -1,6 +1,8 @@
 # This file defines the `GridSpaceSingle`. Notice that a lot of the space functionality
 # comes from `AbstractGridSpace`, i.e., it is shared with `GridSpace`.
 # This shared functionality is in the spaces/grid_general.jl file.
+# The space also inherits a lot of discrete space functionality from spaces/discrete.jl.
+
 # The way we make `GridSpaceSingle` faster is by having an array that directly
 # stores IDs for each space position, and using ID=0 as an empty position.
 export GridSpaceSingle
@@ -44,6 +46,10 @@ end
 # The generic version at core/space_interaction_API.jl covers it.
 # `random_empty` comes from spaces/discrete.jl as long as we extend:
 Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = model.space.stored_ids[pos...] == 0
+# And we also need to extend the iterator of empty positions
+function empty_positions(model::ABM{<:GridSpaceSingle})
+    Iterators.filter(i -> model.space.stored_ids[i...] == 0, positions(model))
+end
 
 #######################################################################################
 # Implementation of nearby_stuff

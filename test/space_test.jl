@@ -1,98 +1,10 @@
+# TODO: This test file needs a complete re-write...
+
 @testset "Space" begin
     @testset "Graphs" begin
         model = ABM(Agent5, GraphSpace(path_graph(5)))
         @test Agents.nv(model) == 5
         @test Agents.ne(model) == 4
-    end
-
-    @testset "1D grids" begin
-        a = GridSpace((5,))
-        @test size(a) == (5,)
-        @test typeof(a.s) <: Array{Array{Int64,1},1}
-        @test a.metric == :chebyshev
-
-        b = GridSpace((5,), periodic = false)
-        @test size(b) == (5,)
-        @test typeof(b.s) <: Array{Array{Int64,1},1}
-        @test b.metric == :chebyshev
-
-        c = GridSpace((3,), metric = :euclidean)
-        @test size(c) == (3,)
-        @test typeof(c.s) <: Array{Array{Int64,1},1}
-        @test c.metric == :euclidean
-
-        d = GridSpace((3,), metric = :euclidean, periodic = false)
-        @test size(d) == (3,)
-        @test typeof(d.s) <: Array{Array{Int64,1},1}
-        @test d.metric == :euclidean
-    end
-
-    @testset "2D grids" begin
-        a = GridSpace((2, 3))
-        @test size(a) == (2, 3)
-        @test typeof(a.s) <: Array{Array{Int64,1},2}
-        @test a.metric == :chebyshev
-
-        b = GridSpace((2, 3), periodic = false)
-        @test size(b) == (2, 3)
-        @test typeof(b.s) <: Array{Array{Int64,1},2}
-        @test b.metric == :chebyshev
-
-        c = GridSpace((3, 3), metric = :euclidean)
-        @test size(c) == (3, 3)
-        @test typeof(c.s) <: Array{Array{Int64,1},2}
-        @test c.metric == :euclidean
-
-        d = GridSpace((3, 4), metric = :euclidean, periodic = false)
-        @test size(d) == (3, 4)
-        @test typeof(d.s) <: Array{Array{Int64,1},2}
-        @test d.metric == :euclidean
-    end
-
-    @testset "3D grids" begin
-        a = GridSpace((2, 3, 4))
-        @test size(a) == (2, 3, 4)
-        @test typeof(a.s) <: Array{Array{Int64,1},3}
-        @test a.metric == :chebyshev
-
-        b = GridSpace((2, 3, 7), periodic = false)
-        @test size(b) == (2, 3, 7)
-        @test typeof(b.s) <: Array{Array{Int64,1},3}
-        @test b.metric == :chebyshev
-
-        c = GridSpace((3, 3, 3), metric = :euclidean)
-        @test size(c) == (3, 3, 3)
-        @test typeof(c.s) <: Array{Array{Int64,1},3}
-        @test c.metric == :euclidean
-
-        d = GridSpace((3, 4, 2), metric = :euclidean, periodic = false)
-        @test size(d) == (3, 4, 2)
-        @test typeof(d.s) <: Array{Array{Int64,1},3}
-        @test d.metric == :euclidean
-    end
-
-    @testset "Positions" begin
-        space = GridSpace((3, 3))
-        model = ABM(Agent1, space)
-        empty = collect(empty_positions(model))
-        @test length(empty) > 0
-        for n in [1, 5, 6, 9, 2, 3, 4]
-            add_agent!(empty[n], model)
-        end
-        # only positions (1,3) and (2,3) should be empty
-        @test random_empty(model) ∈ [(1, 3), (2, 3)]
-        pos_map = [
-            (1, 1) (1, 2) (1, 3)
-            (2, 1) (2, 2) (2, 3)
-            (3, 1) (3, 2) (3, 3)
-        ]
-        @test collect(positions(model)) == pos_map
-        random_positions = positions(model, :random)
-        @test all(n ∈ pos_map for n in random_positions)
-        @test positions(model, :population) ==
-              [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
-        @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
-        @test_throws ErrorException positions(model, :notreal)
     end
 
     @testset "Euclidean Distance" begin
@@ -106,37 +18,6 @@
         b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
         @test euclidean_distance(a, b, model) ≈ 10.198039
 
-        model = ABM(Agent3, GridSpace((12, 10); periodic = true))
-        a = add_agent!((1.0, 6.0), model, 2.0)
-        b = add_agent!((11.0, 4.0), model, 3.0)
-        @test euclidean_distance(a, b, model) ≈ 2.82842712
-
-        model = ABM(Agent3, GridSpace((12, 10); periodic = false))
-        a = add_agent!((1.0, 6.0), model, 2.0)
-        b = add_agent!((11.0, 4.0), model, 3.0)
-        @test euclidean_distance(a, b, model) ≈ 10.198039
-
-        model = ABM(Agent5, GraphSpace(path_graph(5)))
-        a = add_agent!(1, model, rand(model.rng))
-        b = add_agent!(2, model, rand(model.rng))
-        @test_throws MethodError euclidean_distance(a, b, model)
-    end
-
-    @testset "Manhattan Distance" begin
-        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = true))
-        a = add_agent!((1.0, 6.0), model, 2.0)
-        b = add_agent!((11.0, 4.0), model, 3.0)
-        @test manhattan_distance(a, b, model) ≈ 4
-
-        model = ABM(Agent3, GridSpace((12, 10); metric = :manhattan, periodic = false))
-        a = add_agent!((1.0, 6.0), model, 2.0)
-        b = add_agent!((11.0, 4.0), model, 3.0)
-        @test manhattan_distance(a, b, model) ≈ 12
-
-        model = ABM(Agent5, GraphSpace(path_graph(5)))
-        a = add_agent!(1, model, rand(model.rng))
-        b = add_agent!(2, model, rand(model.rng))
-        @test_throws MethodError manhattan_distance(a, b, model)
     end
 
     @testset "Nearby Agents" begin
@@ -179,21 +60,18 @@
         @test sort!(collect(nearby_ids(directed[2], directed; neighbor_type = :all))) ==
               [1, 3]
 
-        grid_euclidean = ABM(Agent3, GridSpace((3, 3); metric = :euclidean, periodic = false))
-        @test collect(nearby_positions((2, 2), grid_euclidean)) ==
-              [(2, 1), (1, 2), (3, 2), (2, 3)]
-        @test collect(nearby_positions((1, 1), grid_euclidean)) == [(2, 1), (1, 2)]
-        a = add_agent!((2, 2), grid_euclidean, rand(grid_euclidean.rng))
-        add_agent!((3, 2), grid_euclidean, rand(grid_euclidean.rng))
-        @test collect(nearby_ids((1, 2), grid_euclidean)) == [1]
-        @test sort!(collect(nearby_ids((1, 2), grid_euclidean, 2))) == [1, 2]
-        @test sort!(collect(nearby_ids((2, 2), grid_euclidean))) == [1, 2]
-        @test collect(nearby_ids(a, grid_euclidean)) == [2]
 
-        @test_throws AssertionError nearby_positions((2, 2), grid_euclidean, (1, 2))
+
+
+
+###################################################################################
+# Grid space
+
+
+
 
         grid_manhattan = ABM(Agent3, GridSpace((6, 6); metric = :manhattan, periodic = false))
-        @test sort!(collect(nearby_positions((3, 3), grid_manhattan))) == 
+        @test sort!(collect(nearby_positions((3, 3), grid_manhattan))) ==
             [(2, 3), (3, 2), (3, 4), (4, 3)]
         @test sort!(collect(nearby_positions((3, 3), grid_manhattan, 3))) ==
             [(1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 1), (3, 2),
@@ -259,6 +137,10 @@
         @test length(region) == 100
         @test (5, 5) ∈ region
         @test (50, 50) ∉ region
+
+
+###################################################################################
+# Continuous space
 
         Random.seed!(78)
         continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))

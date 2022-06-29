@@ -15,8 +15,8 @@ to vector of indices within each radius.
 """
 abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 
-function positions(model::ABM{<:AbstractGridSpace})
-    x = CartesianIndices(model.space.stored_ids)
+function positions(space::AbstractGridSpace)
+    x = CartesianIndices(space.stored_ids)
     return (Tuple(y) for y in x)
 end
 
@@ -67,7 +67,8 @@ function random_position(model::ABM{<:AbstractGridSpace})
 end
 
 
-indices_within_radius_no_0(model::ABM, r::Real) = indices_within_radius_no_0(model.space, r::Real)
+indices_within_radius_no_0(model::ABM, r::Real) =
+    indices_within_radius_no_0(model.space, r::Real)
 function indices_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
     if haskey(space.indices_within_radius_no_0, r)
@@ -81,8 +82,28 @@ function indices_within_radius_no_0(
     return βs::Vector{NTuple{D, Int}}
 end
 
+# `nearby_positions` is easy, uses same code as `GridSpaceSingle` but utilizes
+# the above `indices_within_radius_no_0`
+function nearby_positions(
+        pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r = 1
+    ) where {D}
+    stored_ids = model.space.stored_ids
+    nindices = indices_within_radius_no_0(model, r)
+    positions_iterator = (n .+ pos for n in nindices)
+    return Base.Iterators.filter(
+        pos -> checkbounds(Bool, stored_ids, pos...), positions_iterator
+    )
+end
+function nearby_positions(
+        pos::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}, r = 1
+    ) where {D}
+    nindices = indices_within_radius_no_0(model, r)
+    space_size = size(model.space)
+    return (mod1.(n .+ pos, space_size) for n in nindices)
+end
+
 ###################################################################
-# %% pretty printing
+# pretty printing
 ###################################################################
 Base.size(space::AbstractGridSpace) = size(space.stored_ids)
 
