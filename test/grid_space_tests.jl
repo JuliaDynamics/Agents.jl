@@ -47,7 +47,7 @@ end
             @test isempty(pos1)
             pos2 = ids_in_position((1, 1), model)
             @test length(pos2) == 1
-            @test pos2[1].id == 1
+            @test pos2[1] == 1
 
             @test positions(model, :population) ==
                 [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
@@ -86,59 +86,67 @@ end
         periodics = [false, true]
 
         # All following are with r=1
-        @testset "Metric=$(metric)" for metric in metrics
         @testset "periodic=$(periodic)" for periodic in periodics
-            # To undersatnd where the numbers here are coming from,
-            # check out the plot in the docs that shows the metrics
-            model = ABM(GridAgent2D, SpaceType((5, 5); metric, periodic))
-            if metric ∈ (:euclidean, :mahnattan) # for r = 1 they give the same
-                @test sort!(collect(nearby_positions((2, 2), model))) ==
-                    sort!([(2, 1), (1, 2), (3, 2), (2, 3)])
-                if !periodic
-                    @test sort!(collect(nearby_positions((1, 1), model))) ==
-                    sort!([(1, 2), (2, 1)])
-                else # in periodic case we still have all nearby 4 positions
-                    @test sort!(collect(nearby_positions((1, 1), model))) ==
-                    sort!([(1, 2), (2, 1), (1 ,5), (5, 1)])
+            @testset "Metric=$(metric)" for metric in metrics
+                # To undersatnd where the numbers here are coming from,
+                # check out the plot in the docs that shows the metrics
+                model = ABM(GridAgent2D, SpaceType((5, 5); metric, periodic))
+                if metric ∈ (:euclidean, :mahnattan) # for r = 1 they give the same
+                    @test sort!(collect(nearby_positions((2, 2), model))) ==
+                        sort!([(2, 1), (1, 2), (3, 2), (2, 3)])
+                    if !periodic
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                        sort!([(1, 2), (2, 1)])
+                    else # in periodic case we still have all nearby 4 positions
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                        sort!([(1, 2), (2, 1), (1 ,5), (5, 1)])
+                    end
+                elseif metric == :chebyshev
+                    @test sort!(collect(nearby_positions((2, 2), model))) ==
+                        [(1,1), (1,2), (1,3), (2,1), (2,3), (3,1), (3,2), (3,3)]
+                    if !periodic
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                            [(1,2), (2,1), (2,2)]
+                    else
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                            [(1,2), (1,5), (2,1), (2,2), (2,5), (5,1), (5,2), (5,5)]
+                    end
                 end
-            elseif metric == :chebyshev
-                @test sort!(collect(nearby_positions((2, 2), model))) ==
-                    [(1,1), (1,2), (1,3), (2,1), (2,3), (3,1), (3,2), (3,3)]
-                if !periodic
-                    @test sort!(collect(nearby_positions((1, 1), model))) ==
-                        [(1,2), (2,1), (2,2)]
-                else
-                    @test sort!(collect(nearby_positions((1, 1), model))) ==
-                        [(1,2), (1,5), (2,1), (2,2), (2,5), (5,1), (5,2), (5,5)]
+
+                genocide!(model)
+                add_agent!((1, 1), model)
+                a = add_agent!((2, 1), model)
+                add_agent!((3, 2), model) # this is neighbor only in chebyshev
+                add_agent!((5, 1), model)
+
+                near_agent = sort!(collect(nearby_ids(a, model)))
+                near_pos = sort!(collect(nearby_ids(a.pos, model)))
+                @test 2 ∈ near_pos
+                @test 2 ∉ near_agent
+                @test near_pos == sort!(vcat(near_agent, 2))
+
+                if !periodic && metric ∈ (:euclidean, :mahnattan)
+                    near_agent == [1]
+                elseif periodic && metric ∈ (:euclidean, :mahnattan)
+                    near_agent == [1,4]
+                elseif !periodic && metric == :chebyshev
+                    near_agent == [1,3]
+                elseif periodic && metric == :chebyshev
+                    near_agent == [1,3,4]
                 end
+
             end
-
-            genocide!(model)
-            add_agent!((1, 1), model)
-            a = add_agent!((2, 1), model)
-            add_agent!((3, 2), model) # this is neighbor only in chebyshev
-            add_agent!((5, 1), model)
-
-            near_agent = sort!(collect(nearby_ids(a, model)))
-            near_pos = sort!(collect(nearby_ids(a.pos, model)))
-            @test 2 ∈ near_pos
-            @test 2 ∉ near_agent
-            @test near_pos == sort!(vcat(near_agent, 2))
-
-            if !periodic && metric ∈ (:euclidean, :mahnattan)
-                near_agent == [1]
-            elseif periodic && metric ∈ (:euclidean, :mahnattan)
-                near_agent == [1,4]
-            elseif !periodic && metric == :chebyshev
-                near_agent == [1,3]
-            elseif periodic && metric == :chebyshev
-                near_agent == [1,3,4]
-            end
-
+            # also test larger r. See figure at docs for metrics to get the numbers
+            models = [ABM(GridAgent2D, SpaceType((9, 9); metric, periodic)) for metric in metrics]
+            for m in models; fill_space!(m); end
+            near_pos = [collect(nearby_positions((5,5), m, 3.4)) for m in models]
+            near_ids = [collect(nearby_ids((5,5), m, 3.4)) for m in models] # this is 1 more
+            @test length(near_pos[1]) == length(near_pos[2]) + 12
+            @test length(near_pos[3]) == 7^2 - 1
+            @test length(near_ids[1]) == length(near_ids[2]) + 12
+            @test length(near_ids[1]) == length(near_pos[1]) + 1
+            @test length(near_ids[3]) == 7^2
         end
-        end
-        # also test larger r
-
     end
 
 end
