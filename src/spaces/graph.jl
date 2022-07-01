@@ -13,11 +13,13 @@ end
     GraphSpace(graph::AbstractGraph)
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl).
+`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an
+arbitrary amount of agents, and each agent can move between the nodes of the graph.
 The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
-The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
-`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
-amount of agents, and each agent can move between the nodes of the graph.
+`Graph.nv` and `Graph.ne` can be used in a model with a `GraphSpace` to obtain
+the number of nodes or edges in the graph.
+The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
 

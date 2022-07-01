@@ -79,7 +79,7 @@ function distance_from_cell_center(pos::Tuple, center::Tuple)
 end
 
 function add_agent_to_space!(a::A, model::ABM{<:ContinuousSpace,A}) where {A<:AbstractAgent}
-    push!(model.space.grid.s[pos2cell(a, model)...], a.id)
+    push!(model.space.grid.stored_ids[pos2cell(a, model)...], a.id)
     return a
 end
 
@@ -87,7 +87,7 @@ function remove_agent_from_space!(
     a::A,
     model::ABM{<:ContinuousSpace,A},
 ) where {A<:AbstractAgent}
-    prev = model.space.grid.s[pos2cell(a, model)...]
+    prev = model.space.grid.stored_ids[pos2cell(a, model)...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
@@ -173,7 +173,7 @@ grid_space_neighborhood(α, model::ABM{<:ContinuousSpace}, r) =
 
 function nearby_ids_cell(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-    s = model.space.grid.s
+    s = model.space.grid.stored_ids
     Iterators.flatten((s[i...] for i in nn))
 end
 
@@ -183,12 +183,12 @@ function nearby_positions(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
 end
 
 function positions(model::ABM{<:ContinuousSpace})
-    x = CartesianIndices(model.space.grid.s)
+    x = CartesianIndices(model.space.grid.stored_ids)
     return (Tuple(y) for y in x)
 end
 
 function ids_in_position(pos::ValidPos, model::ABM{<:ContinuousSpace})
-    return model.space.grid.s[pos...]
+    return model.space.grid.stored_ids[pos...]
 end
 
 ################################################################################

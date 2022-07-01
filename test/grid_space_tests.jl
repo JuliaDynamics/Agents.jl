@@ -149,6 +149,71 @@ end
         end
     end
 
+    @testset "walk!" begin
+        # Periodic
+        model = ABM(GridAgent2D, GridSpace((3, 3); periodic = true))
+        a = add_agent!((1, 1), model)
+        walk!(a, (0, 1), model) # North
+        @test a.pos == (1, 2)
+        walk!(a, (1, 1), model) # North east
+        @test a.pos == (2, 3)
+        walk!(a, (1, 0), model) # East
+        @test a.pos == (3, 3)
+        walk!(a, (2, 0), model) # PBC, East two steps
+        @test a.pos == (2, 3)
+        walk!(a, (1, -1), model) # South east
+        @test a.pos == (3, 2)
+        walk!(a, (0, -1), model) # South
+        @test a.pos == (3, 1)
+        walk!(a, (-1, -1), model) # PBC, South west
+        @test a.pos == (2, 3)
+        walk!(a, (-1, 0), model) # West
+        @test a.pos == (1, 3)
+        walk!(a, (0, -8), model) # Round the world, South eight steps
+        @test a.pos == (1, 1)
+        # if empty
+        a = add_agent!((1, 1), model)
+        add_agent!((2, 2), model)
+        walk!(a, (1, 1), model; ifempty = true)
+        @test a.pos == (1, 1)
+        walk!(a, (1, 0), model; ifempty = true)
+        @test a.pos == (2, 1)
+        # aperiodic
+        model = ABM(GridAgent2D, GridSpace((3, 3); periodic = false))
+        a = add_agent!((1, 1), model)
+        walk!(a, (0, 1), model) # North
+        @test a.pos == (1, 2)
+        walk!(a, (1, 1), model) # North east
+        @test a.pos == (2, 3)
+        walk!(a, (1, 0), model) # East
+        @test a.pos == (3, 3)
+        walk!(a, (1, 0), model) # Boundary, attempt East
+        @test a.pos == (3, 3)
+        walk!(a, (-5, 0), model) # Boundary, attempt West five steps
+        @test a.pos == (1, 3)
+        walk!(a, (-1, -1), model) # Boundary in one direction, not in the other, attempt South west
+        @test a.pos == (1, 2)
+        @test_throws MethodError walk!(a, (1.0, 1.5), model) # Must use Int for gridspace
+        # Random Walks
+        model = ABM(GridAgent2D, GridSpace((5, 5)); rng = StableRNG(65))
+        a = add_agent!((3, 3), model)
+        walk!(a, rand, model)
+        @test a.pos == (4, 2)
+        walk!(a, rand, model)
+        @test a.pos == (5, 1)
+        walk!(a, rand, model)
+        @test a.pos == (4, 5)
+        # Just a single sanity test for higher dimensions, just in case
+        mutable struct GridAgent3D <: AbstractAgent
+            id::Int
+            pos::Dims{3}
+        end
+        model = ABM(GridAgent3D, GridSpace((3, 3, 2)))
+        a = add_agent!((1, 1, 1), model)
+        walk!(a, (1, 1, 1), model)
+        @test a.pos == (2, 2, 2)
+    end
+
 end
 
 # TODO: Test nearby_ids(r = Tuple)

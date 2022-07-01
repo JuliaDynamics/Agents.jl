@@ -83,7 +83,7 @@ AStar(
     space::GridSpace{D,periodic};
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(size(space.s)),
+    walkmap::BitArray{D} = trues(size(space)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
     AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
@@ -193,7 +193,7 @@ end
     (cur .+ β.I for β in pathfinder.neighborhood)
 @inline inbounds(n, pathfinder, closed) =
     all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
-    
+
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 

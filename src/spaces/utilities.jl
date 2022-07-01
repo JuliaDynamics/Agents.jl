@@ -167,7 +167,7 @@ each direction. `direction = (2, -3)` is an example of a valid direction on a
 Velocity is ignored for this operation in `ContinuousSpace`.
 
 ## Keywords
-- `ifempty` will check that the target position is unnocupied and only move if that's true.
+- `ifempty` will check that the target position is unoccupied and only move if that's true.
   Available only on `AbstractGridSpace`.
 
 Example usage in [Battle Royale](
@@ -225,7 +225,7 @@ end
     walk!(agent, rand, model)
 
 Invoke a random walk by providing the `rand` function in place of
-`distance`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
+`direction`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
 `ContinuousSpace` will reside within [-1, 1].
 """
 walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D} =
