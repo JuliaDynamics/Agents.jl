@@ -79,7 +79,7 @@ Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
 Return `true` if there are any positions in the model without agents.
 """
 function has_empty_positions(model::ABM{<:DiscreteSpace})
-    return any(pos -> !isempty(pos, model), positions(model))
+    return any(pos -> isempty(pos, model), positions(model))
 end
 
 """

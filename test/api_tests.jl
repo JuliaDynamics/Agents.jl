@@ -1,28 +1,25 @@
 @testset "add_agent! (discrete)" begin
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
-    model = ABM(Agent7, space; properties = properties)
+    model = ABM(Agent7, space; properties)
     attributes = (f1 = true, f2 = 1)
     add_agent!(1, model, attributes...)
     attributes = (f2 = 1, f1 = true)
     add_agent!(1, model; attributes...)
-    @test model.agents[1].id != model.agents[2].id
-    @test model.agents[1].pos == model.agents[2].pos
-    @test model.agents[1].f1 == model.agents[2].f1
-    @test model.agents[1].f2 == model.agents[2].f2
+    @test model[1].id != model[2].id
+    @test model[1].pos == model[2].pos
+    @test model[1].f1 == model[2].f1
+    @test model[1].f2 == model[2].f2
     @test add_agent_single!(model, attributes...).pos ∈ 1:10
-    for id in 4:11
-        agent = Agent7(id, 2, attributes...)
-        add_agent_single!(agent, model)
-    end
+    fill_space!(model, attributes...)
     @test !has_empty_positions(model)
-    agent = Agent7(12, 5, attributes...)
+    agent = Agent7(22, 5, attributes...)
     add_agent_single!(agent, model)
-    @test_throws KeyError model[12]
+    @test_throws KeyError model[22]
     add_agent!(agent, model)
-    @test model[12].pos ∈ 1:10
+    @test model[22].pos ∈ 1:10
 
-    agent = Agent7(13, 5, attributes...)
+    agent = Agent7(44, 5, attributes...)
     @test add_agent!(agent, 3, model).pos == 3
 
     model = ABM(Agent1, GridSpace((10, 10)))
@@ -38,9 +35,9 @@ end
     add_agent!(model, attributes...)
     attributes = (f2 = 1, f1 = true)
     add_agent!(model; attributes...)
-    @test model.agents[1].id != model.agents[2].id
-    @test model.agents[1].f1 == model.agents[2].f1
-    @test model.agents[1].f2 == model.agents[2].f2
+    @test model[1].id != model[2].id
+    @test model[1].f1 == model[2].f1
+    @test model[1].f2 == model[2].f2
     agent = Agent8(3, (0, 0), false, 6)
     @test 0 <= add_agent!(agent, model).pos[1] <= 1
     agent.id = 4
@@ -108,7 +105,7 @@ end
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
-    kill_agent!(model.agents[1], model)
+    kill_agent!(model[1], model)
     @test nagents(model) == 1
     kill_agent!(2, model)
     @test nagents(model) == 0
@@ -241,7 +238,7 @@ end
     model = ABM(Union{Daisy,Land}, space; warn = false)
     fill_space!(Daisy, model, "black")
     @test nagents(model) == 100
-    for a in values(model.agents)
+    for a in allagents(model)
         @test a isa Daisy
         @test a.breed == "black"
     end
@@ -251,7 +248,7 @@ end
     temperature(pos) = (pos[1] / 10,) # make it Tuple!
     fill_space!(Land, model, temperature)
     @test nagents(model) == 100
-    for a in values(model.agents)
+    for a in allagents(model)
         @test a.temperature == a.pos[1] / 10
     end
 

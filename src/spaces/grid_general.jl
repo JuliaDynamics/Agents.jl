@@ -110,7 +110,7 @@ end
 Base.size(space::AbstractGridSpace) = size(space.stored_ids)
 
 function Base.show(io::IO, space::AbstractGridSpace{D,P}) where {D,P}
-    name = nameof(eltype(space))
+    name = nameof(typeof(space))
     s = "$name with size $(size(space)), metric=$(space.metric), periodic=$(P)"
     print(io, s)
 end
