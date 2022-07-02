@@ -1,8 +1,12 @@
 # v5.4
+- [**Will be breaking**] In the near future, **agent ID = 0 will be a reserved ID by Agents.jl**. This means that users should not use ID = 0 for _any agent_. They can use all the negative and positive integers as usual. If you were adding agents with any of the default ways that Agents.jl provides, such as `add_agents!(pos, model, agent_properties...)`, then you were already using only the positive integers.
+- Internal representation of grid spaces has been completely overhauled. For `GridSpace` this lead to about 25-30% performance increase in `nearby_stuff` and 100% decrease in memory allocations.
+- New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one agent per position. It utilizes this knowledge for massive performance benefits over `GridSpace`, **being about 3x faster than `GridSpace`** across the board. ID = 0 is a reserved ID for this space and cannot be used by users.
 - New keyword `showprogress` in `run!` function that displays a progress bar.
 - New function `OSM.route_length`.
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
+- [**Maybe breaking?**] In `ContinuousSpace` `spacing` was documented to be a keyword but in code it was specified as a positional argument. Now it is also a keyword in code as intended.
 - [**Maybe breaking?**] There was an ambiguity in the function `move_agent!(agent, model)`. It typically means to move an agent to a random position. However, in `ContinuousSpace` this function was overwritten by the signature `move_agent(agent, model, dt::Real = 1)`. To resolve the ambiguity, now `move_agent!(agent, model)` **always moves the agent to a random position** even in `ContinuousSpace`. To use the continuous space version users must explicitly provide the third argument `dt`.
 
 # v5.3
