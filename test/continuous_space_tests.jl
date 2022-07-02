@@ -1,4 +1,4 @@
-@testset "Continuous space" begin
+@testset "ContinuousSpace" begin
 
   # Basic model initialization
   space1 = ContinuousSpace((1, 1), 0.1; periodic = true)
