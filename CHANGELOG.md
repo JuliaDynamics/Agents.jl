@@ -3,6 +3,7 @@
 - New function `OSM.route_length`.
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
+- [**Maybe breaking?**] There was an ambiguity in the function `move_agent!(agent, model)`. It typically means to move an agent to a random position. However, in `ContinuousSpace` this function was overwritten by the signature `move_agent(agent, model, dt::Real = 1)`. To resolve the ambiguity, now `move_agent!(agent, model)` **always moves the agent to a random position** even in `ContinuousSpace`. To use the continuous space version users must explicitly provide the third argument `dt`.
 
 # v5.3
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:

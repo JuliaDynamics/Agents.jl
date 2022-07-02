@@ -143,10 +143,13 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A}) where {A}
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
+end
+function move_agent!(agent, model::ABM)
+    move_agent!(agent, random_position(model), model)
 end
 
 """
@@ -202,12 +205,6 @@ function genocide!(model::ABM, f::Function)
     for a in allagents(model)
         f(a) && kill_agent!(a, model)
     end
-end
-
-# Notice: this function is overwritten for continuous space and instead implements
-# the Euler scheme.
-function move_agent!(agent, model::ABM)
-    move_agent!(agent, random_position(model), model)
 end
 
 #######################################################################################

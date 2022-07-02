@@ -8,7 +8,9 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     extent::NTuple{D,T}
 end
 Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
-defvel(a, m) = nothing
+no_vel_update(a, m) = nothing
+spacesize(model::ABM) = spacesize(model.space)
+spacesize(space::ContinuousSpace) = space.extent
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
@@ -17,9 +19,9 @@ Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
 and it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
 in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for convenience.
 
-`ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium
+`ContinuousSpace` is a representation of agent dynamics on a continuous medium
 where agent position, orientation, and speed, are true floats.
-In addition, strong support is provided for representing spatial properties in a model
+In addition, support is provided for representing spatial properties in a model
 that contains a `ContinuousSpace`. Spatial properties (which typically are contained in
 the model properties) can either be functions of the position vector, `f(pos) = value`,
 or `AbstractArrays`, representing discretizations of
@@ -38,8 +40,8 @@ on the Euclidean distance between two points in `ContinuousSpace`.
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
   `false` an error will occur if an agent's position exceeds the boundary.
-* `spacing = min(extent...)/10`: Configures an internal compartment spacing that is used
-  to accelerate nearest neighbor searches like [`nearby_ids`](@ref).
+* `spacing::Real = min(extent...)/10`: Configures an internal compartment spacing that
+  is used to accelerate nearest neighbor searches like [`nearby_ids`](@ref).
   All dimensions in `extent` must be completely divisible by `spacing`.
   There is no "best" choice for the value of `spacing` and if you need optimal performance
   it's advised to set up a benchmark over a range of choices.
@@ -53,24 +55,26 @@ on the Euclidean distance between two points in `ContinuousSpace`.
 function ContinuousSpace(
     extent::NTuple{D,X},
     spacing = min(extent...) / 10.0;
-    update_vel! = defvel,
+    update_vel! = no_vel_update,
     periodic = true,
 ) where {D,X<:Real}
-    @assert extent ./ spacing == floor.(extent ./ spacing) "All dimensions in `extent` must be completely divisible by `spacing`"
-    s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
+    if extent ./ spacing != floor.(extent ./ spacing)
+        error("All dimensions in `extent` must be completely divisible by `spacing`")
+    end
+    s = GridSpace(floor.(Int, extent ./ spacing); periodic, metric = :euclidean)
     Z = X <: AbstractFloat ? X : Float64
     return ContinuousSpace(s, update_vel!, size(s), Z(spacing), Z.(extent))
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(model.rng) * dim, model.space.extent)
+    map(dim -> rand(model.rng) * dim, spacesize(model))
 end
 
-pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos ./ model.space.spacing) .+ 1
+pos2cell(pos::Tuple, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
 function cell_center(pos::NTuple{D,F}, model) where {D,F}
     ε = model.space.spacing
-    (pos2cell(pos, model) .- 1) .* ε .+ ε / 2
+    (pos2cell(pos, model) .- 1) .* ε .+ ε/2
 end
 distance_from_cell_center(pos, model::ABM) =
     distance_from_cell_center(pos, cell_center(pos, model))
@@ -100,7 +104,7 @@ function move_agent!(
 ) where {A<:AbstractAgent,D,periodic}
     remove_agent_from_space!(a, model)
     if periodic
-        pos = mod.(pos, model.space.extent)
+        pos = mod.(pos, spacesize(model))
     end
     a.pos = pos
     add_agent_to_space!(a, model)
@@ -120,7 +124,7 @@ as `agent.pos += agent.vel * dt`. If you want to move the agent to a specified p
 function move_agent!(
     agent::A,
     model::ABM{<:ContinuousSpace,A},
-    dt::Real = 1.0,
+    dt::Real,
 ) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
     pos = agent.pos .+ dt .* agent.vel
@@ -199,7 +203,7 @@ Base.size(space::ContinuousSpace) = space.extent
 
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
-    space.update_vel! ≠ defvel && (s *= " with velocity updates")
+    space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
     print(io, s)
 end
 
@@ -457,7 +461,7 @@ If `property` has lower dimensionalty than the space (e.g. representing some sur
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}
-    spacesize = model.space.extent
+    spacesize = spacesize(model)
     propertysize = size(property)
     upos = pos[1:D]
     usize = spacesize[1:D]

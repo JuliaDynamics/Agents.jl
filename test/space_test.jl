@@ -63,16 +63,11 @@
 
 
 
-
-###################################################################################
-# Grid space
-
-
 ###################################################################################
 # Continuous space
 
-        Random.seed!(78)
-        continuousspace = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
+        extent = (1.0, 1.0)
+        continuousspace = ABM(Agent6, ContinuousSpace(extent); spacing = 0.1, rng = StableRNG(78))
         a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
         b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
         @test_throws MethodError nearby_positions(1, continuousspace)
