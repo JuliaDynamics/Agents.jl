@@ -29,7 +29,7 @@ end
 
 @testset "add_agent! (continuous)" begin
     properties = Dict(:x1 => 1)
-    space2d = ContinuousSpace((1, 1), 0.1; periodic = true)
+    space2d = ContinuousSpace((1, 1); periodic = true)
     model = ABM(Agent8, space2d; properties = properties)
     attributes = (f1 = true, f2 = 1)
     add_agent!(model, attributes...)

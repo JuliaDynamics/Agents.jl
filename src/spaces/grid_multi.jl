@@ -4,8 +4,8 @@ export GridSpace
 struct GridSpace{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Vector{Int},D}
     metric::Symbol
-    indices_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    indices_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
     indices_within_radius_tuple::Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}
 end
 
@@ -96,15 +96,17 @@ end
 ##########################################################################################
 # nearby_stuff for GridSpace
 ##########################################################################################
-# `indices_within_radius` and creating them comes from the spaces/grid_general.jl.
+# `offsets_within_radius` and creating them comes from the spaces/grid_general.jl.
 # The code for `nearby_ids(pos, model, r::Real)` is different from `GridSpaceSingle`.
 # Turns out, nested calls to `Iterators.flatten` were bad for performance,
 # and Julia couldn't completely optimize everything.
 # Instead, here we create a dedicated iterator for going over IDs.
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpace{D,P}}, r = 1) where {D,P}
-    nindices = indices_within_radius(model, r)
-    stored_ids = model.space.stored_ids
+# We allow this to be used with space directly because it is reused in `ContinuousSpace`.
+nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r = 1) = nearby_ids(pos, model.space, r)
+function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r = 1) where {D,P}
+    nindices = offsets_within_radius(space, r)
+    stored_ids = space.stored_ids
     return GridSpaceIdIterator{P}(stored_ids, nindices, pos)
 end
 
@@ -112,7 +114,7 @@ end
 # P is Boolean, and means "periodic".
 struct GridSpaceIdIterator{P,D}
     stored_ids::Array{Vector{Int},D}  # Reference to array in grid space
-    indices::Vector{NTuple{D,Int}}    # Result of `indices_within_radius` pretty much
+    indices::Vector{NTuple{D,Int}}    # Result of `offsets_within_radius` pretty much
     origin::NTuple{D,Int}             # origin position nearby is measured from
     L::Int                            # length of `indices`
     space_size::NTuple{D,Int}         # size of `stored_ids`
@@ -238,6 +240,7 @@ end
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
-function ids_in_position(pos::ValidPos, model::ABM{<:GridSpace})
-    return model.space.stored_ids[pos...]
+ids_in_position(pos::ValidPos, model::ABM{<:GridSpace}) = ids_in_position(pos, model.space)
+function ids_in_position(pos::ValidPos, space::GridSpace)
+    return space.stored_ids[pos...]
 end

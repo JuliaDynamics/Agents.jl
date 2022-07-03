@@ -149,6 +149,27 @@ end
         end
     end
 
+    @testset "Random nearby" begin
+        # Test random_nearby_*
+        abm = ABM(GridAgent2D, GridSpace((10, 10)); rng = StableRNG(42))
+        fill_space!(abm)
+
+        nearby_id = random_nearby_id(abm[1], abm, 5)
+        valid_ids = collect(nearby_ids(abm[1], abm, 5))
+        @test nearby_id in valid_ids
+        nearby_agent = random_nearby_agent(abm[1], abm, 5)
+        @test nearby_agent.id in valid_ids
+
+        genocide!(abm)
+        a = add_agent!((1, 1), abm)
+        @test isnothing(random_nearby_id(a, abm))
+        @test isnothing(random_nearby_agent(a, abm))
+        add_agent!((1,2), abm)
+        add_agent!((2,1), abm)
+        rand_nearby_ids = Set([random_nearby_id(a, abm, 2) for _ in 1:100])
+        @test length(rand_nearby_ids) == 2
+    end
+
     @testset "walk!" begin
         # Periodic
         model = ABM(GridAgent2D, GridSpace((3, 3); periodic = true))

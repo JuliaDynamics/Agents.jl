@@ -99,7 +99,7 @@ end
     include("space_test.jl")
     include("grid_space_tests.jl")
     include("collect_tests.jl")
-    include("continuousSpace_tests.jl")
+    include("continuous_space_tests.jl")
     include("osm_tests.jl")
     include("astar_tests.jl")
     include("collisions_tests.jl")

@@ -11,8 +11,8 @@ export GridSpaceSingle
 struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Int,D}
     metric::Symbol
-    indices_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    indices_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
 end
 
 """
@@ -61,9 +61,10 @@ end
 # the duplication is necessary because `nearby_ids(pos, ...)` should in principle
 # contain the id at the given `pos` as well.
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, r = 1;
-    get_nearby_indices = indices_within_radius) where {D}
-    nindices = get_nearby_indices(model, r)
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, r = 1,
+        get_offset_indices = offsets_within_radius # internal, see last function
+    ) where {D}
+    nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
     array_accesses_iterator = (stored_ids[(mod1.(pos .+ β, space_size))...] for β in nindices)
@@ -73,8 +74,9 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
 end
 
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1;
-    get_nearby_indices = indices_within_radius) where {D}
-    nindices = get_nearby_indices(model, r)
+        get_offset_indices = offsets_within_radius # internal, see last function
+    ) where {D}
+    nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
     positions_iterator = (pos .+ β for β in nindices)
     # Here we combine in one filtering step both valid accesses to the space array
@@ -90,8 +92,8 @@ end
 # Because, we know that one agent exists per position, and hence we can skip the
 # call to `filter(id -> id ≠ a.id, ...)` that happens in core/space_interaction_API.jl.
 # Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
-# The extension uses the function `indices_within_radius_no_0` from spaces/grid_general.jl
+# The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
     a::A, model::ABM{<:GridSpaceSingle{D,false},A}, r = 1) where {D,A<:AbstractAgent}
-    return nearby_ids(a.pos, model, r; get_nearby_indices = indices_within_radius_no_0)
+    return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end

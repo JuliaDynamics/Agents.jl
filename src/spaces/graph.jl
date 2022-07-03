@@ -33,6 +33,14 @@ In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
 the degree of neighbors in the graph (thus distance is always an integer).
 For example, for `r=2` includes first and second degree neighbors.
 For 0 distance, the search occurs only on the origin node.
+
+In functions like [`nearby_ids`](@ref) the keyword `neighbor_type=:default` can be used
+to select differing neighbors depending on the underlying graph directionality type.
+- `:default` returns neighbors of a vertex (position). If graph is directed, this is
+  equivalent to `:out`. For undirected graphs, all options are equivalent to `:out`.
+- `:all` returns both `:in` and `:out` neighbors.
+- `:in` returns incoming vertex neighbors.
+- `:out` returns outgoing vertex neighbors.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
     agent_positions = [Int[] for i in 1:nv(graph)]

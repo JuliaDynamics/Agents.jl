@@ -66,32 +66,15 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
 `position`. The `position` must match type with the spatial structure of the `model`.
 The specification of what "distance" means depends on the space, hence it is explained
-in each space's documentation string.
+in each space's documentation string. Keyword arguments are space-specific and also
+described in each space's documentation string.
 
 `nearby_ids` always includes IDs with 0 distance to `position`.
-
-## Keywords
-Keyword arguments are space-specific.
-For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
-neighbors depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex (position). If graph is directed, this is
-  equivalent to `:out`. For undirected graphs, all options are equivalent to `:out`.
-- `:all` returns both `:in` and `:out` neighbors.
-- `:in` returns incoming vertex neighbors.
-- `:out` returns outgoing vertex neighbors.
-
-For `ContinuousSpace`, the keyword `exact=false` controls whether the found neighbors are
-exactly accurate or approximate (with approximate always being a possible over-estimation),
-see [`ContinuousSpace`](@ref).
-
-In periodic discrete or continuous spaces, when used with a radius larger than half of the
-entire space, this function may find the same agent(s) more than once.
-See Issue #566 online for more information.
 """
 nearby_ids(position, model, r = 1) = notimplemented(model)
 
 """
-    nearby_positions(position, model::ABM, r=1; kwargs...) → positions
+    nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
 
 Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
@@ -99,7 +82,7 @@ The `position` must match type with the spatial structure of the `model`.
 
 The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
-This function only makes sense for discrete spaces with a finite amount of positions.
+This function only exists for discrete spaces with a finite amount of positions.
 
     nearby_positions(position, model::ABM{<:OpenStreetMapSpace}; kwargs...) → positions
 
@@ -143,7 +126,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A}
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)

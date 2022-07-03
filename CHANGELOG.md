@@ -7,7 +7,12 @@
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
 - [**Maybe breaking?**] In `ContinuousSpace` `spacing` was documented to be a keyword but in code it was specified as a positional argument. Now it is also a keyword in code as intended.
+- Keyword `spacing` in `ContinuousSpace` is now `minimum(extent)/20` from `/10`
+  by default, increasing performance of `nearby_ids` versus `move_agent!`, because in the typical scenario a neighbor search is much more costly than moving an agent.
 - [**Maybe breaking?**] There was an ambiguity in the function `move_agent!(agent, model)`. It typically means to move an agent to a random position. However, in `ContinuousSpace` this function was overwritten by the signature `move_agent(agent, model, dt::Real = 1)`. To resolve the ambiguity, now `move_agent!(agent, model)` **always moves the agent to a random position** even in `ContinuousSpace`. To use the continuous space version users must explicitly provide the third argument `dt`.
+- [**Will be breaking**] Keyword `exact` in `nearby_ids` for `ContinuousSpace` is deprecated, because now the exact version returns different type than the non-exact, hence leading to type instabilities. Use `nearby_ids_exact` instead. Same for `nearby_agents`.
+- New keyword `nearby_f = nearby_ids_exact` in `interacting_pairs` which decides whether to use the exact or approximate algorithm for nearest neighbors.
+- Performance increase for `nearest_neighbor`.
 
 # v5.3
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:

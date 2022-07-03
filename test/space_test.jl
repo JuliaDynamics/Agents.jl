@@ -67,41 +67,29 @@
 # Continuous space
 
         extent = (1.0, 1.0)
-        continuousspace = ABM(Agent6, ContinuousSpace(extent); spacing = 0.1, rng = StableRNG(78))
+        continuousspace = ABM(Agent6, ContinuousSpace(extent; spacing = 0.1); rng = StableRNG(78))
         a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
         b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-        @test_throws MethodError nearby_positions(1, continuousspace)
+        @test nagents(continuousspace) == 2
+        @test_throws ErrorException nearby_positions(1, continuousspace)
+
+        # Nearby stuff
         @test collect(nearby_ids(a, continuousspace, 0.05)) == [2] # Not true, but we are not using the exact method
         @test collect(nearby_ids(a, continuousspace, 0.05; exact = true)) == []
         @test collect(nearby_ids(a, continuousspace, 0.1)) == [2]
         @test sort!(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) == [1, 2]
-        move_agent!(a, continuousspace)
-        move_agent!(b, continuousspace)
+
+        # Move agent using velocity
+        move_agent!(a, continuousspace, 1)
+        move_agent!(b, continuousspace, 1)
         @test collect(nearby_ids(a, continuousspace, 0.1; exact = true)) == []
         # Checks for type instability #208
         @test typeof(collect(nearby_ids(a, continuousspace, 0.1))) <: Vector{Int}
         @test typeof(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) <: Vector{Int}
 
-        # Test random_nearby_*
-        abm = ABM(Agent1, GridSpace((10, 10)); rng = MersenneTwister(42))
-        for i in 1:10, j in 1:10
-            add_agent!((i, j), abm)
-        end
+        # move agent using random position
+        # TODO:
 
-        nearby_id = random_nearby_id(abm[1], abm, 5)
-        valid_ids = collect(nearby_ids(abm[1], abm, 5))
-        @test nearby_id in valid_ids
-        nearby_agent = random_nearby_agent(abm[1], abm, 5)
-        @test nearby_agent.id in valid_ids
-
-        genocide!(abm)
-        a = add_agent!((1, 1), abm)
-        @test isnothing(random_nearby_id(a, abm))
-        @test isnothing(random_nearby_agent(a, abm))
-        add_agent!((1,2), abm)
-        add_agent!((2,1), abm)
-        rand_nearby_ids = Set([random_nearby_id(a, abm, 2) for _ in 1:100])
-        @test length(rand_nearby_ids) == 2
     end
 
     mutable struct Agent3D <: AbstractAgent

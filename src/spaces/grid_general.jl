@@ -6,8 +6,8 @@ whose size is the same as the size of the space and whose cartesian
 indices are the possible positions in the space.
 
 Furthermore, all spaces should have at least the fields
-* `indices_within_radius`
-* `indices_within_radius_no_0`
+* `offsets_within_radius`
+* `offsets_within_radius_no_0`
 which are `Dict{Float64,Vector{NTuple{D,Int}}}`, mapping radii
 to vector of indices within each radius.
 
@@ -27,25 +27,25 @@ end
 # nearby_stuff do in the concrete spaces files.
 
 """
-    indices_within_radius(model::ABM{<:AbstractGridSpace}, r::Real)
+    offsets_within_radius(model::ABM{<:AbstractGridSpace}, r::Real)
 The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-indices_within_radius(model::ABM, r::Real) = indices_within_radius(model.space, r::Real)
-function indices_within_radius(
+offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
+function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.indices_within_radius, r)
-        βs = space.indices_within_radius[r]
+    if haskey(space.offsets_within_radius, r)
+        βs = space.offsets_within_radius[r]
     else
-        βs = initialize_neighborhood(space, r)
-        space.indices_within_radius[float(r)] = βs
+        βs = calculate_offsets(space, r)
+        space.offsets_within_radius[float(r)] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
 
 # Make grid space Abstract if indeed faster
-function initialize_neighborhood(space::AbstractGridSpace{D}, r::Real) where {D}
+function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
     if space.metric == :euclidean
         r0 = ceil(Int, r)
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
@@ -61,6 +61,7 @@ function initialize_neighborhood(space::AbstractGridSpace{D}, r::Real) where {D}
     else
         error("Unknown metric type")
     end
+    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val{D}())) # ensure 0 is there
     return βs::Vector{NTuple{D, Int}}
 end
 
@@ -68,39 +69,45 @@ function random_position(model::ABM{<:AbstractGridSpace})
     Tuple(rand(model.rng, CartesianIndices(model.space.stored_ids)))
 end
 
-
-indices_within_radius_no_0(model::ABM, r::Real) =
-    indices_within_radius_no_0(model.space, r::Real)
-function indices_within_radius_no_0(
+offsets_within_radius_no_0(model::ABM, r::Real) =
+    offsets_within_radius_no_0(model.space, r::Real)
+function offsets_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.indices_within_radius_no_0, r)
-        βs = space.indices_within_radius_no_0[r]
+    if haskey(space.offsets_within_radius_no_0, r)
+        βs = space.offsets_within_radius_no_0[r]
     else
-        βs = initialize_neighborhood(space, r)
+        βs = calculate_offsets(space, r)
         z = ntuple(i -> 0, Val{D}())
         filter!(x -> x ≠ z, βs)
-        space.indices_within_radius_no_0[float(r)] = βs
+        space.offsets_within_radius_no_0[float(r)] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
 
-# `nearby_positions` is easy, uses same code as `GridSpaceSingle` but utilizes
-# the above `indices_within_radius_no_0`
+# `nearby_positions` is easy, uses same code as `neaby_ids` of `GridSpaceSingle` but
+# utilizes the above `offsets_within_radius_no_0`. We complicated it a bit more because
+# we want to be able to re-use it in `ContinuousSpace`, so we allow it to either
+# find positions with the 0 or without.
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractGridSpace}, args...)
+    return nearby_positions(pos, model.space, args...)
+end
 function nearby_positions(
-        pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r = 1
+        pos::ValidPos, space::AbstractGridSpace{D,false}, r = 1,
+        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
-    stored_ids = model.space.stored_ids
-    nindices = indices_within_radius_no_0(model, r)
+    stored_ids = space.stored_ids
+    nindices = get_indices_f(space, r)
     positions_iterator = (n .+ pos for n in nindices)
     return Base.Iterators.filter(
         pos -> checkbounds(Bool, stored_ids, pos...), positions_iterator
     )
 end
 function nearby_positions(
-        pos::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}, r = 1
+        pos::ValidPos, space::AbstractGridSpace{D,true}, r = 1,
+        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
-    nindices = indices_within_radius_no_0(model, r)
-    space_size = size(model.space)
+    nindices = get_indices_f(space, r)
+    space_size = size(space)
     return (mod1.(n .+ pos, space_size) for n in nindices)
 end
 
