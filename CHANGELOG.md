@@ -7,7 +7,7 @@ This is a huge release!
 - Because of the new grid spaces internals, `nearby_stuff` searches in `ContinuousSpace` are 2-5 times faster.
 
 ## New space
-- New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one agent per position. It utilizes this knowledge for massive performance benefits over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board. ID = 0 is a reserved ID for this space and cannot be used by users.
+- New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one agent per position only. It utilizes this knowledge for massive performance benefits over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board. ID = 0 is a reserved ID for this space and cannot be used by users.
 
 ## Additions to existing API
 - New keyword `showprogress` in `run!` function that displays a progress bar.
