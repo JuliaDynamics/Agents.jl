@@ -17,6 +17,32 @@ end
         end
     end
 
+    @testset "add/move/kill" begin
+        space = SpaceType((3, 3))
+        model = ABM(GridAgent2D, space; rng = StableRNG(42))
+        pos0 = (2,2)
+        agent = add_agent!(pos0, model)
+        id0 = agent.id
+        @test collect(allids(model)) == [1]
+        @test model[1].pos == agent.pos == pos0
+        move_agent!(agent, (3,3), model)
+        @test agent.pos == (3,3)
+        move_agent!(agent, model)
+        @test agent.pos != (3,3)
+        move_agent!(agent, (2,2), model)
+        kill_agent!(agent, model)
+        @test id0 ∉ allids(model)
+        # Test move single
+        fill_space!(model)
+        agent = model[2]
+        posx = agent.pos
+        kill_agent!(agent, model)
+        # now the only position that is left unoccupied is `posx`
+        agent = model[3]
+        move_agent_single!(agent, model)
+        @test agent.pos == posx
+    end
+
     @testset "positions + empty" begin
         space = SpaceType((3, 3))
         model = ABM(GridAgent2D, space)

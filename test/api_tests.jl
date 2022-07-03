@@ -1,3 +1,5 @@
+# TODO: All of these tests are "bad" in the sense that they should be moved
+# to individual space test files.
 @testset "add_agent! (discrete)" begin
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
