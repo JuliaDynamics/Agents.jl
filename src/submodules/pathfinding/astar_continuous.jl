@@ -145,7 +145,6 @@ function Agents.move_along_route!(
             break
         end
     end
-
     move_agent!(agent, next_pos, model)
 end
 

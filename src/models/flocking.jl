@@ -36,7 +36,7 @@ function flocking(;
     extent = (100, 100),
     spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(extent, spacing)
+    space2d = ContinuousSpace(extent; spacing)
     model = ABM(Bird, space2d, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)

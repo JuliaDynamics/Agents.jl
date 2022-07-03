@@ -78,8 +78,8 @@ end
     model = ABM(Agent3, GridSpace((5,5)))
     @test sprint(show, model)[1:29] == "AgentBasedModel with 0 agents"
     @test sprint(show, model.space) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
-    model = ABM(Agent6, ContinuousSpace((1,1), 0.1))
-    @test sprint(show, model.space) == "periodic continuous space with 10×10 divisions"
+    model = ABM(Agent6, ContinuousSpace((1.0,1.0)))
+    @test sprint(show, model.space) == "periodic continuous space with (1.0, 1.0) extent and spacing=0.05"
     model = ABM(Agent5, GraphSpace(path_graph(5)))
     @test sprint(show, model.space) == "GraphSpace with 5 positions and 4 edges"
 end

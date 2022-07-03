@@ -101,7 +101,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
-* `showprogress=true` : Whether to show progress
+* `showprogress=false` : Whether to show a progress bar.
 """
 function run! end
 
@@ -119,7 +119,7 @@ function run!(
     adata = nothing,
     obtainer = identity,
     agents_first = true,
-    showprogress = false
+    showprogress = false,
 )
 
     df_agent = init_agent_dataframe(model, adata)
@@ -138,7 +138,11 @@ function run!(
     end
 
     s = 0
-    p = typeof(n) <: Int ? ProgressMeter.Progress(n; enabled=showprogress) : ProgressMeter.ProgressUnknown("Steps passed: "; enabled=showprogress)
+    p = if typeof(n) <: Int
+        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+    else
+        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    end
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)

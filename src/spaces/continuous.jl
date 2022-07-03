@@ -1,4 +1,6 @@
 export ContinuousSpace
+export nearby_ids_exact, nearby_agents_exact
+export nearest_neighbor, elastic_collision!, interacting_pairs
 
 struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     grid::GridSpace{D,P}
@@ -8,7 +10,16 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     extent::NTuple{D,T}
 end
 Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
-defvel(a, m) = nothing
+no_vel_update(a, m) = nothing
+spacesize(model::ABM) = spacesize(model.space)
+spacesize(space::ContinuousSpace) = space.extent
+function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
+    s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*
+    " and spacing=$(space.spacing)"
+    space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
+    print(io, s)
+end
+
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
@@ -17,9 +28,9 @@ Your agent positions (field `pos`) must be of type `NTuple{D, <:Real}`,
 and it is strongly recommend that agents also have a field `vel::NTuple{D, <:Real}` to use
 in conjunction with [`move_agent!`](@ref). Use [`ContinuousAgent`](@ref) for convenience.
 
-`ContinuousSpace` is a _true_ representation of agent dynamics on a continuous medium
+`ContinuousSpace` is a representation of agent dynamics on a continuous medium
 where agent position, orientation, and speed, are true floats.
-In addition, strong support is provided for representing spatial properties in a model
+In addition, support is provided for representing spatial properties in a model
 that contains a `ContinuousSpace`. Spatial properties (which typically are contained in
 the model properties) can either be functions of the position vector, `f(pos) = value`,
 or `AbstractArrays`, representing discretizations of
@@ -35,14 +46,23 @@ An example using continuous space is the [Flocking model](@ref).
 Distances specified by `r` in functions like [`nearby_ids`](@ref) are always based
 on the Euclidean distance between two points in `ContinuousSpace`.
 
+In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, see
+discussion around the keyword `spacing` below. [`nearby_ids`](@ref) is not an exact
+search, but can be a possible over-estimation, including agent IDs whose distance
+slightly exceeds `r` with "slightly" being as much as `spacing`.
+If you want exact searches use the much slower [`nearby_ids_exact`](@ref).
+
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
   `false` an error will occur if an agent's position exceeds the boundary.
-* `spacing = min(extent...)/10`: Configures an internal compartment spacing that is used
-  to accelerate nearest neighbor searches like [`nearby_ids`](@ref).
+* `spacing::Real = minimum(extent)/20`: Configures an internal compartment spacing that
+  is used to accelerate nearest neighbor searches like [`nearby_ids`](@ref).
+  The compartments are actually a full instance of `GridSpace` in which agents move.
   All dimensions in `extent` must be completely divisible by `spacing`.
-  There is no "best" choice for the value of `spacing` and if you need optimal performance
-  it's advised to set up a benchmark over a range of choices.
+  There is no best choice for the value of `spacing` and if you need optimal performance
+  it's advised to set up a benchmark over a range of choices. The finer the spacing,
+  the faster and more accurate the inexact version of `nearby_ids` becomes. However,
+  a finer spacing also means slower `move_agent!`, as agents change compartments more often.
 * `update_vel!`: A **function**, `update_vel!(agent, model)` that updates
   the agent's velocity **before** the agent has been moved, see [`move_agent!`](@ref).
   You can of course change the agents' velocities
@@ -51,190 +71,216 @@ on the Euclidean distance between two points in `ContinuousSpace`.
   If you use `update_vel!`, the agent type must have a field `vel::NTuple{D, <:Real}`.
 """
 function ContinuousSpace(
-    extent::NTuple{D,X},
-    spacing = min(extent...) / 10.0;
-    update_vel! = defvel,
+    extent::NTuple{D,X};
+    spacing = minimum(extent)/20.0,
+    update_vel! = no_vel_update,
     periodic = true,
 ) where {D,X<:Real}
-    @assert extent ./ spacing == floor.(extent ./ spacing) "All dimensions in `extent` must be completely divisible by `spacing`"
-    s = GridSpace(floor.(Int, extent ./ spacing), periodic = periodic, metric = :euclidean)
+    if extent ./ spacing != floor.(extent ./ spacing)
+        error("All dimensions in `extent` must be completely divisible by `spacing`")
+    end
+    s = GridSpace(floor.(Int, extent ./ spacing); periodic, metric = :euclidean)
     Z = X <: AbstractFloat ? X : Float64
     return ContinuousSpace(s, update_vel!, size(s), Z(spacing), Z.(extent))
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(model.rng) * dim, model.space.extent)
+    map(dim -> rand(model.rng) * dim, spacesize(model))
 end
 
-pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos ./ model.space.spacing) .+ 1
+"given position in continuous space, return cell coordinates in grid space."
+pos2cell(pos::Tuple, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-function cell_center(pos::NTuple{D,F}, model) where {D,F}
+
+"given position in continuous space, return continuous space coordinates of cell center."
+function cell_center(pos::NTuple{D,<:AbstractFloat}, model) where {D}
     ε = model.space.spacing
-    (pos2cell(pos, model) .- 1) .* ε .+ ε / 2
+    (pos2cell(pos, model) .- 1) .* ε .+ ε/2
 end
+
 distance_from_cell_center(pos, model::ABM) =
     distance_from_cell_center(pos, cell_center(pos, model))
 function distance_from_cell_center(pos::Tuple, center::Tuple)
     sqrt(sum(abs2.(pos .- center)))
 end
 
-function add_agent_to_space!(a::A, model::ABM{<:ContinuousSpace,A}) where {A<:AbstractAgent}
-    push!(model.space.grid.s[pos2cell(a, model)...], a.id)
+function add_agent_to_space!(
+    a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
+    push!(model.space.grid.stored_ids[cell_index...], a.id)
     return a
 end
 
 function remove_agent_from_space!(
     a::A,
     model::ABM{<:ContinuousSpace,A},
+    cell_index = pos2cell(a, model),
 ) where {A<:AbstractAgent}
-    prev = model.space.grid.s[pos2cell(a, model)...]
+    prev = model.space.grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
 end
 
-function move_agent!(
-    a::A,
-    pos::Tuple,
-    model::ABM{<:ContinuousSpace{D,periodic},A},
-) where {A<:AbstractAgent,D,periodic}
-    remove_agent_from_space!(a, model)
-    if periodic
-        pos = mod.(pos, model.space.extent)
+# We re-write this for performance, because if cell doesn't change, we don't have to
+# move the agent in the GridSpace; only change its position field
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
+    ) where {D, A<:AbstractAgent}
+    for i in 1:D
+        pos[i] > spacesize(model)[i] && error("position is outside space extent!")
     end
-    a.pos = pos
-    add_agent_to_space!(a, model)
+    oldcell = pos2cell(agent, model)
+    newcell = pos2cell(pos, model)
+    if oldcell ≠ newcell
+        remove_agent_from_space!(agent, model, oldcell)
+        add_agent_to_space!(agent, model, newcell)
+    end
+    agent.pos = pos
+    return agent
 end
 
+
+
 """
-    move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real = 1.0)
-Propagate the agent forwards one step according to its velocity,
-_after_ updating the agent's velocity (if configured, see [`ContinuousSpace`](@ref)).
+    move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
+Propagate the agent forwards one step according to its velocity, _after_ updating the
+agent's velocity (if configured using `update_vel!`, see [`ContinuousSpace`](@ref)).
 Also take care of periodic boundary conditions.
 
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
-as `agent.pos += agent.vel * dt`. If you want to move the agent to a specified position, do
-`move_agent!(agent, pos, model)`.
+as `agent.pos += agent.vel * dt`.
+
+Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size
+and if movement exceeds the extent in non-periodic spaces, the agent stops at the
+space end, while for periodic spaces it properly wraps around the end.
 """
 function move_agent!(
     agent::A,
     model::ABM{<:ContinuousSpace,A},
-    dt::Real = 1.0,
+    dt::Real,
 ) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
-    pos = agent.pos .+ dt .* agent.vel
-    move_agent!(agent, pos, model)
-    return agent.pos
+    direction = dt .* agent.vel
+    walk!(agent, direction, model)
 end
 
 #######################################################################################
-# %% Neighbors and stuff
+# %% nearby_stuff
 #######################################################################################
-function nearby_ids(
-    pos::ValidPos,
-    model::ABM{<:ContinuousSpace{D,A,T}},
-    r = 1;
-    exact = false,
-) where {D,A,T}
+# TODO: `nearby_stuff` allocate a bit because of the filtering.
+# We can make dedicated iterator structures, like with `GridSpace`, and completely
+# remove allocations!
+
+# Searching neighbors happens in two passes. First, we search neighbors in the
+# internal `GridSpace`, and then we refine them if need be. To understand how this works,
+# see https://github.com/JuliaDynamics/Agents.jl/issues/313
+
+# Extend the gridspace function
+function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
+    return offsets_within_radius(model.space.grid, r)
+end
+
+function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
+        exact = false,
+    ) where {D,A,T}
     if exact
-        grid_r_max = r < model.space.spacing ? T(1) : r / model.space.spacing + T(1)
-        grid_r_certain = grid_r_max - T(1.2) * sqrt(D)
-        focal_cell = CartesianIndex(pos2cell(pos, model))
-        allcells = grid_space_neighborhood(focal_cell, model, grid_r_max)
-        if grid_r_max >= 1
-            certain_cells = grid_space_neighborhood(focal_cell, model, grid_r_certain)
-            certain_ids =
-                Iterators.flatten(ids_in_position(cell, model) for cell in certain_cells)
-
-            uncertain_cells = setdiff(allcells, certain_cells) # This allocates, but not sure if there's a better way.
-            uncertain_ids =
-                Iterators.flatten(ids_in_position(cell, model) for cell in uncertain_cells)
-
-            additional_ids = Iterators.filter(
-                i -> euclidean_distance(pos, model[i].pos, model) ≤ r,
-                uncertain_ids,
-            )
-
-            return Iterators.flatten((certain_ids, additional_ids))
-        else
-            all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
-            return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, all_ids)
-        end
-    else
-        δ = distance_from_cell_center(pos, cell_center(pos, model))
-        grid_r = (r + δ) / model.space.spacing
-        return nearby_ids_cell(pos, model, grid_r)
+        @warn("Keyword `exact` in `nearby_ids` is deprecated. Use `nearby_ids_exact`.")
+        nearby_ids_exact(pos, model, r)
     end
+    # Calculate maximum grid distance (distance + distance from cell center)
+    δ = distance_from_cell_center(pos, cell_center(pos, model))
+    grid_r = (r + δ) / model.space.spacing
+    # Then return the ids within this distance, using the internal grid space
+    # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
+    focal_cell = pos2cell(pos, model)
+    return nearby_ids(focal_cell, model.space.grid, grid_r)
 end
 
-grid_space_neighborhood(α, model::ABM{<:ContinuousSpace}, r) =
-    grid_space_neighborhood(α, model.space.grid, r)
+function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+    # TODO:
+    # Simply filtering the output leads to 4x faster code than the commented-out logic.
+    # It is because the code of the "fast logic" is actually super type unstable.
+    # Hence, we need to re-think how we do this, and probably create dedicated structs
+    iter = nearby_ids(pos, model, r)
+    return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, iter)
 
-function nearby_ids_cell(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-    s = model.space.grid.s
-    Iterators.flatten((s[i...] for i in nn))
+    # Remaining code isn't used, but is based on
+    #  https://github.com/JuliaDynamics/Agents.jl/issues/313
+    #=
+    gridspace = model.space.grid
+    spacing = model.space.spacing
+    focal_cell = pos2cell(pos, model)
+    max_dist_from_center = maximum(abs.(pos .- cell_center(pos, model)))
+    crosses_at_least_one_cell_border = max_dist_from_center + r ≥ spacing
+
+    if crosses_at_least_one_cell_border # must include more than 1 cell guaranteed
+        grid_r_max = r < spacing ? T(1) : r/spacing + T(1)
+        allcells = nearby_positions(
+            focal_cell, gridspace, grid_r_max, offsets_within_radius
+        )
+        # TODO: I am not certain if the constant T(1.2)*sqrt(D) is correct
+        grid_r_certain = grid_r_max - T(1.2) * sqrt(D)
+        certain_cells = nearby_positions(
+            focal_cell, gridspace, grid_r_certain, offsets_within_radius)
+        certain_ids = nearby_ids(focal_cell, gridspace, grid_r_certain)
+
+        # TODO: This allocates, but not sure if there's a better way...
+        uncertain_cells = setdiff(allcells, certain_cells)
+
+        uncertain_ids = Iterators.flatten(
+            ids_in_position(cell, gridspace) for cell in uncertain_cells)
+
+        additional_ids = Iterators.filter(
+            i -> euclidean_distance(pos, model[i].pos, model) ≤ r,
+            uncertain_ids,
+        )
+        return Iterators.flatten((certain_ids, additional_ids))
+    else # only the focal cell is included in this search, so we skip `nearby_ids`
+        all_ids = ids_in_position(focal_cell, gridspace)
+        # return
+        # all_ids = Iterators.flatten(ids_in_position(cell, model) for cell in allcells)
+        # all_ids = nearby_ids(focal_cell, gridspace, r)
+        return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, all_ids)
+    end
+    =#
 end
 
-function nearby_positions(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
-    nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-    Iterators.filter(!isequal(pos), nn)
+# Do the standard extensions for `_exact` as in space API
+function nearby_ids_exact(agent::A, model::ABM, r = 1) where {A<:AbstractAgent}
+    all = nearby_ids_exact(agent.pos, model, r)
+    Iterators.filter(i -> i ≠ agent.id, all)
 end
+nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
 
-function positions(model::ABM{<:ContinuousSpace})
-    x = CartesianIndices(model.space.grid.s)
-    return (Tuple(y) for y in x)
-end
-
-function ids_in_position(pos::ValidPos, model::ABM{<:ContinuousSpace})
-    return model.space.grid.s[pos...]
-end
-
-################################################################################
-### Pretty printing
-################################################################################
-
-Base.size(space::ContinuousSpace) = space.extent
-
-function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
-    s = "$(P ? "periodic" : "") continuous space with $(join(space.dims, "×")) divisions"
-    space.update_vel! ≠ defvel && (s *= " with velocity updates")
-    print(io, s)
-end
 
 #######################################################################################
-# Continuous space exclusive: agent interactions
+# Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
-export nearest_neighbor, elastic_collision!, interacting_pairs
-
 """
     nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(
-    agent::A,
-    model::ABM{<:ContinuousSpace,A},
-    r;
-    exact = false,
-) where {A}
-    n = collect(nearby_ids(agent, model, r; exact))
-    length(n) == 0 && return nothing
-    d, j = Inf, 1
-    for i in 1:length(n)
-        @inbounds dnew = euclidean_distance(agent.pos, model[n[i]].pos, model)
+function nearest_neighbor(agent::A, model::ABM{<:ContinuousSpace,A}, r) where {A}
+    n = nearby_ids(agent, model, r)
+    d, j = Inf, 0
+    for id in n
+        dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
-            d, j = dnew, i
+            d, j = dnew, id
         end
     end
-    return @inbounds model[n[j]]
+    if d == Inf
+        return nothing
+    else
+        return model[j]
+    end
 end
 
 using LinearAlgebra
 
 """
-    elastic_collision!(a, b, f = nothing)
+    elastic_collision!(a, b, f = nothing) → happened
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
 They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
@@ -246,10 +292,13 @@ If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a m
 to weight the two agents for the collision. By default no weighting happens.
 
 One of the two agents can have infinite "mass", and then acts as an immovable object
-that specularly reflects the other agent. In this case of course momentum is not
+that specularly reflects the other agent. In this case momentum is not
 conserved, but kinetic energy is still conserved.
 
-Example usage in [Continuous space social distancing](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
+Return a boolean encoding whether the collision happened.
+
+Example usage in [Continuous space social distancing](
+https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
 """
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
@@ -285,15 +334,21 @@ function elastic_collision!(a, b, f = nothing)
     return true
 end
 
+#######################################################################################
+# interacting pairs
+#######################################################################################
 """
-    interacting_pairs(model, r, method; scheduler = model.scheduler)
-Return an iterator that yields unique pairs of agents `(a1, a2)` that are close
+    interacting_pairs(model, r, method; scheduler = model.scheduler) → piter
+Return an iterator that yields **unique pairs** of agents `(a, b)` that are close
 neighbors to each other, within some interaction radius `r`.
 
 This function is usefully combined with `model_step!`, when one wants to perform
 some pairwise interaction across all pairs of close agents once
-(and does not want to trigger the event twice, both with `a1` and with `a2`, which
-is unavoidable when using `agent_step!`).
+(and does not want to trigger the event twice, both with `a` and with `b`, which
+would be unavoidable when using `agent_step!`). This means, that if a pair
+`(a, b)` exists, the pair `(a, b)` is not included in the iterator!
+
+Use `piter.pairs` to get a vector of pair IDs from the iterator.
 
 The argument `method` provides three pairing scenarios
 - `:all`: return every pair of agents that are within radius `r` of each other,
@@ -306,27 +361,32 @@ The argument `method` provides three pairing scenarios
 - `:types`: For mixed agent models only. Return every pair of agents within radius `r`
   (similar to `:all`), only capturing pairs of differing types. For example, a model of
   `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
-  agent types, *e.g.* `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
+  agent types, e.g. `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
   `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
-  types, *i.e.*: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
+  types, i.e.: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
+
+The following keywords can be used:
+- `scheduler = model.scheduler`, which schedulers the agents during iteration for finding
+  pairs. Especially in the `:nearest` case, this is important, as different sequencing
+  for the agents may give different results (if `b` is the nearest agent for `a`, but
+  `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
+  on whether `a` was scheduelr first or not).
+- `nearby_f = nearby_ids_exact` is the function that decides how to find nearby IDs
+  in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
 """
-function interacting_pairs(
-    model::ABM{<:ContinuousSpace},
-    r::Real,
-    method;
-    scheduler = model.scheduler,
-    exact = true,
-)
+function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
+        scheduler = model.scheduler, nearby_f = nearby_ids_exact,
+    )
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r, scheduler)
     elseif method == :all
-        all_pairs!(pairs, model, r, exact = exact)
+        all_pairs!(pairs, model, r, nearby_f)
     elseif method == :types
-        type_pairs!(pairs, model, r, scheduler, exact = exact)
+        type_pairs!(pairs, model, r, scheduler, nearby_f)
     end
     return PairIterator(pairs, model.agents)
 end
@@ -334,11 +394,10 @@ end
 function all_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real;
-    exact = true,
+    r::Real, nearby_f,
 )
     for a in allagents(model)
-        for nid in nearby_ids(a, model, r; exact)
+        for nid in nearby_f(a, model, r)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -393,14 +452,12 @@ end
 function type_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real,
-    scheduler;
-    exact = true,
+    r::Real, scheduler, nearby_f,
 )
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in nearby_ids(model[id], model, r, exact = exact)
+        for nid in nearby_f(model[id], model, r)
             neigbor_type = typeof(model[nid])
             if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues
@@ -426,7 +483,7 @@ end
 
 
 #######################################################################################
-# %% Spatial fields
+# Spatial fields
 #######################################################################################
 export get_spatial_property, get_spatial_index
 """
@@ -457,10 +514,10 @@ If `property` has lower dimensionalty than the space (e.g. representing some sur
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}
-    spacesize = model.space.extent
+    ssize = spacesize(model)
     propertysize = size(property)
     upos = pos[1:D]
-    usize = spacesize[1:D]
+    usize = ssize[1:D]
     εs = usize ./ propertysize
     idxs = floor.(Int, upos ./ εs) .+ 1
     return CartesianIndex(idxs)

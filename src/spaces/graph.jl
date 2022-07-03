@@ -1,22 +1,25 @@
 export GraphSpace
+using Graphs: nv, ne
 
 #######################################################################################
 # Basic space definition
 #######################################################################################
 struct GraphSpace{G} <: DiscreteSpace
     graph::G
-    s::Vector{Vector{Int}}
+    stored_ids::Vector{Vector{Int}}
 end
 
 """
     GraphSpace(graph::AbstractGraph)
 Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl).
+`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an
+arbitrary amount of agents, and each agent can move between the nodes of the graph.
 The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
-The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
-`GraphSpace` represents a space where each node (i.e. position) of a graph can hold an arbitrary
-amount of agents, and each agent can move between the nodes of the graph.
+`Graph.nv` and `Graph.ne` can be used in a model with a `GraphSpace` to obtain
+the number of nodes or edges in the graph.
+The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
 
@@ -30,9 +33,17 @@ In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
 the degree of neighbors in the graph (thus distance is always an integer).
 For example, for `r=2` includes first and second degree neighbors.
 For 0 distance, the search occurs only on the origin node.
+
+In functions like [`nearby_ids`](@ref) the keyword `neighbor_type=:default` can be used
+to select differing neighbors depending on the underlying graph directionality type.
+- `:default` returns neighbors of a vertex (position). If graph is directed, this is
+  equivalent to `:out`. For undirected graphs, all options are equivalent to `:out`.
+- `:all` returns both `:in` and `:out` neighbors.
+- `:in` returns incoming vertex neighbors.
+- `:out` returns outgoing vertex neighbors.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
-    agent_positions = [Int[] for i in 1:Graphs.nv(graph)]
+    agent_positions = [Int[] for i in 1:nv(graph)]
     return GraphSpace{G}(graph, agent_positions)
 end
 
@@ -57,14 +68,15 @@ end
 
 function add_agent_to_space!(
     agent::A,
-    model::ABM{<:DiscreteSpace,A},
+    model::ABM{<:GraphSpace,A},
 ) where {A <: AbstractAgent}
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
 
 # The following is for the discrete space API:
-ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.s[n]
+positions(space::GraphSpace) = 1:nv(space)
+ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################
@@ -75,7 +87,7 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
         return ids_in_position(pos, model)
     end
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(model.space.s[pos], model.space.s[np]...)
+    vcat(model.space.stored_ids[pos], model.space.stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
@@ -122,7 +134,7 @@ function rem_node!(model::ABM{<:GraphSpace}, n::Int)
     V = nv(model)
     success = Graphs.rem_vertex!(model.space.graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.s
+    s = model.space.stored_ids
     s[V], s[n] = s[n], s[V]
     pop!(s)
 end
@@ -134,7 +146,7 @@ You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
 function add_node!(model::ABM{<:GraphSpace})
     add_vertex!(model.space.graph)
-    push!(model.space.s, Int[])
+    push!(model.space.stored_ids, Int[])
     return nv(model)
 end
 
