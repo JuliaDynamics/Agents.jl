@@ -32,7 +32,7 @@ function euclidean_distance(
     model::ABM{<:ContinuousSpace{D,true}},
 ) where {D}
     total = 0.0
-    for (a, b, d) in zip(p1, p2, model.space.extent)
+    for (a, b, d) in zip(p1, p2, spacesize(model))
         delta = abs(b - a)
         if delta > d - delta
             delta = d - delta
@@ -158,13 +158,13 @@ end
 
 Move agent in the given `direction` respecting periodic boundary conditions.
 If `periodic = false`, agents will walk to, but not exceed the boundary value.
-Possible on both `AbstractGridSpace` and `ContinuousSpace`s.
+Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
-The dimensionality of `direction` must be the same as the space. `AbstractGridSpace` asks for
-`Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
+The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
+for `Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
 each direction. `direction = (2, -3)` is an example of a valid direction on a
 `AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
-Velocity is ignored for this operation in `ContinuousSpace`.
+Agent velocity is ignored for this operation in `ContinuousSpace`.
 
 ## Keywords
 - `ifempty` will check that the target position is unoccupied and only move if that's true.
@@ -182,7 +182,6 @@ function walk!(
     target = mod1.(agent.pos .+ direction, size(model.space))
     walk_if_empty!(agent, target, model; kwargs...)
 end
-
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
@@ -192,33 +191,31 @@ function walk!(
     target = min.(max.(agent.pos .+ direction, 1), size(model.space))
     walk_if_empty!(agent, target, model; kwargs...)
 end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,true}};
-    kwargs...,
-) where {D}
-    target = mod1.(agent.pos .+ direction, model.space.extent)
-    move_agent!(agent, target, model)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,false}};
-    kwargs...,
-) where {D}
-    target = min.(max.(agent.pos .+ direction, 0.0), model.space.extent .- 1e-15)
-    move_agent!(agent, target, model)
-end
-
 function walk_if_empty!(agent, target, model; ifempty::Bool = false)
     if ifempty
         isempty(target, model) && move_agent!(agent, target, model)
     else
         move_agent!(agent, target, model)
     end
+end
+
+# Continuous
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:ContinuousSpace{D,true}};
+    kwargs...,
+) where {D}
+    target = mod1.(agent.pos .+ direction, spacesize(model))
+    move_agent!(agent, target, model)
+end
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:ContinuousSpace{D,false}}
+) where {D}
+    target = min.(max.(agent.pos .+ direction, 0.0), prevfloat.(spacesize(model)))
+    move_agent!(agent, target, model)
 end
 
 """

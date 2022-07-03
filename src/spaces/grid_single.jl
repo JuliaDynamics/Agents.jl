@@ -73,7 +73,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     return valid_pos_iterator
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1;
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1,
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D}
     nindices = get_offset_indices(model, r)
@@ -94,6 +94,6 @@ end
 # Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
-    a::A, model::ABM{<:GridSpaceSingle{D,false},A}, r = 1) where {D,A<:AbstractAgent}
+    a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end

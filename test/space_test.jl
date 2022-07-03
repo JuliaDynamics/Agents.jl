@@ -7,19 +7,6 @@
         @test Agents.ne(model) == 4
     end
 
-    @testset "Euclidean Distance" begin
-        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = true))
-        a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
-        b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test euclidean_distance(a, b, model) ≈ 2.82842712
-
-        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
-        a = add_agent!((1.0, 6.0), model, (0.5, 0.5), 2.0)
-        b = add_agent!((11.0, 4.0), model, (0.5, 0.7), 3.0)
-        @test euclidean_distance(a, b, model) ≈ 10.198039
-
-    end
-
     @testset "Nearby Agents" begin
         undirected = ABM(Agent5, GraphSpace(path_graph(5)))
         @test nearby_positions(3, undirected) == [2, 4]
@@ -66,30 +53,6 @@
 ###################################################################################
 # Continuous space
 
-        extent = (1.0, 1.0)
-        continuousspace = ABM(Agent6, ContinuousSpace(extent; spacing = 0.1); rng = StableRNG(78))
-        a = add_agent!((0.5, 0.5), continuousspace, (0.2, 0.1), 0.01)
-        b = add_agent!((0.6, 0.5), continuousspace, (0.1, -0.1), 0.01)
-        @test nagents(continuousspace) == 2
-        @test_throws ErrorException nearby_positions(1, continuousspace)
-
-        # Nearby stuff
-        @test collect(nearby_ids(a, continuousspace, 0.05)) == [2] # Not true, but we are not using the exact method
-        @test collect(nearby_ids(a, continuousspace, 0.05; exact = true)) == []
-        @test collect(nearby_ids(a, continuousspace, 0.1)) == [2]
-        @test sort!(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) == [1, 2]
-
-        # Move agent using velocity
-        move_agent!(a, continuousspace, 1)
-        move_agent!(b, continuousspace, 1)
-        @test collect(nearby_ids(a, continuousspace, 0.1; exact = true)) == []
-        # Checks for type instability #208
-        @test typeof(collect(nearby_ids(a, continuousspace, 0.1))) <: Vector{Int}
-        @test typeof(collect(nearby_ids((0.55, 0.5), continuousspace, 0.05))) <: Vector{Int}
-
-        # move agent using random position
-        # TODO:
-
     end
 
     mutable struct Agent3D <: AbstractAgent
@@ -105,29 +68,4 @@
         weight::Float64
     end
 
-    @testset "Walk" begin
-        # ContinuousSpace
-        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2; periodic = false))
-        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand(model.rng))
-        walk!(a, (1.0, 1.0), model)
-        @test a.pos == (1.0, 1.0)
-        walk!(a, (15.0, 1.0), model)
-        @test a.pos == (12.0 - 1e-15, 2.0)
-
-        model = ABM(Agent63, ContinuousSpace((12, 10, 5), 0.2))
-        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0), rand(model.rng))
-        walk!(a, (1.0, 1.0, 1.0), model)
-        @test a.pos == (1.0, 1.0, 1.0)
-        walk!(a, (15.0, 1.2, 3.9), model)
-        @test a.pos == (4.0, 2.2, 4.9)
-
-        @test_throws MethodError walk!(a, (1, 1, 5), model) # Must use Float64 for continuousspace
-
-        rng0 = StableRNG(42)
-        model = ABM(Agent6, ContinuousSpace((12, 10), 0.2); rng = rng0)
-        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
-        walk!(a, rand, model)
-        @test a.pos[1] ≈ 6.5824829589163665
-        @test a.pos[2] ≈ 4.842266936412905
-    end
 end

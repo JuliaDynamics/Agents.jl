@@ -21,21 +21,26 @@ using StableRNGs
         model = ABM(SpeedyContinuousAgent, space1; rng = StableRNG(42))
         @test nagents(model) == 0
         # add_agent! with no existing agent (the agent is created)
-        pos = (0.5, 0.5)
+        pos0 = (0.51, 0.51)
         vel = (0.2, 0.1)
         dia = 0.01
-        agent = add_agent!(pos, model, vel, dia)
+        agent = add_agent!(pos0, model, vel, dia)
         @test collect(allids(model)) == [1]
-        @test model[1].pos == agent.pos == (0.5, 0.5)
+        @test model[1].pos == agent.pos == pos0
         # move_agent! without provided update_vel! function and using dt::Real
         move_agent!(agent, model, 1)
-        @test agent.pos == (0.7, 0.6)
+        @test agent.pos == (0.71, 0.61)
         # move_agent! with specified position
-        move_agent!(agent, (0.5, 0.5), model)
-        @test agent.pos == (0.5, 0.5)
+        move_agent!(agent, pos0, model)
+        @test agent.pos == pos0
+        # Do it twice to ensure it works if agent stays in same cell
+        move_agent!(agent, pos0, model)
+        @test agent.pos == pos0
         # move with random position
         move_agent!(agent, model)
-        @test agent.pos ≠ (0.5, 0.5)
+        @test agent.pos ≠ pos0
+        # move at position OUTSIDE extend. Must lead to invalid position
+        @test_throws ErrorException move_agent!(agent, (1.5, 1.5), model)
         # kill
         kill_agent!(agent, model)
         @test nagents(model) == 0
@@ -211,6 +216,35 @@ using StableRNGs
         @test model[3].f1 == 2
         @test model[4].f1 == 3
     end
+
+    @testset "walk" begin
+        # ContinuousSpace
+        model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10); periodic = false))
+        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand(model.rng))
+        walk!(a, (1.0, 1.0), model)
+        @test a.pos == (1.0, 1.0)
+        walk!(a, (15.0, 1.0), model)
+        @test a.pos == (prevfloat(12.0), 2.0)
+
+        @agent ContinuousAgent3D ContinuousAgent{3} begin end
+        model = ABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2))
+        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0))
+        walk!(a, (1.0, 1.0, 1.0), model)
+        @test a.pos == (1.0, 1.0, 1.0)
+        walk!(a, (15.0, 1.2, 3.9), model)
+        @test a.pos == (4.0, 2.2, 4.9)
+
+        # Must use Float64 for continuousspace
+        @test_throws MethodError walk!(a, (1, 1, 5), model)
+
+        rng0 = StableRNG(42)
+        model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10)); rng = rng0)
+        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
+        walk!(a, rand, model)
+        @test a.pos[1] ≈ 6.5824829589163665
+        @test a.pos[2] ≈ 4.842266936412905
+    end
+
 end
 
 

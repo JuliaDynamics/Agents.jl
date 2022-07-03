@@ -27,23 +27,6 @@
     @test add_agent!(agent, (7, 8), model).pos == (7, 8)
 end
 
-@testset "add_agent! (continuous)" begin
-    properties = Dict(:x1 => 1)
-    space2d = ContinuousSpace((1, 1); periodic = true)
-    model = ABM(Agent8, space2d; properties = properties)
-    attributes = (f1 = true, f2 = 1)
-    add_agent!(model, attributes...)
-    attributes = (f2 = 1, f1 = true)
-    add_agent!(model; attributes...)
-    @test model[1].id != model[2].id
-    @test model[1].f1 == model[2].f1
-    @test model[1].f2 == model[2].f2
-    agent = Agent8(3, (0, 0), false, 6)
-    @test 0 <= add_agent!(agent, model).pos[1] <= 1
-    agent.id = 4
-    @test add_agent!(agent, (0.5, 0.5), model).pos[1] ≈ 0.5 atol = 1e-3
-end
-
 @testset "move_agent!" begin
     # GraphSpace
     model = ABM(Agent5, GraphSpace(path_graph(6)))
@@ -81,12 +64,6 @@ end
     move_agent_single!(agent2, model)
     # Agent shouldn't move since the grid is saturated
     @test agent2.pos == (1, 1)
-
-    # ContinuousSpace
-    model = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
-    agent = add_agent!((0.0, 0.0), model, (0.5, 0.0), 1.0)
-    move_agent!(agent, model)
-    @test agent.pos == (0.5, 0.0)
 end
 
 @testset "kill_agent!" begin
@@ -118,13 +95,6 @@ end
     for id in copy(ids_in_position((1, 3), model))
         kill_agent!(id, model)
     end
-    @test nagents(model) == 1
-    # ContinuousSpace
-    model = ABM(Agent6, ContinuousSpace((1, 1), 0.1))
-    add_agent!((0.7, 0.1), model, (15, 20), 5.0)
-    add_agent!((0.2, 0.9), model, (8, 35), 1.7)
-    @test nagents(model) == 2
-    kill_agent!(model[1], model)
     @test nagents(model) == 1
 end
 
@@ -197,21 +167,6 @@ end
     genocide!(model, complex_logic)
     @test nagents(model) < N
 
-    space2d = ContinuousSpace((1, 1), 0.1; periodic = true)
-    model = ABM(Agent8, space2d)
-    attributes = (f1 = true, f2 = 1)
-    for _ in 1:10
-        add_agent!(model, attributes...)
-    end
-    genocide!(model)
-    @test nagents(model) == 0
-    for _ in 1:10
-        add_agent!(model, attributes...)
-    end
-    genocide!(model, 5)
-    @test nagents(model) == 5
-    genocide!(model, a -> a.id < 3)
-    @test nagents(model) == 3
 end
 
 mutable struct Daisy <: AbstractAgent

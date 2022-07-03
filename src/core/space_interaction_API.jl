@@ -130,6 +130,7 @@ function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) whe
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
+    return agent
 end
 function move_agent!(agent, model::ABM)
     move_agent!(agent, random_position(model), model)

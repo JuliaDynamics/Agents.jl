@@ -13,7 +13,8 @@ no_vel_update(a, m) = nothing
 spacesize(model::ABM) = spacesize(model.space)
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
-    s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"
+    s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*
+    " and spacing=$(space.spacing)"
     space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
     print(io, s)
 end
@@ -102,33 +103,41 @@ function distance_from_cell_center(pos::Tuple, center::Tuple)
     sqrt(sum(abs2.(pos .- center)))
 end
 
-function add_agent_to_space!(a::A, model::ABM{<:ContinuousSpace,A}) where {A<:AbstractAgent}
-    push!(model.space.grid.stored_ids[pos2cell(a, model)...], a.id)
+function add_agent_to_space!(
+    a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
+    push!(model.space.grid.stored_ids[cell_index...], a.id)
     return a
 end
 
 function remove_agent_from_space!(
     a::A,
     model::ABM{<:ContinuousSpace,A},
+    cell_index = pos2cell(a, model),
 ) where {A<:AbstractAgent}
-    prev = model.space.grid.stored_ids[pos2cell(a, model)...]
+    prev = model.space.grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
 end
 
-function move_agent!(
-    a::A,
-    pos::NTuple{D, <:AbstractFloat},
-    model::ABM{<:ContinuousSpace{D,periodic},A},
-) where {A<:AbstractAgent,D,periodic}
-    remove_agent_from_space!(a, model)
-    if periodic
-        pos = mod.(pos, spacesize(model))
+# We re-write this for performance, because if cell doesn't change, we don't have to
+# move the agent in the GridSpace; only change its position field
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
+    ) where {D, A<:AbstractAgent}
+    for i in 1:D
+        pos[i] > spacesize(model)[i] && error("position is outside space extent!")
     end
-    a.pos = pos
-    add_agent_to_space!(a, model)
+    oldcell = pos2cell(agent, model)
+    newcell = pos2cell(pos, model)
+    if oldcell ≠ newcell
+        remove_agent_from_space!(agent, model, oldcell)
+        add_agent_to_space!(agent, model, newcell)
+    end
+    agent.pos = pos
+    return agent
 end
+
+
 
 """
     move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
@@ -139,6 +148,10 @@ Also take care of periodic boundary conditions.
 For this continuous space version of `move_agent!`, the "evolution algorithm"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
 as `agent.pos += agent.vel * dt`.
+
+Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size
+and if movement exceeds the extent in non-periodic spaces, the agent stops at the
+space end, while for periodic spaces it properly wraps around the end.
 """
 function move_agent!(
     agent::A,
@@ -146,9 +159,8 @@ function move_agent!(
     dt::Real,
 ) where {A<:AbstractAgent}
     model.space.update_vel!(agent, model)
-    pos = agent.pos .+ dt .* agent.vel
-    move_agent!(agent, pos, model)
-    return agent.pos
+    direction = dt .* agent.vel
+    walk!(agent, direction, model)
 end
 
 #######################################################################################
