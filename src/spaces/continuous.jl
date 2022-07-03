@@ -273,7 +273,7 @@ end
 using LinearAlgebra
 
 """
-    elastic_collision!(a, b, f = nothing)
+    elastic_collision!(a, b, f = nothing) → happened
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
 They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.
@@ -285,10 +285,13 @@ If `f` is a `Symbol`, then the agent property `f`, e.g. `:mass`, is taken as a m
 to weight the two agents for the collision. By default no weighting happens.
 
 One of the two agents can have infinite "mass", and then acts as an immovable object
-that specularly reflects the other agent. In this case of course momentum is not
+that specularly reflects the other agent. In this case momentum is not
 conserved, but kinetic energy is still conserved.
 
-Example usage in [Continuous space social distancing](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
+Return a boolean encoding whether the collision happened.
+
+Example usage in [Continuous space social distancing](
+https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
 """
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
@@ -501,10 +504,10 @@ If `property` has lower dimensionalty than the space (e.g. representing some sur
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}
-    spacesize = spacesize(model)
+    ssize = spacesize(model)
     propertysize = size(property)
     upos = pos[1:D]
-    usize = spacesize[1:D]
+    usize = ssize[1:D]
     εs = usize ./ propertysize
     idxs = floor.(Int, upos ./ εs) .+ 1
     return CartesianIndex(idxs)

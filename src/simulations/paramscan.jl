@@ -88,11 +88,11 @@ function paramscan(
     combs = dict_list(parameters)
 
     if parallel
-        all_data = ProgressMeter.@showprogress pmap(combs) do i
+        all_data = pmap(combs) do i
             run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     else
-        all_data = ProgressMeter.@showprogress map(combs) do i
+        all_data = map(combs) do i
             run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
         end
     end

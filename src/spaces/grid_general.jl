@@ -115,6 +115,7 @@ end
 # pretty printing
 ###################################################################
 Base.size(space::AbstractGridSpace) = size(space.stored_ids)
+spacesize(space::AbstractGridSpace) = size(space)
 
 function Base.show(io::IO, space::AbstractGridSpace{D,P}) where {D,P}
     name = nameof(typeof(space))

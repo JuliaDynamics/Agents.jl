@@ -95,7 +95,6 @@ end
     include("continuous_space_tests.jl")
     include("osm_tests.jl")
     include("astar_tests.jl")
-    include("collisions_tests.jl")
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")

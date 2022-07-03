@@ -147,7 +147,7 @@ function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
-    update_vel! = get(kwargs, :update_vel!, Agents.defvel)
+    update_vel! = get(kwargs, :update_vel!, Agents.no_vel_update)
     ContinuousSpace(
         from_serializable(t.grid; kwargs...),
         update_vel!,

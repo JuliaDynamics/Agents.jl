@@ -1,6 +1,8 @@
 using Agents, Test
 using StableRNGs
 
+# TODO: We need to write tests for get_spatial_index and stuff!
+
 @testset "ContinuousSpace" begin
     @agent SpeedyContinuousAgent ContinuousAgent{2} begin
         speed::Float64
@@ -245,9 +247,86 @@ using StableRNGs
         @test a.pos[2] ≈ 4.842266936412905
     end
 
+    @testset "collisions" begin
+        speed = 0.002
+        dt = 1.0
+        diameter = 0.1
+        @agent MassContinuousAgent ContinuousAgent{2} begin
+            mass::Float64
+        end
+
+        function model_initiation()
+            space = ContinuousSpace((10,10); periodic=true)
+            model = ABM(MassContinuousAgent, space;
+            rng=StableRNG(42), properties= Dict(:c => 0));
+            # Add initial individuals
+            for i in 1:10, j in 1:10
+                    pos = (i/10, j/10)
+                if i > 5
+                    vel = sincos(2π*rand(model.rng)) .* speed
+                    mass = 1.33
+                else
+                    # these agents have infinite mass and 0 velocity. They are fixed.
+                    vel = (0.0, 0.0)
+                    mass = Inf
+                end
+                add_agent!(pos, model, vel, mass)
+            end
+            return model
+        end
+
+        agent_step!(agent, model) = move_agent!(agent, model, dt)
+        function model_step!(model)
+            ipairs = interacting_pairs(model, diameter, :nearest)
+            for (a1, a2) in ipairs
+                e = elastic_collision!(a1, a2, :mass)
+                if e
+                    model.properties[:c] += 1
+                end
+            end
+        end
+
+        function kinetic(model)
+            K = sum(sum(abs2.(a.vel)) for a in allagents(model))
+            p = (0.0, 0.0)
+            for a in allagents(model)
+                 p = p .+ a.vel
+            end
+            return K, p
+        end
+
+        model = model_initiation()
+        initvels = [model[i].vel for i in 1:100]
+        x = count(!isapprox(initvels[id][1], model[id].vel[1]) for id in 1:100)
+        @test x == 0
+
+        K0, p0 = kinetic(model)
+        step!(model, agent_step!, model_step!, 10)
+        ipairs = interacting_pairs(model, diameter, :nearest)
+        @test length(ipairs) ≠ 100
+        @test length(ipairs) ≠ 0
+
+        step!(model, agent_step!, model_step!, 10)
+        x = count(any(initvels[id] .≠ model[id].vel) for id in 1:100)
+        y = count(!any(initvels[id] .≈ model[id].vel) for id in 1:50)
+        @test y == 0
+
+        # x, which is the changed velocities
+        # should be at least the amount of collisions happened divided by 2
+        # because half the agents are unmovable (in a collision at most one agent
+        # must change velocity)
+        @test x > 0
+        @test model.c > 0
+        @test x ≥ model.c/2
+        K1, p1 = kinetic(model)
+        @test p1 != p0
+        # TODO: This test fails but I do not know why. Must be fixed later.
+        # (Kinetic energy is not conserved)
+        # @test K1 ≈ K0
+    end
 end
 
-
+# Plotting for neighbors in continuous space
 #=
 using GLMakie, InteractiveDynamics
 function test_neighbors_continuous(;

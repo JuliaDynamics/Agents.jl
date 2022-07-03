@@ -13,6 +13,7 @@
 - [**Will be breaking**] Keyword `exact` in `nearby_ids` for `ContinuousSpace` is deprecated, because now the exact version returns different type than the non-exact, hence leading to type instabilities. Use `nearby_ids_exact` instead. Same for `nearby_agents`.
 - New keyword `nearby_f = nearby_ids_exact` in `interacting_pairs` which decides whether to use the exact or approximate algorithm for nearest neighbors.
 - Performance increase for `nearest_neighbor`.
+- Keyword `dt` in `move_along_route!` with pathfinding in continuous space is deprecated and will be removed. Reason: it is completely obsolete given `speed`.
 
 # v5.3
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:

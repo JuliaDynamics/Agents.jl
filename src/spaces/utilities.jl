@@ -97,7 +97,7 @@ Return the direction vector from the position `from` to position `to` taking int
 periodicity of the space.
 """
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
-
+# Periodic spaces version
 function get_direction(
     from::NTuple{D,Float64},
     to::NTuple{D,Float64},
@@ -105,7 +105,7 @@ function get_direction(
 ) where {D}
     best = to .- from
     for offset in Iterators.product([-1:1 for _ in 1:D]...)
-        dir = to .+ offset .* size(space) .- from
+        dir = to .+ offset .* spacesize(space) .- from
         sum(dir.^2) < sum(best.^2) && (best = dir)
     end
     return best
