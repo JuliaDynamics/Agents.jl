@@ -93,23 +93,24 @@ move_agent_single!
 isempty(::Integer, ::ABM)
 ```
 
-## Continuous space exclusives
+## `ContinuousSpace` exclusives
 ```@docs
+nearby_ids_exact
+nearest_neighbor
 get_spatial_property
 get_spatial_index
 interacting_pairs
-nearest_neighbor
 elastic_collision!
 ```
 
-## Graph space exclusives
+## `GraphSpace` exclusives
 ```@docs
 add_edge!
 add_node!
 rem_node!
 ```
 
-## OpenStreetMap space exclusives
+## `OpenStreetMapSpace` exclusives
 ```@docs
 OSM
 OSM.lonlat

@@ -4,7 +4,7 @@ This is a huge release!
 ## Performance improvements
 - Internal representation of grid spaces has been completely overhauled. For `GridSpace` this lead to about 25-30% performance increase in `nearby_stuff` and 100% decrease in memory allocations.
 - Significant performance increase for `nearest_neighbor` in `ContinuousSpace`.
-- Because of the new grid spaces internals, `nearby_stuff` searches in `ContinuousSpace` are 2-5 times faster and also allocate 0 memory.
+- Because of the new grid spaces internals, `nearby_stuff` searches in `ContinuousSpace` are 2-5 times faster.
 
 ## New space
 - New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one agent per position. It utilizes this knowledge for massive performance benefits over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board. ID = 0 is a reserved ID for this space and cannot be used by users.

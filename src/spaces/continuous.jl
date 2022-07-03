@@ -1,5 +1,6 @@
 export ContinuousSpace
 export nearby_ids_exact, nearby_agents_exact
+export nearest_neighbor, elastic_collision!, interacting_pairs
 
 struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     grid::GridSpace{D,P}
@@ -166,6 +167,10 @@ end
 #######################################################################################
 # %% nearby_stuff
 #######################################################################################
+# TODO: `nearby_stuff` allocate a bit because of the filtering.
+# We can make dedicated iterator structures, like with `GridSpace`, and completely
+# remove allocations!
+
 # Searching neighbors happens in two passes. First, we search neighbors in the
 # internal `GridSpace`, and then we refine them if need be. To understand how this works,
 # see https://github.com/JuliaDynamics/Agents.jl/issues/313
@@ -193,7 +198,7 @@ end
 
 function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
     # TODO:
-    # Simply filtering the output leads to 4x faster code than the remaining logic.
+    # Simply filtering the output leads to 4x faster code than the commented-out logic.
     # It is because the code of the "fast logic" is actually super type unstable.
     # Hence, we need to re-think how we do this, and probably create dedicated structs
     iter = nearby_ids(pos, model, r)
@@ -248,18 +253,9 @@ end
 nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
 
 
-# function nearby_ids_cell(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
-#     nn = grid_space_neighborhood(CartesianIndex(pos2cell(pos, model)), model, r)
-#     s = model.space.grid.stored_ids
-#     Iterators.flatten((s[i...] for i in nn))
-# end
-
-
 #######################################################################################
-# Continuous space exclusive: agent interactions
+# Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
-export nearest_neighbor, elastic_collision!, interacting_pairs
-
 """
     nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
 Return the agent that has the closest distance to given `agent`.
@@ -338,6 +334,9 @@ function elastic_collision!(a, b, f = nothing)
     return true
 end
 
+#######################################################################################
+# interacting pairs
+#######################################################################################
 """
     interacting_pairs(model, r, method; scheduler = model.scheduler) → piter
 Return an iterator that yields **unique pairs** of agents `(a, b)` that are close
@@ -484,7 +483,7 @@ end
 
 
 #######################################################################################
-# %% Spatial fields
+# Spatial fields
 #######################################################################################
 export get_spatial_property, get_spatial_index
 """
