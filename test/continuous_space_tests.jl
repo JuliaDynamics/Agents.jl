@@ -13,7 +13,6 @@ using StableRNGs
         space2 = ContinuousSpace((1, 1, 1); spacing=0.25, periodic = false)
         @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
         @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
-        @test_throws MethodError ContinuousSpace((1, 1), 0.1) # spacing is a keyword
         model = ABM(SpeedyContinuousAgent, space1)
         model2 = ABM(SpeedyContinuousAgent, space2)
     end
