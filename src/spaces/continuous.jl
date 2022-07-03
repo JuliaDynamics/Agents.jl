@@ -192,6 +192,16 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
 end
 
 function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+    # TODO:
+    # Simply filtering the output leads to 4x faster code than the remaining logic.
+    # It is because the code of the "fast logic" is actually super type unstable.
+    # Hence, we need to re-think how we do this, and probably create dedicated structs
+    iter = nearby_ids(pos, model, r)
+    return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, iter)
+
+    # Remaining code isn't used, but is based on
+    #  https://github.com/JuliaDynamics/Agents.jl/issues/313
+    #=
     gridspace = model.space.grid
     spacing = model.space.spacing
     focal_cell = pos2cell(pos, model)
@@ -227,6 +237,7 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
         # all_ids = nearby_ids(focal_cell, gridspace, r)
         return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, all_ids)
     end
+    =#
 end
 
 # Do the standard extensions for `_exact` as in space API
