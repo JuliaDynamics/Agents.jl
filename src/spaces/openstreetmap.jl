@@ -411,16 +411,14 @@ function distance(
     route = Int[]
 
     # get route
-    try
-        route = shortest_path(
-            model.space.map,
-            model.space.map.index_to_node[st_node],
-            model.space.map.index_to_node[en_node];
-            kwargs...
-        )
-    catch
-        return Inf
-    end
+    route = shortest_path(
+        model.space.map,
+        model.space.map.index_to_node[st_node],
+        model.space.map.index_to_node[en_node];
+        kwargs...
+    )
+    # return infinite distance if a connection doesn't exist
+    isnothing(route) && return Inf
 
     # distance along route
     dist = sum(weights_from_path(model.space.map, route))
