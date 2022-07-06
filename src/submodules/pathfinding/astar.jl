@@ -83,7 +83,7 @@ AStar(
     space::GridSpace{D,periodic};
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(size(space.s)),
+    walkmap::BitArray{D} = trues(size(space)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
     AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
@@ -96,7 +96,7 @@ function AStar(
 ) where {D,periodic}
     @assert walkmap isa BitArray{D} || cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
     isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
-    AStar(size(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
+    AStar(Agents.spacesize(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
 end
 
 
@@ -193,7 +193,7 @@ end
     (cur .+ β.I for β in pathfinder.neighborhood)
 @inline inbounds(n, pathfinder, closed) =
     all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
-    
+
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 

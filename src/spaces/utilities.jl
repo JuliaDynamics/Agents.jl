@@ -1,38 +1,38 @@
-export edistance, get_direction, walk!
+export euclidean_distance, manhattan_distance, get_direction, walk!
 
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
 #######################################################################################
 """
-    edistance(a, b, model::ABM)
+    euclidean_distance(a, b, model::ABM)
 
 Return the euclidean distance between `a` and `b` (either agents or agent positions),
 respecting periodic boundary conditions (if in use). Works with any space where it makes
-sense: currently `GridSpace` and `ContinuousSpace`.
+sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 
 Example usage in the [Flocking model](@ref).
 """
-edistance(
+euclidean_distance(
     a::A,
     b::B,
-    model::ABM{<:Union{ContinuousSpace,GridSpace}},
-) where {A <: AbstractAgent,B <: AbstractAgent} = edistance(a.pos, b.pos, model)
+    model::ABM{<:Union{ContinuousSpace,AbstractGridSpace}},
+) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model)
 
-function edistance(
-    a::ValidPos,
-    b::ValidPos,
-    model::ABM{<:Union{ContinuousSpace{D,false},GridSpace{D,false}}},
+function euclidean_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    model::ABM{<:Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}}},
 ) where {D}
-    sqrt(sum(abs2.(a .- b)))
+    sqrt(sum(abs2.(p1 .- p2)))
 end
 
-function edistance(
+function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
     model::ABM{<:ContinuousSpace{D,true}},
 ) where {D}
     total = 0.0
-    for (a, b, d) in zip(p1, p2, model.space.extent)
+    for (a, b, d) in zip(p1, p2, spacesize(model))
         delta = abs(b - a)
         if delta > d - delta
             delta = d - delta
@@ -42,7 +42,9 @@ function edistance(
     sqrt(total)
 end
 
-function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) where {D}
+function euclidean_distance(
+        p1::ValidPos, p2::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}
+    ) where {D}
     total = 0.0
     for (a, b, d) in zip(p1, p2, size(model.space))
         delta = abs(b - a)
@@ -55,26 +57,61 @@ function edistance(p1::ValidPos, p2::ValidPos, model::ABM{<:GridSpace{D,true}}) 
 end
 
 """
+    manhattan_distance(a, b, model::ABM)
+
+Return the manhattan distance between `a` and `b` (either agents or agent positions),
+respecting periodic boundary conditions (if in use). Works with any space where it makes
+sense: currently `AbstractGridSpace` and `ContinuousSpace`.
+"""
+manhattan_distance(
+    a::A,
+    b::B,
+    model::ABM{<:Union{ContinuousSpace,AbstractGridSpace}},
+) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model)
+
+function manhattan_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    model::ABM{<:Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}}},
+) where {D}
+    sum(abs.(p1 .- p2))
+end
+
+function manhattan_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    model::ABM{<:Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}}
+) where {D}
+    total = 0.0
+    # find minimum distance for each dimension, add to total
+    for dim in 1:D
+        direct = abs(p1[dim] - p2[dim])
+        total += min(size(model.space)[dim] - direct, direct)
+    end
+    return total
+end
+
+"""
     get_direction(from, to, model::ABM)
 Return the direction vector from the position `from` to position `to` taking into account
 periodicity of the space.
 """
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
-
+# Periodic spaces version
 function get_direction(
     from::NTuple{D,Float64},
     to::NTuple{D,Float64},
-    space::Union{ContinuousSpace{D,true},GridSpace{D,true}}
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
     best = to .- from
     for offset in Iterators.product([-1:1 for _ in 1:D]...)
-        dir = to .+ offset .* size(space) .- from
+        dir = to .+ offset .* spacesize(space) .- from
         sum(dir.^2) < sum(best.^2) && (best = dir)
     end
     return best
 end
 
-function get_direction(from, to, ::Union{GridSpace,ContinuousSpace})
+function get_direction(from, to, ::Union{AbstractGridSpace,ContinuousSpace})
     return to .- from
 end
 
@@ -121,59 +158,39 @@ end
 
 Move agent in the given `direction` respecting periodic boundary conditions.
 If `periodic = false`, agents will walk to, but not exceed the boundary value.
-Possible on both `GridSpace` and `ContinuousSpace`s.
+Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
-The dimensionality of `direction` must be the same as the space. `GridSpace` asks for
-`Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
+The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
+for `Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
 each direction. `direction = (2, -3)` is an example of a valid direction on a
-`GridSpace`, which moves the agent to the right 2 positions and down 3 positions.
-Velocity is ignored for this operation in `ContinuousSpace`.
+`AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
+Agent velocity is ignored for this operation in `ContinuousSpace`.
 
 ## Keywords
-- `ifempty` will check that the target position is unnocupied and only move if that's true. Available only on `GridSpace`.
+- `ifempty` will check that the target position is unoccupied and only move if that's true.
+  Available only on `AbstractGridSpace`.
 
-Example usage in [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
+Example usage in [Battle Royale](
+    https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
 """
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
-    model::ABM{<:GridSpace{D,true}};
+    model::ABM{<:AbstractGridSpace{D,true}};
     kwargs...,
 ) where {D}
     target = mod1.(agent.pos .+ direction, size(model.space))
     walk_if_empty!(agent, target, model; kwargs...)
 end
-
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
-    model::ABM{<:GridSpace{D,false}};
+    model::ABM{<:AbstractGridSpace{D,false}};
     kwargs...,
 ) where {D}
     target = min.(max.(agent.pos .+ direction, 1), size(model.space))
     walk_if_empty!(agent, target, model; kwargs...)
 end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,true}};
-    kwargs...,
-) where {D}
-    target = mod1.(agent.pos .+ direction, model.space.extent)
-    move_agent!(agent, target, model)
-end
-
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,false}};
-    kwargs...,
-) where {D}
-    target = min.(max.(agent.pos .+ direction, 0.0), model.space.extent .- 1e-15)
-    move_agent!(agent, target, model)
-end
-
 function walk_if_empty!(agent, target, model; ifempty::Bool = false)
     if ifempty
         isempty(target, model) && move_agent!(agent, target, model)
@@ -182,14 +199,33 @@ function walk_if_empty!(agent, target, model; ifempty::Bool = false)
     end
 end
 
+# Continuous
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:ContinuousSpace{D,true}};
+    kwargs...,
+) where {D}
+    target = mod1.(agent.pos .+ direction, spacesize(model))
+    move_agent!(agent, target, model)
+end
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Float64},
+    model::ABM{<:ContinuousSpace{D,false}}
+) where {D}
+    target = min.(max.(agent.pos .+ direction, 0.0), prevfloat.(spacesize(model)))
+    move_agent!(agent, target, model)
+end
+
 """
     walk!(agent, rand, model)
 
 Invoke a random walk by providing the `rand` function in place of
-`distance`. For `GridSpace`, the walk will cover ±1 positions in all directions,
+`direction`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
 `ContinuousSpace` will reside within [-1, 1].
 """
-walk!(agent, ::typeof(rand), model::ABM{<:GridSpace{D}}; kwargs...) where {D} =
+walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D} =
     walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
 
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}; kwargs...) where {D} =

@@ -36,7 +36,7 @@ function flocking(;
     extent = (100, 100),
     spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(extent, spacing)
+    space2d = ContinuousSpace(extent; spacing)
     model = ABM(Bird, space2d, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
@@ -63,7 +63,7 @@ function flocking_agent_step!(bird, model)
         neighbor = model[id].pos
         heading = neighbor .- bird.pos
         cohere = cohere .+ heading
-        if edistance(bird.pos, neighbor, model) < bird.separation
+        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
             separate = separate .- heading
         end
         match = match .+ model[id].vel

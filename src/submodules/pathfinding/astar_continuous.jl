@@ -124,7 +124,7 @@ function Agents.move_along_route!(
         dir = dir ./ dist_to_target
         next_pos = from .+ dir .* (speed * dt)
         # overshooting means we reached the waypoint
-        dist_to_next = edistance(from, next_pos, model)
+        dist_to_next = euclidean_distance(from, next_pos, model)
         if dist_to_next > dist_to_target
             # change from and dt so it appears we're coming from the waypoint just skipped, instead
             # of directly where the agent was. E.g:
@@ -145,7 +145,6 @@ function Agents.move_along_route!(
             break
         end
     end
-
     move_agent!(agent, next_pos, model)
 end
 
@@ -198,7 +197,7 @@ function random_walkable(
     half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
         Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
-    dist = edistance(pos, cts_rand, model)
+    dist = euclidean_distance(pos, cts_rand, model)
     dist > r && (cts_rand = mod1.(
         pos .+ get_direction(pos, cts_rand, model) ./ dist .* r,
         model.space.extent

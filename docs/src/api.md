@@ -32,6 +32,12 @@ Here we list the spaces that are available "out of the box" from Agents.jl. To c
 ```@docs
 GraphSpace
 GridSpace
+GridSpaceSingle
+```
+
+Here is a specification of how the metrics look like:
+```@example
+include("distances_example_plot.jl") # hide
 ```
 
 ### Continuous spaces
@@ -87,23 +93,24 @@ move_agent_single!
 isempty(::Integer, ::ABM)
 ```
 
-## Continuous space exclusives
+## `ContinuousSpace` exclusives
 ```@docs
+nearby_ids_exact
+nearest_neighbor
 get_spatial_property
 get_spatial_index
 interacting_pairs
-nearest_neighbor
 elastic_collision!
 ```
 
-## Graph space exclusives
+## `GraphSpace` exclusives
 ```@docs
 add_edge!
 add_node!
 rem_node!
 ```
 
-## OpenStreetMap space exclusives
+## `OpenStreetMapSpace` exclusives
 ```@docs
 OSM
 OSM.lonlat
@@ -112,6 +119,7 @@ OSM.nearest_road
 OSM.random_road_position
 OSM.plan_random_route!
 OSM.road_length
+OSM.route_length
 OSM.same_position
 OSM.same_road
 OSM.test_map
@@ -125,7 +133,8 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
-edistance
+euclidean_distance
+manhattan_distance
 ```
 
 ## A note on iteration

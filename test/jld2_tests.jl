@@ -1,3 +1,6 @@
+# TODO: Add tests for GridSpaceSingle
+# TODO: None of these tests should access iternal fields like .stored_ids!
+# instead they should use public API like `ids_in_position` etc.
 @testset "JLD2" begin
 
     function test_model_data(model, other)
@@ -7,9 +10,9 @@
     end
 
     function test_space(space::GridSpace, other)
-        @test size(space.s) == size(other.s)
-        @test all(length(other.s[pos]) == length(space.s[pos]) for pos in eachindex(space.s))
-        @test all(all(x in other.s[pos] for x in space.s[pos]) for pos in eachindex(space.s))
+        @test size(space) == size(other)
+        @test all(length(other.stored_ids[pos]) == length(space.stored_ids[pos]) for pos in eachindex(space.stored_ids))
+        @test all(all(x in other.stored_ids[pos] for x in space.stored_ids[pos]) for pos in eachindex(space.stored_ids))
         @test space.metric == other.metric
     end
 
@@ -170,9 +173,9 @@
         test_model_data(model, other)
         # space data
         @test model.space.graph == other.space.graph
-        @test length(model.space.s) == length(other.space.s)
-        @test all(length(model.space.s[pos]) == length(other.space.s[pos]) for pos in eachindex(model.space.s))
-        @test all(all(x in other.space.s[pos] for x in model.space.s[pos]) for pos in eachindex(model.space.s))
+        @test length(model.space.stored_ids) == length(other.space.stored_ids)
+        @test all(length(model.space.stored_ids[pos]) == length(other.space.stored_ids[pos]) for pos in eachindex(model.space.stored_ids))
+        @test all(all(x in other.space.stored_ids[pos] for x in model.space.stored_ids[pos]) for pos in eachindex(model.space.stored_ids))
 
         rm("test.jld2")
     end

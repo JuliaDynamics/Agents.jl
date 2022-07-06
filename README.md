@@ -1,6 +1,6 @@
 # Agents.jl: agent-based modeling framework in Julia
 
-![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents3_logo.gif?raw=true)
+![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents4_logo.gif?raw=true)
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDynamics.github.io/Agents.jl/stable)
 [![](https://img.shields.io/badge/DOI-10.1177/00375497211068820-purple)](https://journals.sagepub.com/doi/10.1177/00375497211068820)
@@ -14,7 +14,7 @@ Agents.jl is a [Julia](https://julialang.org/) framework for agent-based modelin
 
 Any contribution to Agents.jl is welcome! For example you can:
 
-  * Add new feature or improve an existing one (plenty to choose from the "Issues" page) 
+  * Add new feature or improve an existing one (plenty to choose from the "Issues" page)
   * Improve the existing documentation
   * Add new example ABMs into our existing pool of examples
   * Report bugs and suggestions in the Issues page

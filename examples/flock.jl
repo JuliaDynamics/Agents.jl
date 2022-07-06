@@ -54,9 +54,8 @@ function initialize_model(;
     match_factor = 0.01,
     visual_distance = 5.0,
     extent = (100, 100),
-    spacing = visual_distance / 1.5,
 )
-    space2d = ContinuousSpace(extent, spacing)
+    space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     model = ABM(Bird, space2d, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
@@ -91,7 +90,7 @@ function agent_step!(bird, model)
 
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
-        if edistance(bird.pos, neighbor, model) < bird.separation
+        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
             ## `separate` repels the bird away from neighboring birds
             separate = separate .- heading
         end

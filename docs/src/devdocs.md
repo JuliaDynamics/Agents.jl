@@ -18,8 +18,7 @@ In principle, the following should be done:
 1. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
 1. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
 1. Extend `random_position(model)`.
-1. Think about how the positions of agents will be updated as agents are moved, added or killed.
-1. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`.
+1. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
 1. Extend `nearby_ids(position, model, r)`.
 
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` for performance reasons.
@@ -57,3 +56,6 @@ type during serialization. For OpenStreetMap agents, the position, destination a
 saved separately. These values will be loaded back in during deserialization of the model and
 override any values in the agent structs. To save space, the agents in the serialized model
 will have empty `route` fields.
+
+## OpenStreetMapSpace internals
+Details about the internal details of the OSMSpace are discussed in the docstring of `OSM.OpenStreetMapPath`.
