@@ -30,6 +30,8 @@ function ensemble_benchmark(f, parallel, nreplicates)
                                     ( (step) % whensteps == 0  ||  step == 0 ),
                                    mdata = [:min_to_be_happy])
     else
+        # TODO: Why do we need `replicate_idx` here?
+        # Can't we just use the `Models.schelling`?
         function initialize(;
             replicate_idx = 1, numagents = 320, griddims = (20, 20), min_to_be_happy = 3
         )
