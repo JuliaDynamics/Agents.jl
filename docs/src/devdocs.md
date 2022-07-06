@@ -10,7 +10,7 @@ git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
 
 ## Creating a new space type
-Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the file: [`[src/core/space_interaction_API.jl]`](https://github.com/JuliaDynamics/Agents.jl/blob/master/src/core/space_interaction_API.jl).
+Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the file: [`[src/core/space_interaction_API.jl]`](https://github.com/JuliaDynamics/Agents.jl/blob//src/core/space_interaction_API.jl).
 
 In principle, the following should be done:
 
@@ -59,3 +59,19 @@ will have empty `route` fields.
 
 ## OpenStreetMapSpace internals
 Details about the internal details of the OSMSpace are discussed in the docstring of `OSM.OpenStreetMapPath`.
+
+## Benchmarking
+As Agents.jl is developed we want to monitor code efficiency through
+_benchmarks_. A benchmark is a function or other bit of code whose execution is
+timed so that developers and users can keep track of how long different API
+functions take when used in various ways. Individual benchmarks can be organized
+into _suites_ of benchmark tests. See the
+[`benchmark`](https://github.com/JuliaDynamics/Agents.jl/tree/main/benchmark)
+directory to view Agents.jl's benchmark suites. Follow these examples to add
+your own benchmarks for your Agents.jl contributions. See the BenchmarkTools
+[quickstart guide](https://github.com/JuliaCI/BenchmarkTools.jl#quick-start),
+[toy example benchmark
+suite](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/benchmark/benchmarks.jl),
+and the [BenchmarkTools.jl
+manual](https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Benchmarking-basics)
+for more information on how to write your own benchmarks.

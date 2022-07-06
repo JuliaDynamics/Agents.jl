@@ -3,6 +3,15 @@ using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
 
+using Distributed
+addprocs(2)
+@everywhere begin
+    using Test, Agents, Random
+    using Agents.Graphs, Agents.DataFrames
+    using StatsBase: mean
+    using StableRNGs
+end
+
 mutable struct Agent0 <: AbstractAgent
     id::Int
 end

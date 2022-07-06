@@ -255,3 +255,7 @@ SUITE["continuous"]["collect"]["store_agent"] =
 #### SCHEDULERS ###
 include("schedulers.jl")
 SUITE["schedulers"] = SCHED_SUITE
+
+#### SERIAL AND PARALLEL ENSEMBLE RUNS (ensemblerun! and paramscan!) ####
+include("ensembles.jl")
+SUITE["ensembles"] = ENSEMBLES_SUITE

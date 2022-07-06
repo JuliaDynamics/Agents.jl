@@ -1,3 +1,6 @@
+@everywhere begin
+    using Agents.Models: schelling, schelling_agent_step!
+end
 @testset "DataCollection" begin
     mutable struct Nested
         data::Vector{Float64}
@@ -439,8 +442,55 @@
     end
 end
 
+@testset "Ensemble runs" begin
+
+    nsteps = 100
+    nreplicates = 2
+    numagents_low = 280
+    numagents_high = 300
+    numagents(model) = nagents(model)
+
+    expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
+    function genmodels()
+        basemodels = [Models.schelling(; numagents)[1]
+                      for numagents in numagents_low:numagents_high]
+
+        return repeat(basemodels, nreplicates)
+    end
+
+    @testset begin "Serial ensemblerun!"
+
+        models = genmodels()
+        @assert length(models) == expected_nensembles
+
+        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+                                   parallel = false, adata = [:pos, :mood, :group],
+                                   mdata = [numagents, :min_to_be_happy])
+
+        @test length(unique(adf.ensemble)) == expected_nensembles
+        @test length(unique(adf.step)) == nsteps + 1
+        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+    end
+
+    @testset begin "Parallel ensemblerun!"
+
+        models = genmodels()
+        @assert length(models) == expected_nensembles
+
+        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+                                   parallel = true,
+                                   adata = [:pos, :mood, :group],
+                                   mdata = [numagents, :min_to_be_happy],
+                                   when = (model, step) -> step % 10 == 0 )
+
+        @test length(unique(adf.ensemble)) == expected_nensembles
+        @test length(unique(adf.step)) == (nsteps / 10) + 1
+        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+    end
+end
+
 @testset "Parameter scan" begin
-    @agent Automata GridAgent{2} begin end
+    @everywhere @agent Automata GridAgent{2} begin end
     function forest_fire(; density = 0.7, griddims = (100, 100))
         space = GridSpace(griddims; periodic = false, metric = :euclidean)
         forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
@@ -451,7 +501,7 @@ end
         end
         return forest
     end
-    
+
     function forest_model_step!(forest)
         for I in findall(isequal(2), forest.trees)
             for idx in nearby_positions(I.I, forest)
@@ -468,39 +518,74 @@ end
 
     burnt(f) = count(t == 3 for t in f.trees)
     unburnt(f) = count(t == 1 for t in f.trees)
-    @testset "Standard Scan" begin
+    @testset "Serial Scan" begin
         mdata = [unburnt, burnt]
-        _, data = paramscan(
+        _, mdf = paramscan(
             parameters,
             forest_fire;
-            n = n,
+            n,
             model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
-        @test size(data) == ((n + 1) * 3, 4)
-        _, data = paramscan(
+        @test size(mdf) == ((n + 1) * 3, 4)
+        _, mdf = paramscan(
             parameters,
             forest_fire;
-            n = n,
+            n,
             model_step! = forest_model_step!,
             include_constants = true,
             mdata,
         )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
-        @test size(data) == ((n + 1) * 3, 5)
-
+        @test size(mdf) == ((n + 1) * 3, 5)
         mdata = [burnt]
-        _, data = paramscan(
+        _, mdf = paramscan(
             parameters,
             forest_fire;
-            n = n,
+            n,
             model_step! = forest_model_step!,
             mdata,
         )
-        @test unique(data.step) == 0:10
-        @test unique(data.density) == [0.6, 0.7, 0.8]
+        @test unique(mdf.step) == 0:10
+        @test unique(mdf.density) == [0.6, 0.7, 0.8]
+    end
+
+    @testset "Parallel Scan" begin
+        mdata = [unburnt, burnt]
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+        )
+        # 3 is the number of combinations of changing params
+        @test size(mdf) == ((n + 1) * 3, 4)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            include_constants = true,
+            mdata,
+            parallel = true
+        )
+        # 3 is the number of combinations of changing params,
+        # 5 is 3+2, where 2 is the number of constant parameters
+        @test size(mdf) == ((n + 1) * 3, 5)
+        mdata = [burnt]
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+            parallel = true
+        )
+        @test unique(mdf.step) == 0:10
+        @test unique(mdf.density) == [0.6, 0.7, 0.8]
     end
 end
 

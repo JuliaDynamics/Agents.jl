@@ -8,11 +8,11 @@ To get started, please read the [Tutorial](@ref) page.
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v5"
-    New Major release with a lot of improvements!
+!!! tip "Latest news: Agents.jl v5.4"
+    New minor release with a lot of improvements, new additions, and deprecations!
     * New packages used for Graph and OpenStreetMap spaces: Graphs.jl and LightOSM.jl.
     * Native plotting of `OpenStreetMapSpace` through InteractiveDynamics.jl! This includes the interactive apps!
-    * Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
+    * Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for more details!
 
 
 ## Features
