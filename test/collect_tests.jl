@@ -448,23 +448,25 @@ end
     nreplicates = 2
     numagents_low = 280
     numagents_high = 300
-    expected_nensembles = nreplicates * (numagents_high - numagents_low + 1) 
+    numagents(model) = nagents(model)
+
+    expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
-        basemodels = [Models.schelling(; numagents)[1] 
+        basemodels = [Models.schelling(; numagents)[1]
                       for numagents in numagents_low:numagents_high]
 
         return repeat(basemodels, nreplicates)
     end
 
     @testset begin "Serial ensemblerun!"
-    
+
         models = genmodels()
         @assert length(models) == expected_nensembles
 
         adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
                                    parallel = false, adata = [:pos, :mood, :group],
-                                   mdata = [:numagents, :min_to_be_happy])
-        
+                                   mdata = [numagents, :min_to_be_happy])
+
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.step)) == nsteps + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
@@ -476,9 +478,9 @@ end
         @assert length(models) == expected_nensembles
 
         adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
-                                   parallel = true, 
+                                   parallel = true,
                                    adata = [:pos, :mood, :group],
-                                   mdata = [:numagents, :min_to_be_happy],
+                                   mdata = [numagents, :min_to_be_happy],
                                    when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
@@ -499,7 +501,7 @@ end
         end
         return forest
     end
-    
+
     function forest_model_step!(forest)
         for I in findall(isequal(2), forest.trees)
             for idx in nearby_positions(I.I, forest)

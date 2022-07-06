@@ -1,17 +1,14 @@
 using Test, Agents, Random
 using Agents.Graphs, Agents.DataFrames
-using StatsBase: mean
+using Statistics: mean
 using StableRNGs
+
 using Distributed
 addprocs(2)
-
 @everywhere begin
-    using Pkg; Pkg.activate(".")
-end
-
-@everywhere begin
-    using Test, Agents, Random, Graphs, DataFrames
-    using StatsBase:mean
+    using Test, Agents, Random
+    using Agents.Graphs, Agents.DataFrames
+    using Statistics: mean
     using StableRNGs
 end
 
