@@ -1,6 +1,6 @@
 using Test, Agents, Random
 using Agents.Graphs, Agents.DataFrames
-using Statistics: mean
+using StatsBase: mean
 using StableRNGs
 
 using Distributed
@@ -8,7 +8,7 @@ addprocs(2)
 @everywhere begin
     using Test, Agents, Random
     using Agents.Graphs, Agents.DataFrames
-    using Statistics: mean
+    using StatsBase: mean
     using StableRNGs
 end
 
