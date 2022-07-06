@@ -21,7 +21,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force = true, recursive = true) # cleans up previous examples
 mkpath(outdir)
-toskip = ("predator_prey_multiagent.jl", "siroptim.jl")
+toskip = ()
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -89,8 +89,9 @@ makedocs(
             "Schelling's segregation model" => "examples/schelling.md",
             "SIR model for the spread of COVID-19" => "examples/sir.md",
             "Flocking" => "examples/flock.md",
-            "Zombie Outbreak" => "examples/zombies.md",
-            "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
+            "Zombie Outbreak in a City" => "examples/zombies.md",
+            "Predator-prey dynamics" => "examples/rabbit_fox_hawk.md",
+            "Ecosystem with pathfinding" => "examples/rabbit_fox_hawk.md",
             "Predefined Models" => "models.md",
             "More Examples for Agents.jl" => "examples.md"
         ],

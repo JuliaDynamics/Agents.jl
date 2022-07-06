@@ -1,4 +1,4 @@
-# # Optimizing agent-based models
+# # Optimizing agent based models
 
 # Sometimes we need to fine-tune our ABMs parameters to a specific outcome. The brute-force solution can quickly become infeasible for even for a few different parameter settings over a number of valid scan ranges. Most of the time, ABMs are also stochastic, so the effect of a parameter setting should be derived from taking the average value only after running the model several times.
 
@@ -27,10 +27,10 @@
 #         reinfection_probability = x[6],
 #         detection_time = x[7],
 #     )
-# 
+#
 #     infected_fraction(model) =
 #         count(a.status == :I for a in allagents(model)) / nagents(model)
-# 
+#
 #     _, data = run!(
 #         model,
 #         agent_step!,
