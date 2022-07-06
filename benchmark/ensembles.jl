@@ -1,15 +1,9 @@
-
-@everywhere begin
-    using Pkg
-    Pkg.activate(".")
-end
-
 @everywhere begin
     using Agents
     using Agents.Models: schelling, schelling_agent_step!, SchellingAgent
-    using BenchmarkTools 
+    using BenchmarkTools
 end
-    
+
 ENSEMBLES_SUITE = BenchmarkGroup(["Ensembles"])
 
 function ensemble_benchmark(f, parallel, nreplicates)
@@ -21,7 +15,7 @@ function ensemble_benchmark(f, parallel, nreplicates)
     whensteps = 50
 
     function genmodels(nreplicates)
-        basemodels = [Models.schelling(; numagents)[1] 
+        basemodels = [Models.schelling(; numagents)[1]
                       for numagents in collect(numagents_low:numagents_high)]
 
         return repeat(basemodels, nreplicates)
@@ -32,11 +26,11 @@ function ensemble_benchmark(f, parallel, nreplicates)
         adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
                                    parallel, adata = [:pos, :mood, :group],
                                    showprogress = true,
-                                   when = (model, step) -> 
+                                   when = (model, step) ->
                                     ( (step) % whensteps == 0  ||  step == 0 ),
                                    mdata = [:min_to_be_happy])
     else
-        function initialize(; 
+        function initialize(;
             replicate_idx = 1, numagents = 320, griddims = (20, 20), min_to_be_happy = 3
         )
             space = GridSpace(griddims, periodic = false)
@@ -54,15 +48,15 @@ function ensemble_benchmark(f, parallel, nreplicates)
         end
 
         parameters = Dict(
-            :numagents => collect(numagents_low:numagents_high),        
-            :replicate_idx => collect(1:nreplicates),        
-            :griddims => (20, 20),           
+            :numagents => collect(numagents_low:numagents_high),
+            :replicate_idx => collect(1:nreplicates),
+            :griddims => (20, 20),
         )
-        paramscan(parameters, initialize; 
+        paramscan(parameters, initialize;
                   parallel, adata = [:pos, :mood, :group],
                   mdata = [:min_to_be_happy], showprogress = true,
                   agent_step! = schelling_agent_step!,
-                  when = (model, step) -> 
+                  when = (model, step) ->
                    ( (step) % whensteps == 0  ||  step == 0 ),
                   n = nsteps)
     end

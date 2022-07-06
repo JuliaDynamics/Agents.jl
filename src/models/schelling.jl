@@ -16,7 +16,7 @@ Same as in [Schelling's segregation model](@ref).
 function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     @assert numagents < prod(griddims)
     space = GridSpace(griddims, periodic = false)
-    properties = Dict(:numagents => numagents, :min_to_be_happy => min_to_be_happy)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space; properties, scheduler = Schedulers.Randomly())
     for n in 1:numagents
         agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)

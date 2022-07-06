@@ -1,11 +1,4 @@
-@everywhere begin
-    using Pkg
-    Pkg.activate(".")
-end
-
-@everywhere begin
-    using BenchmarkTools, Agents, Graphs
-end
+using BenchmarkTools, Agents, Graphs
 
 const SUITE = BenchmarkGroup(["Agents"])
 

@@ -12,6 +12,12 @@ Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:ensemble`, which has an integer
 value counting the ensemble member. The function returns `agent_df, model_df, models`.
 
+If you want to scan parameters and at the same time run multiple simulations at each
+parameter combination, simply use `seed` as a parameter, and use that parameter to
+tune the model's initial random seed and/or agent distribution.
+
+See example usage in [Schelling's segregation model](@ref).
+
 ## Keywords
 The following keywords modify the `ensemblerun!` function:
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
@@ -20,13 +26,6 @@ The following keywords modify the `ensemblerun!` function:
 - `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated to [`run!`](@ref) as-is.
-
-## Example
-See example usage in [Schelling's segregation model](@ref).
-
-If you want to scan parameters and at the same time run multiple simulations at each
-parameter combination, simply use `seed` as a parameter, and use that parameter to
-tune the model's initial random seed and agent distribution.
 """
 function ensemblerun!(
     models::Vector_or_Tuple,
@@ -38,10 +37,10 @@ function ensemblerun!(
     kwargs...,
 )
     if parallel
-        return parallel_ensemble(models, agent_step!, model_step!, n; 
+        return parallel_ensemble(models, agent_step!, model_step!, n;
                                  showprogress, kwargs...)
     else
-        return series_ensemble(models, agent_step!, model_step!, n; 
+        return series_ensemble(models, agent_step!, model_step!, n;
                                showprogress, kwargs...)
     end
 end
@@ -64,7 +63,7 @@ function ensemblerun!(
     ensemblerun!(models, args...; kwargs...)
 end
 
-function series_ensemble(models, agent_step!, model_step!, n; 
+function series_ensemble(models, agent_step!, model_step!, n;
                          showprogress = false, kwargs...)
 
     @assert models[1] isa ABM
@@ -73,13 +72,13 @@ function series_ensemble(models, agent_step!, model_step!, n;
     progress = ProgressMeter.Progress(nmodels; enabled = showprogress)
 
     df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
-    
+
     ProgressMeter.next!(progress)
 
     add_ensemble_index!(df_agent, 1)
     add_ensemble_index!(df_model, 1)
 
-    ProgressMeter.progress_map(2:nmodels; progress) do midx 
+    ProgressMeter.progress_map(2:nmodels; progress) do midx
 
         df_agentTemp, df_modelTemp =
             run!(models[midx], agent_step!, model_step!, n; kwargs...)
@@ -90,11 +89,11 @@ function series_ensemble(models, agent_step!, model_step!, n;
         append!(df_agent, df_agentTemp)
         append!(df_model, df_modelTemp)
     end
-    
+
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, agent_step!, model_step!, n; 
+function parallel_ensemble(models, agent_step!, model_step!, n;
                            showprogress = false, kwargs...)
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
