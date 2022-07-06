@@ -54,14 +54,14 @@ Update message: Agents v$(version_number)
 Welcome to this massive update of Agents.jl!
 Noteworthy changes:
 
+- About 5x performance increase in distributed computing!
 - Internals of `GridSpace` have been completely re-written! This led to a significant
-    performance increase of about 30%!
+  performance increase of about 30%!
 - New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one
-    agent per position only. It utilizes this knowledge for massive performance benefits
-    over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board!
+  agent per position only. It utilizes this knowledge for massive performance benefits
+  over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board!
 - Performance increase for nearby_stuff searches `ContinuousSpace` (2-5x faster)
 - New `:manhattan` metric for `GridSpace` models!
-- Keyword `showprogress` in data-collecting functions allows for displaying progress bars!
 - Several new deprecations and/or possible breaking changes!
 
 See the CHANGELOG.md or online docs for more!
