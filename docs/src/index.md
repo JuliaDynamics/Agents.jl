@@ -12,7 +12,7 @@ To get started, please read the [Tutorial](@ref) page.
     New Major release with a lot of improvements!
     * New packages used for Graph and OpenStreetMap spaces: Graphs.jl and LightOSM.jl.
     * Native plotting of `OpenStreetMapSpace` through InteractiveDynamics.jl! This includes the interactive apps!
-    * Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/master/CHANGELOG.md) for more details!
+    * Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob//CHANGELOG.md) for more details!
 
 
 ## Features
