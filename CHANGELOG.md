@@ -12,6 +12,7 @@ This is a huge release!
 
 ## Additions to existing API
 - New keyword `showprogress` in `run!` function that displays a progress bar.
+- New keyword `showprogress` in `ensemblerun!` and `paramscan` that displays a progress bar over total amount of simulations done.
 - New function `OSM.route_length`.
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
