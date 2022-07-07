@@ -233,7 +233,7 @@ plotkwargs = (;
 
 sheepwolfgrass = initialize_model()
 
-fig, ax, abmobs = abmplot(model;
+fig, ax, abmobs = abmplot(sheepwolfgrass;
     agent_step! = sheepwolf_step!,
     model_step! = grass_step!,
 plotkwargs...)
@@ -244,11 +244,11 @@ sheep(a) = a isa Sheep
 wolf(a) = a isa Wolf
 count_grass(model) = count(model.fully_grown)
 # Run simulation:
-model = initialize_model()
+sheepwolfgrass = initialize_model()
 steps = 1000
 adata = [(sheep, count), (wolf, count)]
 mdata = [count_grass]
-adf, mdf = run!(model, sheepwolf_step!, grass_step!, steps; adata, mdata)
+adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, steps; adata, mdata)
 
 # The following plot shows the population dynamics over time.
 # Initially, wolves become extinct because they consume the sheep too quickly.
@@ -280,8 +280,8 @@ stable_params = (;
     seed = 71758,
 )
 
-model = initialize_model(;stable_params...)
-adf, mdf = run!(model, sheepwolf_step!, grass_step!, 2000; adata, mdata)
+sheepwolfgrass = initialize_model(;stable_params...)
+adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
 # Finding a parameter combination that leads to long-term coexistence is actually
@@ -291,11 +291,11 @@ plot_population_timeseries(adf, mdf)
 
 # ## Video
 # Given that we have defined plotting functions, making a video is as simple as
-model = initialize_model(;stable_params...)
+sheepwolfgrass = initialize_model(;stable_params...)
 
 abmvideo(
     "sheepwolf.mp4",
-    model,
+    sheepwolfgrass,
     sheepwolf_step!,
     grass_step!;
     frames = 100,
