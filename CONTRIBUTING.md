@@ -1,6 +1,8 @@
 # Contributing to Agents.jl
 
-Thanks for taking the time to contribute.
+Thanks for taking the time to contribute. We appreciate it very much!
+
+Please have a read at the "Developer Docs" at the online documentation for internal details on the project and/or general advice for users looking to develop Agents.jl.
 
 Any contribution to Agents.jl is welcome in the following ways:
 

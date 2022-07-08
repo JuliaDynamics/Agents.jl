@@ -1,7 +1,30 @@
 # v5.4
+This is a huge release!
+
+## Performance improvements
+- Internal representation of grid spaces has been completely overhauled. For `GridSpace` this lead to about 30% performance increase in `nearby_stuff` and 100% decrease in memory allocations.
+- Significant performance increase for `nearest_neighbor` in `ContinuousSpace`.
+- Because of the new grid spaces internals, `nearby_stuff` searches in `ContinuousSpace` are 2-5 times faster.
+- Much more efficient distributed computing in `ensemblerun!` and `paramscan` functions, like 5x performance gain. Thanks to user Matt Turner `mt-digital`. [#624](https://github.com/JuliaDynamics/Agents.jl/pull/624)
+
+## New space
+- New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one agent per position only. It utilizes this knowledge for massive performance benefits over `GridSpace`, **being about 3x faster than the new `GridSpace`**, all across the board. ID = 0 is a reserved ID for this space and cannot be used by users.
+
+## Additions to existing API
 - New keyword `showprogress` in `run!` function that displays a progress bar.
+- New keyword `showprogress` in `ensemblerun!` and `paramscan` that displays a progress bar over total amount of simulations done.
+- New function `OSM.route_length`.
 - New `:manhattan` metric for `GridSpace` models.
 - New `manhattan_distance` utility function.
+- New keyword `nearby_f = nearby_ids_exact` in `interacting_pairs` which decides whether to use the exact or approximate algorithm for nearest neighbors.
+
+## Breaking or Deprecated
+- [**Will be breaking**] In the near future, **agent ID = 0 will be a reserved ID by Agents.jl**. This means that users should not use ID = 0 for _any agent_. They can use all the negative and positive integers as usual. If you were adding agents with any of the default ways that Agents.jl provides, such as `add_agents!(pos, model, agent_properties...)`, then you were already using only the positive integers.
+- [**Maybe breaking?**] In `ContinuousSpace` `spacing` was documented to be a keyword but in code it was specified as a positional argument. Now it is also a keyword in code as intended.
+- [**Maybe breaking?**] Keyword `spacing` in `ContinuousSpace` is now `minimum(extent)/20` from `/10`
+  by default, increasing accuracy of `nearby_ids` (which is the fastest way to iterate over neighbors). This decreases a bit the performance of `move_agent!`, but in the typical scenario a neighbor search is much more costly than moving an agent.
+- [**Maybe breaking?**] There was an ambiguity in the function `move_agent!(agent, model)`. It typically means to move an agent to a random position. However, in `ContinuousSpace` this function was overwritten by the signature `move_agent(agent, model, dt::Real = 1)`. To resolve the ambiguity, now `move_agent!(agent, model)` **always moves the agent to a random position** even in `ContinuousSpace`. To use the continuous space version that moves an agent using its velocity, users must explicitly provide the third argument `dt`.
+- [**Will be breaking**] Keyword `exact` in `nearby_ids` for `ContinuousSpace` is deprecated, because now the exact version returns different type than the non-exact, hence leading to type instabilities. Use `nearby_ids_exact` instead. Same for `nearby_agents`.
 
 # v5.3
 - Rework schedulers to prefer returning iterators over arrays, resulting in fewer allocations and improved performance. Most scheduler names are now types instead of functions:

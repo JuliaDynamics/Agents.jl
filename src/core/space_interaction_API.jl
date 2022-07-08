@@ -61,50 +61,20 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_ids(position, model::ABM, r; kwargs...) → ids
+    nearby_ids(position, model::ABM, r = 1; kwargs...) → ids
 
-Return an iterable of the ids of the agents within radius `r` (inclusive) of the given
+Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
 `position`. The `position` must match type with the spatial structure of the `model`.
+The specification of what "distance" means depends on the space, hence it is explained
+in each space's documentation string. Keyword arguments are space-specific and also
+described in each space's documentation string.
 
-What the "radius" means depends on the space type:
-- `GraphSpace`: the degree of neighbors in the graph (thus `r` is always an integer),
-  always including ids of the same node as `position`.
-  For example, for `r=2` include first and second degree neighbors.
-  If `r=0`, only ids in the same node as `position` are returned.
-- `GridSpace`: Distance of position indices according to the space metric.
-- `GridSpace` can also take a tuple argument, e.g. `r = (5, 2)` for a 2D space, meaning
-  a distance of 5 in the x direction and 2 in the y. Only possible with `:chebyshev`
-  metric. This can be useful when different coordinates in the space need to be searched
-  with different ranges, e.g., if the space corresponds to a full building, with the
-  third dimension the floor number. See also the
-  [Battle Royale](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/)
-  for advanced usage where one dimension is used as a categorical one.
-- `ContinuousSpace`: Standard distance according to the space metric.
-- `OpenStreetMapSpace`: `r` is equivalent with distance (in the `weight_type` of the space)
-  needed to be travelled according to existing roads in order to reach given `position`.
-
-## Keywords
-Keyword arguments are space-specific.
-For `GraphSpace` the keyword `neighbor_type=:default` can be used to select differing
-neighbors depending on the underlying graph directionality type.
-- `:default` returns neighbors of a vertex (position). If graph is directed, this is equivalent
-  to `:out`. For undirected graphs, all options are equivalent to `:out`.
-- `:all` returns both `:in` and `:out` neighbors.
-- `:in` returns incoming vertex neighbors.
-- `:out` returns outgoing vertex neighbors.
-
-For `ContinuousSpace`, the keyword `exact=false` controls whether the found neighbors are
-exactly accurate or approximate (with approximate always being a strict over-estimation),
-see [`ContinuousSpace`](@ref).
-
-In periodic discrete or continuous spaces, when used with a radius larger than half of the entire
-space, this function may find the same agent(s) more than once.
-See Issue #566 online for more information.
+`nearby_ids` always includes IDs with 0 distance to `position`.
 """
 nearby_ids(position, model, r = 1) = notimplemented(model)
 
 """
-    nearby_positions(position, model::ABM, r=1; kwargs...) → positions
+    nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
 
 Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
@@ -112,7 +82,7 @@ The `position` must match type with the spatial structure of the `model`.
 
 The value of `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
-This function only makes sense for discrete spaces with a finite amount of positions.
+This function only exists for discrete spaces with a finite amount of positions.
 
     nearby_positions(position, model::ABM{<:OpenStreetMapSpace}; kwargs...) → positions
 
@@ -125,7 +95,8 @@ nearby_positions(position, model, r = 1) = notimplemented(model)
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
 #######################################################################################
-plan_route!(agent, dest, model_or_pathfinder; kwargs...) = notimplemented(model_or_pathfinder)
+plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
+    notimplemented(model_or_pathfinder)
 
 plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
     notimplemented(model_or_pathfinder)
@@ -155,11 +126,14 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos, model::ABM{<:AbstractSpace,A}) where {A}
-    @assert typeof(agent.pos) == typeof(pos)
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
+    return agent
+end
+function move_agent!(agent, model::ABM)
+    move_agent!(agent, random_position(model), model)
 end
 
 """
@@ -215,12 +189,6 @@ function genocide!(model::ABM, f::Function)
     for a in allagents(model)
         f(a) && kill_agent!(a, model)
     end
-end
-
-# Notice: this function is overwritten for continuous space and instead implements
-# the Euler scheme.
-function move_agent!(agent, model::ABM)
-    move_agent!(agent, random_position(model), model)
 end
 
 #######################################################################################
@@ -330,12 +298,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(
-    agent::A,
-    model::ABM{S,A},
-    r = 1;
-    kwargs...,
-) where {S,A<:AbstractAgent}
+function nearby_ids(agent::A, model::ABM, r = 1; kwargs...) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
@@ -393,7 +356,7 @@ function random_nearby_id(a, model, r = 1; kwargs...)
             _, state = res
             skip_counter -= 1
         end
-        
+
         res = iterate(iter, state)
         isnothing(res) && break
     end

@@ -34,6 +34,7 @@ for space in ["graph", "grid", "continuous"]
     end
     SUITE[space]["collect"] = BenchmarkGroup(["store_agent"])
 end
+
 # some spaces have specific things we'd like to add
 push!(SUITE["grid"]["add_union"].tags, "agent_fill")
 push!(SUITE["grid"]["add"].tags, "create_fill")
@@ -177,14 +178,14 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
 
-continuous_model = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0), 0.5))
+continuous_model = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
 continuous_agent = ContinuousAgent(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 # For tuning, this is actually impossible. So until ContinuousSpace is implemented, we drop these tests.
 SUITE["continuous"]["add"]["agent_pos"] =
     @benchmarkable add_agent_pos!($continuous_agent, cmodel) setup =
-        (cmodel = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0), 0.5))) samples =
+        (cmodel = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))) samples =
         100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
@@ -197,7 +198,7 @@ SUITE["continuous"]["add_union"]["agent_pos"] =
                 ContinuousAgentFour,
                 ContinuousAgentFive,
             },
-            ContinuousSpace((10.0, 10.0, 10.0), 0.5);
+            ContinuousSpace((10.0, 10.0, 10.0), spacing = 0.5);
             warn = false,
         )
     ) samples = 100
@@ -254,3 +255,7 @@ SUITE["continuous"]["collect"]["store_agent"] =
 #### SCHEDULERS ###
 include("schedulers.jl")
 SUITE["schedulers"] = SCHED_SUITE
+
+#### SERIAL AND PARALLEL ENSEMBLE RUNS (ensemblerun! and paramscan!) ####
+include("ensembles.jl")
+SUITE["ensembles"] = ENSEMBLES_SUITE

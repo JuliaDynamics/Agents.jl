@@ -83,5 +83,8 @@ nearby_walkable(position, model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}, r = 
 Return a random position in the given `model` that is walkable as specified by the given
 `pathfinder`.
 """
-random_walkable(model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}) where {D} =
-    Tuple(rand(model.rng, filter(x -> pathfinder.walkmap[x], CartesianIndices(model.space.s))))
+function random_walkable(model::ABM{<:GridSpace{D}}, pathfinder::AStar{D}) where {D}
+    return Tuple(rand(model.rng,
+        filter(x -> pathfinder.walkmap[x], CartesianIndices(model.space.stored_ids))
+    ))
+end

@@ -1,6 +1,16 @@
-using Test, Agents, Random, Graphs, DataFrames
-using StatsBase:mean
+using Test, Agents, Random
+using Agents.Graphs, Agents.DataFrames
+using StatsBase: mean
 using StableRNGs
+
+using Distributed
+addprocs(2)
+@everywhere begin
+    using Test, Agents, Random
+    using Agents.Graphs, Agents.DataFrames
+    using StatsBase: mean
+    using StableRNGs
+end
 
 mutable struct Agent0 <: AbstractAgent
     id::Int
@@ -59,18 +69,6 @@ end
 
 Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
-mutable struct Agent9 <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
-    f1::Union{Int,Nothing}
-end
-
-mutable struct Agent10 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
-end
-
 mutable struct BadAgent <: AbstractAgent
     useless::Int
     pos::Int
@@ -101,11 +99,11 @@ end
     include("scheduler_tests.jl")
     include("model_access.jl")
     include("space_test.jl")
+    include("grid_space_tests.jl")
     include("collect_tests.jl")
-    include("continuousSpace_tests.jl")
+    include("continuous_space_tests.jl")
     include("osm_tests.jl")
     include("astar_tests.jl")
-    include("collisions_tests.jl")
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")

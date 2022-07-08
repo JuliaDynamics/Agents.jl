@@ -21,7 +21,8 @@ scenarios where this may be required are:
 If your model properties do not fall in the above scenarios, you do not need to use this
 function.
 
-This function is not called recursively on every type/value during serialization. The final
+This function, and [`AgentsIO.from_serializable`](@ref)
+is not called recursively on every type/value during serialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
 for every occurence of a specific type (such as agent structs), refer to the
 Custom Serialization section of JLD2.jl documentation.
@@ -32,17 +33,12 @@ to_serializable(t) = t
     AgentsIO.from_serializable(t; kwargs...)
 
 Given a value in its serializable form, return the original version. This defaults
-to the value itself, unless a more specific method is defined. Define a method for 
+to the value itself, unless a more specific method is defined. Define a method for
 this function and for [`AgentsIO.to_serializable`](@ref) if you need custom
 serialization for model properties. This also enables passing keyword arguments
 to [`AgentsIO.load_checkpoint`](@ref) and having access to them through `kwargs`.
 
-Refer to [`AgentsIO.to_serializable`](@ref) to check when you need to define this function.
-
-This function is not called recursively on every type/value during deserialization. The final
-serialization functionality is enabled by JLD2.jl. To define custom serialization
-for every occurence of a specific type (such as agent structs), refer to the
-Custom Serialization section of JLD2.jl documentation.
+Refer to [`AgentsIO.to_serializable`](@ref) for more info.
 """
 from_serializable(t; kwargs...) = t
 
@@ -55,6 +51,10 @@ struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
 end
 
 struct SerializableGridSpace{D,P}
+    dims::NTuple{D,Int}
+    metric::Symbol
+end
+struct SerializableGridSpaceSingle{D,P}
     dims::NTuple{D,Int}
     metric::Symbol
 end
@@ -96,7 +96,9 @@ function to_serializable(t::ABM{S}) where {S}
 end
 
 to_serializable(t::GridSpace{D,P}) where {D,P} =
-    SerializableGridSpace{D,P}(size(t.s), t.metric)
+    SerializableGridSpace{D,P}(size(t), t.metric)
+to_serializable(t::GridSpaceSingle{D,P}) where {D,P} =
+    SerializableGridSpaceSingle{D,P}(size(t), t.metric)
 
 to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
     SerializableContinuousSpace{D,P,T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
@@ -137,11 +139,15 @@ function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P}(s, t.metric, Dict(), Dict())
+    return GridSpace{D,P}(s, t.metric, Dict(), Dict(), Dict())
+end
+function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
+    s = zeros(Int, t.dims)
+    return GridSpaceSingle{D,P}(s, t.metric, Dict())
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
-    update_vel! = get(kwargs, :update_vel!, Agents.defvel)
+    update_vel! = get(kwargs, :update_vel!, Agents.no_vel_update)
     ContinuousSpace(
         from_serializable(t.grid; kwargs...),
         update_vel!,

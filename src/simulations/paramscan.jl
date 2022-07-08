@@ -30,10 +30,12 @@ The following keywords modify the `paramscan` function:
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
   in parallel. This must be used in conjunction with `@everywhere` (see
   [Performance Tips](@ref)).
+- `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated into [`run!`](@ref).
 Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
-to [`run!`](@ref) as arguments. Naturally, `agent_step!, model_step!, n` and at least one
+to [`run!`](@ref) as arguments. Naturally, stepping functions and the
+number of time steps (`agent_step!`, `model_step!`, and `n`) and at least one
 of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
@@ -43,7 +45,7 @@ A runnable example that uses `paramscan` is shown in [Schelling's segregation mo
 There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
-    space = GridSpace(griddims, moore = true)
+    space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ABM(SchellingAgent, space;
                 properties = properties, scheduler = Schedulers.randomly)
@@ -67,6 +69,8 @@ parameters = Dict(
 
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
+
+
 """
 function paramscan(
     parameters::Dict,
@@ -75,7 +79,8 @@ function paramscan(
     parallel::Bool = false,
     agent_step! = dummystep,
     model_step! = dummystep,
-    n = 1,
+    n::Int = 1,
+    showprogress::Bool = false,
     kwargs...,
 )
 
@@ -87,14 +92,11 @@ function paramscan(
 
     combs = dict_list(parameters)
 
-    if parallel
-        all_data = ProgressMeter.@showprogress pmap(combs) do i
-            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-        end
-    else
-        all_data = ProgressMeter.@showprogress map(combs) do i
-            run_single(i, output_params, initialize; agent_step!, model_step!, n, kwargs...)
-        end
+    progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
+    mapfun = parallel ? pmap : map
+    all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
+        run_single(comb, output_params, initialize;
+                   agent_step!, model_step!, n, kwargs...)
     end
 
     df_agent = DataFrame()
