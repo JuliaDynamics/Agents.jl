@@ -83,6 +83,7 @@ sample!
 ```@docs
 positions
 ids_in_position
+id_in_position
 agents_in_position
 fill_space!
 has_empty_positions

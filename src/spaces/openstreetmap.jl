@@ -74,7 +74,7 @@ two intersections.
 Agents move along the available roads of the map using routing, see below.
 
 The functionality related to Open Street Map spaces is in the submodule `OSM`.
-An example of its usage can be found in [Zombie Outbreak](@ref).
+An example of its usage can be found in [Zombie Outbreak in a City](@ref).
 
 ## The `OSMAgent`
 The base properties for an agent residing on an `OSMSpace` are as follows:

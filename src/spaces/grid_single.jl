@@ -5,7 +5,7 @@
 
 # The way we make `GridSpaceSingle` faster is by having an array that directly
 # stores IDs for each space position, and using ID=0 as an empty position.
-export GridSpaceSingle
+export GridSpaceSingle, id_in_position
 
 # type P stands for Periodic and is a boolean
 struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
@@ -50,6 +50,19 @@ Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = model.space.stored_ids[pos...
 function empty_positions(model::ABM{<:GridSpaceSingle})
     Iterators.filter(i -> model.space.stored_ids[i...] == 0, positions(model))
 end
+
+"""
+    id_in_position(pos, model::ABM{<:GridSpaceSingle}) → id
+Return the agent ID in the given position.
+This will be `0` if there is no agent in this position.
+
+This is similar to [`ids_in_position`](@ref), but specialized for `GridSpaceSingle`.
+See also [`isempty`](@ref).
+"""
+function id_in_position(pos, model::ABM{<:GridSpaceSingle})
+    return model.space.stored_ids[pos...]
+end
+
 
 #######################################################################################
 # Implementation of nearby_stuff

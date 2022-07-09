@@ -1,11 +1,11 @@
-# # Rabbit, Fox, Hawk
+# # 3D Mixed-Agent Ecosystem with Pathfinding
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
 
-# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example.
+# This model is much more advanced version of the [Predator-prey dynamics](@ref) example.
 # It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders). It should be considered an advanced example for showcasing pathfinding.

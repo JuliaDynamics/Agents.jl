@@ -10,15 +10,16 @@
 # the following definition of Schelling's segregation model:
 
 # * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional grid. For each agent we care about
+# * The agents live in a two-dimensional grid. Only one agent per position is allowed.
+# * For each agent we care about
 #   finding all of its 8 nearest neighbors (cardinal and diagonal directions).
-#   To do this, we will create a [`DiscreteSpace`](@ref)
+#   To do this, we will create a [`GridSpaceSingle`](@ref)
 #   with a Chebyshev metric, and when searching for nearby agents we will use a radius
 #   of 1 (which is also the default).
 #   This leads to 8 neighboring positions per position (except at the edges of the grid).
-# * Each position of the grid can be occupied by at most one agent.
 # * If an agent has at least `k=3` neighbors belonging to the same group, then it is happy.
-# * If an agent is unhappy, it keeps moving to new locations until it is happy.
+# * If an agent is unhappy, it keeps moving to new locations until it is happy,
+#   while respecting the 1-agent-per-position rule.
 
 # Schelling's model shows that even small preferences of agents to have neighbors
 # belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
@@ -30,8 +31,9 @@
 
 using Agents
 
-space = GridSpace((10, 10); periodic = false)
-# Notice that by default the `GridSpace` has `metric = Chebyshev()`, which is what we want.
+space = GridSpaceSingle((10, 10); periodic = false)
+# Notice that by default the `GridSpaceSingle` has `metric = Chebyshev()`,
+# which is what we want.
 # Agents existing in this type of space must have a position field that is a
 # `NTuple{2, Int}`. We ensure this below.
 
@@ -92,7 +94,7 @@ schelling2 = ABM(
 
 using Random # for reproducibility
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
-    space = GridSpace(griddims, periodic = false)
+    space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.MersenneTwister(seed)
     model = ABM(
