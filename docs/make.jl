@@ -90,7 +90,7 @@ makedocs(
             "examples/sir.md",
             "examples/flock.md",
             "examples/zombies.md",
-            "examples/rabbit_fox_hawk.md",
+            "examples/predator_pray.md",
             "examples/rabbit_fox_hawk.md",
             "models.md",
             "examples.md"
