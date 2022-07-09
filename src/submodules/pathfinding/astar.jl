@@ -198,6 +198,10 @@ end
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
+"""
+    is_stationary(agent, astar::AStar)
+Same, but for pathfinding with A*.
+"""
 Agents.is_stationary(
     agent::A,
     pathfinder::AStar,
