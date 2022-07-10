@@ -91,7 +91,7 @@ function initialize_model(;
     model = ABM(Union{Sheep, Wolf}, space;
         properties, rng, scheduler = Schedulers.randomly, warn = false
     )
-    # Add agents
+    ## Add agents
     for _ in 1:n_sheep
         energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
         add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
@@ -100,7 +100,7 @@ function initialize_model(;
         energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
         add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
     end
-    # Add grass with random initial growth
+    ## Add grass with random initial growth
     for p in positions(model)
         fully_grown = rand(model.rng, Bool)
         countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
@@ -284,7 +284,7 @@ sheepwolfgrass = initialize_model(;stable_params...)
 adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
-# Finding a parameter combination that leads to long-term coexistence is actually
+# Finding a parameter combination that leads to long-term coexistence was
 # surprisingly difficult. It is for such cases that the
 # [Optimizing agent based models](@ref) example is useful!
 # %% #src

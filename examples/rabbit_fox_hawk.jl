@@ -21,7 +21,8 @@
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
 using Random
-using ImageMagick: load
+import ImageMagick
+using FileIO: load
 
 mutable struct Animal <: AbstractAgent
     id::Int
@@ -30,7 +31,7 @@ mutable struct Animal <: AbstractAgent
     energy::Float64
 end
 
-## Some utility functions to create specific types of agents,
+# Some utility functions to create specific types of agents,
 # and find the euclidean norm of a vector
 Rabbit(id, pos, energy) = Animal(id, pos, :rabbit, energy)
 Fox(id, pos, energy) = Animal(id, pos, :fox, energy)
@@ -56,7 +57,9 @@ eunorm(vec) = √sum(vec .^ 2)
 # with the specified heightmap and containing the specified number of rabbits, foxes and hawks.
 
 function initialize_model(
-    heightmap_url,
+    heightmap_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png",
     water_level = 8,
     grass_level = 20,
     mountain_level = 35;
@@ -173,6 +176,12 @@ function initialize_model(
 
     return model
 end
+
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
+model = initialize_model()
+
+# ## Stepping functions
 
 # The `animal_step!` function dispatches to the proper function depending on the type of agent.
 # The stepping functions for each type of agent are similar: They lose energy per step, and
@@ -398,13 +407,6 @@ function static_preplot!(ax, model)
         colormap = :terrain
     )
 end
-
-# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
-# model.
-heightmap_url =
-    "https://raw.githubusercontent.com/JuliaDynamics/" *
-    "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
-model = initialize_model(heightmap_url)
 
 # ```juia
 # abmvideo(
