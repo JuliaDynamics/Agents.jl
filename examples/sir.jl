@@ -42,15 +42,14 @@
 # ## Making the model in Agents.jl
 # We start by defining the `PoorSoul` agent type and the ABM
 cd(@__DIR__) #src
-using Agents, Random, DataFrames, Graphs
+using Agents, Random
+using Agents.DataFrames, Agents.Graphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
 
-mutable struct PoorSoul <: AbstractAgent
-    id::Int
-    pos::Int
+@agent PoorSoul GraphAgent begin
     days_infected::Int  # number of days since is infected
     status::Symbol  # 1: S, 2: I, 3:R
 end
@@ -115,7 +114,6 @@ function model_initiation(;
     end
     return model
 end
-nothing # hide
 
 # We will make a function that starts a model with `C` number of cities,
 # and creates the other parameters automatically by attributing some random
@@ -227,7 +225,6 @@ function recover_or_die!(agent, model)
         end
     end
 end
-nothing # hide
 
 # ## Example animation
 # At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
@@ -262,7 +259,7 @@ record(fig, "covid_evolution.mp4"; framerate = 5) do io
     end
     recordframe!(io)
 end
-nothing # hide
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../covid_evolution.mp4" type="video/mp4">
@@ -298,7 +295,7 @@ li = lines!(ax, x, log10.(data[:, aggname(:status, infected)]), color = :blue)
 lr = lines!(ax, x, log10.(data[:, aggname(:status, recovered)]), color = :red)
 dead = log10.(N .- data[:, aggname(:status, length)])
 ld = lines!(ax, x, dead, color = :green)
-fig[1, 2] = Legend(fig, [li, lr, ld], ["infected", "recovered", "dead"], textsize = 12)
+Legend(fig[1, 2], [li, lr, ld], ["infected", "recovered", "dead"])
 fig
 
 # The exponential growth is clearly visible since the logarithm of the number of infected increases
