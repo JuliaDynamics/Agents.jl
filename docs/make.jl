@@ -115,6 +115,7 @@ if CI
         repo = "github.com/JuliaDynamics/Agents.jl.git",
         target = "build",
         push_preview = true,
+        devbranch = "main",
     )
 end
 
