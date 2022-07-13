@@ -10,7 +10,7 @@ git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
 
 ## Creating a new space type
-Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the file: [`[src/core/space_interaction_API.jl]`](https://github.com/JuliaDynamics/Agents.jl/blob//src/core/space_interaction_API.jl).
+Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the file: [`src/core/space_interaction_API.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/space_interaction_API.jl).
 
 In principle, the following should be done:
 
