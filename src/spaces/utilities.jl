@@ -161,7 +161,7 @@ If `periodic = false`, agents will walk to, but not exceed the boundary value.
 Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
 The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
-for `Int`, and `ContinuousSpace` for `Float64` vectors, describing the walk distance in
+for `Int`, and `ContinuousSpace` for `Float64` tuples, describing the walk distance in
 each direction. `direction = (2, -3)` is an example of a valid direction on a
 `AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
 Agent velocity is ignored for this operation in `ContinuousSpace`.
