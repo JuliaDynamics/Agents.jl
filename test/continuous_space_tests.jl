@@ -253,7 +253,6 @@ using StableRNGs
             @test a.pos[2] == prevfloat(10.0)
         end
 
-        end
     end
 
     @testset "collisions" begin
