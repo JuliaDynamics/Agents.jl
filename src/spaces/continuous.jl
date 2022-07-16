@@ -144,15 +144,14 @@ end
     move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
 Propagate the agent forwards one step according to its velocity, _after_ updating the
 agent's velocity (if configured using `update_vel!`, see [`ContinuousSpace`](@ref)).
-Also take care of periodic boundary conditions.
 
-For this continuous space version of `move_agent!`, the "evolution algorithm"
+For this continuous space version of `move_agent!`, the "time evolution"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
 as `agent.pos += agent.vel * dt`.
 
-Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size
-and if movement exceeds the extent in non-periodic spaces, the agent stops at the
-space end, while for periodic spaces it properly wraps around the end.
+Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size.
+For non-periodic spaces, agents will walk up to, but not reach, the space extent.
+For periodic spaces movement properly wraps around the extent.
 """
 function move_agent!(
     agent::A,

@@ -157,7 +157,7 @@ end
     walk!(agent, direction::NTuple, model; ifempty = false)
 
 Move agent in the given `direction` respecting periodic boundary conditions.
-If `periodic = false`, agents will walk to, but not exceed the boundary value.
+For non-periodic spaces, agents will walk to, but not exceed the boundary value.
 Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
 The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
