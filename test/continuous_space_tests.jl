@@ -244,6 +244,16 @@ using StableRNGs
         walk!(a, rand, model)
         @test a.pos[1] ≈ 6.5824829589163665
         @test a.pos[2] ≈ 4.842266936412905
+
+        @testset "periodic" begin
+            model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
+            a = add_agent!((11.0, 9.0), model, (3.0, 1.0))
+            move_agent!(a, model, 1.0)
+            @test a.pos[1] == 2
+            @test a.pos[2] == prevfloat(10.0)
+        end
+
+        end
     end
 
     @testset "collisions" begin

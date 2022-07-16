@@ -207,6 +207,7 @@ function walk!(
     kwargs...,
 ) where {D}
     target = mod1.(agent.pos .+ direction, spacesize(model))
+    target = min.(target, prevfloat.(spacesize(model)))
     move_agent!(agent, target, model)
 end
 function walk!(
