@@ -101,15 +101,11 @@ using Agents.Pathfinding
             a = add_agent!((0., 0.), model, (0., 0.), 0.)
             @test is_stationary(a, model.pf)
 
-            # TODO: I don't understand why this specific test fails.
-            # In which internal did it rely on...?
-            # We get the final `next_pos` in `move_along_path!` to be
-            # -0.24999, -0.24999. This is outside the space. Why do we get this...?
-            # plan_route!(a, (4., 4.), model.pf)
-            # @test !is_stationary(a, model.pf)
-            # @test length(model.pf.agent_paths) == 1
-            # move_along_route!(a, model, model.pf, 0.35355)
-            # @test all(isapprox.(a.pos, (4.75, 4.75); atol))
+            plan_route!(a, (4., 4.), model.pf)
+            @test !is_stationary(a, model.pf)
+            @test length(model.pf.agent_paths) == 1
+            move_along_route!(a, model, model.pf, 0.35355)
+            @test all(isapprox.(a.pos, (4.75, 4.75); atol))
 
             # test waypoint skipping
             move_agent!(a, (0.25, 0.25), model)
