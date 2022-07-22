@@ -166,7 +166,7 @@ end
 
 function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
     ss = spacesize(space)
-    return Tuple(clamp.(pos, zeros(D), ss .- eps(ss)))
+    return Tuple(clamp.(pos, zeros(D), ss .- eps.(ss)))
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
@@ -174,7 +174,7 @@ function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
-    return Tuple(clamp.(pos, ones(D), spacesize(space)))
+    return Tuple(clamp.(pos, ones(Int, D), spacesize(space)))
 end
 
 """
@@ -214,7 +214,7 @@ function walk!(
     direction::NTuple{D,Float64},
     model::ABM{<:ContinuousSpace}
 ) where {D}
-    target = normalize_position(agent.pos + direction, model)
+    target = normalize_position(agent.pos .+ direction, model)
     move_agent!(agent, target, model)
 end
 

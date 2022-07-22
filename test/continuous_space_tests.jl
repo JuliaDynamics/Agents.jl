@@ -250,7 +250,7 @@ using StableRNGs
             a = add_agent!((11.0, 9.0), model, (3.0, 1.0))
             move_agent!(a, model, 1.0)
             @test a.pos[1] == 2
-            @test a.pos[2] == prevfloat(10.0)
+            @test a.pos[2] == 0.0
         end
 
     end
