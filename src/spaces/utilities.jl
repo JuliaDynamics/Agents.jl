@@ -166,7 +166,7 @@ end
 
 function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
     ss = spacesize(space)
-    return Tuple(clamp.(pos, zeros(D), ss .- eps.(ss)))
+    return Tuple(clamp.(pos, 0.0, prevfloat.(ss)))
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
