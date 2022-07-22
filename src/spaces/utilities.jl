@@ -204,7 +204,7 @@ function walk!(
     ifempty::Bool = true
 ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
-    if !ifempty || isempty(model.space.s[agent.pos...])
+    if !ifempty || isempty(model.space.stored_ids[agent.pos...])
         move_agent!(agent, target, model)
     end
 end
