@@ -1,4 +1,4 @@
-export euclidean_distance, manhattan_distance, get_direction, walk!
+export euclidean_distance, manhattan_distance, get_direction, normalize_position, walk!, spacesize
 
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
@@ -154,6 +154,28 @@ end
 # %% Walking
 #######################################################################################
 """
+    normalize_position(pos, space::Union{AbstractGridSpace,ContinuousSpace})
+
+Return the position `pos` normalized for the extents of the given `space`.
+"""
+function normalize_position(pos, space::ContinuousSpace{D,true}) where {D}
+    return mod.(pos, spacesize(space))
+end
+
+function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
+    ss = spacesize(space)
+    return clamp.(pos, zeros(D), ss .- eps(ss))
+end
+
+function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
+    return mod1.(pos, spacesize(space))
+end
+
+function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
+    return clamp.(pos, ones(D), spacesize(space))
+end
+
+"""
     walk!(agent, direction::NTuple, model; ifempty = false)
 
 Move agent in the given `direction` respecting periodic boundary conditions.
@@ -176,46 +198,21 @@ Example usage in [Battle Royale](
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Int},
-    model::ABM{<:AbstractGridSpace{D,true}};
-    kwargs...,
+    model::ABM{<:AbstractGridSpace};
+    ifempty::Bool = true
 ) where {D}
-    target = mod1.(agent.pos .+ direction, size(model.space))
-    walk_if_empty!(agent, target, model; kwargs...)
-end
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Int},
-    model::ABM{<:AbstractGridSpace{D,false}};
-    kwargs...,
-) where {D}
-    target = min.(max.(agent.pos .+ direction, 1), size(model.space))
-    walk_if_empty!(agent, target, model; kwargs...)
-end
-function walk_if_empty!(agent, target, model; ifempty::Bool = false)
-    if ifempty
-        isempty(target, model) && move_agent!(agent, target, model)
-    else
+    target = normalize_position(agent.pos .+ direction, model.space)
+    if !ifempty || isempty(model.space.s[agent.pos...])
         move_agent!(agent, target, model)
     end
 end
 
-# Continuous
 function walk!(
     agent::AbstractAgent,
     direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,true}};
-    kwargs...,
+    model::ABM{<:ContinuousSpace}
 ) where {D}
-    target = mod1.(agent.pos .+ direction, spacesize(model))
-    target = min.(target, prevfloat.(spacesize(model)))
-    move_agent!(agent, target, model)
-end
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace{D,false}}
-) where {D}
-    target = min.(max.(agent.pos .+ direction, 0.0), prevfloat.(spacesize(model)))
+    target = normalize_position(agent.pos + direction, model.space)
     move_agent!(agent, target, model)
 end
 
@@ -229,5 +226,5 @@ Invoke a random walk by providing the `rand` function in place of
 walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D} =
     walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
 
-walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}; kwargs...) where {D} =
-    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model; kwargs...)
+walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
+    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
