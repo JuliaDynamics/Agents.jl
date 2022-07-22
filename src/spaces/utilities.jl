@@ -166,7 +166,7 @@ end
 
 function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
     ss = spacesize(space)
-    return clamp.(pos, zeros(D), ss .- eps(ss))
+    return Tuple(clamp.(pos, zeros(D), ss .- eps(ss)))
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
@@ -174,7 +174,7 @@ function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
-    return clamp.(pos, ones(D), spacesize(space))
+    return Tuple(clamp.(pos, ones(D), spacesize(space)))
 end
 
 """
@@ -204,7 +204,7 @@ function walk!(
     ifempty::Bool = true
 ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
-    if !ifempty || isempty(model.space.stored_ids[agent.pos...])
+    if !ifempty || isempty(ids_in_position(target, model))
         move_agent!(agent, target, model)
     end
 end

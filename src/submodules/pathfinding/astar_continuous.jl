@@ -123,7 +123,7 @@ function Agents.move_along_route!(
         end
         dir = dir ./ dist_to_target
         next_pos = from .+ dir .* (speed * dt)
-        next_pos = (next_pos .+ Agents.spacesize(model.space)) .% Agents.spacesize(model.space)
+        next_pos = Agents.normalize_position(next_pos, model)
         # overshooting means we reached the waypoint
         dist_to_next = euclidean_distance(from, next_pos, model)
         if dist_to_next > dist_to_target

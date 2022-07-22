@@ -79,6 +79,12 @@ genocide!
 sample!
 ```
 
+## Space utility functions
+```@docs
+normalize_position
+spacesize
+```
+
 ## Discrete space exclusives
 ```@docs
 positions
