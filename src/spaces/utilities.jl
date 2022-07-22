@@ -154,10 +154,12 @@ end
 # %% Walking
 #######################################################################################
 """
-    normalize_position(pos, space::Union{AbstractGridSpace,ContinuousSpace})
+    normalize_position(pos, model::ABM{<:Union{AbstractGridSpace,ContinuousSpace}})
 
-Return the position `pos` normalized for the extents of the given `space`.
+Return the position `pos` normalized for the extents of the space of the given `model`.
 """
+normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
+
 function normalize_position(pos, space::ContinuousSpace{D,true}) where {D}
     return mod.(pos, spacesize(space))
 end
@@ -201,7 +203,7 @@ function walk!(
     model::ABM{<:AbstractGridSpace};
     ifempty::Bool = true
 ) where {D}
-    target = normalize_position(agent.pos .+ direction, model.space)
+    target = normalize_position(agent.pos .+ direction, model)
     if !ifempty || isempty(model.space.s[agent.pos...])
         move_agent!(agent, target, model)
     end
@@ -212,7 +214,7 @@ function walk!(
     direction::NTuple{D,Float64},
     model::ABM{<:ContinuousSpace}
 ) where {D}
-    target = normalize_position(agent.pos + direction, model.space)
+    target = normalize_position(agent.pos + direction, model)
     move_agent!(agent, target, model)
 end
 
