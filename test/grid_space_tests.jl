@@ -12,6 +12,7 @@ end
         for periodic in (true, false)
             space = SpaceType(dims; periodic)
             poss = positions(space)
+            @test spacesize(space) == dims
             @test size(poss) == dims
             @test size(space) == dims
         end

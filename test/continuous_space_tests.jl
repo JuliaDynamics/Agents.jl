@@ -11,6 +11,8 @@ using StableRNGs
     @testset "space initialization" begin
         space1 = ContinuousSpace((1, 1))
         space2 = ContinuousSpace((1, 1, 1); spacing=0.25, periodic = false)
+        @test spacesize(space1) == (1.0, 1.0)
+        @test spacesize(space2) == (1.0, 1.0, 1.0)
         @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
         @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
         model = ABM(SpeedyContinuousAgent, space1)
