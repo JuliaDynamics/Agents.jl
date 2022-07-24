@@ -11,7 +11,6 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
 end
 Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
-spacesize(model::ABM) = spacesize(model.space)
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*

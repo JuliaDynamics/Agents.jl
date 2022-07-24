@@ -232,3 +232,11 @@ walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) wher
 
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
     walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
+
+"""
+    spacesize(model::ABM)
+
+Return the size of the model's space. Works for [`AbstractGridSpace`](@ref) and
+[`ContinuousSpace`](@ref).
+"""
+spacesize(model::ABM) = spacesize(model.space)
