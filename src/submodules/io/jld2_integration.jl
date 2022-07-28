@@ -143,7 +143,7 @@ function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
 end
 function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
     s = zeros(Int, t.dims)
-    return GridSpaceSingle{D,P}(s, t.metric, Dict())
+    return GridSpaceSingle{D,P}(s, t.metric, Dict(), Dict())
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
