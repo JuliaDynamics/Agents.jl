@@ -1,3 +1,7 @@
+using Test, Agents, Random
+using Agents.Graphs, Agents.DataFrames
+using StableRNGs
+
 # TODO: All of these tests are "bad" in the sense that they should be moved
 # to individual space test files.
 @testset "add_agent! (discrete)" begin
@@ -238,7 +242,13 @@ end
 end
 
 @testset "Higher order groups" begin
-    model = ABM(Agent3, GridSpace((10, 10)))
+    mutable struct AgentWithWeight <: AbstractAgent
+        id::Int
+        pos::Dims{2}
+        weight::Float64
+    end
+
+    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler = Schedulers.ByID())
     for i in 1:10
         add_agent!(model, i)
     end

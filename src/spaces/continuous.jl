@@ -478,6 +478,7 @@ struct PairIterator{A}
     agents::Dict{Int,A}
 end
 
+Base.eltype(::PairIterator{A}) where {A} = Tuple{A, A}
 Base.length(iter::PairIterator) = length(iter.pairs)
 function Base.iterate(iter::PairIterator, i = 1)
     i > length(iter) && return nothing
