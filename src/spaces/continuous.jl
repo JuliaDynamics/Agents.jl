@@ -344,7 +344,7 @@ This function is usefully combined with `model_step!`, when one wants to perform
 some pairwise interaction across all pairs of close agents once
 (and does not want to trigger the event twice, both with `a` and with `b`, which
 would be unavoidable when using `agent_step!`). This means, that if a pair
-`(a, b)` exists, the pair `(a, b)` is not included in the iterator!
+`(a, b)` exists, the pair `(b, a)` is not included in the iterator!
 
 Use `piter.pairs` to get a vector of pair IDs from the iterator.
 
