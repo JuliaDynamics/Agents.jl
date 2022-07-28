@@ -49,7 +49,7 @@ In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, se
 discussion around the keyword `spacing` below. [`nearby_ids`](@ref) is not an exact
 search, but can be a possible over-estimation, including agent IDs whose distance
 slightly exceeds `r` with "slightly" being as much as `spacing`.
-If you want exact searches use the much slower [`nearby_ids_exact`](@ref).
+If you want exact searches use the slower [`nearby_ids_exact`](@ref).
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -194,6 +194,13 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
     return nearby_ids(focal_cell, model.space.grid, grid_r)
 end
 
+"""
+    nearby_ids_exact(x, model, r = 1)
+Return an iterator over agent IDs nearby `x` (a position or an agent).
+Only valid for `ContinuousSpace` models.
+Use instead of [`nearby_ids`](@ref) for a slower, but 100% accurate version.
+See [`ContinuousSpace`](@ref) for more details.
+"""
 function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
     # TODO:
     # Simply filtering the output leads to 4x faster code than the commented-out logic.

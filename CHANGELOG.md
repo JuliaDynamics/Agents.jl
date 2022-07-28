@@ -1,3 +1,7 @@
+# v5.5
+- New function `normalize_position` that normalizes a position according to the model space.
+- New function `spacesize` that returns the size of the space.
+
 # v5.4
 This is a huge release!
 

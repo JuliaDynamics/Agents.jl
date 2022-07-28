@@ -14,7 +14,6 @@ using InteractiveDynamics
 println("LightOSM...")
 using LightOSM
 
-ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples...")
 
 indir = joinpath(@__DIR__, "..", "examples")
