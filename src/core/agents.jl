@@ -3,16 +3,16 @@ export AbstractAgent, @agent, NoSpaceAgent
 """
     YourAgentType <: AbstractAgent
 Agents participating in Agents.jl simulations are instances of user-defined Types that
-are subtypes of `AbstractAgent`. New agent Types should be made with [`@agent`](@ref).
+are subtypes of `AbstractAgent`.
 
 Your agent type(s) **must have** the `id::Int` field as first field.
 In Julia versions ≥ v1.8, this must also be declared as a `const` field.
-If any space is used (see [Spaces](@ref)), a `pos` field of appropriate type
+If any space is used (see [Available spaces](@ref)), a `pos` field of appropriate type
 is also mandatory. Each space may also require additional fields that may,
 or may not, be communicated as part of the public API.
 
-Your agent type may have any other additional fields relevant to your use case,
-for example variable quantities like "status" or other "counters".
+The [`@agent`](@ref) macro ensures that all of these constrains are in place
+and hence it is the expected way to generate new agent types.
 """
 abstract type AbstractAgent end
 
@@ -23,7 +23,7 @@ abstract type AbstractAgent end
         # etc...
     end
 
-Define an agent struct which includes all fields that `AnotherAgentStruct` has,
+Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
