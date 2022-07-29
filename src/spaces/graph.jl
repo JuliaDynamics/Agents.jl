@@ -1,4 +1,4 @@
-export GraphSpace
+export GraphSpace, GraphAgent
 using Graphs: nv, ne
 
 #######################################################################################
@@ -49,6 +49,16 @@ end
 
 function Base.show(io::IO, s::GraphSpace)
     print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
+end
+
+"""
+    GraphAgent <: AbstractAgent
+The minimal agent struct for usage with [`GraphSpace`](@ref).
+It has the fields `id::Int, pos::Int`. See also [`@agent`](@ref).
+"""
+mutable struct GraphAgent <: AbstractAgent
+    id::Int
+    pos::Int
 end
 
 #######################################################################################

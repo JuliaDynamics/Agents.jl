@@ -1,4 +1,4 @@
-export ContinuousSpace
+export ContinuousSpace, ContinuousAgent
 export nearby_ids_exact, nearby_agents_exact
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
@@ -19,6 +19,17 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     print(io, s)
 end
 
+"""
+    ContinuousAgent{D} <: AbstractAgent
+The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
+It has the fields `id::Int, pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
+See also [`@agent`](@ref).
+"""
+mutable struct ContinuousAgent{D} <: AbstractAgent
+    id::Int
+    pos::NTuple{D,Float64}
+    vel::NTuple{D,Float64}
+end
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
