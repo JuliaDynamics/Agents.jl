@@ -8,6 +8,7 @@ The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
 
 ```@docs
 @agent
+NoSpaceAgent
 GraphAgent
 GridAgent
 ContinuousAgent
@@ -100,6 +101,13 @@ move_agent_single!
 isempty(::Integer, ::ABM)
 ```
 
+## `GraphSpace` exclusives
+```@docs
+add_edge!
+add_node!
+rem_node!
+```
+
 ## `ContinuousSpace` exclusives
 ```@docs
 nearby_ids_exact
@@ -108,13 +116,8 @@ get_spatial_property
 get_spatial_index
 interacting_pairs
 elastic_collision!
-```
-
-## `GraphSpace` exclusives
-```@docs
-add_edge!
-add_node!
-rem_node!
+euclidean_distance
+manhattan_distance
 ```
 
 ## `OpenStreetMapSpace` exclusives
@@ -140,8 +143,6 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
-euclidean_distance
-manhattan_distance
 ```
 
 ## A note on iteration

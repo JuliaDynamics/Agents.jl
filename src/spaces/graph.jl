@@ -17,7 +17,7 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 arbitrary amount of agents, and each agent can move between the nodes of the graph.
 The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
 
-`Graph.nv` and `Graph.ne` can be used in a model with a `GraphSpace` to obtain
+`Graphs.nv` and `Graphs.ne` can be used in a model with a `GraphSpace` to obtain
 the number of nodes or edges in the graph.
 The underlying graph can be altered using [`add_node!`](@ref) and [`rem_node!`](@ref).
 
@@ -43,7 +43,7 @@ to select differing neighbors depending on the underlying graph directionality t
 - `:out` returns outgoing vertex neighbors.
 """
 function GraphSpace(graph::G) where {G <: AbstractGraph}
-    agent_positions = [Int[] for i in 1:nv(graph)]
+    agent_positions = [Int[] for _ in 1:nv(graph)]
     return GraphSpace{G}(graph, agent_positions)
 end
 
@@ -107,7 +107,7 @@ function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) wher
 end
 
 function nearby_positions(
-    position::Integer,
+    position::Int,
     model::ABM{<:GraphSpace};
     neighbor_type::Symbol = :default,
 )
@@ -165,4 +165,4 @@ end
 Add a new edge (relationship between two positions) to the graph.
 Returns a boolean, true if the operation was succesful.
 """
-Graphs.add_edge!(model, n, m) = add_edge!(model.space.graph, n, m)
+Graphs.add_edge!(model::ABM{<:GraphSpace}, n, m) = add_edge!(model.space.graph, n, m)

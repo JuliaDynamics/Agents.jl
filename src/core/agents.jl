@@ -191,7 +191,7 @@ end
 # TODO: I do not know how to merge these two macros to remove code duplication.
 # There should be away that only the 4-argument version is used
 # and the 3-argument version just passes `AbstractAgent` to the 4-argument.
-macro agent(new_name, base_type, supertype, extra_fields)
+macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
@@ -208,12 +208,13 @@ macro agent(new_name, base_type, supertype, extra_fields)
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
             additional_fields = $(QuoteNode(extra_fields.args))
-            supertype_quoted = $(QuoteNode(supertype))
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
             expr = quote
-                mutable struct $name <: $$(esc(supertype))
+                # Also notice that we escape supertype and interpolate it twice
+                # because this is expected to already be defined in the calling module
+                mutable struct $name <: $$(esc(super_type))
                     $(base_fields...)
                     $(additional_fields...)
                 end
@@ -229,7 +230,8 @@ end
 """
     NoSpaceAgent <: AbstractAgent
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
-It has the field `id::Int`. See also [`@agent`](@ref).
+It has the field `id::Int`, and potentially other internal fields that
+are not documentated as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
     id::Int
