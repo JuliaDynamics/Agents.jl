@@ -34,10 +34,10 @@ and `AnotherAgentType` itself is also concrete (only concrete types have fields)
 If you want `YourAgentType` to subtype something other than `AbstractAgent`, use
 the optional argument `OptionalSupertype` (which itself must then subtype `AbstractAgent`).
 
-The macro `@agent` is useful in two situations:
-1. You want to include the mandatory fields for a particular space.
-   In this case you would use one of the default agent types (see below).
-2. You want a convenient way to include fields from another, already existing struct.
+The macro `@agent` has two primary uses:
+1. To include the mandatory fields for a particular space in your agent struct.
+   In this case you would use one of the default agent types as `AnotherAgentType`.
+2. A convenient way to include fields from another, already existing struct.
 
 The existing default agent types are:
 - [`NoSpaceAgent`](@ref)
@@ -46,7 +46,8 @@ The existing default agent types are:
 - [`ContinuousAgent`](@ref)
 - [`OSMAgent`](@ref)
 
-You should **never directly manipulate the mandatory fields `id, pos`**.
+You should **never directly manipulate the mandatory fields `id, pos`**
+that the resulting new agent type will have.
 The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
@@ -59,7 +60,7 @@ Using
     moneyz::T
 end
 ```
-will in fact create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
+will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
 ```julia
 mutable struct Person{T} <: AbstractAgent
     id::Int
@@ -86,20 +87,35 @@ end
 ```
 ### Exaple with optional hierachy
 An alternative way to make the above structs, that also establishes
-a subtyping hierachy would be to do:
+a user-specific subtyping hierachy would be to do:
 ```julia
-abstract type AbstractPerson{T} <: AbstractAgent end
+abstract type AbstractHuman <: AbstractAgent end
 
-@agent Person{T} GridAgent{2} AbstractPerson{T} begin
+@agent Worker GridAgent{2} AbstractHuman begin
     age::Int
+    moneyz::Float64
+end
+
+@agent Fisher Worker AbstractHuman begin
+    fish_per_day::Float64
+end
+```
+which would now make both `Human, Fisher` subtypes of `AbstractPerson`.
+
+### Example highlighting problems with parametric types
+Notice that in Julia parametric types are abstract types.
+Hence, the following cannot be used:
+```julia
+@agent Dummy{T} GridAgent{2} begin
     moneyz::T
 end
 
-@agent Baker{T} Person{T} AbstractPerson{T} begin
-    breadz_per_day::T
+@agent Fisherino{T} Dummy{T} begin
+    fish_per_day::T
 end
 ```
-which would now make both `Baker, Person` subtypes of `AbstractPerson`.
+You will get an error in the definition of `Fisherino`, because the fields of
+`Dummy{T}` cannot be obtained, because it is an abstract type.
 """
 macro agent(new_name, base_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
@@ -127,8 +143,8 @@ macro agent(new_name, base_type, extra_fields)
                     $(additional_fields...)
                 end
             end
-            # @show expr # uncomment this to see that the final expression looks as desired
-            eval(expr)
+            @show expr # uncomment this to see that the final expression looks as desired
+            Core.eval($(__module__), expr)
         end
     end
 end
@@ -157,13 +173,13 @@ macro agent(new_name, base_type, supertype, extra_fields)
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
             expr = quote
-                mutable struct $name <: $supertype_quoted
+                mutable struct $name <: $$(esc(supertype))
                     $(base_fields...)
                     $(additional_fields...)
                 end
             end
-            # @show expr # uncomment this to see that the final expression looks as desired
-            eval(expr)
+            @show expr # uncomment this to see that the final expression looks as desired
+            Core.eval($(__module__), expr)
         end
     end
 end

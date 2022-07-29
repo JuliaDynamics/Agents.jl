@@ -1035,4 +1035,4 @@ end # module OSM
 # These are for aliasing the in-module names, and exporting them at top level
 const OpenStreetMapSpace = OSM.OpenStreetMapSpace
 const OSMSpace = OSM.OpenStreetMapSpace
-const OSMAgent = OSM.OSMAGent
+const OSMAgent = OSM.OSMAgent
