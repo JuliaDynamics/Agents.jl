@@ -173,7 +173,7 @@ end
 # TODO: Move all type creation in the space files.
 
 """
-    GraphAgent
+    GraphAgent <: AbstractAgent
 The minimal agent struct for usage with [`GraphSpace`](@ref).
 It has the fields `id::Int, pos::Int`. See also [`@agent`](@ref).
 """
@@ -182,15 +182,10 @@ mutable struct GraphAgent <: AbstractAgent
     pos::Int
 end
 
-
-# TODO: Rework the remaining docstrings as the above one.
-
-
 """
-    GridAgent{D}
-Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`GridSpace`](@ref). It attributes the fields `id::Int, pos::NTuple{D,Int}`
-to the start of the agent type.
+    GridAgent{D} <: AbstractAgent
+The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
+It has the fields `id::Int, pos::NTuple{D,Int}`. See also [`@agent`](@ref).
 """
 mutable struct GridAgent{D} <: AbstractAgent
     id::Int
@@ -198,11 +193,10 @@ mutable struct GridAgent{D} <: AbstractAgent
 end
 
 """
-    ContinuousAgent{D}
-Combine with [`@agent`](@ref) to create an agent type for `D`-dimensional
-[`ContinuousSpace`](@ref). It attributes the fields
-`id::Int, pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`
-to the start of the agent type.
+    ContinuousAgent{D} <: AbstractAgent
+The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
+It has the fields `id::Int, pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
+See also [`@agent`](@ref).
 """
 mutable struct ContinuousAgent{D} <: AbstractAgent
     id::Int
@@ -211,11 +205,10 @@ mutable struct ContinuousAgent{D} <: AbstractAgent
 end
 
 """
-    OSMAgent
-Combine with [`@agent`](@ref) to create an agent type for [`OpenStreetMapSpace`](@ref).
-It attributes the fields
-`id::Int, pos::Tuple{Int,Int,Float64}`
-to the start of the agent type.
+    OSMAgent <: AbstractAgent
+The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
+It has the fields `id::Int, id::Int, pos::Tuple{Int,Int,Float64}`.
+See also [`@agent`](@ref).
 """
 mutable struct OSMAgent <: AbstractAgent
     id::Int
