@@ -28,36 +28,50 @@
 # This model is also available as [`Models.schelling`](@ref).
 
 # ## Creating a space
-
 using Agents
 
 space = GridSpaceSingle((10, 10); periodic = false)
 # Notice that by default the `GridSpaceSingle` has `metric = Chebyshev()`,
 # which is what we want.
 # Agents existing in this type of space must have a position field that is a
-# `NTuple{2, Int}`. We ensure this below.
+# `NTuple{2, Int}`. We ensure this below by using [`@agent`](@ref) along with
+# the minimal agent for grid spaces, `GridAgent{2}`.
 
 # ## Defining the agent type
 
-mutable struct SchellingAgent <: AbstractAgent
-    id::Int             # The identifier number of the agent
-    pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
-    mood::Bool          # whether the agent is happy in its position. (true = happy)
-    group::Int          # The group of the agent, determines mood as it interacts with neighbors
+@agent SchellingAgent GridAgent{2} begin
+    mood::Bool # whether the agent is happy in its position. (true = happy)
+    group::Int # The group of the agent, determines mood as it interacts with neighbors
 end
 
 # We added two more fields for this model, namely a `mood` field which will
 # store `true` for a happy agent and `false` for an unhappy one, and an `group`
 # field which stores `0` or `1` representing two groups.
 
-# Notice also that we could have taken advantage of the macro [`@agent`](@ref) (and in
-# fact, this is recommended), and defined the same agent as:
+# Do notice that `GridAgent{2}` attributed the `id::Int` field,
+# and the `pos::NTuple{2, Int}` field to our agent type
+for (name, type) in zip(fieldnames(SchellingAgent), fieldtypes(SchellingAgent))
+    println(name, "::", type)
+end
+
+# All these fields can be accessed during the simulation, but it is important
+# to keep in mind that `id` must never be modified, and `pos` must be modified
+# only through valid API functions such as [`move_agent!`](@ref).
+
+# You can think of the `@agent` macro defining the following expression:
 # ```julia
-# @agent SchellingAgent GridAgent{2} begin
-#     mood::Bool
-#     group::Int
+# mutable struct SchellingAgent <: AbstractAgent
+#     id::Int             # The identifier number of the agent
+#     pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
+#     mood::Bool          # ...
+#     group::Int          # ...
 # end
 # ```
+# However, the reason to use [`@agent`](@ref) instead of hand-coding the
+# 'mandatory' fields is that it allows us to (1) ensure that some fields are
+# constants, (2) add additional fields that may be necessary but not really
+# part of the public API, and hence set internally by Agents.jl when using
+# various API functions.
 
 # ## Creating an ABM
 
@@ -376,7 +390,7 @@ adf[(end - 10):end, :]
 # ```julia
 # using Distributed
 # @everywhere using Agents
-# @everywhere mutable struct SchellingAgent ...
+# @everywhere @agent SchellingAgent ...
 # @everywhere agent_step!(...) = ...
 # ```
 
