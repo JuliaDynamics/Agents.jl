@@ -103,7 +103,7 @@ end
 ```
 which would now make both `Baker, Person` subtypes of `AbstractPerson`.
 """
-macro agent(base_type, new_name, extra_fields)
+macro agent(new_name, base_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
@@ -137,7 +137,7 @@ end
 # TODO: I do not know how to merge these two macros to remove code duplication.
 # There should be away that only the 4-argument version is used
 # and the 3-argument version just passes `AbstractAgent` to the 4-argument.
-macro agent(base_type, new_name, supertype, extra_fields)
+macro agent(new_name, base_type, supertype, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
