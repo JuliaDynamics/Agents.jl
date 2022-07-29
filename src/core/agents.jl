@@ -102,7 +102,7 @@ end
     fish_per_day::Float64
 end
 ```
-which would now make both `Human, Fisher` subtypes of `AbstractPerson`.
+which would now make both `Human, Fisher` subtypes of `AbstractHuman`.
 
 ### Example highlighting problems with parametric types
 Notice that in Julia parametric types are union types.
