@@ -1,20 +1,18 @@
-export AbstractAgent, @agent
+export AbstractAgent, @agent, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
 Agents participating in Agents.jl simulations are instances of user-defined Types that
-are subtypes of `AbstractAgent`. It is almost always the case that mutable Types make
-for a simpler modelling experience.
+are subtypes of `AbstractAgent`. New agent Types should be made with [`@agent`](@ref).
 
 Your agent type(s) **must have** the `id::Int` field as first field.
+In Julia versions ≥ v1.8, this must also be declared as a `const` field.
 If any space is used (see [Spaces](@ref)), a `pos` field of appropriate type
 is also mandatory. Each space may also require additional fields that may,
-or may not be communicated as part of the public API.
+or may not, be communicated as part of the public API.
 
-Your agent type may have other additional fields relevant to your system,
+Your agent type may have any other additional fields relevant to your use case,
 for example variable quantities like "status" or other "counters".
-
-Use [`@agent`](@ref) to create `YourAgentType` for usage with Agents.jl.
 """
 abstract type AbstractAgent end
 
@@ -30,7 +28,7 @@ as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
 Using `@agent` is **the recommended way to create agent types** for using in Agents.jl.
-Structs created with `@agent` always subtype `AbstractAgent`.
+Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
 and `AnotherAgentType` itself is also concrete (only concrete types have fields).
 If you want `YourAgentType` to subtype something other than `AbstractAgent`, use
@@ -42,14 +40,15 @@ The macro `@agent` is useful in two situations:
 2. You want a convenient way to include fields from another, already existing struct.
 
 The existing default agent types are:
+- [`NoSpaceAgent`](@ref)
 - [`GraphAgent`](@ref)
 - [`GridAgent`](@ref)
 - [`ContinuousAgent`](@ref)
 - [`OSMAgent`](@ref)
 
-Remember that `id, pos` are fields that will always be attributed to the new type
-and a user should **never directly manipulate these fields**. Instead,
-use functions like [`move_agent!`](@ref) etc., to change e.g., the position.
+You should **never directly manipulate the mandatory fields `id, pos`**.
+The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
+Use functions like [`move_agent!`](@ref) etc., to change the position.
 
 ## Examples
 ### Example without optional hierarchy
@@ -167,4 +166,14 @@ macro agent(new_name, base_type, supertype, extra_fields)
             eval(expr)
         end
     end
+end
+
+
+"""
+    NoSpaceAgent <: AbstractAgent
+The minimal agent struct for usage with `nothing` as space (i.e., no space).
+It has the field `id::Int`. See also [`@agent`](@ref).
+"""
+mutable struct NoSpaceAgent <: AbstractAgent
+    id::Int
 end
