@@ -103,7 +103,7 @@ end
 which would now make both `Human, Fisher` subtypes of `AbstractPerson`.
 
 ### Example highlighting problems with parametric types
-Notice that in Julia parametric types are abstract types.
+Notice that in Julia parametric types are union types.
 Hence, the following cannot be used:
 ```julia
 @agent Dummy{T} GridAgent{2} begin
@@ -115,7 +115,8 @@ end
 end
 ```
 You will get an error in the definition of `Fisherino`, because the fields of
-`Dummy{T}` cannot be obtained, because it is an abstract type.
+`Dummy{T}` cannot be obtained, because it is a union type. Same with using `Dummy`.
+You can only use `Dummy{Float64}`.
 """
 macro agent(new_name, base_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
@@ -144,6 +145,7 @@ macro agent(new_name, base_type, extra_fields)
                 end
             end
             @show expr # uncomment this to see that the final expression looks as desired
+            # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
     end
@@ -179,6 +181,7 @@ macro agent(new_name, base_type, supertype, extra_fields)
                 end
             end
             @show expr # uncomment this to see that the final expression looks as desired
+            # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
     end
