@@ -1,5 +1,4 @@
 export AbstractAgent, @agent
-export GraphAgent, GridAgent, ContinuousAgent, OSMAgent
 
 """
     YourAgentType <: AbstractAgent
