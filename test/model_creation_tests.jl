@@ -67,11 +67,36 @@
     @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn = false)
     @test_throws ArgumentError ABM(Agent6, GridSpace((50, 50)))
     @test_throws ErrorException Agents.notimplemented(ABM(Agent0))
-    # Test @agent macro
+
+end
+
+@testset "@agent macro" begin
     @agent A3 GridAgent{2} begin
         weight::Float64
     end
     @test A3 <: AbstractAgent
-    @test fieldnames(A3) == fieldnames(Agent3)
-    @test A3.types == Agent3.types
+    @test fieldnames(A3) == (:id, :pos, :weight)
+    @test fieldtypes(A3) == (Int, NTuple{2, Int}, Float64)
+
+    @agent A4 A3 begin
+        z::Bool
+    end
+    @test A4 <: AbstractAgent
+    @test fieldnames(A4) == (:id, :pos, :weight, :z)
+    @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
+
+    # Also test subtyping
+    abstract type AbstractHuman <: AbstractAgent end
+
+    @agent Worker GridAgent{2} AbstractHuman begin
+        age::Int
+        moneyz::Float64
+    end
+    @test Worker <: AbstractHuman
+
+    @agent Fisher Worker AbstractHuman begin
+        fish_per_day::Float64
+    end
+    @test Fisher <: AbstractHuman
+
 end
