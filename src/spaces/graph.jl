@@ -51,15 +51,15 @@ function Base.show(io::IO, s::GraphSpace)
     print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
 end
 
-"""
-    GraphAgent <: AbstractAgent
-The minimal agent struct for usage with [`GraphSpace`](@ref).
-It has the fields `id::Int, pos::Int`. See also [`@agent`](@ref).
-"""
-mutable struct GraphAgent <: AbstractAgent
-    id::Int
+@agent GraphAgent NoSpaceAgent begin
     pos::Int
 end
+
+@doc """
+    GraphAgent <: AbstractAgent
+The minimal agent struct for usage with [`GraphSpace`](@ref).
+It has an additional `pos::Int` field. See also [`@agent`](@ref).
+""" GraphAgent
 
 #######################################################################################
 # Agents.jl space API

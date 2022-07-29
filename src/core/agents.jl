@@ -51,6 +51,8 @@ that the resulting new agent type will have.
 The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
+You can use the `@doc` macro from Julia to document the generated struct if you wish so.
+
 ## Examples
 ### Example without optional hierarchy
 Using
@@ -117,6 +119,42 @@ end
 You will get an error in the definition of `Fisherino`, because the fields of
 `Dummy{T}` cannot be obtained, because it is a union type. Same with using `Dummy`.
 You can only use `Dummy{Float64}`.
+
+### Example with common dispatch and no subtyping
+It may be that you do not even need to create a subtyping relation if you want
+to utilize multiple dispatch. Consider the example:
+```julia
+@agent CommonTraits GridSpace{2} begin
+    age::Int
+    speed::Int
+    energy::Int
+end
+```
+and then two more structs are made from these traits:
+```julia
+@agent Bird CommonTraits begin
+    height::Float64
+end
+
+@agent Rabbit CommonTraits begin
+    underground::Bool
+end
+```
+
+If you wanted a function that dispatches to both `Rabbit, Bird`, you only have to define:
+```julia
+Animal = Union{Bird, Rabbit}
+f(x::Animal) = ... # uses `CommonTraits` fields
+```
+However, it should also be said, that there is no real reason here to explicitly
+type-annotate `x::Animal` in `f`. Don't annotate any type. Annotating a type
+only becomes useful if there are at least two "abstract" groups, like `Animal, Person`.
+Then it would make sense to define
+```julia
+Person = Union{Fisher, Baker}
+f(x::Animal) = ... # uses `CommonTraits` fields
+f(x::Person) = ... # uses fields that all "persons" have
+```
 """
 macro agent(new_name, base_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
@@ -144,7 +182,7 @@ macro agent(new_name, base_type, extra_fields)
                     $(additional_fields...)
                 end
             end
-            @show expr # uncomment this to see that the final expression looks as desired
+            # @show expr # uncomment this to see that the final expression looks as desired
             # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
@@ -180,7 +218,7 @@ macro agent(new_name, base_type, supertype, extra_fields)
                     $(additional_fields...)
                 end
             end
-            @show expr # uncomment this to see that the final expression looks as desired
+            # @show expr # uncomment this to see that the final expression looks as desired
             # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
