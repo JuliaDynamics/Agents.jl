@@ -2,7 +2,7 @@
 - The `@agent` macro has been re-written and is now more general and more safe.
   It now also allows inhereting fields from any other type.
 - The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
-  Directly creating structs by hand is no longer mention in the documentation at all.
+  Directly creating structs by hand is no longer mentioned in the documentation at all.
   This will allow us in the future to utilize additional fields that the user does not
   have to know about, which may bring new features or performance gains by being
   part of the agent structures.
