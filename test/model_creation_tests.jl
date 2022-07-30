@@ -3,7 +3,7 @@
     agent = ImmutableAgent(1)
     @test_logs (
         :warn,
-        "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.",
+        "AgentType is not mutable. You probably haven't used `@agent`!",
     ) ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
@@ -48,7 +48,13 @@
     # Shouldn't use ParametricAgent since it is not a concrete type
     @test_logs (
         :warn,
-        "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.",
+        """
+        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        seeing this warning because you gave `Agent` instead of `Agent{Float64}`
+        (for example) to this function. You can also create an instance of your agent
+        and pass it to this function. If you want to use `Union` types for mixed agent
+        models, you can silence this warning.
+        """
     ) ABM(ParametricAgent, GridSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
