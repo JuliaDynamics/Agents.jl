@@ -25,9 +25,7 @@ import ImageMagick
 using FileIO: load
 
 @agent Animal ContinuousAgent{3} begin
-    id::Int
-    pos::NTuple{3,Float64}
-    type::Symbol ## one of :rabbit, :fox or :hawk
+    type::Symbol # one of :rabbit, :fox or :hawk
     energy::Float64
 end
 

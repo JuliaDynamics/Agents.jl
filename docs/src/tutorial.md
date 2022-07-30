@@ -27,7 +27,7 @@ Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Creating a new space type](@ref).
 
 The available spaces are listed in the [Available spaces](@ref) part of the API.
-An example of a space is [`OpenStreetMapSpace`](@ref). It is based on Open Street Map, where agents are confined to move along streets of the map, using real-world meter values for the length of each street.
+An example of a space is [`OpenStreetMapSpace`](@ref). It is based on Open Street Map, where agents are confined to move along streets of the map, using real-world values for the length of each street.
 
 After deciding on the space, one simply initializes an instance of a space, e.g. with `grid = GridSpace((10, 10))` and passes that into [`AgentBasedModel`](@ref). See each individual space for all its possible arguments.
 
@@ -39,10 +39,9 @@ AbstractAgent
 ```
 
 ## 3. The model
-Once an agent is created with [`@agent`](@ref), it can be added to a model using e.g. [`add_agent!`](@ref).
+Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
 Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
 The "model" here stands for an instance of [`AgentBasedModel`](@ref).
-
 
 ```@docs
 AgentBasedModel
@@ -51,19 +50,19 @@ AgentBasedModel
 
 ## 4. Evolving the model
 
-Any ABM model should have at least one and at most two stepping functions.
+In Agents.jl, an agent based model should be accompanied with least one and at most two stepping functions.
 An _agent step function_ is required by default.
 Such an agent step function defines what happens to an agent when it activates.
 Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
 
-An agent step function should only accept two arguments: first, an agent instance, and second, a model instance.
+An agent step function must accept two arguments: first, an agent instance, and second, a model instance.
 
-The model step function should accept only one argument, that is the model.
+The model step function must accept one argument, that is the model.
 To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function. This is typically the case for [Advanced stepping](@ref).
 
 The stepping functions are created using the [API](@ref) functions, and the Examples hosted in this documentation showcase several different variants.
 
-After you have defined these two functions, you evolve your model with `step!`:
+After you have defined the stepping functions functions, you can evolve your model with `step!`:
 ```@docs
 step!
 dummystep

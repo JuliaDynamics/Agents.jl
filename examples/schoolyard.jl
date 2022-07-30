@@ -28,7 +28,7 @@ using Random: MersenneTwister                     # reproducibility
 
 # And create an alias to `ContinuousAgent{2}`,
 # as our agents don't need additional properties.
-Student = ContinuousAgent{2}
+const Student = ContinuousAgent{2}
 
 # ## Rules of the schoolyard
 

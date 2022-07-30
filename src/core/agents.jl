@@ -8,11 +8,12 @@ are subtypes of `AbstractAgent`.
 Your agent type(s) **must have** the `id::Int` field as first field.
 In Julia versions ≥ v1.8, this must also be declared as a `const` field.
 If any space is used (see [Available spaces](@ref)), a `pos` field of appropriate type
-is also mandatory. Each space may also require additional fields that may,
+is also mandatory. The core model structure, and each space,
+may also require additional fields that may,
 or may not, be communicated as part of the public API.
 
 The [`@agent`](@ref) macro ensures that all of these constrains are in place
-and hence it is the expected way to generate new agent types.
+and hence it is the only officially supported way to generate new agent types.
 """
 abstract type AbstractAgent end
 
@@ -27,7 +28,7 @@ Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
-Using `@agent` is **the recommended way to create agent types** for using in Agents.jl.
+Using `@agent` is **the only supported way to create agent types** for Agents.jl.
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
 and `AnotherAgentType` itself is also concrete (only concrete types have fields).
@@ -36,17 +37,18 @@ the optional argument `OptionalSupertype` (which itself must then subtype `Abstr
 
 The macro `@agent` has two primary uses:
 1. To include the mandatory fields for a particular space in your agent struct.
-   In this case you would use one of the default agent types as `AnotherAgentType`.
+   In this case you would use one of the minimal agent types as `AnotherAgentType`.
 2. A convenient way to include fields from another, already existing struct.
 
-The existing default agent types are:
+The existing minimal agent types are:
 - [`NoSpaceAgent`](@ref)
 - [`GraphAgent`](@ref)
 - [`GridAgent`](@ref)
 - [`ContinuousAgent`](@ref)
 - [`OSMAgent`](@ref)
 
-You should **never directly manipulate the mandatory fields `id, pos`**
+All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
+a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
 that the resulting new agent type will have.
 The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
 Use functions like [`move_agent!`](@ref) etc., to change the position.
