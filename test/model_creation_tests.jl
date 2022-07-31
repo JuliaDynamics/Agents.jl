@@ -1,6 +1,7 @@
 using Test, Agents, Random
 
 @testset "@agent macro" begin
+    @test ContinuousAgent <: AbstractAgent
     @agent A3 GridAgent{2} begin
         weight::Float64
     end
@@ -23,12 +24,13 @@ using Test, Agents, Random
         moneyz::Float64
     end
     @test Worker <: AbstractHuman
+    @test :age ∈ fieldnames(Worker)
 
     @agent Fisher Worker AbstractHuman begin
         fish_per_day::Float64
     end
     @test Fisher <: AbstractHuman
-
+    @test :fish_per_day ∈ fieldnames(Fisher)
 end
 
 
