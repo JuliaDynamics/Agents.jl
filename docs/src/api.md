@@ -3,17 +3,6 @@
 The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## `@agent` macro
-The [`@agent`](@ref) macro makes defining agent types within Agents.jl simple.
-
-```@docs
-@agent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
-```
-
 ## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
@@ -100,6 +89,13 @@ move_agent_single!
 isempty(::Integer, ::ABM)
 ```
 
+## `GraphSpace` exclusives
+```@docs
+add_edge!
+add_node!
+rem_node!
+```
+
 ## `ContinuousSpace` exclusives
 ```@docs
 nearby_ids_exact
@@ -108,13 +104,8 @@ get_spatial_property
 get_spatial_index
 interacting_pairs
 elastic_collision!
-```
-
-## `GraphSpace` exclusives
-```@docs
-add_edge!
-add_node!
-rem_node!
+euclidean_distance
+manhattan_distance
 ```
 
 ## `OpenStreetMapSpace` exclusives
@@ -140,8 +131,6 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
-euclidean_distance
-manhattan_distance
 ```
 
 ## A note on iteration
@@ -152,12 +141,9 @@ Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for perf
 Specifically, imagine the scenario
 ```@example docs
 using Agents
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::NTuple{4, Int}
-end
-
-model = ABM(Agent, GridSpace((5, 5, 5, 5)))
+# We don't need to make a new agent type here,
+# we use the minimal agent for 4-dimensional grid spaces
+model = ABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
 add_agent!((1, 1, 1, 1), model)
 add_agent!((1, 1, 1, 1), model)
 add_agent!((2, 1, 1, 1), model)
@@ -193,6 +179,17 @@ These methods follow the conventions outlined above in [A note on iteration](@re
 iter_agent_groups
 map_agent_groups
 index_mapped_groups
+```
+
+## Minimal agent types
+The [`@agent`](@ref) macro can be used to define new agent types from the minimal agent types that are listed below:
+
+```@docs
+NoSpaceAgent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
 ```
 
 ## Parameter scanning

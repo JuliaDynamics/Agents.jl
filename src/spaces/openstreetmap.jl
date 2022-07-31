@@ -1,4 +1,4 @@
-export OpenStreetMapSpace, OSMSpace, OSM
+export OpenStreetMapSpace, OSMSpace, OSM, OSMAgent
 
 """
     OSM
@@ -147,6 +147,15 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
         "and $(length(s.map.nodes)) nodes",
     )
 end
+
+@agent OSMAgent NoSpaceAgent begin
+    pos::Tuple{Int,Int,Float64}
+end
+@doc """
+    OSMAgent <: AbstractAgent
+The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
+It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
+""" OSMAgent
 
 """
     OSM.test_map()
@@ -1021,6 +1030,7 @@ end
 
 end # module OSM
 
+# These are for aliasing the in-module names, and exporting them at top level
 const OpenStreetMapSpace = OSM.OpenStreetMapSpace
-
 const OSMSpace = OSM.OpenStreetMapSpace
+const OSMAgent = OSM.OSMAgent

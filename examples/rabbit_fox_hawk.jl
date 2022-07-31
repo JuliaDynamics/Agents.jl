@@ -24,18 +24,17 @@ using Random
 import ImageMagick
 using FileIO: load
 
-mutable struct Animal <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    type::Symbol ## one of :rabbit, :fox or :hawk
+@agent Animal ContinuousAgent{3} begin
+    type::Symbol # one of :rabbit, :fox or :hawk
     energy::Float64
 end
 
 # Some utility functions to create specific types of agents,
-# and find the euclidean norm of a vector
-Rabbit(id, pos, energy) = Animal(id, pos, :rabbit, energy)
-Fox(id, pos, energy) = Animal(id, pos, :fox, energy)
-Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
+# and find the euclidean norm of a Vector
+const v0 = (0.0, 0.0, 0.0) # we don't use the velocity field here
+Rabbit(id, pos, energy) = Animal(id, pos, v0, :rabbit, energy)
+Fox(id, pos, energy) = Animal(id, pos, v0, :fox, energy)
+Hawk(id, pos, energy) = Animal(id, pos, v0, :hawk, energy)
 eunorm(vec) = √sum(vec .^ 2)
 
 # The environment is generated from a heightmap: a 2D matrix, where each value denotes the

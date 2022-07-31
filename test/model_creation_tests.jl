@@ -1,9 +1,56 @@
+using Test, Agents, Random
+
+@testset "@agent macro" begin
+    @test ContinuousAgent <: AbstractAgent
+    @agent A3 GridAgent{2} begin
+        weight::Float64
+    end
+    @test A3 <: AbstractAgent
+    @test fieldnames(A3) == (:id, :pos, :weight)
+    @test fieldtypes(A3) == (Int, NTuple{2, Int}, Float64)
+
+    @agent A4 A3 begin
+        z::Bool
+    end
+    @test A4 <: AbstractAgent
+    @test fieldnames(A4) == (:id, :pos, :weight, :z)
+    @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
+
+    # Also test subtyping
+    abstract type AbstractHuman <: AbstractAgent end
+
+    @agent Worker GridAgent{2} AbstractHuman begin
+        age::Int
+        moneyz::Float64
+    end
+    @test Worker <: AbstractHuman
+    @test :age ∈ fieldnames(Worker)
+
+    @agent Fisher Worker AbstractHuman begin
+        fish_per_day::Float64
+    end
+    @test Fisher <: AbstractHuman
+    @test :fish_per_day ∈ fieldnames(Fisher)
+end
+
+
 @testset "Model construction" begin
+    mutable struct BadAgent <: AbstractAgent
+        useless::Int
+        pos::Int
+    end
+    mutable struct BadAgentId <: AbstractAgent
+        id::Float64
+    end
+    struct ImmutableAgent <: AbstractAgent
+        id::Int
+    end
+
     # Shouldn't use ImmutableAgent since it cannot be edited
     agent = ImmutableAgent(1)
     @test_logs (
         :warn,
-        "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition.",
+        "AgentType is not mutable. You probably haven't used `@agent`!",
     ) ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
@@ -18,22 +65,24 @@
     @test_throws ArgumentError ABM(BadAgentId)
     agent = BadAgentId(1.0)
     @test_throws ArgumentError ABM(agent)
-    # Cannot use Agent0 in a grid space context since it has no `pos` field
-    @test_throws ArgumentError ABM(Agent0, GridSpace((1, 1)))
-    agent = Agent0(1)
+    # Cannot use NoSpaceAgent in a grid space context since it has no `pos` field
+    @test_throws ArgumentError ABM(NoSpaceAgent, GridSpace((1, 1)))
+    agent = NoSpaceAgent(1)
     @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
-    # Cannot use Agent3 in a graph space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(Agent3, GraphSpace(Agents.Graph(1)))
-    agent = Agent3(1, (1, 1), 5.3)
+    # Cannot use Gridagent in a graph space context since `pos` has an invalid type
+    @test_throws ArgumentError ABM(GridAgent{2}, GraphSpace(Agents.Graph(1)))
+    agent = GridAgent{2}(1, (1, 1))
     @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)))
-    # Cannot use Agent3 in a continuous space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(Agent3, ContinuousSpace((1, 1)))
-    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)))
-    # Cannot use Agent4 in a continuous space context since it has no `vel` field
-    @test_throws ArgumentError ABM(Agent4, ContinuousSpace((1, 1)))
-    agent = Agent4(1, (1, 1), 5)
-    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)))
+    # Cannot use GraphAgent in a continuous space context since `pos` has an invalid type
+    @test_throws ArgumentError ABM(GraphAgent, ContinuousSpace((1, 1)))
+
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
+    mutable struct DiscreteVelocity <: AbstractAgent
+        id::Int
+        pos::NTuple{2,Float64}
+        vel::NTuple{2,Int}
+        diameter::Float64
+    end
     @test_logs (
         :warn,
         "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
@@ -46,9 +95,20 @@
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace((1, 1)); warn = false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
+    mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
+        id::T
+        pos::NTuple{2,T}
+        weight::T
+        info::String
+    end
     @test_logs (
         :warn,
-        "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.",
+        """
+        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        seeing this warning because you gave `Agent` instead of `Agent{Float64}`
+        (for example) to this function. You can also create an instance of your agent
+        and pass it to this function. If you want to use `Union` types for mixed agent
+        models, you can silence this warning.\n"""
     ) ABM(ParametricAgent, GridSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
@@ -59,19 +119,19 @@
     agent = ParametricAgent(1, (1, 1), 5, "Info")
     @test Agents.agenttype(ABM(agent, GridSpace((1, 1)))) <: AbstractAgent
     #Mixed agents
-    @test Agents.agenttype(ABM(Union{Agent0,Agent1}; warn = false)) <: AbstractAgent
+    @agent ValidAgent NoSpaceAgent begin
+        dummy::Bool
+    end
+
+    @test Agents.agenttype(ABM(Union{NoSpaceAgent,ValidAgent}; warn = false)) <: AbstractAgent
     @test_logs (
         :warn,
-        "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning.",
-    ) ABM(Union{Agent0,Agent1})
-    @test_throws ArgumentError ABM(Union{Agent0,BadAgent}; warn = false)
-    @test_throws ArgumentError ABM(Agent6, GridSpace((50, 50)))
-    @test_throws ErrorException Agents.notimplemented(ABM(Agent0))
-    # Test @agent macro
-    @agent A3 GridAgent{2} begin
-        weight::Float64
-    end
-    @test A3 <: AbstractAgent
-    @test fieldnames(A3) == fieldnames(Agent3)
-    @test A3.types == Agent3.types
+        """
+        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        seeing this warning because you gave `Agent` instead of `Agent{Float64}`
+        (for example) to this function. You can also create an instance of your agent
+        and pass it to this function. If you want to use `Union` types for mixed agent
+        models, you can silence this warning.\n"""
+    ) ABM(Union{NoSpaceAgent,ValidAgent})
+    @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
 end

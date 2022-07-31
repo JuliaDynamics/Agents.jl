@@ -26,11 +26,9 @@ using SimpleWeightedGraphs: SimpleWeightedDiGraph # will make social network
 using SparseArrays: findnz                        # for social network connections
 using Random: MersenneTwister                     # reproducibility
 
-# And create a very simple agent without any extra properties
-mutable struct Student <: AbstractAgent
-    id::Int
-    pos::Tuple{Float64,Float64}
-end
+# And create an alias to `ContinuousAgent{2}`,
+# as our agents don't need additional properties.
+const Student = ContinuousAgent{2}
 
 # ## Rules of the schoolyard
 

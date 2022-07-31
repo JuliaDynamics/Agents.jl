@@ -47,24 +47,28 @@ using Scratch
 
 function __init__()
 display_update = true
-version_number = "5.4"
+version_number = "5.5"
 update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
-Welcome to this massive update of Agents.jl!
+Welcome to this new update of Agents.jl!
 Noteworthy changes:
 
-- About 5x performance increase in distributed computing!
-- Internals of `GridSpace` have been completely re-written! This led to a significant
-  performance increase of about 30%!
-- New space `GridSpaceSingle` that is the same as `GridSpace` but only allows for one
-  agent per position only. It utilizes this knowledge for massive performance benefits
-  over `GridSpace`, **being about 3x faster than `GridSpace`** all across the board!
-- Performance increase for nearby_stuff searches `ContinuousSpace` (2-5x faster)
-- New `:manhattan` metric for `GridSpace` models!
-- Several new deprecations and/or possible breaking changes!
+- The `@agent` macro has been re-written and is now more general and more safe.
+  It now also allows inhereting fields from any other type.
+- The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
+  Directly creating structs by hand is no longer mentioned in the documentation at all.
+  This will allow us in the future to utilize additional fields that the user does not
+  have to know about, which may bring new features or performance gains by being
+  part of the agent structures.
+- The minimal agent types like `GraphAgent` can be used normally as standard agent
+  types that only have the mandatory fields. This is now clear in the docs.
+  (this was possible also before v5.4, just not clear)
+- In the future, making agent types by hand may be completely dissalowed, resulting
+  in error. Therefore, making agent types manually is considered deprecated.
+- New function `normalize_position`.
 
-See the CHANGELOG.md or online docs for more!
+See the CHANGELOG.md, because v5.4 was also a large release!
 """
 if display_update
     # Get scratch space for this package

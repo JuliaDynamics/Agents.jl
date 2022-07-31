@@ -1,8 +1,6 @@
 using LinearAlgebra
 
-mutable struct PoorSoul <: AbstractAgent
-    id::Int
-    pos::Int
+@agent PoorSoul GraphAgent begin
     days_infected::Int  # number of days since is infected
     status::Symbol  # 1: S, 2: I, 3:R
 end

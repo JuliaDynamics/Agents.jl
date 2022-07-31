@@ -283,7 +283,7 @@ index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedu
 # %% Model construction validation
 #######################################################################################
 """
-    agent_validator(agent, space)
+    agent_validator(AgentType, space)
 Validate the user supplied agent (subtype of `AbstractAgent`).
 Checks for mutability and existence and correct types for fields depending on `SpaceType`.
 """
@@ -296,8 +296,13 @@ function agent_validator(
     if isconcretetype(A)
         do_checks(A, space, warn)
     else
-        warn &&
-        @warn "AgentType is not concrete. If your agent is parametrically typed, you're probably seeing this warning because you gave `Agent` instead of `Agent{Float64}` (for example) to this function. You can also create an instance of your agent and pass it to this function. If you want to use `Union` types for mixed agent models, you can silence this warning."
+        warn && @warn """
+        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        seeing this warning because you gave `Agent` instead of `Agent{Float64}`
+        (for example) to this function. You can also create an instance of your agent
+        and pass it to this function. If you want to use `Union` types for mixed agent
+        models, you can silence this warning.
+        """
         for type in union_types(A)
             do_checks(type, space, warn)
         end
@@ -311,7 +316,7 @@ Helper function for `agent_validator`.
 function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
     if warn
         isbitstype(A) &&
-        @warn "AgentType should be mutable. Try adding the `mutable` keyword infront of `struct` in your agent definition."
+        @warn "AgentType is not mutable. You probably haven't used `@agent`!"
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
     throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
