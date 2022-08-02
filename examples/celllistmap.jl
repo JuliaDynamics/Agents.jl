@@ -89,6 +89,43 @@ mutable struct CellListMapData{B,C,A,O}
     output_threaded::O
 end
 
+function initialize_clmap(positions, sides, cutoff; parallel=true)
+    ## initialize array of forces
+    forces = fill(SVector(0.0,0.0), length(positions))
+    box = CellListMap.Box(sides, cutoff)
+    cl = CellListMap.CellList(positions, box; parallel=parallel)
+    aux = CellListMap.AuxThreaded(cl)
+    output_threaded = [copy(forces) for _ in 1:CellListMap.nbatches(cl)]
+    clmap = CellListMapData(positions, forces, box, cl, aux, output_threaded)
+    return clmap
+end
+
+function update_forces!(model)
+    ## reset forces at this step, and auxiliary threaded forces array
+    fill!(model.clmap.forces, SVector(0.0, 0.0))
+    for i in eachindex(model.clmap.output_threaded)
+        fill!(model.clmap.output_threaded[i], SVector(0.0, 0.0))
+    end
+    ## update cell lists 
+    model.clmap.cell_list = CellListMap.UpdateCellList!(
+        model.clmap.positions, # current positions
+        model.clmap.box,
+        model.clmap.cell_list,
+        model.clmap.aux;
+        parallel=model.parallel
+    )
+    ## calculate pairwise forces at this step
+    CellListMap.map_pairwise!(
+        (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
+        model.clmap.forces,
+        model.clmap.box,
+        model.clmap.cell_list;
+        output_threaded=model.clmap.output_threaded,
+        parallel=model.parallel
+    )
+    return nothing
+end
+
 # ## Model properties
 
 # A `parallel` boolean flag is included to activate or deactivate the parallel
@@ -113,16 +150,10 @@ function initialize_model(;
     positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
     ## space
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
-    ## initialize array of forces
-    forces = zeros(SVector{2,Float64}, number_of_particles)
     ## default maximum radius is 10.0 thus cutoff is 20.0
     cutoff = 2*max_radius
     ## Define cell list structure
-    box = CellListMap.Box(sides, cutoff)
-    cl = CellListMap.CellList(positions, box; parallel=parallel)
-    aux = CellListMap.AuxThreaded(cl)
-    output_threaded = [copy(forces) for _ in 1:CellListMap.nbatches(cl)]
-    clmap = CellListMapData(positions, forces, box, cl, aux, output_threaded)
+    clmap = initialize_clmap(positions, sides, cutoff; parallel = parallel)
 
     ## define the model properties, which include a flag `parallel`
     ## that decides whether to run the simulation with parallelization on.
@@ -185,31 +216,7 @@ end
 # update the `model.forces` array. The first argument of the call is
 # the function to be computed for each pair of particles, which closes-over
 # the `model` data to call the `calc_forces!` function defined above.
-function model_step!(model::ABM)
-    ## update cell lists
-    model.clmap.cell_list = CellListMap.UpdateCellList!(
-        model.clmap.positions, # current positions
-        model.clmap.box,
-        model.clmap.cell_list,
-        model.clmap.aux;
-        parallel=model.parallel
-    )
-    ## reset forces at this step, and auxiliary threaded forces array
-    fill!(model.clmap.forces, SVector(0.0, 0.0))
-    for i in eachindex(model.clmap.output_threaded)
-        fill!(model.clmap.output_threaded[i], SVector(0.0, 0.0))
-    end
-    ## calculate pairwise forces at this step
-    CellListMap.map_pairwise!(
-        (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
-        model.forces,
-        model.clmap.box,
-        model.clmap.cell_list;
-        output_threaded=model.clmap.output_threaded,
-        parallel=model.parallel
-    )
-    return nothing
-end
+model_step!(model::ABM) = update_forces!(model)
 
 # ## Update agent positions and velocities
 # The `agent_step!` function will update the particle positons and velocities,
@@ -219,7 +226,7 @@ end
 # of the agents.
 function agent_step!(agent, model::ABM)
     id = agent.id
-    f = model.forces[id]
+    f = model.clmap.forces[id]
     x = SVector(agent.pos)
     v = SVector(agent.vel)
     dt = model.properties.dt
