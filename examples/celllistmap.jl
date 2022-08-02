@@ -315,7 +315,7 @@ abmvideo(
     framerate = 20, frames = 200, spf=5,
     title = "Bouncing particles",
     as = p -> p.r, # marker size
-    ac = p -> p.k, # marker size
+    ac = p -> p.k, # marker color
 )
 #
 # The final video is shown at the top of this page.
