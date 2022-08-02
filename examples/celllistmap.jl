@@ -66,6 +66,9 @@ using StaticArrays
 # 1. `positions`: `CellListMap` requires a vector of static vectors as the positions
 #    of the particles. To avoid creating this array on every call, a buffer to
 #    which the `agent.pos` positions will be copied is stored in this data structure.
+# 1. `forces`: In CellListMap.jl the `forces` between particles are stored in a `Vector{<:SVector}`,
+#    just like the positions, and will be updated
+#    at each simulation step by the `CellListMap.map_pairwise!` function.
 # 2. `box`: is the `CellListMap.Box` data structure containing the size of the system
 #    (generally with periodicity), and the cutoff that is used for pairwise interactions.
 # 3. `cell_list`: will contain the cell lists obtained with the `CellListMap.CellList`
@@ -79,6 +82,7 @@ using StaticArrays
 #    for parallelization.
 mutable struct CellListMapData{B,C,A,O}
     positions::Vector{SVector{2,Float64}}
+    forces::Vector{SVector{2,Float64}}
     box::B
     cell_list::C
     aux::A
@@ -86,25 +90,11 @@ mutable struct CellListMapData{B,C,A,O}
 end
 
 # ## Model properties
-#
-# In CellListMap.jl the `forces` between particles are stored in a `Vector{<:SVector}`,
-# just like the positions, and will be updated
-# at each simulation step by the `CellListMap.map_pairwise!` function.
-#
-# The `cutoff` is the maximum possible distance between particles with non-null interactions,
-# meaning, here, twice the maximum radius that the particles may have.
-#
-# The `clmap` field will store the data required for `CellListMap`, and again we
-# use a parametric type to guarantee the concrectness of the types, aoviding type
-# instabilities.
-#
+
 # A `parallel` boolean flag is included to activate or deactivate the parallel
 # execution of the `CellListMap` functions.
 Base.@kwdef struct Properties{CL<:CellListMapData}
     dt::Float64 = 0.01
-    number_of_particles::Int64 = 0
-    forces::Vector{SVector{2,Float64}}
-    cutoff::Float64
     clmap::CL
     parallel::Bool
 end
@@ -132,18 +122,12 @@ function initialize_model(;
     cl = CellListMap.CellList(positions, box; parallel=parallel)
     aux = CellListMap.AuxThreaded(cl)
     output_threaded = [copy(forces) for _ in 1:CellListMap.nbatches(cl)]
-    clmap = CellListMapData(positions, box, cl, aux, output_threaded)
+    clmap = CellListMapData(positions, forces, box, cl, aux, output_threaded)
 
-    ## define the model properties
-    properties = Properties(
-        dt=dt,
-        number_of_particles=number_of_particles,
-        cutoff=cutoff,
-        forces=forces,
-        clmap=clmap,
-        parallel=parallel,
-    )
-    model = ABM(Particlespace2d; properties)
+    ## define the model properties, which include a flag `parallel`
+    ## that decides whether to run the simulation with parallelization on.
+    properties = (; dt, clmap, parallel)
+    model = ABM(Particle, space2d; properties)
 
     ## Create active agents
     for id in 1:number_of_particles
@@ -211,9 +195,9 @@ function model_step!(model::ABM)
         parallel=model.parallel
     )
     ## reset forces at this step, and auxiliary threaded forces array
-    fill!(model.forces, zeros(eltype(model.forces)))
+    fill!(model.clmap.forces, SVector(0.0, 0.0))
     for i in eachindex(model.clmap.output_threaded)
-        fill!(model.clmap.output_threaded[i], zeros(eltype(model.forces)))
+        fill!(model.clmap.output_threaded[i], SVector(0.0, 0.0))
     end
     ## calculate pairwise forces at this step
     CellListMap.map_pairwise!(
