@@ -161,8 +161,8 @@ end
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
 function calc_forces!(x, y, i, j, d2, forces, model)
-    pᵢ = model.agents[i]
-    pⱼ = model.agents[j]
+    pᵢ = model[i]
+    pⱼ = model[j]
     d = sqrt(d2)
     if d ≤ (pᵢ.r + pⱼ.r)
         dr = y - x
