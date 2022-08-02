@@ -91,7 +91,6 @@ makedocs(
             "examples/zombies.md",
             "examples/predator_prey.md",
             "examples/rabbit_fox_hawk.md",
-            "examples/celllistmap.md",
             "models.md",
             "examples.md"
         ],
@@ -102,6 +101,7 @@ makedocs(
             "DifferentialEquations.jl" => "examples/diffeq.md",
             "Graphs.jl" => "examples/schoolyard.md",
             "Measurements.jl" => "examples/measurements.md",
+            "CellListMap.jl" => "examples/celllistmap.md",
         ],
         "performance_tips.md",
         "comparison.md",
