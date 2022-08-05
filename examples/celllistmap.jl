@@ -54,19 +54,6 @@ using StaticArrays
 # We `import` the `CellListMap` package because
 # it exports some functions with conflicting names with `Agents`.
 
-# 
-# ## Model properties.
-# 
-# The `clmap_system` field will store the data required for `CellListMap`, and again we 
-# use a parametric type to guarantee the concrectness of the types, aoviding type
-# instabilities.  
-#
-Base.@kwdef struct Properties{CL<:CellListMap.PeriodicSystem}
-    dt::Float64 = 0.01
-    number_of_particles::Int64 = 0
-    clmap_system::CL # CellListMap system
-end
-
 # Two auxiliary arrays will be created on model initialization, to be passed to
 # the `CellListMap.PeriodicSystem` data structure:
 #
@@ -119,7 +106,8 @@ function initialize_model(;
     )
 
     ## define the model properties
-    properties = Properties(
+    ## The clmap_system field contains the data required for CellListMap.jl
+    properties = (
         dt=dt,
         number_of_particles=number_of_particles,
         clmap_system=clmap_system,
