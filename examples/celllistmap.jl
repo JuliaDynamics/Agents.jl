@@ -106,7 +106,6 @@ function initialize_model(;
     ## Space and agents
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
 
-    ## default maximum radius is 10.0 thus cutoff is 20.0
     cutoff = 2 * max_radius
 
     ## Initialize CellListMap periodic system
