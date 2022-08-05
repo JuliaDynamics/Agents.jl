@@ -174,17 +174,11 @@ function calc_forces!(x, y, i, j, d2, forces, model)
 end
 
 # The `model_step!` function will use `CellListMap` to update the
-# forces for all particles, given the function above. It starts by
-# updating the cell lists, given the current positions of the particles.
-#
-# Next, the `CellListMap.map_pairwise!` function is called to
-# update the array of forces. The first argument of the call is
+# forces for all particles. The first argument of the call is
 # the function to be computed for each pair of particles, which closes-over
 # the `model` data to call the `calc_forces!` function defined above.
 # 
 function model_step!(model::ABM)
-    # Update the cell lists with the current coordinates
-    CellListMap.UpdatePeriodicSystem!(model.clmap_system)
     ## Update the pairwise forces at this step
     CellListMap.map_pairwise!(
         (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
@@ -212,7 +206,7 @@ function agent_step!(agent, model::ABM)
     x = normalize_position(Tuple(x), model)
     agent.vel = Tuple(v)
     move_agent!(agent, x, model)
-    ## Update coordinates in CellListMap.PeriodicSystem
+    ## IMPORTANT! Update coordinates in CellListMap.PeriodicSystem
     CellListMap.set_coordinates!(model.clmap_system, SVector(agent.pos), id)
     return nothing
 end
