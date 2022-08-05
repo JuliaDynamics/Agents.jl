@@ -91,13 +91,6 @@ Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 # To each field a parametric type is associated, to make the fields concrete without
 # having to write their types explicitly. 
 # 
-mutable struct CellListMapData{B,C,A,O}
-    positions::Vector{SVector{2,Float64}}
-    box::B
-    cell_list::C
-    aux::A
-    output_threaded::O
-end
 
 # 
 # ## Model properties.
@@ -115,14 +108,13 @@ end
 # A `parallel` boolean flag is included to activate or deactivate the parallel 
 # execution of the `CellListMap` functions. 
 # 
-Base.@kwdef struct Properties{CL<:CellListMapData}
+Base.@kwdef struct Properties{CL<:CellListMap.PeriodicSystem}
     dt::Float64 = 0.01
     number_of_particles::Int64 = 0
-    forces::Vector{SVector{2,Float64}}
-    cutoff::Float64
-    clmap::CL # CellListMap data
+    clmap_system::CL # CellListMap data
     parallel::Bool
 end
+
 #
 # ## Model initialization
 #
@@ -136,10 +128,10 @@ function initialize_model(;
     sides=SVector(500.0, 500.0),
     dt=0.001,
     max_radius=10.0,
-    parallel=true,
+    parallel=true
 )
-    ## initial random positions
-    positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
+    ## initial random coordinates
+    coordinates = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
 
     ## Space and agents
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
@@ -148,22 +140,21 @@ function initialize_model(;
     forces = zeros(SVector{2,Float64}, number_of_particles)
 
     ## default maximum radius is 10.0 thus cutoff is 20.0
-    cutoff = 2*max_radius
+    cutoff = 2 * max_radius
 
-    ## Define cell list structure
-    box = CellListMap.Box(sides, cutoff)
-    cl = CellListMap.CellList(positions, box; parallel=parallel)
-    aux = CellListMap.AuxThreaded(cl)
-    output_threaded = [copy(forces) for _ in 1:CellListMap.nbatches(cl)]
-    clmap = CellListMapData(positions, box, cl, aux, output_threaded)
+    clmap_system = CellListMap.PeriodicSystem(
+        coordinates=coordinates,
+        sides=sides,
+        cutoff=cutoff,
+        output=forces,
+        parallel=parallel,
+    )
 
     ## define the model properties
     properties = Properties(
         dt=dt,
         number_of_particles=number_of_particles,
-        cutoff=cutoff,
-        forces=forces,
-        clmap=clmap,
+        clmap_system = clmap_system,
         parallel=parallel,
     )
     model = ABM(Particle,
@@ -176,13 +167,13 @@ function initialize_model(;
         add_agent_pos!(
             Particle(
                 id=id,
-                r = (0.1 + 0.9*rand())*max_radius,
-                k=1.0 + 10*rand(), # random force constants
-                mass=10.0 + 100*rand(), # random masses
-                pos=Tuple(positions[id]),
-                vel=(100*randn(), 100*randn()), # initial velocities
+                r=(0.1 + 0.9 * rand()) * max_radius,
+                k=1.0 + 10 * rand(), # random force constants
+                mass=10.0 + 100 * rand(), # random masses
+                pos=Tuple(coordinates[id]),
+                vel=(100 * randn(), 100 * randn()), # initial velocities
             ),
-        model)
+            model)
     end
 
     return model
@@ -205,8 +196,8 @@ end
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
 function calc_forces!(x, y, i, j, d2, forces, model)
-    pᵢ = model.agents[i]
-    pⱼ = model.agents[j]
+    pᵢ = model[i]
+    pⱼ = model[j]
     d = sqrt(d2)
     if d ≤ (pᵢ.r + pⱼ.r)
         dr = y - x
@@ -232,27 +223,10 @@ end
 # the `model` data to call the `calc_forces!` function defined above.
 # 
 function model_step!(model::ABM)
-    ## update cell lists
-    model.clmap.cell_list = CellListMap.UpdateCellList!(
-        model.clmap.positions, # current positions
-        model.clmap.box,
-        model.clmap.cell_list,
-        model.clmap.aux;
-        parallel=model.parallel
-    )
-    ## reset forces at this step, and auxiliary threaded forces array
-    fill!(model.forces, zeros(eltype(model.forces)))
-    for i in eachindex(model.clmap.output_threaded)
-        fill!(model.clmap.output_threaded[i], zeros(eltype(model.forces)))
-    end
     ## calculate pairwise forces at this step
     CellListMap.map_pairwise!(
         (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
-        model.forces,
-        model.clmap.box,
-        model.clmap.cell_list;
-        output_threaded=model.clmap.output_threaded,
-        parallel=model.parallel
+        model.clmap_system,
     )
     return nothing
 end
@@ -279,6 +253,7 @@ function agent_step!(agent, model::ABM)
     agent.vel = Tuple(v_new)
     x_new = normalize_position(Tuple(x_new), model)
     move_agent!(agent, x_new, model)
+    # Update the cell lists with the new coordinates
     return nothing
 end
 
@@ -288,7 +263,7 @@ end
 # Finally, the function below runs an example simulation, for 1000 steps.
 #
 function simulate(; model=nothing, nsteps=1_000, number_of_particles=10_000)
-    if isnothing(model) 
+    if isnothing(model)
         model = initialize_model(number_of_particles=number_of_particles)
     end
     Agents.step!(
@@ -312,10 +287,10 @@ CairoMakie.activate!() # hide
 model = initialize_model(number_of_particles=1000)
 abmvideo(
     "celllistmap.mp4", model, agent_step!, model_step!;
-    framerate = 20, frames = 200, spf=5,
-    title = "Bouncing particles",
-    as = p -> p.r, # marker size
-    ac = p -> p.k, # marker color
+    framerate=20, frames=200, spf=5,
+    title="Bouncing particles",
+    as=p -> p.r, # marker size
+    ac=p -> p.k # marker color
 )
 #
 # The final video is shown at the top of this page.
