@@ -391,6 +391,13 @@ The following keywords can be used:
   in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
+
+!!! note "Better performance with CellListMap.jl"
+    Notice that in most applications that [`interacting_pairs`](@ref) is useful, there is
+    significant (10x-100x) performance gain to be made by integrating with CellListMap.jl.
+    Checkout the [Integrating Agents.jl with CellListMap.jl](@ref) integration
+    example for how to do this.
+
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
         scheduler = model.scheduler, nearby_f = nearby_ids_exact,

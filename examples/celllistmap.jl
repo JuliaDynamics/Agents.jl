@@ -1,4 +1,4 @@
-# # Using CellListMap
+# # Integrating Agents.jl with CellListMap.jl
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -6,15 +6,15 @@
 # </video>
 # ```
 
-# This example illustrates how to integrate `Agents.jl` with 
-# [`CellListMap.jl`](https:://github.com/m3g/CellListMap.jl), to accelerate the
-# computation of short-ranged (within a cutoff) interactions in 2D and 3D continuous 
-# spaces. `CellListMap.jl` is a package that allows the computation of pairwise interactions
+# This example illustrates how to integrate Agents.jl with
+# [CellListMap.jl](https:://github.com/m3g/CellListMap.jl), to accelerate the
+# computation of short-ranged (within a cutoff) interactions in 2D and 3D continuous
+# spaces. CellListMap.jl is a package that allows the computation of pairwise interactions
 # using an efficient and parallel implementation of [cell lists](https://en.wikipedia.org/wiki/Cell_lists).
 
 # ## The system simulated
 #
-# The example will illustrate how to simulate a set of particles in 2 dimensions, interaction 
+# The example will illustrate how to simulate a set of particles in 2 dimensions, interaction
 # through a simple repulsive potential of the form:
 #
 # $U(r) = k_i k_j\left[r^2 - (ri+rj)^2\right]^2~~~$ for $~~~r \leq (ri+rj)$
@@ -22,38 +22,20 @@
 # $U(r) = 0.0~~~$ for $~~~r \gt (ri+rj)$
 #
 # where $r_i$ and $r_j$ are the radii of the two particles involved, and
-# $k_i$ and $k_j$ are constants associated to each particle. The potential 
+# $k_i$ and $k_j$ are constants associated to each particle. The potential
 # energy function is a smoothly decaying potential with a maximum when
-# the particles overlap. The figure below illustrates the potential energy
-# for a pair or particles with unitary radii and force constants.  
+# the particles overlap.
 #
-# ```@raw html
-# <center>
-# <img src="https://raw.githubusercontent.com/JuliaDynamics/Agents.jl/main/examples/cellistmap.svg">
-# </center>
-# ```
-#
-# Thus, if the maximum sum of radii between particles is much smaller than the size 
+# Thus, if the maximum sum of radii between particles is much smaller than the size
 # of the system, cell lists can greatly accelerate the computation of the pairwise forces.
-# 
+#
 # Each particle will have different radii and different repulsion force constants and masses.
-# 
-# ## Packages required and data structure
-#
-# We begin by loading the required packages. `StaticArrays` provides the `SVector` 
-# types which are practical for the representation of coordinates of 
-# points in 2 and 3 dimensions. We `import` the `CellListMap` package because 
-# it exports some functions with conflicting names with `Agents`. 
-
 using Agents
-import CellListMap
-using StaticArrays
-#
-# Below we define the `Particle` type, which will contain the agents of the 
+
+# Below we define the `Particle` type, which represents the agents of the
 # simulation. The `Particle` type, for the `ContinousAgent{2}` space, will have additionally
 # an `id` and `pos` (positon) and `vel` (velocity) fields, which are automatically added
-# by the `@agent` macro. 
-# 
+# by the `@agent` macro.
 @agent Particle ContinuousAgent{2} begin
     r::Float64 # radius
     k::Float64 # repulsion force constant
@@ -61,68 +43,53 @@ using StaticArrays
 end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
-#
-# The `CellListMap` data structure contains the necessary data for the fast 
-# computation of interactions using `CellListMap`. The structure must be mutable,
-# because it is expected that the `box` and `cell_list` fields, which will contain
-# immutable data structures, will be updated at each simulation step.
-# 
-# Five data structures are necessary:
-#
-# 1. `positions`: `CellListMap` requires a vector of vectors as the positions
-# of the particles. To avoid creating this array on every call, a buffer to
-# which the `agent.pos` positions will be copied is stored in this data structure.
-# 
-# 2. `box`: is the `CellListMap.Box` data structure containing the size of the system
-# (generally with periodicity), and the cutoff that is used for pairwise interactions.
-# 
-# 3. `cell_list`: will contain the cell lists obtained with the `CellListMap.CellList` 
-# constructor. 
-# 
-# The next two auxiliary structures necessary for parallel runs, but for simplicity they will always be
-# defined:
-# 
-# 4. `aux`: is a data structure that is built with the `CellListMap.AuxThreaded` constructor,
-# and contains auxiliary arrays to paralellize the construction of the cell lists.
-# 
-# 5. `output_threaded`: is a vector containing copies of the output of the mapped function,
-# for parallelization.
-#
-# To each field a parametric type is associated, to make the fields concrete without
-# having to write their types explicitly. 
-# 
+# ## Required and data structures for CellListMap.jl
+import CellListMap
+using StaticArrays
+# `StaticArrays` provides the `SVector` type, which is practical for the representation of
+# various vector types (e.g., coordinates or velocities) in small amount of dimensions.
+# Agents.jl uses `NTuple{D, Float64}` for that, which does not support vector operations
+# out of the box. In the future, Agents.jl may also switch the `pos` type to a static vector.
+
+# We `import` the `CellListMap` package because
+# it exports some functions with conflicting names with `Agents`.
 
 # 
 # ## Model properties.
 # 
-# The `forces` between particles are stored in a `Vector{SVector{2}}`, and will be updated
-# at each simulation step by the `CellListMap.map_pairwise!` function.
-# 
-# The `cutoff` is the maximum possible distance between particles with non-null interactions,
-# meaning, here, twice the maximum radius that the particles may have.
-# 
-# The `clmap` field will store the data required for `CellListMap`, and again we 
+# The `clmap_system` field will store the data required for `CellListMap`, and again we 
 # use a parametric type to guarantee the concrectness of the types, aoviding type
 # instabilities.  
 #
-# A `parallel` boolean flag is included to activate or deactivate the parallel 
-# execution of the `CellListMap` functions. 
-# 
 Base.@kwdef struct Properties{CL<:CellListMap.PeriodicSystem}
     dt::Float64 = 0.01
     number_of_particles::Int64 = 0
-    clmap_system::CL # CellListMap data
-    parallel::Bool
+    clmap_system::CL # CellListMap system
 end
+
+# Two auxiliary arrays will be created on model initialization, to be passed to
+# the `CellListMap.PeriodicSystem` data structure:
+#
+# 1. `positions`: `CellListMap` requires a vector of (preferentially) static vectors as the positions
+#    of the particles. To avoid creating this array on every call, a buffer to
+#    which the `agent.pos` positions will be copied is stored in this data structure.
+# 2. `forces`: In this example, the property to be computed using `CellListMap.jl` is 
+#    the forces between particles, which are stored here in a `Vector{<:SVector}`, of
+#    the same type as the positions. These forces will be updated by the `CellListMap.map_pairwise!`
+#    function.
+#
+# Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
+# which will be twice the maximum interacting radii of the particles, and the geometry of the
+# the system, given by the `sides` of the periodic box. 
+#
+# Just for clarity, we define an alias for the function that fetches the forces from 
+# the `CellListMap.PeriodicSystem` structure:
+const get_forces = CellListMap.get_output
 
 #
 # ## Model initialization
-#
-# By default the model will be generated with 10_000 particles in a 2D system
-# with sides 1000.0. The maximum possible radius of the particles is set to 10.0, and
-# each particle will have a random radius assigned between 1 and 10. Random 
-# initial velocities and force constants will also be generated. 
-#
+# We create the model with a keyword-accepting function as is recommended in Agents.jl.
+# The keywords here control number of particles and sizes.
 function initialize_model(;
     number_of_particles=10_000,
     sides=SVector(500.0, 500.0),
@@ -133,15 +100,16 @@ function initialize_model(;
     ## initial random coordinates
     coordinates = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
 
+    ## We will use CellListMap to compute forces, with similar structure as the coordinates
+    forces = similar(coordinates)
+
     ## Space and agents
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
-
-    ## initialize array of forces
-    forces = zeros(SVector{2,Float64}, number_of_particles)
 
     ## default maximum radius is 10.0 thus cutoff is 20.0
     cutoff = 2 * max_radius
 
+    ## Initialize CellListMap periodic system
     clmap_system = CellListMap.PeriodicSystem(
         coordinates=coordinates,
         sides=sides,
@@ -154,8 +122,7 @@ function initialize_model(;
     properties = Properties(
         dt=dt,
         number_of_particles=number_of_particles,
-        clmap_system = clmap_system,
-        parallel=parallel,
+        clmap_system=clmap_system,
     )
     model = ABM(Particle,
         space2d,
@@ -167,8 +134,8 @@ function initialize_model(;
         add_agent_pos!(
             Particle(
                 id=id,
-                r=(0.1 + 0.9 * rand()) * max_radius,
-                k=1.0 + 10 * rand(), # random force constants
+                r=(0.5 + 0.9 * rand()) * max_radius,
+                k=(10 + 20 * rand()), # random force constants
                 mass=10.0 + 100 * rand(), # random masses
                 pos=Tuple(coordinates[id]),
                 vel=(100 * randn(), 100 * randn()), # initial velocities
@@ -179,17 +146,15 @@ function initialize_model(;
     return model
 end
 
-#
 # ## Computing the pairwise particle forces
-#
 # To follow the `CellListMap` interface, we first need a function that
 # computes the force between a single pair of particles. This function
-# receives the positions of the two particles (already considering 
-# the periodic boundary conditions), `x` and `y`, their indices in the 
+# receives the positions of the two particles (already considering
+# the periodic boundary conditions), `x` and `y`, their indices in the
 # array of coordinates, `i` and `j`, the squared distance between them, `d2`,
-# the `forces` array to be updated and the `model` properties. 
+# the `forces` array to be updated and the `model` properties.
 #
-# Given these input parameters, the function obtains the properties of 
+# Given these input parameters, the function obtains the properties of
 # each particle from the model, and computes the force between the particles
 # as (minus) the gradient of the potential energy function defined above.
 #
@@ -208,22 +173,19 @@ function calc_forces!(x, y, i, j, d2, forces, model)
     return forces
 end
 
-# 
-# The `model_step!` function will use `CellListMap` to update the 
+# The `model_step!` function will use `CellListMap` to update the
 # forces for all particles, given the function above. It starts by
 # updating the cell lists, given the current positions of the particles.
-# Next, we reset the `forces` array and the auxiliary arrays used to
-# store the forces for each parallel task. In this example, the default
-# reduction function can be used, for more complex output data, custom
-# reduction functions can be provided.
 #
-# Finally, the `CellListMap.map_pairwise!` function is called to 
-# update the `model.forces` array. The first argument of the call is 
-# the function to be computed for each pair of particles, which closes-over 
+# Next, the `CellListMap.map_pairwise!` function is called to
+# update the array of forces. The first argument of the call is
+# the function to be computed for each pair of particles, which closes-over
 # the `model` data to call the `calc_forces!` function defined above.
 # 
 function model_step!(model::ABM)
-    ## calculate pairwise forces at this step
+    # Update the cell lists with the current coordinates
+    CellListMap.UpdatePeriodicSystem!(model.clmap_system)
+    ## Update the pairwise forces at this step
     CellListMap.map_pairwise!(
         (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
         model.clmap_system,
@@ -231,38 +193,33 @@ function model_step!(model::ABM)
     return nothing
 end
 
-#
-# ## Update agent positions and velocities 
-# 
+# ## Update agent positions and velocities
 # The `agent_step!` function will update the particle positons and velocities,
 # given the forces, which are computed in the `model_step!` function. A simple
 # Euler step is used here for simplicity. We need to convert the static vectors
 # to tuples to conform the `Agents` API for the positions and velocities
-# of the agents.
-#
+# of the agents. Finally, the coordinates within the `CellListMap.PeriodicSystem`
+# structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
-    f = model.forces[id]
-    x = SVector{2,Float64}(agent.pos)
-    v = SVector{2,Float64}(agent.vel)
     dt = model.properties.dt
+    ## Get forces on agent id
+    f = get_forces(model.clmap_system, id)
     a = f / agent.mass
-    x_new = x + v * dt + (a / 2) * dt^2
-    v_new = v + f * dt
-    model.clmap.positions[id] = x_new
-    agent.vel = Tuple(v_new)
-    x_new = normalize_position(Tuple(x_new), model)
-    move_agent!(agent, x_new, model)
-    # Update the cell lists with the new coordinates
+    # Update positions and velocities
+    v = SVector(agent.vel) + a * dt
+    x = SVector(agent.pos) + v * dt + (a / 2) * dt^2
+    x = normalize_position(Tuple(x), model)
+    agent.vel = Tuple(v)
+    move_agent!(agent, x, model)
+    ## Update coordinates in CellListMap.PeriodicSystem
+    CellListMap.set_coordinates!(model.clmap_system, SVector(agent.pos), id)
     return nothing
 end
 
-#
 # ## The simulation
-#
 # Finally, the function below runs an example simulation, for 1000 steps.
-#
-function simulate(; model=nothing, nsteps=1_000, number_of_particles=10_000)
+function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
     if isnothing(model)
         model = initialize_model(number_of_particles=number_of_particles)
     end
@@ -270,17 +227,15 @@ function simulate(; model=nothing, nsteps=1_000, number_of_particles=10_000)
         model, agent_step!, model_step!, nsteps, false,
     )
 end
-#
-# Which should be quite fast. Compilation time should be irrelevant
-# for longer runs:
-#
-@time simulate()
-#
-# and let's make a nice video with less particles, 
-# to see them bouncing around. The marker size is set by the 
+# Which should be quite fast
+model = initialize_model()
+simulate(model) # compile
+@time simulate(model)
+
+# and let's make a nice video with less particles,
+# to see them bouncing around. The marker size is set by the
 # radius of each particle, and the marker color by the
 # corresponding repulsion constant.
-#
 using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -288,10 +243,13 @@ model = initialize_model(number_of_particles=1000)
 abmvideo(
     "celllistmap.mp4", model, agent_step!, model_step!;
     framerate=20, frames=200, spf=5,
-    title="Bouncing particles",
+    title="Bouncing particles with CellListMap.jl acceleration",
     as=p -> p.r, # marker size
     ac=p -> p.k # marker color
 )
-#
-# The final video is shown at the top of this page.
-#
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../celllistmap.mp4" type="video/mp4">
+# </video>
+# ```
