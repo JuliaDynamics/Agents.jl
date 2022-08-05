@@ -47,7 +47,7 @@ Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 import CellListMap
 using StaticArrays
 # `StaticArrays` provides the `SVector` type, which is practical for the representation of
-# various vector types (e.g., coordinates or velocities) in small amount of dimensions.
+# various vector types (e.g., positions or velocities) in small amount of dimensions.
 # Agents.jl uses `NTuple{D, Float64}` for that, which does not support vector operations
 # out of the box. In the future, Agents.jl may also switch the `pos` type to a static vector.
 
@@ -97,11 +97,11 @@ function initialize_model(;
     max_radius=10.0,
     parallel=true
 )
-    ## initial random coordinates
-    coordinates = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
+    ## initial random positions
+    positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
 
-    ## We will use CellListMap to compute forces, with similar structure as the coordinates
-    forces = similar(coordinates)
+    ## We will use CellListMap to compute forces, with similar structure as the positions
+    forces = similar(positions)
 
     ## Space and agents
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
@@ -111,7 +111,7 @@ function initialize_model(;
 
     ## Initialize CellListMap periodic system
     clmap_system = CellListMap.PeriodicSystem(
-        coordinates=coordinates,
+        positions=positions,
         sides=sides,
         cutoff=cutoff,
         output=forces,
@@ -137,7 +137,7 @@ function initialize_model(;
                 r=(0.5 + 0.9 * rand()) * max_radius,
                 k=(10 + 20 * rand()), # random force constants
                 mass=10.0 + 100 * rand(), # random masses
-                pos=Tuple(coordinates[id]),
+                pos=Tuple(positions[id]),
                 vel=(100 * randn(), 100 * randn()), # initial velocities
             ),
             model)
@@ -151,7 +151,7 @@ end
 # computes the force between a single pair of particles. This function
 # receives the positions of the two particles (already considering
 # the periodic boundary conditions), `x` and `y`, their indices in the
-# array of coordinates, `i` and `j`, the squared distance between them, `d2`,
+# array of positions, `i` and `j`, the squared distance between them, `d2`,
 # the `forces` array to be updated and the `model` properties.
 #
 # Given these input parameters, the function obtains the properties of
@@ -192,7 +192,7 @@ end
 # given the forces, which are computed in the `model_step!` function. A simple
 # Euler step is used here for simplicity. We need to convert the static vectors
 # to tuples to conform the `Agents` API for the positions and velocities
-# of the agents. Finally, the coordinates within the `CellListMap.PeriodicSystem`
+# of the agents. Finally, the positions within the `CellListMap.PeriodicSystem`
 # structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
@@ -206,8 +206,8 @@ function agent_step!(agent, model::ABM)
     x = normalize_position(Tuple(x), model)
     agent.vel = Tuple(v)
     move_agent!(agent, x, model)
-    ## IMPORTANT! Update coordinates in CellListMap.PeriodicSystem
-    CellListMap.set_coordinates!(model.clmap_system, SVector(agent.pos), id)
+    ## IMPORTANT! Update positions in CellListMap.PeriodicSystem
+    CellListMap.set_positions(model.clmap_system, SVector(agent.pos), id)
     return nothing
 end
 
