@@ -1,5 +1,6 @@
 using Agents, Test
 using StableRNGs
+using StaticArrays
 
 # TODO: We need to write tests for get_spatial_index and stuff!
 
@@ -24,15 +25,15 @@ using StableRNGs
         model = ABM(SpeedyContinuousAgent, space1; rng = StableRNG(42))
         @test nagents(model) == 0
         # add_agent! with no existing agent (the agent is created)
-        pos0 = (0.51, 0.51)
-        vel = (0.2, 0.1)
+        pos0 = SVector(0.51, 0.51)
+        vel = SVector(0.2, 0.1)
         dia = 0.01
         agent = add_agent!(pos0, model, vel, dia)
         @test collect(allids(model)) == [1]
         @test model[1].pos == agent.pos == pos0
         # move_agent! without provided update_vel! function and using dt::Real
         move_agent!(agent, model, 1)
-        @test agent.pos == (0.71, 0.61)
+        @test agent.pos == SVector(0.71, 0.61)
         # move_agent! with specified position
         move_agent!(agent, pos0, model)
         @test agent.pos == pos0
@@ -43,7 +44,7 @@ using StableRNGs
         move_agent!(agent, model)
         @test agent.pos ≠ pos0
         # move at position OUTSIDE extend. Must lead to invalid position
-        @test_throws ErrorException move_agent!(agent, (1.5, 1.5), model)
+        @test_throws ErrorException move_agent!(agent, SVector(1.5, 1.5), model)
         # kill
         kill_agent!(agent, model)
         @test nagents(model) == 0
@@ -62,13 +63,13 @@ using StableRNGs
             genocide!(model)
             # we can parallelize these cell center coordinates with the coordinates
             # in the documentation figure showing the different GridSpace metric types.
-            cell_centers = [(0.05 + 0.1i, 0.05 + 0.1j) for i in 0:9, j in 0:9]
+            cell_centers = [SVector(0.05 + 0.1i, 0.05 + 0.1j) for i in 0:9, j in 0:9]
             for c in cell_centers
-                add_agent!(c, model, (0.0, 0.0), 0.01)
+                add_agent!(c, model, SVector(0.0, 0.0), 0.01)
             end
-            center = (0.45, 0.45)
+            center = SVector(0.45, 0.45)
             center_id = 25
-            rs = (1, 2, 3.4) .* 0.1 .+ 0.001 # multiply with spacing and add ε for accuracy
+            rs = SVector(1, 2, 3.4) .* 0.1 .+ 0.001 # multiply with spacing and add ε for accuracy
             ns = (4, 12, 36)
             for j in 1:3
                 nids = nearby_ids_exact(center, model, rs[j])
@@ -87,8 +88,8 @@ using StableRNGs
             # Note that these two should NOT be in the same cell
             r0 = 0.01
             r1 = 0.08
-            a = add_agent!((0.51, 0.51), model, (0.0, 0.0), 0.01)
-            b = add_agent!((0.51 + r1, 0.51), model, (0.0, 0.0), 0.01)
+            a = add_agent!(SVector(0.51, 0.51), model, SVector(0.0, 0.0), 0.01)
+            b = add_agent!(SVector(0.51 + r1, 0.51), model, SVector(0.0, 0.0), 0.01)
             c1 = Agents.pos2cell(a, model)
             c2 = Agents.pos2cell(b, model)
             @test c1 == c2
@@ -113,14 +114,14 @@ using StableRNGs
         @testset "standard" begin
             space = ContinuousSpace((10, 10); spacing = 0.2, periodic = false)
             model = ABM(SpeedyContinuousAgent, space; scheduler = Schedulers.ByID())
-            pos = [
+            pos = SVector.([
                 (7.074386436066224, 4.963014649338054)
                 (5.831962448496828, 4.926297135685473)
                 (5.122087781793935, 5.300031210394806)
                 (3.9715633336430156, 4.8106570045816675)
-            ]
+            ])
             for i in 1:4
-                add_agent_pos!(SpeedyContinuousAgent(i+2, pos[i], (0.0, 0.0), 0), model)
+                add_agent_pos!(SpeedyContinuousAgent(i+2, pos[i], SVector(0.0, 0.0), 0), model)
             end
             pairs = interacting_pairs(model, 2.0, :all).pairs
             @test length(pairs) == 5
@@ -129,7 +130,7 @@ using StableRNGs
             space2 = ContinuousSpace((10, 10); spacing = 0.1, periodic = false)
             model2 = ABM(SpeedyContinuousAgent, space2; scheduler = Schedulers.ByID())
             for i in 1:4
-                add_agent_pos!(SpeedyContinuousAgent(i, pos[i], (0.0, 0.0), 0), model2)
+                add_agent_pos!(SpeedyContinuousAgent(i, pos[i], SVector(0.0, 0.0), 0), model2)
             end
             pairs = interacting_pairs(model2, 2.0, :nearest).pairs
             @test length(pairs) == 1
@@ -140,13 +141,13 @@ using StableRNGs
         @testset "union types" begin
             mutable struct AgentU1 <: AbstractAgent
                 id::Int
-                pos::NTuple{2,Float64}
-                vel::NTuple{2,Float64}
+                pos::SVector{2,Float64}
+                vel::SVector{2,Float64}
             end
             mutable struct AgentU2 <: AbstractAgent
                 id::Int
-                pos::NTuple{2,Float64}
-                vel::NTuple{2,Float64}
+                pos::SVector{2,Float64}
+                vel::SVector{2,Float64}
             end
             function ignore_normal(model::ABM)
                 [a.id for a in allagents(model) if !(typeof(a) <: SpeedyContinuousAgent)]
@@ -154,13 +155,13 @@ using StableRNGs
             space3 = ContinuousSpace((10,10); spacing = 1.0, periodic = false)
             model3 = ABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3; warn = false)
             for i in 1:10
-                add_agent_pos!(SpeedyContinuousAgent(i, (i/10, i/10), (0.0, 0.0), 0), model3)
+                add_agent_pos!(SpeedyContinuousAgent(i, SVector(i/10, i/10), SVector(0.0, 0.0), 0), model3)
             end
             for i in 11:20
-                add_agent_pos!(AgentU1(i, (i/10-1, 0.5), (0.0, 0.0)), model3)
+                add_agent_pos!(AgentU1(i, SVector(i/10-1, 0.5), SVector(0.0, 0.0)), model3)
             end
             for i in 21:30
-                add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
+                add_agent_pos!(AgentU2(i, SVector(0.45, i/10-2), SVector(0.0, 0.0)), model3)
             end
             pairs = interacting_pairs(model3, 0.1, :types).pairs
             @test length(pairs) == 7
@@ -179,9 +180,9 @@ using StableRNGs
         @testset "fix #288" begin
             space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
             model = ABM(SpeedyContinuousAgent, space)
-            pos = [(0.01, 0.01),(0.2,0.2),(0.5,0.5)]
+            pos = SVector.([(0.01, 0.01),(0.2,0.2),(0.5,0.5)])
             for i in pos
-            add_agent!(i,model,(0.0,0.0),1.0)
+            add_agent!(i,model,SVector(0.0,0.0),1.0)
             end
             pairs = collect(interacting_pairs(model, 0.29, :all))
             @test length(pairs) == 1
@@ -199,15 +200,15 @@ using StableRNGs
     @testset "nearest neighbor" begin
         mutable struct AgentNNContinuous <: AbstractAgent
             id::Int
-            pos::NTuple{2,Float64}
-            vel::NTuple{2,Float64}
+            pos::SVector{2,Float64}
+            vel::SVector{2,Float64}
             f1::Union{Int,Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
         model = ABM(AgentNNContinuous, space)
-        pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
+        pos = SVector.([(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)])
         for i in pos
-            add_agent!(i,model,(0.0,0.0),nothing)
+            add_agent!(i,model,SVector(0.0,0.0),nothing)
         end
 
         for agent in allagents(model)
@@ -223,33 +224,33 @@ using StableRNGs
     @testset "walk" begin
         # ContinuousSpace
         model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10); periodic = false))
-        a = add_agent!((0.0, 0.0), model, (0.0, 0.0), rand(model.rng))
-        walk!(a, (1.0, 1.0), model)
-        @test a.pos == (1.0, 1.0)
-        walk!(a, (15.0, 1.0), model)
-        @test a.pos == (prevfloat(12.0), 2.0)
+        a = add_agent!(SVector(0.0, 0.0), model, SVector(0.0, 0.0), rand(model.rng))
+        walk!(a, SVector(1.0, 1.0), model)
+        @test a.pos == SVector(1.0, 1.0)
+        walk!(a, SVector(15.0, 1.0), model)
+        @test a.pos == SVector(prevfloat(12.0), 2.0)
 
         @agent ContinuousAgent3D ContinuousAgent{3} begin end
         model = ABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2))
-        a = add_agent!((0.0, 0.0, 0.0), model, (0.0, 0.0, 0.0))
-        walk!(a, (1.0, 1.0, 1.0), model)
-        @test a.pos == (1.0, 1.0, 1.0)
-        walk!(a, (15.0, 1.2, 3.9), model)
-        @test a.pos == (4.0, 2.2, 4.9)
+        a = add_agent!(SVector(0.0, 0.0, 0.0), model, SVector(0.0, 0.0, 0.0))
+        walk!(a, SVector(1.0, 1.0, 1.0), model)
+        @test a.pos == SVector(1.0, 1.0, 1.0)
+        walk!(a, SVector(15.0, 1.2, 3.9), model)
+        @test a.pos == SVector(4.0, 2.2, 4.9)
 
         # Must use Float64 for continuousspace
-        @test_throws MethodError walk!(a, (1, 1, 5), model)
+        @test_throws MethodError walk!(a, SVector(1, 1, 5), model)
 
         rng0 = StableRNG(42)
         model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10)); rng = rng0)
-        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
+        a = add_agent!(SVector(7.2, 3.9), model, SVector(0.0, 0.0), rand(model.rng))
         walk!(a, rand, model)
         @test a.pos[1] ≈ 6.5824829589163665
         @test a.pos[2] ≈ 4.842266936412905
 
         @testset "periodic" begin
             model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
-            a = add_agent!((11.0, 9.0), model, (3.0, 1.0))
+            a = add_agent!(SVector(11.0, 9.0), model, SVector(3.0, 1.0))
             move_agent!(a, model, 1.0)
             @test a.pos[1] == 2
             @test a.pos[2] == 0.0
