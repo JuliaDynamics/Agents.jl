@@ -272,13 +272,13 @@ using StaticArrays
             rng=StableRNG(42), properties= Dict(:c => 0));
             # Add initial individuals
             for i in 1:10, j in 1:10
-                    pos = (i/10, j/10)
+                    pos = SVector(i/10, j/10)
                 if i > 5
-                    vel = sincos(2π*rand(model.rng)) .* speed
+                    vel = SVector(sincos(2π*rand(model.rng))) .* speed
                     mass = 1.33
                 else
                     # these agents have infinite mass and 0 velocity. They are fixed.
-                    vel = (0.0, 0.0)
+                    vel = SVector(0.0, 0.0)
                     mass = Inf
                 end
                 add_agent!(pos, model, vel, mass)
