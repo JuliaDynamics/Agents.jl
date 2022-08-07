@@ -99,8 +99,8 @@ periodicity of the space.
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
 # Periodic spaces version
 function get_direction(
-    from::NTuple{D,Float64},
-    to::NTuple{D,Float64},
+    from::Union{SVector{D,Float64},NTuple{D,Float64}},
+    to::Union{SVector{D,Float64},NTuple{D,Float64}},
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
     best = to .- from
@@ -180,15 +180,16 @@ function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
 end
 
 """
-    walk!(agent, direction::NTuple, model; ifempty = false)
+    walk!(agent, direction::NTuple, model::ABM{<:AbstractGridSpace}; ifempty = false)
+    walk!(agent, direction::SVector, model::ABM{<:ContinuousSpace}; ifempty = false)
 
 Move agent in the given `direction` respecting periodic boundary conditions.
 For non-periodic spaces, agents will walk to, but not exceed the boundary value.
 Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
 The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
-for `Int`, and `ContinuousSpace` for `Float64` tuples, describing the walk distance in
-each direction. `direction = (2, -3)` is an example of a valid direction on a
+for `Int` tuples, and `ContinuousSpace` for `Float64` static vectors, describing the walk
+distance in each direction. `direction = (2, -3)` is an example of a valid direction on a
 `AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
 Agent velocity is ignored for this operation in `ContinuousSpace`.
 
@@ -213,7 +214,7 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::NTuple{D,Float64},
+    direction::SVector{D,Float64},
     model::ABM{<:ContinuousSpace}
 ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
