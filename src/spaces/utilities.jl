@@ -163,12 +163,12 @@ spaces this clamps the position to the space extent.
 normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
 
 function normalize_position(pos, space::ContinuousSpace{D,true}) where {D}
-    return mod.(pos, spacesize(space))
+    return mod.(pos, SVector(spacesize(space)))
 end
 
 function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
     ss = spacesize(space)
-    return Tuple(clamp.(pos, 0.0, prevfloat.(ss)))
+    return SVector(clamp.(pos, 0.0, prevfloat.(ss)))
 end
 
 function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
@@ -232,7 +232,7 @@ walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) wher
     walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
 
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
-    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
+    walk!(agent, SVector{D}(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
 
 """
     spacesize(model::ABM)
