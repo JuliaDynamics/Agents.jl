@@ -95,7 +95,7 @@ function ContinuousSpace(
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(model.rng) * dim, spacesize(model))
+    map(dim -> rand(model.rng) * dim, SVector(spacesize(model)))
 end
 
 "given position in continuous space, return cell coordinates in grid space."
@@ -110,7 +110,7 @@ end
 
 distance_from_cell_center(pos, model::ABM) =
     distance_from_cell_center(pos, cell_center(pos, model))
-function distance_from_cell_center(pos::SVector, center::SVector)
+function distance_from_cell_center(pos::SVector, center::Union{SVector,Tuple})
     sqrt(sum(abs2.(pos .- center)))
 end
 
