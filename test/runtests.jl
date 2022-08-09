@@ -46,8 +46,8 @@ end
 
 mutable struct Agent6 <: AbstractAgent
     id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+    pos::SVector{2,Float64}
+    vel::SVector{2,Float64}
     weight::Float64
 end
 
