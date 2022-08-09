@@ -44,35 +44,30 @@ end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
 # ## Required and data structures for CellListMap.jl
-import CellListMap
+#
+# We will use the high-level interface provided by the `PeriodicSystems` module:
+using CellListMap.PeriodicSystems
 using StaticArrays
 # `StaticArrays` provides the `SVector` type, which is practical for the representation of
 # various vector types (e.g., positions or velocities) in small amount of dimensions.
 # Agents.jl uses `NTuple{D, Float64}` for that, which does not support vector operations
 # out of the box. In the future, Agents.jl may also switch the `pos` type to a static vector.
 
-# We `import` the `CellListMap` package because
-# it exports some functions with conflicting names with `Agents`.
-
 # Two auxiliary arrays will be created on model initialization, to be passed to
-# the `CellListMap.PeriodicSystem` data structure:
+# the `PeriodicSystem` data structure:
 #
 # 1. `positions`: `CellListMap` requires a vector of (preferentially) static vectors as the positions
 #    of the particles. To avoid creating this array on every call, a buffer to
 #    which the `agent.pos` positions will be copied is stored in this data structure.
 # 2. `forces`: In this example, the property to be computed using `CellListMap.jl` is 
 #    the forces between particles, which are stored here in a `Vector{<:SVector}`, of
-#    the same type as the positions. These forces will be updated by the `CellListMap.map_pairwise!`
+#    the same type as the positions. These forces will be updated by the `map_pairwise!`
 #    function.
 #
 # Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
 # which will be twice the maximum interacting radii of the particles, and the geometry of the
-# the system, given by the `sides` of the periodic box. 
+# the system, given by the `unitcell` of the periodic box. 
 #
-# Just for clarity, we define an alias for the function that fetches the forces from 
-# the `CellListMap.PeriodicSystem` structure:
-const get_forces = CellListMap.get_output
-
 #
 # ## Model initialization
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
@@ -93,14 +88,13 @@ function initialize_model(;
     ## Space and agents
     space2d = ContinuousSpace(Tuple(sides); periodic=true)
 
-    cutoff = 2 * max_radius
-
     ## Initialize CellListMap periodic system
-    clmap_system = CellListMap.PeriodicSystem(
+    system = PeriodicSystem(
         positions=positions,
-        sides=sides,
-        cutoff=cutoff,
+        unitcell=sides,
+        cutoff=2 * max_radius,
         output=forces,
+        output_name=:forces, # allows the system.forces alias for clarity
         parallel=parallel,
     )
 
@@ -109,7 +103,7 @@ function initialize_model(;
     properties = (
         dt=dt,
         number_of_particles=number_of_particles,
-        clmap_system=clmap_system,
+        system=system,
     )
     model = ABM(Particle,
         space2d,
@@ -167,9 +161,9 @@ end
 # 
 function model_step!(model::ABM)
     ## Update the pairwise forces at this step
-    CellListMap.map_pairwise!(
+    map_pairwise!(
         (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
-        model.clmap_system,
+        model.system,
     )
     return nothing
 end
@@ -184,8 +178,8 @@ end
 function agent_step!(agent, model::ABM)
     id = agent.id
     dt = model.properties.dt
-    ## Get forces on agent id
-    f = get_forces(model.clmap_system, id)
+    ## Retrieve the forces on agent id
+    f = model.system.forces[id]
     a = f / agent.mass
     # Update positions and velocities
     v = SVector(agent.vel) + a * dt
@@ -193,8 +187,8 @@ function agent_step!(agent, model::ABM)
     x = normalize_position(Tuple(x), model)
     agent.vel = Tuple(v)
     move_agent!(agent, x, model)
-    ## IMPORTANT! Update positions in CellListMap.PeriodicSystem
-    CellListMap.set_positions(model.clmap_system, SVector(agent.pos), id)
+    ## !!! IMPORTANT: Update positions in the CellListMap.PeriodicSystem
+    model.system.positions[id] = SVector(agent.pos)
     return nothing
 end
 
