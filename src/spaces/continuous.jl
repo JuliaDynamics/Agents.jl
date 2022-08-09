@@ -201,7 +201,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
     grid_r = (r + δ) / model.space.spacing
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
-    focal_cell = pos2cell(pos, model)
+    focal_cell = Tuple(pos2cell(pos, model))
     return nearby_ids(focal_cell, model.space.grid, grid_r)
 end
 
