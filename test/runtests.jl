@@ -2,6 +2,7 @@ using Test, Agents, Random
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
+using StaticArrays
 
 using Distributed
 addprocs(2)
@@ -10,6 +11,7 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
+    using StaticArrays
 end
 
 mutable struct Agent0 <: AbstractAgent
