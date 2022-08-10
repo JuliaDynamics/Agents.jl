@@ -299,7 +299,7 @@ using StaticArrays
 
         function kinetic(model)
             K = sum(sum(abs2.(a.vel)) for a in allagents(model))
-            p = (0.0, 0.0)
+            p = SVector(0.0, 0.0)
             for a in allagents(model)
                  p = p .+ a.vel
             end

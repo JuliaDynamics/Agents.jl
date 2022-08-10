@@ -329,12 +329,12 @@ function elastic_collision!(a, b, f = nothing)
     # mass weights
     m1 == m2 == Inf && return false
     if m1 == Inf
-        @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v1 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
         v1 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 0.0, 2.0
     elseif m2 == Inf
-        @assert v2 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v2 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r2, v1) ≤ 0 && return false
         v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0
