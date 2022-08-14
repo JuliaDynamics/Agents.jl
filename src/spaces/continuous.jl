@@ -328,6 +328,7 @@ function elastic_collision!(a, b, f=nothing)
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
+    dv = a.vel .- b.vel
     if m1 == Inf
         @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
@@ -340,7 +341,8 @@ function elastic_collision!(a, b, f=nothing)
         f1, f2 = 2.0, 0.0
     else
         # Check if disks face each other, to avoid double collisions
-        !(dot(r2, v1) > 0 && dot(r1, v2) > 0) && return false
+
+        dot(dv, r2) ≤ 0 && return false
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
