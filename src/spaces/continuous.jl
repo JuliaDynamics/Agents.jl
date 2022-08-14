@@ -321,10 +321,10 @@ function elastic_collision!(a, b, f=nothing)
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
-    r1 = x1 .- x2 # A to B
+    r1 = x1 .- x2 # B to A
     n = norm(r1)^2
     n == 0 && return false # do nothing if they are at the same position
-    r2 = x2 .- x1 # B to A
+    r2 = x2 .- x1 # A to B
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
