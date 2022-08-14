@@ -322,13 +322,13 @@ function elastic_collision!(a, b, f=nothing)
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2 # B to A
+    dv = a.vel .- b.vel
     n = norm(r1)^2
     n == 0 && return false # do nothing if they are at the same position
     r2 = x2 .- x1 # A to B
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
-    dv = a.vel .- b.vel
     if m1 == Inf
         @assert v1 == (0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
@@ -340,7 +340,7 @@ function elastic_collision!(a, b, f=nothing)
         v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0
     else
-        # Check if disks face each other, to avoid double collisions
+        # Check if disks face or overtake each other, to avoid double collisions
 
         dot(dv, r2) ≤ 0 && return false
         f1 = (2m2 / (m1 + m2))
