@@ -43,7 +43,7 @@ using Agents
 end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
-# ## Required and data structures for CellListMap.jl (requires version ≥7.22) 
+# ## Required and data structures for CellListMap.jl (requires version ≥0.7.22) 
 #
 # We will use the high-level interface provided by the `PeriodicSystems` module:
 using CellListMap.PeriodicSystems
