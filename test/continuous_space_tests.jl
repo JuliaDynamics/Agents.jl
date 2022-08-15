@@ -297,7 +297,9 @@ using StableRNGs
         end
 
         function kinetic(model)
+            # Kinetic enrgy
             K = sum(sum(abs2.(a.vel)) for a in allagents(model))
+            # Momentum
             p = (0.0, 0.0)
             for a in allagents(model)
                  p = p .+ a.vel
@@ -322,12 +324,10 @@ using StableRNGs
         @test y == 0
 
         # x, which is the changed velocities
-        # should be at least the amount of collisions happened divided by 2
-        # because half the agents are unmovable (in a collision at most one agent
-        # must change velocity)
-        @test x > 0
+        # should be at most half the agents
+        # because half the agents are unmovable
+        @test 0 < x ≤ 50
         @test model.c > 0
-        @test x ≥ model.c/2
         K1, p1 = kinetic(model)
         @test p1 != p0
         # TODO: This test fails but I do not know why. Must be fixed later.
