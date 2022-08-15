@@ -43,7 +43,7 @@ using Agents
 end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
-# ## Required and data structures for CellListMap.jl
+# ## Required and data structures for CellListMap.jl (requires version ≥7.22) 
 #
 # We will use the high-level interface provided by the `PeriodicSystems` module:
 using CellListMap.PeriodicSystems
@@ -67,7 +67,10 @@ using StaticArrays
 # Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
 # which will be twice the maximum interacting radii of the particles, and the geometry of the
 # the system, given by the `unitcell` of the periodic box. 
-#
+# 
+# More complex output data, variable system geometries and other options are supported, 
+# according to the [CellListMap.PeriodicSystems](https://m3g.github.io/CellListMap.jl/stable/PeriodicSystems/) 
+# user guide.
 #
 # ## Model initialization
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
