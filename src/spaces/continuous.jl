@@ -346,7 +346,7 @@ function elastic_collision!(a, b, f=nothing)
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
-
+    dv = a.vel .- b.vel
     a.vel = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
     b.vel = v2 .+ f2 .* (dot(dv, r2) / n) .* (r2)
     return true
