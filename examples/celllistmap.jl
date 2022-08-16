@@ -17,9 +17,9 @@
 # The example will illustrate how to simulate a set of particles in 2 dimensions, interaction
 # through a simple repulsive potential of the form:
 #
-# $U(r) = k_i k_j\left[r^2 - (ri+rj)^2\right]^2~~~$ for $~~~r \leq (ri+rj)$
+# $U(r) = k_i k_j\left[r^2 - (ri+rj)^2\right]^2~~~\textrm{for}~~~r \leq (ri+rj)$
 #
-# $U(r) = 0.0~~~$ for $~~~r \gt (ri+rj)$
+# $U(r) = 0.0~~~\textrm{for}~~~r \gt (ri+rj)$
 #
 # where $r_i$ and $r_j$ are the radii of the two particles involved, and
 # $k_i$ and $k_j$ are constants associated to each particle. The potential
@@ -43,9 +43,10 @@ using Agents
 end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
-# ## Required and data structures for CellListMap.jl (requires version ≥0.7.22) 
+# ## Required and data structures for CellListMap.jl 
 #
-# We will use the high-level interface provided by the `PeriodicSystems` module:
+# We will use the high-level interface provided by the `PeriodicSystems` module
+# (requires version ≥0.7.22):
 using CellListMap.PeriodicSystems
 using StaticArrays
 # `StaticArrays` provides the `SVector` type, which is practical for the representation of
