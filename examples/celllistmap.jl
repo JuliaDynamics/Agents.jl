@@ -184,7 +184,7 @@ function agent_step!(agent, model::ABM)
     ## Retrieve the forces on agent id
     f = model.system.forces[id]
     a = f / agent.mass
-    # Update positions and velocities
+    ## Update positions and velocities
     v = SVector(agent.vel) + a * dt
     x = SVector(agent.pos) + v * dt + (a / 2) * dt^2
     x = normalize_position(Tuple(x), model)
