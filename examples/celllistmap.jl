@@ -17,9 +17,9 @@
 # The example will illustrate how to simulate a set of particles in 2 dimensions, interaction
 # through a simple repulsive potential of the form:
 #
-# $U(r) = k_i k_j\left[r^2 - (ri+rj)^2\right]^2~~~\textrm{for}~~~r \leq (ri+rj)$
+# $U(r) = k_i k_j\left[r^2 - (r_i+r_j)^2\right]^2~~~\textrm{for}~~~r \leq (r_i+r_j)$
 #
-# $U(r) = 0.0~~~\textrm{for}~~~r \gt (ri+rj)$
+# $U(r) = 0.0~~~\textrm{for}~~~r \gt (r_i+r_j)$
 #
 # where $r_i$ and $r_j$ are the radii of the two particles involved, and
 # $k_i$ and $k_j$ are constants associated to each particle. The potential
