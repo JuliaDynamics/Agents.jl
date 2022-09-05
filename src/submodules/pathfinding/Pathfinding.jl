@@ -24,6 +24,7 @@ module Pathfinding
 using Agents
 using DataStructures
 using LinearAlgebra
+using StaticArrays
 
 abstract type GridPathfinder{D,P,M} end
 
