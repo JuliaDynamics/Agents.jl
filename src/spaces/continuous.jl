@@ -537,5 +537,5 @@ function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where 
     usize = ssize[1:D]
     εs = usize ./ propertysize
     idxs = floor.(Int, upos ./ εs) .+ 1
-    return CartesianIndex(idxs)
+    return CartesianIndex(Tuple(idxs))
 end
