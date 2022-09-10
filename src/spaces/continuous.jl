@@ -321,10 +321,11 @@ function elastic_collision!(a, b, f = nothing)
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
-    r1 = x1 .- x2
+    r1 = x1 .- x2 # B to A
     n = norm(r1)^2
     n == 0 && return false # do nothing if they are at the same position
-    r2 = x2 .- x1
+    dv = a.vel .- b.vel
+    r2 = x2 .- x1 # A to B
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
@@ -339,14 +340,13 @@ function elastic_collision!(a, b, f = nothing)
         v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0
     else
-        # Check if disks face each other, to avoid double collisions
-        !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+        # Check if disks face or overtake each other, to avoid double collisions
+        dot(dv, r2) ≤ 0 && return false
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
-    dv = a.vel .- b.vel
     a.vel = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
-    b.vel = v2 .- f2 .* (dot(dv, r2) / n) .* (r2)
+    b.vel = v2 .+ f2 .* (dot(dv, r2) / n) .* (r2)
     return true
 end
 
@@ -391,6 +391,13 @@ The following keywords can be used:
   in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
+
+!!! note "Better performance with CellListMap.jl"
+    Notice that in most applications that [`interacting_pairs`](@ref) is useful, there is
+    significant (10x-100x) performance gain to be made by integrating with CellListMap.jl.
+    Checkout the [Integrating Agents.jl with CellListMap.jl](@ref) integration
+    example for how to do this.
+
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
         scheduler = model.scheduler, nearby_f = nearby_ids_exact,
