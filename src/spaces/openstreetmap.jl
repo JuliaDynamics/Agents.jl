@@ -540,47 +540,24 @@ end
 """
     OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to **(longitude, latitude)**.
-Significantly slower, but more precise than [`OSM.nearest_node`](@ref).
+Return a location on a road nearest to **(longitude, latitude)**. Slower, but more
+precise than [`OSM.nearest_node`](@ref).
 """
 function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-    ll = reverse(ll)
-    best_sq_dist = Inf
-    best = (-1, -1, -1.0)
-    pt = LightOSM.to_cartesian(GeoLocation(ll..., 0.0))
-    for e in edges(model.space.map.graph)
-        s = LightOSM.to_cartesian(GeoLocation(
-            model.space.map.node_coordinates[src(e)]..., 0.0))
-        d = LightOSM.to_cartesian(GeoLocation(
-            model.space.map.node_coordinates[dst(e)]..., 0.0))
-        road_vec = d .- s
-
-        # closest point on line segment requires checking if perpendicular
-        # from point lies on line segment. If not, use the closest end of the line segment
-        if dot(pt .- s, road_vec) < 0.0
-            int_pt = s
-        elseif dot(pt .- d, road_vec) > 0.0
-            int_pt = d
-        else
-            int_pt = s .+ (dot(pt .- s, road_vec) / dot(road_vec, road_vec)) .* road_vec
-        end
-
-        sq_dist = dot(int_pt .- pt, int_pt .- pt)
-
-        if sq_dist < best_sq_dist
-            best_sq_dist = sq_dist
-            rd_dist = norm(int_pt .- s) / norm(road_vec) *
-                      road_length(Int(src(e)), Int(dst(e)), model)
-
-            best = (
-                Int(src(e)),
-                Int(dst(e)),
-                rd_dist,
-            )
-        end
-    end
-
-    return best
+    geoloc = GeoLocation(ll[2], ll[1], 0.0)
+    
+    _, _, closest_point = LightOSM.nearest_way(model.space.map, geoloc)
+    # NOTE: This should never happen, see:
+    # https://github.com/DeloitteDigitalAPAC/LightOSM.jl/blob/42b0acf63563c041d656f2954038d16c05dde79a/src/nearest_way.jl#L32
+    # As long as there are no isolated nodes (not on a way) this will always find
+    # a result
+    isnothing(closest_point) && return nothing
+    
+    start_index = Int(model.space.map.node_to_index[closest_point.n1])
+    end_index = Int(model.space.map.node_to_index[closest_point.n2])
+    road_len = road_length((start_index, end_index, 0.0), model)
+    position = closest_point.pos * road_len
+    return (start_index, end_index, position)
 end
 
 """
