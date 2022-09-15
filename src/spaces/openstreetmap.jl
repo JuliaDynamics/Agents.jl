@@ -540,7 +540,8 @@ end
 """
     OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return a location on a road nearest to **(longitude, latitude)**. 
+Return a location on a road nearest to **(longitude, latitude)**. Slower, but more
+precise than [`OSM.nearest_node`](@ref).
 """
 function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     geoloc = GeoLocation(ll[2], ll[1], 0.0)
