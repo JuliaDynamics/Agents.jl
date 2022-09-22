@@ -1,6 +1,6 @@
 export ContinuousSpace, ContinuousAgent
 export nearby_ids_exact, nearby_agents_exact
-export nearest_neighbor, elastic_collision!, interacting_pairs
+export nearest_neighbor, nearest_neighbor_ties, elastic_collision!, interacting_pairs
 
 struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     grid::GridSpace{D,P}
@@ -291,6 +291,27 @@ function nearest_neighbor(agent::A, model::ABM{<:ContinuousSpace,A}, r) where {A
     else
         return model[j]
     end
+end
+
+"""
+    nearest_neighbor_ties(agent, model::ABM{<:ContinuousSpace}, r) → nearest
+Return a vector of agents that have the closest distance to given `agent`.
+Return empty vector if no agent is within distance `r`.
+Note: This function allows multiple agents to have closest distances to given
+`agent`.
+"""
+function nearest_neighbor_ties(agent::A, model::ABM{<:ContinuousSpace,A}, r) where {A}
+    n = nearby_ids(agent, model, r)
+    d, j = Inf, Int[]
+    for id in n
+        dnew = euclidean_distance(agent.pos, model[id].pos, model)
+        if dnew < d
+            d, j = dnew, Int[id]
+        elseif dnew == d && id ∉ j
+            push!(j, id)
+        end
+    end
+    return [model[id] for id in j]
 end
 
 using LinearAlgebra
