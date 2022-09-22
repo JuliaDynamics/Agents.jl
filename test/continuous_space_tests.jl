@@ -221,27 +221,57 @@ using StableRNGs
     end
 
     @testset "nearest neighbor ties" begin
-        mutable struct AgentNNContinuous <: AbstractAgent
+        mutable struct AgentNNTContinuous <: AbstractAgent
             id::Int
             pos::NTuple{2,Float64}
             vel::NTuple{2,Float64}
-            nn::Union{Int,Nothing}
+            nn::Union{Vector{Int},Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
-        model = ABM(AgentNNContinuous, space)
+        model = ABM(AgentNNTContinuous, space)
         pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
         for i in pos
             add_agent!(i,model,(0.0,0.0),nothing)
         end
 
         for agent in allagents(model)
-            agent.nn = [id for i in nearest_neighbor(agent, model, sqrt(2))]
+            agent.nn = [a.id for a in nearest_neighbor_ties(agent, model, sqrt(2))]
         end
 
         @test model[1].nn == [2]
         @test Set(model[2].nn) == Set([1,3])
         @test model[3].nn == [2]
         @test model[4].nn == [3]
+    end
+
+    ## Taken from benchmarks/benchmark.jl
+    @testset "nearest neighbors ex from benchmarks" begin
+
+        mutable struct AgentNNBContinuous <: AbstractAgent
+            id::Int
+            pos::NTuple{3,Float64}
+            vel::NTuple{3,Float64}
+            one::Float64
+            two::Bool
+        end
+
+        continuous_model = ABM(AgentNNBContinuous, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
+        continuous_agent = AgentNNBContinuous(1, (2.2, 1.9, 7.5), (0.5, 1.0, 0.01), 6.5, false)
+
+        for x in range(0, stop = 9.99, length = 7)
+            for y in range(0, stop = 9.99, length = 7)
+                for z in range(0, stop = 9.99, length = 7)
+                    add_agent!((x, y, z), continuous_model, (0.8, 0.7, 1.3), 6.5, false)
+                end
+            end
+        end
+
+        a = continuous_model[139]
+        pos = (7.07, 8.10, 6.58)
+        
+        @test nearest_neighbor(a, continuous_model, 5).id in [132,138]
+        @test Set([a.id for a in nearest_neighbor_ties(a, continuous_model, 5)]) == Set([132,138])
+
     end
 
     @testset "walk" begin
