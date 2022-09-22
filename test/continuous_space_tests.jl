@@ -201,6 +201,30 @@ using StableRNGs
             id::Int
             pos::NTuple{2,Float64}
             vel::NTuple{2,Float64}
+            nn::Union{Int,Nothing}
+        end
+        space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
+        model = ABM(AgentNNContinuous, space)
+        pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
+        for i in pos
+            add_agent!(i,model,(0.0,0.0),nothing)
+        end
+
+        for agent in allagents(model)
+            agent.nn = nearest_neighbor(agent, model, sqrt(2)).id
+        end
+
+        @test model[1].nn == 2
+        @test model[2].nn in [1,3] ## tied
+        @test model[3].nn == 2
+        @test model[4].nn == 3
+    end
+
+    @testset "nearest neighbor" begin
+        mutable struct AgentNNContinuous <: AbstractAgent
+            id::Int
+            pos::NTuple{2,Float64}
+            vel::NTuple{2,Float64}
             f1::Union{Int,Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
