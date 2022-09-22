@@ -306,7 +306,8 @@ function nearest_neighbor_ties(agent::A, model::ABM{<:ContinuousSpace,A}, r) whe
     for id in n
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
-            d, j = dnew, Int[id]
+            empty!(j)
+            d, j = dnew, push!(j, id)
         elseif dnew == d && id ∉ j
             push!(j, id)
         end
