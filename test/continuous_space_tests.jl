@@ -220,12 +220,12 @@ using StableRNGs
         @test model[4].nn == 3
     end
 
-    @testset "nearest neighbor" begin
+    @testset "nearest neighbor ties" begin
         mutable struct AgentNNContinuous <: AbstractAgent
             id::Int
             pos::NTuple{2,Float64}
             vel::NTuple{2,Float64}
-            f1::Union{Int,Nothing}
+            nn::Union{Int,Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
         model = ABM(AgentNNContinuous, space)
@@ -235,13 +235,13 @@ using StableRNGs
         end
 
         for agent in allagents(model)
-            agent.f1 = nearest_neighbor(agent, model, sqrt(2)).id
+            agent.nn = [id for i in nearest_neighbor(agent, model, sqrt(2))]
         end
 
-        @test model[1].f1 == 2
-        @test model[2].f1 == 1
-        @test model[3].f1 == 2
-        @test model[4].f1 == 3
+        @test model[1].nn == [2]
+        @test Set(model[2].nn) == Set([1,3])
+        @test model[3].nn == [2]
+        @test model[4].nn == [3]
     end
 
     @testset "walk" begin
