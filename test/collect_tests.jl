@@ -1,4 +1,5 @@
 @everywhere begin
+    import Pkg; Pkg.activate(".")
     using Agents.Models: schelling, schelling_agent_step!
 end
 @testset "DataCollection" begin
@@ -485,6 +486,24 @@ end
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.step)) == (nsteps / 10) + 1
+        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+    end
+
+    @testset begin "Parallel ensemblerun! with stopping function"
+
+        models = genmodels()
+        @assert length(models) == expected_nensembles
+
+        stopfn(model, step) = all(map(agent -> agent.mood, allagents(model)))
+
+        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, stopfn;
+                                   parallel = true,
+                                   adata = [:pos, :mood, :group],
+                                   mdata = [numagents, :min_to_be_happy],
+                                   when = (model, step) -> step % 10 == 0 )
+
+        @test length(unique(adf.ensemble)) == expected_nensembles
+        @test length(unique(adf.step)) ≤ (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 end
