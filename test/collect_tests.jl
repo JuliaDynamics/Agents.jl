@@ -1,5 +1,4 @@
 @everywhere begin
-    import Pkg; Pkg.activate(".")
     using Agents.Models: schelling, schelling_agent_step!
 end
 @testset "DataCollection" begin
