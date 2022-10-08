@@ -2,6 +2,7 @@ using Test, Agents, Random
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
+using StaticArrays
 
 using Distributed
 addprocs(2)
@@ -10,6 +11,7 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
+    using StaticArrays
 end
 
 mutable struct Agent0 <: AbstractAgent
@@ -46,8 +48,8 @@ end
 
 mutable struct Agent6 <: AbstractAgent
     id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+    pos::SVector{2,Float64}
+    vel::SVector{2,Float64}
     weight::Float64
 end
 

@@ -1,5 +1,6 @@
 using Agents, Test
 using Agents.Pathfinding
+using StaticArrays
 
 @testset "AStar" begin
     moore = Pathfinding.moore_neighborhood(2)
@@ -98,45 +99,45 @@ using Agents.Pathfinding
         @testset "ContinuousSpace" begin
             pathfinder = AStar(cspace; walkmap = trues(10, 10))
             model = ABM(Agent6, cspace; properties = (pf = pathfinder,))
-            a = add_agent!((0., 0.), model, (0., 0.), 0.)
+            a = add_agent!(SVector(0., 0.), model, SVector(0., 0.), 0.)
             @test is_stationary(a, model.pf)
 
-            plan_route!(a, (4., 4.), model.pf)
+            plan_route!(a, SVector(4., 4.), model.pf)
             @test !is_stationary(a, model.pf)
             @test length(model.pf.agent_paths) == 1
             move_along_route!(a, model, model.pf, 0.35355)
-            @test all(isapprox.(a.pos, (4.75, 4.75); atol))
+            @test all(isapprox.(a.pos, SVector(4.75, 4.75); atol))
 
             # test waypoint skipping
-            move_agent!(a, (0.25, 0.25), model)
-            plan_route!(a, (0.75, 1.25), model.pf)
+            move_agent!(a, SVector(0.25, 0.25), model)
+            plan_route!(a, SVector(0.75, 1.25), model.pf)
             move_along_route!(a, model, model.pf, 0.807106)
-            @test all(isapprox.(a.pos, (0.75, 0.849999); atol)) || all(isapprox.(a.pos, (0.467156, 0.967156); atol))
+            @test all(isapprox.(a.pos, SVector(0.75, 0.849999); atol)) || all(isapprox.(a.pos, SVector(0.467156, 0.967156); atol))
             # make sure it doesn't overshoot the end
             move_along_route!(a, model, model.pf, 20.)
-            @test all(isapprox.(a.pos, (0.75, 1.25); atol))
+            @test all(isapprox.(a.pos, SVector(0.75, 1.25); atol))
 
             delete!(model.pf.agent_paths, 1)
             @test length(model.pf.agent_paths) == 0
 
             model.pf.walkmap[:, 3] .= 0
             @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
-            rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-            @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+            rpos = [random_walkable(SVector(2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
+            @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, SVector(2.5, 0.75), model) <= 2.0 + atol for x in rpos)
 
             pcspace = ContinuousSpace((5., 5.); periodic = false)
             pathfinder = AStar(pcspace; walkmap = trues(10, 10))
             model = ABM(Agent6, pcspace; properties = (pf = pathfinder,))
-            a = add_agent!((0., 0.), model, (0., 0.), 0.)
-            @test all(plan_best_route!(a, [(2.5, 2.5), (4.99,0.), (0., 4.99)], model.pf) .≈ (2.5, 2.5))
+            a = add_agent!(SVector(0., 0.), model, SVector(0., 0.), 0.)
+            @test all(plan_best_route!(a, SVector.([(2.5, 2.5), (4.99,0.), (0., 4.99)]), model.pf) .≈ SVector(2.5, 2.5))
             @test length(model.pf.agent_paths) == 1
             move_along_route!(a, model, model.pf, 1.0)
             @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
             model.pf.walkmap[:, 3] .= 0
-            move_agent!(a, (2.5, 2.5), model)
-            @test all(plan_best_route!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
-            @test isnothing(plan_best_route!(a, [(3., 0.3), (1., 0.1)], model.pf))
+            move_agent!(a, SVector(2.5, 2.5), model)
+            @test all(plan_best_route!(a, SVector.([(3., 0.3), (2.5, 2.5)]), model.pf) .≈ (2.5, 2.5))
+            @test isnothing(plan_best_route!(a, SVector.([(3., 0.3), (1., 0.1)]), model.pf))
 
             kill_agent!(a, model, model.pf)
             @test length(model.pf.agent_paths) == 0
@@ -147,8 +148,8 @@ using Agents.Pathfinding
             @test penaltymap(pathfinder) == pmap
 
             @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
-            rpos = [random_walkable((2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
-            @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, (2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+            rpos = [random_walkable(SVector(2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
+            @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, SVector(2.5, 0.75), model) <= 2.0 + atol for x in rpos)
         end
     end
 
@@ -260,13 +261,13 @@ using Agents.Pathfinding
 
         # Continuous
         model = ABM(Agent6, ContinuousSpace((10., 10.)))
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_m, (0.25, 0.25), (7.8, 9.5)))
-        testp = [(0.71429, 2.5), (0.71429, 4.16667), (0.71429, 5.83333), (0.71429, 7.5), (2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_np_m, SVector(0.25, 0.25), SVector(7.8, 9.5)))
+        testp = SVector.([(0.71429, 2.5), (0.71429, 4.16667), (0.71429, 5.83333), (0.71429, 7.5), (2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)])
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
 
-        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, (0.25, 0.25), (7.8, 9.5)))
-        testp = [(2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)]
+        p = collect(Pathfinding.find_continuous_path(pfinder_2d_p_m, SVector(0.25, 0.25), SVector(7.8, 9.5)))
+        testp = SVector.([(2.14286, 9.16667), (3.57143, 9.16667), (5.0, 9.16667), (6.42857, 9.16667), (7.85714, 9.16667), (7.8, 9.5)])
         @test length(p) == length(testp)
         @test all(all(isapprox.(p[i], testp[i]; atol)) for i in 1:length(p))
     end
