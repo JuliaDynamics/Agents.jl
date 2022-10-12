@@ -180,7 +180,7 @@ function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
 end
 
 """
-    walk!(agent, direction::NTuple, model; ifempty = false)
+    walk!(agent, direction::NTuple, model; ifempty = true)
 
 Move agent in the given `direction` respecting periodic boundary conditions.
 For non-periodic spaces, agents will walk to, but not exceed the boundary value.
