@@ -135,7 +135,7 @@ function sheepwolf_step!(sheep::Sheep, model)
 end
 
 function sheepwolf_step!(wolf::Wolf, model)
-    walk!(wolf, rand, model)
+    walk!(wolf, rand, model;ifempty=false)
     wolf.energy -= 1
     if wolf.energy < 0
         kill_agent!(wolf, model)
