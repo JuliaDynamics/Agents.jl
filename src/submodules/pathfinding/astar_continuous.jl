@@ -2,9 +2,12 @@ to_discrete_position(pos, pathfinder) =
     floor.(Int, pos ./ pathfinder.dims .* size(pathfinder.walkmap)) .+ 1
 to_continuous_position(pos, pathfinder) =
     pos ./ size(pathfinder.walkmap) .* pathfinder.dims .-
-    pathfinder.dims ./ size(pathfinder.walkmap) ./ 2.
-sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} =
-    sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
+    pathfinder.dims ./ size(pathfinder.walkmap) ./ 2.    
+function sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} 
+    Δ = abs.(to .- from)
+    Δ= any(Δ .> pathfinder.dims) ? Δ .% pathfinder.dims : Δ
+    return sum(Δ .^ 2)
+end
 sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
     sum((from .- to) .^ 2)
 
