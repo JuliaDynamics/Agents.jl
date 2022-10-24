@@ -5,10 +5,7 @@ periodicity of `pathfinder`.
 """
 function position_delta(pathfinder::GridPathfinder{D,true}, from::Dims{D}, to::Dims{D}) where {D} 
     Δ = abs.(to .- from)
-    walkmap_size = size(pathfinder.walkmap)
-    if any(Δ .> walkmap_size)
-        Δ = Δ .% walkmap_size
-    end
+    Δ = any(Δ .> pathfinder.dims) ? Δ .% pathfinder.dims : Δ    
     return Δ
 end
 
