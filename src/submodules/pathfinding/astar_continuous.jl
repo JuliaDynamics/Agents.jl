@@ -5,7 +5,7 @@ to_continuous_position(pos, pathfinder) =
     pathfinder.dims ./ size(pathfinder.walkmap) ./ 2.    
 function sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} 
     Δ = abs.(to .- from)
-    Δ= any(Δ .> pathfinder.dims) ? Δ .% pathfinder.dims : Δ
+    Δ = any(Δ .> pathfinder.dims) ? Δ .% pathfinder.dims : Δ
     return sum(Δ .^ 2)
 end
 sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
