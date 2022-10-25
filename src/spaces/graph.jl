@@ -126,7 +126,7 @@ end
 #######################################################################################
 # Mutable graph functions
 #######################################################################################
-export rem_node!, add_node!, add_edge!
+export rem_vertex!, add_vertex!, add_edge!, rem_edge!
 
 """
     rem_node!(model::ABM{<: GraphSpace}, n::Int)
@@ -137,7 +137,7 @@ that of the one to be removed, while every other node remains as is. This means 
 when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
 `n`-th node (and all its edges and agents) are deleted.
 """
-function rem_node!(model::ABM{<:GraphSpace}, n::Int)
+function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
     for id in copy(ids_in_position(n, model))
         kill_agent!(model[id], model)
     end
@@ -154,15 +154,29 @@ end
 Add a new node (i.e. possible position) to the model's graph and return it.
 You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
-function add_node!(model::ABM{<:GraphSpace})
+function Graphs.add_vertex!(model::ABM{<:GraphSpace})
     add_vertex!(model.space.graph)
     push!(model.space.stored_ids, Int[])
     return nv(model)
 end
 
 """
-    add_edge!(model::ABM{<: GraphSpace}, n::Int, m::Int)
+    add_edge!(model::ABM{<:GraphSpace},  args...; kwargs...)
 Add a new edge (relationship between two positions) to the graph.
-Returns a boolean, true if the operation was succesful.
+Returns a boolean, true if the operation was succesful. 
+
+`args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
-Graphs.add_edge!(model::ABM{<:GraphSpace}, n, m) = add_edge!(model.space.graph, n, m)
+Graphs.add_edge!(model::ABM{<:GraphSpace}, args...; kwargs...) = add_edge!(model.space.graph, args...; kwargs...)
+
+
+"""
+    rem_edge!(model::ABM{<:GraphSpace}, n, m)
+Remove an edge (relationship between two positions) to the graph.
+Returns a boolean, true if the operation was succesful. 
+"""
+Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(model.space.graph, n, m)
+
+
+
+
