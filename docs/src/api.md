@@ -92,8 +92,9 @@ isempty(::Integer, ::ABM)
 ## `GraphSpace` exclusives
 ```@docs
 add_edge!
-add_node!
-rem_node!
+rem_edge!
+add_vertex!
+rem_vertex!
 ```
 
 ## `ContinuousSpace` exclusives
