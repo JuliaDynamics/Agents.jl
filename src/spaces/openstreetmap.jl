@@ -136,6 +136,7 @@ end
 
 function OpenStreetMapSpace(path::AbstractString; kwargs...)
     m = graph_from_file(path; weight_type = :distance, kwargs...)
+    LightOSM.add_rtree!(m)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
     return OpenStreetMapSpace(m, agent_positions, Dict())
 end
