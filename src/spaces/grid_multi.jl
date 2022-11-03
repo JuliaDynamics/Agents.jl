@@ -103,8 +103,8 @@ end
 # Instead, here we create a dedicated iterator for going over IDs.
 
 # We allow this to be used with space directly because it is reused in `ContinuousSpace`.
-nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r = 1) = nearby_ids(pos, model.space, r)
-function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r = 1) where {D,P}
+nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r::Real = 1) = nearby_ids(pos, model.space, r)
+function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) where {D,P}
     nindices = offsets_within_radius(space, r)
     stored_ids = space.stored_ids
     return GridSpaceIdIterator{P}(stored_ids, nindices, pos)
@@ -210,14 +210,14 @@ end
 
 function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r::NTuple{D,Int}) where {D}
     # simply transform `r` to the Vector format expected by the below function
-    newr = [(-r[i]:r[i], i) for i in 1:D]
+    newr = [(i, -r[i]:r[i]) for i in 1:D]
     nearby_ids(pos, model, newr)
 end
 
 function nearby_ids(
     pos::ValidPos,
     model::ABM{<:GridSpace},
-    r::Vector{Tuple{Int,UnitRange{Int}}},
+    r::Vector{Tuple{Int64, UnitRange{Int64}}},
 )
     @assert model.space.metric == :chebyshev
     dims = first.(r)

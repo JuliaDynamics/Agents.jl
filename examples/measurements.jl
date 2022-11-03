@@ -13,17 +13,13 @@
 using Agents
 using Measurements
 
-mutable struct Daisy <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent Daisy GridAgent{2} begin
     breed::Symbol
     age::Int
     albedo::AbstractFloat # Allow Measurements
 end
 
-mutable struct Land <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent Land GridAgent{2} begin
     temperature::AbstractFloat # Allow Measurements
 end
 

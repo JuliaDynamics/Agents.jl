@@ -26,11 +26,9 @@ using SimpleWeightedGraphs: SimpleWeightedDiGraph # will make social network
 using SparseArrays: findnz                        # for social network connections
 using Random: MersenneTwister                     # reproducibility
 
-# And create a very simple agent without any extra properties
-mutable struct Student <: AbstractAgent
-    id::Int
-    pos::Tuple{Float64,Float64}
-end
+# And create an alias to `ContinuousAgent{2}`,
+# as our agents don't need additional properties.
+const Student = ContinuousAgent{2}
 
 # ## Rules of the schoolyard
 
@@ -55,6 +53,7 @@ function schoolyard(;
     max_force = 1.7,
     spacing = 4.0,
     seed = 6998,
+    velocity = (0, 0),
 )
     model = ABM(
         Student,
@@ -69,7 +68,8 @@ function schoolyard(;
     )
     for student in 1:numStudents
         ## Students begin near the school building
-        add_agent!(model.space.extent .* 0.5 .+ Tuple(rand(model.rng, 2)) .- 0.5, model)
+        position = model.space.extent .* 0.5 .+ Tuple(rand(model.rng, 2)) .- 0.5
+        add_agent!(position, model, velocity)
 
         ## Add one friend and one foe to the social network
         friend = rand(model.rng, filter(s -> s != student, 1:numStudents))

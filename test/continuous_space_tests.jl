@@ -11,6 +11,8 @@ using StableRNGs
     @testset "space initialization" begin
         space1 = ContinuousSpace((1, 1))
         space2 = ContinuousSpace((1, 1, 1); spacing=0.25, periodic = false)
+        @test spacesize(space1) == (1.0, 1.0)
+        @test spacesize(space2) == (1.0, 1.0, 1.0)
         @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
         @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
         model = ABM(SpeedyContinuousAgent, space1)
@@ -244,6 +246,15 @@ using StableRNGs
         walk!(a, rand, model)
         @test a.pos[1] ≈ 6.5824829589163665
         @test a.pos[2] ≈ 4.842266936412905
+
+        @testset "periodic" begin
+            model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
+            a = add_agent!((11.0, 9.0), model, (3.0, 1.0))
+            move_agent!(a, model, 1.0)
+            @test a.pos[1] == 2
+            @test a.pos[2] == 0.0
+        end
+
     end
 
     @testset "collisions" begin
@@ -286,7 +297,9 @@ using StableRNGs
         end
 
         function kinetic(model)
+            # Kinetic enrgy
             K = sum(sum(abs2.(a.vel)) for a in allagents(model))
+            # Momentum
             p = (0.0, 0.0)
             for a in allagents(model)
                  p = p .+ a.vel
@@ -311,12 +324,10 @@ using StableRNGs
         @test y == 0
 
         # x, which is the changed velocities
-        # should be at least the amount of collisions happened divided by 2
-        # because half the agents are unmovable (in a collision at most one agent
-        # must change velocity)
-        @test x > 0
+        # should be at most half the agents
+        # because half the agents are unmovable
+        @test 0 < x ≤ 50
         @test model.c > 0
-        @test x ≥ model.c/2
         K1, p1 = kinetic(model)
         @test p1 != p0
         # TODO: This test fails but I do not know why. Must be fixed later.

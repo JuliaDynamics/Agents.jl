@@ -21,10 +21,7 @@
 using Agents, LinearAlgebra
 using Random # hide
 
-mutable struct Bird <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent Bird ContinuousAgent{2} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -33,8 +30,10 @@ mutable struct Bird <: AbstractAgent
     visual_distance::Float64
 end
 
-# The fields `id` and `pos` are required for every agent.
-# The field `vel` is required for using [`move_agent!`](@ref) in `ContinuousSpace`.
+# The fields `id` and `pos`, which are required for agents on [`ContinuousSpace`](@ref),
+# are part of the struct. The field `vel`, which is also added by
+# using [`ContinuousAgent`](@ref) is required for using [`move_agent!`](@ref)
+# in `ContinuousSpace` with a time-stepping method.
 # `speed` defines how far the bird travels in the direction defined by `vel` per `step`.
 # `separation` defines the minimum distance a bird must maintain from its neighbors.
 # `visual_distance` refers to the distance a bird can see and defines a radius of neighboring birds.

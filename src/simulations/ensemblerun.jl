@@ -31,7 +31,7 @@ function ensemblerun!(
     models::Vector_or_Tuple,
     agent_step!,
     model_step!,
-    n::Int;
+    n;
     showprogress = false,
     parallel = false,
     kwargs...,

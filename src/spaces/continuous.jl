@@ -1,4 +1,4 @@
-export ContinuousSpace
+export ContinuousSpace, ContinuousAgent
 export nearby_ids_exact, nearby_agents_exact
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
@@ -11,7 +11,6 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
 end
 Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
-spacesize(model::ABM) = spacesize(model.space)
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*
@@ -20,6 +19,17 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     print(io, s)
 end
 
+@agent ContinuousAgent{D} NoSpaceAgent begin
+    pos::NTuple{D,Float64}
+    vel::NTuple{D,Float64}
+end
+
+@doc """
+    ContinuousAgent{D} <: AbstractAgent
+The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
+It has the additoinal fields `pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
+See also [`@agent`](@ref).
+""" ContinuousAgent
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
@@ -50,7 +60,7 @@ In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, se
 discussion around the keyword `spacing` below. [`nearby_ids`](@ref) is not an exact
 search, but can be a possible over-estimation, including agent IDs whose distance
 slightly exceeds `r` with "slightly" being as much as `spacing`.
-If you want exact searches use the much slower [`nearby_ids_exact`](@ref).
+If you want exact searches use the slower [`nearby_ids_exact`](@ref).
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -144,15 +154,14 @@ end
     move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
 Propagate the agent forwards one step according to its velocity, _after_ updating the
 agent's velocity (if configured using `update_vel!`, see [`ContinuousSpace`](@ref)).
-Also take care of periodic boundary conditions.
 
-For this continuous space version of `move_agent!`, the "evolution algorithm"
+For this continuous space version of `move_agent!`, the "time evolution"
 is a trivial Euler scheme with `dt` the step size, i.e. the agent position is updated
 as `agent.pos += agent.vel * dt`.
 
-Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size
-and if movement exceeds the extent in non-periodic spaces, the agent stops at the
-space end, while for periodic spaces it properly wraps around the end.
+Unlike `move_agent!(agent, [pos,] model)`, this function respects the space size.
+For non-periodic spaces, agents will walk up to, but not reach, the space extent.
+For periodic spaces movement properly wraps around the extent.
 """
 function move_agent!(
     agent::A,
@@ -196,6 +205,13 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
     return nearby_ids(focal_cell, model.space.grid, grid_r)
 end
 
+"""
+    nearby_ids_exact(x, model, r = 1)
+Return an iterator over agent IDs nearby `x` (a position or an agent).
+Only valid for `ContinuousSpace` models.
+Use instead of [`nearby_ids`](@ref) for a slower, but 100% accurate version.
+See [`ContinuousSpace`](@ref) for more details.
+"""
 function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
     # TODO:
     # Simply filtering the output leads to 4x faster code than the commented-out logic.
@@ -305,10 +321,11 @@ function elastic_collision!(a, b, f = nothing)
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
-    r1 = x1 .- x2
+    r1 = x1 .- x2 # B to A
     n = norm(r1)^2
     n == 0 && return false # do nothing if they are at the same position
-    r2 = x2 .- x1
+    dv = a.vel .- b.vel
+    r2 = x2 .- x1 # A to B
     m1, m2 = f === nothing ? (1.0, 1.0) : (getfield(a, f), getfield(b, f))
     # mass weights
     m1 == m2 == Inf && return false
@@ -323,14 +340,13 @@ function elastic_collision!(a, b, f = nothing)
         v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0
     else
-        # Check if disks face each other, to avoid double collisions
-        !(dot(r2, v1) > 0 && dot(r2, v1) > 0) && return false
+        # Check if disks face or overtake each other, to avoid double collisions
+        dot(dv, r2) ≤ 0 && return false
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
-    dv = a.vel .- b.vel
     a.vel = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
-    b.vel = v2 .- f2 .* (dot(dv, r2) / n) .* (r2)
+    b.vel = v2 .+ f2 .* (dot(dv, r2) / n) .* (r2)
     return true
 end
 
@@ -346,7 +362,7 @@ This function is usefully combined with `model_step!`, when one wants to perform
 some pairwise interaction across all pairs of close agents once
 (and does not want to trigger the event twice, both with `a` and with `b`, which
 would be unavoidable when using `agent_step!`). This means, that if a pair
-`(a, b)` exists, the pair `(a, b)` is not included in the iterator!
+`(a, b)` exists, the pair `(b, a)` is not included in the iterator!
 
 Use `piter.pairs` to get a vector of pair IDs from the iterator.
 
@@ -375,6 +391,13 @@ The following keywords can be used:
   in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
+
+!!! note "Better performance with CellListMap.jl"
+    Notice that in most applications that [`interacting_pairs`](@ref) is useful, there is
+    significant (10x-100x) performance gain to be made by integrating with CellListMap.jl.
+    Checkout the [Integrating Agents.jl with CellListMap.jl](@ref) integration
+    example for how to do this.
+
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
         scheduler = model.scheduler, nearby_f = nearby_ids_exact,
@@ -473,6 +496,7 @@ struct PairIterator{A}
     agents::Dict{Int,A}
 end
 
+Base.eltype(::PairIterator{A}) where {A} = Tuple{A, A}
 Base.length(iter::PairIterator) = length(iter.pairs)
 function Base.iterate(iter::PairIterator, i = 1)
     i > length(iter) && return nothing

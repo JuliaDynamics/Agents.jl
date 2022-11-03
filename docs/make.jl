@@ -14,14 +14,13 @@ using InteractiveDynamics
 println("LightOSM...")
 using LightOSM
 
-ENV["GKS_ENCODING"] = "utf-8"
 println("Converting Examples...")
 
 indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force = true, recursive = true) # cleans up previous examples
 mkpath(outdir)
-toskip = ("predator_prey_multiagent.jl", "siroptim.jl")
+toskip = ()
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -86,25 +85,27 @@ makedocs(
         "Introduction" => "index.md",
         "Tutorial" => "tutorial.md",
         "Examples" => [
-            "Schelling's segregation model" => "examples/schelling.md",
-            "SIR model for the spread of COVID-19" => "examples/sir.md",
-            "Flocking" => "examples/flock.md",
-            "Zombie Outbreak" => "examples/zombies.md",
-            "Rabbit, Fox, Hawk" => "examples/rabbit_fox_hawk.md",
-            "Predefined Models" => "models.md",
-            "More Examples for Agents.jl" => "examples.md"
+            "examples/schelling.md",
+            "examples/sir.md",
+            "examples/flock.md",
+            "examples/zombies.md",
+            "examples/predator_prey.md",
+            "examples/rabbit_fox_hawk.md",
+            "models.md",
+            "examples.md"
         ],
-        "API" => "api.md",
+        "api.md",
         "Plotting and Interactivity" => "agents_visualizations.md",
         "Ecosystem Integration" => [
             "BlackBoxOptim.jl" => "examples/optim.md",
             "DifferentialEquations.jl" => "examples/diffeq.md",
             "Graphs.jl" => "examples/schoolyard.md",
             "Measurements.jl" => "examples/measurements.md",
+            "CellListMap.jl" => "examples/celllistmap.md",
         ],
-        "Performance Tips" => "performance_tips.md",
-        "ABM Framework Comparison" => "comparison.md",
-        "Developer Docs" => "devdocs.md",
+        "performance_tips.md",
+        "comparison.md",
+        "devdocs.md",
     ],
 )
 
@@ -114,6 +115,7 @@ if CI
         repo = "github.com/JuliaDynamics/Agents.jl.git",
         target = "build",
         push_preview = true,
+        devbranch = "main",
     )
 end
 

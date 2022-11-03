@@ -1,3 +1,5 @@
+export GridAgent
+
 """
     AbstractGridSpace{D,P}
 Abstract type for grid-based spaces.
@@ -14,6 +16,16 @@ to vector of indices within each radius.
 `D` is the dimension and `P` is whether the space is periodic (boolean).
 """
 abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
+
+@agent GridAgent{D} NoSpaceAgent begin
+    pos::NTuple{D, Int}
+end
+
+@doc """
+    GridAgent{D} <: AbstractAgent
+The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
+It has an additional `pos::NTuple{D,Int}` field. See also [`@agent`](@ref).
+""" GridAgent
 
 function positions(space::AbstractGridSpace)
     x = CartesianIndices(space.stored_ids)

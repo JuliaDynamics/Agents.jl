@@ -16,6 +16,12 @@
         @test space.metric == other.metric
     end
 
+    function test_space(space::GridSpaceSingle, other)
+        @test size(space) == size(other)
+        @test all(other.stored_ids[pos] == space.stored_ids[pos] for pos in eachindex(space.stored_ids))
+        @test space.metric == other.metric
+    end
+
     function test_space(space::ContinuousSpace, other)
         test_space(space.grid, other.grid)
         @test space.update_vel! == other.update_vel!
@@ -89,7 +95,40 @@
     end
 
     @testset "GridSpace" begin
-        # predator_prey used since properties is a NamedTuple, and contains an Array
+        model, astep, mstep = Models.schelling()
+        step!(model, astep, mstep, 50)
+        AgentsIO.save_checkpoint("test.jld2", model)
+        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+
+        # agent data
+        @test nagents(other) == nagents(model)
+        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(model[i].mood == other[i].mood for i in allids(model))
+        @test all(model[i].group == other[i].group for i in allids(model))
+        # properties
+        @test model.min_to_be_happy == other.min_to_be_happy
+        # model data
+        test_model_data(model, other)
+        # space data
+        @test typeof(model.space) == typeof(other.space)    # to check periodicity
+        test_space(model.space, other.space)
+
+        rm("test.jld2")
+    end
+
+    @testset "GridSpaceSingle" begin
+        function schelling_single(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+            @assert numagents < prod(griddims)
+            space = GridSpaceSingle(griddims, periodic = false)
+            properties = Dict(:min_to_be_happy => min_to_be_happy)
+            model = ABM(Models.SchellingAgent, space; properties, scheduler = Schedulers.Randomly())
+            for n in 1:numagents
+                agent = Models.SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+                add_agent_single!(agent, model)
+            end
+            return model, Models.schelling_agent_step!, dummystep
+        end
+
         model, astep, mstep = Models.schelling()
         step!(model, astep, mstep, 50)
         AgentsIO.save_checkpoint("test.jld2", model)

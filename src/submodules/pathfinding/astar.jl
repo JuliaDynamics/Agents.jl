@@ -58,7 +58,8 @@ to specify the level of discretisation of the space.
 - `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
   metric used to approximate the distance between any two points.
 
-Utilization of all features of `AStar` occurs in the [Rabbit, Fox, Hawk](@ref) example.
+Utilization of all features of `AStar` occurs in the
+[3D Mixed-Agent Ecosystem with Pathfinding](@ref) example.
 """
 function AStar(
     dims::NTuple{D,T};
@@ -197,6 +198,10 @@ end
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
+"""
+    is_stationary(agent, astar::AStar)
+Same, but for pathfinding with A*.
+"""
 Agents.is_stationary(
     agent::A,
     pathfinder::AStar,

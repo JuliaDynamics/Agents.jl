@@ -1,11 +1,11 @@
-# # Rabbit, Fox, Hawk
+# # 3D Mixed-Agent Ecosystem with Pathfinding
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">
 # </video>
 # ```
 
-# This model is much more advanced version of the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/) example.
+# This model is much more advanced version of the [Predator-prey dynamics](@ref) example.
 # It uses a 3-dimensional
 # [`ContinuousSpace`](@ref), a realistic terrain for the agents, and pathfinding (with multiple
 # pathfinders). It should be considered an advanced example for showcasing pathfinding.
@@ -21,20 +21,20 @@
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
 using Random
-using ImageMagick: load
+import ImageMagick
+using FileIO: load
 
-mutable struct Animal <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    type::Symbol ## one of :rabbit, :fox or :hawk
+@agent Animal ContinuousAgent{3} begin
+    type::Symbol # one of :rabbit, :fox or :hawk
     energy::Float64
 end
 
-## Some utility functions to create specific types of agents,
-# and find the euclidean norm of a vector
-Rabbit(id, pos, energy) = Animal(id, pos, :rabbit, energy)
-Fox(id, pos, energy) = Animal(id, pos, :fox, energy)
-Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
+# Some utility functions to create specific types of agents,
+# and find the euclidean norm of a Vector
+const v0 = (0.0, 0.0, 0.0) # we don't use the velocity field here
+Rabbit(id, pos, energy) = Animal(id, pos, v0, :rabbit, energy)
+Fox(id, pos, energy) = Animal(id, pos, v0, :fox, energy)
+Hawk(id, pos, energy) = Animal(id, pos, v0, :hawk, energy)
 eunorm(vec) = √sum(vec .^ 2)
 
 # The environment is generated from a heightmap: a 2D matrix, where each value denotes the
@@ -56,7 +56,9 @@ eunorm(vec) = √sum(vec .^ 2)
 # with the specified heightmap and containing the specified number of rabbits, foxes and hawks.
 
 function initialize_model(
-    heightmap_url,
+    heightmap_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png",
     water_level = 8,
     grass_level = 20,
     mountain_level = 35;
@@ -173,6 +175,12 @@ function initialize_model(
 
     return model
 end
+
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
+model = initialize_model()
+
+# ## Stepping functions
 
 # The `animal_step!` function dispatches to the proper function depending on the type of agent.
 # The stepping functions for each type of agent are similar: They lose energy per step, and
@@ -398,13 +406,6 @@ function static_preplot!(ax, model)
         colormap = :terrain
     )
 end
-
-# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
-# model.
-heightmap_url =
-    "https://raw.githubusercontent.com/JuliaDynamics/" *
-    "JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png"
-model = initialize_model(heightmap_url)
 
 # ```juia
 # abmvideo(

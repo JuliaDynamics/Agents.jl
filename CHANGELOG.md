@@ -1,3 +1,20 @@
+# v5.6
+- `add_node!` and `rem_node!` have been renamed to `add_vertex!` and `rem_vertex!` extending Graphs.jl homonymous methods to help standardise names across ecosystems. Therefore `add_node!` and `rem_node!` have been deprecated.  
+- The signature of `add_edge!` has been generalised with `args...` and `kwargs...` to be compatible with all the implementations the underlying graph supports. 
+- New function `rem_edge!` that removes an edge from the graph.
+
+# v5.5
+- The `@agent` macro has been re-written and is now more general and more safe.
+  It now also allows inhereting fields from any other type.
+- The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
+  Directly creating structs by hand is no longer mentioned in the documentation at all. This will allow us in the future to utilize additional fields that the user does not have to know about, which may bring new features or performance gains by being part of the agent structures.
+- The minimal agent types like `GraphAgent` can be used normally as standard agent
+  types that only have the mandatory fields. This is now clear in the docs.
+  (this was possible also before v5.4, just not clear)
+- In the future, making agent types manually (without `@agent`) may be completely dissalowed, resulting in error. Therefore, making agent types manually is considered deprecated.
+- New function `normalize_position` that normalizes a position according to the model space.
+- New function `spacesize` that returns the size of the space.
+
 # v5.4
 This is a huge release!
 
