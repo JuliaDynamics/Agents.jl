@@ -19,6 +19,11 @@ jobs:
         os:  [ubuntu-latest, windows-latest, macos-latest]
         arch:
           - x64
+        include:
+          - version: nightly 
+            os: ubuntu-latest
+            arch: x64
+            
     steps:
       # Cancel ongoing CI test runs if pushing to branch again before the previous tests
       # have finished
