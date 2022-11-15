@@ -233,6 +233,57 @@ walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) wher
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
     walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
 
+
+"""
+    rotate(w::SVector{2}, θ)
+    rotate(w::SVector{3}, θ, ϕ)
+"""
+rotate(w::SVector{2}, θ) = Angle2d(θ) * w
+function rotate(w::SVector{3}, θ, ϕ)
+    # find a vector normal to w
+    m = findfirst(w .≠ 0)
+    n = m%3 + 1
+    u = zeros(3)
+    u[n], u[m] = w[m], -w[n]
+    # rotate w around u by the polar angle θ
+    a = AngleAxis(θ, u...) * w
+    # rotate a around the original vector w by the azimuthal angle ϕ
+    AngleAxis(ϕ, w...) * a
+end # function
+
+"""
+    randomwalk!(agent, model, r)
+Move `agent` for a distance `r` in a random direction, respecting periodic 
+boundary conditions and space metric.
+"""
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:AbstractContinuousSpace{2}},
+    r::Real;
+    polar::ContinuousUnivariateDistribution=Uniform(-π,π),
+    ifempty::Bool=true
+)
+    θ = rand(polar)
+    direction = Tuple(rotate(SVector{agent.vel}, θ)) # assume vel has unit norm
+    agent.vel = direction
+    walk!(agent, direction.*r, model; ifempty)
+end
+
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:AbstractContinuousSpace{3}},
+    r::Real;
+    polar::ContinuousUnivariateDistribution=Uniform(-π,π),
+    azimuthal::ContinuousUnivariateDistribution=Uniform(-π,π),
+    ifempty::Bool=true
+)
+    θ = rand(polar)
+    ϕ = rand(azimuthal)
+    direction = Tuple(rotate(SVector{agent.vel}, θ, ϕ)) # assume vel has unit norm
+    agent.vel = direction
+    walk!(agent, direction.*r, model; ifempty)
+end
+
 """
     spacesize(model::ABM)
 
