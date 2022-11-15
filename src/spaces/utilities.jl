@@ -261,13 +261,12 @@ function randomwalk!(
     model::ABM{<:AbstractContinuousSpace{2}},
     r::Real;
     polar::ContinuousUnivariateDistribution=Uniform(-π,π),
-    ifempty::Bool=true
 )
     θ = rand(polar)
     r₀ = LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector{agent.vel}, θ)) .* (r / r₀)
     agent.vel = direction
-    walk!(agent, direction, model; ifempty)
+    walk!(agent, direction, model)
 end
 
 function randomwalk!(
@@ -276,14 +275,13 @@ function randomwalk!(
     r::Real;
     polar::ContinuousUnivariateDistribution=Uniform(-π,π),
     azimuthal::ContinuousUnivariateDistribution=Uniform(-π,π),
-    ifempty::Bool=true
 )
     θ = rand(polar)
     ϕ = rand(azimuthal)
     r₀ = LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector{agent.vel}, θ, ϕ)) .* (r / r₀)
     agent.vel = direction
-    walk!(agent, direction, model; ifempty)
+    walk!(agent, direction, model)
 end
 
 """
