@@ -173,7 +173,7 @@ function model_step!(model::ABM)
 end
 
 # ## Update agent positions and velocities
-# The `agent_step!` function will update the particle positons and velocities,
+# The `agent_step!` function will update the particle positions and velocities,
 # given the forces, which are computed in the `model_step!` function. A simple
 # Euler step is used here for simplicity. We need to convert the static vectors
 # to tuples to conform the `Agents` API for the positions and velocities

@@ -14,7 +14,7 @@
 
 # This example illustrates how to develop models with
 # heterogeneous agents (sometimes referred to as a *mixed agent based model*),
-# incorporation of a spatial property in the dynamics (represented by a stanadard
+# incorporation of a spatial property in the dynamics (represented by a standard
 # array, not an agent, as is done in most other ABM frameworks),
 # and usage of [`GridSpace`](@ref), which allows multiple agents per grid coordinate.
 
