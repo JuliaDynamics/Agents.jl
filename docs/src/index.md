@@ -10,9 +10,9 @@ To get started, please read the [Tutorial](@ref) page.
 
 !!! tip "Latest news: Agents.jl v5.5"
     New minor release with a major change on creating agents!
-    - The `@agent` macro has been re-written and is now more general and more safe. It now also allows inhereting fields from any other type.
+    - The `@agent` macro has been re-written and is now more general and more safe. It now also allows inheriting fields from any other type.
     - The `@agent` macro is now THE way to create agent types for Agents.jl simulations. Directly creating structs by hand is no longer mentioned in the documentation at all.
-    - In the future, making agent types manually (without `@agent`) may be completely dissalowed, resulting in error. Therefore, making agent types manually is considered deprecated.
+    - In the future, making agent types manually (without `@agent`) may be completely disallowed, resulting in error. Therefore, making agent types manually is considered deprecated.
     - The minimal agent types like `GraphAgent` can be used normally as standard  types that only have the mandatory fields. This is now clear in the docs. (this was possible also before, just not clear)
 
     Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for more details!
