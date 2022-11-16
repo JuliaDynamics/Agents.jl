@@ -236,9 +236,14 @@ walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
 
 """
     rotate(w::SVector{2}, θ)
-    rotate(w::SVector{3}, θ, ϕ)
+Rotate two-dimensional vector `w` by an angle `θ`.
 """
 rotate(w::SVector{2}, θ) = Angle2d(θ) * w
+
+"""
+    rotate(w::SVector{3}, θ, ϕ)
+Rotate three-dimensional vector `w` by angles `θ` (polar) and `ϕ` (azimuthal).
+"""
 function rotate(w::SVector{3}, θ, ϕ)
     # find a vector normal to w
     m = findfirst(w .≠ 0)
