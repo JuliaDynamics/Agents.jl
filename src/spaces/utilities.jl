@@ -269,7 +269,7 @@ function randomwalk!(
 )
     θ = rand(polar)
     r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector{agent.vel}, θ)) .* (r / r₀)
+    direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -284,7 +284,7 @@ function randomwalk!(
     θ = rand(polar)
     ϕ = rand(azimuthal)
     r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector{agent.vel}, θ, ϕ)) .* (r / r₀)
+    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* (r / r₀)
     agent.vel = direction
     walk!(agent, direction, model)
 end
