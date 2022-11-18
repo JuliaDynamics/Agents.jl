@@ -536,6 +536,7 @@ end
 
     burnt(f) = count(t == 3 for t in f.trees)
     unburnt(f) = count(t == 1 for t in f.trees)
+    terminate(m, s) = s >= 3 ? true : false
     @testset "Serial Scan" begin
         mdata = [unburnt, burnt]
         _, mdf = paramscan(
@@ -568,6 +569,16 @@ end
         )
         @test unique(mdf.step) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
+
+        # test whether paramscan accepts n::Function
+        mdata = []
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n = terminate,
+            model_step! = forest_model_step!,
+            mdata)
+        @test unique(mdf.step) == 0:3
     end
 
     @testset "Parallel Scan" begin
@@ -604,6 +615,17 @@ end
         )
         @test unique(mdf.step) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
+
+        # test whether paramscan accepts n::Function
+        mdata = []
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n = terminate,
+            model_step! = forest_model_step!,
+            mdata,
+            parallel = true)
+        @test unique(mdf.step) == 0:3
     end
 end
 
