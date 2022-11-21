@@ -263,7 +263,7 @@ boundary conditions and space metric.
 """
 function randomwalk!(
     agent::AbstractAgent,
-    model::ABM{<:AbstractContinuousSpace{2}},
+    model::ABM{<:ContinuousSpace{2}},
     r::Real;
     polar::ContinuousUnivariateDistribution=Uniform(-π,π),
 )
@@ -289,7 +289,7 @@ Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
 
 function randomwalk!(
     agent::AbstractAgent,
-    model::ABM{<:AbstractContinuousSpace{3}},
+    model::ABM{<:ContinuousSpace{3}},
     r::Real;
     polar::ContinuousUnivariateDistribution=Uniform(-π,π),
     azimuthal::ContinuousUnivariateDistribution=Arccos(-1,1),
