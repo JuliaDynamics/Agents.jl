@@ -241,7 +241,12 @@ function multi_agent_types!(
     for (i, k) in enumerate(properties)
         current_types = DataType[]
         for atype in utypes
-            a = first(Iterators.filter(a -> a isa atype, allagents(model)))
+            a = try 
+                first(Iterators.filter(a -> a isa atype, allagents(model)))
+            catch
+                nothing
+            end 
+            
             if k isa Symbol
                 current_type =
                     hasproperty(a, k) ? typeof(get_data(a, k, identity)) : Missing
