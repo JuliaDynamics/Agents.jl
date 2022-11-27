@@ -303,7 +303,9 @@ function fox_step!(fox, model)
                 random_walkable(fox.pos, model, model.landfinder, model.fox_vision),
                 model.landfinder,
             )
-            return
+        else
+            ## Move toward a random rabbit
+            plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
         end
         ## Move toward a random rabbit
         plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
