@@ -356,8 +356,8 @@ end
 # a copy of it is created and added to the model.
 
 function reproduce!(animal, model)
-    animal.energy = ceil(Int, animal.energy / 2)
-    add_agent_pos!(Animal(nextid(model), animal.pos, animal.type, animal.energy), model)
+    animal.energy = Float64(ceil(Int, animal.energy / 2))
+    add_agent_pos!(Animal(nextid(model), animal.pos, v0, animal.type, animal.energy), model)
 end
 
 # The model stepping function simulates the growth of grass
