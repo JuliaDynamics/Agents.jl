@@ -37,7 +37,6 @@ CairoMakie.activate!() # hide
 using Random # hide
 
 @agent Fisher NoSpaceAgent begin
-    id::Int
     competence::Int
     yearly_catch::Float64
 end
