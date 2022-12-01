@@ -233,6 +233,23 @@ walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) wher
 walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
     walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
 
+"""
+    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r)
+Move `agent` for a distance `r` in a random direction respecting boundary conditions
+and space metric.
+For Chebyshev and Manhattan metric, the step size `r` is rounded to `floor(Int,r)`;
+for Euclidean metric in a GridSpace, random walks are not defined due to a strong
+dependency on the given value of `r`.
+"""
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:AbstractGridSpace},
+    r::Real
+)
+    offsets = offsets_at_radius(model, r)
+    walk!(agent, rand(offsets), model)
+end
+
 
 """
     rotate(w::SVector{2}, θ)
