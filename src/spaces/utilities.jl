@@ -246,6 +246,12 @@ function randomwalk!(
     model::ABM{<:AbstractGridSpace},
     r::Real
 )
+    if model.space.metric == :euclidean
+        throw(ArgumentError(
+            "Random walks on a GridSpace with Euclidean metric are not defined. " *
+            "You might want to use a ContinuousSpace or a different metric."
+        ))
+    end
     offsets = offsets_at_radius(model, r)
     walk!(agent, rand(offsets), model)
 end

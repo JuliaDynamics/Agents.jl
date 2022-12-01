@@ -66,12 +66,6 @@ offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(model.space, r::Real)
 function offsets_at_radius(
     space::AbstractGridSpace{D}, r::Real
 )::Vector{NTuple{D, Int}} where {D}
-    if space.metric == :euclidean
-        throw(ArgumentError(
-            "Exact offsets on a DiscreteSpace with Euclidean metric are not defined. " *
-            "You might want to use a ContinuousSpace or a different metric."
-        ))            
-    end
     r₀ = floor(Int, r)
     if haskey(space.offsets_at_radius, r₀)
         βs = space.offsets_at_radius[r₀]
