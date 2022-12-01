@@ -293,7 +293,7 @@ function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
     r::Real;
-    polar::ContinuousUnivariateDistribution=Uniform(-π,π),
+    polar=Uniform(-π,π),
 )
     θ = rand(polar)
     r₀ = LinearAlgebra.norm(agent.vel)
@@ -330,8 +330,8 @@ function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
     r::Real;
-    polar::ContinuousUnivariateDistribution=Uniform(-π,π),
-    azimuthal::ContinuousUnivariateDistribution=Arccos(-1,1),
+    polar=Uniform(-π,π),
+    azimuthal=Arccos(-1,1),
 )
     θ = rand(polar)
     ϕ = rand(azimuthal)
