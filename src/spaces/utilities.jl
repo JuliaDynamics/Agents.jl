@@ -248,8 +248,9 @@ function rotate(w::SVector{3}, θ, ϕ)
     # find a vector normal to w
     m = findfirst(w .≠ 0)
     n = m%3 + 1
-    u = zeros(3)
-    u[n], u[m] = w[m], -w[n]
+    u = SVector{3}(0., 0., 0.)
+    u = setindex(u, w[m], n)
+    u = setindex(u, -w[n], m)
     # rotate w around u by the polar angle θ
     a = AngleAxis(θ, u...) * w
     # rotate a around the original vector w by the azimuthal angle ϕ
