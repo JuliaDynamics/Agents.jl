@@ -56,6 +56,35 @@ function offsets_within_radius(
     return βs::Vector{NTuple{D, Int}}
 end
 
+"""
+    offsets_at_radius(model::ABM{<:AbstractGridSpace}, r::Real)
+The function does two things:
+1. If a vector of indices exists in the model, it returns that.
+2. If not, it creates this vector, stores it in the model and then returns that.
+"""
+offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(model.space, r::Real)
+function offsets_at_radius(
+    space::AbstractGridSpace{D}, r::Real
+)::Vector{NTuple{D, Int}} where {D}
+    if space.metric == :euclidean
+        throw(ArgumentError(
+            "Exact offsets on a DiscreteSpace with Euclidean metric are not defined. " *
+            "You might want to use a ContinuousSpace or a different metric."
+        ))            
+    end
+    if haskey(space.offsets_at_radius, r)
+        βs = space.offsets_at_radius[r]
+    else
+        βs = calculate_offsets(space, r)
+        if space.metric == :manhattan
+            filter!(β -> sum(abs.(β)) == floor(Int,r), βs)
+        elseif space.metric == :chebyshev
+            filter!(β -> maximum(abs.(β)) == floor(Int,r), βs)
+        end
+    end
+    return βs::Vector{NTuple{D,Int}}
+end
+
 # Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
     if space.metric == :euclidean
