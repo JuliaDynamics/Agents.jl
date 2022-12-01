@@ -260,9 +260,11 @@ function rotate(w::SVector{3}, θ, ϕ)
 end # function
 
 """
-    randomwalk!(agent, model, r)
-Move `agent` for a distance `r` in a random direction, respecting periodic 
+    randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
+Move `agent` for a distance `r` in a random direction, respecting 
 boundary conditions and space metric.
+The new direction is chosen from the angle distribution `polar`, which defaults
+to a uniform distribution in the plane.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -283,6 +285,10 @@ struct Arccos{T<:Real} <: ContinuousUnivariateDistribution
     b::T
     Arccos{T}(a::T,b::T) where {T} = new{T}(a::T,b::T)
 end
+"""
+    Arccos(a, b)
+Create a ContinuousUnivariateDistribution corresponding to `acos(Uniform(a,b))`.
+"""
 function Arccos(a::Real, b::Real; check_args::Bool=true)
     Distributions.@check_args Arccos a≤b -1≤a≤1 -1≤b≤1
     return Arccos{Float64}(Float64(a), Float64(b))
@@ -290,6 +296,13 @@ end
 Arccos() = Arccos(-1,1)
 Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
 
+"""
+    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r; polar=Uniform(-π,π), azimuthal=Arccos(-1,1))
+Move `agent` for a distance `r` in a random direction, respecting boundary conditions
+and space metric.
+The new direction is chosen from the angle distributions `polar` and `azimuthal`;
+their default values produce uniformly distributed reorientations on the unit sphere.
+"""
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
