@@ -72,14 +72,15 @@ function offsets_at_radius(
             "You might want to use a ContinuousSpace or a different metric."
         ))            
     end
-    if haskey(space.offsets_at_radius, r)
-        βs = space.offsets_at_radius[r]
+    r₀ = floor(Int, r)
+    if haskey(space.offsets_at_radius, r₀)
+        βs = space.offsets_at_radius[r₀]
     else
-        βs = calculate_offsets(space, r)
+        βs = calculate_offsets(space, r₀)
         if space.metric == :manhattan
-            filter!(β -> sum(abs.(β)) == floor(Int,r), βs)
+            filter!(β -> sum(abs.(β)) == r₀, βs)
         elseif space.metric == :chebyshev
-            filter!(β -> maximum(abs.(β)) == floor(Int,r), βs)
+            filter!(β -> maximum(abs.(β)) == r₀, βs)
         end
     end
     return βs::Vector{NTuple{D,Int}}
