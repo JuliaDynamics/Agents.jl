@@ -79,8 +79,10 @@ function offsets_at_radius(
         βs = calculate_offsets(space, r₀)
         if space.metric == :manhattan
             filter!(β -> sum(abs.(β)) == r₀, βs)
+            space.offsets_at_radius[r₀] = βs
         elseif space.metric == :chebyshev
             filter!(β -> maximum(abs.(β)) == r₀, βs)
+            space.offsets_at_radius[r₀] = βs
         end
     end
     return βs::Vector{NTuple{D,Int}}
