@@ -1,5 +1,7 @@
 export euclidean_distance, manhattan_distance, get_direction, normalize_position, walk!, Arccos, randomwalk!, spacesize
 
+using Distributions, Rotations, StaticArrays
+
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
 #######################################################################################
