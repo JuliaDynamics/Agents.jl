@@ -315,7 +315,7 @@ end
 Create a ContinuousUnivariateDistribution corresponding to `acos(Uniform(a,b))`.
 """
 function Arccos(a::Real, b::Real; check_args::Bool=true)
-    Distributions.@check_args Arccos a≤b -1≤a≤1 -1≤b≤1
+    Distributions.@check_args Arccos a<b -1≤a≤1 -1≤b≤1
     return Arccos{Float64}(Float64(a), Float64(b))
 end
 Arccos() = Arccos(-1,1)
