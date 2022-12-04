@@ -262,6 +262,100 @@ end
         @test a.pos == (2, 2, 2)
     end
 
+    @testset "random walk" begin
+        # random walks on grid spaces with euclidean metric are not defined
+        space = SpaceType((10,10), metric=:euclidean)
+        model = ABM(GridAgent2D, space)
+        add_agent!(model)
+        r = 1.0
+        @test_throws ArgumentError randomwalk!(model.agents[1], model, r)
+
+        # chebyshev metric
+        space = SpaceType((100,100), metric=:chebyshev)
+        model = ABM(GridAgent2D, space)
+        x₀ = (50,50)
+        add_agent!(x₀, model)
+        r = 1.5
+        randomwalk!(model.agents[1], model, r)
+        x₁ = model.agents[1].pos
+        # chebyshev distance after the random step should be 1
+        @test maximum(abs.(x₁ .- x₀)) == 1
+        # the list of available offsets at distance 1
+        # should be stored in space.offsets_at_radius[1]
+        @test haskey(space.offsets_at_radius, 1)
+        offsets_1 = Set((
+            (1,-1)  ,  (1,0)  ,  (1,1),
+            (0,-1)       ,       (0,1),
+            (-1,-1) ,  (-1,0) ,  (-1,1)
+        ))
+        @test Set(space.offsets_at_radius[1]) == offsets_1
+
+        r = 1.95
+        randomwalk!(model.agents[1], model, r)
+        # there should be still only one list of offsets,
+        # associated to floor(Int, r)
+        @test Set(keys(space.offsets_at_radius)) == Set((1))
+
+        # if floor(Int,r) ≠ 1, a new list of offsets is evaluated
+        r = 2.0
+        x₂ = model.agents[1].pos
+        randomwalk!(model.agents[1], model, r)
+        x₃ = model.agents[1].pos
+        # offsets should now be at 1 and 2
+        @test Set(keys(space.offsets_at_radius)) == Set((1,2))
+        # chebyshev distance from previous position should now be 2
+        @test maximum(abs.(x₃ .- x₂)) == 2
+
+        # for r < 1 the agent should not move
+        r = 0.5
+        randomwalk!(model.agents[1], model, r)
+        @test space.offsets_at_radius[0] == [(0,0)]
+        @test model.agents[1].pos == x₃
+
+        # manhattan metric
+        space = SpaceType((100,100), metric=:manhattan)
+        model = ABM(GridAgent2D, space)
+        x₀ = (50,50)
+        add_agent!(x₀, model)
+        r = 1.5
+        randomwalk!(model.agents[1], model, r)
+        x₁ = model.agents[1].pos
+        # manhattan distance after the random step should be 1
+        @test manhattan_distance(x₁, x₀, model) == 1
+        # the list of available offsets at distance 1
+        # should be stored in space.offsets_at_radius[1]
+        @test haskey(space.offsets_at_radius, 1)
+        offsets_1 = Set(((-1,0), (1,0), (0,1), (0,-1)))
+        @test Set(space.offsets_at_radius[1]) == offsets_1
+
+        r = 1.95
+        randomwalk!(model.agents[1], model, r)
+        # there should be still only one list of offsets,
+        # associated to floor(Int, r)
+        @test Set(keys(space.offsets_at_radius)) == Set((1))
+
+        # if floor(Int,r) ≠ 1, a new list of offsets is evaluated
+        r = 2.0
+        x₂ = model.agents[1].pos
+        randomwalk!(model.agents[1], model, r)
+        x₃ = model.agents[1].pos
+        offsets_2 = Set((
+            (-2,0), (2,0), (0,2), (0,-2),
+            (-1,-1), (-1,1), (1,-1), (1,1)
+        ))
+        @test Set(space.offsets_at_radius[2]) == offsets_2
+        # offsets should now be at 1 and 2
+        @test Set(keys(space.offsets_at_radius)) == Set((1,2))
+        # chebyshev distance from previous position should now be 2
+        @test manhattan_distance(x₃, x₂, model) == 2
+
+        # for r < 1 the agent should not move
+        r = 0.5
+        randomwalk!(model.agents[1], model, r)
+        @test space.offsets_at_radius[0] == [(0,0)]
+        @test model.agents[1].pos == x₃
+    end
+
 end
 
 # TODO: Test nearby_ids(r = Tuple)

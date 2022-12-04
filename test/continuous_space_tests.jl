@@ -1,5 +1,6 @@
 using Agents, Test
 using StableRNGs
+using LinearAlgebra: norm, dot
 
 # TODO: We need to write tests for get_spatial_index and stuff!
 
@@ -333,6 +334,98 @@ using StableRNGs
         # TODO: This test fails but I do not know why. Must be fixed later.
         # (Kinetic energy is not conserved)
         # @test K1 ≈ K0
+    end
+
+    @testset "random walk" begin
+        @testset "2D" begin
+            ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
+            @agent RWAgent2D ContinuousAgent{2} begin; end
+            space = ContinuousSpace((10,10), periodic=true)
+            model = ABM(RWAgent2D, space)
+            x₀ = (5.0, 5.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            r = 2.0
+            randomwalk!(model.agents[1], model, r)
+            # distance between initial and new position
+            # should be equal to r, independently of v₀
+            @test norm(model.agents[1].pos .- x₀) ≃ r
+            @test !(norm(model.agents[1].pos .- x₀) ≃ norm(v₀))
+
+            # verify that reorientations obey the specified angles
+            space = ContinuousSpace((10,10), periodic=true)
+            model = ABM(RWAgent2D, space)
+            x₀ = (5.0, 5.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            r = 1.0
+            polar = [π/2] # degenerate distribution, only π/2 reorientations
+            # at the 4th step, the agent should come back to its initial position
+            v₁ = (0.0, 1.0) # π/2
+            x₁ = x₀ .+ v₁
+            v₂ = (-1.0, 0.0) # π
+            x₂ = x₁ .+ v₂
+            v₃ = (0.0, -1.0) # 3π/2
+            x₃ = x₂ .+ v₃
+            randomwalk!(model.agents[1], model, r; polar)
+            @test all(model.agents[1].vel .≃ v₁)
+            @test all(model.agents[1].pos .≃ x₁)
+            randomwalk!(model.agents[1], model, r; polar)
+            @test all(model.agents[1].vel .≃ v₂)
+            @test all(model.agents[1].pos .≃ x₂)
+            randomwalk!(model.agents[1], model, r; polar)
+            @test all(model.agents[1].vel .≃ v₃)
+            @test all(model.agents[1].pos .≃ x₃)
+            randomwalk!(model.agents[1], model, r; polar)
+            @test all(model.agents[1].vel .≃ v₀)
+            @test all(model.agents[1].pos .≃ x₀)
+
+            # verify boundary conditions are respected
+            space1 = ContinuousSpace((2,2), periodic=true)
+            space2 = ContinuousSpace((2,2), periodic=false)
+            model1 = ABM(RWAgent2D, space1)
+            model2 = ABM(RWAgent2D, space2)
+            x₀ = (1.0, 1.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model1, v₀)
+            add_agent!(x₀, model2, v₀)
+            r = 1.1
+            polar = [0.0] # no reorientation, move straight
+            randomwalk!(model1.agents[1], model1, r; polar)
+            randomwalk!(model2.agents[1], model2, r; polar)
+            @test model1.agents[1].pos[1] ≈ 0.1
+            @test model2.agents[1].pos[1] ≈ 2.0
+        end
+
+        @testset "3D" begin
+            ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
+            @agent RWAgent3D ContinuousAgent{3} begin; end
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(RWAgent3D, space)
+            x₀ = (5.0, 5.0, 5.0)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            r = 2.0
+            randomwalk!(model.agents[1], model, r)
+            # distance between initial and new position
+            # should be equal to Δr and independent of v₀
+            @test norm(model.agents[1].pos .- x₀) ≃ r
+            @test !(norm(model.agents[1].pos .- x₀) ≃ norm(v₀))
+
+            # verify that reorientations obey the specified angles
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(RWAgent3D, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            r = 1.0
+            θ = π/6
+            polar = [θ]
+            azimuthal = Arccos()
+            randomwalk!(model.agents[1], model, r; polar, azimuthal)
+            # for any φ, dot(v₁,v₀) = cos(θ)
+            v₁ = model.agents[1].vel
+            @test dot(v₁, v₀) ≃ cos(θ)
+        end
     end
 end
 
