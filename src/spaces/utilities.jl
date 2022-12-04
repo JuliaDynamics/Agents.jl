@@ -255,7 +255,9 @@ function randomwalk!(
         ))
     end
     offsets = offsets_at_radius(model, r)
-    walk!(agent, rand(offsets), model)
+    # if ifempty is not set to false, `walk!` will error for GridSpaceSingle
+    ifempty = typeof(model.space) <: GridSpaceSingle ? false : true
+    walk!(agent, rand(offsets), model; ifempty)
 end
 
 
