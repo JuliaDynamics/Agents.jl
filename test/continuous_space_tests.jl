@@ -345,6 +345,8 @@ using LinearAlgebra: norm, dot
             x₀ = (5.0, 5.0)
             v₀ = (1.0, 0.0)
             add_agent!(x₀, model, v₀)
+            # should throw error if displacement is 0
+            @test_throws ArgumentError randomwalk!(model.agents[1], model, 0.0)
             r = 2.0
             randomwalk!(model.agents[1], model, r)
             # distance between initial and new position
