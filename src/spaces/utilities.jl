@@ -327,6 +327,7 @@ Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
     randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r; polar=Uniform(-π,π), azimuthal=Arccos(-1,1))
 Move `agent` for a distance `r` in a random direction, respecting boundary conditions
 and space metric.
+The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distributions `polar` and `azimuthal`;
 their default values produce uniformly distributed reorientations on the unit sphere.
 """
@@ -337,6 +338,9 @@ function randomwalk!(
     polar=Uniform(-π,π),
     azimuthal=Arccos(-1,1),
 )
+    if r ≤ 0
+        throw(ArgumentError("The displacement must be larger than 0."))
+    end
     θ = rand(polar)
     ϕ = rand(azimuthal)
     r₀ = LinearAlgebra.norm(agent.vel)
