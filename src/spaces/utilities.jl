@@ -236,12 +236,17 @@ walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
     walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
 
 """
-    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r)
+    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r; kwargs...)
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
 and space metric.
 For Chebyshev and Manhattan metric, the step size `r` is rounded to `floor(Int,r)`;
 for Euclidean metric in a GridSpace, random walks are not defined due to a strong
 dependency on the given value of `r`.
+
+## Keywords
+- `ifempty` will check that the target position is unoccupied and only move if that's true.
+  By default this is true, set it to false if different agents can occupy the same position.
+  In a GridSpaceSingle, agents cannot overlap and this keyword has no effect.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -275,7 +280,10 @@ function randomwalk!(
     target_positions = map(β -> normalize_position(agent.pos .+ β, model), offsets)
     idx = findall(pos -> id_in_position(pos, model) == 0, target_positions)
     available_offsets = @view offsets[idx]
-    if !isempty(available_offsets)
+    if isempty(available_offsets)
+        # don't move, return agent only for type stability
+        agent
+    else
         walk!(agent, rand(available_offsets), model; ifempty=false)
     end
 end
