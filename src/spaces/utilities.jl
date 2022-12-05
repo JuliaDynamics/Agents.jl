@@ -262,23 +262,18 @@ end
 
 
 """
-    rotate(w::SVector{2}, θ::Real)
+    rotate(w::SVector{2}, θ)
 Rotate two-dimensional vector `w` by an angle `θ`.
 The angle must be given in radians.
 """
-rotate(w::SVector{2}, θ::Real) = Angle2d(θ) * w
+rotate(w::SVector{2}, θ) = Angle2d(θ) * w
 
 """
-    rotate(w::SVector{3}, θ::Real, ϕ::Real)
+    rotate(w::SVector{3}, θ, ϕ)
 Rotate three-dimensional vector `w` by angles `θ` (polar) and `ϕ` (azimuthal).
 The angles must be given in radians.
-
-Note that in general a 3D rotation requires 1 angle and 1 axis of rotation (or 3 angles).
-Here, using only 2 angles, `w` is first rotated by angle `θ`
-about an arbitrarily chosen vector (`u`) normal to it (`u⋅w=0`);
-this new rotated vector (`a`) is then rotated about the original `w` by the angle `ϕ`.
 """
-function rotate(w::SVector{3}, θ::Real, ϕ::Real)
+function rotate(w::SVector{3}, θ, ϕ)
     # find a vector normal to w
     m = findfirst(w .≠ 0)
     n = m%3 + 1
