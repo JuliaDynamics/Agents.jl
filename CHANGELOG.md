@@ -1,3 +1,9 @@
+# v5.7
+- New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing
+easier creation of random walks in both discrete and continuous spaces.
+Random walks in continuous space also allow users to specify the reorientation distributions:
+`polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
+
 # v5.6
 - `add_node!` and `rem_node!` have been renamed to `add_vertex!` and `rem_vertex!` extending Graphs.jl homonymous methods to help standardise names across ecosystems. Therefore `add_node!` and `rem_node!` have been deprecated.  
 - The signature of `add_edge!` has been generalised with `args...` and `kwargs...` to be compatible with all the implementations the underlying graph supports. 
