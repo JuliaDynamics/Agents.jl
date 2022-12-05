@@ -228,12 +228,18 @@ end
 Invoke a random walk by providing the `rand` function in place of
 `direction`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
 `ContinuousSpace` will reside within [-1, 1].
-"""
-walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D} =
-    walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
 
-walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
+This functionality is deprecated. Use `randomwalk!` instead.
+"""
+function walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D}
+    @warn "Producing random walks through `walk!` is deprecated. Use `randomwalk!` instead."
+    walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
+end
+
+function walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D}
+    @warn "Producing random walks through `walk!` is deprecated. Use `randomwalk!` instead."
     walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
+end
 
 """
     randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r; kwargs...)
