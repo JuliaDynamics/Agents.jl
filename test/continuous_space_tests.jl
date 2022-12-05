@@ -337,8 +337,8 @@ using LinearAlgebra: norm, dot
     end
 
     @testset "random walk" begin
+        ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
         @testset "2D" begin
-            ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
             @agent RWAgent2D ContinuousAgent{2} begin; end
             space = ContinuousSpace((10,10), periodic=true)
             model = ABM(RWAgent2D, space)
@@ -400,7 +400,6 @@ using LinearAlgebra: norm, dot
         end
 
         @testset "3D" begin
-            ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
             @agent RWAgent3D ContinuousAgent{3} begin; end
             space = ContinuousSpace((10,10,10), periodic=true)
             model = ABM(RWAgent3D, space)
