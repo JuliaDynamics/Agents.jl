@@ -256,8 +256,8 @@ function randomwalk!(
 )
     if model.space.metric == :euclidean
         throw(ArgumentError(
-            "Random walks on a GridSpace with Euclidean metric are not defined. " *
-            "You might want to use a ContinuousSpace or a different metric."
+            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
+            "You might want to use a `ContinuousSpace` or a different metric."
         ))
     end
     offsets = offsets_at_radius(model, r)
@@ -272,8 +272,8 @@ function randomwalk!(
 ) where D
     if model.space.metric == :euclidean
         throw(ArgumentError(
-            "Random walks on a GridSpace with Euclidean metric are not defined. " *
-            "You might want to use a ContinuousSpace or a different metric."
+            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
+            "You might want to use a `ContinuousSpace` or a different metric."
         ))
     end
     offsets = offsets_at_radius(model, r)
@@ -288,6 +288,55 @@ function randomwalk!(
     end
 end
 
+"""
+    randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
+Move `agent` for a distance `r` in a random direction, respecting 
+boundary conditions and space metric.
+The displacement `r` must be larger than 0.
+The new direction is chosen from the angle distribution `polar`, which defaults
+to a uniform distribution in the plane.
+"""
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{2}},
+    r::Real;
+    polar=Uniform(-π,π),
+)
+    if r ≤ 0
+        throw(ArgumentError("The displacement must be larger than 0."))
+    end
+    θ = rand(polar)
+    r₀ = LinearAlgebra.norm(agent.vel)
+    direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
+    agent.vel = direction
+    walk!(agent, direction, model)
+end
+
+"""
+    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r; polar=Uniform(-π,π), azimuthal=Arccos(-1,1))
+Move `agent` for a distance `r` in a random direction, respecting boundary conditions
+and space metric.
+The displacement `r` must be larger than 0.
+The new direction is chosen from the angle distributions `polar` and `azimuthal`;
+their default values produce uniformly distributed reorientations on the unit sphere.
+"""
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{3}},
+    r::Real;
+    polar=Uniform(-π,π),
+    azimuthal=Arccos(-1,1),
+)
+    if r ≤ 0
+        throw(ArgumentError("The displacement must be larger than 0."))
+    end
+    θ = rand(polar)
+    ϕ = rand(azimuthal)
+    r₀ = LinearAlgebra.norm(agent.vel)
+    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* (r / r₀)
+    agent.vel = direction
+    walk!(agent, direction, model)
+end
 
 """
     rotate(w::SVector{2}, θ::Real)
@@ -320,30 +369,6 @@ function rotate(w::SVector{3}, θ::Real, ϕ::Real)
     AngleAxis(ϕ, w...) * a
 end # function
 
-"""
-    randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
-Move `agent` for a distance `r` in a random direction, respecting 
-boundary conditions and space metric.
-The displacement `r` must be larger than 0.
-The new direction is chosen from the angle distribution `polar`, which defaults
-to a uniform distribution in the plane.
-"""
-function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{2}},
-    r::Real;
-    polar=Uniform(-π,π),
-)
-    if r ≤ 0
-        throw(ArgumentError("The displacement must be larger than 0."))
-    end
-    θ = rand(polar)
-    r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
-    agent.vel = direction
-    walk!(agent, direction, model)
-end
-
 # define new distribution to obtain spherically uniform rotations in 3D
 struct Arccos{T<:Real} <: ContinuousUnivariateDistribution
     a::T
@@ -352,7 +377,7 @@ struct Arccos{T<:Real} <: ContinuousUnivariateDistribution
 end
 """
     Arccos(a, b)
-Create a ContinuousUnivariateDistribution corresponding to `acos(Uniform(a,b))`.
+Create a `ContinuousUnivariateDistribution` corresponding to `acos(Uniform(a,b))`.
 """
 function Arccos(a::Real, b::Real; check_args::Bool=true)
     Distributions.@check_args Arccos a<b -1≤a≤1 -1≤b≤1
@@ -360,32 +385,6 @@ function Arccos(a::Real, b::Real; check_args::Bool=true)
 end
 Arccos() = Arccos(-1,1)
 Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
-
-"""
-    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r; polar=Uniform(-π,π), azimuthal=Arccos(-1,1))
-Move `agent` for a distance `r` in a random direction, respecting boundary conditions
-and space metric.
-The displacement `r` must be larger than 0.
-The new direction is chosen from the angle distributions `polar` and `azimuthal`;
-their default values produce uniformly distributed reorientations on the unit sphere.
-"""
-function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{3}},
-    r::Real;
-    polar=Uniform(-π,π),
-    azimuthal=Arccos(-1,1),
-)
-    if r ≤ 0
-        throw(ArgumentError("The displacement must be larger than 0."))
-    end
-    θ = rand(polar)
-    ϕ = rand(azimuthal)
-    r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* (r / r₀)
-    agent.vel = direction
-    walk!(agent, direction, model)
-end
 
 """
     spacesize(model::ABM)
