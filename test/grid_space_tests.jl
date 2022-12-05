@@ -354,6 +354,41 @@ end
         randomwalk!(model.agents[1], model, r)
         @test space.offsets_at_radius[0] == [(0,0)]
         @test model.agents[1].pos == x₃
+
+        space = SpaceType((100,100), metric=:manhattan)
+        model = ABM(GridAgent2D, space)
+        pos = (50,50)
+        add_agent!(pos, model) # agent id = 1
+        # fill surrounding positions with other agents
+        offsets = [(-1,0), (1,0), (0,1), (0,-1)]
+        for β in offsets; add_agent!(pos.+β, model); end
+        if SpaceType == GridSpaceSingle
+            # agent 1 should not move since there are no available offsets
+            randomwalk!(model.agents[1], model, 1)
+            @test model.agents[1].pos == pos
+            # the keyword ifempty should have no effect in a GridSpaceSingle
+            randomwalk!(model.agents[1], model, 1; ifempty=false)
+            @test model.agents[1].pos == pos
+            randomwalk!(model.agents[1], model, 1; ifempty=true)
+            @test model.agents[1].pos == pos
+            # if agent 2 (49,50) moves, then agent 1 can only move
+            # to the position that was just freed
+            randomwalk!(model.agents[2], model, 1)
+            randomwalk!(model.agents[1], model, 1)
+            @test model.agents[1].pos == (49,50)
+        elseif SpaceType == GridSpace
+            # if ifempty=true (default), agent 1 should not move since there are
+            # no available offsets
+            randomwalk!(model.agents[1], model, 1)
+            @test model.agents[1].pos == pos
+            # if ifempty=false, agent 1 will move and occupy
+            # the same position as one of the other agents
+            randomwalk!(model.agents[1], model, 1; ifempty=false)
+            @test model.agents[1].pos ≠ pos
+            # 5 agents but only 4 unique positions
+            unique_pos = unique([a.second.pos for a in model.agents])
+            @test (length(model.agents)==5) && length(unique_pos)==4
+        end
     end
 
 end
