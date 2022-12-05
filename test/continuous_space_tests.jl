@@ -407,6 +407,8 @@ using LinearAlgebra: norm, dot
             x₀ = (5.0, 5.0, 5.0)
             v₀ = (1.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
+            # should throw error if displacement is 0
+            @test_throws ArgumentError randomwalk!(model.agents[1], model, 0.0)
             r = 2.0
             randomwalk!(model.agents[1], model, r)
             # distance between initial and new position
@@ -426,6 +428,22 @@ using LinearAlgebra: norm, dot
             randomwalk!(model.agents[1], model, r; polar, azimuthal)
             # for any φ, dot(v₁,v₀) = cos(θ)
             v₁ = model.agents[1].vel
+            @test dot(v₁, v₀) ≃ cos(θ)
+
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(RWAgent3D, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            r = 1.0
+            θ = π/4
+            φ = π/6
+            polar = [θ]
+            azimuthal = [φ]
+            randomwalk!(model.agents[1], model, r; polar, azimuthal)
+            v₁ = model.agents[1].vel
+            @test v₁[1] ≃ cos(θ)
+            @test v₁[2] ≃ sin(θ)*sin(φ)
+            @test v₁[3] ≃ -sin(θ)*cos(φ)
             @test dot(v₁, v₀) ≃ cos(θ)
         end
     end
