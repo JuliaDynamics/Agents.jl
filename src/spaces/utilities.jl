@@ -324,6 +324,7 @@ end # function
     randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
 Move `agent` for a distance `r` in a random direction, respecting 
 boundary conditions and space metric.
+The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distribution `polar`, which defaults
 to a uniform distribution in the plane.
 """
@@ -333,6 +334,9 @@ function randomwalk!(
     r::Real;
     polar=Uniform(-π,π),
 )
+    if r ≤ 0
+        throw(ArgumentError("The displacement must be larger than 0."))
+    end
     θ = rand(polar)
     r₀ = LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
