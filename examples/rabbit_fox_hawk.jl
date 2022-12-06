@@ -303,10 +303,10 @@ function fox_step!(fox, model)
                 random_walkable(fox.pos, model, model.landfinder, model.fox_vision),
                 model.landfinder,
             )
-            return
+        else
+            ## Move toward a random rabbit
+            plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
         end
-        ## Move toward a random rabbit
-        plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
     end
 
     move_along_route!(fox, model, model.landfinder, model.fox_speed, model.dt)
@@ -356,8 +356,8 @@ end
 # a copy of it is created and added to the model.
 
 function reproduce!(animal, model)
-    animal.energy = ceil(Int, animal.energy / 2)
-    add_agent_pos!(Animal(nextid(model), animal.pos, animal.type, animal.energy), model)
+    animal.energy = Float64(ceil(Int, animal.energy / 2))
+    add_agent_pos!(Animal(nextid(model), animal.pos, v0, animal.type, animal.energy), model)
 end
 
 # The model stepping function simulates the growth of grass

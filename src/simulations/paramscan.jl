@@ -79,7 +79,7 @@ function paramscan(
     parallel::Bool = false,
     agent_step! = dummystep,
     model_step! = dummystep,
-    n::Int = 1,
+    n = 1,
     showprogress::Bool = false,
     kwargs...,
 )

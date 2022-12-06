@@ -89,7 +89,7 @@ mutable struct Baker{T} <: AbstractAgent
     breadz_per_day::T
 end
 ```
-### Exaple with optional hierachy
+### Example with optional hierachy
 An alternative way to make the above structs, that also establishes
 a user-specific subtyping hierachy would be to do:
 ```julia
@@ -104,7 +104,16 @@ end
     fish_per_day::Float64
 end
 ```
-which would now make both `Human, Fisher` subtypes of `AbstractHuman`.
+which would now make both `Fisher` and `Worker` subtypes of `AbstractHuman`.
+```julia
+julia> supertypes(Fisher)
+(Fisher, AbstractHuman, AbstractAgent, Any)
+
+julia> supertypes(Worker)
+(Worker, AbstractHuman, AbstractAgent, Any)
+```
+Note that `Fisher` will *not* be a subtype of `Worker` although `Fisher` has
+inherited the fields from `Worker`.
 
 ### Example highlighting problems with parametric types
 Notice that in Julia parametric types are union types.
