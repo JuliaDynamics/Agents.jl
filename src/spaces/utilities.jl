@@ -267,7 +267,7 @@ function randomwalk!(
         ))
     end
     offsets = offsets_at_radius(model, r)
-    walk!(agent, rand(offsets), model; kwargs...)
+    walk!(agent, rand(model.rng, offsets), model; kwargs...)
 end
 
 function randomwalk!(
@@ -290,7 +290,7 @@ function randomwalk!(
         # don't move, return agent only for type stability
         agent
     else
-        walk!(agent, rand(available_offsets), model; ifempty=false)
+        walk!(agent, rand(model.rng, available_offsets), model; ifempty=false)
     end
 end
 
@@ -311,7 +311,7 @@ function randomwalk!(
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    θ = rand(polar)
+    θ = rand(model.rng, polar)
     r₀ = LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
     agent.vel = direction
@@ -336,8 +336,8 @@ function randomwalk!(
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    θ = rand(polar)
-    ϕ = rand(azimuthal)
+    θ = rand(model.rng, polar)
+    ϕ = rand(model.rng, azimuthal)
     r₀ = LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* (r / r₀)
     agent.vel = direction
