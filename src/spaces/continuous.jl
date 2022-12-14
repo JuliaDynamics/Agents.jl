@@ -46,7 +46,7 @@ the model properties) can either be functions of the position vector, `f(pos) = 
 or `AbstractArrays`, representing discretizations of
 spatial data that may not be available in analytic form. In the latter case,
 the position is automatically mapped into the discretization represented by the array.
-Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
+Use [`get_spatial_property`](@ref) to access spatial properties in conjunction with
 `ContinuousSpace`.
 
 See also [Continuous space exclusives](@ref) on the online docs for more functionality.
@@ -534,7 +534,7 @@ Convert the continuous agent position into an appropriate `index` of `property`,
 represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
 
 The dimensionality of `property` and the continuous space do not have to match.
-If `property` has lower dimensionalty than the space (e.g. representing some surface
+If `property` has lower dimensionality than the space (e.g. representing some surface
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}

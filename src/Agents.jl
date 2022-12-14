@@ -55,7 +55,7 @@ Welcome to this new update of Agents.jl!
 Noteworthy changes:
 
 - The `@agent` macro has been re-written and is now more general and more safe.
-  It now also allows inhereting fields from any other type.
+  It now also allows inheriting fields from any other type.
 - The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
   Directly creating structs by hand is no longer mentioned in the documentation at all.
   This will allow us in the future to utilize additional fields that the user does not
@@ -64,7 +64,7 @@ Noteworthy changes:
 - The minimal agent types like `GraphAgent` can be used normally as standard agent
   types that only have the mandatory fields. This is now clear in the docs.
   (this was possible also before v5.4, just not clear)
-- In the future, making agent types by hand may be completely dissalowed, resulting
+- In the future, making agent types by hand may be completely disallowed, resulting
   in error. Therefore, making agent types manually is considered deprecated.
 - New function `normalize_position`.
 

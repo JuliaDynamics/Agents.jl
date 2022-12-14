@@ -89,9 +89,9 @@ mutable struct Baker{T} <: AbstractAgent
     breadz_per_day::T
 end
 ```
-### Example with optional hierachy
+### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
-a user-specific subtyping hierachy would be to do:
+a user-specific subtyping hierarchy would be to do:
 ```julia
 abstract type AbstractHuman <: AbstractAgent end
 
@@ -242,7 +242,7 @@ end
     NoSpaceAgent <: AbstractAgent
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
-are not documentated as part of the public API. See also [`@agent`](@ref).
+are not documented as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
     id::Int
