@@ -19,17 +19,16 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     print(io, s)
 end
 
-@agent ContinuousAgent{D} NoSpaceAgent begin
-    pos::NTuple{D,Float64}
-    vel::NTuple{D,Float64}
-end
-
-@doc """
+"""
     ContinuousAgent{D} <: AbstractAgent
 The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
 It has the additoinal fields `pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
 See also [`@agent`](@ref).
-""" ContinuousAgent
+"""
+@agent ContinuousAgent{D} NoSpaceAgent begin
+    pos::NTuple{D,Float64}
+    vel::NTuple{D,Float64}
+end
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)

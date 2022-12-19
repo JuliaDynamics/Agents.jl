@@ -53,8 +53,6 @@ that the resulting new agent type will have.
 The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
-You can use the `@doc` macro from Julia to document the generated struct if you wish so.
-
 ## Examples
 ### Example without optional hierarchy
 Using
