@@ -190,8 +190,8 @@ macro agent(new_name, base_type, extra_fields)
                     $(base_fields...)
                     $(additional_fields...)
                 end
-                #@doc @doc(name) $name # $docstring $name
             end
+            # @show expr # uncomment this to see that the final expression looks as desired
             # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
