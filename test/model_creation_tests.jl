@@ -69,10 +69,17 @@ end
     @test_throws ArgumentError ABM(BadAgentId)
     agent = BadAgentId(1.0)
     @test_throws ArgumentError ABM(agent)
-    # Cannot use NoSpaceAgent in a grid space context since it has no `pos` field
-    @test_throws ArgumentError ABM(NoSpaceAgent, GridSpace((1, 1)))
+    # Warn the user about using NoSpaceAgent in a grid space context since it has no `pos` field
+    @test_logs (
+        :warn,
+        "Second field of Agent struct must be `pos` when using a space, unless you are purposely working with a NoSpaceAgent."
+    ) match_mode=:any ABM(NoSpaceAgent, GridSpace((1, 1)))
     agent = NoSpaceAgent(1)
-    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
+    @test_logs (
+        :warn,
+        "Second field of Agent struct must be `pos` when using a space, unless you are purposely working with a NoSpaceAgent."
+    ) match_mode=:any ABM(agent, GridSpace((1, 1)))
+    @test_logs ABM(NoSpaceAgent, GridSpace((1, 1)), warn=false) #no warnings with warn=false
     # Cannot use Gridagent in a graph space context since `pos` has an invalid type
     @test_throws ArgumentError ABM(GridAgent{2}, GraphSpace(Agents.Graph(1)))
     agent = GridAgent{2}(1, (1, 1))
@@ -90,12 +97,12 @@ end
     @test_logs (
         :warn,
         "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
-    ) ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
+    ) match_mode=:any ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
     agent = DiscreteVelocity(1, (1, 1), (2, 3), 2.4)
     @test_logs (
         :warn,
         "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
-    ) ABM(agent, ContinuousSpace((1, 1)))
+    ) match_mode=:any ABM(agent, ContinuousSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace((1, 1)); warn = false)) <: AbstractAgent
     # Shouldn't use ParametricAgent since it is not a concrete type
@@ -112,14 +119,14 @@ end
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
-        models, you can silence this warning.\n"""
-    ) ABM(ParametricAgent, GridSpace((1, 1)))
+        models, you can silence this warning by passing `warn=false` to `AgentBasedModel()`.\n"""
+    ) match_mode=:any ABM(ParametricAgent, GridSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
           AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
     @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1, 1)))) <: AbstractAgent
-    #Type inferance using an instance can help users here
+    #Type inference using an instance can help users here
     agent = ParametricAgent(1, (1, 1), 5, "Info")
     @test Agents.agenttype(ABM(agent, GridSpace((1, 1)))) <: AbstractAgent
     #Mixed agents
@@ -135,7 +142,7 @@ end
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
-        models, you can silence this warning.\n"""
+        models, you can silence this warning by passing `warn=false` to `AgentBasedModel()`.\n"""
     ) ABM(Union{NoSpaceAgent,ValidAgent})
     @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
 end
