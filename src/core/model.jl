@@ -323,24 +323,26 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:S
     fieldtype(A, :id) <: Integer ||
     throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space !== nothing
-        (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
-        throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
-        # Check `pos` field in A has the correct type
-        pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
-        if space_type <: GraphSpace && !(pos_type <: Integer)
-            throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
-        elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
-        elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
-            if !(pos_type <: NTuple{D,<:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+        if warn && !(any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos)
+            @warn "Second field of Agent struct should be `pos` when using a space."
+        elseif any(isequal(:pos), fieldnames(A))
+            # Check `pos` field in A has the correct type
+            pos_type = fieldtype(A, :pos)
+            if space_type <: GraphSpace && !(pos_type <: Integer)
+                throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
+            elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
+                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
+            elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace #FIXME this seems wrong?
+                if !(pos_type <: NTuple{D,<:AbstractFloat} where {D})
+                    throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+                end
             end
-            if warn &&
-               any(isequal(:vel), fieldnames(A)) &&
-               !(fieldtype(A, :vel) <: NTuple{D,<:AbstractFloat} where {D})
-                @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
-            end
+        end
+        if warn && space_type <: ContinuousSpace &&
+            any(isequal(:vel), fieldnames(A)) &&
+            !(fieldtype(A, :vel) <: NTuple{D,<:AbstractFloat} where {D})
+            @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
         end
     end
 end
