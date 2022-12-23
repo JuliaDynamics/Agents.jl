@@ -51,7 +51,7 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
         if agent_step! ≠ dummystep
             activation_order = schedule(model)
             for index in activation_order
-                haskey(model.agents, index) || continue
+                index in eachindex(model.agents) || continue
                 agent_step!(model.agents[index], model)
             end
         end
@@ -59,3 +59,4 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
         s += 1
     end
 end
+
