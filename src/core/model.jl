@@ -118,11 +118,20 @@ Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
-function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
+function Base.setindex!(m::ABM{S,A,Dict{Int,A}}, a::AbstractAgent, id::Int) where {S,A}
     a.id ≠ id &&
         throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
     m.maxid[] < id && (m.maxid[] += 1)
+    return a
+end
+
+function Base.setindex!(m::ABM{S,A,Vector{A}}, a::AbstractAgent, id::Int) where {S,A}
+    a.id ≠ id &&
+        throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
+    id == nagents(m) + 1 || error("Cannot add agent of ID $(id) to a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
+    m.maxid[] < id && (m.maxid[] += 1)
+    push!(m.agents, a)
     return a
 end
 
