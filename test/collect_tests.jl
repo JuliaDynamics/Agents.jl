@@ -378,6 +378,24 @@ end
         collect_agent_data!(df, model, props)
         @test size(df) == (1, 2)
         @test df[1, :sum_fweight] ≈ 82.46
+
+        # Handle dataframe initialization when one agent type is absent
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
+
+        # get fieldtype from Agent4 struct definition when agent is absent 
+        props = [:weight, :p]
+        df = init_agent_dataframe(model, props)
+        @test eltype(df[!, :p]) == Union{Int, Missing}
+        
+        # Add Agent4 and check data collection
+        add_agent_pos!(Agent4(2, (4, 1), 3), model)
+        collect_agent_data!(df, model, props)
+        @test size(df) == (2, 5)
+        @test df[1, :weight] == model[1].weight
+        @test df[2, :p] == model[2].p
+        @test ismissing(df[1, :p])
+        @test ismissing(df[2, :weight])
     end
 
     @testset "Observers" begin
