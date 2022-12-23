@@ -51,7 +51,7 @@ The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is ommited then all agents are virtually in one position and there is no spatial structure.
+If it is omitted then all agents are virtually in one position and there is no spatial structure.
 
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
@@ -261,7 +261,7 @@ Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) ite
 
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
-matrix order, so should be used in conjuction with [`index_mapped_groups`](@ref) to
+matrix order, so should be used in conjunction with [`index_mapped_groups`](@ref) to
 associate agent ids with the resultant data.
 """
 map_agent_groups(order::Int, f::Function, model::ABM; kwargs...) =

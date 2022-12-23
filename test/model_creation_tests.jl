@@ -9,12 +9,16 @@ using Test, Agents, Random
     @test fieldnames(A3) == (:id, :pos, :weight)
     @test fieldtypes(A3) == (Int, NTuple{2, Int}, Float64)
 
+    """
+    This is a test docstring for agent A4
+    """
     @agent A4 A3 begin
         z::Bool
     end
     @test A4 <: AbstractAgent
     @test fieldnames(A4) == (:id, :pos, :weight, :z)
     @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
+    @test contains(string(@doc(A4)), "This is a test docstring for agent A4")
 
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end

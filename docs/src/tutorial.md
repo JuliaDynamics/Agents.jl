@@ -107,7 +107,7 @@ step!(model, dummystep, complex_step!, n)
 For defining your own schedulers, see [Schedulers](@ref).
 
 ## 5. Visualizations
-Once you have defined a model and the stepping functions you can visualize the model statically or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Plotting and interactive application](@ref). Furthermore, all models in the Examples showcase plotting.
+Once you have defined a model and the stepping functions you can visualize the model statically or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Visualizations and Animations for Agent Based Models](@ref). Furthermore, all models in the Examples showcase plotting.
 
 ## 6. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection while scanning ranges of the parameters of the model, and the [`ensemblerun!`](@ref) that performs ensemble simulations and data collection.

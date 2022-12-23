@@ -85,7 +85,7 @@ end
 """
     random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
 Return a random position without any agents, or `nothing` if no such positions exist.
-`cutoff` switches the search algorithm from probabalistic to a filter.
+`cutoff` switches the search algorithm from probabilistic to a filter.
 Specifically, when `clamp(nagents(model)/total_positions, 0.0, 1.0) < cutoff`,
 then the algorithm is probabilistic.
 """

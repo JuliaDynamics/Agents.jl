@@ -53,8 +53,6 @@ that the resulting new agent type will have.
 The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
-You can use the `@doc` macro from Julia to document the generated struct if you wish so.
-
 ## Examples
 ### Example without optional hierarchy
 Using
@@ -89,9 +87,9 @@ mutable struct Baker{T} <: AbstractAgent
     breadz_per_day::T
 end
 ```
-### Example with optional hierachy
+### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
-a user-specific subtyping hierachy would be to do:
+a user-specific subtyping hierarchy would be to do:
 ```julia
 abstract type AbstractHuman <: AbstractAgent end
 
@@ -197,8 +195,13 @@ macro agent(new_name, base_type, extra_fields)
             # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
+        # allow attaching docstrings to the new struct, issue #715
+        Core.@__doc__($(esc(Docs.namify(new_name))))
+        nothing
     end
 end
+
+
 # TODO: I do not know how to merge these two macros to remove code duplication.
 # There should be away that only the 4-argument version is used
 # and the 3-argument version just passes `AbstractAgent` to the 4-argument.
@@ -234,6 +237,9 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # It is important to evaluate the macro in the module that it was called at
             Core.eval($(__module__), expr)
         end
+        # allow attaching docstrings to the new struct, issue #715
+        Core.@__doc__($(esc(Docs.namify(new_name))))
+        nothing
     end
 end
 
@@ -242,7 +248,7 @@ end
     NoSpaceAgent <: AbstractAgent
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
-are not documentated as part of the public API. See also [`@agent`](@ref).
+are not documented as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
     id::Int
