@@ -17,8 +17,10 @@ ValidPos = Union{
     Tuple{Int,Int,Float64} # osm
 } where {N,M}
 
-struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
-    agents::Dict{Int,A}
+ContainerType{A} = Union{Dict{Int,A},Vector{A}} # Possible to include a stack-allocated containertype?
+
+struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}
+    agents::C
     space::S
     scheduler::F
     properties::P
@@ -31,8 +33,10 @@ end
 """
 const ABM = AgentBasedModel
 
+containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
+
 
 """
     union_types(U::Type)
@@ -43,23 +47,21 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
     AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
+
 Create an agent-based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
-
 The agents are stored in a dictionary that maps unique IDs (integers)
-to agents. Use `model[id]` to get the agent with the given `id`.
-
+to agents or a vector whose indices are IDs. Use `model[id]` to get the agent with the given `id`.
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial structure.
-
 **Note:** Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
-
 **Note:** Agents.jl supports multiple agent types by passing a `Union` of agent types
 as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
 drawbacks of this approach.
-
+**Note:** You should only store agents in a vector if you will never remove agents from the model
+once they are added.
 ## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
 that can be accessed as `model.properties`. If `properties` is a dictionary with
@@ -68,31 +70,29 @@ key type `Symbol`, or if it is a struct, then the syntax
 for structs).
 This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
 which are the fields of `AgentBasedModel`.
-
 `scheduler = Schedulers.fastest` decides the order with which agents are activated
 (see e.g. [`Schedulers.by_id`](@ref) and the scheduler API).
 `scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
 or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
 as illustrated in the [Advanced stepping](@ref) part of the tutorial.
-
 `rng = Random.default_rng()` provides random number generation to the model.
 Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
-
 `warn=true`: Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate.
 """
 function AgentBasedModel(
     ::Type{A},
-    space::S = nothing;
-    scheduler::F = Schedulers.fastest,
-    properties::P = nothing,
-    rng::R = Random.default_rng(),
-    warn = true,
-) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
+    space::S=nothing;
+    container::Type{C}=Dict{Int,A},
+    scheduler::F=Schedulers.fastest,
+    properties::P=nothing,
+    rng::R=Random.default_rng(),
+    warn=true
+) where {A<:AbstractAgent,S<:SpaceType,C<:ContainerType{A},F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
 
-    agents = Dict{Int,A}()
-    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    agents = container()
+    return ABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
@@ -107,7 +107,6 @@ export random_agent, nagents, allagents, allids, nextid, seed!
 """
     model[id]
     getindex(model::ABM, id::Integer)
-
 Return an agent given its ID.
 """
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
@@ -115,14 +114,13 @@ Base.getindex(m::ABM, id::Integer) = m.agents[id]
 """
     model[id] = agent
     setindex!(model::ABM, agent::AbstractAgent, id::Int)
-
 Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
 function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
     a.id ≠ id &&
-    throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
+        throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     m.agents[id] = a
     m.maxid[] < id && (m.maxid[] += 1)
     return a
@@ -137,16 +135,14 @@ nextid(model::ABM) = model.maxid[] + 1
 """
     model.prop
     getproperty(model::ABM, :prop)
-
 Return a property with name `:prop` from the current `model`, assuming the model `properties`
 are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
-
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
+function Base.getproperty(m::ABM{S,A,C,F,P,R}, s::Symbol) where {S,A,C,F,P,R}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -166,7 +162,7 @@ function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
     end
 end
 
-function Base.setproperty!(m::ABM{S,A,F,P,R}, s::Symbol, x) where {S,A,F,P,R}
+function Base.setproperty!(m::ABM{S,A,C,F,P,R}, s::Symbol, x) where {S,A,C,F,P,R}
     exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
     properties = getfield(m, :properties)
     properties === nothing && throw(exception)
@@ -181,11 +177,10 @@ end
 
 """
     seed!(model [, seed])
-
 Reseed the random number pool of the model with the given seed or a random one,
 when using a pseudo-random number generator like `MersenneTwister`.
 """
-function seed!(model::ABM{S,A,F,P,R}, args...) where {S,A,F,P,R}
+function seed!(model::ABM{S,A,C,F,P,R}, args...) where {S,A,C,F,P,R}
     rng = getfield(model, :rng)
     Random.seed!(rng, args...)
 end
@@ -194,7 +189,9 @@ end
     random_agent(model) → agent
 Return a random agent from the model.
 """
-random_agent(model) = model[rand(model.rng, keys(model.agents))]
+function random_agent(model)
+    model[rand(model.rng, eachindex(model.agents))]
+end
 
 """
     random_agent(model, condition) → agent
@@ -203,7 +200,7 @@ The function generates a random permutation of agent IDs and iterates through th
 If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    ids = shuffle!(model.rng, collect(keys(model.agents)))
+    ids = shuffle!(model.rng, collect(allids(model)))
     i, L = 1, length(ids)
     a = model[ids[1]]
     while !condition(a)
@@ -230,7 +227,7 @@ allagents(model) = values(model.agents)
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
-allids(model) = keys(model.agents)
+allids(model) = eachindex(model.agents) # eachindex over keys as works with Dict & Vector
 
 #######################################################################################
 # %% Higher order collections
@@ -239,29 +236,25 @@ export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
     iter_agent_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
-
 Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
 iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
 e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
-
 Index order is provided by the model scheduler by default,
 but can be altered with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = model.scheduler) =
+iter_agent_groups(order::Int, model::ABM; scheduler=model.scheduler) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
     map_agent_groups(order::Int, f::Function, model::ABM; kwargs...)
     map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...)
-
 Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
 `kwargs` are passed to the iterator method.
 `f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
 `order`.
-
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
-matrix order, so should be used in conjunction with [`index_mapped_groups`](@ref) to
+matrix order, so should be used in conjuction with [`index_mapped_groups`](@ref) to
 associate agent ids with the resultant data.
 """
 map_agent_groups(order::Int, f::Function, model::ABM; kwargs...) =
@@ -274,9 +267,9 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
     index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
 Return an iterable of agent ids in the model, meeting the `filter` criteria if used.
 """
-index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM; scheduler=Schedulers.by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler=Schedulers.by_id) =
     Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
@@ -316,15 +309,15 @@ Helper function for `agent_validator`.
 function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
     if warn
         isbitstype(A) &&
-        @warn "AgentType is not mutable. You probably haven't used `@agent`!"
+            @warn "AgentType is not mutable. You probably haven't used `@agent`!"
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
-    throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
+        throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer ||
-    throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
+        throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space !== nothing
         (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
-        throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
+            throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
