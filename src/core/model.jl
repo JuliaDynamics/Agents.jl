@@ -61,7 +61,6 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
     AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
-
 Create an agent-based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
 `ABM` is equivalent with `AgentBasedModel`.
@@ -105,12 +104,12 @@ warnings are thrown when appropriate.
 """
 function AgentBasedModel(
     ::Type{A},
-    space::S=nothing;
-    container::Type=Dict{Int,A},
-    scheduler::F=Schedulers.fastest,
-    properties::P=nothing,
-    rng::R=Random.default_rng(),
-    warn=true
+    space::S = nothing;
+    container::Type = Dict{Int,A},
+    scheduler::F = Schedulers.fastest,
+    properties::P = nothing,
+    rng::R = Random.default_rng(),
+    warn = true
 ) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
@@ -136,13 +135,15 @@ export random_agent, nagents, allagents, allids, nextid, seed!
 """
     model[id]
     getindex(model::ABM, id::Integer)
-Return an agent given its ID.
+
+    Return an agent given its ID.
 """
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
 """
     model[id] = agent
     setindex!(model::ABM, agent::AbstractAgent, id::Int)
+
 Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
@@ -178,10 +179,12 @@ nextid(model::ABM) = model.maxid[] + 1
 """
     model.prop
     getproperty(model::ABM, :prop)
+
 Return a property with name `:prop` from the current `model`, assuming the model `properties`
 are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
+
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
@@ -220,6 +223,7 @@ end
 
 """
     seed!(model [, seed])
+
 Reseed the random number pool of the model with the given seed or a random one,
 when using a pseudo-random number generator like `MersenneTwister`.
 """
@@ -277,22 +281,26 @@ export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
     iter_agent_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
+
 Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
 iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
 e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
+
 Index order is provided by the model scheduler by default,
 but can be altered with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler=model.scheduler) =
+iter_agent_groups(order::Int, model::ABM; scheduler = model.scheduler) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
     map_agent_groups(order::Int, f::Function, model::ABM; kwargs...)
     map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...)
+
 Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
 `kwargs` are passed to the iterator method.
 `f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
 `order`.
+
 Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
 applied to remove unwanted matches from the results. **Note:** This option cannot keep
 matrix order, so should be used in conjunction with [`index_mapped_groups`](@ref) to
@@ -308,9 +316,9 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
     index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
 Return an iterable of agent ids in the model, meeting the `filter` criteria if used.
 """
-index_mapped_groups(order::Int, model::ABM; scheduler=Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler=Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id) =
     Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
