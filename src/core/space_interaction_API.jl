@@ -14,28 +14,25 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 TODO: do_checks needs to be updated for each new space type
 =#
 export move_agent!,
-       add_agent!,
-       add_agent_pos!,
-       kill_agent!,
-       genocide!,
-       random_position,
-       nearby_positions,
-       nearby_ids,
-       nearby_agents,
-       random_nearby_id,
-       random_nearby_agent,
-       plan_route!,
-       plan_best_route!,
-       move_along_route!,
-       is_stationary
+    add_agent!,
+    add_agent_pos!,
+    kill_agent!,
+    genocide!,
+    random_position,
+    nearby_positions,
+    nearby_ids,
+    nearby_agents,
+    random_nearby_id,
+    random_nearby_agent,
+    plan_route!,
+    plan_best_route!,
+    move_along_route!,
+    is_stationary
 
-function notimplemented(model)
+notimplemented(model) =
     error("Not implemented for space type $(nameof(typeof(model.space)))")
-end
 
-function nokill()
-    error("Removing agents who are stored in vectors is disallowed. To be able to remove agents they must be stored in a Dict.")
-end
+nokill() = error("Removing agents who are stored in vectors is disallowed. To be able to remove agents they must be stored in a Dict.")
 
 #######################################################################################
 # %% IMPLEMENT
@@ -76,7 +73,7 @@ described in each space's documentation string.
 
 `nearby_ids` always includes IDs with 0 distance to `position`.
 """
-nearby_ids(position, model, r = 1) = notimplemented(model)
+nearby_ids(position, model, r=1) = notimplemented(model)
 
 """
     nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
@@ -95,18 +92,16 @@ For [`OpenStreetMapSpace`](@ref) this means "nearby intersections" and operates 
 on the underlying graph of the OSM, providing the intersection nodes nearest to the
 given position.
 """
-nearby_positions(position, model, r = 1) = notimplemented(model)
+nearby_positions(position, model, r=1) = notimplemented(model)
 
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
 #######################################################################################
-function plan_route!(agent, dest, model_or_pathfinder; kwargs...)
+plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
     notimplemented(model_or_pathfinder)
-end
 
-function plan_best_route!(agent, dests, model_or_pathfinder; kwargs...)
+plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
     notimplemented(model_or_pathfinder)
-end
 
 # """
 #     move_along_route!(agent, model, args...; kwargs...)
@@ -133,8 +128,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos::ValidPos,
-                     model::ABM{<:AbstractSpace, A}) where {A <: AbstractAgent}
+function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -150,12 +144,12 @@ end
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM{S, A, Dict{Int, A}}) where {S, A}
+function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
     delete!(model.agents, a.id)
     remove_agent_from_space!(a, model)
 end
 
-function kill_agent!(a::AbstractAgent, model::ABM{S, A, Vector{A}}) where {S, A}
+function kill_agent!(a::AbstractAgent, model::ABM{S,A,Vector{A}}) where {S,A}
     nokill()
 end
 
@@ -185,7 +179,7 @@ end
 
 # Must be implemented separately, otherwise genocide! would return an unhelpful
 # BoundsError error to the user.
-function genocide!(model::ABM{S, A, Vector{A}, F, P, R}, n::Integer) where {S, A, F, P, R}
+function genocide!(model::ABM{S,A,Vector{A},F,P,R}, n::Integer) where {S,A,F,P,R}
     nokill()
 end
 
@@ -277,8 +271,7 @@ add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{S, A}, properties...;
-                    kwargs...) where {S, A <: AbstractAgent}
+function add_agent!(model::ABM{S,A}, properties...; kwargs...) where {S,A<:AbstractAgent}
     add_agent!(A, model, properties...; kwargs...)
 end
 
@@ -286,19 +279,23 @@ function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs.
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
 
-function add_agent!(pos::ValidPos,
-                    model::ABM{S, A},
-                    properties...;
-                    kwargs...) where {S, A <: AbstractAgent}
+function add_agent!(
+    pos::ValidPos,
+    model::ABM{S,A},
+    properties...;
+    kwargs...
+) where {S,A<:AbstractAgent}
     add_agent!(pos, A, model, properties...; kwargs...)
 end
 
 # lowest level:
-function add_agent!(pos::ValidPos,
-                    A::Type{<:AbstractAgent},
-                    model::ABM,
-                    properties...;
-                    kwargs...)
+function add_agent!(
+    pos::ValidPos,
+    A::Type{<:AbstractAgent},
+    model::ABM,
+    properties...;
+    kwargs...
+)
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)
@@ -313,7 +310,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(agent::A, model::ABM, r = 1; kwargs...) where {A <: AbstractAgent}
+function nearby_ids(agent::A, model::ABM, r=1; kwargs...) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
@@ -323,10 +320,12 @@ end
 
 Same as `nearby_positions(agent.pos, model, r)`.
 """
-function nearby_positions(agent::A,
-                          model::ABM{S, A},
-                          r = 1;
-                          kwargs...) where {S, A <: AbstractAgent}
+function nearby_positions(
+    agent::A,
+    model::ABM{S,A},
+    r=1;
+    kwargs...
+) where {S,A<:AbstractAgent}
     nearby_positions(agent.pos, model, r; kwargs...)
 end
 
@@ -337,9 +336,8 @@ Return an iterable of the agents near the position of the given `agent`.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-function nearby_agents(a, model, r = 1; kwargs...)
+nearby_agents(a, model, r=1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
-end
 
 """
     random_nearby_id(agent, model::ABM, r = 1; kwargs...) → id
@@ -350,7 +348,7 @@ Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-function random_nearby_id(a, model, r = 1; kwargs...)
+function random_nearby_id(a, model, r=1; kwargs...)
     # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
     iter = nearby_ids(a, model, r; kwargs...)
 
@@ -386,7 +384,7 @@ is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-function random_nearby_agent(a, model, r = 1; kwargs...)
+function random_nearby_agent(a, model, r=1; kwargs...)
     id = random_nearby_id(a, model, r; kwargs...)
     isnothing(id) && return
     return model[id]

@@ -24,24 +24,26 @@ sir(;
 Same as in [SIR model for the spread of COVID-19](@ref).
 """
 function sir(;
-             C = 8,
-             max_travel_rate = 0.01,
-             Ns = rand(50:5000, C),
-             β_und = rand(0.3:0.02:0.6, C),
-             β_det = β_und ./ 10,
-             infection_period = 30,
-             reinfection_probability = 0.05,
-             detection_time = 14,
-             death_rate = 0.02,
-             Is = [zeros(Int, length(Ns) - 1)..., 1],
-             seed = 19)
+    C = 8,
+    max_travel_rate = 0.01,
+    Ns = rand(50:5000, C),
+    β_und = rand(0.3:0.02:0.6, C),
+    β_det = β_und ./ 10,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, length(Ns) - 1)..., 1],
+    seed = 19,
+)
+
     rng = MersenneTwister(seed)
-    @assert length(Ns)==
-            length(Is)==
-            length(β_und)==
-            length(β_det)==
-            size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
-    @assert size(migration_rates, 1)==size(migration_rates, 2) "migration_rates rates should be a square matrix"
+    @assert length(Ns) ==
+    length(Is) ==
+    length(β_und) ==
+    length(β_det) ==
+    size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
+    @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     migration_rates = zeros(C, C)
     for c in 1:C
@@ -59,17 +61,19 @@ function sir(;
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-    properties = Dict(:Ns => Ns,
-                      :Is => Is,
-                      :β_und => β_und,
-                      :β_det => β_det,
-                      :migration_rates => migration_rates,
-                      :infection_period => infection_period,
-                      :infection_period => infection_period,
-                      :reinfection_probability => reinfection_probability,
-                      :detection_time => detection_time,
-                      :C => C,
-                      :death_rate => death_rate)
+    properties = Dict(
+        :Ns => Ns,
+        :Is => Is,
+        :β_und => β_und,
+        :β_det => β_det,
+        :migration_rates => migration_rates,
+        :infection_period => infection_period,
+        :infection_period => infection_period,
+        :reinfection_probability => reinfection_probability,
+        :detection_time => detection_time,
+        :C => C,
+        :death_rate => death_rate
+    )
 
     space = GraphSpace(complete_digraph(C))
     model = ABM(PoorSoul, space; properties, rng)

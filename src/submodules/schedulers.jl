@@ -109,7 +109,7 @@ function partially(p::Real)
     return partial
 end
 
-struct Partially{R <: Real}
+struct Partially{R<:Real}
     p::R
     all_ids::Vector{Int}
     schedule::Vector{Int}
@@ -120,7 +120,7 @@ end
 A non-allocating scheduler that at each step activates only `p` percentage of randomly
 chosen agents.
 """
-Partially(p::R) where {R <: Real} = Partially{R}(p, Int[], Int[])
+Partially(p::R) where {R<:Real} = Partially{R}(p, Int[], Int[])
 
 function (sched::Partially)(model::ABM)
     get_ids!(sched.all_ids, model)
@@ -186,7 +186,7 @@ Otherwise returns agents grouped in order of appearance in the `Union`.
 the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
-    function by_union(model::ABM{S, A}) where {S, A}
+    function by_union(model::ABM{S,A}) where {S,A}
         types = Agents.union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
@@ -208,11 +208,11 @@ end
 A scheduler that activates agents by type in specified order (since `Union`s are not order
 preserving). `shuffle_agents = true` randomizes the order of agents within each group.
 """
-function by_type(order::Tuple{Type, Vararg{Type}}, shuffle_agents::Bool)
-    function by_ordered_union(model::ABM{S, A}) where {S, A}
+function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+    function by_ordered_union(model::ABM{S,A}) where {S,A}
         types = Agents.union_types(A)
         if order !== nothing
-            @assert length(types)==length(order) "Invalid dimension for `order`"
+            @assert length(types) == length(order) "Invalid dimension for `order`"
             types = order
         end
         sets = [Integer[] for _ in types]
@@ -232,7 +232,7 @@ end
 struct ByType
     shuffle_types::Bool
     shuffle_agents::Bool
-    type_inds::Dict{DataType, Int}
+    type_inds::Dict{DataType,Int}
     ids::Vector{Vector{Int}}
 end
 
@@ -247,10 +247,12 @@ the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
 function ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
     types = Agents.union_types(agent_union)
-    return ByType(shuffle_types,
-                  shuffle_agents,
-                  Dict(t => i for (i, t) in enumerate(types)),
-                  [Int[] for _ in 1:length(types)])
+    return ByType(
+        shuffle_types,
+        shuffle_agents,
+        Dict(t => i for (i, t) in enumerate(types)),
+        [Int[] for _ in 1:length(types)]
+    )
 end
 
 """
@@ -259,11 +261,13 @@ A non-allocating scheduler that activates agents by type in specified order (sin
 `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
 agents within each group.
 """
-function ByType(order::Tuple{Type, Vararg{Type}}, shuffle_agents::Bool)
-    return ByType(false,
-                  shuffle_agents,
-                  Dict(t => i for (i, t) in enumerate(order)),
-                  [Int[] for _ in 1:length(order)])
+function ByType(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
+    return ByType(
+        false,
+        shuffle_agents,
+        Dict(t => i for (i, t) in enumerate(order)),
+        [Int[] for _ in 1:length(order)]
+    )
 end
 
 function (sched::ByType)(model::ABM)
@@ -274,7 +278,7 @@ function (sched::ByType)(model::ABM)
     for agent in allagents(model)
         push!(sched.ids[sched.type_inds[typeof(agent)]], agent.id)
     end
-
+    
     sched.shuffle_types && shuffle!(model.rng, sched.ids)
 
     if sched.shuffle_agents

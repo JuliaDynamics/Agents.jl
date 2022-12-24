@@ -18,10 +18,12 @@ be chosen more than once.
 
 Example usage in [Wright-Fisher model of evolution](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/wright-fisher/).
 """
-function sample!(model::ABM,
-                 n::Int,
-                 weight = nothing;
-                 replace = true)
+function sample!(
+    model::ABM,
+    n::Int,
+    weight = nothing;
+    replace = true,
+)
     nagents(model) > 0 || return
     org_ids = collect(keys(model.agents))
     if weight !== nothing

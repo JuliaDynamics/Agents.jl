@@ -47,8 +47,11 @@
         @test sort!(collect(nearby_ids(directed[2], directed; neighbor_type = :all))) ==
               [1, 3]
 
-        ###################################################################################
-        # Continuous space
+
+
+
+###################################################################################
+# Continuous space
 
     end
 
@@ -60,8 +63,9 @@
 
     mutable struct Agent63 <: AbstractAgent
         id::Int
-        pos::NTuple{3, Float64}
-        vel::NTuple{3, Float64}
+        pos::NTuple{3,Float64}
+        vel::NTuple{3,Float64}
         weight::Float64
     end
+
 end

@@ -3,7 +3,7 @@ fig = Figure(resolution = (850, 300))
 
 function circle!(ax, r, color, distance)
     if distance == :euclidean
-        θ = 0:0.01:(2π)
+        θ = 0:0.01:2π
         lines!(ax, r .* cos.(θ), r .* sin.(θ); color)
     elseif distance == :chebyshev
         lines!(ax, [-r, -r], [-r, r]; color)
@@ -20,7 +20,7 @@ end
 
 function scatter_dots!(ax, r)
     r0 = ceil(r)
-    X = (-r0):r0
+    X = -r0:r0
     points = [Point2f(x, y) for x in X for y in X]
     scatter!(ax, points; color = :black)
 end
@@ -41,6 +41,6 @@ end
 
 elems = [LineElement(color = c, linestyle = nothing) for c in colors]
 
-fig[1, 4] = Legend(fig[1, 4], elems, string.(rs), "radius", framevisible = false)
+fig[1, 4] = Legend(fig[1,4], elems, string.(rs), "radius", framevisible = false)
 
 fig

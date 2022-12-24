@@ -45,26 +45,29 @@ end
 
 # The function `initialize_model` generates birds and returns a model object using default values.
 function initialize_model(;
-                          n_birds = 100,
-                          speed = 1.0,
-                          cohere_factor = 0.25,
-                          separation = 4.0,
-                          separate_factor = 0.25,
-                          match_factor = 0.01,
-                          visual_distance = 5.0,
-                          extent = (100, 100))
-    space2d = ContinuousSpace(extent; spacing = visual_distance / 1.5)
+    n_birds = 100,
+    speed = 1.0,
+    cohere_factor = 0.25,
+    separation = 4.0,
+    separate_factor = 0.25,
+    match_factor = 0.01,
+    visual_distance = 5.0,
+    extent = (100, 100),
+)
+    space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     model = ABM(Bird, space2d, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
-        add_agent!(model,
-                   vel,
-                   speed,
-                   cohere_factor,
-                   separation,
-                   separate_factor,
-                   match_factor,
-                   visual_distance)
+        add_agent!(
+            model,
+            vel,
+            speed,
+            cohere_factor,
+            separation,
+            separate_factor,
+            match_factor,
+            visual_distance,
+        )
     end
     return model
 end
@@ -130,10 +133,12 @@ figure, = abmplot(model; am = bird_marker)
 figure
 
 # And let's also do a nice little video for it:
-abmvideo("flocking.mp4", model, agent_step!;
-         am = bird_marker,
-         framerate = 20, frames = 100,
-         title = "Flocking")
+abmvideo(
+    "flocking.mp4", model, agent_step!;
+    am = bird_marker,
+    framerate = 20, frames = 100,
+    title = "Flocking"
+)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

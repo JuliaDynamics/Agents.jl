@@ -67,32 +67,37 @@ end
 # directions.
 
 function initialize_model(;
-                          n_sheep = 100,
-                          n_wolves = 50,
-                          dims = (20, 20),
-                          regrowth_time = 30,
-                          Δenergy_sheep = 4,
-                          Δenergy_wolf = 20,
-                          sheep_reproduce = 0.04,
-                          wolf_reproduce = 0.05,
-                          seed = 23182)
+        n_sheep = 100,
+        n_wolves = 50,
+        dims = (20, 20),
+        regrowth_time = 30,
+        Δenergy_sheep = 4,
+        Δenergy_wolf = 20,
+        sheep_reproduce = 0.04,
+        wolf_reproduce = 0.05,
+        seed = 23182,
+    )
+
     rng = MersenneTwister(seed)
     space = GridSpace(dims, periodic = true)
     ## Model properties contain the grass as two arrays: whether it is fully grown
     ## and the time to regrow. Also have static parameter `regrowth_time`.
     ## Notice how the properties are a `NamedTuple` to ensure type stability.
-    properties = (fully_grown = falses(dims),
-                  countdown = zeros(Int, dims),
-                  regrowth_time = regrowth_time)
+    properties = (
+        fully_grown = falses(dims),
+        countdown = zeros(Int, dims),
+        regrowth_time = regrowth_time,
+    )
     model = ABM(Union{Sheep, Wolf}, space;
-                properties, rng, scheduler = Schedulers.randomly, warn = false)
+        properties, rng, scheduler = Schedulers.randomly, warn = false
+    )
     ## Add agents
     for _ in 1:n_sheep
-        energy = rand(model.rng, 1:(Δenergy_sheep * 2)) - 1
+        energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
         add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
     end
     for _ in 1:n_wolves
-        energy = rand(model.rng, 1:(Δenergy_wolf * 2)) - 1
+        energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
         add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
     end
     ## Add grass with random initial growth
@@ -130,7 +135,7 @@ function sheepwolf_step!(sheep::Sheep, model)
 end
 
 function sheepwolf_step!(wolf::Wolf, model)
-    walk!(wolf, rand, model; ifempty = false)
+    walk!(wolf, rand, model;ifempty=false)
     wolf.energy -= 1
     if wolf.energy < 0
         kill_agent!(wolf, model)
@@ -149,6 +154,8 @@ function first_sheep_in_position(pos, model)
     j = findfirst(id -> model[id] isa Sheep, ids)
     isnothing(j) ? nothing : model[ids[j]]::Sheep
 end
+
+
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
 # additional energy and the grass will not be available for consumption until regrowth time
@@ -204,7 +211,7 @@ CairoMakie.activate!() # hide
 
 # To view our starting population, we can build an overview plot using [`abmplot`](@ref).
 # We define the plotting details for the wolves and sheep:
-offset(a) = a isa Sheep ? (-0.1, -0.1 * rand()) : (+0.1, +0.1 * rand())
+offset(a) = a isa Sheep ? (-0.1, -0.1*rand()) : (+0.1, +0.1*rand())
 ashape(a) = a isa Sheep ? :circle : :utriangle
 acolor(a) = a isa Sheep ? RGBAf(1.0, 1.0, 1.0, 0.8) : RGBAf(0.2, 0.2, 0.3, 0.8)
 
@@ -215,20 +222,21 @@ heatkwargs = (colormap = [:brown, :green], colorrange = (0, 1))
 
 # and put everything together and give it to [`abmplot`](@ref)
 plotkwargs = (;
-              ac = acolor,
-              as = 25,
-              am = ashape,
-              offset,
-              scatterkwargs = (strokewidth = 1.0, strokecolor = :black),
-              heatarray = grasscolor,
-              heatkwargs = heatkwargs)
+    ac = acolor,
+    as = 25,
+    am = ashape,
+    offset,
+    scatterkwargs = (strokewidth = 1.0, strokecolor = :black),
+    heatarray = grasscolor,
+    heatkwargs = heatkwargs,
+)
 
 sheepwolfgrass = initialize_model()
 
 fig, ax, abmobs = abmplot(sheepwolfgrass;
-                          agent_step! = sheepwolf_step!,
-                          model_step! = grass_step!,
-                          plotkwargs...)
+    agent_step! = sheepwolf_step!,
+    model_step! = grass_step!,
+plotkwargs...)
 fig
 
 # Now, lets run the simulation and collect some data. Define datacollection:
@@ -262,16 +270,17 @@ plot_population_timeseries(adf, mdf)
 # find an equilibrium
 # %% #src
 stable_params = (;
-                 n_sheep = 140,
-                 n_wolves = 20,
-                 dims = (30, 30),
-                 Δenergy_sheep = 5,
-                 sheep_reproduce = 0.31,
-                 wolf_reproduce = 0.06,
-                 Δenergy_wolf = 30,
-                 seed = 71758)
+    n_sheep = 140,
+    n_wolves = 20,
+    dims = (30, 30),
+    Δenergy_sheep = 5,
+    sheep_reproduce = 0.31,
+    wolf_reproduce = 0.06,
+    Δenergy_wolf = 30,
+    seed = 71758,
+)
 
-sheepwolfgrass = initialize_model(; stable_params...)
+sheepwolfgrass = initialize_model(;stable_params...)
 adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
@@ -282,16 +291,18 @@ plot_population_timeseries(adf, mdf)
 
 # ## Video
 # Given that we have defined plotting functions, making a video is as simple as
-sheepwolfgrass = initialize_model(; stable_params...)
+sheepwolfgrass = initialize_model(;stable_params...)
 
-abmvideo("sheepwolf.mp4",
-         sheepwolfgrass,
-         sheepwolf_step!,
-         grass_step!;
-         frames = 100,
-         framerate = 8,
-         title = "Sheep Wolf Grass",
-         plotkwargs...)
+abmvideo(
+    "sheepwolf.mp4",
+    sheepwolfgrass,
+    sheepwolf_step!,
+    grass_step!;
+    frames = 100,
+    framerate = 8,
+    title = "Sheep Wolf Grass",
+    plotkwargs...,
+)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

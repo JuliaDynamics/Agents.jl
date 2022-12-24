@@ -1,5 +1,5 @@
 export ensemblerun!
-Vector_or_Tuple = Union{AbstractArray, Tuple}
+Vector_or_Tuple = Union{AbstractArray,Tuple}
 
 """
     ensemblerun!(models::Vector, agent_step!, model_step!, n; kwargs...)
@@ -27,13 +27,15 @@ The following keywords modify the `ensemblerun!` function:
 
 All other keywords are propagated to [`run!`](@ref) as-is.
 """
-function ensemblerun!(models::Vector_or_Tuple,
-                      agent_step!,
-                      model_step!,
-                      n;
-                      showprogress = false,
-                      parallel = false,
-                      kwargs...)
+function ensemblerun!(
+    models::Vector_or_Tuple,
+    agent_step!,
+    model_step!,
+    n;
+    showprogress = false,
+    parallel = false,
+    kwargs...,
+)
     if parallel
         return parallel_ensemble(models, agent_step!, model_step!, n;
                                  showprogress, kwargs...)
@@ -50,17 +52,20 @@ the provided `generator` which is a one-argument function whose input is a seed.
 
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
-function ensemblerun!(generator,
-                      args...;
-                      ensemble = 5,
-                      seeds = rand(UInt32, ensemble),
-                      kwargs...)
+function ensemblerun!(
+    generator,
+    args...;
+    ensemble = 5,
+    seeds = rand(UInt32, ensemble),
+    kwargs...,
+)
     models = [generator(seed) for seed in seeds]
     ensemblerun!(models, args...; kwargs...)
 end
 
 function series_ensemble(models, agent_step!, model_step!, n;
                          showprogress = false, kwargs...)
+
     @assert models[1] isa ABM
 
     nmodels = length(models)
@@ -74,8 +79,9 @@ function series_ensemble(models, agent_step!, model_step!, n;
     add_ensemble_index!(df_model, 1)
 
     ProgressMeter.progress_map(2:nmodels; progress) do midx
-        df_agentTemp, df_modelTemp = run!(models[midx], agent_step!, model_step!, n;
-                                          kwargs...)
+
+        df_agentTemp, df_modelTemp =
+            run!(models[midx], agent_step!, model_step!, n; kwargs...)
 
         add_ensemble_index!(df_agentTemp, midx)
         add_ensemble_index!(df_modelTemp, midx)
@@ -89,6 +95,7 @@ end
 
 function parallel_ensemble(models, agent_step!, model_step!, n;
                            showprogress = false, kwargs...)
+
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
         run!(model, agent_step!, model_step!, n; kwargs...)

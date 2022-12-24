@@ -55,23 +55,25 @@ CairoMakie.activate!() # hide
 end
 
 function model_initiation(;
-                          Ns,
-                          migration_rates,
-                          β_und,
-                          β_det,
-                          infection_period = 30,
-                          reinfection_probability = 0.05,
-                          detection_time = 14,
-                          death_rate = 0.02,
-                          Is = [zeros(Int, length(Ns) - 1)..., 1],
-                          seed = 0)
+    Ns,
+    migration_rates,
+    β_und,
+    β_det,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, length(Ns) - 1)..., 1],
+    seed = 0,
+)
+
     rng = MersenneTwister(seed)
-    @assert length(Ns)==
-            length(Is)==
-            length(β_und)==
-            length(β_det)==
-            size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
-    @assert size(migration_rates, 1)==size(migration_rates, 2) "migration_rates rates should be a square matrix"
+    @assert length(Ns) ==
+    length(Is) ==
+    length(β_und) ==
+    length(β_det) ==
+    size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
+    @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     C = length(Ns)
     ## normalize migration_rates
@@ -80,18 +82,20 @@ function model_initiation(;
         migration_rates[c, :] ./= migration_rates_sum[c]
     end
 
-    properties = @dict(Ns,
-                       Is,
-                       β_und,
-                       β_det,
-                       β_det,
-                       migration_rates,
-                       infection_period,
-                       infection_period,
-                       reinfection_probability,
-                       detection_time,
-                       C,
-                       death_rate)
+    properties = @dict(
+        Ns,
+        Is,
+        β_und,
+        β_det,
+        β_det,
+        migration_rates,
+        infection_period,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        C,
+        death_rate
+    )
     space = GraphSpace(complete_digraph(C))
     model = ABM(PoorSoul, space; properties, rng)
 
@@ -122,14 +126,16 @@ end
 using LinearAlgebra: diagind
 
 function create_params(;
-                       C,
-                       max_travel_rate,
-                       infection_period = 30,
-                       reinfection_probability = 0.05,
-                       detection_time = 14,
-                       death_rate = 0.02,
-                       Is = [zeros(Int, C - 1)..., 1],
-                       seed = 19)
+    C,
+    max_travel_rate,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, C - 1)..., 1],
+    seed = 19,
+)
+
     Random.seed!(seed)
     Ns = rand(50:5000, C)
     β_und = rand(0.3:0.02:0.6, C)
@@ -146,15 +152,17 @@ function create_params(;
     migration_rates = (migration_rates .* max_travel_rate) ./ maxM
     migration_rates[diagind(migration_rates)] .= 1.0
 
-    params = @dict(Ns,
-                   β_und,
-                   β_det,
-                   migration_rates,
-                   infection_period,
-                   reinfection_probability,
-                   detection_time,
-                   death_rate,
-                   Is)
+    params = @dict(
+        Ns,
+        β_und,
+        β_det,
+        migration_rates,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        death_rate,
+        Is
+    )
 
     return params
 end
@@ -232,8 +240,10 @@ infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
 infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
-title = lift((s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
-             abmobs.s, abmobs.model)
+title = lift(
+    (s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
+    abmobs.s, abmobs.model
+)
 
 # And lastly we use them to plot things in a figure
 fig = Figure(resolution = (600, 400))

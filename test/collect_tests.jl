@@ -1,17 +1,23 @@
-@everywhere begin using Agents.Models: schelling, schelling_agent_step! end
+@everywhere begin
+    using Agents.Models: schelling, schelling_agent_step!
+end
 @testset "DataCollection" begin
     mutable struct Nested
         data::Vector{Float64}
     end
 
     function initialize()
-        model = ABM(Agent3,
-                    GridSpace((10, 10));
-                    properties = Dict(:year => 0,
-                                      :tick => 0,
-                                      :flag => false,
-                                      :container => Float64[],
-                                      :deep => Nested([20.0, 52.1])))
+        model = ABM(
+            Agent3,
+            GridSpace((10, 10));
+            properties = Dict(
+                :year => 0,
+                :tick => 0,
+                :flag => false,
+                :container => Float64[],
+                :deep => Nested([20.0, 52.1]),
+            ),
+        )
         add_agent!((4, 3), model, 0.1)
         add_agent!((7, 5), model, 0.35)
         add_agent!((2, 9), model, 0.67)
@@ -44,15 +50,18 @@
         @test collect_model_data!(DataFrame(), model, nothing, 1) == DataFrame()
 
         props = [:weight]
-        @test sprint(show,
-                     "text/csv",
-                     describe(init_agent_dataframe(model, props), :eltype)) ==
+        @test sprint(
+            show,
+            "text/csv",
+            describe(init_agent_dataframe(model, props), :eltype),
+        ) ==
               "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
         props = [:year]
-        @test sprint(show,
-                     "text/csv",
-                     describe(init_model_dataframe(model, props), :eltype)) ==
-              "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
+        @test sprint(
+            show,
+            "text/csv",
+            describe(init_model_dataframe(model, props), :eltype),
+        ) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
 
         @test_throws ErrorException init_agent_dataframe(model, [:UNKNOWN])
     end
@@ -139,14 +148,16 @@
         # with the average `weight` of all agents every six months.
         each_year(model, step) = step % 365 == 0
         six_months(model, step) = step % 182 == 0
-        agent_data, model_data = run!(model,
-                                      agent_step!,
-                                      model_step!,
-                                      365 * 5;
-                                      when_model = each_year,
-                                      when = six_months,
-                                      mdata = [:flag, :year],
-                                      adata = [(:weight, mean)])
+        agent_data, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = each_year,
+            when = six_months,
+            mdata = [:flag, :year],
+            adata = [(:weight, mean)],
+        )
 
         @test size(agent_data) == (11, 2)
         @test propertynames(agent_data) == [:step, :mean_weight]
@@ -156,36 +167,41 @@
         @test propertynames(model_data) == [:step, :flag, :year]
         @test maximum(model_data[!, :step]) == 1825
 
-        agent_data, model_data = run!(model,
-                                      agent_step!,
-                                      model_step!,
-                                      365 * 5;
-                                      when_model = [1, 365 * 5],
-                                      when = false,
-                                      mdata = [:flag, :year],
-                                      adata = [(:weight, mean)])
+        agent_data, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [1, 365 * 5],
+            when = false,
+            mdata = [:flag, :year],
+            adata = [(:weight, mean)],
+        )
         @test size(agent_data) == (0, 2)
         @test size(model_data) == (2, 3)
 
-        _, model_data = run!(model,
-                             agent_step!,
-                             model_step!,
-                             365 * 5;
-                             when_model = [1, 365 * 5],
-                             when = false,
-                             mdata = [:deep],
-                             obtainer = deepcopy)
+        _, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [1, 365 * 5],
+            when = false,
+            mdata = [:deep],
+            obtainer = deepcopy,
+        )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
 
-        _, model_data = run!(model,
-                             agent_step!,
-                             model_step!,
-                             365 * 5;
-                             when_model = [365 * 5],
-                             when = false,
-                             mdata = [(m) -> (m.deep.data[i])
-                                      for i in 1:length(model.deep.data)])
-        @test Array{Float64, 1}(model_data[1, 2:end]) == model.deep.data
+        _, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [365 * 5],
+            when = false,
+            mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
+        )
+        @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
     end
 
     @testset "Low-level API for Collections" begin
@@ -245,7 +261,7 @@
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3, Agent4}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
         add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
         add_agent_pos!(Agent4(2, (10, 7), 5), model)
 
@@ -290,10 +306,10 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 7)
-        @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
-        @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
-        @test typeof(df.p) <: Vector{Union{Missing, Int}}
-        @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.pos) <: Vector{Tuple{Int,Int}}
+        @test typeof(df.weight) <: Vector{Union{Missing,Float64}}
+        @test typeof(df.p) <: Vector{Union{Missing,Int}}
+        @test typeof(df.wpos) <: Vector{Union{Missing,Float64}}
 
         # Expect something completely unknown to fail
         props = [:UNKNOWN]
@@ -339,7 +355,7 @@
             pos::Dims{2}
             weight::Int
         end
-        model = ABM(Union{Agent3, Agent3Int}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
         add_agent_pos!(Agent3(1, (6, 8), 54.65), model)
         add_agent_pos!(Agent3Int(2, (10, 7), 5), model)
         add_agent_pos!(Agent3(3, (2, 4), 19.81), model)
@@ -349,7 +365,7 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 4)
-        @test typeof(df.weight) <: Vector{Union{Float64, Int}}
+        @test typeof(df.weight) <: Vector{Union{Float64,Int}}
 
         # Expect a1.weight <: Float64, a2.weight <: Int64 to fail in aggregate
         props = [(:weight, sum)]
@@ -392,15 +408,17 @@
         @test [length(d.data) for d in model_data[!, :deep]] == [3, 4, 4]
 
         model = initialize()
-        agent_data, model_data = run!(model,
-                                      agent_step!,
-                                      model_step!,
-                                      365 * 5;
-                                      when_model = [1, 365 * 5],
-                                      when = false,
-                                      mdata = [:flag, :year, :container, :deep],
-                                      adata = [(:weight, mean)],
-                                      obtainer = deepcopy)
+        agent_data, model_data = run!(
+            model,
+            agent_step!,
+            model_step!,
+            365 * 5;
+            when_model = [1, 365 * 5],
+            when = false,
+            mdata = [:flag, :year, :container, :deep],
+            adata = [(:weight, mean)],
+            obtainer = deepcopy,
+        )
         @test size(agent_data) == (0, 2)
         @test size(model_data) == (2, 5)
     end
@@ -412,9 +430,11 @@
             b::Bool
         end
 
-        model = ABM(Agent3,
-                    GridSpace((10, 10));
-                    properties = Props(1, false))
+        model = ABM(
+            Agent3,
+            GridSpace((10, 10));
+            properties=Props(1, false),
+        )
         mdata = [:a, :b]
 
         model_data = init_model_dataframe(model, mdata)
@@ -423,6 +443,7 @@
 end
 
 @testset "Ensemble runs" begin
+
     nsteps = 100
     nreplicates = 2
     numagents_low = 280
@@ -437,8 +458,7 @@ end
         return repeat(basemodels, nreplicates)
     end
 
-    @testset begin
-        "Serial ensemblerun!"
+    @testset begin "Serial ensemblerun!"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
@@ -452,8 +472,7 @@ end
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
-    @testset begin
-        "Parallel ensemblerun!"
+    @testset begin "Parallel ensemblerun!"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
@@ -462,15 +481,14 @@ end
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
-                                   when = (model, step) -> step % 10 == 0)
+                                   when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.step)) == (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
-    @testset begin
-        "Parallel ensemblerun! with stopping function"
+    @testset begin "Parallel ensemblerun! with stopping function"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
@@ -481,7 +499,7 @@ end
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
-                                   when = (model, step) -> step % 10 == 0)
+                                   when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.step)) ≤ (nsteps / 10) + 1
@@ -521,78 +539,92 @@ end
     terminate(m, s) = s >= 3 ? true : false
     @testset "Serial Scan" begin
         mdata = [unburnt, burnt]
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           mdata)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+        )
         # 3 is the number of combinations of changing params
         @test size(mdf) == ((n + 1) * 3, 4)
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           include_constants = true,
-                           mdata)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            include_constants = true,
+            mdata,
+        )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
         @test size(mdf) == ((n + 1) * 3, 5)
         mdata = [burnt]
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           mdata)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+        )
         @test unique(mdf.step) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
 
         # test whether paramscan accepts n::Function
         mdata = []
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n = terminate,
-                           model_step! = forest_model_step!,
-                           mdata)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n = terminate,
+            model_step! = forest_model_step!,
+            mdata)
         @test unique(mdf.step) == 0:3
     end
 
     @testset "Parallel Scan" begin
         mdata = [unburnt, burnt]
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           mdata)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+        )
         # 3 is the number of combinations of changing params
         @test size(mdf) == ((n + 1) * 3, 4)
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           include_constants = true,
-                           mdata,
-                           parallel = true)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            include_constants = true,
+            mdata,
+            parallel = true
+        )
         # 3 is the number of combinations of changing params,
         # 5 is 3+2, where 2 is the number of constant parameters
         @test size(mdf) == ((n + 1) * 3, 5)
         mdata = [burnt]
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n,
-                           model_step! = forest_model_step!,
-                           mdata,
-                           parallel = true)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n,
+            model_step! = forest_model_step!,
+            mdata,
+            parallel = true
+        )
         @test unique(mdf.step) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
 
         # test whether paramscan accepts n::Function
         mdata = []
-        _, mdf = paramscan(parameters,
-                           forest_fire;
-                           n = terminate,
-                           model_step! = forest_model_step!,
-                           mdata,
-                           parallel = true)
+        _, mdf = paramscan(
+            parameters,
+            forest_fire;
+            n = terminate,
+            model_step! = forest_model_step!,
+            mdata,
+            parallel = true)
         @test unique(mdf.step) == 0:3
     end
 end

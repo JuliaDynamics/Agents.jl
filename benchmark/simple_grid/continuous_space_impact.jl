@@ -31,9 +31,9 @@ function count_nearby_same_exact(agent, model)
 end
 
 println("Continuous space count nearby ids, spacing=$spacing, r=$r, inexact")
-@btime count_nearby_same(agent, $model) setup=(agent = random_agent($model))
+@btime count_nearby_same(agent, $model) setup = (agent = random_agent($model))
 println("Continuous space count nearby ids, spacing=$spacing, r=$r, exact")
-@btime count_nearby_same_exact(agent, $model) setup=(agent = random_agent($model))
+@btime count_nearby_same_exact(agent, $model) setup = (agent = random_agent($model))
 
 #= Results
 # Current state
@@ -46,6 +46,7 @@ Continuous space count nearby ids, spacing=0.05, r=0.1, exact
   1.220 μs (2 allocations: 288 bytes)
 Continuous space count nearby ids, spacing=0.1, r=0.1, exact
   4.843 μs (58 allocations: 5.22 KiB)
+
 
 # master
 Continuous space count nearby ids, spacing=0.05, r=0.1, inexact

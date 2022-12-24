@@ -1,4 +1,5 @@
 @testset "mutable graph" begin
+
     g = complete_digraph(5)
     abm = ABM(Agent5, GraphSpace(g))
     for n in 1:5
@@ -26,6 +27,7 @@
     ids = nearby_ids(a, abm)
     @test sort(ids) == 21:25
 
+
     rem_edge!(abm, n, 2)
     ids = nearby_ids(a, abm)
     @test isempty(ids)
@@ -37,4 +39,5 @@
     @test add_edge!(abm, 1, 2) == false
     add_vertex!(abm)
     @test add_edge!(abm, 1, 2) == true
+
 end

@@ -56,23 +56,29 @@ end
 The minimal agent struct for usage with [`GraphSpace`](@ref).
 It has an additional `pos::Int` field. See also [`@agent`](@ref).
 """
-@agent GraphAgent NoSpaceAgent begin pos::Int end
+@agent GraphAgent NoSpaceAgent begin
+    pos::Int
+end
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
 random_position(model::ABM{<:GraphSpace}) = rand(model.rng, 1:nv(model))
 
-function remove_agent_from_space!(agent::A,
-                                  model::ABM{<:GraphSpace, A}) where {A <: AbstractAgent}
+function remove_agent_from_space!(
+    agent::A,
+    model::ABM{<:GraphSpace,A},
+) where {A <: AbstractAgent}
     agentpos = agent.pos
     ids = ids_in_position(agentpos, model)
     splice!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
-function add_agent_to_space!(agent::A,
-                             model::ABM{<:GraphSpace, A}) where {A <: AbstractAgent}
+function add_agent_to_space!(
+    agent::A,
+    model::ABM{<:GraphSpace,A},
+) where {A <: AbstractAgent}
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
@@ -94,15 +100,16 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
 end
 
 # This function is here purely because of performance reasons
-function nearby_ids(agent::A, model::ABM{<:GraphSpace, A}, r = 1;
-                    kwargs...) where {A <: AbstractAgent}
+function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A <: AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
 
-function nearby_positions(position::Int,
-                          model::ABM{<:GraphSpace};
-                          neighbor_type::Symbol = :default)
+function nearby_positions(
+    position::Int,
+    model::ABM{<:GraphSpace};
+    neighbor_type::Symbol = :default,
+)
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     if neighbor_type == :default
         Graphs.neighbors(model.space.graph, position)
@@ -128,10 +135,10 @@ that of the one to be removed, while every other node remains as is. This means 
  when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
  `n`-th node (and all its edges and agents) are deleted.
  """
-function rem_node!(model::ABM{<:GraphSpace}, n::Int)
-    for id in copy(ids_in_position(n, model))
-        kill_agent!(model[id], model)
-    end
+ function rem_node!(model::ABM{<:GraphSpace}, n::Int)
+     for id in copy(ids_in_position(n, model))
+         kill_agent!(model[id], model)
+     end
     V = nv(model)
     success = Graphs.rem_vertex!(model.space.graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
@@ -145,11 +152,11 @@ end
  Add a new node (i.e. possible position) to the model's graph and return it.
  You can connect this new node with existing ones using [`add_edge!`](@ref).
  """
-function add_node!(model::ABM{<:GraphSpace})
-    add_vertex!(model.space.graph)
-    push!(model.space.stored_ids, Int[])
-    return nv(model)
-end
+ function add_node!(model::ABM{<:GraphSpace})
+     add_vertex!(model.space.graph)
+     push!(model.space.stored_ids, Int[])
+     return nv(model)
+ end
 
 """
     rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
@@ -190,9 +197,7 @@ Returns a boolean, true if the operation was successful.
 
 `args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
-function Graphs.add_edge!(model::ABM{<:GraphSpace}, args...; kwargs...)
-    add_edge!(model.space.graph, args...; kwargs...)
-end
+Graphs.add_edge!(model::ABM{<:GraphSpace}, args...; kwargs...) = add_edge!(model.space.graph, args...; kwargs...)
 
 """
     rem_edge!(model::ABM{<:GraphSpace}, n, m)
