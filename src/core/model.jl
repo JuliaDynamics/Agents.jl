@@ -1,4 +1,4 @@
-export ABM, AgentBasedModel
+export ABM, UnkillableABM, AgentBasedModel
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -101,6 +101,19 @@ end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
     return ABM(typeof(agent), args...; kwargs...)
+end
+
+"""
+    UnkillableABM(AgentType [, space]; properties, kwargs...) → model
+
+Create an unkillable agent-based model from the given agent type and `space`. For more details see `ABM`.
+"""
+function UnkillableABM(T::Type{A}, args...; kwargs...) where {A}
+    AgentBasedModel(T, args...; container = Vector{A})
+end
+
+function UnkillableABM(agent::AbstractAgent, args...; kwargs...)
+    return UnkillableABM(typeof(agent), args...; kwargs...)
 end
 
 #######################################################################################
