@@ -23,7 +23,6 @@ DirectDistance{D}() where {D} = DirectDistance{D}([floor(Int, 10.0 * √x) for x
 
 Base.show(io::IO, metric::DirectDistance) = print(io, "DirectDistance")
 
-
 """
     Pathfinding.MaxDistance{D}() <: CostMetric{D}
 Distance between two tiles is approximated as the maximum of absolute
@@ -35,7 +34,7 @@ Base.show(io::IO, metric::MaxDistance) = print(io, "MaxDistance")
 
 struct PenaltyMap{D} <: CostMetric{D}
     base_metric::CostMetric{D}
-    pmap::Array{Int,D}
+    pmap::Array{Int, D}
 end
 
 """
@@ -53,10 +52,12 @@ changed by specifying `base_metric`.
 
 An example usage can be found in [Mountain Runners](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/runners/).
 """
-PenaltyMap(pmap::Array{Int,D}) where {D} = PenaltyMap{D}(DirectDistance{D}(), pmap)
+PenaltyMap(pmap::Array{Int, D}) where {D} = PenaltyMap{D}(DirectDistance{D}(), pmap)
 
-PenaltyMap(pmap::Array{Int,D}, base_metric::CostMetric{D}) where {D} =
+function PenaltyMap(pmap::Array{Int, D}, base_metric::CostMetric{D}) where {D}
     PenaltyMap{D}(base_metric, pmap)
+end
 
-Base.show(io::IO, metric::PenaltyMap) =
+function Base.show(io::IO, metric::PenaltyMap)
     print(io, "HeightMap with base: $(metric.base_metric)")
+end

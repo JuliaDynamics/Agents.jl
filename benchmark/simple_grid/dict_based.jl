@@ -5,7 +5,7 @@ end
 
 function initialize_dict()
     model = Dict{NTuple{2, Int}, DictAgent}()
-    N = grid_size[1]*grid_size[2]*grid_occupation
+    N = grid_size[1] * grid_size[2] * grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2
         pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
@@ -49,4 +49,4 @@ end
 
 model_dict = initialize_dict()
 println("benchmarking dict-based step")
-@btime simulation_step!($model_dict) setup = (model_dict = initialize_dict())
+@btime simulation_step!($model_dict) setup=(model_dict = initialize_dict())

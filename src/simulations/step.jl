@@ -42,9 +42,11 @@ dummystep(agent, model) = nothing
 until(s, n::Integer, model) = s < n
 until(s, n, model) = !n(model, s)
 
-step!(model::ABM, agent_step!, n::Integer=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
+function step!(model::ABM, agent_step!, n::Integer = 1, agents_first::Bool = true)
+    step!(model, agent_step!, dummystep, n, agents_first)
+end
 
-function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
+function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first = true)
     s = 0
     while until(s, n, model)
         !agents_first && model_step!(model)
@@ -59,4 +61,3 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
         s += 1
     end
 end
-

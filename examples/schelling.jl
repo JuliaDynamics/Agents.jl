@@ -86,12 +86,10 @@ schelling = ABM(SchellingAgent, space; properties)
 # property `:group`, so that all agents of group 1 act first.
 # We would then use the scheduler [`Schedulers.ByProperty`](@ref) like so:
 
-schelling2 = ABM(
-    SchellingAgent,
-    space;
-    properties = properties,
-    scheduler = Schedulers.ByProperty(:group),
-)
+schelling2 = ABM(SchellingAgent,
+                 space;
+                 properties = properties,
+                 scheduler = Schedulers.ByProperty(:group))
 
 # Notice that `Schedulers.ByProperty` accepts an argument and returns a struct,
 # which is why we didn't just give `Schedulers.ByProperty` to `scheduler`.
@@ -111,10 +109,8 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.MersenneTwister(seed)
-    model = ABM(
-        SchellingAgent, space;
-        properties, rng, scheduler = Schedulers.Randomly()
-    )
+    model = ABM(SchellingAgent, space;
+                properties, rng, scheduler = Schedulers.Randomly())
 
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
@@ -207,12 +203,10 @@ figure # returning the figure displays it
 # finer control over additional plot elements.
 
 model = initialize();
-abmvideo(
-    "schelling.mp4", model, agent_step!;
-    ac = groupcolor, am = groupmarker, as = 10,
-    framerate = 4, frames = 20,
-    title = "Schelling's segregation model"
-)
+abmvideo("schelling.mp4", model, agent_step!;
+         ac = groupcolor, am = groupmarker, as = 10,
+         framerate = 4, frames = 20,
+         title = "Schelling's segregation model")
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -296,7 +290,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # to save and load models to JLD2 files respectively.
 
 # First, let's create a model with 200 agents and run it for 40 iterations.
-@eval Main __atexample__named__schelling = $(@__MODULE__) # hide
+@eval Main __atexample__named__schelling=$(@__MODULE__) # hide
 
 model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
 run!(model, agent_step!, 40)
@@ -414,11 +408,9 @@ adf[(end - 10):end, :]
 happyperc(moods) = count(moods) / length(moods)
 adata = [(:mood, happyperc)]
 
-parameters = Dict(
-    :min_to_be_happy => collect(2:5), # expanded
-    :numagents => [200, 300],         # expanded
-    :griddims => (20, 20),            # not Vector = not expanded
-)
+parameters = Dict(:min_to_be_happy => collect(2:5), # expanded
+                  :numagents => [200, 300],         # expanded
+                  :griddims => (20, 20))
 
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 adf

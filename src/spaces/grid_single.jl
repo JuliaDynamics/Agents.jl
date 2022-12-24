@@ -8,11 +8,11 @@
 export GridSpaceSingle, id_in_position
 
 # type P stands for Periodic and is a boolean
-struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
-    stored_ids::Array{Int,D}
+struct GridSpaceSingle{D, P} <: AbstractGridSpace{D, P}
+    stored_ids::Array{Int, D}
     metric::Symbol
-    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Float64, Vector{NTuple{D, Int}}}
+    offsets_within_radius_no_0::Dict{Float64, Vector{NTuple{D, Int}}}
 end
 
 """
@@ -26,18 +26,22 @@ with non-zero IDs, either positive or negative. This is not checked internally.
 
 All arguments and keywords behave exactly as in [`GridSpace`](@ref).
 """
-function GridSpaceSingle(d::NTuple{D,Int}; periodic = true, metric = :chebyshev) where {D}
+function GridSpaceSingle(d::NTuple{D, Int}; periodic = true, metric = :chebyshev) where {D}
     s = zeros(Int, d)
-    return GridSpaceSingle{D,periodic}(s, metric,
-        Dict{Float64,Vector{NTuple{D,Int}}}(), Dict{Float64,Vector{NTuple{D,Int}}}(),
-    )
+    return GridSpaceSingle{D, periodic}(s, metric,
+                                        Dict{Float64, Vector{NTuple{D, Int}}}(),
+                                        Dict{Float64, Vector{NTuple{D, Int}}}())
 end
 # Implementation of space API
-function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::A,
+                             model::ABM{<:GridSpaceSingle, A}) where {A <: AbstractAgent}
     model.space.stored_ids[a.pos...] = a.id
     return a
 end
-function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::A,
+                                  model::ABM{<:GridSpaceSingle, A}) where {
+                                                                           A <:
+                                                                           AbstractAgent}
     model.space.stored_ids[a.pos...] = 0
     return a
 end
@@ -63,7 +67,6 @@ function id_in_position(pos, model::ABM{<:GridSpaceSingle})
     return model.space.stored_ids[pos...]
 end
 
-
 #######################################################################################
 # Implementation of nearby_stuff
 #######################################################################################
@@ -74,9 +77,8 @@ end
 # the duplication is necessary because `nearby_ids(pos, ...)` should in principle
 # contain the id at the given `pos` as well.
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, r = 1,
-        get_offset_indices = offsets_within_radius # internal, see last function
-    ) where {D}
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D, true}}, r = 1,
+                    get_offset_indices = offsets_within_radius) where {D}
     nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
@@ -86,18 +88,17 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     return valid_pos_iterator
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1,
-        get_offset_indices = offsets_within_radius # internal, see last function
-    ) where {D}
+function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D, false}}, r = 1,
+                    get_offset_indices = offsets_within_radius) where {D}
     nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
     positions_iterator = (pos .+ β for β in nindices)
     # Here we combine in one filtering step both valid accesses to the space array
     # but also that the accessed location is not empty (i.e., id is not 0)
-    array_accesses_iterator = Base.Iterators.filter(
-        pos -> checkbounds(Bool, stored_ids, pos...) && stored_ids[pos...] ≠ 0,
-        positions_iterator
-    )
+    array_accesses_iterator = Base.Iterators.filter(pos -> checkbounds(Bool, stored_ids,
+                                                                       pos...) &&
+                                                        stored_ids[pos...] ≠ 0,
+                                                    positions_iterator)
     return (stored_ids[pos...] for pos in array_accesses_iterator)
 end
 
@@ -106,7 +107,7 @@ end
 # call to `filter(id -> id ≠ a.id, ...)` that happens in core/space_interaction_API.jl.
 # Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
-function nearby_ids(
-    a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}
+function nearby_ids(a::A, model::ABM{<:GridSpaceSingle{D}, A},
+                    r = 1) where {D, A <: AbstractAgent}
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end

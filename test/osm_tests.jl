@@ -4,7 +4,7 @@ using StableRNGs
 
 mutable struct AgentOSM <: AbstractAgent
     id::Int
-    pos::Tuple{Int,Int,Float64}
+    pos::Tuple{Int, Int, Float64}
 end
 
 @testset "OpenStreetMap space" begin
@@ -40,7 +40,8 @@ end
         @test 51.525 < lat < 51.545
 
         # Test that finding nearest nodes works, and that road version is closer
-        intersection_diff = maximum(abs.(OSM.lonlat(start_intersection, model) .- start_lonlat))
+        intersection_diff = maximum(abs.(OSM.lonlat(start_intersection, model) .-
+                                         start_lonlat))
         start_road = OSM.nearest_road(start_lonlat, model)
         road_diff = maximum(abs.(OSM.lonlat(start_road, model) .- start_lonlat))
         @test intersection_diff < 0.1 # 0.1 degrees is max degree distance for goettingen
@@ -66,7 +67,8 @@ end
         @test all(OSM.latlon(np_latlon[1], model) .≈ (51.5307792, 9.9451386))
 
         @test OSM.road_length(model[1].pos, model) ≈ 0.0002591692620559716
-        @test OSM.road_length(finish_road[1], finish_road[2], model) ≈ 0.00030269737299400725
+        @test OSM.road_length(finish_road[1], finish_road[2], model) ≈
+              0.00030269737299400725
     end
 
     @testset "Moving along routes" begin
@@ -100,7 +102,7 @@ end
         for i in 1:5
             s = (start_road[1:2]..., i / 5 * OSM.road_length(start_road, model))
             add_agent!(s, model)
-            route = plan_route!(model[2+i], finish_road, model)
+            route = plan_route!(model[2 + i], finish_road, model)
         end
 
         @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
@@ -127,15 +129,14 @@ end
         nbor = Int(outneighbors(model.space.map.graph, pos_1[1])[1])
         rl = OSM.road_length(pos_1, nbor, model)
         @test OSM.distance(pos_1, nbor, model) ≈ rl
-        @test OSM.distance(pos_1, pos_1, model) == 0.
+        @test OSM.distance(pos_1, pos_1, model) == 0.0
         @test OSM.distance((pos_1, nbor, 0.0), (nbor, pos_1, rl), model) == 0.0
-        @test OSM.distance((pos_1, nbor, rl/4), (nbor, pos_1, rl/4), model) ≈ rl/2
+        @test OSM.distance((pos_1, nbor, rl / 4), (nbor, pos_1, rl / 4), model) ≈ rl / 2
         move_agent!(model[1], (pos_1, pos_1, 0.0), model)
         plan_route!(model[1], finish_intersection, model)
-        len = sum(OSM.LightOSM.weights_from_path(
-            model.space.map,
-            reverse([model.space.map.index_to_node[i] for i in model.space.routes[1].route]),
-        ))
+        len = sum(OSM.LightOSM.weights_from_path(model.space.map,
+                                                 reverse([model.space.map.index_to_node[i]
+                                                          for i in model.space.routes[1].route])))
         len += OSM.road_length(pos_1, model.space.routes[1].route[end], model)
         @test OSM.distance(pos_1, finish_intersection, model) ≈ len
         @test OSM.route_length(model[1], model) ≈ len

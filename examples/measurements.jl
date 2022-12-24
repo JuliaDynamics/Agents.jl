@@ -19,8 +19,7 @@ using Measurements
     albedo::AbstractFloat # Allow Measurements
 end
 
-@agent Land GridAgent{2} begin
-    temperature::AbstractFloat # Allow Measurements
+@agent Land GridAgent{2} begin temperature::AbstractFloat # Allow Measurements
 end
 
 # Notice that there is only one small difference between this version and the original
@@ -41,7 +40,7 @@ import StatsBase
 CairoMakie.activate!() # hide
 using Random # hide
 
-const DaisyWorld = ABM{<:GridSpace,Union{Daisy,Land}}
+const DaisyWorld = ABM{<:GridSpace, Union{Daisy, Land}}
 
 function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
@@ -70,7 +69,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         temperature = model[ids[1]].temperature
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand(model.rng) < seed_threshold
-            empty_neighbors = Tuple{Int,Int}[]
+            empty_neighbors = Tuple{Int, Int}[]
             neighbors = nearby_positions(pos, model)
             for n in neighbors
                 if length(ids_in_position(n, model)) == 1
@@ -122,45 +121,41 @@ end
 # automatically through our model.
 
 function daisyworld(;
-    griddims = (30, 30),
-    max_age = 25,
-    init_white = 0.2,
-    init_black = 0.2,
-    albedo_white = 0.75,
-    albedo_black = 0.25,
-    ## Surface albedo measurements are complicated for our satellites perhaps
-    surface_albedo = 0.4 ± 0.15,
-    ## Measurements from the sun are generally stable, but fluctuate around 10%
-    solar_change = 0.005 ± 0.002,
-    solar_luminosity = 1.0 ± 0.1,
-    scenario = :default,
-)
-
+                    griddims = (30, 30),
+                    max_age = 25,
+                    init_white = 0.2,
+                    init_black = 0.2,
+                    albedo_white = 0.75,
+                    albedo_black = 0.25,
+                    ## Surface albedo measurements are complicated for our satellites perhaps
+                    surface_albedo = 0.4 ± 0.15,
+                    ## Measurements from the sun are generally stable, but fluctuate around 10%
+                    solar_change = 0.005 ± 0.002,
+                    solar_luminosity = 1.0 ± 0.1,
+                    scenario = :default)
     space = GridSpace(griddims)
     properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
     properties[:tick] = 0
     daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
-    model = ABM(
-        Union{Daisy,Land},
-        space;
-        scheduler = daisysched,
-        properties = properties,
-        warn = false,
-    )
+    model = ABM(Union{Daisy, Land},
+                space;
+                scheduler = daisysched,
+                properties = properties,
+                warn = false)
 
     ## An uncertain initial temperature, solely for type stability
     fill_space!(Land, model, 0.0 ± 0.0)
     grid = collect(positions(model))
     num_positions = prod(griddims)
-    white_positions =
-        StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
+    white_positions = StatsBase.sample(grid, Int(init_white * num_positions);
+                                       replace = false)
     for wp in white_positions
         wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(grid, white_positions)
-    black_positions =
-        StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
+    black_positions = StatsBase.sample(allowed, Int(init_black * num_positions);
+                                       replace = false)
     for bp in black_positions
         wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
         add_agent_pos!(wd, model)
@@ -194,54 +189,43 @@ mdata = [:solar_luminosity]
 
 Random.seed!(19) # hide
 model = daisyworld(scenario = :ramp)
-agent_df, model_df =
-    run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+agent_df, model_df = run!(model, agent_step!, model_step!, 1000; adata = adata,
+                          mdata = mdata)
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
 lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
 lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
-leg =
-    f[1, 1] = Legend(
-        f,
-        [lb, lw],
-        ["black", "white"],
-        tellheight = false,
-        tellwidth = false,
-        halign = :right,
-        valign = :top,
-        margin = (10, 10, 10, 10),
-    )
+leg = f[1, 1] = Legend(f,
+                       [lb, lw],
+                       ["black", "white"],
+                       tellheight = false,
+                       tellwidth = false,
+                       halign = :right,
+                       valign = :top,
+                       margin = (10, 10, 10, 10))
 
 ax2 = f[2, 1] = Axis(f, ylabel = "Temperature")
-highband =
-    Measurements.value.(agent_df[!, dataname(adata[3])]) +
-    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
-lowband =
-    Measurements.value.(agent_df[!, dataname(adata[3])]) -
-    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
+highband = Measurements.value.(agent_df[!, dataname(adata[3])]) +
+           Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
+lowband = Measurements.value.(agent_df[!, dataname(adata[3])]) -
+          Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
 band!(ax2, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
-lines!(
-    ax2,
-    agent_df.step,
-    Measurements.value.(agent_df[!, dataname(adata[3])]),
-    linewidth = 2,
-    color = :blue,
-)
+lines!(ax2,
+       agent_df.step,
+       Measurements.value.(agent_df[!, dataname(adata[3])]),
+       linewidth = 2,
+       color = :blue)
 
 ax3 = f[3, 1] = Axis(f, ylabel = "Luminosity")
-highband =
-    Measurements.value.(model_df.solar_luminosity) +
-    Measurements.uncertainty.(model_df.solar_luminosity)
-lowband =
-    Measurements.value.(model_df.solar_luminosity) -
-    Measurements.uncertainty.(model_df.solar_luminosity)
+highband = Measurements.value.(model_df.solar_luminosity) +
+           Measurements.uncertainty.(model_df.solar_luminosity)
+lowband = Measurements.value.(model_df.solar_luminosity) -
+          Measurements.uncertainty.(model_df.solar_luminosity)
 band!(ax3, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
-lines!(
-    ax3,
-    agent_df.step,
-    Measurements.value.(model_df.solar_luminosity),
-    linewidth = 2,
-    color = :blue,
-)
+lines!(ax3,
+       agent_df.step,
+       Measurements.value.(model_df.solar_luminosity),
+       linewidth = 2,
+       color = :blue)
 f

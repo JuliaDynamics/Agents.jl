@@ -46,8 +46,8 @@ end
 
 mutable struct Agent6 <: AbstractAgent
     id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+    pos::NTuple{2, Float64}
+    vel::NTuple{2, Float64}
     weight::Float64
 end
 
@@ -62,7 +62,7 @@ Agent7(id, pos; f1, f2) = Agent7(id, pos, f1, f2)
 
 mutable struct Agent8 <: AbstractAgent
     id::Int
-    pos::NTuple{2,Float64}
+    pos::NTuple{2, Float64}
     f1::Bool
     f2::Int
 end

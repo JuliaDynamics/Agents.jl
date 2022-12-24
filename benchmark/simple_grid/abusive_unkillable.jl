@@ -5,7 +5,7 @@
 # die in this simulation.
 # Based on https://github.com/JuliaDynamics/Agents.jl/issues/640#issuecomment-1166330815
 mutable struct AbusiveUnkillableAgent
-    pos::Tuple{Int,Int}
+    pos::Tuple{Int, Int}
     group::Int
     happy::Bool
 end
@@ -19,7 +19,7 @@ function initialize_abusiveunkillable()
     model = AbusiveUnkillableModel(AbusiveUnkillableAgent[], fill(0, grid_size...))
     N = floor(Int, grid_size[1] * grid_size[2] * grid_occupation * 0.5)
 
-    for i in 1:2N
+    for i in 1:(2N)
         grp = i <= N ? 1 : 2
         pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
         while model.space[pos...] > 0
@@ -67,7 +67,7 @@ end
 
 model_abusiveunkillable = initialize_abusiveunkillable()
 println("Benchmarking abusive unkillable version")
-@btime simulate_abusiveunkillable!($model_abusiveunkillable) setup = (model_abusiveunkillable = initialize_abusiveunkillable())
+@btime simulate_abusiveunkillable!($model_abusiveunkillable) setup=(model_abusiveunkillable = initialize_abusiveunkillable())
 println("Benchmarking abusive unkillable version: count nearby same")
 model_abusiveunkillable = initialize_abusiveunkillable()
-@btime count_nearby_same_abusiveunkillable(agent, model_abusiveunkillable) setup = (agent = rand(model_abusiveunkillable.agents))
+@btime count_nearby_same_abusiveunkillable(agent, model_abusiveunkillable) setup=(agent = rand(model_abusiveunkillable.agents))

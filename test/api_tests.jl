@@ -8,9 +8,9 @@ using StableRNGs
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
     model = ABM(Agent7, space; properties)
-    attributes = (f1=true, f2=1)
+    attributes = (f1 = true, f2 = 1)
     add_agent!(1, model, attributes...)
-    attributes = (f2=1, f1=true)
+    attributes = (f2 = 1, f1 = true)
     add_agent!(1, model; attributes...)
     @test model[1].id != model[2].id
     @test model[1].pos == model[2].pos
@@ -179,7 +179,7 @@ end
 
     # Testing genocide!(model::ABM, f::Function) with a named function
     # No need to replenish population since the last test fails
-    function complex_logic(agent::A) where {A<:AbstractAgent}
+    function complex_logic(agent::A) where {A <: AbstractAgent}
         if agent.pos[1] <= 5 && agent.weight > 25
             true
         else
@@ -188,7 +188,6 @@ end
     end
     genocide!(model, complex_logic)
     @test nagents(model) < N
-
 end
 
 mutable struct Daisy <: AbstractAgent
@@ -212,7 +211,7 @@ end
     end
 
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn=false)
+    model = ABM(Union{Daisy, Land}, space; warn = false)
     fill_space!(Daisy, model, "black")
     @test nagents(model) == 100
     for a in allagents(model)
@@ -220,15 +219,14 @@ end
         @test a.breed == "black"
     end
 
-    space = GridSpace((10, 10), periodic=true)
-    model = ABM(Union{Daisy,Land}, space; warn=false)
+    space = GridSpace((10, 10), periodic = true)
+    model = ABM(Union{Daisy, Land}, space; warn = false)
     temperature(pos) = (pos[1] / 10,) # make it Tuple!
     fill_space!(Land, model, temperature)
     @test nagents(model) == 100
     for a in allagents(model)
         @test a.temperature == a.pos[1] / 10
     end
-
 end
 
 @testset "model step order" begin
@@ -244,7 +242,7 @@ end
     end
 
     for bool in (true, false)
-        model = ABM(Agent2; properties=Dict(:count => 0))
+        model = ABM(Agent2; properties = Dict(:count => 0))
         for i in 1:100
             add_agent!(model, rand(model.rng))
         end
@@ -264,7 +262,7 @@ end
         weight::Float64
     end
 
-    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler=Schedulers.ByID())
+    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler = Schedulers.ByID())
     for i in 1:10
         add_agent!(model, i)
     end
@@ -281,15 +279,15 @@ end
     @test second[15] == 7.0
     @test second[end] == 20.0
 
-    third =
-        collect(map_agent_groups(3, x -> x[1].weight + x[2].weight + x[3].weight, model))
+    third = collect(map_agent_groups(3, x -> x[1].weight + x[2].weight + x[3].weight,
+                                     model))
     @test size(third) == (10, 10, 10)
     @test third[1] == 3.0
     @test third[15] == 8.0
     @test third[end] == 30.0
 
-    second_filtered =
-        collect(map_agent_groups(2, x -> x[1].weight + x[2].weight, model, allunique))
+    second_filtered = collect(map_agent_groups(2, x -> x[1].weight + x[2].weight, model,
+                                               allunique))
     @test size(second_filtered) == (90,)
     @test second_filtered[1] == 3.0
     @test second_filtered[15] == 9.0

@@ -41,12 +41,10 @@ end
 function initialise(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
-        Zombie,
-        OpenStreetMapSpace(map_path);
-        properties = properties,
-        rng = Random.MersenneTwister(seed)
-    )
+    model = ABM(Zombie,
+                OpenStreetMapSpace(map_path);
+                properties = properties,
+                rng = Random.MersenneTwister(seed))
 
     for id in 1:100
         start = random_position(model) # At an intersection
@@ -99,7 +97,7 @@ as(agent) = agent.infected ? 10 : 8
 model = initialise()
 
 abmvideo("outbreak.mp4", model, agent_step!;
-title = "Zombie outbreak", framerate = 15, frames = 200, as, ac)
+         title = "Zombie outbreak", framerate = 15, frames = 200, as, ac)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

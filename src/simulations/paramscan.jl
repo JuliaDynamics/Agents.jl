@@ -72,18 +72,15 @@ adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 
 
 """
-function paramscan(
-    parameters::Dict,
-    initialize;
-    include_constants::Bool = false,
-    parallel::Bool = false,
-    agent_step! = dummystep,
-    model_step! = dummystep,
-    n = 1,
-    showprogress::Bool = false,
-    kwargs...,
-)
-
+function paramscan(parameters::Dict,
+                   initialize;
+                   include_constants::Bool = false,
+                   parallel::Bool = false,
+                   agent_step! = dummystep,
+                   model_step! = dummystep,
+                   n = 1,
+                   showprogress::Bool = false,
+                   kwargs...)
     if include_constants
         output_params = collect(keys(parameters))
     else
@@ -118,26 +115,24 @@ function dict_list(c::Dict)
     non_iterable_dict = Dict(non_iterables .=> getindex.(Ref(c), non_iterables))
 
     vec(map(Iterators.product(values(iterable_dict)...)) do vals
-        dd = Dict(keys(iterable_dict) .=> vals)
-        if isempty(non_iterable_dict)
-            dd
-        elseif isempty(iterable_dict)
-            non_iterable_dict
-        else
-            merge(non_iterable_dict, dd)
-        end
-    end)
+            dd = Dict(keys(iterable_dict) .=> vals)
+            if isempty(non_iterable_dict)
+                dd
+            elseif isempty(iterable_dict)
+                non_iterable_dict
+            else
+                merge(non_iterable_dict, dd)
+            end
+        end)
 end
 
-function run_single(
-    param_dict::Dict,
-    output_params::Vector{Symbol},
-    initialize;
-    agent_step! = dummystep,
-    model_step! = dummystep,
-    n = 1,
-    kwargs...,
-)
+function run_single(param_dict::Dict,
+                    output_params::Vector{Symbol},
+                    initialize;
+                    agent_step! = dummystep,
+                    model_step! = dummystep,
+                    n = 1,
+                    kwargs...)
     model = initialize(; param_dict...)
     df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
     output_params_dict = filter(j -> first(j) in output_params, param_dict)

@@ -10,7 +10,7 @@ function initialize_gridspace()
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(rand(UInt))
     model = ABM(GridSpaceAgent, space; properties, rng)
-    N = grid_size[1]*grid_size[2]*grid_occupation
+    N = grid_size[1] * grid_size[2] * grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2
         agent = GridSpaceAgent(n, (1, 1), group, false)
@@ -41,11 +41,11 @@ end
 model = initialize_gridspace()
 agent = model[1]
 println("Benchmarking GridSpace version")
-@btime step!($model, agent_step_gridspace!) setup = (model = initialize_gridspace())
+@btime step!($model, agent_step_gridspace!) setup=(model = initialize_gridspace())
 
 println("Benchmarking GridSpace version: count nearby same")
 model = initialize_gridspace()
-@btime count_nearby_same(agent, model) setup = (agent = random_agent(model))
+@btime count_nearby_same(agent, model) setup=(agent = random_agent(model))
 
 function profile_nearby_same(model, agent = random_agent(model))
     x = 0
@@ -53,6 +53,6 @@ function profile_nearby_same(model, agent = random_agent(model))
     for i in 1:N
         x += count_nearby_same(agent, model)
     end
-    return x/N
+    return x / N
 end
 # Then use @profview in VSCode

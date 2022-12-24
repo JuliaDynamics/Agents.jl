@@ -201,7 +201,6 @@ macro agent(new_name, base_type, extra_fields)
     end
 end
 
-
 # TODO: I do not know how to merge these two macros to remove code duplication.
 # There should be away that only the 4-argument version is used
 # and the 3-argument version just passes `AbstractAgent` to the 4-argument.
@@ -242,7 +241,6 @@ macro agent(new_name, base_type, super_type, extra_fields)
         nothing
     end
 end
-
 
 """
     NoSpaceAgent <: AbstractAgent

@@ -77,55 +77,46 @@ using StaticArrays
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
 # The keywords here control number of particles and sizes.
 function initialize_model(;
-    number_of_particles=10_000,
-    sides=SVector(500.0, 500.0),
-    dt=0.001,
-    max_radius=10.0,
-    parallel=true
-)
+                          number_of_particles = 10_000,
+                          sides = SVector(500.0, 500.0),
+                          dt = 0.001,
+                          max_radius = 10.0,
+                          parallel = true)
     ## initial random positions
-    positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
+    positions = [sides .* rand(SVector{2, Float64}) for _ in 1:number_of_particles]
 
     ## We will use CellListMap to compute forces, with similar structure as the positions
     forces = similar(positions)
 
     ## Space and agents
-    space2d = ContinuousSpace(Tuple(sides); periodic=true)
+    space2d = ContinuousSpace(Tuple(sides); periodic = true)
 
     ## Initialize CellListMap periodic system
-    system = PeriodicSystem(
-        positions=positions,
-        unitcell=sides,
-        cutoff=2 * max_radius,
-        output=forces,
-        output_name=:forces, # allows the system.forces alias for clarity
-        parallel=parallel,
-    )
+    system = PeriodicSystem(positions = positions,
+                            unitcell = sides,
+                            cutoff = 2 * max_radius,
+                            output = forces,
+                            output_name = :forces, # allows the system.forces alias for clarity
+                            parallel = parallel)
 
     ## define the model properties
     ## The clmap_system field contains the data required for CellListMap.jl
-    properties = (
-        dt=dt,
-        number_of_particles=number_of_particles,
-        system=system,
-    )
+    properties = (dt = dt,
+                  number_of_particles = number_of_particles,
+                  system = system)
     model = ABM(Particle,
-        space2d,
-        properties=properties
-    )
+                space2d,
+                properties = properties)
 
     ## Create active agents
     for id in 1:number_of_particles
-        add_agent_pos!(
-            Particle(
-                id=id,
-                r=(0.5 + 0.9 * rand()) * max_radius,
-                k=(10 + 20 * rand()), # random force constants
-                mass=10.0 + 100 * rand(), # random masses
-                pos=Tuple(positions[id]),
-                vel=(100 * randn(), 100 * randn()), # initial velocities
-            ),
-            model)
+        add_agent_pos!(Particle(id = id,
+                                r = (0.5 + 0.9 * rand()) * max_radius,
+                                k = (10 + 20 * rand()), # random force constants
+                                mass = 10.0 + 100 * rand(), # random masses
+                                pos = Tuple(positions[id]),
+                                vel = (100 * randn(), 100 * randn())),
+                       model)
     end
 
     return model
@@ -165,10 +156,8 @@ end
 # 
 function model_step!(model::ABM)
     ## Update the pairwise forces at this step
-    map_pairwise!(
-        (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
-        model.system,
-    )
+    map_pairwise!((x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
+                  model.system)
     return nothing
 end
 
@@ -198,13 +187,11 @@ end
 
 # ## The simulation
 # Finally, the function below runs an example simulation, for 1000 steps.
-function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
+function simulate(model = nothing; nsteps = 1_000, number_of_particles = 10_000)
     if isnothing(model)
-        model = initialize_model(number_of_particles=number_of_particles)
+        model = initialize_model(number_of_particles = number_of_particles)
     end
-    Agents.step!(
-        model, agent_step!, model_step!, nsteps, false,
-    )
+    Agents.step!(model, agent_step!, model_step!, nsteps, false)
 end
 # Which should be quite fast
 model = initialize_model()
@@ -218,14 +205,12 @@ simulate(model) # compile
 using InteractiveDynamics
 using CairoMakie
 CairoMakie.activate!() # hide
-model = initialize_model(number_of_particles=1000)
-abmvideo(
-    "celllistmap.mp4", model, agent_step!, model_step!;
-    framerate=20, frames=200, spf=5,
-    title="Bouncing particles with CellListMap.jl acceleration",
-    as=p -> p.r, # marker size
-    ac=p -> p.k # marker color
-)
+model = initialize_model(number_of_particles = 1000)
+abmvideo("celllistmap.mp4", model, agent_step!, model_step!;
+         framerate = 20, frames = 200, spf = 5,
+         title = "Bouncing particles with CellListMap.jl acceleration",
+         as = p -> p.r, # marker size
+         ac = p -> p.k)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

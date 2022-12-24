@@ -13,7 +13,6 @@ agents are stored in a field `stored_ids` of the space.
 export positions, ids_in_position, agents_in_position,
        empty_positions, random_empty, has_empty_positions
 
-
 positions(model::ABM) = positions(model.space)
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
@@ -46,8 +45,9 @@ end
 Return the ids of agents in the position corresponding to `position` or position
 of `agent`.
 """
-ids_in_position(agent::A, model) where {A<:AbstractAgent} =
+function ids_in_position(agent::A, model) where {A <: AbstractAgent}
     ids_in_position(agent.pos, model)
+end
 
 """
     agents_in_position(position, model::ABM{<:DiscreteSpace})
@@ -55,8 +55,9 @@ ids_in_position(agent::A, model) where {A<:AbstractAgent} =
 
 Return the agents in the position corresponding to `position` or position of `agent`.
 """
-agents_in_position(agent::A, model) where {A<:AbstractAgent} =
+function agents_in_position(agent::A, model) where {A <: AbstractAgent}
     agents_in_position(agent.pos, model)
+end
 agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
 
 """
@@ -126,7 +127,8 @@ per position, updating the agent's position to the new one.
 
 This function does nothing if there aren't any empty positions.
 """
-function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
+function add_agent_single!(agent::A,
+                           model::ABM{<:DiscreteSpace, A}) where {A <: AbstractAgent}
     position = random_empty(model)
     isnothing(position) && return nothing
     agent.pos = position
@@ -158,15 +160,14 @@ applying `f` where `pos` is each position (tuple for grid, integer index for gra
 An optional first argument is an agent **type** to be created, and targets mixed agent
 models where the agent constructor cannot be deduced (since it is a union).
 """
-fill_space!(model::ABM{S,A}, args...; kwargs...) where {S,A<:AbstractAgent} =
+function fill_space!(model::ABM{S, A}, args...; kwargs...) where {S, A <: AbstractAgent}
     fill_space!(A, model, args...; kwargs...)
+end
 
-function fill_space!(
-    ::Type{A},
-    model::ABM{<:DiscreteSpace,U},
-    args...;
-    kwargs...,
-) where {A<:AbstractAgent,U<:AbstractAgent}
+function fill_space!(::Type{A},
+                     model::ABM{<:DiscreteSpace, U},
+                     args...;
+                     kwargs...) where {A <: AbstractAgent, U <: AbstractAgent}
     for p in positions(model)
         id = nextid(model)
         add_agent_pos!(A(id, p, args...; kwargs...), model)
@@ -174,12 +175,10 @@ function fill_space!(
     return model
 end
 
-function fill_space!(
-    ::Type{A},
-    model::ABM{<:DiscreteSpace,U},
-    f::Function;
-    kwargs...,
-) where {A<:AbstractAgent,U<:AbstractAgent}
+function fill_space!(::Type{A},
+                     model::ABM{<:DiscreteSpace, U},
+                     f::Function;
+                     kwargs...) where {A <: AbstractAgent, U <: AbstractAgent}
     for p in positions(model)
         id = nextid(model)
         args = f(p)
@@ -196,11 +195,9 @@ per position. If there are no empty positions, the agent won't move.
 
 The keyword `cutoff = 0.998` is sent to [`random_empty`](@ref).
 """
-function move_agent_single!(
-    agent::A,
-    model::ABM{<:DiscreteSpace,A};
-    cutoff = 0.998,
-) where {A<:AbstractAgent}
+function move_agent_single!(agent::A,
+                            model::ABM{<:DiscreteSpace, A};
+                            cutoff = 0.998) where {A <: AbstractAgent}
     position = random_empty(model, cutoff)
     isnothing(position) && return nothing
     move_agent!(agent, position, model)

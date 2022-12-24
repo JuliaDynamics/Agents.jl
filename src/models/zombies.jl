@@ -12,12 +12,10 @@ Same as in the [Zombie Outbreak](@ref) example.
 function zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
-        Zombie,
-        OpenStreetMapSpace(map_path);
-        properties = properties,
-        rng = Random.MersenneTwister(seed)
-    )
+    model = ABM(Zombie,
+                OpenStreetMapSpace(map_path);
+                properties = properties,
+                rng = Random.MersenneTwister(seed))
 
     for id in 1:100
         start = random_position(model) # At an intersection

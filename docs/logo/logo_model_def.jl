@@ -12,8 +12,8 @@ const steps_per_day = 24
 
 mutable struct PoorSoul <: AbstractAgent
     id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+    pos::NTuple{2, Float64}
+    vel::NTuple{2, Float64}
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
@@ -65,33 +65,29 @@ function recover_or_die!(agent, model)
 end
 
 function sir_logo_initiation(;
-        recovery_period = RECOVERY_PERIOD * steps_per_day,
-        reinfection_probability = REINFECT,
-        isolated = 0.0, # in percentage
-        interaction_radius = 0.014,
-        dt = 1.0,
-        speed = SPEED,
-        death_rate = 0.044, # from website of WHO
-        N = 1000, # Agents outside text
-        initial_infected = INITINFECT,
-        seed = SEED,
-        β = BETA,
-    )
+                             recovery_period = RECOVERY_PERIOD * steps_per_day,
+                             reinfection_probability = REINFECT,
+                             isolated = 0.0, # in percentage
+                             interaction_radius = 0.014,
+                             dt = 1.0,
+                             speed = SPEED,
+                             death_rate = 0.044, # from website of WHO
+                             N = 1000, # Agents outside text
+                             initial_infected = INITINFECT,
+                             seed = SEED,
+                             β = BETA)
 
     # Sample agents inside text
     points = sample(findall(p -> p > 0.0, font_matrix), AGENTS_IN_TEXT)
     # Convert those into points that make sense within our continuous space (image coords must be y-inverted)
-    init_static = map(
-        p -> (p.I[2]/100, (logo_dims[2] - p.I[1])/100),
-        points,
-    )
+    init_static = map(p -> (p.I[2] / 100, (logo_dims[2] - p.I[1]) / 100),
+                      points)
 
     properties = (;
-        reinfection_probability,
-        death_rate,
-        interaction_radius,
-        dt,
-    )
+                  reinfection_probability,
+                  death_rate,
+                  interaction_radius,
+                  dt)
     rng = Random.Xoshiro(seed)
     space = ContinuousSpace(logo_dims ./ 100)
     model = ABM(PoorSoul, space; rng, properties)
@@ -103,17 +99,17 @@ function sir_logo_initiation(;
         status = :S
         mass = Inf
         vel = (0.0, 0.0)
-        p = round(Int, recovery_period*(rand(rng)*0.4 + 0.8))
+        p = round(Int, recovery_period * (rand(rng) * 0.4 + 0.8))
         add_agent!(pos, model, vel, mass, 0, status, β, p)
     end
     #--------------------------------------
     ## Add initial individuals
     for ind in 1:N
-        status = ind ≤ N - initial_infected*N ? :S : :I
+        status = ind ≤ N - initial_infected * N ? :S : :I
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
         vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(rng)) .* speed
-        p = round(Int, recovery_period*(rand(rng)*0.4 + 0.8))
+        p = round(Int, recovery_period * (rand(rng) * 0.4 + 0.8))
         add_agent!(model, vel, mass, 0, status, β, p)
     end
     return model

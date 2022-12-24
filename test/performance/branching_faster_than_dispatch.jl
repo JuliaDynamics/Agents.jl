@@ -44,24 +44,23 @@ mutable struct GridAgentFive <: AbstractAgent
     two::Bool
 end
 
-model1 = ABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
-    GridSpace((15, 15));
-    warn = false,
-    rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
-)
+model1 = ABM(Union{GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive
+                   },
+             GridSpace((15, 15));
+             warn = false,
+             rng = MersenneTwister(42),
+             scheduler = Schedulers.randomly)
 
 for _ in 1:50
-    a = GridAgentOne(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
+    a = GridAgentOne(nextid(model1), (1, 1), rand(model1.rng), rand(model1.rng, Bool))
     add_agent!(a, model1)
-    a = GridAgentTwo(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
+    a = GridAgentTwo(nextid(model1), (1, 1), rand(model1.rng), rand(model1.rng, Bool))
     add_agent!(a, model1)
-    a = GridAgentThree(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
+    a = GridAgentThree(nextid(model1), (1, 1), rand(model1.rng), rand(model1.rng, Bool))
     add_agent!(a, model1)
-    a = GridAgentFour(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
+    a = GridAgentFour(nextid(model1), (1, 1), rand(model1.rng), rand(model1.rng, Bool))
     add_agent!(a, model1)
-    a = GridAgentFive(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
+    a = GridAgentFive(nextid(model1), (1, 1), rand(model1.rng), rand(model1.rng, Bool))
     add_agent!(a, model1)
 end
 
@@ -71,7 +70,7 @@ function agent_step!(agent::GridAgentTwo, model1)
     agent.two = rand(model1.rng, Bool)
 end
 function agent_step!(agent::GridAgentThree, model1)
-    if any(a-> a isa GridAgentTwo, nearby_agents(agent, model1))
+    if any(a -> a isa GridAgentTwo, nearby_agents(agent, model1))
         agent.two = true
         walk!(agent, rand, model1)
     end
@@ -80,8 +79,8 @@ function agent_step!(agent::GridAgentFour, model1)
     agent.one += sum(a.one for a in nearby_agents(agent, model1))
 end
 function agent_step!(agent::GridAgentFive, model1)
-    targets = filter!(a->a.one > 0.8, collect(nearby_agents(agent, model1, 3)))
-    idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
+    targets = filter!(a -> a.one > 0.8, collect(nearby_agents(agent, model1, 3)))
+    idx = argmax(map(t -> euclidean_distance(agent, t, model1), targets))
     farthest = targets[idx]
     walk!(agent, sign.(farthest.pos .- agent.pos), model1)
 end
@@ -96,23 +95,24 @@ mutable struct GridAgentAll <: AbstractAgent
     type::Symbol
 end
 
-model2 = ABM(
-    GridAgentAll,
-    GridSpace((15, 15));
-    rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
-)
+model2 = ABM(GridAgentAll,
+             GridSpace((15, 15));
+             rng = MersenneTwister(42),
+             scheduler = Schedulers.randomly)
 
 for _ in 1:50
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :one)
+    a = GridAgentAll(nextid(model2), (1, 1), rand(model2.rng), rand(model2.rng, Bool), :one)
     add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :two)
+    a = GridAgentAll(nextid(model2), (1, 1), rand(model2.rng), rand(model2.rng, Bool), :two)
     add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :three)
+    a = GridAgentAll(nextid(model2), (1, 1), rand(model2.rng), rand(model2.rng, Bool),
+                     :three)
     add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :four)
+    a = GridAgentAll(nextid(model2), (1, 1), rand(model2.rng), rand(model2.rng, Bool),
+                     :four)
     add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :five)
+    a = GridAgentAll(nextid(model2), (1, 1), rand(model2.rng), rand(model2.rng, Bool),
+                     :five)
     add_agent!(a, model2)
 end
 
@@ -135,7 +135,7 @@ function agent_step_two!(agent, model2)
     agent.two = rand(model2.rng, Bool)
 end
 function agent_step_three!(agent, model2)
-    if any(a-> a.type == :two, nearby_agents(agent, model2))
+    if any(a -> a.type == :two, nearby_agents(agent, model2))
         agent.two = true
         walk!(agent, rand, model2)
     end
@@ -144,9 +144,9 @@ function agent_step_four!(agent, model2)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
 function agent_step_five!(agent, model2)
-    targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
+    targets = filter!(a -> a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
     if !isempty(targets)
-        idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
+        idx = argmax(map(t -> euclidean_distance(agent, t, model2), targets))
         farthest = targets[idx]
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end

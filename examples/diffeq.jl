@@ -71,27 +71,20 @@ nothing #hide
 # with some competence.
 
 function initialise(;
-    stock = 5.0, # Initial population of fish
-    max_population = 500.0, # Maximum value of fish stock
-    min_threshold = 60.0, # Regulate fishing if population drops below this value
-    nagents = 50,
-)
-    model = ABM(
-        Fisher;
-        properties = Dict(
-            :stock => stock,
-            :max_population => max_population,
-            :min_threshold => min_threshold,
-        ),
-    )
+                    stock = 5.0, # Initial population of fish
+                    max_population = 500.0, # Maximum value of fish stock
+                    min_threshold = 60.0, # Regulate fishing if population drops below this value
+                    nagents = 50)
+    model = ABM(Fisher;
+                properties = Dict(:stock => stock,
+                                  :max_population => max_population,
+                                  :min_threshold => min_threshold))
     for _ in 1:nagents
-        add_agent!(
-            model,
-            ## Competence level is a lognormal distribution between 1 and 5
-            floor(rand(model.rng, truncated(LogNormal(), 1, 6))),
-            ## Yearly catch can start at 0
-            0.0,
-        )
+        add_agent!(model,
+                   ## Competence level is a lognormal distribution between 1 and 5
+                   floor(rand(model.rng, truncated(LogNormal(), 1, 6))),
+                   ## Yearly catch can start at 0
+                   0.0)
     end
     model
 end
@@ -105,13 +98,10 @@ model = initialise()
 _, results = run!(model, agent_step!, model_step!, 20; mdata = [:stock])
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
-        f,
-        xlabel = "Year",
-        ylabel = "Stock",
-        title = "Fishery Inventory",
-    )
+ax = f[1, 1] = Axis(f,
+                    xlabel = "Year",
+                    ylabel = "Stock",
+                    title = "Fishery Inventory")
 lines!(ax, results.stock, linewidth = 2, color = :blue)
 f
 
@@ -148,20 +138,15 @@ function model_step!(model)
 end
 
 function initialise(;
-    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
-    max_population = 500.0, # Maximum value of fish stock
-    min_threshold = 60.0, # Regulate fishing if population drops below this value
-    nagents = 50,
-)
-    model = ABM(
-        Fisher;
-        properties = Dict(
-            :stock => stock,
-            :max_population => max_population,
-            :min_threshold => min_threshold,
-            :tick => 0, # Time keeper in units of days
-        ),
-    )
+                    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+                    max_population = 500.0, # Maximum value of fish stock
+                    min_threshold = 60.0, # Regulate fishing if population drops below this value
+                    nagents = 50)
+    model = ABM(Fisher;
+                properties = Dict(:stock => stock,
+                                  :max_population => max_population,
+                                  :min_threshold => min_threshold,
+                                  :tick => 0))
     for _ in 1:nagents
         add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
     end
@@ -175,17 +160,14 @@ nothing #hide
 Random.seed!(6549) #hide
 model = initialise()
 yearly(model, s) = s % 365 == 0
-_, results =
-    run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
+_, results = run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock],
+                  when = yearly)
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
-        f,
-        xlabel = "Year",
-        ylabel = "Stock",
-        title = "Fishery Inventory",
-    )
+ax = f[1, 1] = Axis(f,
+                    xlabel = "Year",
+                    ylabel = "Stock",
+                    title = "Fishery Inventory")
 lines!(ax, results.stock, linewidth = 2, color = :blue)
 f
 
@@ -196,8 +178,7 @@ f
 using BenchmarkTools
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_step!, model_step!, 20 * 365) setup =
-    (model = initialise())
+@btime Agents.step!(model, agent_step!, model_step!, 20 * 365) setup=(model = initialise())
 
 # So this is fairly quick since the model is a simple one, but it's certainly not as efficient
 # as it could be.
@@ -224,9 +205,9 @@ function model_diffeq_step!(model)
     ## We step 364 days with this call.
     OrdinaryDiffEq.step!(model.i, 364.0, true)
     ## Only allow fishing if stocks are high enough
-    model.i.p[2] =
-        model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
-        0.0
+    model.i.p[2] = model.i.u[1] > model.min_threshold ?
+                   sum(a.yearly_catch for a in allagents(model)) :
+                   0.0
     ## Notify the integrator that conditions may be altered
     OrdinaryDiffEq.u_modified!(model.i, true)
     ## Then apply our catch modifier
@@ -239,29 +220,23 @@ function model_diffeq_step!(model)
 end
 
 function initialise_diffeq(;
-    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
-    max_population = 500.0, # Maximum value of fish stock
-    min_threshold = 60.0, # Regulate fishing if population drops below this value
-    nagents = 50,
-)
-
+                           stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+                           max_population = 500.0, # Maximum value of fish stock
+                           min_threshold = 60.0, # Regulate fishing if population drops below this value
+                           nagents = 50)
     function fish_stock!(ds, s, p, t)
         max_population, h = p
         ds[1] = s[1] * (1 - (s[1] / max_population)) - h
     end
-    prob =
-        OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+    prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf),
+                                     [max_population, 0.0])
     integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
 
-    model = ABM(
-        Fisher;
-        properties = Dict(
-            :stock => stock,
-            :max_population => max_population,
-            :min_threshold => min_threshold,
-            :i => integrator, # The OrdinaryDiffEq integrator
-        ),
-    )
+    model = ABM(Fisher;
+                properties = Dict(:stock => stock,
+                                  :max_population => max_population,
+                                  :min_threshold => min_threshold,
+                                  :i => integrator))
     for _ in 1:nagents
         add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
     end
@@ -292,21 +267,17 @@ modeldeq = initialise_diffeq()
 _, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
-        f,
-        xlabel = "Year",
-        ylabel = "Stock",
-        title = "Fishery Inventory",
-    )
+ax = f[1, 1] = Axis(f,
+                    xlabel = "Year",
+                    ylabel = "Stock",
+                    title = "Fishery Inventory")
 lines!(ax, resultsdeq.stock, linewidth = 2, color = :blue)
 f
 
 # The small complexity addition yields us a generous speed up of around 4.5x.
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup =
-    (model = initialise_diffeq())
+@btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup=(model = initialise_diffeq())
 
 # Digging into the results a little more, we can see that the `DifferentialEquations`
 # solver did not need to solve the logistic equation at every agent step to achieve
@@ -327,16 +298,13 @@ length(modeldeq.i.sol.t)
 # precisely the same manner:
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
-        f,
-        xlabel = "Year",
-        ylabel = "Stock",
-        title = "Fishery Inventory",
-    )
+ax = f[1, 1] = Axis(f,
+                    xlabel = "Year",
+                    ylabel = "Stock",
+                    title = "Fishery Inventory")
 lineE = lines!(ax, results.stock, linewidth = 2, color = :blue)
 lineTS = lines!(ax, resultsdeq.stock, linewidth = 2, color = :red)
-leg = f[1, end+1] = Legend(f, [lineE, lineTS], ["Euler", "TSit5"])
+leg = f[1, end + 1] = Legend(f, [lineE, lineTS], ["Euler", "TSit5"])
 f
 
 # That's an average discrepancy of 30 fish! Optimising the step size in the Euler method
@@ -378,7 +346,7 @@ import DiffEqCallbacks
 
 function fish!(integrator, model)
     integrator.p[2] = integrator.u[1] > model.min_threshold ?
-        sum(a.yearly_catch for a in allagents(model)) : 0.0
+                      sum(a.yearly_catch for a in allagents(model)) : 0.0
     Agents.step!(model, agent_cb_step!, 1)
 end
 
@@ -398,20 +366,15 @@ fish = DiffEqCallbacks.PeriodicCallback(i -> fish!(i, modelcb), 364)
 ## Stocks are replenished again
 reset = DiffEqCallbacks.PeriodicCallback(i -> i.p[2] = 0.0, 365)
 
-sol = OrdinaryDiffEq.solve(
-    prob,
-    OrdinaryDiffEq.Tsit5();
-    callback = OrdinaryDiffEq.CallbackSet(fish, reset),
-)
-discrete = vcat(sol(0:365:(365 * 20))[:,:]...)
+sol = OrdinaryDiffEq.solve(prob,
+                           OrdinaryDiffEq.Tsit5();
+                           callback = OrdinaryDiffEq.CallbackSet(fish, reset))
+discrete = vcat(sol(0:365:(365 * 20))[:, :]...)
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
-        f,
-        xlabel = "Year",
-        ylabel = "Stock",
-        title = "Fishery Inventory",
-    )
+ax = f[1, 1] = Axis(f,
+                    xlabel = "Year",
+                    ylabel = "Stock",
+                    title = "Fishery Inventory")
 lines!(ax, discrete, linewidth = 2, color = :blue)
 f
 
@@ -420,4 +383,3 @@ f
 #
 # However, as you can see, it is for the most part just a re-arranged implementation
 # of the integrator method - giving users flexibility in their architecture choices.
-

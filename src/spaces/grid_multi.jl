@@ -1,12 +1,12 @@
 export GridSpace
 
 # type P stands for Periodic and is a boolean
-struct GridSpace{D,P} <: AbstractGridSpace{D,P}
-    stored_ids::Array{Vector{Int},D}
+struct GridSpace{D, P} <: AbstractGridSpace{D, P}
+    stored_ids::Array{Vector{Int}, D}
     metric::Symbol
-    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
-    indices_within_radius_tuple::Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Float64, Vector{NTuple{D, Int}}}
+    offsets_within_radius_no_0::Dict{Float64, Vector{NTuple{D, Int}}}
+    indices_within_radius_tuple::Dict{NTuple{D, Float64}, Vector{NTuple{D, Int}}}
 end
 
 """
@@ -62,31 +62,29 @@ See the
 example for usage of this advanced specification of dimension-dependent distances
 where one dimension is used as a categorical one.
 """
-function GridSpace(
-        d::NTuple{D,Int}; periodic::Bool = true, metric::Symbol = :chebyshev
-    ) where {D}
-    stored_ids = Array{Vector{Int},D}(undef, d)
+function GridSpace(d::NTuple{D, Int}; periodic::Bool = true,
+                   metric::Symbol = :chebyshev) where {D}
+    stored_ids = Array{Vector{Int}, D}(undef, d)
     for i in eachindex(stored_ids)
         stored_ids[i] = Int[]
     end
-    return GridSpace{D,periodic}(
-        stored_ids,
-        metric,
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
-        Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}(),
-    )
+    return GridSpace{D, periodic}(stored_ids,
+                                  metric,
+                                  Dict{Float64, Vector{NTuple{D, Int}}}(),
+                                  Dict{Float64, Vector{NTuple{D, Int}}}(),
+                                  Dict{NTuple{D, Float64}, Vector{NTuple{D, Int}}}())
 end
 
 #######################################################################################
 # %% Implementation of space API
 #######################################################################################
-function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::A, model::ABM{<:GridSpace, A}) where {A <: AbstractAgent}
     push!(model.space.stored_ids[a.pos...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::A,
+                                  model::ABM{<:GridSpace, A}) where {A <: AbstractAgent}
     prev = model.space.stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
@@ -103,8 +101,10 @@ end
 # Instead, here we create a dedicated iterator for going over IDs.
 
 # We allow this to be used with space directly because it is reused in `ContinuousSpace`.
-nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r::Real = 1) = nearby_ids(pos, model.space, r)
-function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) where {D,P}
+function nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r::Real = 1)
+    nearby_ids(pos, model.space, r)
+end
+function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D, P}, r::Real = 1) where {D, P}
     nindices = offsets_within_radius(space, r)
     stored_ids = space.stored_ids
     return GridSpaceIdIterator{P}(stored_ids, nindices, pos)
@@ -112,18 +112,18 @@ end
 
 # Iterator struct. State is `(pos_i, inner_i)` with `pos_i` the index to the nearby indices
 # P is Boolean, and means "periodic".
-struct GridSpaceIdIterator{P,D}
-    stored_ids::Array{Vector{Int},D}  # Reference to array in grid space
-    indices::Vector{NTuple{D,Int}}    # Result of `offsets_within_radius` pretty much
-    origin::NTuple{D,Int}             # origin position nearby is measured from
+struct GridSpaceIdIterator{P, D}
+    stored_ids::Array{Vector{Int}, D}  # Reference to array in grid space
+    indices::Vector{NTuple{D, Int}}    # Result of `offsets_within_radius` pretty much
+    origin::NTuple{D, Int}             # origin position nearby is measured from
     L::Int                            # length of `indices`
-    space_size::NTuple{D,Int}         # size of `stored_ids`
+    space_size::NTuple{D, Int}         # size of `stored_ids`
 end
-function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D,Int}) where {P,D}
+function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D, Int}) where {P, D}
     L = length(indices)
     @assert L > 0
     space_size = size(stored_ids)
-    return GridSpaceIdIterator{P,D}(stored_ids, indices, origin, L, space_size)
+    return GridSpaceIdIterator{P, D}(stored_ids, indices, origin, L, space_size)
 end
 Base.eltype(::Type{<:GridSpaceIdIterator}) = Int # It returns IDs
 Base.IteratorSize(::Type{<:GridSpaceIdIterator}) = Base.SizeUnknown()
@@ -137,22 +137,22 @@ end
 # Initialize iteration
 function Base.iterate(iter::GridSpaceIdIterator)
     @inbounds begin
-        stored_ids, indices, L, origin = getproperty.(
-        Ref(iter), (:stored_ids, :indices, :L, :origin))
-    pos_i = 1
-    pos_index = combine_positions(indices[pos_i], origin, iter)
-    # First, check if the position index is valid (bounds checking)
-    # AND whether the position is empty. If not, proceed to next position index.
-    while invalid_access(pos_index, iter)
-        pos_i += 1
-        # Stop iteration if `pos_index` exceeded the amount of positions
-        pos_i > L && return nothing
+        stored_ids, indices, L, origin = getproperty.(Ref(iter),
+                                                      (:stored_ids, :indices, :L, :origin))
+        pos_i = 1
         pos_index = combine_positions(indices[pos_i], origin, iter)
-    end
-    # We have a valid position index and a non-empty position
-    ids_in_pos = stored_ids[pos_index...]
-    id = ids_in_pos[1]
-    return (id, (pos_i, 2))
+        # First, check if the position index is valid (bounds checking)
+        # AND whether the position is empty. If not, proceed to next position index.
+        while invalid_access(pos_index, iter)
+            pos_i += 1
+            # Stop iteration if `pos_index` exceeded the amount of positions
+            pos_i > L && return nothing
+            pos_index = combine_positions(indices[pos_i], origin, iter)
+        end
+        # We have a valid position index and a non-empty position
+        ids_in_pos = stored_ids[pos_index...]
+        id = ids_in_pos[1]
+        return (id, (pos_i, 2))
     end
 end
 
@@ -172,35 +172,33 @@ end
 # known knowledge of `pos_i` being a valid position index.
 function Base.iterate(iter::GridSpaceIdIterator, state)
     @inbounds begin
-    stored_ids, indices, L, origin = getproperty.(
-        Ref(iter), (:stored_ids, :indices, :L, :origin))
-    pos_i, inner_i = state
-    pos_index = combine_positions(indices[pos_i], origin, iter)
-    # We know guaranteed from previous iteration that `pos_index` is valid index
-    ids_in_pos = stored_ids[pos_index...]
-    X = length(ids_in_pos)
-    if inner_i > X
-        # we have exhausted IDs in current position, so we reset and go to next
-        pos_i += 1
-        # Stop iteration if `pos_index` exceeded the amount of positions
-        pos_i > L && return nothing
-        inner_i = 1
+        stored_ids, indices, L, origin = getproperty.(Ref(iter),
+                                                      (:stored_ids, :indices, :L, :origin))
+        pos_i, inner_i = state
         pos_index = combine_positions(indices[pos_i], origin, iter)
-        # Of course, we need to check if we have valid index
-        while invalid_access(pos_index, iter)
-            pos_i += 1
-            pos_i > L && return nothing
-            pos_index = combine_positions(indices[pos_i], origin, iter)
-        end
+        # We know guaranteed from previous iteration that `pos_index` is valid index
         ids_in_pos = stored_ids[pos_index...]
-    end
-    # We reached the next valid position and non-empty position
-    id = ids_in_pos[inner_i]
-    return (id, (pos_i, inner_i + 1))
+        X = length(ids_in_pos)
+        if inner_i > X
+            # we have exhausted IDs in current position, so we reset and go to next
+            pos_i += 1
+            # Stop iteration if `pos_index` exceeded the amount of positions
+            pos_i > L && return nothing
+            inner_i = 1
+            pos_index = combine_positions(indices[pos_i], origin, iter)
+            # Of course, we need to check if we have valid index
+            while invalid_access(pos_index, iter)
+                pos_i += 1
+                pos_i > L && return nothing
+                pos_index = combine_positions(indices[pos_i], origin, iter)
+            end
+            ids_in_pos = stored_ids[pos_index...]
+        end
+        # We reached the next valid position and non-empty position
+        id = ids_in_pos[inner_i]
+        return (id, (pos_i, inner_i + 1))
     end
 end
-
-
 
 ##########################################################################################
 # nearby_stuff with special access r::Tuple
@@ -208,34 +206,31 @@ end
 # TODO: We can re-write this to create its own `indices_within_radius_tuple`.
 # This would also allow it to work for any metric, not just Chebyshev!
 
-function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r::NTuple{D,Int}) where {D}
+function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r::NTuple{D, Int}) where {D}
     # simply transform `r` to the Vector format expected by the below function
-    newr = [(i, -r[i]:r[i]) for i in 1:D]
+    newr = [(i, (-r[i]):r[i]) for i in 1:D]
     nearby_ids(pos, model, newr)
 end
 
-function nearby_ids(
-    pos::ValidPos,
-    model::ABM{<:GridSpace},
-    r::Vector{Tuple{Int64, UnitRange{Int64}}},
-)
+function nearby_ids(pos::ValidPos,
+                    model::ABM{<:GridSpace},
+                    r::Vector{Tuple{Int64, UnitRange{Int64}}})
     @assert model.space.metric == :chebyshev
     dims = first.(r)
     vidx = []
     for d in 1:ndims(model.space.stored_ids)
         idx = findall(dim -> dim == d, dims)
         dim_range = isempty(idx) ? Colon() :
-            bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
+                    bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
         push!(vidx, dim_range)
     end
     s = view(model.space.stored_ids, vidx...)
     Iterators.flatten(s)
 end
 
-function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
+function bound_range(unbound, d, space::GridSpace{D, false}) where {D}
     return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
 end
-
 
 #######################################################################################
 # %% Further discrete space functions

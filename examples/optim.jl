@@ -283,4 +283,3 @@
 # We now have a set of parameters to strive towards in the real world. Insights
 # such as these assist us to enact countermeasures like social distancing to mitigate
 # infection risks.
-

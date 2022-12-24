@@ -3,34 +3,33 @@
 Alias of `MutableLinkedList{NTuple{D,T}}`. Used to represent the path to be
 taken by an agent in a `D` dimensional space.
 """
-const Path{D,T} = MutableLinkedList{NTuple{D,T}}
+const Path{D, T} = MutableLinkedList{NTuple{D, T}}
 
-struct AStar{D,P,M,T,C<:CostMetric{D}} <: GridPathfinder{D,P,M}
-    agent_paths::Dict{Int,Path{D,T}}
-    dims::NTuple{D,T}
+struct AStar{D, P, M, T, C <: CostMetric{D}} <: GridPathfinder{D, P, M}
+    agent_paths::Dict{Int, Path{D, T}}
+    dims::NTuple{D, T}
     neighborhood::Vector{CartesianIndex{D}}
     admissibility::Float64
     walkmap::BitArray{D}
     cost_metric::C
 
-    function AStar{D,P,M,T,C}(
-        agent_paths::Dict,
-        dims::NTuple{D,T},
-        neighborhood::Vector{CartesianIndex{D}},
-        admissibility::Float64,
-        walkmap::BitArray{D},
-        cost_metric::C,
-    ) where {D,P,M,C,T}
+    function AStar{D, P, M, T, C}(agent_paths::Dict,
+                                  dims::NTuple{D, T},
+                                  neighborhood::Vector{CartesianIndex{D}},
+                                  admissibility::Float64,
+                                  walkmap::BitArray{D},
+                                  cost_metric::C) where {D, P, M, C, T}
         @assert all(dims .> 0) "Invalid pathfinder dimensions: $(dims)"
-        T <: Integer && @assert size(walkmap) == dims "Walkmap must be same dimensions as grid"
-        @assert admissibility >= 0 "Invalid value for admissibility: $admissibility ≱ 0"
+        T <: Integer &&
+            @assert size(walkmap)==dims "Walkmap must be same dimensions as grid"
+        @assert admissibility>=0 "Invalid value for admissibility: $admissibility ≱ 0"
         if cost_metric isa PenaltyMap{D}
-            @assert size(cost_metric.pmap) == size(walkmap) "Penaltymap dimensions must be same as walkable map"
+            @assert size(cost_metric.pmap)==size(walkmap) "Penaltymap dimensions must be same as walkable map"
         elseif cost_metric isa DirectDistance{D}
             if M
-                @assert length(cost_metric.direction_costs) >= D "DirectDistance direction_costs must have as many values as dimensions"
+                @assert length(cost_metric.direction_costs)>=D "DirectDistance direction_costs must have as many values as dimensions"
             else
-                @assert length(cost_metric.direction_costs) >= 1 "DirectDistance direction_costs must have non-zero length"
+                @assert length(cost_metric.direction_costs)>=1 "DirectDistance direction_costs must have non-zero length"
             end
         end
         new(agent_paths, dims, neighborhood, admissibility, walkmap, cost_metric)
@@ -61,61 +60,54 @@ to specify the level of discretisation of the space.
 Utilization of all features of `AStar` occurs in the
 [3D Mixed-Agent Ecosystem with Pathfinding](@ref) example.
 """
-function AStar(
-    dims::NTuple{D,T};
-    periodic::Bool = false,
-    diagonal_movement::Bool = true,
-    admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(dims),
-    cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D,T}
+function AStar(dims::NTuple{D, T};
+               periodic::Bool = false,
+               diagonal_movement::Bool = true,
+               admissibility::Float64 = 0.0,
+               walkmap::BitArray{D} = trues(dims),
+               cost_metric::CostMetric{D} = DirectDistance{D}()) where {D, T}
     neighborhood = diagonal_movement ? moore_neighborhood(D) : vonneumann_neighborhood(D)
-    return AStar{D,periodic,diagonal_movement,T,typeof(cost_metric)}(
-        Dict{Int,Path{D,T}}(),
-        dims,
-        neighborhood,
-        admissibility,
-        walkmap,
-        cost_metric,
-    )
+    return AStar{D, periodic, diagonal_movement, T, typeof(cost_metric)}(Dict{Int,
+                                                                              Path{D, T}}(),
+                                                                         dims,
+                                                                         neighborhood,
+                                                                         admissibility,
+                                                                         walkmap,
+                                                                         cost_metric)
 end
 
-AStar(
-    space::GridSpace{D,periodic};
-    diagonal_movement::Bool = true,
-    admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(size(space)),
-    cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D,periodic} =
+function AStar(space::GridSpace{D, periodic};
+               diagonal_movement::Bool = true,
+               admissibility::Float64 = 0.0,
+               walkmap::BitArray{D} = trues(size(space)),
+               cost_metric::CostMetric{D} = DirectDistance{D}()) where {D, periodic}
     AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
-
-function AStar(
-    space::ContinuousSpace{D,periodic};
-    walkmap::Union{BitArray{D},Nothing} = nothing,
-    admissibility::Float64 = 0.0,
-    cost_metric::CostMetric{D} = DirectDistance{D}(),
-) where {D,periodic}
-    @assert walkmap isa BitArray{D} || cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
-    isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
-    AStar(Agents.spacesize(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
 end
 
+function AStar(space::ContinuousSpace{D, periodic};
+               walkmap::Union{BitArray{D}, Nothing} = nothing,
+               admissibility::Float64 = 0.0,
+               cost_metric::CostMetric{D} = DirectDistance{D}()) where {D, periodic}
+    @assert walkmap isa BitArray{D}||cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
+    isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
+    AStar(Agents.spacesize(space); periodic, diagonal_movement = true, admissibility,
+          walkmap, cost_metric)
+end
 
-moore_neighborhood(D) = [
-    CartesianIndex(a)
-    for a in Iterators.product([-1:1 for φ in 1:D]...) if a != Tuple(zeros(Int, D))
-]
+function moore_neighborhood(D)
+    [CartesianIndex(a)
+     for a in Iterators.product([-1:1 for φ in 1:D]...) if a != Tuple(zeros(Int, D))]
+end
 
 function vonneumann_neighborhood(D)
     hypercube = CartesianIndices((repeat([-1:1], D)...,))
-    [β for β ∈ hypercube if LinearAlgebra.norm(β.I) == 1]
+    [β for β in hypercube if LinearAlgebra.norm(β.I) == 1]
 end
 
-function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
+function Base.show(io::IO, pathfinder::AStar{D, P, M}) where {D, P, M}
     periodic = P ? "periodic, " : ""
     moore = M ? "diagonal, " : "orthogonal, "
-    s =
-        "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), " *
+    s = "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), " *
         "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
@@ -126,8 +118,9 @@ struct GridCell
     h::Int
 end
 
-GridCell(g::Int, h::Int, admissibility::Float64) =
+function GridCell(g::Int, h::Int, admissibility::Float64)
     GridCell(round(Int, g + (1 + admissibility) * h), g, h)
+end
 
 GridCell() = GridCell(typemax(Int), typemax(Int), typemax(Int))
 
@@ -140,21 +133,19 @@ If a path does not exist between the given positions, an empty linked list is re
 """
 function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     if !all(1 .<= from .<= size(pathfinder.walkmap)) ||
-        !all(1 .<= to .<= size(pathfinder.walkmap)) ||
-        !pathfinder.walkmap[from...] ||
-        !pathfinder.walkmap[to...]
+       !all(1 .<= to .<= size(pathfinder.walkmap)) ||
+       !pathfinder.walkmap[from...] ||
+       !pathfinder.walkmap[to...]
         return # nothing
     end
-    parent = Dict{Dims{D},Dims{D}}()
+    parent = Dict{Dims{D}, Dims{D}}()
 
-    open_list = PriorityQueue{Dims{D},GridCell}(Base.By(ordering))
+    open_list = PriorityQueue{Dims{D}, GridCell}(Base.By(ordering))
     closed_list = Set{Dims{D}}()
 
-    enqueue!(
-        open_list,
-        from,
-        GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility)
-    )
+    enqueue!(open_list,
+             from,
+             GridCell(0, delta_cost(pathfinder, from, to), pathfinder.admissibility))
 
     while !isempty(open_list)
         cur, cell = dequeue_pair!(open_list)
@@ -168,16 +159,14 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
 
             if new_g_cost < nbor_cell.g
                 parent[nbor] = cur
-                open_list[nbor] = GridCell(
-                    new_g_cost,
-                    delta_cost(pathfinder, nbor, to),
-                    pathfinder.admissibility,
-                )
+                open_list[nbor] = GridCell(new_g_cost,
+                                           delta_cost(pathfinder, nbor, to),
+                                           pathfinder.admissibility)
             end
         end
     end
 
-    agent_path = Path{D,Int64}()
+    agent_path = Path{D, Int64}()
     cur = to
     while true
         haskey(parent, cur) || break
@@ -188,24 +177,28 @@ function find_path(pathfinder::AStar{D}, from::Dims{D}, to::Dims{D}) where {D}
     return agent_path
 end
 
-@inline get_neighbors(cur, pathfinder::AStar{D,true}) where {D} =
+@inline function get_neighbors(cur, pathfinder::AStar{D, true}) where {D}
     (mod1.(cur .+ β.I, size(pathfinder.walkmap)) for β in pathfinder.neighborhood)
-@inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
+end
+@inline function get_neighbors(cur, pathfinder::AStar{D, false}) where {D}
     (cur .+ β.I for β in pathfinder.neighborhood)
-@inline inbounds(n, pathfinder, closed) =
+end
+@inline function inbounds(n, pathfinder, closed)
     all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
+end
 
-Base.isempty(id::Int, pathfinder::AStar) =
+function Base.isempty(id::Int, pathfinder::AStar)
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
+end
 
 """
     is_stationary(agent, astar::AStar)
 Same, but for pathfinding with A*.
 """
-Agents.is_stationary(
-    agent::A,
-    pathfinder::AStar,
-) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
+function Agents.is_stationary(agent::A,
+                              pathfinder::AStar) where {A <: AbstractAgent}
+    isempty(agent.id, pathfinder)
+end
 
 """
     Pathfinding.penaltymap(pathfinder)
@@ -230,11 +223,9 @@ end
 The same as `kill_agent!(agent, model)`, but also removes the agent's path data
 from `pathfinder`.
 """
-function Agents.kill_agent!(
-    agent::A,
-    model::ABM{S,A},
-    pathfinder::AStar,
-) where {S,A<:AbstractAgent}
+function Agents.kill_agent!(agent::A,
+                            model::ABM{S, A},
+                            pathfinder::AStar) where {S, A <: AbstractAgent}
     delete!(pathfinder.agent_paths, agent.id)
     delete!(model.agents, agent.id)
     Agents.remove_agent_from_space!(agent, model)

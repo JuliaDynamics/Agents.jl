@@ -4,17 +4,15 @@ using StableRNGs
 # TODO: We need to write tests for get_spatial_index and stuff!
 
 @testset "ContinuousSpace" begin
-    @agent SpeedyContinuousAgent ContinuousAgent{2} begin
-        speed::Float64
-    end
+    @agent SpeedyContinuousAgent ContinuousAgent{2} begin speed::Float64 end
 
     @testset "space initialization" begin
         space1 = ContinuousSpace((1, 1))
-        space2 = ContinuousSpace((1, 1, 1); spacing=0.25, periodic = false)
+        space2 = ContinuousSpace((1, 1, 1); spacing = 0.25, periodic = false)
         @test spacesize(space1) == (1.0, 1.0)
         @test spacesize(space2) == (1.0, 1.0, 1.0)
-        @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
-        @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
+        @test_throws ArgumentError ContinuousSpace((-1, 1)) # Cannot have negative extent
+        @test_throws MethodError ContinuousSpace([1, 1]) # Must be a tuple
         model = ABM(SpeedyContinuousAgent, space1)
         model2 = ABM(SpeedyContinuousAgent, space2)
     end
@@ -101,26 +99,23 @@ using StableRNGs
             @test collect(nearby_ids(a, model, r1)) == [2]
             @test collect(nearby_ids_exact(a, model, r1)) == [2]
             # With position everything includes ID 1
-            @test collect(nearby_ids(a.pos, model, r0)) == [1,2]
+            @test collect(nearby_ids(a.pos, model, r0)) == [1, 2]
             @test collect(nearby_ids_exact(a.pos, model, r0)) == Int[1]
-            @test collect(nearby_ids(a.pos, model, r1)) == [1,2]
-            @test collect(nearby_ids_exact(a.pos, model, r1)) == [1,2]
+            @test collect(nearby_ids(a.pos, model, r1)) == [1, 2]
+            @test collect(nearby_ids_exact(a.pos, model, r1)) == [1, 2]
         end
     end
-
 
     @testset "Interacting pairs" begin
         @testset "standard" begin
             space = ContinuousSpace((10, 10); spacing = 0.2, periodic = false)
             model = ABM(SpeedyContinuousAgent, space; scheduler = Schedulers.ByID())
-            pos = [
-                (7.074386436066224, 4.963014649338054)
-                (5.831962448496828, 4.926297135685473)
-                (5.122087781793935, 5.300031210394806)
-                (3.9715633336430156, 4.8106570045816675)
-            ]
+            pos = [(7.074386436066224, 4.963014649338054)
+                   (5.831962448496828, 4.926297135685473)
+                   (5.122087781793935, 5.300031210394806)
+                   (3.9715633336430156, 4.8106570045816675)]
             for i in 1:4
-                add_agent_pos!(SpeedyContinuousAgent(i+2, pos[i], (0.0, 0.0), 0), model)
+                add_agent_pos!(SpeedyContinuousAgent(i + 2, pos[i], (0.0, 0.0), 0), model)
             end
             pairs = interacting_pairs(model, 2.0, :all).pairs
             @test length(pairs) == 5
@@ -140,74 +135,78 @@ using StableRNGs
         @testset "union types" begin
             mutable struct AgentU1 <: AbstractAgent
                 id::Int
-                pos::NTuple{2,Float64}
-                vel::NTuple{2,Float64}
+                pos::NTuple{2, Float64}
+                vel::NTuple{2, Float64}
             end
             mutable struct AgentU2 <: AbstractAgent
                 id::Int
-                pos::NTuple{2,Float64}
-                vel::NTuple{2,Float64}
+                pos::NTuple{2, Float64}
+                vel::NTuple{2, Float64}
             end
             function ignore_normal(model::ABM)
                 [a.id for a in allagents(model) if !(typeof(a) <: SpeedyContinuousAgent)]
             end
-            space3 = ContinuousSpace((10,10); spacing = 1.0, periodic = false)
-            model3 = ABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3; warn = false)
+            space3 = ContinuousSpace((10, 10); spacing = 1.0, periodic = false)
+            model3 = ABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3;
+                         warn = false)
             for i in 1:10
-                add_agent_pos!(SpeedyContinuousAgent(i, (i/10, i/10), (0.0, 0.0), 0), model3)
+                add_agent_pos!(SpeedyContinuousAgent(i, (i / 10, i / 10), (0.0, 0.0), 0),
+                               model3)
             end
             for i in 11:20
-                add_agent_pos!(AgentU1(i, (i/10-1, 0.5), (0.0, 0.0)), model3)
+                add_agent_pos!(AgentU1(i, (i / 10 - 1, 0.5), (0.0, 0.0)), model3)
             end
             for i in 21:30
-                add_agent_pos!(AgentU2(i, (0.45, i/10-2), (0.0, 0.0)), model3)
+                add_agent_pos!(AgentU2(i, (0.45, i / 10 - 2), (0.0, 0.0)), model3)
             end
             pairs = interacting_pairs(model3, 0.1, :types).pairs
             @test length(pairs) == 7
-            for (a,b) in pairs
+            for (a, b) in pairs
                 @test typeof(model3[a]) !== typeof(model3[b])
             end
             @test (3, 6) ∉ pairs
 
             # Test that we have at least some SpeedyContinuousAgent's in this match
-            @test any(typeof(model3[a]) <: SpeedyContinuousAgent || typeof(model3[b]) <: SpeedyContinuousAgent for (a,b) in pairs)
+            @test any(typeof(model3[a]) <: SpeedyContinuousAgent ||
+                      typeof(model3[b]) <: SpeedyContinuousAgent for (a, b) in pairs)
             pairs = interacting_pairs(model3, 0.2, :types; scheduler = ignore_normal).pairs
             @test length(pairs) == 12
             # No SpeedyContinuousAgent's when using the ignore_normal scheduler
-            @test all(!(typeof(model3[a]) <: SpeedyContinuousAgent) && !(typeof(model3[b]) <: SpeedyContinuousAgent) for (a,b) in pairs)
+            @test all(!(typeof(model3[a]) <: SpeedyContinuousAgent) &&
+                      !(typeof(model3[b]) <: SpeedyContinuousAgent) for (a, b) in pairs)
         end
         @testset "fix #288" begin
-            space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
+            space = ContinuousSpace((1, 1); spacing = 0.1, periodic = true)
             model = ABM(SpeedyContinuousAgent, space)
-            pos = [(0.01, 0.01),(0.2,0.2),(0.5,0.5)]
+            pos = [(0.01, 0.01), (0.2, 0.2), (0.5, 0.5)]
             for i in pos
-            add_agent!(i,model,(0.0,0.0),1.0)
+                add_agent!(i, model, (0.0, 0.0), 1.0)
             end
             pairs = collect(interacting_pairs(model, 0.29, :all))
             @test length(pairs) == 1
-            (a,b) = first(pairs)
-            @test (a.id, b.id) == (1,2)
+            (a, b) = first(pairs)
+            @test (a.id, b.id) == (1, 2)
             # Before the #288 fix, this would return (2,3) as a pair
             # which has a euclidean distance of 0.42
             pairs = collect(interacting_pairs(model, 0.3, :all))
             @test length(pairs) == 1
-            (a,b) = first(pairs)
-            @test (a.id, b.id) == (1,2)
+            (a, b) = first(pairs)
+            @test (a.id, b.id) == (1, 2)
         end
     end
 
     @testset "nearest neighbor" begin
         mutable struct AgentNNContinuous <: AbstractAgent
             id::Int
-            pos::NTuple{2,Float64}
-            vel::NTuple{2,Float64}
-            f1::Union{Int,Nothing}
+            pos::NTuple{2, Float64}
+            vel::NTuple{2, Float64}
+            f1::Union{Int, Nothing}
         end
-        space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
+        space = ContinuousSpace((1, 1); spacing = 0.1, periodic = true)
         model = ABM(AgentNNContinuous, space)
-        pos = [(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)]
+        pos = [(0.01, 0.01), (0.2, 0.01), (0.2, 0.2), (0.5, 0.5)]
         for i in pos
-            add_agent!(i,model,(0.0,0.0),nothing)
+            add_agent!(i, model, (0.0, 0.0), nothing)
         end
 
         for agent in allagents(model)
@@ -254,26 +253,23 @@ using StableRNGs
             @test a.pos[1] == 2
             @test a.pos[2] == 0.0
         end
-
     end
 
     @testset "collisions" begin
         speed = 0.002
         dt = 1.0
         diameter = 0.1
-        @agent MassContinuousAgent ContinuousAgent{2} begin
-            mass::Float64
-        end
+        @agent MassContinuousAgent ContinuousAgent{2} begin mass::Float64 end
 
         function model_initiation()
-            space = ContinuousSpace((10,10); periodic=true)
+            space = ContinuousSpace((10, 10); periodic = true)
             model = ABM(MassContinuousAgent, space;
-            rng=StableRNG(42), properties= Dict(:c => 0));
+                        rng = StableRNG(42), properties = Dict(:c => 0))
             # Add initial individuals
             for i in 1:10, j in 1:10
-                    pos = (i/10, j/10)
+                pos = (i / 10, j / 10)
                 if i > 5
-                    vel = sincos(2π*rand(model.rng)) .* speed
+                    vel = sincos(2π * rand(model.rng)) .* speed
                     mass = 1.33
                 else
                     # these agents have infinite mass and 0 velocity. They are fixed.
@@ -302,7 +298,7 @@ using StableRNGs
             # Momentum
             p = (0.0, 0.0)
             for a in allagents(model)
-                 p = p .+ a.vel
+                p = p .+ a.vel
             end
             return K, p
         end

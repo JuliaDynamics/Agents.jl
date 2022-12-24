@@ -1,7 +1,7 @@
 # Some deprecations exist in submodules Pathfinding, OSM
 
 @deprecate edistance euclidean_distance
-@deprecate rem_node! rem_vertex! 
+@deprecate rem_node! rem_vertex!
 @deprecate add_node! add_vertex!
 
 function ContinuousSpace(extent, spacing; kwargs...)

@@ -42,7 +42,7 @@ Refer to [`AgentsIO.to_serializable`](@ref) for more info.
 """
 from_serializable(t; kwargs...) = t
 
-struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
+struct SerializableABM{S, A <: AbstractAgent, P, R <: AbstractRNG}
     agents::Vector{A}
     space::S
     properties::P
@@ -50,82 +50,86 @@ struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
     maxid::Int64
 end
 
-struct SerializableGridSpace{D,P}
-    dims::NTuple{D,Int}
+struct SerializableGridSpace{D, P}
+    dims::NTuple{D, Int}
     metric::Symbol
 end
-struct SerializableGridSpaceSingle{D,P}
-    dims::NTuple{D,Int}
+struct SerializableGridSpaceSingle{D, P}
+    dims::NTuple{D, Int}
     metric::Symbol
 end
 
-struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
-    grid::SerializableGridSpace{D,P}
-    dims::NTuple{D,Int}
+struct SerializableContinuousSpace{D, P, T <: AbstractFloat}
+    grid::SerializableGridSpace{D, P}
+    dims::NTuple{D, Int}
     spacing::T
-    extent::NTuple{D,T}
+    extent::NTuple{D, T}
 end
 
 struct SerializableGraphSpace{G}
     graph::G
 end
 struct SerializableOSMSpace
-    routes::Vector{Tuple{Int,OSM.OpenStreetMapPath}}
+    routes::Vector{Tuple{Int, OSM.OpenStreetMapPath}}
 end
 
-struct SerializableAStar{D,P,M,T,C}
-    agent_paths::Vector{Tuple{Int,Vector{NTuple{D,T}}}}
-    dims::NTuple{D,T}
+struct SerializableAStar{D, P, M, T, C}
+    agent_paths::Vector{Tuple{Int, Vector{NTuple{D, T}}}}
+    dims::NTuple{D, T}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
     walkmap::BitArray{D}
     cost_metric::C
 end
 
-JLD2.writeas(::Type{Pathfinding.AStar{D,P,M,T,C}}) where {D,P,M,T,C} = SerializableAStar{D,P,M,T,C}
+function JLD2.writeas(::Type{Pathfinding.AStar{D, P, M, T, C}}) where {D, P, M, T, C}
+    SerializableAStar{D, P, M, T, C}
+end
 
 function to_serializable(t::ABM{S}) where {S}
-    sabm = SerializableABM(
-        collect(allagents(t)),
-        to_serializable(t.space),
-        to_serializable(t.properties),
-        t.rng,
-        t.maxid.x,
-    )
+    sabm = SerializableABM(collect(allagents(t)),
+                           to_serializable(t.space),
+                           to_serializable(t.properties),
+                           t.rng,
+                           t.maxid.x)
     return sabm
 end
 
-to_serializable(t::GridSpace{D,P}) where {D,P} =
-    SerializableGridSpace{D,P}(size(t), t.metric)
-to_serializable(t::GridSpaceSingle{D,P}) where {D,P} =
-    SerializableGridSpaceSingle{D,P}(size(t), t.metric)
+function to_serializable(t::GridSpace{D, P}) where {D, P}
+    SerializableGridSpace{D, P}(size(t), t.metric)
+end
+function to_serializable(t::GridSpaceSingle{D, P}) where {D, P}
+    SerializableGridSpaceSingle{D, P}(size(t), t.metric)
+end
 
-to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
-    SerializableContinuousSpace{D,P,T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
+function to_serializable(t::ContinuousSpace{D, P, T}) where {D, P, T}
+    SerializableContinuousSpace{D, P, T}(to_serializable(t.grid), t.dims, t.spacing,
+                                         t.extent)
+end
 
 to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([(k, v) for (k, v) in t.routes])
+function to_serializable(t::OSM.OpenStreetMapSpace)
+    SerializableOSMSpace([(k, v) for (k, v) in t.routes])
+end
 
-JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T,C}) where {D,P,M,T,C} =
-    SerializableAStar{D,P,M,T,C}(
-        [(k, collect(v)) for (k, v) in t.agent_paths],
-        t.dims,
-        map(Tuple, t.neighborhood),
-        t.admissibility,
-        t.walkmap,
-        t.cost_metric,
-    )
+function JLD2.wconvert(::Type{SerializableAStar{D, P, M, T, C}},
+                       t::Pathfinding.AStar{D, P, M, T, C}) where {D, P, M, T, C}
+    SerializableAStar{D, P, M, T, C}([(k, collect(v)) for (k, v) in t.agent_paths],
+                                     t.dims,
+                                     map(Tuple, t.neighborhood),
+                                     t.admissibility,
+                                     t.walkmap,
+                                     t.cost_metric)
+end
 
-function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
-    abm = ABM(
-        A,
-        from_serializable(t.space; kwargs...);
-        scheduler = get(kwargs, :scheduler, Schedulers.fastest),
-        properties = from_serializable(t.properties; kwargs...),
-        rng = t.rng,
-        warn = get(kwargs, :warn, true)
-    )
+function from_serializable(t::SerializableABM{S, A}; kwargs...) where {S, A}
+    abm = ABM(A,
+              from_serializable(t.space; kwargs...);
+              scheduler = get(kwargs, :scheduler, Schedulers.fastest),
+              properties = from_serializable(t.properties; kwargs...),
+              rng = t.rng,
+              warn = get(kwargs, :warn, true))
     abm.maxid[] = t.maxid
 
     for a in t.agents
@@ -134,27 +138,26 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     return abm
 end
 
-function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
-    s = Array{Vector{Int},D}(undef, t.dims)
+function from_serializable(t::SerializableGridSpace{D, P}; kwargs...) where {D, P}
+    s = Array{Vector{Int}, D}(undef, t.dims)
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P}(s, t.metric, Dict(), Dict(), Dict())
+    return GridSpace{D, P}(s, t.metric, Dict(), Dict(), Dict())
 end
-function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
+function from_serializable(t::SerializableGridSpaceSingle{D, P}; kwargs...) where {D, P}
     s = zeros(Int, t.dims)
-    return GridSpaceSingle{D,P}(s, t.metric, Dict(), Dict())
+    return GridSpaceSingle{D, P}(s, t.metric, Dict(), Dict())
 end
 
-function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
+function from_serializable(t::SerializableContinuousSpace{D, P, T};
+                           kwargs...) where {D, P, T}
     update_vel! = get(kwargs, :update_vel!, Agents.no_vel_update)
-    ContinuousSpace(
-        from_serializable(t.grid; kwargs...),
-        update_vel!,
-        t.dims,
-        t.spacing,
-        t.extent,
-    )
+    ContinuousSpace(from_serializable(t.grid; kwargs...),
+                    update_vel!,
+                    t.dims,
+                    t.spacing,
+                    t.extent)
 end
 
 from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
@@ -162,26 +165,26 @@ from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
 function from_serializable(t::SerializableOSMSpace; kwargs...)
     @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
 
-    space = OSM.OpenStreetMapSpace(
-        get(kwargs, :map, OSM.test_map());   # Should never need default value
-    )
+    space = OSM.OpenStreetMapSpace(get(kwargs, :map, OSM.test_map());)
     for (k, v) in t.routes
         space.routes[k] = v
     end
     return space
 end
 
-JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T,C}}, t::SerializableAStar{D,P,M,T,C}) where {D,P,M,T,C} =
-    Pathfinding.AStar{D,P,M,T,C}(
-        Dict{Int,Pathfinding.Path{D,T}}(
-            k => Pathfinding.Path{D,T}(v...) for (k, v) in t.agent_paths
-        ),
-        t.dims,
-        map(CartesianIndex, t.neighborhood),
-        t.admissibility,
-        t.walkmap,
-        t.cost_metric,
-    )
+function JLD2.rconvert(::Type{Pathfinding.AStar{D, P, M, T, C}},
+                       t::SerializableAStar{D, P, M, T, C}) where {D, P, M, T, C}
+    Pathfinding.AStar{D, P, M, T, C}(Dict{Int, Pathfinding.Path{D, T}}(k => Pathfinding.Path{
+                                                                                             D,
+                                                                                             T
+                                                                                             }(v...)
+                                                                       for (k, v) in t.agent_paths),
+                                     t.dims,
+                                     map(CartesianIndex, t.neighborhood),
+                                     t.admissibility,
+                                     t.walkmap,
+                                     t.cost_metric)
+end
 
 """
     AgentsIO.save_checkpoint(filename, model::ABM)

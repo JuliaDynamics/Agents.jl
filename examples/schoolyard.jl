@@ -47,25 +47,20 @@ const Student = ContinuousAgent{2}
 # ## Initialising the model
 
 function schoolyard(;
-    numStudents = 50,
-    teacher_attractor = 0.15,
-    noise = 0.1,
-    max_force = 1.7,
-    spacing = 4.0,
-    seed = 6998,
-    velocity = (0, 0),
-)
-    model = ABM(
-        Student,
-        ContinuousSpace((100, 100), spacing; periodic = false);
-        properties = Dict(
-            :teacher_attractor => teacher_attractor,
-            :noise => noise,
-            :buddies => SimpleWeightedDiGraph(numStudents),
-            :max_force => max_force,
-        ),
-        rng = MersenneTwister(seed)
-    )
+                    numStudents = 50,
+                    teacher_attractor = 0.15,
+                    noise = 0.1,
+                    max_force = 1.7,
+                    spacing = 4.0,
+                    seed = 6998,
+                    velocity = (0, 0))
+    model = ABM(Student,
+                ContinuousSpace((100, 100), spacing; periodic = false);
+                properties = Dict(:teacher_attractor => teacher_attractor,
+                                  :noise => noise,
+                                  :buddies => SimpleWeightedDiGraph(numStudents),
+                                  :max_force => max_force),
+                rng = MersenneTwister(seed))
     for student in 1:numStudents
         ## Students begin near the school building
         position = model.space.extent .* 0.5 .+ Tuple(rand(model.rng, 2)) .- 0.5
@@ -150,12 +145,10 @@ function static_preplot!(ax, model)
     CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
 end
 
-abmvideo(
-    "schoolyard.mp4", model, agent_step!, dummystep;
-    framerate = 15, frames = 40,
-    title = "Playgound dynamics",
-    static_preplot!,
-)
+abmvideo("schoolyard.mp4", model, agent_step!, dummystep;
+         framerate = 15, frames = 40,
+         title = "Playgound dynamics",
+         static_preplot!)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>

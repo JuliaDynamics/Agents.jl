@@ -47,25 +47,18 @@ for `Foo` taking the appropriate combination of fields as parameters.
 If `"test.csv"` contains the following columns: `pos_1, pos_2, foo_1, foo_2`, then `model`
 can be populated as `AgentsIO.populate_from_csv!(model, "test.csv"; row_number_is_id = true)`.
 """
-function populate_from_csv!(
-    model::ABM{S,A},
-    filename,
-    agent_type::B = A,
-    col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
-    row_number_is_id = false,
-    kwargs...,
-) where {A,B <: Union{Type{<:A},Function},S}
-    @assert(
-        agent_type isa Function || !(agent_type isa Union),
-        "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent"
-    )
+function populate_from_csv!(model::ABM{S, A},
+                            filename,
+                            agent_type::B = A,
+                            col_map::Dict{Symbol, Int} = Dict{Symbol, Int}();
+                            row_number_is_id = false,
+                            kwargs...) where {A, B <: Union{Type{<:A}, Function}, S}
+    @assert(agent_type isa Function||!(agent_type isa Union),
+            "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent")
     if !haskey(kwargs, :types) && isstructtype(agent_type)
-        kwargs = (
-            kwargs...,
-            types = Dict(
-                fieldname(agent_type, i) => fieldtype(agent_type, i) for i in 1:fieldcount(agent_type)
-            ),
-        )
+        kwargs = (kwargs...,
+                  types = Dict(fieldname(agent_type, i) => fieldtype(agent_type, i)
+                               for i in 1:fieldcount(agent_type)))
         for (k, v) in kwargs.types
             if v <: Tuple && isconcretetype(v)
                 len = length(fieldtypes(v))
@@ -78,7 +71,8 @@ function populate_from_csv!(
 
     if isempty(col_map)
         if row_number_is_id
-            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...,
+                                                validate = false))
                 add_agent_pos!(agent_type(id, row...), model)
             end
         else
@@ -88,8 +82,10 @@ function populate_from_csv!(
         end
     else
         if row_number_is_id
-            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
-                add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
+            for (id, row) in enumerate(CSV.Rows(read(filename); kwargs...,
+                                                validate = false))
+                add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...),
+                               model)
             end
         else
             for row in CSV.Rows(read(filename); kwargs..., validate = false)
@@ -126,7 +122,8 @@ AgentsIO.dump_to_csv("test.csv", allagents(model))
 The resultant `"test.csv"` file will contain the following columns: `id`, `pos_1`, `pos_2`,
 `foo_1`, `foo_2`.
 """
-function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents))); kwargs...)
+function dump_to_csv(filename, agents, fields = collect(fieldnames(eltype(agents)));
+                     kwargs...)
     atype = eltype(agents)
     data = DataFrame()
     for f in fields

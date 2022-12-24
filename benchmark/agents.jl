@@ -54,33 +54,32 @@ end
 
 mutable struct ContinuousAgent <: AbstractAgent
     id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+    pos::NTuple{3, Float64}
+    vel::NTuple{3, Float64}
     one::Float64
     two::Bool
 end
 
 mutable struct ContinuousAgentTwo <: AbstractAgent
     id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+    pos::NTuple{3, Float64}
+    vel::NTuple{3, Float64}
 end
 
 mutable struct ContinuousAgentThree <: AbstractAgent
     id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+    pos::NTuple{3, Float64}
+    vel::NTuple{3, Float64}
 end
 
 mutable struct ContinuousAgentFour <: AbstractAgent
     id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+    pos::NTuple{3, Float64}
+    vel::NTuple{3, Float64}
 end
 
 mutable struct ContinuousAgentFive <: AbstractAgent
     id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+    pos::NTuple{3, Float64}
+    vel::NTuple{3, Float64}
 end
-

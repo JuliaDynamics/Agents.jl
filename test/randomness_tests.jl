@@ -6,14 +6,14 @@ using Random
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = ABM(Agent1, GridSpace((3,3)); rng)
-    agent = Agent1(1, (1,1))
+    model = ABM(Agent1, GridSpace((3, 3)); rng)
+    agent = Agent1(1, (1, 1))
     add_agent_pos!(agent, model)
-    agent = Agent1(2, (1,1))
+    agent = Agent1(2, (1, 1))
     add_agent_single!(agent, model)
     # Test that model rng pool was used
     @test model.rng ≠ rng0
-    @test agent.pos == (2,1)
+    @test agent.pos == (2, 1)
     seed!(model, 42)
     @test model.rng == rng0
 
@@ -88,12 +88,12 @@ end
 
 @testset "random agent" begin
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = ABM(Union{Daisy, Land}, space; warn = false)
     fill_space!(Daisy, model, "black")
     add_agent!(Land(999, (1, 1), 999), model)
 
     a = random_agent(model)
-    @test typeof(a) <: Union{Daisy,Land}
+    @test typeof(a) <: Union{Daisy, Land}
 
     c1(a) = a isa Land
     a = random_agent(model, c1)
