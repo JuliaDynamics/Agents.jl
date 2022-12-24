@@ -42,6 +42,15 @@ containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
 
+function construct_agent_container(container, A)
+    if container <: Dict
+        return Dict{Int,A}
+    elseif container <: Vector
+        return Vector{A}
+    else
+        throw(ArgumentError("Unrecognised container $container, please specify either Dict or Vector."))
+    end
+end
 
 """
     union_types(U::Type)
@@ -88,15 +97,15 @@ warnings are thrown when appropriate.
 function AgentBasedModel(
     ::Type{A},
     space::S=nothing;
-    container::Type{C}=Dict{Int,A},
+    container::Type=Dict{Int,A},
     scheduler::F=Schedulers.fastest,
     properties::P=nothing,
     rng::R=Random.default_rng(),
     warn=true
-) where {A<:AbstractAgent,S<:SpaceType,C<:ContainerType{A},F,P,R<:AbstractRNG}
+) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
-
-    agents = container()
+    C = construct_agent_container(container, A)
+    agents = C()
     return ABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
