@@ -33,6 +33,11 @@ end
 """
 const ABM = AgentBasedModel
 
+"""
+`UnkillableABM{A, S}` is an alias for `ABM{A, S, Vector{A}`.
+"""
+const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
+
 containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S

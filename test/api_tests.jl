@@ -106,14 +106,14 @@ end
 
 @testset "kill_agent! (vector container)" begin
     # No Space
-    model = ABM(Agent0; container=Vector{Agent0})
+    model = UnkillableABM(Agent0)
     add_agent!(model)
     agent = add_agent!(model)
     @test nagents(model) == 2
     @test_throws ErrorException kill_agent!(agent, model)
     @test_throws ErrorException genocide!(model, [1, 3])
     # GraphSpace
-    model = ABM(Agent5, GraphSpace(path_graph(6)); container=Vector{Agent5})
+    model = UnkillableABM(Agent5, GraphSpace(path_graph(6)))
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
