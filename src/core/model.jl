@@ -199,7 +199,7 @@ end
 Return a random agent from the model.
 """
 function random_agent(model)
-    model[rand(model.rng, eachindex(model.agents))]
+    model[rand(model.rng, allids(model))]
 end
 
 """
@@ -236,7 +236,7 @@ allagents(model) = values(model.agents)
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
-allids(model) = eachindex(model.agents) # eachindex over keys as works with Dict & Vector
+allids(model) = eachindex(model.agents)
 
 #######################################################################################
 # %% Higher order collections
