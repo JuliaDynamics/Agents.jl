@@ -8,9 +8,9 @@ using StableRNGs
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
     model = ABM(Agent7, space; properties)
-    attributes = (f1=true, f2=1)
+    attributes = (f1 = true, f2 = 1)
     add_agent!(1, model, attributes...)
-    attributes = (f2=1, f1=true)
+    attributes = (f2 = 1, f1 = true)
     add_agent!(1, model; attributes...)
     @test model[1].id != model[2].id
     @test model[1].pos == model[2].pos
@@ -212,7 +212,7 @@ end
     end
 
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn=false)
+    model = ABM(Union{Daisy,Land}, space; warn = false)
     fill_space!(Daisy, model, "black")
     @test nagents(model) == 100
     for a in allagents(model)
@@ -220,8 +220,8 @@ end
         @test a.breed == "black"
     end
 
-    space = GridSpace((10, 10), periodic=true)
-    model = ABM(Union{Daisy,Land}, space; warn=false)
+    space = GridSpace((10, 10), periodic = true)
+    model = ABM(Union{Daisy,Land}, space; warn = false)
     temperature(pos) = (pos[1] / 10,) # make it Tuple!
     fill_space!(Land, model, temperature)
     @test nagents(model) == 100
@@ -244,7 +244,7 @@ end
     end
 
     for bool in (true, false)
-        model = ABM(Agent2; properties=Dict(:count => 0))
+        model = ABM(Agent2; properties = Dict(:count => 0))
         for i in 1:100
             add_agent!(model, rand(model.rng))
         end
@@ -264,7 +264,7 @@ end
         weight::Float64
     end
 
-    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler=Schedulers.ByID())
+    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler = Schedulers.ByID())
     for i in 1:10
         add_agent!(model, i)
     end

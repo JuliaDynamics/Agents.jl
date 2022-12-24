@@ -73,7 +73,7 @@ described in each space's documentation string.
 
 `nearby_ids` always includes IDs with 0 distance to `position`.
 """
-nearby_ids(position, model, r=1) = notimplemented(model)
+nearby_ids(position, model, r = 1) = notimplemented(model)
 
 """
     nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
@@ -92,7 +92,7 @@ For [`OpenStreetMapSpace`](@ref) this means "nearby intersections" and operates 
 on the underlying graph of the OSM, providing the intersection nodes nearest to the
 given position.
 """
-nearby_positions(position, model, r=1) = notimplemented(model)
+nearby_positions(position, model, r = 1) = notimplemented(model)
 
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
@@ -283,7 +283,7 @@ function add_agent!(
     pos::ValidPos,
     model::ABM{S,A},
     properties...;
-    kwargs...
+    kwargs...,
 ) where {S,A<:AbstractAgent}
     add_agent!(pos, A, model, properties...; kwargs...)
 end
@@ -294,7 +294,7 @@ function add_agent!(
     A::Type{<:AbstractAgent},
     model::ABM,
     properties...;
-    kwargs...
+    kwargs...,
 )
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
@@ -310,7 +310,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(agent::A, model::ABM, r=1; kwargs...) where {A<:AbstractAgent}
+function nearby_ids(agent::A, model::ABM, r = 1; kwargs...) where {A<:AbstractAgent}
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
@@ -323,8 +323,8 @@ Same as `nearby_positions(agent.pos, model, r)`.
 function nearby_positions(
     agent::A,
     model::ABM{S,A},
-    r=1;
-    kwargs...
+    r = 1;
+    kwargs...,
 ) where {S,A<:AbstractAgent}
     nearby_positions(agent.pos, model, r; kwargs...)
 end
@@ -336,7 +336,7 @@ Return an iterable of the agents near the position of the given `agent`.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-nearby_agents(a, model, r=1; kwargs...) =
+nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
 
 """
@@ -348,7 +348,7 @@ Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-function random_nearby_id(a, model, r=1; kwargs...)
+function random_nearby_id(a, model, r = 1; kwargs...)
     # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
     iter = nearby_ids(a, model, r; kwargs...)
 
@@ -384,7 +384,7 @@ is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 """
-function random_nearby_agent(a, model, r=1; kwargs...)
+function random_nearby_agent(a, model, r = 1; kwargs...)
     id = random_nearby_id(a, model, r; kwargs...)
     isnothing(id) && return
     return model[id]

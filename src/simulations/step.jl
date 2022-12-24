@@ -59,4 +59,3 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
         s += 1
     end
 end
-
