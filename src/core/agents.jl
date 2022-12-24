@@ -202,13 +202,14 @@ macro agent(new_name, base_type, extra_fields)
 end
 
 # TODO: I do not know how to merge these two macros to remove code duplication.
-# There should be a way that only the 4-argument version is used
+# There should be away that only the 4-argument version is used
 # and the 3-argument version just passes `AbstractAgent` to the 4-argument.
 macro agent(new_name, base_type, super_type, extra_fields)
-    #! format: off
     # This macro was generated with the guidance of @rdeits on Discourse:
-    # https://discourse.julialang.org/t/metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    #! format: on
+    # https://discourse.julialang.org/t/
+    # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
+
+    # We start with a quote. All macros return a quote to be evaluated
     quote
         let
             # Here we collect the field names and types from the base type
