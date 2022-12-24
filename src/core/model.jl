@@ -1,4 +1,4 @@
-export ABM, AgentBasedModel
+export ABM, AgentBasedModel, UnkillableABM
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -105,12 +105,12 @@ warnings are thrown when appropriate.
 """
 function AgentBasedModel(
     ::Type{A},
-    space::S = nothing;
-    container::Type = Dict{Int,A},
-    scheduler::F = Schedulers.fastest,
-    properties::P = nothing,
-    rng:: R =Random.default_rng(),
-    warn = true
+    space::S=nothing;
+    container::Type=Dict{Int,A},
+    scheduler::F=Schedulers.fastest,
+    properties::P=nothing,
+    rng::R=Random.default_rng(),
+    warn=true
 ) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
@@ -121,6 +121,12 @@ end
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
     return ABM(typeof(agent), args...; kwargs...)
 end
+
+"""
+    UnkillableABM(AgentType [, space]; properties, kwargs...) → model
+Create an unkillable agent-based model from the given agent type and `space`. For more details see `ABM`.
+"""
+UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
 
 #######################################################################################
 # %% Model accessing api
@@ -277,7 +283,7 @@ e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no uppe
 Index order is provided by the model scheduler by default,
 but can be altered with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = model.scheduler) =
+iter_agent_groups(order::Int, model::ABM; scheduler=model.scheduler) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """
@@ -302,9 +308,9 @@ map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs..
     index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
 Return an iterable of agent ids in the model, meeting the `filter` criteria if used.
 """
-index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM; scheduler=Schedulers.by_id) =
     Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id) =
+index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler=Schedulers.by_id) =
     Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
@@ -344,15 +350,15 @@ Helper function for `agent_validator`.
 function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
     if warn
         isbitstype(A) &&
-        @warn "AgentType is not mutable. You probably haven't used `@agent`!"
+            @warn "AgentType is not mutable. You probably haven't used `@agent`!"
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
-    throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
+        throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer ||
-    throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
+        throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space !== nothing
         (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
-        throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
+            throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
