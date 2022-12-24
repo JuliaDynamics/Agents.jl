@@ -17,9 +17,9 @@ function add_agent_pos!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent
 end
 
 function add_agent!(
-    model::ABM{Nothing, A},
-    properties...;
-    kwargs...,
-) where {A<:AbstractAgent}
+        model::ABM{Nothing, A},
+        properties...;
+        kwargs...,
+    ) where {A<:AbstractAgent}
     add_agent_pos!(A(nextid(model), properties...; kwargs...), model)
 end
