@@ -87,22 +87,15 @@ warnings are thrown when appropriate.
 """
 function AgentBasedModel(::Type{A},
                          space::S = nothing;
-                         container::Type = Dict{Int, A},
+                         container::Type{C} = Dict{Int, A},
                          scheduler::F = Schedulers.fastest,
                          properties::P = nothing,
                          rng::R = Random.default_rng(),
                          warn = true) where {A <: AbstractAgent, S <: SpaceType,
-                                             F, P, R <: AbstractRNG}
+                                             C <: ContainerType{A}, F, P, R <: AbstractRNG}
     agent_validator(A, space, warn)
-    # This is ghastly. Please *someone* find a more elegant way to do this:
-    if container <: Dict
-        C = Dict{Int, A}
-    elseif container <: Vector
-        C = Vector{A}
-    else
-        throw(ArgumentError("Unknown container type $container, please specify either a Dict or Vector."))
-    end
-    agents = C()
+
+    agents = container()
     return ABM{S, A, C, F, P, R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
@@ -115,7 +108,13 @@ end
 
 Create an unkillable agent-based model from the given agent type and `space`. For more details see `ABM`.
 """
-UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container = Vector)
+function UnkillableABM(T::Type{A}, args...; kwargs...) where {A}
+    AgentBasedModel(T, args...; container = Vector{A})
+end
+
+function UnkillableABM(agent::AbstractAgent, args...; kwargs...)
+    return UnkillableABM(typeof(agent), args...; kwargs...)
+end
 
 #######################################################################################
 # %% Model accessing api
