@@ -358,12 +358,12 @@ Helper function for `agent_validator`.
 function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
     if warn
         isbitstype(A) &&
-            @warn "AgentType is not mutable. You probably haven't used `@agent`!"
+        @warn "AgentType is not mutable. You probably haven't used `@agent`!"
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
-        throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
+    throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
     fieldtype(A, :id) <: Integer ||
-        throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
+    throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
     if space !== nothing
         (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
         throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
@@ -371,12 +371,12 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:S
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
         if space_type <: GraphSpace && !(pos_type <: Integer)
-        throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
-        throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
+            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
             if !(pos_type <: NTuple{D,<:AbstractFloat} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if warn &&
                any(isequal(:vel), fieldnames(A)) &&
