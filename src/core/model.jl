@@ -134,9 +134,14 @@ end
 function Base.setindex!(m::ABM{S,A,Vector{A}}, a::AbstractAgent, id::Int) where {S,A}
     a.id ≠ id &&
         throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
-    id == nagents(m) + 1 || error("Cannot add agent of ID $(id) to a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
+    if id <= nagents(m)
+        m.agents[id] = a
+    elseif id == nagents(m) + 1
+        push!(m.agents, a)
+    else
+        error("Cannot add/modify agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID <= $(nagents(m)+1).")
+    end
     m.maxid[] < id && (m.maxid[] += 1)
-    push!(m.agents, a)
     return a
 end
 
