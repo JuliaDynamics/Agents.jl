@@ -17,7 +17,7 @@ ValidPos = Union{
     Tuple{Int,Int,Float64} # osm
 } where {N,M}
 
-ContainerType{A} = Union{Dict{Int,A},Vector{A}} # Possible to include a stack-allocated containertype?
+ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
 struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}
     agents::C
