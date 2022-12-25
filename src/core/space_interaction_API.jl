@@ -232,6 +232,11 @@ function add_agent!(agent::AbstractAgent, model::ABM)
     add_agent_pos!(agent, model)
 end
 
+function add_agent!(agent::AbstractAgent, model::UnkillableABM)
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
+    add_agent_pos!(agent, model)
+end
+
 function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
     agent.pos = pos
     add_agent_pos!(agent, model)

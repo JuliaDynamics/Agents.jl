@@ -109,6 +109,7 @@ end
     model = UnkillableABM(Agent0)
     add_agent!(model)
     agent = add_agent!(model)
+    @test_throws ErrorException add_agent!(Agent0(4), model)
     @test nagents(model) == 2
     @test_throws ErrorException kill_agent!(agent, model)
     @test_throws ErrorException genocide!(model, [1, 3])

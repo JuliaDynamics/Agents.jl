@@ -33,9 +33,6 @@ end
 """
 const ABM = AgentBasedModel
 
-"""
-`UnkillableABM{A, S}` is an alias for `ABM{A, S, Vector{A}`.
-"""
 const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
 
 containertype(::ABM{S,A,C}) where {S,A,C} = C
@@ -66,7 +63,7 @@ You can provide an agent _instance_ instead of type, and the type will be deduce
 `ABM` is equivalent with `AgentBasedModel`.
 
 The agents are stored in a dictionary that maps unique IDs (integers)
-to agents or a vector whose indices are IDs. Use `model[id]` to get the agent with the given `id`.
+to agents. Use `model[id]` to get the agent with the given `id`.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial structure.
@@ -123,7 +120,11 @@ end
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
-Create an unkillable agent-based model from the given agent type and `space`. For more details see `ABM`.
+Same as ABM, but agents cannot be removed during model stepping. Additionally,
+it is mandatory that the agent ID is exactly the same as the agent insertion
+order (i.e., the 5th agent added to the model must have ID 5). This allows the
+internal storage of agents to be in a standard Vector, accelerating the
+performance of retrieving agents from the model.
 """
 UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
 
