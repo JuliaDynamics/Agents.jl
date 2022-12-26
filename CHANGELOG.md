@@ -2,6 +2,7 @@
 - `add_node!` and `rem_node!` have been renamed to `add_vertex!` and `rem_vertex!` extending Graphs.jl homonymous methods to help standardise names across ecosystems. Therefore `add_node!` and `rem_node!` have been deprecated.  
 - The signature of `add_edge!` has been generalised with `args...` and `kwargs...` to be compatible with all the implementations the underlying graph supports. 
 - New function `rem_edge!` that removes an edge from the graph.
+- `multi_agents_type!` has been updated to handle edge case where agents of one (or more) type are absent at the beginning of the simulation. 
 
 # v5.5
 - The `@agent` macro has been re-written and is now more general and more safe.
