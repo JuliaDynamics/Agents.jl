@@ -222,7 +222,7 @@ function single_agent_types!(
     a = first(model.agents).second
     for (i, k) in enumerate(properties)
         current_type = typeof(get_data(a, k, identity))
-        isconcretetype(current_type) || warn(
+        isconcretetype(current_type) || @warn(
             "Type is not concrete when using $(k) " *
             "on agents. Consider narrowning the type signature of $(k).",
         )
@@ -241,10 +241,18 @@ function multi_agent_types!(
     for (i, k) in enumerate(properties)
         current_types = DataType[]
         for atype in utypes
-            a = first(Iterators.filter(a -> a isa atype, allagents(model)))
+            a = try 
+                first(Iterators.filter(a -> a isa atype, allagents(model)))
+            catch
+                nothing
+            end 
+            
             if k isa Symbol
-                current_type =
-                    hasproperty(a, k) ? typeof(get_data(a, k, identity)) : Missing
+                current_type = if hasproperty(a, k) 
+                    typeof(get_data(a, k, identity))
+                else 
+                    hasfield(atype, k) ? fieldtype(atype, k) : Missing
+                end
             else
                 current_type = try
                     typeof(get_data(a, k, identity))
@@ -252,9 +260,9 @@ function multi_agent_types!(
                     Missing
                 end
             end
-            isconcretetype(current_type) || warn(
+            isconcretetype(current_type) || @warn(
                 "Type is not concrete when using $(k) " *
-                "on $(atype) agents. Consider narrowning the type signature of $(k).",
+                "on $(atype) agents. Consider narrowing the type signature of $(k).",
             )
             push!(current_types, current_type)
         end
@@ -343,7 +351,7 @@ function single_agent_agg_types!(
         current_type = typeof(agg(
             get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
         ))
-        isconcretetype(current_type) || warn(
+        isconcretetype(current_type) || @warn(
             "Type is not concrete when using function $(agg) " *
             "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
         )
@@ -363,7 +371,12 @@ function multi_agent_agg_types!(
         headers[i+1] = dataname(property)
         current_types = DataType[]
         for atype in utypes
-            a = first(Iterators.filter(a -> a isa atype, allagents(model)))
+            a = try 
+                first(Iterators.filter(a -> a isa atype, allagents(model)))
+            catch
+                nothing
+            end 
+
             if k isa Symbol
                 current_type =
                     hasproperty(a, k) ? typeof(agg(get_data(a, k, identity))) : Missing
@@ -374,7 +387,7 @@ function multi_agent_agg_types!(
                     Missing
                 end
             end
-            isconcretetype(current_type) || warn(
+            isconcretetype(current_type) || @warn(
                 "Type is not concrete when using function $(agg) " *
                 "on key $(k) for $(atype) agents. Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
             )
@@ -477,7 +490,7 @@ function init_model_dataframe(model::ABM, properties::Vector)
             end
         else
             current_type = typeof(k(model))
-            isconcretetype(current_type) || warn(
+            isconcretetype(current_type) || @warn(
                 "Type is not concrete when using $(k)" *
                 "on the model. Considering narrowing the type signature of $(k).",
             )
