@@ -285,8 +285,13 @@ function add_agent!(
     kwargs...,
 )
     id = nextid(model)
-    newagent = A(id, pos, properties...; kwargs...)
-    add_agent_pos!(newagent, model)
+    if any(isequal(:pos), fieldnames(A))
+        newagent = A(id, pos, properties...; kwargs...)
+        add_agent_pos!(newagent, model)
+    else #if adding a NoSpaceAgent to a spaced model
+        newagent = A(id, properties...; kwargs...)
+        model[id] = newagent
+    end
 end
 
 #######################################################################################
