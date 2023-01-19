@@ -203,12 +203,15 @@ macro agent(new_name, base_type, super_type, extra_fields)
     end
 end
 
-# Shorter macro for convenience
 macro agent(new_name, base_type, extra_fields)
-    quote
-        # Call the actual macro with default `super_type = AbstractAgent`
+    # Here we nest one macro call into another because there is no way to provide 
+    # defaults for macro arguments. We proceed to call the actual macro with the default
+    # `super_type = AbstractAgent`. This requires us to disable 'macro hygiene', see here
+    # for a brief explanation of the potential issues with this: 
+    # https://discourse.julialang.org/t/calling-a-macro-from-within-a-macro-revisited/19680/16?u=fbanning
+    esc(quote
         @agent($new_name, $base_type, AbstractAgent, $extra_fields)
-    end
+    end)
 end
 
 """
