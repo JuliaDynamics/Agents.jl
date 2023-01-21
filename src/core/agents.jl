@@ -2,18 +2,18 @@ export AbstractAgent, @agent, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
+
 Agents participating in Agents.jl simulations are instances of user-defined Types that
 are subtypes of `AbstractAgent`.
 
 Your agent type(s) **must have** the `id::Int` field as first field.
-In Julia versions ≥ v1.8, this must also be declared as a `const` field.
 If any space is used (see [Available spaces](@ref)), a `pos` field of appropriate type
 is also mandatory. The core model structure, and each space,
 may also require additional fields that may,
 or may not, be communicated as part of the public API.
 
 The [`@agent`](@ref) macro ensures that all of these constrains are in place
-and hence it is the only officially supported way to generate new agent types.
+and hence it is the recommended way to generate new agent types.
 """
 abstract type AbstractAgent end
 
@@ -28,12 +28,17 @@ Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
-Using `@agent` is **the only supported way to create agent types** for Agents.jl.
+Using `@agent` is the recommended way to create agent types for Agents.jl,
+however keep in mind that the macro (currently) doesn't work with `Base.@kwdef`
+or `const` declerations in individual fields (for Julia v1.8+).
+
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
 and `AnotherAgentType` itself is also concrete (only concrete types have fields).
 If you want `YourAgentType` to subtype something other than `AbstractAgent`, use
 the optional argument `OptionalSupertype` (which itself must then subtype `AbstractAgent`).
+
+## Usage
 
 The macro `@agent` has two primary uses:
 1. To include the mandatory fields for a particular space in your agent struct.
@@ -49,8 +54,7 @@ The existing minimal agent types are:
 
 All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
 a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
-that the resulting new agent type will have.
-The `id` is an unchangable field (and in Julia versions ≥ v1.8 this is enforced).
+that the resulting new agent type will have. The `id` is an unchangable field.
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
 ## Examples
