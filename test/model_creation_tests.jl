@@ -54,7 +54,7 @@ end
     agent = ImmutableAgent(1)
     @test_logs (
         :warn,
-        "gent type is not mutable, and most library functions assume that it is.",
+        "Agent type is not mutable, and most library functions assume that it is.",
     ) ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
