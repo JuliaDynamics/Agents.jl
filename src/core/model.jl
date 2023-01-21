@@ -297,7 +297,7 @@ function agent_validator(
         do_checks(A, space, warn)
     else
         warn && @warn """
-        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        Agent type is not concrete. If your agent is parametrically typed, you're probably
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
