@@ -1,4 +1,6 @@
 using LinearAlgebra
+using Agents.Graphs
+using Distributions: DiscreteNonParametric, Poisson
 
 @agent PoorSoul GraphAgent begin
     days_infected::Int  # number of days since is infected
