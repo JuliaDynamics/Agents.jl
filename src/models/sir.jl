@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Agents.Graphs
 
 @agent PoorSoul GraphAgent begin
     days_infected::Int  # number of days since is infected
@@ -38,6 +39,7 @@ function sir(;
 )
 
     rng = MersenneTwister(seed)
+    migration_rates = zeros(C, C)
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -45,7 +47,6 @@ function sir(;
     size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
-    migration_rates = zeros(C, C)
     for c in 1:C
         for c2 in 1:C
             migration_rates[c, c2] = (Ns[c] + Ns[c2]) / Ns[c]
@@ -95,10 +96,10 @@ function sir(;
 end
 
 function sir_agent_step!(agent, model)
-    migrate!(agent, model)
-    transmit!(agent, model)
-    update!(agent, model)
-    recover_or_die!(agent, model)
+    sir_migrate!(agent, model)
+    sir_transmit!(agent, model)
+    sir_update!(agent, model)
+    sir_recover_or_die!(agent, model)
 end
 
 function sir_migrate!(agent, model)
