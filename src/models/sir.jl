@@ -38,7 +38,7 @@ function sir(;
     seed = 19,
 )
 
-    rng = MersenneTwister(seed)
+    rng = Xoshiro(seed)
     migration_rates = zeros(C, C)
     @assert length(Ns) ==
     length(Is) ==
