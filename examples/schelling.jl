@@ -269,7 +269,8 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # using GLMakie # using a different plotting backend that enables interactive plots
 #
 # figure, abmobs = abmexploration(
-#     model, agent_step!, dummystep, parange;
+#     model;
+#     agent_step!, dummystep, parange,
 #     ac = groupcolor, am = groupmarker, as = 10,
 #     adata, alabels
 # )
