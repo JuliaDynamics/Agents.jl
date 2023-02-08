@@ -192,6 +192,8 @@ Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = model.maxid[] + 1
 
+nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
+
 """
     model.prop
     getproperty(model::ABM, :prop)
