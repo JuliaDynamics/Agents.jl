@@ -57,6 +57,22 @@ This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
 
+"""
+    add_agent_to_model!(agent, model)
+Add the agent to the model. This function is called before the agent is inserted
+into the model dictionary and `maxid` has been updated. This function is NOT
+part of the public API.
+"""
+add_agent_to_model!(agent, model) = notimplemented(model)
+
+"""
+    remove_agent_from_model!(agent, model)
+Remove the agent from the model. This function is called before the agent is
+inserted into the model dictionary and `maxid` has been updated. This function
+is NOT part of the public API.
+"""
+remove_agent_from_model!(agent, model) = notimplemented(model)
+
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
@@ -143,7 +159,7 @@ end
 Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
-    delete!(model.agents, a.id)
+    remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
 
@@ -209,7 +225,7 @@ end
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    model[agent.id] = agent
+    add_agent_to_model!(agent, model)
     model.maxid[] < agent.id && (model.maxid[] = agent.id)
     add_agent_to_space!(agent, model)
     return agent
