@@ -355,7 +355,7 @@ function agent_validator(
         do_checks(A, space, warn)
     else
         warn && @warn """
-        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        Agent type is not concrete. If your agent is parametrically typed, you're probably
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
@@ -367,37 +367,38 @@ function agent_validator(
     end
 end
 
+# Note: This function needs to be updated every time a new space is defined!
 """
     do_checks(agent, space)
 Helper function for `agent_validator`.
 """
-function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent,S<:SpaceType}
+function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     if warn
         isbitstype(A) &&
-        @warn "AgentType is not mutable. You probably haven't used `@agent`!"
+        @warn "Agent type is not mutable, and most library functions assume that it is."
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
-    throw(ArgumentError("First field of Agent struct must be `id` (it should be of type `Int`)."))
+    throw(ArgumentError("First field of agent type must be `id` (and should be of type `Int`)."))
     fieldtype(A, :id) <: Integer ||
-    throw(ArgumentError("`id` field in Agent struct must be of type `Int`."))
+    throw(ArgumentError("`id` field in agent type must be of type `Int`."))
     if space !== nothing
         (any(isequal(:pos), fieldnames(A)) && fieldnames(A)[2] == :pos) ||
-        throw(ArgumentError("Second field of Agent struct must be `pos` when using a space."))
+        throw(ArgumentError("Second field of agent type must be `pos` when using a space."))
         # Check `pos` field in A has the correct type
         pos_type = fieldtype(A, :pos)
         space_type = typeof(space)
         if space_type <: GraphSpace && !(pos_type <: Integer)
-            throw(ArgumentError("`pos` field in Agent struct must be of type `Int` when using GraphSpace."))
+            throw(ArgumentError("`pos` field in agent type must be of type `Int` when using GraphSpace."))
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
-            throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{Int}` when using GridSpace."))
+            throw(ArgumentError("`pos` field in agent type must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
             if !(pos_type <: NTuple{D,<:AbstractFloat} where {D})
-                throw(ArgumentError("`pos` field in Agent struct must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
+                throw(ArgumentError("`pos` field in agent type must be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if warn &&
                any(isequal(:vel), fieldnames(A)) &&
                !(fieldtype(A, :vel) <: NTuple{D,<:AbstractFloat} where {D})
-                @warn "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
+                @warn "`vel` field in agent type should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace."
             end
         end
     end
