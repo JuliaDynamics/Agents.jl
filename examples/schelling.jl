@@ -58,7 +58,7 @@ end
 # to keep in mind that `id` must never be modified, and `pos` must be modified
 # only through valid API functions such as [`move_agent!`](@ref).
 
-# You can think of the `@agent` macro defining the following expression:
+# The `@agent` macro defined the following expression:
 # ```julia
 # mutable struct SchellingAgent <: AbstractAgent
 #     id::Int             # The identifier number of the agent
@@ -67,11 +67,6 @@ end
 #     group::Int          # ...
 # end
 # ```
-# However, the reason to use [`@agent`](@ref) instead of hand-coding the
-# 'mandatory' fields is that it allows us to (1) ensure that some fields are
-# constants, (2) add additional fields that may be necessary but not really
-# part of the public API, and hence set internally by Agents.jl when using
-# various API functions.
 
 # ## Creating an ABM
 
@@ -274,7 +269,8 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # using GLMakie # using a different plotting backend that enables interactive plots
 #
 # figure, abmobs = abmexploration(
-#     model, agent_step!, dummystep, parange;
+#     model;
+#     agent_step!, dummystep, parange,
 #     ac = groupcolor, am = groupmarker, as = 10,
 #     adata, alabels
 # )

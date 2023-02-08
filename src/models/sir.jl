@@ -1,4 +1,5 @@
 using LinearAlgebra
+using StatsBase
 
 @agent PoorSoul GraphAgent begin
     days_infected::Int  # number of days since is infected
@@ -37,7 +38,8 @@ function sir(;
     seed = 19,
 )
 
-    rng = MersenneTwister(seed)
+    rng = Xoshiro(seed)
+    migration_rates = zeros(C, C)
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -45,7 +47,6 @@ function sir(;
     size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
-    migration_rates = zeros(C, C)
     for c in 1:C
         for c2 in 1:C
             migration_rates[c, c2] = (Ns[c] + Ns[c2]) / Ns[c]
@@ -75,7 +76,7 @@ function sir(;
         :death_rate => death_rate
     )
 
-    space = GraphSpace(complete_digraph(C))
+    space = GraphSpace(Agents.Graphs.complete_graph(C))
     model = ABM(PoorSoul, space; properties, rng)
 
     ## Add initial individuals
@@ -95,16 +96,15 @@ function sir(;
 end
 
 function sir_agent_step!(agent, model)
-    migrate!(agent, model)
-    transmit!(agent, model)
-    update!(agent, model)
-    recover_or_die!(agent, model)
+    sir_migrate!(agent, model)
+    sir_transmit!(agent, model)
+    sir_update!(agent, model)
+    sir_recover_or_die!(agent, model)
 end
 
 function sir_migrate!(agent, model)
     pid = agent.pos
-    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
-    m = rand(model.rng, d)
+    m = sample(model.rng, 1:(model.C), Weights(model.migration_rates[pid, :]))
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -118,9 +118,8 @@ function sir_transmit!(agent, model)
         model.β_det[agent.pos]
     end
 
-    d = Poisson(rate)
-    n = rand(model.rng, d)
-    n == 0 && return
+    n = rate * abs(randn(model.rng))
+    n <= 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
@@ -128,7 +127,7 @@ function sir_transmit!(agent, model)
            (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
-            n == 0 && return
+            n <= 0 && return
         end
     end
 end

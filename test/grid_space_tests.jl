@@ -251,6 +251,13 @@ end
         @test a.pos == (5, 1)
         walk!(a, rand, model)
         @test a.pos == (4, 5)
+        
+        # GridSpaceSingle
+        model = ABM(GridAgent2D, GridSpaceSingle((5, 5)))
+        a = add_agent!((3, 3), model)
+        walk!(a, (1, 1), model)
+        a.pos == (4, 4)
+
         # Just a single sanity test for higher dimensions, just in case
         mutable struct GridAgent3D <: AbstractAgent
             id::Int

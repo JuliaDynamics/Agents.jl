@@ -1,7 +1,7 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["George Datseris", "Tim DuBois", "Aayush Sabharwal", "Ali Vahdati"]
-version = "5.6.3"
+version = "5.6.5"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

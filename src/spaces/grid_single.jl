@@ -110,3 +110,15 @@ function nearby_ids(
     a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end
+
+# Method for walking on GridSpaceSingle, similar to `walk!` in spaces/utilities.jl
+function walk!(
+    agent::AbstractAgent,
+    direction::NTuple{D,Int},
+    model::ABM{<:GridSpaceSingle}
+) where {D}
+    target = normalize_position(agent.pos .+ direction, model)
+    if isempty(target, model) # if target unoccupied
+        move_agent!(agent, target, model)
+    end
+end

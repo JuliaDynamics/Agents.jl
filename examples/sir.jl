@@ -44,7 +44,6 @@
 cd(@__DIR__) #src
 using Agents, Random
 using Agents.DataFrames, Agents.Graphs
-using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -67,7 +66,7 @@ function model_initiation(;
     seed = 0,
 )
 
-    rng = MersenneTwister(seed)
+    rng = Xoshiro(seed)
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -96,7 +95,7 @@ function model_initiation(;
         C,
         death_rate
     )
-    space = GraphSpace(complete_digraph(C))
+    space = GraphSpace(complete_graph(C))
     model = ABM(PoorSoul, space; properties, rng)
 
     ## Add initial individuals
@@ -183,8 +182,7 @@ end
 
 function migrate!(agent, model)
     pid = agent.pos
-    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
-    m = rand(model.rng, d)
+    m = sample(model.rng, 1:(model.C), Weights(model.migration_rates[pid, :]))
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -198,9 +196,8 @@ function transmit!(agent, model)
         model.β_det[agent.pos]
     end
 
-    d = Poisson(rate)
-    n = rand(model.rng, d)
-    n == 0 && return
+    n = rate * abs(randn(model.rng))
+    n <= 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
@@ -208,7 +205,7 @@ function transmit!(agent, model)
            (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
-            n == 0 && return
+            n <= 0 && return
         end
     end
 end
