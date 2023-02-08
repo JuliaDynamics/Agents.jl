@@ -134,6 +134,11 @@ is_stationary(agent, model) = notimplemented(model)
 #######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
+
+function remove_agent_from_model!(agent, model::ABM{<:AbstractSpace,A,AbstractDict{Int, A}}) where {A<:AbstractAgent}
+    delete!(model.agents, agent.id)
+end
+
 """
     move_agent!(agent [, pos], model::ABM) → agent
 
@@ -220,6 +225,16 @@ end
 #######################################################################################
 # %% Space agnostic adding
 #######################################################################################
+
+function add_agent_to_model!(agent, model::ABM{<:AbstractSpace,A,AbstractDict{Int, A}}) where {A<:AbstractAgent}
+    model.agents[agent.id] = agent
+end
+
+function add_agent_to_model!(agent, model::ABM{<:AbstractSpace,A,Vector{A}}) where {A<:AbstractAgent}
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
+    model.agents[agent.id] = agent
+end
+
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
@@ -243,11 +258,6 @@ The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, model::UnkillableABM)
-    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
     add_agent_pos!(agent, model)
 end
 

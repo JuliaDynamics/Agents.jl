@@ -236,6 +236,6 @@ function Agents.kill_agent!(
     pathfinder::AStar,
 ) where {S,A<:AbstractAgent}
     delete!(pathfinder.agent_paths, agent.id)
-    delete!(model.agents, agent.id)
+    remove_agent_from_model!(a, model)
     Agents.remove_agent_from_space!(agent, model)
 end
