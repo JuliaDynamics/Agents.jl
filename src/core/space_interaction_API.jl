@@ -57,6 +57,22 @@ This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
 
+"""
+    add_agent_to_model!(agent, model)
+Add the agent to the model. This function is called before the agent is inserted
+into the model dictionary and `maxid` has been updated. This function is NOT
+part of the public API.
+"""
+add_agent_to_model!(agent, model) = notimplemented(model)
+
+"""
+    remove_agent_from_model!(agent, model)
+Remove the agent from the model. This function is called before the agent is
+inserted into the model dictionary and `maxid` has been updated. This function
+is NOT part of the public API.
+"""
+remove_agent_from_model!(agent, model) = notimplemented(model)
+
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
@@ -118,6 +134,13 @@ is_stationary(agent, model) = notimplemented(model)
 #######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
+
+# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
+# but there's no difference in functionality between Nothing and AbstractSpace
+function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
+    delete!(model.agents, agent.id)
+end
+
 """
     move_agent!(agent [, pos], model::ABM) → agent
 
@@ -143,11 +166,11 @@ end
 Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
-    delete!(model.agents, a.id)
+    remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
 
-function kill_agent!(a::AbstractAgent, model::ABM{S,A,Vector{A}}) where {S,A}
+function kill_agent!(a::AbstractAgent, model::ABM{S,A,<:AbstractVector{A}}) where {S,A}
     nokill()
 end
 
@@ -204,12 +227,22 @@ end
 #######################################################################################
 # %% Space agnostic adding
 #######################################################################################
+
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+    model.agents[agent.id] = agent
+end
+
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Vector{A}}) where {A<:AbstractAgent}
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    push!(model.agents, agent)
+end
+
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    model[agent.id] = agent
+    add_agent_to_model!(agent, model)
     model.maxid[] < agent.id && (model.maxid[] = agent.id)
     add_agent_to_space!(agent, model)
     return agent
@@ -227,11 +260,6 @@ The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, model::UnkillableABM)
-    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
     add_agent_pos!(agent, model)
 end
 

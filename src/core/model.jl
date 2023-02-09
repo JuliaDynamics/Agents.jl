@@ -34,6 +34,7 @@ end
 const ABM = AgentBasedModel
 
 const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
+const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}} #TODO add utility functions for (creation of) FMABMs?
 
 containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
@@ -128,6 +129,28 @@ performance of retrieving agents from the model.
 """
 UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
 
+
+function FixedMassABM(
+    agents::AbstractVector{A},
+    space::S = nothing;
+    scheduler::F = Schedulers.fastest,
+    properties::P = nothing,
+    rng::R = Random.default_rng(),
+    warn = true
+) where {A<:AbstractAgent, S<:SpaceType,F,P,R<:AbstractRNG} 
+    C = SizedVector{length(agents), A}
+    # println(C)
+    # println(C<:AbstractVector)
+    fixed_agents = C(agents)
+    # println(typeof(fixed_agents))
+    agent_validator(A, space, warn)
+    return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
+end
+
+# TypeError: in AgentBasedModel, in C, expected
+# C<:Union{AbstractDict{Int64, Agent0}, AbstractVector{Agent0}}, got
+# Type{StaticArraysCore.SizedVector{10, T} where T}
+
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
@@ -176,6 +199,8 @@ end
 Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = model.maxid[] + 1
+
+nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
 """
     model.prop
