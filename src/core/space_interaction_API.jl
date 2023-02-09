@@ -137,7 +137,7 @@ is_stationary(agent, model) = notimplemented(model)
 
 # Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
 # but there's no difference in functionality between Nothing and AbstractSpace
-function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,AbstractDict{Int,A}}) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
     delete!(model.agents, agent.id)
 end
 
