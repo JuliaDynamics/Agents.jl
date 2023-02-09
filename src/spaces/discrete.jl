@@ -10,7 +10,7 @@ Notice that the default version of the remaining functions assumes that
 agents are stored in a field `stored_ids` of the space.
 =#
 
-export positions, ids_in_position, agents_in_position,
+export positions, npositions, ids_in_position, agents_in_position,
        empty_positions, random_empty, has_empty_positions
 
 
@@ -93,10 +93,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
-    # TODO: We shouldn't be using `model.space.stored_ids` here.
-    # For `DiscreteSpace`s we should define `npositions` that
-    # returns the total possible number of positions in the space...
-    if clamp(nagents(model) / length(positions(model)), 0.0, 1.0) < cutoff
+    if clamp(nagents(model) / npositions(model.space), 0.0, 1.0) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee
