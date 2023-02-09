@@ -170,7 +170,7 @@ function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
     remove_agent_from_space!(a, model)
 end
 
-function kill_agent!(a::AbstractAgent, model::ABM{S,A,Vector{A}}) where {S,A}
+function kill_agent!(a::AbstractAgent, model::ABM{S,A,<:AbstractVector{A}}) where {S,A}
     nokill()
 end
 
