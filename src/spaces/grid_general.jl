@@ -31,9 +31,7 @@ function positions(space::AbstractGridSpace)
     return (Tuple(y) for y in x)
 end
 
-function npositions(space::AbstractGridSpace)
-    return length(space.stored_ids)
-end
+npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
 # ALright, so here is the design for basic nearby_stuff looping.
 # We initialize a vector of tuples of indices within radius `r` from origin position.
