@@ -135,7 +135,9 @@ is_stationary(agent, model) = notimplemented(model)
 # %% Space agnostic killing and moving
 #######################################################################################
 
-function remove_agent_from_model!(agent, model::ABM{<:AbstractSpace,A,AbstractDict{Int, A}}) where {A<:AbstractAgent}
+# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
+# but there's no difference in functionality between Nothing and AbstractSpace
+function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,AbstractDict{Int,A}}) where {A<:AbstractAgent}
     delete!(model.agents, agent.id)
 end
 
@@ -226,13 +228,13 @@ end
 # %% Space agnostic adding
 #######################################################################################
 
-function add_agent_to_model!(agent, model::ABM{<:AbstractSpace,A,AbstractDict{Int, A}}) where {A<:AbstractAgent}
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
     model.agents[agent.id] = agent
 end
 
-function add_agent_to_model!(agent, model::ABM{<:AbstractSpace,A,Vector{A}}) where {A<:AbstractAgent}
-    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID == $(nagents(m)+1).")
-    model.agents[agent.id] = agent
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Vector{A}}) where {A<:AbstractAgent}
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    push!(model.agents, agent)
 end
 
 """
