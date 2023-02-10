@@ -40,6 +40,13 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
 end
 
 """
+    npositions(model::ABM{<:DiscreteSpace})
+
+Return the number of positions of a model with a discrete space.
+"""
+npositions(model::ABM) = positions(model.space)
+
+"""
     ids_in_position(position, model::ABM{<:DiscreteSpace})
     ids_in_position(agent, model::ABM{<:DiscreteSpace})
 
@@ -93,7 +100,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
     # agent per position, which is not true in general but is appropriate
     # here.
-    if clamp(nagents(model) / npositions(model.space), 0.0, 1.0) < cutoff
+    if clamp(nagents(model) / npositions(model), 0.0, 1.0) < cutoff
         # 0.998 has been benchmarked as a performant branching point
         # It sits close to where the maximum return time is better
         # than the code in the else loop runs. So we guarantee
