@@ -14,7 +14,7 @@ export positions, npositions, ids_in_position, agents_in_position,
        empty_positions, random_empty, has_empty_positions
 
 
-positions(model::ABM) = positions(model.space)
+positions(model::ABM) = npositions(model.space)
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
 Return an iterator over all positions of a model with a discrete space.
