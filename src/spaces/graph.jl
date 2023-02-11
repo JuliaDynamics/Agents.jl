@@ -71,7 +71,7 @@ function remove_agent_from_space!(
 ) where {A <: AbstractAgent}
     agentpos = agent.pos
     ids = ids_in_position(agentpos, model)
-    splice!(ids, findfirst(a -> a == agent.id, ids))
+    deleteat!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
