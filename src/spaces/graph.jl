@@ -84,8 +84,8 @@ function add_agent_to_space!(
 end
 
 # The following is for the discrete space API:
-positions(space::GraphSpace) = 1:nv(space.graph)
 npositions(space::GraphSpace) = nv(space.graph)
+positions(space::GraphSpace) = 1:npositions(space)
 ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
