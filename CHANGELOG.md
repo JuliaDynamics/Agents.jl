@@ -1,5 +1,6 @@
 # main
 - `multi_agents_type!` has been updated to handle edge case where agents of one (or more) type are absent at the beginning of the simulation. 
+- New function `npositions` that returns the number of positions of a model with a discrete space.
 
 # v5.6
 - `add_node!` and `rem_node!` have been renamed to `add_vertex!` and `rem_vertex!` extending Graphs.jl homonymous methods to help standardise names across ecosystems. Therefore `add_node!` and `rem_node!` have been deprecated.  
