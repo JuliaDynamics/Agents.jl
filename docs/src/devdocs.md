@@ -76,3 +76,7 @@ suite](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/benchmark/benchm
 and the [BenchmarkTools.jl
 manual](https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Benchmarking-basics)
 for more information on how to write your own benchmarks.
+
+## Creating a new `AgentBasedModel` implementation
+
+The interface defined by `AgentBasedModel`, that needs to be satisfied by new implementations, is very small. It is contained in the file `src/core/model_abstract.jl`.
