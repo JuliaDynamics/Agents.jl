@@ -73,12 +73,6 @@ Literally equivalent with `cheduler(model)(model)`.
 schedule(model::ABM) = abmscheduler(model)(model)
 
 """
-    nextid(model::ABM) → id
-Return a valid `id` for creating a new agent with it.
-"""
-nextid(model::ABM) = length(allids(model)) + 1
-
-"""
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
@@ -95,6 +89,12 @@ allagents(model) = values(agent_container(model))
 Return the number of agents in the `model`.
 """
 nagents(model::ABM) = length(allids(model))
+
+"""
+    nextid(model::ABM) → id
+Return a valid `id` for creating a new agent with it.
+"""
+nextid(model::ABM) = nagents(model) + 1
 
 """
     random_agent(model) → agent
@@ -181,7 +181,8 @@ spacetype(::ABM{S}) where {S} = S
 
 """
     add_agent_to_model!(agent, model)
-Add the agent to the model's internal container.
+Add the agent to the model's internal container, if the addition is valid
+given the agent's ID and those already in the model. Otherwise error.
 """
 add_agent_to_model!(agent, model) = notimplemented(model)
 

@@ -155,20 +155,26 @@ nextid(model::ABM) = model.maxid[] + 1
 nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
 function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
-    model.agents[agent.id] = agent
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+    if haskey(agent_container(model), agent.id)
+        error("Can't add agent to model. There is already an agent with id=$(agent.id)")
+    else
+        agent_container(model)[agent.id] = agent
+    end
+    # Only the `Dict` implementation actually uses the `maxid` field.
+    # The `Vector` one uses the defaults, and the `Sized` one errors anyways.
+    maxid = getfield(model, :maxid)
+    if maxid[] < agent.id; maxid[] = agent.id; end
+    return
 end
 
 function add_agent_to_model!(agent, model::UnkillableABM)
     agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
-    push!(model.agents, agent)
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+    push!(agent_container(model), agent)
+    return
 end
 
-# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
-# but there's no difference in functionality between Nothing and AbstractSpace
 function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
-    delete!(model.agents, agent.id)
+    delete!(agent_container(model), agent.id)
 end
 function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
     error(
@@ -247,7 +253,7 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-modelname(abm::ABM) = modelname(abm.agents)
+modelname(abm::ABM) = modelname(agent_container(abm))
 modelname(::Dict) = "AgentBasedModel"
 modelname(::Vector) = "UnkillableABM"
 modelname(::SizedVector) = "FixedMassABM"
@@ -258,9 +264,9 @@ function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     if abm.space === nothing
         s *= "\n space: nothing (no spatial structure)"
     else
-        s *= "\n space: $(sprint(show, abm.space))"
+        s *= "\n space: $(sprint(show, abmspace(abm)))"
     end
-    s *= "\n scheduler: $(schedulername(abm.scheduler))"
+    s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
     print(io, s)
     if abm.properties ≠ nothing
         if typeof(abm.properties) <: Dict
