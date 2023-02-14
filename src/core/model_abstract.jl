@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AbstractAgentBasedModel, ABM
-export abmrng
+export abmrng, abmscheduler
 export random_agent, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
@@ -27,15 +27,14 @@ ValidPos = Union{
 
 
 """
-    AbstractAgentBasedModel{S,A}
-Supertype of all concrete ABM implementations for Agents.jl. Defines the ABM interface.
+    AgentBasedModel{S,A}
+
+Abstract type encompassing of all concrete ABM implementations for models in Agents.jl.
+Defines the ABM interface.
 It is typed with type `S` for space and `A` for agent(s).
 """
-abstract type AbstractAgentBasedModel{S<:SpaceType,A<:AbstractAgent} end
-const AABM = AbstractAgentBasedModel
-# In the future `AgentBasedModel` will be come an abstract type,
-# and the current `AgentBasedModel` will be renamed to something like `VanillaABM`.
-const ABM = AbstractAgentBasedModel
+abstract type AgentBasedModel{S<:SpaceType,A<:AbstractAgent} end
+const ABM = AgentBasedModel
 
 function notimplemented(model)
     error("Function not implemented for model of type $(nameof(typeof(model))) "*
@@ -60,6 +59,12 @@ Return the random number generator stored in the `model`.
 abmrng(model::ABM) = getfield(model, :rng)
 
 """
+    abmproperties(model::ABM)
+Return the properties container stored in the `model`.
+"""
+abmproperties(model::ABM) = getfield(model, :properties)
+
+"""
     abmscheduler(model)
 Return the default scheduler stored in `model`.
 """
@@ -68,7 +73,7 @@ abmscheduler(model::ABM) = getfield(model, :scheduler)
 """
     schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
-Literally equivalent with `cheduler(model)(model)`.
+Literally equivalent with `abmscheduler(model)(model)`.
 """
 schedule(model::ABM) = abmscheduler(model)(model)
 
@@ -101,7 +106,6 @@ nextid(model::ABM) = nagents(model) + 1
 Return a random agent from the model.
 """
 random_agent(model) = model[rand(abmrng(model), allids(model))]
-
 
 """
     random_agent(model, condition) → agent

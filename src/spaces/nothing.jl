@@ -3,23 +3,10 @@ This file implements the "agent-space interaction API" for `nothing`, ie
 no space type
 =#
 
-function kill_agent!(agent::A, model::ABM{Nothing,A,Dict{Int,A}}) where {A<:AbstractAgent}
-    remove_agent_from_model!(agent, model)
+function add_agent_to_space!(::A, ::ABM{Nothing,A}) where {A<:AbstractAgent}
+    nothing
 end
-
-function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
-    add_agent_pos!(agent, model)
+function remove_agent_from_space!(::A, ::ABM{Nothing,A}) where {A<:AbstractAgent}
+    nothing
 end
-
-function add_agent_pos!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
-    add_agent_to_model!(agent, model)
-    return agent
-end
-
-function add_agent!(
-        model::ABM{Nothing, A},
-        properties...;
-        kwargs...,
-    ) where {A<:AbstractAgent}
-    add_agent_pos!(A(nextid(model), properties...; kwargs...), model)
-end
+nearby_ids(position, model::ABM{Nothing}, r = 1) = allids(model)

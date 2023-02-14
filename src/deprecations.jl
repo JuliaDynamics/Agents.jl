@@ -15,8 +15,14 @@ end
 Reseed the random number pool of the model with the given seed or a random one,
 when using a pseudo-random number generator like `MersenneTwister`.
 """
-function seed!(model::ABM{S,A,C,F,P,R}, args...) where {S,A,C,F,P,R}
+function seed!(model::ABM, args...)
     @warn "`seed!(model::ABM, ...)` is deprecated. Do `seed!(abmrng(model), ...)`."
-    rng = getfield(model, :rng)
-    Random.seed!(rng, args...)
+    Random.seed!(abmrng(model), args...)
 end
+
+# From before the move to an interface for ABMs and making `ABM` abstract.
+"""
+`ABM` is an alias for `AgentBasedModel`.
+"""
+ABM(args...; kwargs...) = SingleContainerABM(args...; kwargs...)
+AgentBasedModel(args...; kwargs...) = SingleContainerABM(args...; kwargs...)

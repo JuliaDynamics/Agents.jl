@@ -1,11 +1,11 @@
-export ABM, AgentBasedModel, UnkillableABM, FixedMassABM
+export ABM, SingleContainerABM, UnkillableABM, FixedMassABM
 using StaticArraysCore: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
 # TODO: This will become `SingleContainerABM`.
 # And the three implementations here are just variants with different `C` type.
-struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}
+struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
     agents::C
     space::S
     scheduler::F
@@ -14,15 +14,12 @@ struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:
     maxid::Base.RefValue{Int64}
 end
 
-"""
-`ABM` is an alias for `AgentBasedModel`.
-"""
-const ABM = AgentBasedModel
+const SCABM = SingleContainerABM
+const StandardABM{A,S} = SingleContainerABM{A,S,Dict{Int,A}}
+const UnkillableABM{A,S} = SingleContainerABM{A,S,Vector{A}}
+const FixedMassABM{A,S} = SingleContainerABM{A,S,SizedVector{A}}
 
-const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
-const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}}
-
-containertype(::ABM{S,A,C}) where {S,A,C} = C
+containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
 function construct_agent_container(container, A)
     if container <: Dict
@@ -42,10 +39,10 @@ union_types(T::Type) = (T,)
 union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
-    AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
+    SingleContainerABM(AgentType [, space]; properties, kwargs...) → model
+
 Create an agent-based model from the given agent type and `space`.
 You can provide an agent _instance_ instead of type, and the type will be deduced.
-`ABM` is equivalent with `AgentBasedModel`.
 
 The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
@@ -73,7 +70,7 @@ key type `Symbol`, or if it is a struct, then the syntax
 `model.name` is shorthand for `model.properties[:name]` (or `model.properties.name`
 for structs).
 This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
-which are the fields of `AgentBasedModel`.
+which are the fields of `SingleContainerABM`.
 
 `scheduler = Schedulers.fastest` decides the order with which agents are activated
 (see e.g. [`Schedulers.by_id`](@ref) and the scheduler API).
@@ -87,7 +84,7 @@ Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
 `warn=true`: Type tests for `AgentType` are done, and by default
 warnings are thrown when appropriate.
 """
-function AgentBasedModel(
+function SingleContainerABM(
     ::Type{A},
     space::S = nothing;
     container::Type = Dict{Int,A},
@@ -99,28 +96,28 @@ function AgentBasedModel(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return ABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    return SingleContainerABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
-function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
-    return ABM(typeof(agent), args...; kwargs...)
+function SingleContainerABM(agent::AbstractAgent, args...; kwargs...)
+    return SingleContainerABM(typeof(agent), args...; kwargs...)
 end
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
-Similar to [`AgentBasedModel`](@ref), but agents cannot be removed, only added.
+Similar to [`SingleContainerABM`](@ref), but agents cannot be removed, only added.
 This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
-the `Dict` used by [`AgentBasedModel`](@ref), yielding faster retrieval and iteration over agents.
+the `Dict` used by [`SingleContainerABM`](@ref), yielding faster retrieval and iteration over agents.
 
 It is mandatory that the agent ID is exactly the same as the agent insertion
 order (i.e., the 5th agent added to the model must have ID 5). If not,
 an error will be thrown by [`add_agent!`](@ref).
 """
-UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
+UnkillableABM(args...; kwargs...) = SingleContainerABM(args...; container=Vector)
 
 """
     FixedMassABM(agent_vector [, space]; properties, kwargs...) → model
-Similar to [`AgentBasedModel`](@ref), but agents cannot be removed or added.
+Similar to [`SingleContainerABM`](@ref), but agents cannot be removed or added.
 Hence, all agents in the model must be provided in advance as a vector.
 This allows storing agents into a `SizedVector`, a special vector with statically typed
 size which is the same as the size of the input `agent_vector`.
@@ -145,16 +142,16 @@ function FixedMassABM(
         i ≠ a.id && throw(ArgumentError("$(i)-th agent had ID $(a.id) instead of $i."))
     end
     agent_validator(A, space, warn)
-    return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
+    return SingleContainerABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
 end
 
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-nextid(model::ABM) = model.maxid[] + 1
+nextid(model::StandardABM) = model.maxid[] + 1
 nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
-function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -173,13 +170,13 @@ function add_agent_to_model!(agent, model::UnkillableABM)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::A, model::SingleContainerABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
     delete!(agent_container(model), agent.id)
 end
-function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
+function remove_agent_from_model!(::A, model::SingleContainerABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
     error(
     "Cannot remove agents stored in $(containertype(model)). "*
-    "Use the vanilla `AgentBasedModel` to be able to remove agents."
+    "Use the vanilla `SingleContainerABM` to be able to remove agents."
     )
 end
 
@@ -254,11 +251,11 @@ end
 # %% Pretty printing
 #######################################################################################
 modelname(abm::ABM) = modelname(agent_container(abm))
-modelname(::Dict) = "AgentBasedModel"
+modelname(::Dict) = "StandardABM"
 modelname(::Vector) = "UnkillableABM"
 modelname(::SizedVector) = "FixedMassABM"
 
-function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
+function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
     if abm.space === nothing
