@@ -6,7 +6,6 @@ using DataStructures
 using Graphs
 using DataFrames
 using Random
-using StaticArraysCore
 import ProgressMeter
 import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra

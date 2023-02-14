@@ -1,4 +1,5 @@
 export ABM, AgentBasedModel, UnkillableABM, FixedMassABM
+using StaticArraysCore: SizedVector
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -166,10 +167,6 @@ function FixedMassABM(
     agent_validator(A, space, warn)
     return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
 end
-
-# TypeError: in AgentBasedModel, in C, expected
-# C<:Union{AbstractDict{Int64, Agent0}, AbstractVector{Agent0}}, got
-# Type{StaticArraysCore.SizedVector{10, T} where T}
 
 #######################################################################################
 # %% Model accessing api
@@ -420,9 +417,14 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
+modelname(abm::ABM) = modelname(abm.agents)
+modelname(::Dict) = "AgentBasedModel"
+modelname(::Vector) = "UnkillableABM"
+modelname(::SizedVector) = "FixedMassABM"
+
 function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
-    s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
+    s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
     if abm.space === nothing
         s *= "\n space: nothing (no spatial structure)"
     else
