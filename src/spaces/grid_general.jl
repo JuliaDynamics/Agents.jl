@@ -53,7 +53,6 @@ function offsets_within_radius(
     else
         βs = calculate_offsets(space, r)
         space.offsets_within_radius[float(r)] = βs
-        #println(βs)
     end
     return βs::Vector{NTuple{D, Int}}
 end
