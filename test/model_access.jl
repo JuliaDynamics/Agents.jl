@@ -22,9 +22,9 @@
 
     newa = Agent0(6)
     add_agent!(newa, model)
-    model[6] = newa
     @test model[6] == newa
-    @test_throws ArgumentError model[7] = newa
+    # setindex must errors
+    @test_throws ErrorException model[7] = newa
 
     prop2 = Agent2(1, 0.5)
     model2 = ABM(Agent0; properties = prop2)
