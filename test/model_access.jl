@@ -77,12 +77,12 @@ end
     model = ABM(Agent0)
     @test occursin("no spatial structure", sprint(show, model))
     model = ABM(Agent3, GridSpace((5,5)))
-    @test sprint(show, model)[1:29] == "AgentBasedModel with 0 agents"
-    @test sprint(show, model.space) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
+    @test sprint(show, model)[1:29] == "StandardABM with 0 agents"
+    @test sprint(show, Agents.abmspace(model)) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
     model = ABM(Agent6, ContinuousSpace((1.0,1.0)))
-    @test sprint(show, model.space) == "periodic continuous space with (1.0, 1.0) extent and spacing=0.05"
+    @test sprint(show, Agents.abmspace(model)) == "periodic continuous space with (1.0, 1.0) extent and spacing=0.05"
     model = ABM(Agent5, GraphSpace(path_graph(5)))
-    @test sprint(show, model.space) == "GraphSpace with 5 positions and 4 edges"
+    @test sprint(show, Agents.abmspace(model)) == "GraphSpace with 5 positions and 4 edges"
 end
 
 end

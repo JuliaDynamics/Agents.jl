@@ -1,10 +1,11 @@
 export schedule, Schedulers
+
 """
     schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
-Literally equivalent with `model.scheduler(model)`.
+Literally equivalent with `abmscheduler(model)(model)`.
 """
-schedule(model::ABM) = model.scheduler(model)
+schedule(model::ABM) = abmscheduler(model)(model)
 
 # Notice how the above lines are *outside* the submodule
 
@@ -278,7 +279,7 @@ function (sched::ByType)(model::ABM)
     for agent in allagents(model)
         push!(sched.ids[sched.type_inds[typeof(agent)]], agent.id)
     end
-    
+
     sched.shuffle_types && shuffle!(model.rng, sched.ids)
 
     if sched.shuffle_agents

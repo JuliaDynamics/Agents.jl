@@ -38,7 +38,7 @@ const ABM = AgentBasedModel
 
 function notimplemented(model)
     error("Function not implemented for model of type $(nameof(typeof(model))) "*
-    "with space type $(nameof(typeof(space(model))))")
+    "with space type $(nameof(typeof(abmspace(model))))")
 end
 
 ###########################################################################################
@@ -71,13 +71,6 @@ Return the default scheduler stored in `model`.
 abmscheduler(model::ABM) = getfield(model, :scheduler)
 
 """
-    schedule(model) → ids
-Return an iterator over the scheduled IDs using the model's scheduler.
-Literally equivalent with `abmscheduler(model)(model)`.
-"""
-schedule(model::ABM) = abmscheduler(model)(model)
-
-"""
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
@@ -99,7 +92,7 @@ nagents(model::ABM) = length(allids(model))
     nextid(model::ABM) → id
 Return a valid `id` for creating a new agent with it.
 """
-nextid(model::ABM) = nagents(model) + 1
+nextid(model::ABM) = notimplemented(model)
 
 """
     random_agent(model) → agent
@@ -140,7 +133,7 @@ For example, if a model has the set of properties `Dict(:weight => 5, :current =
 retrieving these values can be obtained via `model.weight`.
 
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
-and **should not be accessed by the user**.
+and **should not be accessed by the user**. In the next release, getting those will error.
 """
 function Base.getproperty(m::ABM, s::Symbol)
     if s === :agents
@@ -155,10 +148,12 @@ function Base.getproperty(m::ABM, s::Symbol)
         return getfield(m, :rng)
     elseif s === :maxid
         return getfield(m, :maxid)
-    elseif P <: Dict
-        return getindex(getfield(m, :properties), s)
+    end
+    p = abmproperties(m)
+    if p isa Dict
+        return getindex(p, s)
     else # properties is assumed to be a struct
-        return getproperty(getfield(m, :properties), s)
+        return getproperty(p, s)
     end
 end
 
@@ -166,7 +161,7 @@ function Base.setproperty!(m::ABM, s::Symbol, x)
     exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
     properties = getfield(m, :properties)
     properties === nothing && throw(exception)
-    if P <: Dict && haskey(properties, s)
+    if properties isa Dict && haskey(properties, s)
         properties[s] = x
     elseif hasproperty(properties, s)
         setproperty!(properties, s, x)
@@ -200,7 +195,7 @@ remove_agent_from_model!(agent, model) = notimplemented(model)
     abmspace(model::ABM)
 Return the space instance stored in the `model`.
 """
-abmspace(model::ABM) = model.space
+abmspace(model::ABM) = getfield(model, :space)
 
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*

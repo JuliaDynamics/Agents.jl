@@ -21,8 +21,4 @@ function seed!(model::ABM, args...)
 end
 
 # From before the move to an interface for ABMs and making `ABM` abstract.
-"""
-`ABM` is an alias for `AgentBasedModel`.
-"""
-ABM(args...; kwargs...) = SingleContainerABM(args...; kwargs...)
 AgentBasedModel(args...; kwargs...) = SingleContainerABM(args...; kwargs...)

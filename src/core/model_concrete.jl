@@ -148,8 +148,9 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-nextid(model::StandardABM) = model.maxid[] + 1
-nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
+nextid(model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A} = getfield(model, :maxid)[] + 1
+nextid(model::SingleContainerABM{<:SpaceType,A,Vector{A}}) = nagents(model) + 1
+nextid(::SingleContainerABM{<:SpaceType,A,SizedVector}) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
 function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
