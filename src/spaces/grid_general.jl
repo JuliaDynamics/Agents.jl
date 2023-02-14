@@ -48,14 +48,22 @@ The function does two things:
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
 function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.offsets_within_radius, r)
-        βs = space.offsets_within_radius[r]
+    if space.metric == :euclidean
+        r0 = ceil(Int, r)
+    elseif space.metric == :manhattan
+        r0 = floor(Int, r)
+    elseif space.metric == :chebyshev
+        r0 = floor(Int, r)
+    end
+    if haskey(space.offsets_within_radius, r0)
+        βs = space.offsets_within_radius[r0]
     else
-        βs = calculate_offsets(space, r)
-        space.offsets_within_radius[float(r)] = βs
+        βs = calculate_offsets(space, r0)
+        space.offsets_within_radius[r0] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
+
 
 # Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
