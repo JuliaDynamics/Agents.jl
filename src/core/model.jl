@@ -1,4 +1,4 @@
-export ABM, AgentBasedModel, UnkillableABM
+export ABM, AgentBasedModel, UnkillableABM, FixedMassABM
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -65,7 +65,9 @@ You can provide an agent _instance_ instead of type, and the type will be deduce
 
 The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
-See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types.
+See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
+that yield better performance in case number of agents can only increase, or stays constant,
+during the model evolution.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial structure.
@@ -132,7 +134,15 @@ an error will be thrown by [`add_agent!`](@ref).
 """
 UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
 
-
+"""
+    FixedMassABM(agent_vector [, space]; properties, kwargs...) → model
+Similar to [`AgentBasedModel`](@ref), but agents cannot be removed or added.
+Hence, all agents in the model must be provided in advance as a vector.
+This allows storing agents into a `SizedVector`, a special vector with statically typed
+size which is the same as the size of the input `agent_vector`.
+This version of agent based model has slightly better iteration and retrieval speed
+than [`UnkillableABM`](@ref).
+"""
 function FixedMassABM(
     agents::AbstractVector{A},
     space::S = nothing;
