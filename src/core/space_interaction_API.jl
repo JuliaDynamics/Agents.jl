@@ -52,22 +52,6 @@ This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
 
-"""
-    add_agent_to_model!(agent, model)
-Add the agent to the model. This function is called before the agent is inserted
-into the model dictionary and `maxid` has been updated. This function is NOT
-part of the public API.
-"""
-add_agent_to_model!(agent, model) = notimplemented(model)
-
-"""
-    remove_agent_from_model!(agent, model)
-Remove the agent from the model. This function is called before the agent is
-inserted into the model dictionary and `maxid` has been updated. This function
-is NOT part of the public API.
-"""
-remove_agent_from_model!(agent, model) = nokill(model)
-
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
