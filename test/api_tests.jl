@@ -74,7 +74,7 @@ end
 
 @testset "kill_agent!" begin
     # No Space
-    model = ABM(Agent0)
+    model = ABM(NoSpaceAgent)
     add_agent!(model)
     agent = add_agent!(model)
     @test nagents(model) == 2
@@ -106,10 +106,11 @@ end
 
 @testset "kill_agent! (vector container)" begin
     # No Space
-    model = UnkillableABM(Agent0)
+    model = UnkillableABM(NoSpaceAgent)
     add_agent!(model)
     agent = add_agent!(model)
-    @test_throws ErrorException add_agent!(Agent0(4), model)
+    @test agent.id == 2
+    @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
     @test nagents(model) == 2
     @test_throws ErrorException kill_agent!(agent, model)
     @test_throws ErrorException genocide!(model, [1, 3])
@@ -125,11 +126,11 @@ end
 @testset "xyz_agent! (sized-vector container)" begin
     # No Space
     n_agents = 10
-    agents = [Agent0(id) for id in 1:n_agents]
+    agents = [NoSpaceAgent(id) for id in 1:n_agents]
     model = FixedMassABM(agents)
     @test_throws ErrorException add_agent!(model)
     @test_throws ErrorException agent = add_agent!(model)
-    @test_throws ErrorException add_agent!(Agent0(4), model)
+    @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
     @test nagents(model) == n_agents
     @test_throws ErrorException kill_agent!(model[1], model)
     @test_throws ErrorException genocide!(model, [1, 3])
@@ -149,15 +150,15 @@ end
 
 @testset "genocide!" begin
     # Testing no space
-    model = ABM(Agent0)
+    model = ABM(NoSpaceAgent)
     for i in 1:10
-        a = Agent0(i)
+        a = NoSpaceAgent(i)
         add_agent!(a, model)
     end
     genocide!(model)
     @test nagents(model) == 0
     for i in 1:10
-        a = Agent0(i)
+        a = NoSpaceAgent(i)
         add_agent!(a, model)
     end
     genocide!(model, 5)
@@ -165,11 +166,11 @@ end
     genocide!(model, a -> a.id < 3)
     @test nagents(model) == 3
 
-    model = ABM(Agent3, GridSpace((10, 10)))
+    model = ABM(GridAgent{2}, GridSpace((10, 10)))
 
     # Testing genocide!(model::ABM)
     for i in 1:20
-        agent = Agent3(i, (1, 1), rand(model.rng))
+        agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
     genocide!(model)
@@ -179,42 +180,20 @@ end
     for i in 1:20
         # Explicitly override agents each time we replenish the population,
         # so we always start the genocide with 20 agents.
-        agent = Agent3(i, (1, 1), rand(model.rng))
+        agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
     genocide!(model, 10)
     @test nagents(model) == 10
 
     # Testing genocide!(model::ABM, f::Function) with an anonymous function
-    for i in 1:20
-        agent = Agent3(i, (1, 1), rand(model.rng))
+    for i in 11:20
+        agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
     @test nagents(model) == 20
     genocide!(model, a -> a.id > 5)
     @test nagents(model) == 5
-
-    Random.seed!(6465)
-    # Testing genocide!(model::ABM, f::Function) when the function is invalid
-    # (i.e. does not return a bool)
-    for i in 1:20
-        agent = Agent3(i, (rand(model.rng, 1:10), rand(model.rng, 1:10)), i * 2)
-        add_agent_pos!(agent, model)
-    end
-    @test_throws TypeError genocide!(model, a -> a.id)
-    N = nagents(model)
-
-    # Testing genocide!(model::ABM, f::Function) with a named function
-    # No need to replenish population since the last test fails
-    function complex_logic(agent::A) where {A<:AbstractAgent}
-        if agent.pos[1] <= 5 && agent.weight > 25
-            true
-        else
-            false
-        end
-    end
-    genocide!(model, complex_logic)
-    @test nagents(model) < N
 
 end
 

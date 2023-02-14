@@ -14,7 +14,7 @@ using Random
     # Test that model rng pool was used
     @test model.rng ≠ rng0
     @test agent.pos == (2,1)
-    seed!(model, 42)
+    seed!(abmrng(model), 42)
     @test model.rng == rng0
 
     model = ABM(Agent2; rng = RandomDevice())

@@ -13,6 +13,8 @@ function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     add_agent_pos!(agent, model)
 end
 
+# We need to extend this one, because otherwise there is a `pos` that
+# is attempted to be given to the agent creation...
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, properties...; kwargs...)
     id = nextid(model)
     newagent = A(id, properties...; kwargs...)

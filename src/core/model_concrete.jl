@@ -165,7 +165,7 @@ function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Dict
     return
 end
 
-function add_agent_to_model!(agent, model::UnkillableABM)
+function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Vector{A}}) where {A}
     agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
