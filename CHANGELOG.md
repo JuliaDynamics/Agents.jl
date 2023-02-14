@@ -1,4 +1,8 @@
 # main
+
+# v5.7
+- Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
+- The old `AgentBasedModel` is now `StandardABM`.
 - Two new variants of agent based models: `UnkillableABM` and `FixedMassABM`: they yield huge performance benefits (up to twice the speed!!!) on iterating over agents if the agents can't get killed, or even added, during model evolution!
 - `multi_agents_type!` has been updated to handle edge case where agents of one (or more) type are absent at the beginning of the simulation.
 - New function `npositions` that returns the number of positions of a model with a discrete space.
