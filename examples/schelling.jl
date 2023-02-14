@@ -9,6 +9,7 @@
 # In this introductory example we parallelize the main [Tutorial](@ref) while building
 # the following definition of Schelling's segregation model:
 
+# * A fixed pre-determined number of agents exist in the model.
 # * Agents belong to one of two groups (0 or 1).
 # * The agents live in a two-dimensional grid. Only one agent per position is allowed.
 # * For each agent we care about
@@ -91,39 +92,86 @@ schelling2 = ABM(
 # Notice that `Schedulers.ByProperty` accepts an argument and returns a struct,
 # which is why we didn't just give `Schedulers.ByProperty` to `scheduler`.
 
+# ## Adding agents
+# Currently the model is empty:
+nagents(schelling)
+
+# We can add agents to this model using [`add_agent!`](@ref).
+# [`add_agent_single!`](@ref) offers an automated way to create and add agents
+# while ensuring that we have at most 1 agent per unique position.
+
+add_agent_single!(schelling, false, 1)
+nagents(schelling)
+
+# We can obtain the created and added agent, that got assigned the ID 1, like so
+agent = schelling[1]
+
+# ## Using a `FixedMassABM`
+# Since the rules of the Schelling model state that there is a fixed number of
+# agents, it is to our benefit to not use the default constructor `StandardABM`
+# (`ABM`, which is `AgentBasedModel`, defaults to `StandardABM`).
+# Instead, we should use [`FixedMassABM`](@ref).
+
+# However, in this case we cannot use [`add_agent_single!`](@ref). We need to first
+# create a vector of all agents, that will be in the model, and then provide it to the
+# constructor, as the constructor needs to know the agents in advance.
+
+total_agents = 80
+agents_vector = SchellingAgent[]
+for n in 1:total_agents
+    ## half group 1, the other group 2
+    group = n < total_agents/2 ? 1 : 2
+    a = SchellingAgent(n, (1, 1), false, group)
+    push!(agents_vector, a)
+end
+agents_vector
+
+# Now we can give this to the `FixedMassABM` constructor
+space = GridSpaceSingle((10, 10); periodic = false) # dont forget to reset space!
+schelling = FixedMassABM(agents_vector, space; properties)
+
+# There is one more thing to be aware of: so far we've put all agents in position
+# `(1, 1)`, which is not what the model requires. Each agent needs to be in a unique
+# position. This is fairly easy to achieve though; we just "shuffle" around the agents
+# using the [`move_agent_single!`](@ref) function.
+
+for agent in allagents(schelling)
+    move_agent_single!(agent, schelling)
+end
+
 # ## Creating the ABM through a function
 
 # Here we put the model instantiation in a function so that
 # it will be easy to recreate the model and change its parameters.
 
 # In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`Schedulers.Randomly`](@ref).
+# We also change the scheduler to [`Schedulers.Randomly`](@ref) , as
+# the rules of the model require the agents to activate in random order.
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
 using Random # for reproducibility
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.MersenneTwister(seed)
-    model = ABM(
-        SchellingAgent, space;
+    ## populate the model with agents, adding equal amount of the two types of agents
+    agents_vector = [
+        SchellingAgent(n, (1, 1), false, n < total_agents/2 ? 1 : 2)
+        for n in 1:total_agents
+    ]
+    model = FixedMassABM(
+        agents_vector, space;
         properties, rng, scheduler = Schedulers.Randomly()
     )
-
-    ## populate the model with agents, adding equal amount of the two types of agents
-    ## at random positions in the model
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-        add_agent_single!(agent, model)
+    ## and shuffle agents around to ensure each agent is at a unique position
+    for agent in allagents(schelling)
+        move_agent_single!(agent, schelling)
     end
     return model
 end
 
-# Notice that the position that an agent is initialized does not matter
-# in this example.
-# This is because we use [`add_agent_single!`](@ref), which places the agent in a random,
-# empty location on the grid, thus updating its position.
+model = initialize()
 
 # ## Defining a step function
 
@@ -263,7 +311,7 @@ parange = Dict(:min_to_be_happy => 0:8)
 adata = [(:mood, sum), (x, mean)]
 alabels = ["happy", "avg. x"]
 
-model = initialize(; numagents = 300) # fresh model, noone happy
+model = initialize(; total_agents = 300) # fresh model, noone happy
 
 # ```julia
 # using GLMakie # using a different plotting backend that enables interactive plots
@@ -294,7 +342,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # First, let's create a model with 200 agents and run it for 40 iterations.
 @eval Main __atexample__named__schelling = $(@__MODULE__) # hide
 
-model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
+model = initialize(total_agents = 200, min_to_be_happy = 5, seed = 42)
 run!(model, agent_step!, 40)
 
 figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
@@ -412,7 +460,7 @@ adata = [(:mood, happyperc)]
 
 parameters = Dict(
     :min_to_be_happy => collect(2:5), # expanded
-    :numagents => [200, 300],         # expanded
+    :total_agents => [200, 300],         # expanded
     :griddims => (20, 20),            # not Vector = not expanded
 )
 

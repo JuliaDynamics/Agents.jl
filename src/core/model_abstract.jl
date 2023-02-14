@@ -31,7 +31,9 @@ ValidPos = Union{
 
 An `AgentBasedModel` is the supertype encompassing models in Agents.jl.
 All models are some concrete implementation of `AgentBasedModel` and follow its
-interface (see below). A model is typically constructed with:
+interface (see below). `ABM` is an alias to `AgentBasedModel`.
+
+A model is typically constructed with:
 
     AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
 
