@@ -169,11 +169,13 @@ end
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
+function kill_agent!(a::AbstractAgent, model::ABM)
     remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
 kill_agent!(id::Int, model::ABM) = kill_agent!(model[id], model)
+
+kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
     genocide!(model::ABM)
