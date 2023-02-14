@@ -13,7 +13,6 @@ end
 
 function add_agent_pos!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     add_agent_to_model!(agent, model)
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
     return agent
 end
 

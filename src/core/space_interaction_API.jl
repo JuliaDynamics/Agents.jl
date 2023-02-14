@@ -30,7 +30,10 @@ export move_agent!,
 notimplemented(model) =
     error("Not implemented for space type $(nameof(typeof(model.space)))")
 
-nokill() = error("Removing agents who are stored in vectors is disallowed. To be able to remove agents they must be stored in a Dict.")
+nokill(model) = error("""
+    Cannot remove agents stored in $(containertype(model)) as this is a type of \
+    vector. To be able to remove agents they must be stored in a `Dict`.
+    """)
 
 #######################################################################################
 # %% IMPLEMENT
@@ -71,7 +74,7 @@ Remove the agent from the model. This function is called before the agent is
 inserted into the model dictionary and `maxid` has been updated. This function
 is NOT part of the public API.
 """
-remove_agent_from_model!(agent, model) = notimplemented(model)
+remove_agent_from_model!(agent, model) = nokill(model)
 
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
@@ -170,12 +173,6 @@ function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
     remove_agent_from_space!(a, model)
 end
 
-function kill_agent!(a::AbstractAgent, model::ABM{S,A,<:AbstractVector{A}}) where {S,A}
-    nokill()
-end
-
-kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
-
 """
     genocide!(model::ABM)
 Kill all the agents of the model.
@@ -200,8 +197,8 @@ end
 
 # Must be implemented separately, otherwise genocide! would return an unhelpful
 # BoundsError error to the user.
-function genocide!(model::ABM{S,A,Vector{A},F,P,R}, n::Integer) where {S,A,F,P,R}
-    nokill()
+function genocide!(model::ABM{S,A,<:AbstractVector{A},F,P,R}, args...) where {S,A,F,P,R}
+    nokill(model)
 end
 
 """
@@ -230,11 +227,13 @@ end
 
 function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
     model.agents[agent.id] = agent
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
 end
 
 function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Vector{A}}) where {A<:AbstractAgent}
     agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(model.agents, agent)
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
 end
 
 """
@@ -243,7 +242,6 @@ Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
     add_agent_to_model!(agent, model)
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
     add_agent_to_space!(agent, model)
     return agent
 end

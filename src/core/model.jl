@@ -180,7 +180,7 @@ function Base.setindex!(m::ABM{S,A,Dict{Int,A}}, a::AbstractAgent, id::Int) wher
     return a
 end
 
-function Base.setindex!(m::ABM{S,A,Vector{A}}, a::AbstractAgent, id::Int) where {S,A}
+function Base.setindex!(m::ABM{S,A,<:AbstractVector{A}}, a::AbstractAgent, id::Int) where {S,A}
     a.id ≠ id &&
         throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
     if id <= nagents(m)
