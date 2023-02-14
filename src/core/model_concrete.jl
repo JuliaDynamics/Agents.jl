@@ -1,9 +1,8 @@
-export ABM, SingleContainerABM, UnkillableABM, FixedMassABM
+export ABM, StandardABM, UnkillableABM, FixedMassABM
 using StaticArraysCore: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
-# TODO: This will become `SingleContainerABM`.
 # And the three implementations here are just variants with different `C` type.
 struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
     agents::C
@@ -41,48 +40,12 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 """
     SingleContainerABM(AgentType [, space]; properties, kwargs...) → model
 
-Create an agent-based model from the given agent type and `space`.
-You can provide an agent _instance_ instead of type, and the type will be deduced.
+A concrete version of [`AgentBasedModel`](@ref) that stores all agents in a
+single container. Offers the variants:
 
-The agents are stored in a dictionary that maps unique IDs (integers)
-to agents. Use `model[id]` to get the agent with the given `id`.
-See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
-that yield better performance in case number of agents can only increase, or stays constant,
-during the model evolution.
-
-`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is omitted then all agents are virtually in one position and there is no spatial structure.
-
-**Note:** Spaces are mutable objects and are not designed to be shared between models.
-Create a fresh instance of a space with the same properties if you need to do this.
-
-**Note:** Agents.jl supports multiple agent types by passing a `Union` of agent types
-as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
-drawbacks of this approach.
-
-**Note:** You should only store agents in a vector if you will never remove agents from the model
-once they are added.
-
-## Keywords
-`properties = nothing` is additional model-level properties (typically a dictionary)
-that can be accessed as `model.properties`. If `properties` is a dictionary with
-key type `Symbol`, or if it is a struct, then the syntax
-`model.name` is shorthand for `model.properties[:name]` (or `model.properties.name`
-for structs).
-This syntax can't be used for `name` being `agents, space, scheduler, properties, rng, maxid`,
-which are the fields of `SingleContainerABM`.
-
-`scheduler = Schedulers.fastest` decides the order with which agents are activated
-(see e.g. [`Schedulers.by_id`](@ref) and the scheduler API).
-`scheduler` is only meaningful if an agent-stepping function is defined for [`step!`](@ref)
-or [`run!`](@ref), otherwise a user decides a scheduler in the model-stepping function,
-as illustrated in the [Advanced stepping](@ref) part of the tutorial.
-
-`rng = Random.default_rng()` provides random number generation to the model.
-Accepts any subtype of `AbstractRNG` and is accessed by `model.rng`.
-
-`warn=true`: Type tests for `AgentType` are done, and by default
-warnings are thrown when appropriate.
+- [`StandardABM`](@ref)
+- [`UnkillableABM`](@ref)
+- [`FixedMassABM`](@ref)
 """
 function SingleContainerABM(
     ::Type{A},
@@ -103,11 +66,24 @@ function SingleContainerABM(agent::AbstractAgent, args...; kwargs...)
     return SingleContainerABM(typeof(agent), args...; kwargs...)
 end
 
+
+"""
+    StandardABM(AgentType [, space]; properties, kwargs...) → model
+
+
+The most standard concrete implementation of an [`AgentBasedModel`](@ref),
+as well as the default version of the generic [`AgentBasedModel`](@ref) constructor.
+`StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
+See also [`UnkillableABM`](@ref), [`FixedMassABM`](@ref).
+"""
+StandardABM(args...; kwargs...) = SingleContainerABM(args...; container=Dict)
+
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
-Similar to [`SingleContainerABM`](@ref), but agents cannot be removed, only added.
+
+Similar to [`StandardABM`](@ref), but agents cannot be removed, only added.
 This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
-the `Dict` used by [`SingleContainerABM`](@ref), yielding faster retrieval and iteration over agents.
+the `Dict` used by [`StandardABM`](@ref), yielding faster retrieval and iteration over agents.
 
 It is mandatory that the agent ID is exactly the same as the agent insertion
 order (i.e., the 5th agent added to the model must have ID 5). If not,
@@ -117,7 +93,8 @@ UnkillableABM(args...; kwargs...) = SingleContainerABM(args...; container=Vector
 
 """
     FixedMassABM(agent_vector [, space]; properties, kwargs...) → model
-Similar to [`SingleContainerABM`](@ref), but agents cannot be removed or added.
+
+Similar to [`UnkillableABM`](@ref), but agents cannot be removed nor added.
 Hence, all agents in the model must be provided in advance as a vector.
 This allows storing agents into a `SizedVector`, a special vector with statically typed
 size which is the same as the size of the input `agent_vector`.
