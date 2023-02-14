@@ -45,6 +45,8 @@ The "model" here stands for an instance of [`AgentBasedModel`](@ref).
 
 ```@docs
 AgentBasedModel
+UnkillableABM
+FixedMassABM
 ```
 
 

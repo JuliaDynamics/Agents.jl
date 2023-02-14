@@ -50,10 +50,26 @@ add_agent_to_space!(agent, model) = notimplemented(model)
 """
     remove_agent_from_space!(agent, model)
 Remove the agent from the underlying space structure.
-This function is called after the agent is already removed from the model dictionary
+This function is called after the agent is already removed from the model container.
 This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
+
+"""
+    add_agent_to_model!(agent, model)
+Add the agent to the model. This function is called before the agent is inserted
+into the model dictionary and `maxid` has been updated. This function is NOT
+part of the public API.
+"""
+add_agent_to_model!(agent, model) = notimplemented(model)
+
+"""
+    remove_agent_from_model!(agent, model)
+Remove the agent from the model. This function is called before the agent is
+inserted into the model dictionary and `maxid` has been updated. This function
+is NOT part of the public API.
+"""
+remove_agent_from_model!(agent, model) = nokill(model)
 
 #######################################################################################
 # %% IMPLEMENT: Neighbors and stuff
@@ -116,6 +132,19 @@ is_stationary(agent, model) = notimplemented(model)
 #######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
+
+# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
+# but there's no difference in functionality between Nothing and AbstractSpace
+function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
+    delete!(model.agents, agent.id)
+end
+function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
+    error(
+    "Cannot remove agents stored in $(containertype(model)). "*
+    "Use the vanilla `AgentBasedModel` to be able to remove agents."
+    )
+end
+
 """
     move_agent!(agent [, pos], model::ABM) → agent
 
@@ -141,10 +170,9 @@ end
 Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
-    delete!(model.agents, a.id)
+    remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
-
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
@@ -163,11 +191,12 @@ end
 Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
-    for (k, v) in model.agents
-        k > n && kill_agent!(v, model)
+    for id in allids(model)
+        id > n && kill_agent!(id, model)
     end
     model.maxid[] = n
 end
+
 
 """
     genocide!(model::ABM, IDs)
@@ -192,13 +221,24 @@ end
 #######################################################################################
 # %% Space agnostic adding
 #######################################################################################
+
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+    model.agents[agent.id] = agent
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+end
+
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Vector{A}}) where {A<:AbstractAgent}
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    push!(model.agents, agent)
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+end
+
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    model[agent.id] = agent
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+    add_agent_to_model!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
 end

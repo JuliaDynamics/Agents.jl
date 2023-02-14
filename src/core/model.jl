@@ -1,4 +1,5 @@
-export ABM, AgentBasedModel
+export ABM, AgentBasedModel, UnkillableABM, FixedMassABM
+using StaticArraysCore: SizedVector
 
 #######################################################################################
 # %% Fundamental type definitions
@@ -17,8 +18,10 @@ ValidPos = Union{
     Tuple{Int,Int,Float64} # osm
 } where {N,M}
 
-struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,F,P,R<:AbstractRNG}
-    agents::Dict{Int,A}
+ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
+
+struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}
+    agents::C
     space::S
     scheduler::F
     properties::P
@@ -31,8 +34,22 @@ end
 """
 const ABM = AgentBasedModel
 
+const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
+const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}}
+
+containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
+
+function construct_agent_container(container, A)
+    if container <: Dict
+        return Dict{Int,A}
+    elseif container <: Vector
+        return Vector{A}
+    else
+        throw(ArgumentError("Unrecognised container $container, please specify either Dict or Vector."))
+    end
+end
 
 """
     union_types(U::Type)
@@ -49,6 +66,9 @@ You can provide an agent _instance_ instead of type, and the type will be deduce
 
 The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
+See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
+that yield better performance in case number of agents can only increase, or stays constant,
+during the model evolution.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial structure.
@@ -59,6 +79,9 @@ Create a fresh instance of a space with the same properties if you need to do th
 **Note:** Agents.jl supports multiple agent types by passing a `Union` of agent types
 as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
 drawbacks of this approach.
+
+**Note:** You should only store agents in a vector if you will never remove agents from the model
+once they are added.
 
 ## Keywords
 `properties = nothing` is additional model-level properties (typically a dictionary)
@@ -84,19 +107,65 @@ warnings are thrown when appropriate.
 function AgentBasedModel(
     ::Type{A},
     space::S = nothing;
+    container::Type = Dict{Int,A},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
-    warn = true,
+    warn = true
 ) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
-
-    agents = Dict{Int,A}()
-    return ABM{S,A,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    C = construct_agent_container(container, A)
+    agents = C()
+    return ABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
 function AgentBasedModel(agent::AbstractAgent, args...; kwargs...)
     return ABM(typeof(agent), args...; kwargs...)
+end
+
+"""
+    UnkillableABM(AgentType [, space]; properties, kwargs...) → model
+Similar to [`AgentBasedModel`](@ref), but agents cannot be removed, only added.
+This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
+the `Dict` used by [`AgentBasedModel`](@ref), yielding faster retrieval and iteration over agents.
+
+It is mandatory that the agent ID is exactly the same as the agent insertion
+order (i.e., the 5th agent added to the model must have ID 5). If not,
+an error will be thrown by [`add_agent!`](@ref).
+"""
+UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
+
+"""
+    FixedMassABM(agent_vector [, space]; properties, kwargs...) → model
+Similar to [`AgentBasedModel`](@ref), but agents cannot be removed or added.
+Hence, all agents in the model must be provided in advance as a vector.
+This allows storing agents into a `SizedVector`, a special vector with statically typed
+size which is the same as the size of the input `agent_vector`.
+This version of agent based model has slightly better iteration and retrieval speed
+than [`UnkillableABM`](@ref).
+
+It is mandatory that the agent ID is exactly the same as its position
+in the given `agent_vector`.
+"""
+function FixedMassABM(
+    agents::AbstractVector{A},
+    space::S = nothing;
+    scheduler::F = Schedulers.fastest,
+    properties::P = nothing,
+    rng::R = Random.default_rng(),
+    warn = true
+) where {A<:AbstractAgent, S<:SpaceType,F,P,R<:AbstractRNG}
+    C = SizedVector{length(agents), A}
+    # println(C)
+    # println(C<:AbstractVector)
+    fixed_agents = C(agents)
+    # Validate that agent ID is the same as its order in the vector.
+    for (i, a) in enumerate(agents)
+        i ≠ a.id && throw(ArgumentError("$(i)-th agent had ID $(a.id) instead of $i."))
+    end
+    # println(typeof(fixed_agents))
+    agent_validator(A, space, warn)
+    return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
 end
 
 #######################################################################################
@@ -120,12 +189,9 @@ Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
-function Base.setindex!(m::ABM, a::AbstractAgent, id::Int)
-    a.id ≠ id &&
-    throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
-    m.agents[id] = a
-    m.maxid[] < id && (m.maxid[] += 1)
-    return a
+function Base.setindex!(m::ABM, args...; kwargs...)
+    error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*
+    "or other variants of an `add_agent_...` function to add agents to an ABM.")
 end
 
 """
@@ -133,6 +199,8 @@ end
 Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = model.maxid[] + 1
+
+nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
 """
     model.prop
@@ -146,7 +214,7 @@ retrieving these values can be obtained via `model.weight`.
 The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
 and **should not be accessed by the user**.
 """
-function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
+function Base.getproperty(m::ABM{S,A,C,F,P,R}, s::Symbol) where {S,A,C,F,P,R}
     if s === :agents
         return getfield(m, :agents)
     elseif s === :space
@@ -166,7 +234,7 @@ function Base.getproperty(m::ABM{S,A,F,P,R}, s::Symbol) where {S,A,F,P,R}
     end
 end
 
-function Base.setproperty!(m::ABM{S,A,F,P,R}, s::Symbol, x) where {S,A,F,P,R}
+function Base.setproperty!(m::ABM{S,A,C,F,P,R}, s::Symbol, x) where {S,A,C,F,P,R}
     exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
     properties = getfield(m, :properties)
     properties === nothing && throw(exception)
@@ -185,7 +253,7 @@ end
 Reseed the random number pool of the model with the given seed or a random one,
 when using a pseudo-random number generator like `MersenneTwister`.
 """
-function seed!(model::ABM{S,A,F,P,R}, args...) where {S,A,F,P,R}
+function seed!(model::ABM{S,A,C,F,P,R}, args...) where {S,A,C,F,P,R}
     rng = getfield(model, :rng)
     Random.seed!(rng, args...)
 end
@@ -194,7 +262,7 @@ end
     random_agent(model) → agent
 Return a random agent from the model.
 """
-random_agent(model) = model[rand(model.rng, keys(model.agents))]
+random_agent(model) = model[rand(model.rng, allids(model))]
 
 """
     random_agent(model, condition) → agent
@@ -203,7 +271,7 @@ The function generates a random permutation of agent IDs and iterates through th
 If no agent satisfies the condition, `nothing` is returned instead.
 """
 function random_agent(model, condition)
-    ids = shuffle!(model.rng, collect(keys(model.agents)))
+    ids = shuffle!(model.rng, collect(allids(model)))
     i, L = 1, length(ids)
     a = model[ids[1]]
     while !condition(a)
@@ -230,7 +298,7 @@ allagents(model) = values(model.agents)
     allids(model)
 Return an iterator over all agent IDs of the model.
 """
-allids(model) = keys(model.agents)
+allids(model) = eachindex(model.agents)
 
 #######################################################################################
 # %% Higher order collections
@@ -349,9 +417,14 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
+modelname(abm::ABM) = modelname(abm.agents)
+modelname(::Dict) = "AgentBasedModel"
+modelname(::Vector) = "UnkillableABM"
+modelname(::SizedVector) = "FixedMassABM"
+
 function Base.show(io::IO, abm::ABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
-    s = "AgentBasedModel with $(nagents(abm)) agents of type $(n)"
+    s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
     if abm.space === nothing
         s *= "\n space: nothing (no spatial structure)"
     else
