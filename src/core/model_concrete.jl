@@ -76,7 +76,7 @@ as well as the default version of the generic [`AgentBasedModel`](@ref) construc
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
 See also [`UnkillableABM`](@ref), [`FixedMassABM`](@ref).
 """
-StandardABM(args...; kwargs...) = SingleContainerABM(args...; container=Dict)
+StandardABM(args...; kwargs...) = SingleContainerABM(args...; container=Dict{Int})
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
