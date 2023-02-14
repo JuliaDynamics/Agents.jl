@@ -3,6 +3,8 @@ using StaticArraysCore: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
+# TODO: This will become `SingleContainerABM`.
+# And the three implementations here are just variants with different `C` type.
 struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}
     agents::C
     space::S
@@ -21,8 +23,6 @@ const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
 const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}}
 
 containertype(::ABM{S,A,C}) where {S,A,C} = C
-agenttype(::ABM{S,A}) where {S,A} = A
-spacetype(::ABM{S}) where {S} = S
 
 function construct_agent_container(container, A)
     if container <: Dict
@@ -139,14 +139,11 @@ function FixedMassABM(
     warn = true
 ) where {A<:AbstractAgent, S<:SpaceType,F,P,R<:AbstractRNG}
     C = SizedVector{length(agents), A}
-    # println(C)
-    # println(C<:AbstractVector)
     fixed_agents = C(agents)
     # Validate that agent ID is the same as its order in the vector.
     for (i, a) in enumerate(agents)
         i ≠ a.id && throw(ArgumentError("$(i)-th agent had ID $(a.id) instead of $i."))
     end
-    # println(typeof(fixed_agents))
     agent_validator(A, space, warn)
     return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
 end
@@ -154,181 +151,31 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-export random_agent, nagents, allagents, allids, nextid, seed!
-
-"""
-    model[id]
-    getindex(model::ABM, id::Integer)
-
-Return an agent given its ID.
-"""
-Base.getindex(m::ABM, id::Integer) = m.agents[id]
-
-"""
-    model[id] = agent
-    setindex!(model::ABM, agent::AbstractAgent, id::Int)
-
-Add an `agent` to the `model` at a given index: `id`.
-Note this method will return an error if the `id` requested is not equal to `agent.id`.
-**Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
-"""
-function Base.setindex!(m::ABM, args...; kwargs...)
-    error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*
-    "or other variants of an `add_agent_...` function to add agents to an ABM.")
-end
-
-"""
-    nextid(model::ABM) → id
-Return a valid `id` for creating a new agent with it.
-"""
 nextid(model::ABM) = model.maxid[] + 1
-
 nextid(::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
-"""
-    model.prop
-    getproperty(model::ABM, :prop)
-
-Return a property with name `:prop` from the current `model`, assuming the model `properties`
-are either a dictionary with key type `Symbol` or a Julia struct.
-For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
-retrieving these values can be obtained via `model.weight`.
-
-The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
-and **should not be accessed by the user**.
-"""
-function Base.getproperty(m::ABM{S,A,C,F,P,R}, s::Symbol) where {S,A,C,F,P,R}
-    if s === :agents
-        return getfield(m, :agents)
-    elseif s === :space
-        return getfield(m, :space)
-    elseif s === :scheduler
-        return getfield(m, :scheduler)
-    elseif s === :properties
-        return getfield(m, :properties)
-    elseif s === :rng
-        return getfield(m, :rng)
-    elseif s === :maxid
-        return getfield(m, :maxid)
-    elseif P <: Dict
-        return getindex(getfield(m, :properties), s)
-    else # properties is assumed to be a struct
-        return getproperty(getfield(m, :properties), s)
-    end
+function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+    model.agents[agent.id] = agent
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
 end
 
-function Base.setproperty!(m::ABM{S,A,C,F,P,R}, s::Symbol, x) where {S,A,C,F,P,R}
-    exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
-    properties = getfield(m, :properties)
-    properties === nothing && throw(exception)
-    if P <: Dict && haskey(properties, s)
-        properties[s] = x
-    elseif hasproperty(properties, s)
-        setproperty!(properties, s, x)
-    else
-        throw(exception)
-    end
+function add_agent_to_model!(agent, model::UnkillableABM)
+    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    push!(model.agents, agent)
+    model.maxid[] < agent.id && (model.maxid[] = agent.id)
 end
 
-"""
-    seed!(model [, seed])
-
-Reseed the random number pool of the model with the given seed or a random one,
-when using a pseudo-random number generator like `MersenneTwister`.
-"""
-function seed!(model::ABM{S,A,C,F,P,R}, args...) where {S,A,C,F,P,R}
-    rng = getfield(model, :rng)
-    Random.seed!(rng, args...)
+# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
+# but there's no difference in functionality between Nothing and AbstractSpace
+function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
+    delete!(model.agents, agent.id)
 end
-
-"""
-    random_agent(model) → agent
-Return a random agent from the model.
-"""
-random_agent(model) = model[rand(model.rng, allids(model))]
-
-"""
-    random_agent(model, condition) → agent
-Return a random agent from the model that satisfies `condition(agent) == true`.
-The function generates a random permutation of agent IDs and iterates through them.
-If no agent satisfies the condition, `nothing` is returned instead.
-"""
-function random_agent(model, condition)
-    ids = shuffle!(model.rng, collect(allids(model)))
-    i, L = 1, length(ids)
-    a = model[ids[1]]
-    while !condition(a)
-        i += 1
-        i > L && return nothing
-        a = model[ids[i]]
-    end
-    return a
+function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
+    error(
+    "Cannot remove agents stored in $(containertype(model)). "*
+    "Use the vanilla `AgentBasedModel` to be able to remove agents."
+    )
 end
-
-"""
-    nagents(model::ABM)
-Return the number of agents in the `model`.
-"""
-nagents(model::ABM) = length(model.agents)
-
-"""
-    allagents(model)
-Return an iterator over all agents of the model.
-"""
-allagents(model) = values(model.agents)
-
-"""
-    allids(model)
-Return an iterator over all agent IDs of the model.
-"""
-allids(model) = eachindex(model.agents)
-
-#######################################################################################
-# %% Higher order collections
-#######################################################################################
-export iter_agent_groups, map_agent_groups, index_mapped_groups
-
-"""
-    iter_agent_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
-
-Return an iterator over all agents of the model, grouped by order. When `order = 2`, the
-iterator returns agent pairs, e.g `(agent1, agent2)` and when `order = 3`: agent triples,
-e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no upper bound.
-
-Index order is provided by the model scheduler by default,
-but can be altered with the `scheduler` keyword.
-"""
-iter_agent_groups(order::Int, model::ABM; scheduler = model.scheduler) =
-    Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
-
-"""
-    map_agent_groups(order::Int, f::Function, model::ABM; kwargs...)
-    map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...)
-
-Applies function `f` to all grouped agents of an [`iter_agent_groups`](@ref) iterator.
-`kwargs` are passed to the iterator method.
-`f` must take the form `f(NTuple{O,AgentType})`, where the dimension `O` is equal to
-`order`.
-
-Optionally, a `filter` function that accepts an iterable and returns a `Bool` can be
-applied to remove unwanted matches from the results. **Note:** This option cannot keep
-matrix order, so should be used in conjunction with [`index_mapped_groups`](@ref) to
-associate agent ids with the resultant data.
-"""
-map_agent_groups(order::Int, f::Function, model::ABM; kwargs...) =
-    (f(idx) for idx in iter_agent_groups(order, model; kwargs...))
-map_agent_groups(order::Int, f::Function, model::ABM, filter::Function; kwargs...) =
-    (f(idx) for idx in iter_agent_groups(order, model; kwargs...) if filter(idx))
-
-"""
-    index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id)
-    index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id)
-Return an iterable of agent ids in the model, meeting the `filter` criteria if used.
-"""
-index_mapped_groups(order::Int, model::ABM; scheduler = Schedulers.by_id) =
-    Iterators.product((scheduler(model) for _ in 1:order)...)
-index_mapped_groups(order::Int, model::ABM, filter::Function; scheduler = Schedulers.by_id) =
-    Iterators.filter(filter, Iterators.product((scheduler(model) for _ in 1:order)...))
 
 #######################################################################################
 # %% Model construction validation

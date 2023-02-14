@@ -15,6 +15,7 @@ include("core/agents.jl")
 include("core/model_abstract.jl")
 include("core/model_concrete.jl")
 include("core/space_interaction_API.jl")
+include("core/higher_order_iteration.jl")
 
 # Existing spaces
 include("spaces/nothing.jl")

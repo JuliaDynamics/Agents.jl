@@ -113,19 +113,6 @@ is_stationary(agent, model) = notimplemented(model)
 #######################################################################################
 # %% Space agnostic killing and moving
 #######################################################################################
-
-# Dispatching on <:SpaceType feels weird because it's not labelled as Abstract,
-# but there's no difference in functionality between Nothing and AbstractSpace
-function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
-    delete!(model.agents, agent.id)
-end
-function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
-    error(
-    "Cannot remove agents stored in $(containertype(model)). "*
-    "Use the vanilla `AgentBasedModel` to be able to remove agents."
-    )
-end
-
 """
     move_agent!(agent [, pos], model::ABM) → agent
 
@@ -202,18 +189,6 @@ end
 #######################################################################################
 # %% Space agnostic adding
 #######################################################################################
-
-function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
-    model.agents[agent.id] = agent
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
-end
-
-function add_agent_to_model!(agent, model::ABM{<:SpaceType,A,Vector{A}}) where {A<:AbstractAgent}
-    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
-    push!(model.agents, agent)
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
-end
-
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
 Add the agent to the `model` at the agent's own position.
