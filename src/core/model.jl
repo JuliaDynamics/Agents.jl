@@ -159,7 +159,7 @@ function FixedMassABM(
     # println(C<:AbstractVector)
     fixed_agents = C(agents)
     # Validate that agent ID is the same as its order in the vector.
-    for (i, a) in eachindex(agents)
+    for (i, a) in enumerate(agents)
         i ≠ a.id && throw(ArgumentError("$(i)-th agent had ID $(a.id) instead of $i."))
     end
     # println(typeof(fixed_agents))

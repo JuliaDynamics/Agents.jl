@@ -125,7 +125,8 @@ end
 @testset "xyz_agent! (sized-vector container)" begin
     # No Space
     n_agents = 10
-    model = FixedMassABM([Agent0(id) for id in 1:n_agents])
+    agents = [Agent0(id) for id in 1:n_agents]
+    model = FixedMassABM(agents)
     @test_throws ErrorException add_agent!(model)
     @test_throws ErrorException agent = add_agent!(model)
     @test_throws ErrorException add_agent!(Agent0(4), model)
@@ -133,7 +134,7 @@ end
     @test_throws ErrorException kill_agent!(model[1], model)
     @test_throws ErrorException genocide!(model, [1, 3])
 
-    for (i,a) in eachindex(allagents(model))
+    for (i,a) in enumerate(allagents(model))
         @test a.id == i
     end
 

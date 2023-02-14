@@ -21,6 +21,7 @@
     @test_throws ErrorException model.c = 5
 
     newa = Agent0(6)
+    add_agent!(newa, model)
     model[6] = newa
     @test model[6] == newa
     @test_throws ArgumentError model[7] = newa

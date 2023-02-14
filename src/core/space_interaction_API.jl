@@ -173,8 +173,6 @@ function kill_agent!(a::AbstractAgent, model::ABM)
     remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
-kill_agent!(id::Int, model::ABM) = kill_agent!(model[id], model)
-
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
@@ -194,7 +192,7 @@ Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
     for id in allids(model)
-        k > n && kill_agent!(id, model)
+        id > n && kill_agent!(id, model)
     end
     model.maxid[] = n
 end
