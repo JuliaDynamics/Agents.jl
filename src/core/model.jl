@@ -137,7 +137,7 @@ function FixedMassABM(
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true
-) where {A<:AbstractAgent, S<:SpaceType,F,P,R<:AbstractRNG} 
+) where {A<:AbstractAgent, S<:SpaceType,F,P,R<:AbstractRNG}
     C = SizedVector{length(agents), A}
     # println(C)
     # println(C<:AbstractVector)
@@ -172,26 +172,9 @@ Add an `agent` to the `model` at a given index: `id`.
 Note this method will return an error if the `id` requested is not equal to `agent.id`.
 **Internal method, use [`add_agents!`](@ref) instead to actually add an agent.**
 """
-function Base.setindex!(m::ABM{S,A,Dict{Int,A}}, a::AbstractAgent, id::Int) where {S,A}
-    a.id ≠ id &&
-        throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
-    m.agents[id] = a
-    m.maxid[] < id && (m.maxid[] += 1)
-    return a
-end
-
-function Base.setindex!(m::ABM{S,A,<:AbstractVector{A}}, a::AbstractAgent, id::Int) where {S,A}
-    a.id ≠ id &&
-        throw(ArgumentError("You are adding an agent to an ID not equal with the agent's ID!"))
-    if id <= nagents(m)
-        m.agents[id] = a
-    elseif id == nagents(m) + 1
-        push!(m.agents, a)
-    else
-        error("Cannot add/modify agent of ID $(id) in a vector ABM of $(nagents(m)) agents. Expected ID <= $(nagents(m)+1).")
-    end
-    m.maxid[] < id && (m.maxid[] += 1)
-    return a
+function Base.setindex!(m::ABM, args...; kwargs...)
+    error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*
+    "or other variants of an `add_agent_...` function to add agents to an ABM.")
 end
 
 """
