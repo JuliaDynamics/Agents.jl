@@ -34,7 +34,7 @@ end
 const ABM = AgentBasedModel
 
 const UnkillableABM{A,S} = ABM{A,S,Vector{A}}
-const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}} #TODO add utility functions for (creation of) FMABMs?
+const FixedMassABM{A,S} = ABM{A,S,SizedVector{A}}
 
 containertype(::ABM{S,A,C}) where {S,A,C} = C
 agenttype(::ABM{S,A}) where {S,A} = A
@@ -142,6 +142,9 @@ This allows storing agents into a `SizedVector`, a special vector with staticall
 size which is the same as the size of the input `agent_vector`.
 This version of agent based model has slightly better iteration and retrieval speed
 than [`UnkillableABM`](@ref).
+
+It is mandatory that the agent ID is exactly the same as its position
+in the given `agent_vector`.
 """
 function FixedMassABM(
     agents::AbstractVector{A},
@@ -155,6 +158,10 @@ function FixedMassABM(
     # println(C)
     # println(C<:AbstractVector)
     fixed_agents = C(agents)
+    # Validate that agent ID is the same as its order in the vector.
+    for (i, a) in eachindex(agents)
+        i ≠ a.id && throw(ArgumentError("$(i)-th agent had ID $(a.id) instead of $i."))
+    end
     # println(typeof(fixed_agents))
     agent_validator(A, space, warn)
     return ABM{S,A,C,F,P,R}(fixed_agents, space, scheduler, properties, rng, Ref(0))
