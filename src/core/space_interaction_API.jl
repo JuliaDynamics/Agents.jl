@@ -30,11 +30,6 @@ export move_agent!,
 notimplemented(model) =
     error("Not implemented for space type $(nameof(typeof(model.space)))")
 
-nokill(model) = error("""
-    Cannot remove agents stored in $(containertype(model)) as this is a type of \
-    vector. To be able to remove agents they must be stored in a `Dict`.
-    """)
-
 #######################################################################################
 # %% IMPLEMENT
 #######################################################################################
@@ -55,7 +50,7 @@ add_agent_to_space!(agent, model) = notimplemented(model)
 """
     remove_agent_from_space!(agent, model)
 Remove the agent from the underlying space structure.
-This function is called after the agent is already removed from the model dictionary
+This function is called after the agent is already removed from the model container.
 This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
@@ -143,6 +138,12 @@ is_stationary(agent, model) = notimplemented(model)
 function remove_agent_from_model!(agent::A, model::ABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
     delete!(model.agents, agent.id)
 end
+function remove_agent_from_model!(::A, model::ABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
+    error(
+    "Cannot remove agents stored in $(containertype(model)). "*
+    "Use the vanilla `AgentBasedModel` to be able to remove agents."
+    )
+end
 
 """
     move_agent!(agent [, pos], model::ABM) → agent
@@ -172,6 +173,7 @@ function kill_agent!(a::AbstractAgent, model::ABM{S,A,Dict{Int,A}}) where {S,A}
     remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
+kill_agent!(id::Int, model::ABM) = kill_agent!(model[id], model)
 
 """
     genocide!(model::ABM)
@@ -189,17 +191,12 @@ end
 Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
-    for (k, v) in model.agents
-        k > n && kill_agent!(v, model)
+    for id in allids(model)
+        k > n && kill_agent!(id, model)
     end
     model.maxid[] = n
 end
 
-# Must be implemented separately, otherwise genocide! would return an unhelpful
-# BoundsError error to the user.
-function genocide!(model::ABM{S,A,<:AbstractVector{A},F,P,R}, args...) where {S,A,F,P,R}
-    nokill(model)
-end
 
 """
     genocide!(model::ABM, IDs)
