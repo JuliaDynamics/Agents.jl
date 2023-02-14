@@ -7,11 +7,13 @@ In this page we list the remaining API functions, which constitute the bulk of A
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
-seed!
 random_agent
 nagents
 allagents
 allids
+abmproperties
+abmrng
+abmscheduler
 ```
 
 ## Available spaces

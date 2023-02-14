@@ -27,13 +27,59 @@ ValidPos = Union{
 
 
 """
-    AgentBasedModel{S,A}
+    AgentBasedModel
 
-Abstract type encompassing of all concrete ABM implementations for models in Agents.jl.
-Defines the ABM interface.
-It is typed with type `S` for space and `A` for agent(s).
+An `AgentBasedModel` is the supertype encompassing models in Agents.jl.
+All models are some concrete implementation of `AgentBasedModel` and follow its
+interface (see below). A model is typically constructed with:
+
+    AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
+
+which creates a model expecting agents of type `AgentType` living in the given `space`.
+`AgentBasedModel(...)` defaults to [`StandardABM`](@ref), which stores agents in a
+dictionary that maps unique IDs (integers) to agents.
+See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
+that yield better performance in case number of agents can only increase, or stays constant,
+during the model evolution.
+
+Agents.jl supports multiple agent types by passing a `Union` of agent types
+as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
+drawbacks of this approach.
+
+`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
+If it is omitted then all agents are virtually in one position and there is no spatial structure.
+Spaces are mutable objects and are not designed to be shared between models.
+Create a fresh instance of a space with the same properties if you need to do this.
+
+## Keywords
+
+- `properties = nothing`: additional model-level properties that the user may decide upon
+  and include in the model. `properties` can be an arbitrary container of data,
+  however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
+- `scheduler = Schedulers.fastest`: is the scheduelr that decides the (default)
+  activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
+- `rng = Random.default_rng()`: the random number generation stored and used by the model
+  in all calls to random functions. Accepts any subtype of `AbstractRNG`.
+- `warn=true`: some type tests for `AgentType` are done, and by default
+  warnings are thrown when appropriate.
+
+## Interface of `AgentBasedModel`
+
+Here we the most important information on how to query an instance of `AgentBasedModel`:
+
+- `model[id]` gives the agent with given `id`.
+- `abmproperties(model)` gives the `properies` container stored in the model.
+- `model.property`:  If the model properties is a dictionary with
+  key type `Symbol`, or if it is a composite type (`struct`), then the syntax
+  `model.property` will return the model property with key `:property`.
+- `abmrng(model)` will return the random number generator of the model.
+  It is strongly recommended to use `abmrng(model)` to all calls to `rand` and similar
+  functions, so that reproducibility can be established in your modelling workflow.
+- `abmscheduler(model)` will return the default scheduler of the model.
+
+Many more functions exist in the API page, such as [`allagents`](@ref).
 """
-abstract type AgentBasedModel{S<:SpaceType,A<:AbstractAgent} end
+abstract type AgentBasedModel{S<:SpaceType, A<:AbstractAgent} end
 const ABM = AgentBasedModel
 
 function notimplemented(model)
