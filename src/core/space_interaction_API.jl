@@ -27,9 +27,6 @@ export move_agent!,
     move_along_route!,
     is_stationary
 
-notimplemented(model) =
-    error("Not implemented for space type $(nameof(typeof(model.space)))")
-
 #######################################################################################
 # %% IMPLEMENT
 #######################################################################################

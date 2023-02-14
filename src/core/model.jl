@@ -1,23 +1,6 @@
 export ABM, AgentBasedModel, UnkillableABM, FixedMassABM
 using StaticArraysCore: SizedVector
 
-#######################################################################################
-# %% Fundamental type definitions
-#######################################################################################
-
-abstract type AbstractSpace end
-SpaceType = Union{Nothing,AbstractSpace}
-
-abstract type DiscreteSpace <: AbstractSpace end
-
-# This is a collection of valid position types, sometimes used for ambiguity resolution
-ValidPos = Union{
-    Int, # graph
-    NTuple{N,Int}, # grid
-    NTuple{M,<:AbstractFloat}, # continuous
-    Tuple{Int,Int,Float64} # osm
-} where {N,M}
-
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
 struct AgentBasedModel{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG}

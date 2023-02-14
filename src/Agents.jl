@@ -12,7 +12,8 @@ import LinearAlgebra
 
 # Core structures of Agents.jl
 include("core/agents.jl")
-include("core/model.jl")
+include("core/model_abstract.jl")
+include("core/model_concrete.jl")
 include("core/space_interaction_API.jl")
 
 # Existing spaces
