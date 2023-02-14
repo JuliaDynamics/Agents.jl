@@ -65,6 +65,7 @@ You can provide an agent _instance_ instead of type, and the type will be deduce
 
 The agents are stored in a dictionary that maps unique IDs (integers)
 to agents. Use `model[id]` to get the agent with the given `id`.
+See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial structure.
@@ -121,11 +122,13 @@ end
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
-Same as ABM, but agents cannot be removed during model stepping. Additionally,
-it is mandatory that the agent ID is exactly the same as the agent insertion
-order (i.e., the 5th agent added to the model must have ID 5). This allows the
-internal storage of agents to be in a standard Vector, accelerating the
-performance of retrieving agents from the model.
+Similar to [`AgentBasedModel`](@ref), but agents cannot be removed, only added.
+This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
+the `Dict` used by [`AgentBasedModel`](@ref), yielding faster retrieval and iteration over agents.
+
+It is mandatory that the agent ID is exactly the same as the agent insertion
+order (i.e., the 5th agent added to the model must have ID 5). If not,
+an error will be thrown by [`add_agent!`](@ref).
 """
 UnkillableABM(args...; kwargs...) = AgentBasedModel(args...; container=Vector)
 
@@ -160,7 +163,7 @@ export random_agent, nagents, allagents, allids, nextid, seed!
     model[id]
     getindex(model::ABM, id::Integer)
 
-    Return an agent given its ID.
+Return an agent given its ID.
 """
 Base.getindex(m::ABM, id::Integer) = m.agents[id]
 
