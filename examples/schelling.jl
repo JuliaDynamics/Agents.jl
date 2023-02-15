@@ -202,7 +202,7 @@ end
 
 # ## Stepping the model
 
-# Let's initialize the model with 370 agents on a 20 by 20 grid.
+# We have initialized a model with default parameters
 
 model = initialize()
 

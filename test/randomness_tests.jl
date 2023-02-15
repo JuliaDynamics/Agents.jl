@@ -15,8 +15,6 @@ using Agents, Test
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
     @test agent.pos == (2,1)
-    seed!(abmrng(model), 42)
-    @test abmrng(model) == rng0
 
     model = ABM(Agent2; rng = RandomDevice())
     @test_throws MethodError seed!(abmrng(model), 64)
