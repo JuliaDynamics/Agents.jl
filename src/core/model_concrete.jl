@@ -98,8 +98,8 @@ Similar to [`UnkillableABM`](@ref), but agents cannot be removed nor added.
 Hence, all agents in the model must be provided in advance as a vector.
 This allows storing agents into a `SizedVector`, a special vector with statically typed
 size which is the same as the size of the input `agent_vector`.
-This version of agent based model has slightly better iteration and retrieval speed
-than [`UnkillableABM`](@ref).
+This version of agent based model offers better performance than [`UnkillableABM`](@ref)
+if the number of agents is important and used often in the simulation.
 
 It is mandatory that the agent ID is exactly the same as its position
 in the given `agent_vector`.
