@@ -76,7 +76,7 @@ as well as the default version of the generic [`AgentBasedModel`](@ref) construc
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
 See also [`UnkillableABM`](@ref), [`FixedMassABM`](@ref).
 """
-StandardABM(args...; kwargs...) = SingleContainerABM(args...; container=Dict{Int})
+StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
@@ -89,7 +89,7 @@ It is mandatory that the agent ID is exactly the same as the agent insertion
 order (i.e., the 5th agent added to the model must have ID 5). If not,
 an error will be thrown by [`add_agent!`](@ref).
 """
-UnkillableABM(args...; kwargs...) = SingleContainerABM(args...; container=Vector)
+UnkillableABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Vector)
 
 """
     FixedMassABM(agent_vector [, space]; properties, kwargs...) → model

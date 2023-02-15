@@ -2,8 +2,8 @@
 # also instructs how to add more/new types of ABM implementations.
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
-export AbstractAgentBasedModel, ABM
-export abmrng, abmscheduler
+export AgentBasedModel, ABM
+export abmrng, abmscheduler, abmproperties
 export random_agent, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
