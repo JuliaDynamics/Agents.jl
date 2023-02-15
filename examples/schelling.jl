@@ -85,7 +85,7 @@ schelling = ABM(SchellingAgent, space; properties)
 schelling2 = ABM(
     SchellingAgent,
     space;
-    properties = properties,
+    properties,
     scheduler = Schedulers.ByProperty(:group),
 )
 
@@ -97,53 +97,43 @@ schelling2 = ABM(
 nagents(schelling)
 
 # We can add agents to this model using [`add_agent!`](@ref).
+first_agent = SchellingAgent(1, (1, 1), false, 1)
+add_agent!(first_agent, schelling)
+nagents(schelling)
+
+# However, there is a much more convenient way to do this.
 # [`add_agent_single!`](@ref) offers an automated way to create and add agents
-# while ensuring that we have at most 1 agent per unique position.
+# while ensuring that we have at most 1 agent per unique position,
+# which is exactly what we need for the rules of Schelling.
 
 add_agent_single!(schelling, false, 1)
 nagents(schelling)
 
-# We can obtain the created and added agent, that got assigned the ID 1, like so
-agent = schelling[1]
+# We can obtain the created and added agent, that got assigned the ID 2, like so
+agent = schelling[2]
 
-# ## Using a `FixedMassABM`
-# Since the rules of the Schelling model state that there is a fixed number of
-# agents, it is to our benefit to not use the default constructor `StandardABM`
-# (`ABM`, which is `AgentBasedModel`, defaults to `StandardABM`).
-# Instead, we should use [`FixedMassABM`](@ref).
 
-# However, in this case we cannot use [`add_agent_single!`](@ref). We need to first
-# create a vector of all agents, that will be in the model, and then provide it to the
-# constructor, as the constructor needs to know the agents in advance.
+# ## Using an `UnkillableABM`
 
-total_agents = 80
-agents_vector = SchellingAgent[]
-for n in 1:total_agents
-    ## half group 1, the other group 2
-    group = n < total_agents/2 ? 1 : 2
-    a = SchellingAgent(n, (1, 1), false, group)
-    push!(agents_vector, a)
-end
-agents_vector
+# We know that the number of agents in the model never change.
+# This means that we shouldn't use the the default version of ABM that is initialized
+# by `ABM`, becuase this allows deleting agents (at a performance defecit).
+# Instead, we should use [`UnkillableABM`](@ref). The only change necessary
+# for this to work is to simply change the call to `ABM` to a call to `UnkillableABM`.
 
-# Now we can give this to the `FixedMassABM` constructor
-space = GridSpaceSingle((10, 10); periodic = false) # dont forget to reset space!
-schelling = FixedMassABM(agents_vector, space; properties)
+schelling = UnkillableABM(SchellingAgent, space; properties)
 
-# There is one more thing to be aware of: so far we've put all agents in position
-# `(1, 1)`, which is not what the model requires. Each agent needs to be in a unique
-# position. This is fairly easy to achieve though; we just "shuffle" around the agents
-# using the [`move_agent_single!`](@ref) function.
-
-for agent in allagents(schelling)
-    move_agent_single!(agent, schelling)
-end
+# _note: we could be using [`FixedMassABM`](@ref) instead, since the number of agents
+# stays constant, however we do not really need this number in the simulation,
+# and [`FixedMassABM`](@ref) is a bit more involved to initialize, as it requires
+# passing all agents in in advance before making the model. So, we stick with
+# [`UnkillableABM`](@ref) for simplicity,
+# and because it doens't make a performance difference._
 
 # ## Creating the ABM through a function
 
 # Here we put the model instantiation in a function so that
 # it will be easy to recreate the model and change its parameters.
-
 # In addition, inside this function, we populate the model with some agents.
 # We also change the scheduler to [`Schedulers.Randomly`](@ref) , as
 # the rules of the model require the agents to activate in random order.
@@ -151,27 +141,25 @@ end
 # it will be of further use in [`paramscan`](@ref) below.
 
 using Random # for reproducibility
-function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.MersenneTwister(seed)
-    ## populate the model with agents, adding equal amount of the two types of agents
-    agents_vector = [
-        SchellingAgent(n, (1, 1), false, n < total_agents/2 ? 1 : 2)
-        for n in 1:total_agents
-    ]
-    model = FixedMassABM(
-        agents_vector, space;
+    rng = Random.Xoshiro(seed)
+    model = UnkillableABM(
+        SchellingAgent, space;
         properties, rng, scheduler = Schedulers.Randomly()
     )
-    ## and shuffle agents around to ensure each agent is at a unique position
-    for agent in allagents(schelling)
-        move_agent_single!(agent, schelling)
+    ## populate the model with agents, adding equal amount of the two types of agents
+    ## at random positions in the model
+    for n in 1:numagents
+        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+        add_agent_single!(agent, model)
     end
     return model
 end
 
 model = initialize()
+
 
 # ## Defining a step function
 
