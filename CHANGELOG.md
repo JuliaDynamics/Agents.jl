@@ -1,5 +1,6 @@
 # main
 - Two new variants of agent based models: `UnkillableABM` and `FixedMassABM`: they yield huge performance benefits (up to twice the speed!!!) on iterating over agents if the agents can't get killed, or even added, during model evolution!
+- Huge memory performance increase in continuous space by fixing a memory leak bug.
 - `multi_agents_type!` has been updated to handle edge case where agents of one (or more) type are absent at the beginning of the simulation.
 - New function `npositions` that returns the number of positions of a model with a discrete space.
 
