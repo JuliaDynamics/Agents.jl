@@ -281,9 +281,7 @@ end
 function allocating_random_agent(model, condition)
     ids = shuffle!(model.rng, collect(allids(model)))
     for id in ids
-        if condition(model[id])
-            return model[id]
-        end
+        condition(model[id]) && return model[id]
     end
     return nothing
 end
