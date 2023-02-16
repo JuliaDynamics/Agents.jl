@@ -123,12 +123,12 @@ agent = schelling[2]
 
 schelling = UnkillableABM(SchellingAgent, space; properties)
 
-# _note: we could be using [`FixedMassABM`](@ref) instead, since the number of agents
-# stays constant, however we do not really need this number in the simulation,
+# _note: we should be using [`FixedMassABM`](@ref) instead, since the number of agents
+# stays constant. However, we do not really need this number in the simulation,
 # and [`FixedMassABM`](@ref) is a bit more involved to initialize, as it requires
 # passing all agents in in advance before making the model. So, we stick with
 # [`UnkillableABM`](@ref) for simplicity,
-# and because it doens't make a performance difference._
+# and because it doens't make a significant performance difference._
 
 # ## Creating the ABM through a function
 
@@ -141,7 +141,7 @@ schelling = UnkillableABM(SchellingAgent, space; properties)
 # it will be of further use in [`paramscan`](@ref) below.
 
 using Random # for reproducibility
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(seed)
@@ -151,8 +151,8 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3,
     )
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+    for n in 1:total_agents
+        agent = SchellingAgent(n, (1, 1), false, n < total_agents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
     return model
@@ -286,7 +286,7 @@ data
 # columns of the resulting dataframe by name.
 
 # ## Launching the interactive application
-# Given the definitions we have already created for a normally plotting or animating the ABM
+# Given the definitions we have already created for normally plotting or animating the ABM
 # it is almost trivial to launch an interactive application for it, through the function
 # [`abmexploration`](@ref).
 
