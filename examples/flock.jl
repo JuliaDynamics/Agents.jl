@@ -45,7 +45,6 @@ end
 
 # The function `initialize_model` generates birds and returns
 # a model object using default values.
-# Since the bird number stays constant in the simulation, we use [`FixedMassABM`](@ref).
 function initialize_model(;
     n_birds = 100,
     speed = 1.0,
@@ -59,19 +58,21 @@ function initialize_model(;
 )
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
-    birds = [Bird(
-        i,
-        Tuple(rand(rng, 2) .* extent),
-        Tuple(rand(rng, 2) * 2 .- 1),
-        speed,
-        cohere_factor,
-        separation,
-        separate_factor,
-        match_factor,
-        visual_distance,
-    ) for i in 1:n_birds]
 
-    model = FixedMassABM(birds, space2d; rng, scheduler = Schedulers.Randomly())
+    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    for _ in 1:n_birds
+        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
+        add_agent!(
+            model,
+            vel,
+            speed,
+            cohere_factor,
+            separation,
+            separate_factor,
+            match_factor,
+            visual_distance,
+        )
+    end
     return model
 end
 
