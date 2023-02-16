@@ -20,16 +20,6 @@ const FixedMassABM{A,S} = SingleContainerABM{A,S,SizedVector{A}}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
-function construct_agent_container(container, A)
-    if container <: Dict
-        return Dict{Int,A}
-    elseif container <: Vector
-        return Vector{A}
-    else
-        throw(ArgumentError("Unrecognised container $container, please specify either Dict or Vector."))
-    end
-end
-
 """
     union_types(U::Type)
 Return a tuple of types within a `Union`.
@@ -66,6 +56,11 @@ function SingleContainerABM(agent::AbstractAgent, args...; kwargs...)
     return SingleContainerABM(typeof(agent), args...; kwargs...)
 end
 
+construct_agent_container(::Type{<:AbstractDict}, A) = Dict{Int,A}
+construct_agent_container(::Type{<:Vector}, A) = Vector{A}
+construct_agent_container(container, A) = throw(
+    "Unrecognised container $container, please specify either Dict or Vector."
+)
 
 """
     StandardABM(AgentType [, space]; properties, kwargs...) → model
