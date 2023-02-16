@@ -270,7 +270,15 @@ Return a random agent from the model that satisfies `condition(agent) == true`.
 The function generates a random permutation of agent IDs and iterates through them.
 If no agent satisfies the condition, `nothing` is returned instead.
 """
-function random_agent(model, condition)
+function random_agent(model, condition; optimistic=false)
+    if optimistic
+        return optimistic_random_agent(model, condition)
+    else
+        return allocating_random_agent(model, condition)
+    end
+end
+
+function allocating_random_agent(model, condition)
     ids = shuffle!(model.rng, collect(allids(model)))
     i, L = 1, length(ids)
     a = model[ids[1]]
@@ -280,6 +288,21 @@ function random_agent(model, condition)
         a = model[ids[i]]
     end
     return a
+end
+
+function allocating_random_agent2(model, condition)
+    ids = filter!(id -> condition(model[id]), collect(allids(model)))
+    isempty(ids) && return nothing
+    return rand(model.rng, ids)
+end
+
+function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
+    for _ in 1:n_attempts
+        idx = rand(model.rng, allids(model))
+        condition(model[idx]) && return model[idx]
+    end
+    # Fallback after n_attempts tries to find an agent
+    return allocating_random_agent(model, condition)
 end
 
 """
