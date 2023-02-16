@@ -14,7 +14,7 @@ Creating a new space type within Agents.jl is quite simple and requires the exte
 
 In principle, the following should be done:
 
-1. Think about what the agent position type should be.
+1. Think about what the agent position type should be. Add this type to the `ValidPos` union type in `src/core/model_abstract.jl`.
 1. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
 1. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
 1. Extend `random_position(model)`.
