@@ -18,8 +18,8 @@
 
 # We begin by calling the required packages and defining an agent type representing a bird.
 
-using Agents, LinearAlgebra
-using Random # hide
+using Agents
+using Random, LinearAlgebra
 
 @agent Bird ContinuousAgent{2} begin
     speed::Float64
@@ -43,7 +43,8 @@ end
 # and `separate_factor` is the importance of maintaining the minimum
 # distance from neighboring birds.
 
-# The function `initialize_model` generates birds and returns a model object using default values.
+# The function `initialize_model` generates birds and returns
+# a model object using default values.
 function initialize_model(;
     n_birds = 100,
     speed = 1.0,
@@ -53,9 +54,12 @@ function initialize_model(;
     match_factor = 0.01,
     visual_distance = 5.0,
     extent = (100, 100),
+    seed = 42,
 )
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
-    model = ABM(Bird, space2d, scheduler = Schedulers.Randomly())
+    rng = Random.MersenneTwister(seed)
+
+    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(model.rng, 2) * 2 .- 1)
         add_agent!(
@@ -71,7 +75,8 @@ function initialize_model(;
     end
     return model
 end
-nothing # hide
+
+model = initialize_model()
 
 # ## Defining the agent_step!
 # `agent_step!` is the primary function called for each step and computes velocity
