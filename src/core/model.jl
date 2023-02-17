@@ -279,20 +279,6 @@ function random_agent(model, condition; optimistic=false)
 end
 
 function allocating_random_agent(model, condition)
-    ids = shuffle!(model.rng, collect(allids(model)))
-    for id in ids
-        condition(model[id]) && return model[id]
-    end
-    return nothing
-end
-
-function allocating_random_agent2(model, condition)
-    ids = filter!(id -> condition(model[id]), collect(allids(model)))
-    isempty(ids) && return nothing
-    return rand(model.rng, ids)
-end
-
-function allocating_random_agent3(model, condition)
     ids = collect(allids(model))
     while !isempty(ids)
         index_id = rand(model.rng, eachindex(ids))

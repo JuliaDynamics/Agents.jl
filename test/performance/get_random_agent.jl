@@ -1,5 +1,5 @@
 using Agents, Random, BenchmarkTools
-using Agents: optimistic_random_agent, allocating_random_agent, allocating_random_agent2
+using Agents: optimistic_random_agent, allocating_random_agent
 
 mutable struct LabelledAgent <: AbstractAgent
     id::Int
@@ -7,7 +7,7 @@ mutable struct LabelledAgent <: AbstractAgent
 end
 
 n_agents = 100
-agents = [LabelledAgent(id, id>n_agents/2) for id in 1:n_agents]
+agents = [LabelledAgent(id, id<=n_agents/100) for id in 1:n_agents]
 noremove_model = UnkillableABM(LabelledAgent)
 dict_model = ABM(LabelledAgent)
 fixed_model = FixedMassABM(agents)
@@ -20,16 +20,13 @@ cond(agent) = agent.label
 
 # All times are median
 # FixedMassABM
-@benchmark optimistic_random_agent(fixed_model, cond) # 336 ns
-@benchmark allocating_random_agent(fixed_model, cond) # 1450 ns
-@benchmark allocating_random_agent2(fixed_model, cond) # 6100 ns
+@benchmark optimistic_random_agent(fixed_model, cond)
+@benchmark allocating_random_agent(fixed_model, cond)
 
 # UnkillableABM
-@benchmark optimistic_random_agent(noremove_model, cond) # 158 ns 
-@benchmark allocating_random_agent(noremove_model, cond) # 1283 ns
-@benchmark allocating_random_agent2(noremove_model, cond) # 276 ns
+@benchmark optimistic_random_agent(noremove_model, cond)
+@benchmark allocating_random_agent(noremove_model, cond)
 
 # DictionaryABM
-@benchmark optimistic_random_agent(dict_model, cond) # 454 ns
-@benchmark allocating_random_agent(dict_model, cond) # 1592 ns
-@benchmark allocating_random_agent2(dict_model, cond) # 882 ns
+@benchmark optimistic_random_agent(dict_model, cond)
+@benchmark allocating_random_agent(dict_model, cond)
