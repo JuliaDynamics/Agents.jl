@@ -166,6 +166,7 @@ function random_agent(model, condition; optimistic=false)
         return allocating_random_agent(model, condition)
     end
 end
+
 function allocating_random_agent(model, condition)
     ids = collect(allids(model))
     while !isempty(ids)
@@ -177,6 +178,7 @@ function allocating_random_agent(model, condition)
     end
     return nothing
 end
+
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
     for _ in 1:n_attempts
         idx = rand(model.rng, allids(model))
@@ -185,7 +187,6 @@ function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model)
     # Fallback after n_attempts tries to find an agent
     return allocating_random_agent(model, condition)
 end
-"""
 
 # TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
 # Instead, use the API functions such as `abmrng, abmspace`, etc.
