@@ -18,15 +18,33 @@ end
 
 cond(agent) = agent.label
 
+function old_random_agent(model, condition)
+    ids = shuffle!(abmrng(model), collect(allids(model)))
+    i, L = 1, length(ids)
+    a = model[ids[1]]
+    while !condition(a)
+        i += 1
+        i > L && return nothing
+        a = model[ids[i]]
+    end
+    return a
+end
+
 # All times are median
 # FixedMassABM
 @benchmark optimistic_random_agent(fixed_model, cond)
 @benchmark allocating_random_agent(fixed_model, cond)
+@benchmark random_agent(fixed_model, cond)
+@benchmark old_random_agent(fixed_model, cond)
 
 # UnkillableABM
 @benchmark optimistic_random_agent(noremove_model, cond)
 @benchmark allocating_random_agent(noremove_model, cond)
+@benchmark random_agent(noremove_model, cond)
+@benchmark old_random_agent(noremove_model, cond)
 
 # DictionaryABM
 @benchmark optimistic_random_agent(dict_model, cond)
 @benchmark allocating_random_agent(dict_model, cond)
+@benchmark random_agent(dict_model, cond)
+@benchmark old_random_agent(dict_model, cond)
