@@ -170,7 +170,7 @@ end
 function allocating_random_agent(model, condition)
     ids = collect(allids(model))
     while !isempty(ids)
-        index_id = rand(model.rng, eachindex(ids))
+        index_id = rand(abmrng(model), eachindex(ids))
         id = ids[index_id]
         condition(model[id]) && return model[id]
         ids[index_id], ids[end] = ids[end], ids[index_id]
@@ -181,7 +181,7 @@ end
 
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
     for _ in 1:n_attempts
-        idx = rand(model.rng, allids(model))
+        idx = rand(abmrng(model), allids(model))
         condition(model[idx]) && return model[idx]
     end
     # Fallback after n_attempts tries to find an agent
