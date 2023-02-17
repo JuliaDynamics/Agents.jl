@@ -89,7 +89,8 @@ end
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
     prev = model.space.stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
-    deleteat!(prev, ai)
+    prev[ai], prev[end] = prev[end], prev[ai]
+    pop!(prev)
     return a
 end
 
