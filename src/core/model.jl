@@ -265,10 +265,16 @@ Return a random agent from the model.
 random_agent(model) = model[rand(model.rng, allids(model))]
 
 """
-    random_agent(model, condition) → agent
+    random_agent(model, condition; optimistic=false)
 Return a random agent from the model that satisfies `condition(agent) == true`.
-The function generates a random permutation of agent IDs and iterates through them.
-If no agent satisfies the condition, `nothing` is returned instead.
+The function generates a random permutation of agent IDs and iterates through
+them. If no agent satisfies the condition, `nothing` is returned instead.
+
+## Keywords
+`optimistic = false` changes the algorithm used to be non-allocating but
+potentially more variable in performance. This should be faster if the condition
+is `true` for a large proportion of the population (for example if the agents
+are split into groups).
 """
 function random_agent(model, condition; optimistic=false)
     if optimistic
