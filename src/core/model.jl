@@ -292,6 +292,18 @@ function allocating_random_agent2(model, condition)
     return rand(model.rng, ids)
 end
 
+function allocating_random_agent3(model, condition)
+    ids = collect(allids(model))
+    while !isempty(ids)
+        index_id = rand(model.rng, eachindex(ids))
+        id = ids[index_id]
+        condition(model[id]) && return model[id]
+        ids[index_id], ids[end] = ids[end], ids[index_id]
+        pop!(ids)
+    end
+    return nothing
+end
+
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
     for _ in 1:n_attempts
         idx = rand(model.rng, allids(model))
