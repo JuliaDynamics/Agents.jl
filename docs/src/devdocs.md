@@ -14,7 +14,7 @@ Creating a new space type within Agents.jl is quite simple and requires the exte
 
 In principle, the following should be done:
 
-1. Think about what the agent position type should be.
+1. Think about what the agent position type should be. Add this type to the `ValidPos` union type in `src/core/model_abstract.jl`.
 1. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
 1. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
 1. Extend `random_position(model)`.
@@ -76,3 +76,7 @@ suite](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/benchmark/benchm
 and the [BenchmarkTools.jl
 manual](https://juliaci.github.io/BenchmarkTools.jl/dev/manual/#Benchmarking-basics)
 for more information on how to write your own benchmarks.
+
+## Creating a new `AgentBasedModel` implementation
+
+The interface defined by `AgentBasedModel`, that needs to be satisfied by new implementations, is very small. It is contained in the file `src/core/model_abstract.jl`.

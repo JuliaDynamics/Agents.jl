@@ -1,8 +1,9 @@
 using Random
+using Agents, Test
 
 @testset "Random Number Generation" begin
     model = ABM(Agent2)
-    @test model.rng == Random.default_rng()
+    @test abmrng(model) == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
@@ -12,20 +13,18 @@ using Random
     agent = Agent1(2, (1,1))
     add_agent_single!(agent, model)
     # Test that model rng pool was used
-    @test model.rng ≠ rng0
+    @test abmrng(model) ≠ rng0
     @test agent.pos == (2,1)
-    seed!(model, 42)
-    @test model.rng == rng0
 
     model = ABM(Agent2; rng = RandomDevice())
-    @test_throws MethodError seed!(model, 64)
+    @test_throws MethodError seed!(abmrng(model), 64)
 end
 
 @testset "sample!" begin
     rng = StableRNG(42)
     model = ABM(Agent2)
     for i in 1:20
-        add_agent!(model, rand(model.rng) / rand(model.rng))
+        add_agent!(model, rand(abmrng(model)) / rand(abmrng(model)))
     end
     allweights = [i.weight for i in values(model.agents)]
     mean_weights = sum(allweights) / length(allweights)
