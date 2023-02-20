@@ -29,31 +29,10 @@ end
 function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{<:ContinuousSpace{D,true}},
+    model::ABM{<:Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}},
 ) where {D}
-    total = 0.0
-    for (a, b, d) in zip(p1, p2, spacesize(model))
-        delta = abs(b - a)
-        if delta > d - delta
-            delta = d - delta
-        end
-        total += delta^2
-    end
-    sqrt(total)
-end
-
-function euclidean_distance(
-        p1::ValidPos, p2::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}
-    ) where {D}
-    total = 0.0
-    for (a, b, d) in zip(p1, p2, size(model.space))
-        delta = abs(b - a)
-        if delta > d - delta
-            delta = d - delta
-        end
-        total += delta^2
-    end
-    sqrt(total)
+    direct = abs.(p1 .- p2)
+    sqrt(sum(min.(direct, spacesize(model) .- direct).^2))
 end
 
 """
@@ -82,13 +61,8 @@ function manhattan_distance(
     p2::ValidPos,
     model::ABM{<:Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}}
 ) where {D}
-    total = 0.0
-    # find minimum distance for each dimension, add to total
-    for dim in 1:D
-        direct = abs(p1[dim] - p2[dim])
-        total += min(size(model.space)[dim] - direct, direct)
-    end
-    return total
+    direct = abs.(p1 .- p2)
+    sum(min.(direct, spacesize(model) .- direct))
 end
 
 """
