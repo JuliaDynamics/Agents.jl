@@ -169,8 +169,9 @@ end
 
 function allocating_random_agent(model, condition)
     ids = collect(allids(model))
+    rng = abmrng(model)
     while !isempty(ids)
-        index_id = rand(abmrng(model), eachindex(ids))
+        index_id = rand(rng, eachindex(ids))
         id = ids[index_id]
         condition(model[id]) && return model[id]
         ids[index_id], ids[end] = ids[end], ids[index_id]
