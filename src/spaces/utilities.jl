@@ -73,19 +73,20 @@ periodicity of the space.
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
 # Periodic spaces version
 function get_direction(
-    from::NTuple{D,Float64},
-    to::NTuple{D,Float64},
+    from::ValidPos,
+    to::ValidPos,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
-    best = to .- from
-    for offset in Iterators.product([-1:1 for _ in 1:D]...)
-        dir = to .+ offset .* spacesize(space) .- from
-        sum(dir.^2) < sum(best.^2) && (best = dir)
-    end
-    return best
+    direct_dir = to .- from
+    inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
+    return map((x, y) -> argmin(abs, (x, y)), direct_dir, inverse_dir)
 end
 
-function get_direction(from, to, ::Union{AbstractGridSpace,ContinuousSpace})
+function get_direction(
+    from::ValidPos, 
+    to::ValidPos, 
+    space::Union{AbstractGridSpace{D,false},ContinuousSpace{D,false}}
+) where {D}
     return to .- from
 end
 
