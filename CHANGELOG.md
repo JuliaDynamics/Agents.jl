@@ -1,4 +1,5 @@
 # main
+- Huge improvement of performance of the `get_direction` function in the periodic case.
 
 # v5.7
 - Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
