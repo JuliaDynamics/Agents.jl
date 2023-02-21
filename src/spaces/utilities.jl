@@ -79,7 +79,7 @@ function get_direction(
 ) where {D}
     direct_dir = to .- from
     inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
-    return map((x, y) -> minimum(abs, (x, y)), direct_dir, inverse_dir)
+    return map((x, y) -> abs(x) < abs(y) ? x : y, direct_dir, inverse_dir)
 end
 
 function get_direction(
