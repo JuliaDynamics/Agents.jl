@@ -181,8 +181,9 @@ function allocating_random_agent(model, condition)
 end
 
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
+    rng = abmrng(model)
     for _ in 1:n_attempts
-        idx = rand(abmrng(model), allids(model))
+        idx = rand(rng, allids(model))
         condition(model[idx]) && return model[idx]
     end
     # Fallback after n_attempts tries to find an agent
