@@ -120,7 +120,6 @@ function nearby_positions(
     if radius == 1
         return neighbors
     end
-    
     seen = Set{Int}(neighbors)
     push!(seen, position)
     k, n = 1, nv(model)
