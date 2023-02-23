@@ -123,8 +123,7 @@ function nearby_positions(
     
     seen = Set{Int}(neighbors)
     push!(seen, position)
-    n = nv(model)
-    k = 1
+    k, n = 1, nv(model)
     for _ in 2:radius
         thislevel = @view neighbors[k:end]
         k = length(neighbors)
