@@ -116,30 +116,28 @@ function nearby_positions(
     radius::Integer;
     kwargs...,
 )   
-    neighbors = copy(nearby_positions(position, model; kwargs...))
-    if radius == 1
-        return neighbors
-    end
-    seen = Set{Int}(neighbors)
+    nearby = copy(nearby_positions(position, model; kwargs...))
+    radius == 1 && return nearby
+    seen = Set{Int}(nearby)
     push!(seen, position)
-    k, n = 1, nv(model)
+    k, n = 0, nv(model)
     for _ in 2:radius
-        thislevel = @view neighbors[k:end]
-        k = length(neighbors)
-        if isempty(thislevel) || k == n
-    	    return neighbors
-    	end
+        thislevel = @view nearby[k+1:end]
+        isempty(thislevel) && return nearby
+        k = length(nearby)
+        k == n && return nearby
     	for v in thislevel
     	    for w in nearby_positions(v, model; kwargs...)
     	        if w ∉ seen
-    	            push!(neighbors, w)
-    	            push!(seen, w)  
+    	            push!(seen, w)
+    	            push!(nearby, w)
     	        end
     	    end
     	end
     end  
-    return neighbors
-end
+    return nearby
+end	    
+
 
 #######################################################################################
 # %% Walking
