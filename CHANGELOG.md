@@ -1,5 +1,6 @@
 # main
-- Huge improvement of performance of the `get_direction` function in the periodic case.
+- Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
+- Huge performance improvement in `get_direction` function for periodic spaces.
 
 # v5.7
 - Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
