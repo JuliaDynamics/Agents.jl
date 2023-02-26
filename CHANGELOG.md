@@ -1,4 +1,5 @@
 # main
+- Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
 - Huge improvement of performance of the `get_direction` function in the periodic case.
 - `normalize_position` is now 50x faster for the case of a non-periodic grid. 
 

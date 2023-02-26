@@ -149,24 +149,46 @@ Return a random agent from the model.
 random_agent(model) = model[rand(abmrng(model), allids(model))]
 
 """
-    random_agent(model, condition) → agent
+    random_agent(model, condition; optimistic=false) → agent
 Return a random agent from the model that satisfies `condition(agent) == true`.
-The function generates a random permutation of agent IDs and iterates through them.
-If no agent satisfies the condition, `nothing` is returned instead.
+The function generates a random permutation of agent IDs and iterates through
+them. If no agent satisfies the condition, `nothing` is returned instead.
+## Keywords
+`optimistic = false` changes the algorithm used to be non-allocating but
+potentially more variable in performance. This should be faster if the condition
+is `true` for a large proportion of the population (for example if the agents
+are split into groups).
 """
-function random_agent(model, condition)
-    ids = shuffle!(abmrng(model), collect(allids(model)))
-    i, L = 1, length(ids)
-    a = model[ids[1]]
-    while !condition(a)
-        i += 1
-        i > L && return nothing
-        a = model[ids[i]]
+function random_agent(model, condition; optimistic=false)
+    if optimistic
+        return optimistic_random_agent(model, condition)
+    else
+        return allocating_random_agent(model, condition)
     end
-    return a
 end
 
+function allocating_random_agent(model, condition)
+    ids = collect(allids(model))
+    rng = abmrng(model)
+    while !isempty(ids)
+        index_id = rand(rng, eachindex(ids))
+        id = ids[index_id]
+        condition(model[id]) && return model[id]
+        ids[index_id], ids[end] = ids[end], ids[index_id]
+        pop!(ids)
+    end
+    return nothing
+end
 
+function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
+    rng = abmrng(model)
+    for _ in 1:n_attempts
+        idx = rand(rng, allids(model))
+        condition(model[idx]) && return model[idx]
+    end
+    # Fallback after n_attempts tries to find an agent
+    return allocating_random_agent(model, condition)
+end
 
 # TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
 # Instead, use the API functions such as `abmrng, abmspace`, etc.

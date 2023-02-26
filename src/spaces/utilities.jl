@@ -113,15 +113,29 @@ function nearby_positions(
     model::ABM{<:GraphBasedSpace},
     radius::Integer;
     kwargs...,
-)
-    output = copy(nearby_positions(position, model; kwargs...))
+)   
+    nearby = copy(nearby_positions(position, model; kwargs...))
+    radius == 1 && return nearby
+    seen = Set{Int}(nearby)
+    push!(seen, position)
+    k, n = 0, nv(model)
     for _ in 2:radius
-        newnps = (nearby_positions(np, model; kwargs...) for np in output)
-        append!(output, reduce(vcat, newnps))
-        unique!(output)
-    end
-    filter!(i -> i ≠ position, output)
-end
+        thislevel = @view nearby[k+1:end]
+        isempty(thislevel) && return nearby
+        k = length(nearby)
+        k == n && return nearby
+    	for v in thislevel
+    	    for w in nearby_positions(v, model; kwargs...)
+    	        if w ∉ seen
+    	            push!(seen, w)
+    	            push!(nearby, w)
+    	        end
+    	    end
+    	end
+    end  
+    return nearby
+end	    
+
 
 #######################################################################################
 # %% Walking
