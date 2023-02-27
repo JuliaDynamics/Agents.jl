@@ -17,20 +17,21 @@ to vector of indices within each radius.
 """
 abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 
-@agent GridAgent{D} NoSpaceAgent begin
-    pos::NTuple{D, Int}
-end
-
-@doc """
+"""
     GridAgent{D} <: AbstractAgent
 The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
 It has an additional `pos::NTuple{D,Int}` field. See also [`@agent`](@ref).
-""" GridAgent
+"""
+@agent GridAgent{D} NoSpaceAgent begin
+    pos::NTuple{D, Int}
+end
 
 function positions(space::AbstractGridSpace)
     x = CartesianIndices(space.stored_ids)
     return (Tuple(y) for y in x)
 end
+
+npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
 # ALright, so here is the design for basic nearby_stuff looping.
 # We initialize a vector of tuples of indices within radius `r` from origin position.

@@ -10,8 +10,6 @@ In short: IMPLEMENT ALL FUNCTIONS IN SECTION "IMPLEMENT", WITH SAME ARGUMENTS!
 
 In addition to the required functions, a minimal `AbstractAgent` struct with REQUIRED
 fields should be supplied. See the top of src/core/agents.jl for examples.
-
-TODO: do_checks needs to be updated for each new space type
 =#
 export move_agent!,
     add_agent!,
@@ -28,9 +26,6 @@ export move_agent!,
     plan_best_route!,
     move_along_route!,
     is_stationary
-
-notimplemented(model) =
-    error("Not implemented for space type $(nameof(typeof(model.space)))")
 
 #######################################################################################
 # %% IMPLEMENT
@@ -52,7 +47,7 @@ add_agent_to_space!(agent, model) = notimplemented(model)
 """
     remove_agent_from_space!(agent, model)
 Remove the agent from the underlying space structure.
-This function is called after the agent is already removed from the model dictionary
+This function is called after the agent is already removed from the model container.
 This function is NOT part of the public API.
 """
 remove_agent_from_space!(agent, model) = notimplemented(model)
@@ -143,10 +138,9 @@ end
 Remove an agent from the model.
 """
 function kill_agent!(a::AbstractAgent, model::ABM)
-    delete!(model.agents, a.id)
+    remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
-
 kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
 
 """
@@ -165,11 +159,12 @@ end
 Kill the agents whose IDs are larger than n.
 """
 function genocide!(model::ABM, n::Integer)
-    for (k, v) in model.agents
-        k > n && kill_agent!(v, model)
+    for id in allids(model)
+        id > n && kill_agent!(id, model)
     end
     model.maxid[] = n
 end
+
 
 """
     genocide!(model::ABM, IDs)
@@ -199,8 +194,7 @@ end
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    model[agent.id] = agent
-    model.maxid[] < agent.id && (model.maxid[] = agent.id)
+    add_agent_to_model!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
 end

@@ -3,15 +3,24 @@
 The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
+## [Concrete ABM implementations](@id ABM_Implementations)
+```@docs
+StandardABM
+UnkillableABM
+FixedMassABM
+```
+
 ## Agent/model retrieval and access
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
-seed!
 random_agent
 nagents
 allagents
 allids
+abmproperties
+abmrng
+abmscheduler
 ```
 
 ## Available spaces
@@ -77,6 +86,7 @@ spacesize
 ## Discrete space exclusives
 ```@docs
 positions
+npositions
 ids_in_position
 id_in_position
 agents_in_position

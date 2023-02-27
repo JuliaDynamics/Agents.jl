@@ -19,17 +19,16 @@ function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
     print(io, s)
 end
 
-@agent ContinuousAgent{D} NoSpaceAgent begin
-    pos::NTuple{D,Float64}
-    vel::NTuple{D,Float64}
-end
-
-@doc """
+"""
     ContinuousAgent{D} <: AbstractAgent
 The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
 It has the additoinal fields `pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
 See also [`@agent`](@ref).
-""" ContinuousAgent
+"""
+@agent ContinuousAgent{D} NoSpaceAgent begin
+    pos::NTuple{D,Float64}
+    vel::NTuple{D,Float64}
+end
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
@@ -46,7 +45,7 @@ the model properties) can either be functions of the position vector, `f(pos) = 
 or `AbstractArrays`, representing discretizations of
 spatial data that may not be available in analytic form. In the latter case,
 the position is automatically mapped into the discretization represented by the array.
-Use [`get_spatial_property`](@ref) to access spatial properties in conjuction with
+Use [`get_spatial_property`](@ref) to access spatial properties in conjunction with
 `ContinuousSpace`.
 
 See also [Continuous space exclusives](@ref) on the online docs for more functionality.
@@ -198,7 +197,8 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
     end
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, cell_center(pos, model))
-    grid_r = (r + δ) / model.space.spacing
+    # Ceiling since the grid has euclidean metric
+    grid_r = ceil(Int, (r + δ) / model.space.spacing)
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
     focal_cell = pos2cell(pos, model)
@@ -534,7 +534,7 @@ Convert the continuous agent position into an appropriate `index` of `property`,
 represents some discretization of a spatial field over a [`ContinuousSpace`](@ref).
 
 The dimensionality of `property` and the continuous space do not have to match.
-If `property` has lower dimensionalty than the space (e.g. representing some surface
+If `property` has lower dimensionality than the space (e.g. representing some surface
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
 function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}

@@ -26,7 +26,7 @@ The following keywords modify the `paramscan` function:
 
 - `include_constants::Bool = false`: by default, only the varying parameters (Vector in
   `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
-  (non-Vector in `parameteres`) will also be included.
+  (non-Vector in `parameters`) will also be included.
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
   in parallel. This must be used in conjunction with `@everywhere` (see
   [Performance Tips](@ref)).

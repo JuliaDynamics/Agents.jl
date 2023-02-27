@@ -9,6 +9,7 @@
 # In this introductory example we parallelize the main [Tutorial](@ref) while building
 # the following definition of Schelling's segregation model:
 
+# * A fixed pre-determined number of agents exist in the model.
 # * Agents belong to one of two groups (0 or 1).
 # * The agents live in a two-dimensional grid. Only one agent per position is allowed.
 # * For each agent we care about
@@ -58,7 +59,7 @@ end
 # to keep in mind that `id` must never be modified, and `pos` must be modified
 # only through valid API functions such as [`move_agent!`](@ref).
 
-# You can think of the `@agent` macro defining the following expression:
+# The `@agent` macro defined the following expression:
 # ```julia
 # mutable struct SchellingAgent <: AbstractAgent
 #     id::Int             # The identifier number of the agent
@@ -67,11 +68,6 @@ end
 #     group::Int          # ...
 # end
 # ```
-# However, the reason to use [`@agent`](@ref) instead of hand-coding the
-# 'mandatory' fields is that it allows us to (1) ensure that some fields are
-# constants, (2) add additional fields that may be necessary but not really
-# part of the public API, and hence set internally by Agents.jl when using
-# various API functions.
 
 # ## Creating an ABM
 
@@ -89,46 +85,81 @@ schelling = ABM(SchellingAgent, space; properties)
 schelling2 = ABM(
     SchellingAgent,
     space;
-    properties = properties,
+    properties,
     scheduler = Schedulers.ByProperty(:group),
 )
 
 # Notice that `Schedulers.ByProperty` accepts an argument and returns a struct,
 # which is why we didn't just give `Schedulers.ByProperty` to `scheduler`.
 
+# ## Adding agents
+# Currently the model is empty:
+nagents(schelling)
+
+# We can add agents to this model using [`add_agent!`](@ref).
+first_agent = SchellingAgent(1, (1, 1), false, 1)
+add_agent!(first_agent, schelling)
+nagents(schelling)
+
+# However, there is a much more convenient way to do this.
+# [`add_agent_single!`](@ref) offers an automated way to create and add agents
+# while ensuring that we have at most 1 agent per unique position,
+# which is exactly what we need for the rules of Schelling.
+
+add_agent_single!(schelling, false, 1)
+nagents(schelling)
+
+# We can obtain the created and added agent, that got assigned the ID 2, like so
+agent = schelling[2]
+
+
+# ## Using an `UnkillableABM`
+
+# We know that the number of agents in the model never change.
+# This means that we shouldn't use the the default version of ABM that is initialized
+# by `ABM`, becuase this allows deleting agents (at a performance defecit).
+# Instead, we should use [`UnkillableABM`](@ref). The only change necessary
+# for this to work is to simply change the call to `ABM` to a call to `UnkillableABM`.
+
+schelling = UnkillableABM(SchellingAgent, space; properties)
+
+# _note: we should be using [`FixedMassABM`](@ref) instead, since the number of agents
+# stays constant. However, we do not really need this number in the simulation,
+# and [`FixedMassABM`](@ref) is a bit more involved to initialize, as it requires
+# passing all agents in in advance before making the model. So, we stick with
+# [`UnkillableABM`](@ref) for simplicity,
+# and because it doens't make a significant performance difference._
+
 # ## Creating the ABM through a function
 
 # Here we put the model instantiation in a function so that
 # it will be easy to recreate the model and change its parameters.
-
 # In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`Schedulers.Randomly`](@ref).
+# We also change the scheduler to [`Schedulers.Randomly`](@ref) , as
+# the rules of the model require the agents to activate in random order.
 # Because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) below.
 
 using Random # for reproducibility
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.MersenneTwister(seed)
-    model = ABM(
+    rng = Random.Xoshiro(seed)
+    model = UnkillableABM(
         SchellingAgent, space;
         properties, rng, scheduler = Schedulers.Randomly()
     )
-
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
+    for n in 1:total_agents
+        agent = SchellingAgent(n, (1, 1), false, n < total_agents / 2 ? 1 : 2)
         add_agent_single!(agent, model)
     end
     return model
 end
 
-# Notice that the position that an agent is initialized does not matter
-# in this example.
-# This is because we use [`add_agent_single!`](@ref), which places the agent in a random,
-# empty location on the grid, thus updating its position.
+model = initialize()
+
 
 # ## Defining a step function
 
@@ -171,7 +202,7 @@ end
 
 # ## Stepping the model
 
-# Let's initialize the model with 370 agents on a 20 by 20 grid.
+# We have initialized a model with default parameters
 
 model = initialize()
 
@@ -255,7 +286,7 @@ data
 # columns of the resulting dataframe by name.
 
 # ## Launching the interactive application
-# Given the definitions we have already created for a normally plotting or animating the ABM
+# Given the definitions we have already created for normally plotting or animating the ABM
 # it is almost trivial to launch an interactive application for it, through the function
 # [`abmexploration`](@ref).
 
@@ -268,13 +299,14 @@ parange = Dict(:min_to_be_happy => 0:8)
 adata = [(:mood, sum), (x, mean)]
 alabels = ["happy", "avg. x"]
 
-model = initialize(; numagents = 300) # fresh model, noone happy
+model = initialize(; total_agents = 300) # fresh model, noone happy
 
 # ```julia
 # using GLMakie # using a different plotting backend that enables interactive plots
 #
 # figure, abmobs = abmexploration(
-#     model, agent_step!, dummystep, parange;
+#     model;
+#     agent_step!, dummystep, parange,
 #     ac = groupcolor, am = groupmarker, as = 10,
 #     adata, alabels
 # )
@@ -298,7 +330,7 @@ model = initialize(; numagents = 300) # fresh model, noone happy
 # First, let's create a model with 200 agents and run it for 40 iterations.
 @eval Main __atexample__named__schelling = $(@__MODULE__) # hide
 
-model = initialize(numagents = 200, min_to_be_happy = 5, seed = 42)
+model = initialize(total_agents = 200, min_to_be_happy = 5, seed = 42)
 run!(model, agent_step!, 40)
 
 figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
@@ -416,7 +448,7 @@ adata = [(:mood, happyperc)]
 
 parameters = Dict(
     :min_to_be_happy => collect(2:5), # expanded
-    :numagents => [200, 300],         # expanded
+    :total_agents => [200, 300],         # expanded
     :griddims => (20, 20),            # not Vector = not expanded
 )
 

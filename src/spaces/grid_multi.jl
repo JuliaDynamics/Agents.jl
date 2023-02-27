@@ -22,7 +22,7 @@ An example using `GridSpace` is [Schelling's segregation model](@ref).
 ## Distance specification
 The typical terminology when searching neighbors in agent based modelling is
 "Von Neumann" neighborhood or "Moore" neighborhoods. However, because Agents.jl
-provides a much more powerful infastructure for finding neighbors, both in
+provides a much more powerful infrastructure for finding neighbors, both in
 arbitrary dimensions but also of arbitrary neighborhood size, this established
 terminology is no longer appropriate.
 Instead, distances that define neighborhoods are specified according to a proper metric
@@ -43,7 +43,7 @@ The allowed metrics are (and see docs online for a plotted example):
   position.
 
 ## Advanced dimension-dependent distances in Chebyshev metric
-If `metric = :chebyshev`, some advanved specification of distances is allowed when providing
+If `metric = :chebyshev`, some advanced specification of distances is allowed when providing
 `r` to functions like [`nearby_ids`](@ref).
 1. `r::NTuple{D,Int}` such as `r = (5, 2)`. This would mean a distance of 5 in the first
    dimension and 2 in the second. This can be useful when different coordinates in the space

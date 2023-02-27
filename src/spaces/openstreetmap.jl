@@ -149,14 +149,14 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
-@agent OSMAgent NoSpaceAgent begin
-    pos::Tuple{Int,Int,Float64}
-end
-@doc """
+"""
     OSMAgent <: AbstractAgent
 The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
 It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
-""" OSMAgent
+"""
+@agent OSMAgent NoSpaceAgent begin
+    pos::Tuple{Int,Int,Float64}
+end
 
 """
     OSM.test_map()

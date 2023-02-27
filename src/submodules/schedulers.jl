@@ -1,15 +1,17 @@
 export schedule, Schedulers
+
 """
     schedule(model) → ids
 Return an iterator over the scheduled IDs using the model's scheduler.
-Literally equivalent with `model.scheduler(model)`.
+Literally equivalent with `abmscheduler(model)(model)`.
 """
-schedule(model::ABM) = model.scheduler(model)
+schedule(model::ABM) = abmscheduler(model)(model)
 
 # Notice how the above lines are *outside* the submodule
 
 """
     Schedulers
+
 Submodule containing all predefined schedulers of Agents.jl and the scheduling API.
 Schedulers have a very simple interface. They are functions that take as an input the ABM and
 return an iterator over agent IDs. Notice that this iterator can be a "true" iterator
@@ -23,6 +25,10 @@ See also [Advanced scheduling](@ref) for making more advanced schedulers.
 Notice that schedulers can be given directly to model creation, and thus become the
 "default" scheduler a model uses, but they can just as easily be incorporated in a
 `model_step!` function as shown in [Advanced stepping](@ref).
+The `scheduler` that is stored in the model is only meaningful if an agent-stepping function
+is defined for [`step!`](@ref) or [`run!`](@ref), otherwise a user decides a scheduler in
+the model-stepping function,
+as illustrated in the [Advanced stepping](@ref) part of the tutorial.
 """
 module Schedulers
 using Agents
@@ -36,7 +42,7 @@ export Randomly, by_id, fastest, Partially, ByProperty, ByType
 
 function get_ids!(ids::Vector{Int}, model::ABM)
     resize!(ids, nagents(model))
-    for (i, id) in enumerate(keys(model.agents))
+    for (i, id) in enumerate(allids(model))
         ids[i] = id
     end
 end
@@ -47,14 +53,14 @@ A scheduler that activates all agents once per step in the order dictated by the
 agent's container, which is arbitrary (the keys sequence of a dictionary).
 This is the fastest way to activate all agents once per step.
 """
-fastest(model::ABM) = keys(model.agents)
+fastest(model::ABM) = allids(model)
 
 """
     Schedulers.by_id
 A scheduler that activates all agents agents at each step according to their id.
 """
 function by_id(model::ABM)
-    agent_ids = sort(collect(keys(model.agents)))
+    agent_ids = sort(collect(allids(model)))
     return agent_ids
 end
 
@@ -79,7 +85,7 @@ A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 function randomly(model::ABM)
-    order = shuffle!(model.rng, collect(keys(model.agents)))
+    order = shuffle!(model.rng, collect(allids(model)))
 end
 
 struct Randomly
@@ -103,7 +109,7 @@ A scheduler that at each step activates only `p` percentage of randomly chosen a
 """
 function partially(p::Real)
     function partial(model::ABM)
-        ids = collect(keys(model.agents))
+        ids = collect(allids(model))
         return randsubseq(model.rng, ids, p)
     end
     return partial
@@ -136,7 +142,7 @@ and outputs a real number.
 """
 function by_property(p)
     function property(model::ABM)
-        ids = collect(keys(model.agents))
+        ids = collect(allids(model))
         properties = [Agents.get_data(model[id], p) for id in ids]
         s = sortperm(properties)
         return ids[s]
@@ -278,7 +284,7 @@ function (sched::ByType)(model::ABM)
     for agent in allagents(model)
         push!(sched.ids[sched.type_inds[typeof(agent)]], agent.id)
     end
-    
+
     sched.shuffle_types && shuffle!(model.rng, sched.ids)
 
     if sched.shuffle_agents

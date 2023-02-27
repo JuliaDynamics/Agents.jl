@@ -9,12 +9,16 @@ using Test, Agents, Random
     @test fieldnames(A3) == (:id, :pos, :weight)
     @test fieldtypes(A3) == (Int, NTuple{2, Int}, Float64)
 
+    """
+    This is a test docstring for agent A4
+    """
     @agent A4 A3 begin
         z::Bool
     end
     @test A4 <: AbstractAgent
     @test fieldnames(A4) == (:id, :pos, :weight, :z)
     @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
+    @test contains(string(@doc(A4)), "This is a test docstring for agent A4")
 
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end
@@ -50,7 +54,7 @@ end
     agent = ImmutableAgent(1)
     @test_logs (
         :warn,
-        "AgentType is not mutable. You probably haven't used `@agent`!",
+        "Agent type is not mutable, and most library functions assume that it is.",
     ) ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
@@ -85,12 +89,12 @@ end
     end
     @test_logs (
         :warn,
-        "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
+        "`vel` field in agent type should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
     ) ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
     agent = DiscreteVelocity(1, (1, 1), (2, 3), 2.4)
     @test_logs (
         :warn,
-        "`vel` field in Agent struct should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
+        "`vel` field in agent type should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
     ) ABM(agent, ContinuousSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent, ContinuousSpace((1, 1)); warn = false)) <: AbstractAgent
@@ -104,7 +108,7 @@ end
     @test_logs (
         :warn,
         """
-        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        Agent type is not concrete. If your agent is parametrically typed, you're probably
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
@@ -127,7 +131,7 @@ end
     @test_logs (
         :warn,
         """
-        AgentType is not concrete. If your agent is parametrically typed, you're probably
+        Agent type is not concrete. If your agent is parametrically typed, you're probably
         seeing this warning because you gave `Agent` instead of `Agent{Float64}`
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent

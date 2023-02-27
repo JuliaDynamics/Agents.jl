@@ -13,8 +13,8 @@ In the spirit of simple design, all of this is done by defining simple Julia dat
 To set up an ABM simulation in Agents.jl, a user only needs to follow these steps:
 
 1. Choose in what kind of space the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
-2. Define the agent type (or types, for mixed models) that will populate the ABM. Agent types are standard Julia `mutable struct` that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to user's choice.
-3. The created agent type, the chosen space, optional additional model level properties, and other simulation tuning properties like schedulers or random number generators, are given to our universal structure [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation.
+2. Define the agent type (or types, for mixed models) that will populate the ABM. Agent types are standard Julia `mutable struct`s. They can be created manually, but typically you'd want to use [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to user's choice.
+3. The created agent type, the chosen space, optional additional model level properties, and other simulation tuning properties like schedulers or random number generators, are given to [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation. More specialized structures are also available, see [`AgentBasedModel`](@ref).
 4. Provide functions that govern the time evolution of the ABM. A user can provide an agent-stepping function, that acts on each agent one by one, and/or a model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref). Once these functions are created, they are simply passed to [`step!`](@ref) to evolve the model.
 5. _(Optional)_ Visualize the model and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
 6. Collect data. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, for example `[:mood, :wealth]`, and another one for the model. The agent data names are given as the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref). This function outputs collected data in the form of a `DataFrame`.
@@ -46,7 +46,6 @@ The "model" here stands for an instance of [`AgentBasedModel`](@ref).
 ```@docs
 AgentBasedModel
 ```
-
 
 ## 4. Evolving the model
 
@@ -107,7 +106,7 @@ step!(model, dummystep, complex_step!, n)
 For defining your own schedulers, see [Schedulers](@ref).
 
 ## 5. Visualizations
-Once you have defined a model and the stepping functions you can visualize the model statically or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Plotting and interactive application](@ref). Furthermore, all models in the Examples showcase plotting.
+Once you have defined a model and the stepping functions you can visualize the model statically or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Visualizations and Animations for Agent Based Models](@ref). Furthermore, all models in the Examples showcase plotting.
 
 ## 6. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection while scanning ranges of the parameters of the model, and the [`ensemblerun!`](@ref) that performs ensemble simulations and data collection.
