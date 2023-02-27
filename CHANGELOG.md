@@ -1,5 +1,8 @@
 # main
 
+# v5.8
+- New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
+
 # v5.7
 - Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
 - The old `AgentBasedModel` is now `StandardABM`.
@@ -7,12 +10,6 @@
 - Huge memory performance increase in continuous space by fixing a memory leak bug.
 - `multi_agents_type!` has been updated to handle edge case where agents of one (or more) type are absent at the beginning of the simulation.
 - New function `npositions` that returns the number of positions of a model with a discrete space.
-
-# v5.7
-- New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing
-easier creation of random walks in both discrete and continuous spaces.
-Random walks in continuous space also allow users to specify the reorientation distributions:
-`polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
 
 # v5.6
 - `add_node!` and `rem_node!` have been renamed to `add_vertex!` and `rem_vertex!` extending Graphs.jl homonymous methods to help standardise names across ecosystems. Therefore `add_node!` and `rem_node!` have been deprecated.
