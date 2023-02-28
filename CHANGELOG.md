@@ -1,4 +1,7 @@
 # main
+- Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
+- Huge improvement of performance of the `get_direction` function in the periodic case.
+- `normalize_position` is now 50x faster for the case of a non-periodic grid. 
 
 # v5.8
 - New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.

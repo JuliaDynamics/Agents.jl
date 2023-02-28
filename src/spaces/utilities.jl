@@ -14,16 +14,15 @@ sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 
 Example usage in the [Flocking model](@ref).
 """
-euclidean_distance(
-    a::A,
-    b::B,
-    model::ABM{<:Union{ContinuousSpace,AbstractGridSpace}},
-) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model)
+euclidean_distance(a::A, b::B, model::ABM,
+) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model.space)
+
+euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, model.space)
 
 function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{<:Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}}},
+    space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sqrt(sum(abs2.(p1 .- p2)))
 end
@@ -31,31 +30,10 @@ end
 function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{<:ContinuousSpace{D,true}},
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}},
 ) where {D}
-    total = 0.0
-    for (a, b, d) in zip(p1, p2, spacesize(model))
-        delta = abs(b - a)
-        if delta > d - delta
-            delta = d - delta
-        end
-        total += delta^2
-    end
-    sqrt(total)
-end
-
-function euclidean_distance(
-        p1::ValidPos, p2::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}
-    ) where {D}
-    total = 0.0
-    for (a, b, d) in zip(p1, p2, size(model.space))
-        delta = abs(b - a)
-        if delta > d - delta
-            delta = d - delta
-        end
-        total += delta^2
-    end
-    sqrt(total)
+    direct = abs.(p1 .- p2)
+    sqrt(sum(min.(direct, spacesize(space) .- direct).^2))
 end
 
 """
@@ -65,16 +43,15 @@ Return the manhattan distance between `a` and `b` (either agents or agent positi
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 """
-manhattan_distance(
-    a::A,
-    b::B,
-    model::ABM{<:Union{ContinuousSpace,AbstractGridSpace}},
-) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model)
+manhattan_distance(a::A, b::B, model::ABM
+) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model.space)
+
+manhattan_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, model.space)
 
 function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{<:Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}}},
+    space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sum(abs.(p1 .- p2))
 end
@@ -82,15 +59,10 @@ end
 function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
-    model::ABM{<:Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}}
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
-    total = 0.0
-    # find minimum distance for each dimension, add to total
-    for dim in 1:D
-        direct = abs(p1[dim] - p2[dim])
-        total += min(size(model.space)[dim] - direct, direct)
-    end
-    return total
+    direct = abs.(p1 .- p2)
+    sum(min.(direct, spacesize(space) .- direct))
 end
 
 """
@@ -99,21 +71,22 @@ Return the direction vector from the position `from` to position `to` taking int
 periodicity of the space.
 """
 get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
-# Periodic spaces version
+
 function get_direction(
-    from::NTuple{D,Float64},
-    to::NTuple{D,Float64},
-    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
+    from::ValidPos,
+    to::ValidPos,
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}},
 ) where {D}
-    best = to .- from
-    for offset in Iterators.product([-1:1 for _ in 1:D]...)
-        dir = to .+ offset .* spacesize(space) .- from
-        sum(dir.^2) < sum(best.^2) && (best = dir)
-    end
-    return best
+    direct_dir = to .- from
+    inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
+    return map((x, y) -> argmin(abs, (x, y)), direct_dir, inverse_dir)
 end
 
-function get_direction(from, to, ::Union{AbstractGridSpace,ContinuousSpace})
+function get_direction(
+    from::ValidPos, 
+    to::ValidPos, 
+    space::Union{AbstractGridSpace{D,false},ContinuousSpace{D,false}},
+) where {D}
     return to .- from
 end
 
@@ -142,15 +115,29 @@ function nearby_positions(
     model::ABM{<:GraphBasedSpace},
     radius::Integer;
     kwargs...,
-)
-    output = copy(nearby_positions(position, model; kwargs...))
+)   
+    nearby = copy(nearby_positions(position, model; kwargs...))
+    radius == 1 && return nearby
+    seen = Set{Int}(nearby)
+    push!(seen, position)
+    k, n = 0, nv(model)
     for _ in 2:radius
-        newnps = (nearby_positions(np, model; kwargs...) for np in output)
-        append!(output, reduce(vcat, newnps))
-        unique!(output)
-    end
-    filter!(i -> i ≠ position, output)
-end
+        thislevel = @view nearby[k+1:end]
+        isempty(thislevel) && return nearby
+        k = length(nearby)
+        k == n && return nearby
+    	for v in thislevel
+    	    for w in nearby_positions(v, model; kwargs...)
+    	        if w ∉ seen
+    	            push!(seen, w)
+    	            push!(nearby, w)
+    	        end
+    	    end
+    	end
+    end  
+    return nearby
+end	    
+
 
 #######################################################################################
 # %% Walking
@@ -164,22 +151,22 @@ spaces this clamps the position to the space extent.
 """
 normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
 
-function normalize_position(pos, space::ContinuousSpace{D,true}) where {D}
+function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
     return mod.(pos, spacesize(space))
 end
 
-function normalize_position(pos, space::ContinuousSpace{D,false}) where {D}
-    ss = spacesize(space)
-    return Tuple(clamp.(pos, 0.0, prevfloat.(ss)))
+function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
+    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
 end
 
-function normalize_position(pos, space::AbstractGridSpace{D,true}) where {D}
+function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
     return mod1.(pos, spacesize(space))
 end
 
-function normalize_position(pos, space::AbstractGridSpace{D,false}) where {D}
-    return Tuple(clamp.(pos, ones(Int, D), spacesize(space)))
+function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
+    return clamp.(pos, 1, spacesize(space))
 end
+
 
 """
     walk!(agent, direction::NTuple, model; ifempty = true)
