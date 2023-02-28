@@ -117,12 +117,12 @@ sheepwolfgrass = initialize_model()
 # both lose 1 energy unit by moving to an adjacent position and both consume
 # a food source if available. If their energy level is below zero, they die.
 # Otherwise, they live and reproduce with some probability.
-# They move to a random adjacent position with the [`walk!`](@ref) function.
+# They move to a random adjacent position with the [`randomwalk!`](@ref) function.
 
 # Notice how the function `sheepwolf_step!`, which is our `agent_step!`,
 # is dispatched to the appropriate agent type via Julia's Multiple Dispatch system.
 function sheepwolf_step!(sheep::Sheep, model)
-    walk!(sheep, rand, model)
+    randomwalk!(sheep, model)
     sheep.energy -= 1
     if sheep.energy < 0
         kill_agent!(sheep, model)
@@ -135,7 +135,7 @@ function sheepwolf_step!(sheep::Sheep, model)
 end
 
 function sheepwolf_step!(wolf::Wolf, model)
-    walk!(wolf, rand, model;ifempty=false)
+    randomwalk!(wolf, model; ifempty=false)
     wolf.energy -= 1
     if wolf.energy < 0
         kill_agent!(wolf, model)
