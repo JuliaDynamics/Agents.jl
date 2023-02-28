@@ -394,9 +394,8 @@ using LinearAlgebra: norm, dot
         end
 
         @testset "3D" begin
-            @agent RWAgent3D ContinuousAgent{3} begin; end
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(RWAgent3D, space)
+            model = ABM(ContinuousAgent{3}, space)
             x₀ = (5.0, 5.0, 5.0)
             v₀ = (1.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -411,7 +410,7 @@ using LinearAlgebra: norm, dot
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(RWAgent3D, space)
+            model = ABM(ContinuousAgent{3}, space)
             v₀ = (1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0
@@ -424,7 +423,7 @@ using LinearAlgebra: norm, dot
             @test dot(v₁, v₀) ≃ cos(θ)
 
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(RWAgent3D, space)
+            model = ABM(ContinuousAgent{3}, space)
             v₀ = (1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0

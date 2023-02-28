@@ -1,6 +1,6 @@
 using Distributions: Distributions, Uniform, ContinuousUnivariateDistribution
 using Rotations
-using StaticArraysCore: SVector
+using StaticArrays: SVector, setindex
 
 export walk!, randomwalk!, normalize_position
 export Arccos, Uniform
@@ -56,7 +56,7 @@ Return the position `pos` normalized for the extents of the space of the given `
 For periodic spaces, this wraps the position along each dimension, while for non-periodic
 spaces this clamps the position to the space extent.
 """
-normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
+normalize_position(pos, model::ABM) = normalize_position(pos, abmspace(model))
 
 function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
     return mod.(pos, spacesize(space))
@@ -118,7 +118,7 @@ function randomwalk!(
     r::Real;
     kwargs...
 )
-    if model.space.metric == :euclidean
+    if abmspace(model).metric == :euclidean
         throw(ArgumentError(
             "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
             "You might want to use a `ContinuousSpace` or a different metric."
