@@ -4,6 +4,7 @@ export GridSpace
 struct GridSpace{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Vector{Int},D}
     metric::Symbol
+    offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
     offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
     offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
     indices_within_radius_tuple::Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}
@@ -72,6 +73,7 @@ function GridSpace(
     return GridSpace{D,periodic}(
         stored_ids,
         metric,
+        Dict{Int,Vector{NTuple{D,Int}}}(),
         Dict{Float64,Vector{NTuple{D,Int}}}(),
         Dict{Float64,Vector{NTuple{D,Int}}}(),
         Dict{NTuple{D,Float64},Vector{NTuple{D,Int}}}(),

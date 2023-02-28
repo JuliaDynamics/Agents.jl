@@ -27,6 +27,7 @@ include("spaces/discrete.jl")
 include("spaces/continuous.jl")
 include("spaces/openstreetmap.jl")
 include("spaces/utilities.jl")
+include("spaces/walk.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")

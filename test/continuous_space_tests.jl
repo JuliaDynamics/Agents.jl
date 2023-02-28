@@ -1,5 +1,6 @@
 using Agents, Test
 using StableRNGs
+using LinearAlgebra: norm, dot
 
 # TODO: We need to write tests for get_spatial_index and stuff!
 
@@ -240,12 +241,6 @@ using StableRNGs
         # Must use Float64 for continuousspace
         @test_throws MethodError walk!(a, (1, 1, 5), model)
 
-        rng0 = StableRNG(42)
-        model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10)); rng = rng0)
-        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
-        walk!(a, rand, model)
-        @test a.pos[1] ≈ 6.5824829589163665
-        @test a.pos[2] ≈ 4.842266936412905
 
         @testset "periodic" begin
             model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
@@ -333,6 +328,125 @@ using StableRNGs
         # TODO: This test fails but I do not know why. Must be fixed later.
         # (Kinetic energy is not conserved)
         # @test K1 ≈ K0
+    end
+
+    @testset "random walk" begin
+        ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
+        @testset "2D" begin
+            space = ContinuousSpace((10,10), periodic=true)
+            model = ABM(ContinuousAgent{2}, space)
+            x₀ = (5.0, 5.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            # should throw error if displacement is 0
+            @test_throws ArgumentError randomwalk!(model[1], model, 0.0)
+            r = 2.0
+            randomwalk!(model[1], model, r)
+            # distance between initial and new position
+            # should be equal to r, independently of v₀
+            @test norm(model[1].pos .- x₀) ≃ r
+            @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
+
+            # verify that reorientations obey the specified angles
+            space = ContinuousSpace((10,10), periodic=true)
+            model = ABM(ContinuousAgent{2}, space)
+            x₀ = (5.0, 5.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            r = 1.0
+            polar = [π/2] # degenerate distribution, only π/2 reorientations
+            # at the 4th step, the agent should come back to its initial position
+            v₁ = (0.0, 1.0) # π/2
+            x₁ = x₀ .+ v₁
+            v₂ = (-1.0, 0.0) # π
+            x₂ = x₁ .+ v₂
+            v₃ = (0.0, -1.0) # 3π/2
+            x₃ = x₂ .+ v₃
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₁)
+            @test all(model[1].pos .≃ x₁)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₂)
+            @test all(model[1].pos .≃ x₂)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₃)
+            @test all(model[1].pos .≃ x₃)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₀)
+            @test all(model[1].pos .≃ x₀)
+
+            # verify boundary conditions are respected
+            space1 = ContinuousSpace((2,2), periodic=true)
+            space2 = ContinuousSpace((2,2), periodic=false)
+            model1 = ABM(ContinuousAgent{2}, space1)
+            model2 = ABM(ContinuousAgent{2}, space2)
+            x₀ = (1.0, 1.0)
+            v₀ = (1.0, 0.0)
+            add_agent!(x₀, model1, v₀)
+            add_agent!(x₀, model2, v₀)
+            r = 1.1
+            polar = [0.0] # no reorientation, move straight
+            randomwalk!(model1[1], model1, r; polar)
+            randomwalk!(model2[1], model2, r; polar)
+            @test model1[1].pos[1] ≈ 0.1
+            @test model2[1].pos[1] ≈ 2.0
+            @test norm(model1[1].vel) == 1.1
+        end
+
+        @testset "3D" begin
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(ContinuousAgent{3}, space)
+            x₀ = (5.0, 5.0, 5.0)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            # should throw error if displacement is 0
+            @test_throws ArgumentError randomwalk!(model[1], model, 0.0)
+            r = 2.0
+            randomwalk!(model[1], model, r)
+            # distance between initial and new position
+            # should be equal to Δr and independent of v₀
+            @test norm(model[1].pos .- x₀) ≃ r
+            @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
+
+            # verify that reorientations obey the specified angles
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(ContinuousAgent{3}, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            r = 1.0
+            θ = π/6
+            polar = [θ]
+            azimuthal = Arccos()
+            randomwalk!(model[1], model, r; polar, azimuthal)
+            # for any φ, dot(v₁,v₀) = cos(θ)
+            v₁ = model[1].vel
+            @test dot(v₁, v₀) ≃ cos(θ)
+
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(ContinuousAgent{3}, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            r = 1.0
+            θ = π/4
+            φ = π/6
+            polar = [θ]
+            azimuthal = [φ]
+            randomwalk!(model[1], model, r; polar, azimuthal)
+            v₁ = model[1].vel
+            @test v₁[1] ≃ cos(θ)
+            @test v₁[2] ≃ sin(θ)*sin(φ)
+            @test v₁[3] ≃ -sin(θ)*cos(φ)
+            @test dot(v₁, v₀) ≃ cos(θ)
+
+            # test that velocity measure changes
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(ContinuousAgent{3}, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            randomwalk!(model[1], model, 2)
+            @test norm(model[1].vel) ≈ 2
+
+        end
     end
 end
 

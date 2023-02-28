@@ -56,6 +56,7 @@ random_position
 ```@docs
 move_agent!
 walk!
+randomwalk!
 get_direction
 ```
 

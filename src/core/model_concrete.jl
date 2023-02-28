@@ -1,5 +1,5 @@
 export ABM, StandardABM, UnkillableABM, FixedMassABM
-using StaticArraysCore: SizedVector
+using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 

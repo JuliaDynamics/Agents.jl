@@ -1,4 +1,13 @@
-export euclidean_distance, manhattan_distance, get_direction, normalize_position, walk!, spacesize
+export euclidean_distance, manhattan_distance, get_direction, spacesize
+
+
+"""
+    spacesize(model::ABM)
+
+Return the size of the model's space. Works for [`AbstractGridSpace`](@ref) and
+[`ContinuousSpace`](@ref).
+"""
+spacesize(model::ABM) = spacesize(abmspace(model))
 
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
@@ -81,8 +90,8 @@ function get_direction(
 end
 
 function get_direction(
-    from::ValidPos, 
-    to::ValidPos, 
+    from::ValidPos,
+    to::ValidPos,
     space::Union{AbstractGridSpace{D,false},ContinuousSpace{D,false}},
 ) where {D}
     return to .- from
@@ -113,7 +122,7 @@ function nearby_positions(
     model::ABM{<:GraphBasedSpace},
     radius::Integer;
     kwargs...,
-)   
+)
     nearby = copy(nearby_positions(position, model; kwargs...))
     radius == 1 && return nearby
     seen = Set{Int}(nearby)
@@ -132,98 +141,8 @@ function nearby_positions(
     	        end
     	    end
     	end
-    end  
-    return nearby
-end	    
-
-
-#######################################################################################
-# %% Walking
-#######################################################################################
-"""
-    normalize_position(pos, model::ABM{<:Union{AbstractGridSpace,ContinuousSpace}})
-
-Return the position `pos` normalized for the extents of the space of the given `model`.
-For periodic spaces, this wraps the position along each dimension, while for non-periodic
-spaces this clamps the position to the space extent.
-"""
-normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
-
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
-    return mod.(pos, spacesize(space))
-end
-
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
-    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
-end
-
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
-    return mod1.(pos, spacesize(space))
-end
-
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
-    return clamp.(pos, 1, spacesize(space))
-end
-
-
-"""
-    walk!(agent, direction::NTuple, model; ifempty = true)
-
-Move agent in the given `direction` respecting periodic boundary conditions.
-For non-periodic spaces, agents will walk to, but not exceed the boundary value.
-Available for both `AbstractGridSpace` and `ContinuousSpace`s.
-
-The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
-for `Int`, and `ContinuousSpace` for `Float64` tuples, describing the walk distance in
-each direction. `direction = (2, -3)` is an example of a valid direction on a
-`AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
-Agent velocity is ignored for this operation in `ContinuousSpace`.
-
-## Keywords
-- `ifempty` will check that the target position is unoccupied and only move if that's true.
-  Available only on `AbstractGridSpace`.
-
-Example usage in [Battle Royale](
-    https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
-"""
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Int},
-    model::ABM{<:AbstractGridSpace};
-    ifempty::Bool = true
-) where {D}
-    target = normalize_position(agent.pos .+ direction, model)
-    if !ifempty || isempty(ids_in_position(target, model))
-        move_agent!(agent, target, model)
     end
+    return nearby
 end
 
-function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Float64},
-    model::ABM{<:ContinuousSpace}
-) where {D}
-    target = normalize_position(agent.pos .+ direction, model)
-    move_agent!(agent, target, model)
-end
 
-"""
-    walk!(agent, rand, model)
-
-Invoke a random walk by providing the `rand` function in place of
-`direction`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
-`ContinuousSpace` will reside within [-1, 1].
-"""
-walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D} =
-    walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
-
-walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D} =
-    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
-
-"""
-    spacesize(model::ABM)
-
-Return the size of the model's space. Works for [`AbstractGridSpace`](@ref) and
-[`ContinuousSpace`](@ref).
-"""
-spacesize(model::ABM) = spacesize(model.space)

@@ -1,7 +1,11 @@
 # main
+
+# v5.8
+- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
+- New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
 - Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
 - Huge improvement of performance of the `get_direction` function in the periodic case.
-- `normalize_position` is now 50x faster for the case of a non-periodic grid. 
+- `normalize_position` is now 50x faster for the case of a non-periodic grid.
 
 # v5.7
 - Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
