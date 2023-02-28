@@ -31,7 +31,7 @@ Invoke a random walk by providing the `rand` function in place of
 `direction`. For `AbstractGridSpace`, the walk will cover ±1 positions in all directions,
 `ContinuousSpace` will reside within [-1, 1].
 
-This functionality is deprecated. Use `randomwalk!` instead.
+This functionality is deprecated. Use [`randomwalk!`](@ref) instead.
 """
 function walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D}
     @warn "Producing random walks through `walk!` is deprecated. Use `randomwalk!` instead."

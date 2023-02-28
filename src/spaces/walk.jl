@@ -1,33 +1,8 @@
+export walk!, randomwalk!, normalize_position
 
 #######################################################################################
 # %% Walking
 #######################################################################################
-"""
-    normalize_position(pos, model::ABM{<:Union{AbstractGridSpace,ContinuousSpace}})
-
-Return the position `pos` normalized for the extents of the space of the given `model`.
-For periodic spaces, this wraps the position along each dimension, while for non-periodic
-spaces this clamps the position to the space extent.
-"""
-normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
-
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
-    return mod.(pos, spacesize(space))
-end
-
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
-    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
-end
-
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
-    return mod1.(pos, spacesize(space))
-end
-
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
-    return clamp.(pos, 1, spacesize(space))
-end
-
-
 """
     walk!(agent, direction::NTuple, model; ifempty = true)
 
@@ -69,19 +44,52 @@ function walk!(
     move_agent!(agent, target, model)
 end
 
+"""
+    normalize_position(pos, model::ABM{<:Union{AbstractGridSpace,ContinuousSpace}})
+
+Return the position `pos` normalized for the extents of the space of the given `model`.
+For periodic spaces, this wraps the position along each dimension, while for non-periodic
+spaces this clamps the position to the space extent.
+"""
+normalize_position(pos, model::ABM) = normalize_position(pos, model.space)
+
+function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
+    return mod.(pos, spacesize(space))
+end
+
+function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
+    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
+end
+
+function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
+    return mod1.(pos, spacesize(space))
+end
+
+function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
+    return clamp.(pos, 1, spacesize(space))
+end
+
+#######################################################################################
+# %% Random walks
+#######################################################################################
+
 
 """
     randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r; kwargs...)
+
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
 and space metric.
 For Chebyshev and Manhattan metric, the step size `r` is rounded to `floor(Int,r)`;
-for Euclidean metric in a GridSpace, random walks are not defined due to a strong
-dependency on the given value of `r`.
+for Euclidean metric in a GridSpace, random walks are ill defined and hence not supported.t
+
+For example, for `Chebyshev` metric and `r=1`, this will move the agent with equal
+probability to any of the 8 surrounding cells. For Manhattan metric, it
+will move to any of the 4 surrounding cells
 
 ## Keywords
 - `ifempty` will check that the target position is unoccupied and only move if that's true.
   By default this is true, set it to false if different agents can occupy the same position.
-  In a GridSpaceSingle, agents cannot overlap and this keyword has no effect.
+  In a `GridSpaceSingle`, agents cannot overlap anyways and this keyword has no effect.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -89,7 +97,7 @@ function randomwalk!(
     r::Real;
     kwargs...
 )
-    if model.space.metric == :euclidean
+    if abmspace(model).metric == :euclidean
         throw(ArgumentError(
             "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
             "You might want to use a `ContinuousSpace` or a different metric."
@@ -104,7 +112,7 @@ function randomwalk!(
     model::ABM{<:GridSpaceSingle},
     r::Real;
     kwargs...
-) where D
+)
     if model.space.metric == :euclidean
         throw(ArgumentError(
             "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
@@ -125,11 +133,12 @@ end
 
 """
     randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
+
 Move `agent` for a distance `r` in a random direction, respecting
 boundary conditions and space metric.
 The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distribution `polar`, which defaults
-to a uniform distribution in the plane.
+to a uniform distribution of angles on the circle.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -148,12 +157,15 @@ function randomwalk!(
 end
 
 """
-    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r; polar=Uniform(-π,π), azimuthal=Arccos(-1,1))
+    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r;
+        polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
+    )
+
 Move `agent` for a distance `r` in a random direction, respecting boundary conditions
 and space metric.
 The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distributions `polar` and `azimuthal`;
-their default values produce uniformly distributed reorientations on the unit sphere.
+their default values produce uniformly distributed reorientations on the `r`-radius sphere.
 """
 function randomwalk!(
     agent::AbstractAgent,
