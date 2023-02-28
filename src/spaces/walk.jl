@@ -1,4 +1,4 @@
-using Distributions: Uniform
+using Distributions: Distributions, Uniform, ContinuousUnivariateDistribution
 using Rotations
 using StaticArraysCore: SVector
 
@@ -109,7 +109,7 @@ function randomwalk!(
         ))
     end
     offsets = offsets_at_radius(model, r)
-    walk!(agent, rand(model.rng, offsets), model; kwargs...)
+    walk!(agent, rand(abmrng(model), offsets), model; kwargs...)
 end
 
 function randomwalk!(
@@ -132,62 +132,54 @@ function randomwalk!(
         # don't move, return agent only for type stability
         agent
     else
-        walk!(agent, rand(model.rng, available_offsets), model; ifempty=false)
+        walk!(agent, rand(abmrng(model), available_offsets), model; ifempty=false)
     end
 end
 
 """
-    randomwalk!(agent, model::ABM{<:ContinuousSpace{2}}, r; polar=Uniform(-π,π))
+    randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r];
+        polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
+    )
 
-Move `agent` for a distance `r` in a random direction, respecting
-boundary conditions and space metric.
-The displacement `r` must be larger than 0.
-The new direction is chosen from the angle distribution `polar`, which defaults
-to a uniform distribution of angles on the circle.
-Anything that supports `rand` can be used as a distribution instead.
+Re-orient and move `agent` for a distance `r` in a random direction
+respecting space boundary conditions. By default `r = norm(agent.vel)`.
+
+The `ContinuousSpace` version is slightly different than the grid space.
+Here, the agent's velocity is taken into account. First, the velocity vector
+is rotated using random angles given by the distributions
+for polar (2D and 3D) and azimuthal (3D only) angles, and scaled to have
+measure `r`. After the re-orientation the agent is moved for `r` in the new direction.
+
+Anything that supports `rand` can be used as an angle distribution instead.
 """
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
-    r::Real;
+    r::Real = LinearAlgebra.norm(agent.vel);
     polar=Uniform(-π,π),
 )
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    θ = rand(model.rng, polar)
-    r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ)) .* (r / r₀)
+    θ = rand(abmrng(model), polar)
+    direction = Tuple(rotate(SVector(agent.vel), θ)) .* r
     agent.vel = direction
     walk!(agent, direction, model)
 end
 
-"""
-    randomwalk!(agent, model::ABM{<:ContinuousSpace{3}}, r;
-        polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
-    )
-
-Move `agent` for a distance `r` in a random direction, respecting boundary conditions
-and space metric.
-The displacement `r` must be larger than 0.
-The new direction is chosen from the angle distributions `polar` and `azimuthal`;
-their default values produce uniformly distributed reorientations on the `r`-radius sphere.
-Anything that supports `rand` can be used as a distribution instead.
-"""
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
-    r::Real;
+    r::Real = LinearAlgebra.norm(agent.vel);
     polar=Uniform(-π,π),
     azimuthal=Arccos(-1,1),
 )
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    θ = rand(model.rng, polar)
-    ϕ = rand(model.rng, azimuthal)
-    r₀ = LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* (r / r₀)
+    θ = rand(abmrng(model), polar)
+    ϕ = rand(abmrng(model), azimuthal)
+    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* r
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -214,7 +206,7 @@ function rotate(w::SVector{3}, θ::Real, ϕ::Real)
     # find a vector normal to w
     m = findfirst(w .≠ 0)
     n = m%3 + 1
-    u = SVector{3}(0., 0., 0.)
+    u = SVector{3}(0.0, 0.0, 0.0)
     u = setindex(u, w[m], n)
     u = setindex(u, -w[n], m)
     # rotate w around u by the polar angle θ
@@ -233,7 +225,7 @@ end
     Arccos(a, b)
 Create a `ContinuousUnivariateDistribution` corresponding to `acos(Uniform(a,b))`.
 """
-function Arccos(a::Real, b::Real)
+function Arccos(a::Real, b::Real; check_args = true)
     Distributions.@check_args Arccos a<b -1≤a≤1 -1≤b≤1
     return Arccos{Float64}(Float64(a), Float64(b))
 end

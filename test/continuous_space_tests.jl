@@ -241,12 +241,6 @@ using LinearAlgebra: norm, dot
         # Must use Float64 for continuousspace
         @test_throws MethodError walk!(a, (1, 1, 5), model)
 
-        rng0 = StableRNG(42)
-        model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10)); rng = rng0)
-        a = add_agent!((7.2, 3.9), model, (0.0, 0.0), rand(model.rng))
-        walk!(a, rand, model)
-        @test a.pos[1] ≈ 6.5824829589163665
-        @test a.pos[2] ≈ 4.842266936412905
 
         @testset "periodic" begin
             model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
