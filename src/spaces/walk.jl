@@ -1,4 +1,9 @@
+using Distributions: Uniform
+using Rotations
+using StaticArraysCore: SVector
+
 export walk!, randomwalk!, normalize_position
+export Arccos, Uniform
 
 #######################################################################################
 # %% Walking
@@ -139,6 +144,7 @@ boundary conditions and space metric.
 The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distribution `polar`, which defaults
 to a uniform distribution of angles on the circle.
+Anything that supports `rand` can be used as a distribution instead.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -166,6 +172,7 @@ and space metric.
 The displacement `r` must be larger than 0.
 The new direction is chosen from the angle distributions `polar` and `azimuthal`;
 their default values produce uniformly distributed reorientations on the `r`-radius sphere.
+Anything that supports `rand` can be used as a distribution instead.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -226,7 +233,7 @@ end
     Arccos(a, b)
 Create a `ContinuousUnivariateDistribution` corresponding to `acos(Uniform(a,b))`.
 """
-function Arccos(a::Real, b::Real; check_args::Bool=true)
+function Arccos(a::Real, b::Real)
     Distributions.@check_args Arccos a<b -1≤a≤1 -1≤b≤1
     return Arccos{Float64}(Float64(a), Float64(b))
 end

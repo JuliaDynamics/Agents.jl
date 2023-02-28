@@ -1,6 +1,4 @@
-export euclidean_distance, manhattan_distance, get_direction, normalize_position, walk!, Arccos, randomwalk!, spacesize
-
-using Distributions, Rotations, StaticArrays
+export euclidean_distance, manhattan_distance, get_direction, spacesize
 
 
 """
