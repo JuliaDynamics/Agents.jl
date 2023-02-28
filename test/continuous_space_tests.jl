@@ -333,24 +333,23 @@ using LinearAlgebra: norm, dot
     @testset "random walk" begin
         ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
         @testset "2D" begin
-            @agent RWAgent2D ContinuousAgent{2} begin; end
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(RWAgent2D, space)
+            model = ABM(ContinuousAgent{2}, space)
             x₀ = (5.0, 5.0)
             v₀ = (1.0, 0.0)
             add_agent!(x₀, model, v₀)
             # should throw error if displacement is 0
-            @test_throws ArgumentError randomwalk!(model.agents[1], model, 0.0)
+            @test_throws ArgumentError randomwalk!(model[1], model, 0.0)
             r = 2.0
-            randomwalk!(model.agents[1], model, r)
+            randomwalk!(model[1], model, r)
             # distance between initial and new position
             # should be equal to r, independently of v₀
-            @test norm(model.agents[1].pos .- x₀) ≃ r
-            @test !(norm(model.agents[1].pos .- x₀) ≃ norm(v₀))
+            @test norm(model[1].pos .- x₀) ≃ r
+            @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(RWAgent2D, space)
+            model = ABM(ContinuousAgent{2}, space)
             x₀ = (5.0, 5.0)
             v₀ = (1.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -363,34 +362,35 @@ using LinearAlgebra: norm, dot
             x₂ = x₁ .+ v₂
             v₃ = (0.0, -1.0) # 3π/2
             x₃ = x₂ .+ v₃
-            randomwalk!(model.agents[1], model, r; polar)
-            @test all(model.agents[1].vel .≃ v₁)
-            @test all(model.agents[1].pos .≃ x₁)
-            randomwalk!(model.agents[1], model, r; polar)
-            @test all(model.agents[1].vel .≃ v₂)
-            @test all(model.agents[1].pos .≃ x₂)
-            randomwalk!(model.agents[1], model, r; polar)
-            @test all(model.agents[1].vel .≃ v₃)
-            @test all(model.agents[1].pos .≃ x₃)
-            randomwalk!(model.agents[1], model, r; polar)
-            @test all(model.agents[1].vel .≃ v₀)
-            @test all(model.agents[1].pos .≃ x₀)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₁)
+            @test all(model[1].pos .≃ x₁)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₂)
+            @test all(model[1].pos .≃ x₂)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₃)
+            @test all(model[1].pos .≃ x₃)
+            randomwalk!(model[1], model, r; polar)
+            @test all(model[1].vel .≃ v₀)
+            @test all(model[1].pos .≃ x₀)
 
             # verify boundary conditions are respected
             space1 = ContinuousSpace((2,2), periodic=true)
             space2 = ContinuousSpace((2,2), periodic=false)
-            model1 = ABM(RWAgent2D, space1)
-            model2 = ABM(RWAgent2D, space2)
+            model1 = ABM(ContinuousAgent{2}, space1)
+            model2 = ABM(ContinuousAgent{2}, space2)
             x₀ = (1.0, 1.0)
             v₀ = (1.0, 0.0)
             add_agent!(x₀, model1, v₀)
             add_agent!(x₀, model2, v₀)
             r = 1.1
             polar = [0.0] # no reorientation, move straight
-            randomwalk!(model1.agents[1], model1, r; polar)
-            randomwalk!(model2.agents[1], model2, r; polar)
-            @test model1.agents[1].pos[1] ≈ 0.1
-            @test model2.agents[1].pos[1] ≈ 2.0
+            randomwalk!(model1[1], model1, r; polar)
+            randomwalk!(model2[1], model2, r; polar)
+            @test model1[1].pos[1] ≈ 0.1
+            @test model2[1].pos[1] ≈ 2.0
+            @test norm(model1[1].vel) == 1.1
         end
 
         @testset "3D" begin
@@ -400,13 +400,13 @@ using LinearAlgebra: norm, dot
             v₀ = (1.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
             # should throw error if displacement is 0
-            @test_throws ArgumentError randomwalk!(model.agents[1], model, 0.0)
+            @test_throws ArgumentError randomwalk!(model[1], model, 0.0)
             r = 2.0
-            randomwalk!(model.agents[1], model, r)
+            randomwalk!(model[1], model, r)
             # distance between initial and new position
             # should be equal to Δr and independent of v₀
-            @test norm(model.agents[1].pos .- x₀) ≃ r
-            @test !(norm(model.agents[1].pos .- x₀) ≃ norm(v₀))
+            @test norm(model[1].pos .- x₀) ≃ r
+            @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10,10), periodic=true)
@@ -417,9 +417,9 @@ using LinearAlgebra: norm, dot
             θ = π/6
             polar = [θ]
             azimuthal = Arccos()
-            randomwalk!(model.agents[1], model, r; polar, azimuthal)
+            randomwalk!(model[1], model, r; polar, azimuthal)
             # for any φ, dot(v₁,v₀) = cos(θ)
-            v₁ = model.agents[1].vel
+            v₁ = model[1].vel
             @test dot(v₁, v₀) ≃ cos(θ)
 
             space = ContinuousSpace((10,10,10), periodic=true)
@@ -431,12 +431,21 @@ using LinearAlgebra: norm, dot
             φ = π/6
             polar = [θ]
             azimuthal = [φ]
-            randomwalk!(model.agents[1], model, r; polar, azimuthal)
-            v₁ = model.agents[1].vel
+            randomwalk!(model[1], model, r; polar, azimuthal)
+            v₁ = model[1].vel
             @test v₁[1] ≃ cos(θ)
             @test v₁[2] ≃ sin(θ)*sin(φ)
             @test v₁[3] ≃ -sin(θ)*cos(φ)
             @test dot(v₁, v₀) ≃ cos(θ)
+
+            # test that velocity measure changes
+            space = ContinuousSpace((10,10,10), periodic=true)
+            model = ABM(ContinuousAgent{3}, space)
+            v₀ = (1.0, 0.0, 0.0)
+            add_agent!(model, v₀)
+            randomwalk!(model[1], model, 2)
+            @test norm(model[1].vel) ≈ 2
+
         end
     end
 end

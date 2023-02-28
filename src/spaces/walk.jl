@@ -155,22 +155,35 @@ Anything that supports `rand` can be used as an angle distribution instead.
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
-    r::Real = LinearAlgebra.norm(agent.vel);
+    r::Real;
     polar=Uniform(-π,π),
 )
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
     θ = rand(abmrng(model), polar)
-    direction = Tuple(rotate(SVector(agent.vel), θ)) .* r
+    relative_r = r/LinearAlgebra.norm(agent.vel)
+    direction = Tuple(rotate(SVector(agent.vel), θ)) .* relative_r
+    agent.vel = direction
+    walk!(agent, direction, model)
+end
+# Code degeneracy here but makes much faster version without r
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{2}};
+    polar=Uniform(-π,π),
+)
+    θ = rand(abmrng(model), polar)
+    direction = Tuple(rotate(SVector(agent.vel), θ))
     agent.vel = direction
     walk!(agent, direction, model)
 end
 
+
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
-    r::Real = LinearAlgebra.norm(agent.vel);
+    r::Real;
     polar=Uniform(-π,π),
     azimuthal=Arccos(-1,1),
 )
@@ -179,7 +192,21 @@ function randomwalk!(
     end
     θ = rand(abmrng(model), polar)
     ϕ = rand(abmrng(model), azimuthal)
-    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* r
+    relative_r = r/LinearAlgebra.norm(agent.vel)
+    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* relative_r
+    agent.vel = direction
+    walk!(agent, direction, model)
+end
+
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{3}};
+    polar=Uniform(-π,π),
+    azimuthal=Arccos(-1,1),
+)
+    θ = rand(abmrng(model), polar)
+    ϕ = rand(abmrng(model), azimuthal)
+    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ))
     agent.vel = direction
     walk!(agent, direction, model)
 end
