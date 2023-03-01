@@ -48,7 +48,7 @@ The function does two things:
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
 function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r0 = float(floor(Int, r))
+    r0 = floor(Int, r)
     if haskey(space.offsets_within_radius, r0)
         βs = space.offsets_within_radius[r0]
     else
@@ -111,7 +111,7 @@ offsets_within_radius_no_0(model::ABM, r::Real) =
     offsets_within_radius_no_0(model.space, r::Real)
 function offsets_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r0 = float(floor(Int, r))
+    r0 = floor(Int, r)
     if haskey(space.offsets_within_radius_no_0, r0)
         βs = space.offsets_within_radius_no_0[r0]
     else
