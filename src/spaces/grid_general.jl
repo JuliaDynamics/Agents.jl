@@ -52,7 +52,7 @@ function offsets_within_radius(
         βs = space.offsets_within_radius[r]
     else
         βs = calculate_offsets(space, r)
-        space.offsets_within_radius[float(r)] = βs
+        space.offsets_within_radius[float(floor(Int, r))] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
@@ -85,17 +85,15 @@ end
 
 # Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
+    r0 = floor(Int, r)
     if space.metric == :euclidean
-        r0 = ceil(Int, r)
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         # select subset which is in Hypersphere
         βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
     elseif space.metric == :manhattan
-        r0 = floor(Int, r)
         hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r0]
     elseif space.metric == :chebyshev
-        r0 = floor(Int, r)
         βs = vec([Tuple(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
     else
         error("Unknown metric type")
@@ -118,7 +116,7 @@ function offsets_within_radius_no_0(
         βs = calculate_offsets(space, r)
         z = ntuple(i -> 0, Val{D}())
         filter!(x -> x ≠ z, βs)
-        space.offsets_within_radius_no_0[float(r)] = βs
+        space.offsets_within_radius_no_0[float(floor(Int,r))] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
