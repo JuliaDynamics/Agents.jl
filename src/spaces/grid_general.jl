@@ -85,17 +85,16 @@ function offsets_at_radius(
 end
 
 # Make grid space Abstract if indeed faster
-function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
-    r0 = floor(Int, r)
+function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     if space.metric == :euclidean
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
+        hypercube = CartesianIndices((repeat([-r:r], D)...,))
         # select subset which is in Hypersphere
         βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
     elseif space.metric == :manhattan
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r0]
+        hypercube = CartesianIndices((repeat([-r:r], D)...,))
+        βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r]
     elseif space.metric == :chebyshev
-        βs = vec([Tuple(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
+        βs = vec([Tuple(a) for a in Iterators.product([-r:r for φ in 1:D]...)])
     else
         error("Unknown metric type")
     end
