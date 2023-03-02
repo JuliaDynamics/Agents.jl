@@ -48,12 +48,12 @@ The function does two things:
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
 function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r0 = floor(Int, r)
-    if haskey(space.offsets_within_radius, r0)
-        βs = space.offsets_within_radius[r0]
+    r₀ = floor(Int, r)
+    if haskey(space.offsets_within_radius, r₀)
+        βs = space.offsets_within_radius[r₀]
     else
-        βs = calculate_offsets(space, r0)
-        space.offsets_within_radius[r0] = βs
+        βs = calculate_offsets(space, r₀)
+        space.offsets_within_radius[r₀] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
@@ -86,19 +86,18 @@ end
 
 # Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
+    hypercube = Iterators.product(repeat([-r:r], D)...)
     if space.metric == :euclidean
-        hypercube = CartesianIndices((repeat([-r:r], D)...,))
         # select subset which is in Hypersphere
-        βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
+        βs = [β for β ∈ hypercube if sum(β.^2) ≤ r^2]
     elseif space.metric == :manhattan
-        hypercube = CartesianIndices((repeat([-r:r], D)...,))
-        βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r]
+        βs = [β for β ∈ hypercube if sum(abs.(β)) ≤ r]
     elseif space.metric == :chebyshev
-        βs = vec([Tuple(a) for a in Iterators.product([-r:r for φ in 1:D]...)])
+        βs = vec([β for β ∈ hypercube])
     else
         error("Unknown metric type")
     end
-    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val{D}())) # ensure 0 is there
+    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
     return βs::Vector{NTuple{D, Int}}
 end
 
@@ -110,14 +109,14 @@ offsets_within_radius_no_0(model::ABM, r::Real) =
     offsets_within_radius_no_0(model.space, r::Real)
 function offsets_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r0 = floor(Int, r)
-    if haskey(space.offsets_within_radius_no_0, r0)
-        βs = space.offsets_within_radius_no_0[r0]
+    r₀ = floor(Int, r)
+    if haskey(space.offsets_within_radius_no_0, r₀)
+        βs = space.offsets_within_radius_no_0[r₀]
     else
-        βs = calculate_offsets(space, r0)
-        z = ntuple(i -> 0, Val{D}())
+        βs = calculate_offsets(space, r₀)
+        z = ntuple(i -> 0, Val(D))
         filter!(x -> x ≠ z, βs)
-        space.offsets_within_radius_no_0[r0] = βs
+        space.offsets_within_radius_no_0[r₀] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
