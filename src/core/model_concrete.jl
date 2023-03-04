@@ -14,7 +14,7 @@ struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,
 end
 
 const SCABM = SingleContainerABM
-const StandardABM{A,S} = SingleContainerABM{A,S,Dict{Int,A}}
+const StandardABM{A,S} = SingleContainerABM{A,S,OrderedDict{Int,A}}
 const UnkillableABM{A,S} = SingleContainerABM{A,S,Vector{A}}
 const FixedMassABM{A,S} = SingleContainerABM{A,S,SizedVector{A}}
 
@@ -40,7 +40,7 @@ single container. Offers the variants:
 function SingleContainerABM(
     ::Type{A},
     space::S = nothing;
-    container::Type = Dict{Int},
+    container::Type = OrderedDict{Int},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
@@ -56,7 +56,7 @@ function SingleContainerABM(agent::AbstractAgent, args...; kwargs...)
     return SingleContainerABM(typeof(agent), args...; kwargs...)
 end
 
-construct_agent_container(::Type{<:Dict}, A) = Dict{Int,A}
+construct_agent_container(::Type{<:OrderedDict}, A) = OrderedDict{Int,A}
 construct_agent_container(::Type{<:Vector}, A) = Vector{A}
 construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either Dict or Vector."
@@ -71,7 +71,7 @@ as well as the default version of the generic [`AgentBasedModel`](@ref) construc
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
 See also [`UnkillableABM`](@ref), [`FixedMassABM`](@ref).
 """
-StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
+StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=OrderedDict{Int})
 
 """
     UnkillableABM(AgentType [, space]; properties, kwargs...) → model
@@ -120,11 +120,11 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-nextid(model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A} = getfield(model, :maxid)[] + 1
+nextid(model::SingleContainerABM{<:SpaceType,A,OrderedDict{Int, A}}) where {A} = getfield(model, :maxid)[] + 1
 nextid(model::SingleContainerABM{<:SpaceType,A,Vector{A}}) where {A} = nagents(model) + 1
 nextid(::SingleContainerABM{<:SpaceType,A,<:SizedVector}) where {A} = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
-function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,OrderedDict{Int, A}}) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -224,7 +224,7 @@ end
 # %% Pretty printing
 #######################################################################################
 modelname(abm::ABM) = modelname(agent_container(abm))
-modelname(::Dict) = "StandardABM"
+modelname(::OrderedDict) = "StandardABM"
 modelname(::Vector) = "UnkillableABM"
 modelname(::SizedVector) = "FixedMassABM"
 
@@ -250,3 +250,4 @@ end
 
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
+
