@@ -493,7 +493,7 @@ end
 
 struct PairIterator{A}
     pairs::Vector{Tuple{Int,Int}}
-    agents::Dict{Int,A}
+    agents::OrderedDict{Int,A}
 end
 
 Base.eltype(::PairIterator{A}) where {A} = Tuple{A, A}
