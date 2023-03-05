@@ -1,53 +1,42 @@
 using BenchmarkTools, Agents
 
-const SCHED_SUITE = BenchmarkGroup(["Schedulers"])
+const SUITE = BenchmarkGroup(["Schedulers"])
 
 mutable struct FakeAgent <: AbstractAgent
     id::Int
     group::Int
+    incr::Int
 end
 
 mutable struct OtherFakeAgent <: AbstractAgent
     id::Int
+    group::Int
+    incr::Int
 end
 
-function fake_model(; nagents = 500, scheduler)
+function fake_model(; nagents, scheduler)
     model = ABM(FakeAgent; scheduler)
     for i in 1:nagents
-        add_agent!(model, i % 2)
+        add_agent!(model, i % 2, 0)
     end
     model
 end
 
-function fake_model_multi(; nagents = 500, scheduler)
+function fake_model_multi(; nagents, scheduler)
     model = ABM(Union{FakeAgent,OtherFakeAgent}; scheduler, warn = false)
     for i in 1:nagents
         if i % 2 == 0
-            add_agent!(FakeAgent(i, 1), model)
+            add_agent!(FakeAgent(i, 0, 0), model)
         else
-            add_agent!(OtherFakeAgent(i), model)
+            add_agent!(OtherFakeAgent(i, 1, 0), model)
         end
     end
     model
 end
 
-for (model, name) in [
-    (fake_model(; scheduler = Schedulers.fastest), "fastest"),
-    (fake_model(; scheduler = Schedulers.by_id), "by_id"),
-    (fake_model(; scheduler = Schedulers.ByID()), "ByID"),
-    (fake_model(; scheduler = Schedulers.randomly), "randomly"),
-    (fake_model(; scheduler = Schedulers.Randomly()), "Randomly"),
-    (fake_model(; scheduler = Schedulers.by_property(:group)), "by_property"),
-    (fake_model(; scheduler = Schedulers.ByProperty(:group)), "ByProperty"),
-    (fake_model(; scheduler = Schedulers.partially(0.7)), "partially"),
-    (fake_model(; scheduler = Schedulers.Partially(0.7)), "Partially"),
-    (fake_model_multi(; scheduler = Schedulers.by_type(true, true)), "by_type"),
-    (fake_model_multi(; scheduler = Schedulers.ByType(true, true, Union{FakeAgent,OtherFakeAgent})), "ByType")
-]
-    SUITE[name] = @benchmarkable Agents.schedule($model)
-end
+agent_step(agent, model) = agent.incr += 1
 
-SUITE["large_model"] = BenchmarkGroup(["by_id", "ByID", "randomly", "Randomly"])
+SUITE["large_model"] = BenchmarkGroup()
 
 for (model, name) in [
     (fake_model(; nagents = 800000, scheduler = Schedulers.fastest), "fastest"),
@@ -62,10 +51,28 @@ for (model, name) in [
     (fake_model_multi(; nagents = 800000, scheduler = Schedulers.by_type(true, true)), "by_type"),
     (fake_model_multi(; nagents = 800000, scheduler = Schedulers.ByType(true, true, Union{FakeAgent,OtherFakeAgent})), "ByType")
 ]
-    SUITE["large_model"][name] = @benchmarkable Agents.schedule($model)
+    SUITE["large_model"][name] = @benchmarkable step!($model, agent_step, dummystep)
 end
 
-SUITE["small_model"] = BenchmarkGroup(["by_id", "ByID", "randomly", "Randomly"])
+SUITE["medium_model"] = BenchmarkGroup()
+
+for (model, name) in [
+    (fake_model(; nagents = 2000, scheduler = Schedulers.fastest), "fastest"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.by_id), "by_id"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.ByID()), "ByID"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.randomly), "randomly"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.Randomly()), "Randomly"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.by_property(:group)), "by_property"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.ByProperty(:group)), "ByProperty"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.partially(0.7)), "partially"),
+    (fake_model(; nagents = 2000, scheduler = Schedulers.Partially(0.7)), "Partially"),
+    (fake_model_multi(; nagents = 2000, scheduler = Schedulers.by_type(true, true)), "by_type"),
+    (fake_model_multi(; nagents = 2000, scheduler = Schedulers.ByType(true, true, Union{FakeAgent,OtherFakeAgent})), "ByType")
+]
+    SUITE["medium_model"][name] = @benchmarkable step!($model, agent_step, dummystep)
+end
+
+SUITE["small_model"] = BenchmarkGroup()
 
 for (model, name) in [
     (fake_model(; nagents = 50, scheduler = Schedulers.fastest), "fastest"),
@@ -80,5 +87,7 @@ for (model, name) in [
     (fake_model_multi(; nagents = 50, scheduler = Schedulers.by_type(true, true)), "by_type"),
     (fake_model_multi(; nagents = 50, scheduler = Schedulers.ByType(true, true, Union{FakeAgent,OtherFakeAgent})), "ByType")
 ]
-    SUITE["small_model"][name] = @benchmarkable Agents.schedule($model)
+    SUITE["small_model"][name] = @benchmarkable step!($model, agent_step, dummystep)
 end
+
+results = run(SUITE, verbose = true, seconds = 5)
