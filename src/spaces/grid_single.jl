@@ -39,8 +39,9 @@ end
 function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     pos = a.pos
     !isempty(pos, model) && error("Attempt to add Agent $(a.id) to an occupied position")
-    model.space.stored_ids[pos...] = a.id  
+    model.space.stored_ids[pos...] = a.id
     return a
+end
 
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     model.space.stored_ids[a.pos...] = 0
