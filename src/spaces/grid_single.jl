@@ -38,7 +38,7 @@ end
 # Implementation of space API
 function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     pos = a.pos
-    !isempty(pos, model) && error("Attempted to add agent $(a) to occupied position $(pos)")
+    !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
     model.space.stored_ids[pos...] = a.id
     return a
 end
