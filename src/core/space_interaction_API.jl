@@ -22,6 +22,7 @@ export move_agent!,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
+    random_nearby_position,
     plan_route!,
     plan_best_route!,
     move_along_route!,
@@ -361,7 +362,7 @@ end
 """
     random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
 
-Return the a random agent near the position of the given `agent`. Return `nothing` if no agent
+Return a random agent near the position of the given `agent`. Return `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -370,4 +371,16 @@ function random_nearby_agent(a, model, r = 1; kwargs...)
     id = random_nearby_id(a, model, r; kwargs...)
     isnothing(id) && return
     return model[id]
+end
+
+"""
+    random_nearby_position(position, model::ABM) → agent
+
+Return a random position near the given `position`.
+
+A nearby position is a position within a "radius" of `r=1` from `position`.
+
+"""
+function random_nearby_position(pos, model)
+    return rand(abmrng(model), collect(nearby_positions(pos, model)))
 end
