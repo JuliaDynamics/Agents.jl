@@ -12,8 +12,8 @@ struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Int,D}
     metric::Symbol
     offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
-    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Int,Vector{NTuple{D,Int}}}
+    offsets_within_radius_no_0::Dict{Int,Vector{NTuple{D,Int}}}
 end
 
 """
@@ -31,8 +31,8 @@ function GridSpaceSingle(d::NTuple{D,Int}; periodic = true, metric = :chebyshev)
     s = zeros(Int, d)
     return GridSpaceSingle{D,periodic}(s, metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
+        Dict{Int,Vector{NTuple{D,Int}}}(),
+        Dict{Int,Vector{NTuple{D,Int}}}(),
     )
 end
 # Implementation of space API

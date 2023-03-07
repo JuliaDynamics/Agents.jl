@@ -48,11 +48,12 @@ The function does two things:
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
 function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.offsets_within_radius, r)
-        βs = space.offsets_within_radius[r]
+    r₀ = floor(Int, r)
+    if haskey(space.offsets_within_radius, r₀)
+        βs = space.offsets_within_radius[r₀]
     else
-        βs = calculate_offsets(space, r)
-        space.offsets_within_radius[float(r)] = βs
+        βs = calculate_offsets(space, r₀)
+        space.offsets_within_radius[r₀] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
@@ -84,23 +85,19 @@ function offsets_at_radius(
 end
 
 # Make grid space Abstract if indeed faster
-function calculate_offsets(space::AbstractGridSpace{D}, r::Real) where {D}
+function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
+    hypercube = Iterators.product(repeat([-r:r], D)...)
     if space.metric == :euclidean
-        r0 = ceil(Int, r)
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
         # select subset which is in Hypersphere
-        βs = [Tuple(β) for β ∈ hypercube if LinearAlgebra.norm(β.I) ≤ r]
+        βs = [β for β ∈ hypercube if sum(β.^2) ≤ r^2]
     elseif space.metric == :manhattan
-        r0 = floor(Int, r)
-        hypercube = CartesianIndices((repeat([(-r0):r0], D)...,))
-        βs = [Tuple(β) for β ∈ hypercube if sum(abs.(β.I)) ≤ r0]
+        βs = [β for β ∈ hypercube if sum(abs.(β)) ≤ r]
     elseif space.metric == :chebyshev
-        r0 = floor(Int, r)
-        βs = vec([Tuple(a) for a in Iterators.product([(-r0):r0 for φ in 1:D]...)])
+        βs = vec([β for β ∈ hypercube])
     else
         error("Unknown metric type")
     end
-    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val{D}())) # ensure 0 is there
+    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
     return βs::Vector{NTuple{D, Int}}
 end
 
@@ -112,13 +109,14 @@ offsets_within_radius_no_0(model::ABM, r::Real) =
     offsets_within_radius_no_0(model.space, r::Real)
 function offsets_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    if haskey(space.offsets_within_radius_no_0, r)
-        βs = space.offsets_within_radius_no_0[r]
+    r₀ = floor(Int, r)
+    if haskey(space.offsets_within_radius_no_0, r₀)
+        βs = space.offsets_within_radius_no_0[r₀]
     else
-        βs = calculate_offsets(space, r)
-        z = ntuple(i -> 0, Val{D}())
+        βs = calculate_offsets(space, r₀)
+        z = ntuple(i -> 0, Val(D))
         filter!(x -> x ≠ z, βs)
-        space.offsets_within_radius_no_0[float(r)] = βs
+        space.offsets_within_radius_no_0[r₀] = βs
     end
     return βs::Vector{NTuple{D, Int}}
 end
