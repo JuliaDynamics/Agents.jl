@@ -37,9 +37,12 @@ function GridSpaceSingle(d::NTuple{D,Int}; periodic = true, metric = :chebyshev)
 end
 # Implementation of space API
 function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
-    model.space.stored_ids[a.pos...] = a.id
+    pos = a.pos
+    !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
+    model.space.stored_ids[pos...] = a.id
     return a
 end
+
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     model.space.stored_ids[a.pos...] = 0
     return a
