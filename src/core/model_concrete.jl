@@ -1,4 +1,4 @@
-export ABM, StandardABM, UnkillableABM, FixedMassABM
+export ABM, StandardABM, UnremovableABM, FixedMassABM
 using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
@@ -15,7 +15,7 @@ end
 
 const SCABM = SingleContainerABM
 const StandardABM{A,S} = SingleContainerABM{A,S,Dict{Int,A}}
-const UnkillableABM{A,S} = SingleContainerABM{A,S,Vector{A}}
+const UnremovableABM{A,S} = SingleContainerABM{A,S,Vector{A}}
 const FixedMassABM{A,S} = SingleContainerABM{A,S,SizedVector{A}}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
@@ -34,7 +34,7 @@ A concrete version of [`AgentBasedModel`](@ref) that stores all agents in a
 single container. Offers the variants:
 
 - [`StandardABM`](@ref)
-- [`UnkillableABM`](@ref)
+- [`UnremovableABM`](@ref)
 - [`FixedMassABM`](@ref)
 """
 function SingleContainerABM(
@@ -69,12 +69,12 @@ construct_agent_container(container, A) = throw(
 The most standard concrete implementation of an [`AgentBasedModel`](@ref),
 as well as the default version of the generic [`AgentBasedModel`](@ref) constructor.
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
-See also [`UnkillableABM`](@ref), [`FixedMassABM`](@ref).
+See also [`UnremovableABM`](@ref), [`FixedMassABM`](@ref).
 """
 StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
 
 """
-    UnkillableABM(AgentType [, space]; properties, kwargs...) → model
+    UnremovableABM(AgentType [, space]; properties, kwargs...) → model
 
 Similar to [`StandardABM`](@ref), but agents cannot be removed, only added.
 This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
@@ -84,16 +84,16 @@ It is mandatory that the agent ID is exactly the same as the agent insertion
 order (i.e., the 5th agent added to the model must have ID 5). If not,
 an error will be thrown by [`add_agent!`](@ref).
 """
-UnkillableABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Vector)
+UnremovableABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Vector)
 
 """
     FixedMassABM(agent_vector [, space]; properties, kwargs...) → model
 
-Similar to [`UnkillableABM`](@ref), but agents cannot be removed nor added.
+Similar to [`UnremovableABM`](@ref), but agents cannot be removed nor added.
 Hence, all agents in the model must be provided in advance as a vector.
 This allows storing agents into a `SizedVector`, a special vector with statically typed
 size which is the same as the size of the input `agent_vector`.
-This version of agent based model offers better performance than [`UnkillableABM`](@ref)
+This version of agent based model offers better performance than [`UnremovableABM`](@ref)
 if the number of agents is important and used often in the simulation.
 
 It is mandatory that the agent ID is exactly the same as its position
@@ -225,7 +225,7 @@ end
 #######################################################################################
 modelname(abm::ABM) = modelname(agent_container(abm))
 modelname(::Dict) = "StandardABM"
-modelname(::Vector) = "UnkillableABM"
+modelname(::Vector) = "UnremovableABM"
 modelname(::SizedVector) = "FixedMassABM"
 
 function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}

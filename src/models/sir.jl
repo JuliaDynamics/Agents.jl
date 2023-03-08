@@ -137,7 +137,7 @@ sir_update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 function sir_recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
         if rand(model.rng) ≤ model.death_rate
-            kill_agent!(agent, model)
+            remove_agent!(agent, model)
         else
             agent.status = :R
             agent.days_infected = 0

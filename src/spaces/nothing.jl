@@ -1,7 +1,7 @@
 #=
 This file implements the "agent-space interaction API" for `nothing`, ie
 no space type. In contrast to all other extensions, here we have to extend
-the `kill_agent!` and `add_agent!` functions directly,
+the `remove_agent!` and `add_agent!` functions directly,
 otherwise they will try to add `nothing` to the agent position.
 =#
 

@@ -13,7 +13,7 @@ using StableRNGs
         end
     end
 
-    @testset "add/move/kill" begin
+    @testset "add/move/remove" begin
         space = SpaceType((3, 3))
         model = ABM(GridAgent{2}, space; rng = StableRNG(42))
         pos0 = (2,2)
@@ -26,13 +26,13 @@ using StableRNGs
         move_agent!(agent, model)
         @test agent.pos != (3,3)
         move_agent!(agent, (2,2), model)
-        kill_agent!(agent, model)
+        remove_agent!(agent, model)
         @test id0 ∉ allids(model)
         # Test move single
         fill_space!(model)
         agent = model[2]
         posx = agent.pos
-        kill_agent!(agent, model)
+        remove_agent!(agent, model)
         # now the only position that is left unoccupied is `posx`
         agent = model[3]
         move_agent_single!(agent, model)
@@ -135,7 +135,7 @@ using StableRNGs
                     end
                 end
 
-                genocide!(model)
+                remove_all!(model)
                 add_agent!((1, 1), model)
                 a = add_agent!((2, 1), model)
                 add_agent!((3, 2), model) # this is neighbor only in chebyshev
@@ -182,7 +182,7 @@ using StableRNGs
         nearby_agent = random_nearby_agent(abm[1], abm, 5)
         @test nearby_agent.id in valid_ids
 
-        genocide!(abm)
+        remove_all!(abm)
         a = add_agent!((1, 1), abm)
         @test isnothing(random_nearby_id(a, abm))
         @test isnothing(random_nearby_agent(a, abm))

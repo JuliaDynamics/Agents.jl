@@ -107,7 +107,7 @@ end
 # Contrary to `GridSpace`, we also extend here `nearby_ids(a::Agent)`.
 # Because, we know that one agent exists per position, and hence we can skip the
 # call to `filter(id -> id ≠ a.id, ...)` that happens in core/space_interaction_API.jl.
-# Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
+# Here we implement a new version for neighborhoods, similar to abusive_unremovable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
     a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}

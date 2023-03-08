@@ -2,7 +2,7 @@ using Agents, Test
 
 @testset "Model Access" begin
 @testset "Accessing model" begin
-    @testset "ModelType=$(ModelType)" for ModelType in (ABM, StandardABM, UnkillableABM)
+    @testset "ModelType=$(ModelType)" for ModelType in (ABM, StandardABM, UnremovableABM)
     model = ModelType(NoSpaceAgent; properties = Dict(:a => 2, :b => "test"))
     for i in 1:5
         add_agent!(model)

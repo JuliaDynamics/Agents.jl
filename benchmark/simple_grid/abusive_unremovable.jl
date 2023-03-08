@@ -4,19 +4,19 @@
 # hence using 0 as and ID to represent this, and also abuse that agents don't
 # die in this simulation.
 # Based on https://github.com/JuliaDynamics/Agents.jl/issues/640#issuecomment-1166330815
-mutable struct AbusiveUnkillableAgent
+mutable struct AbusiveUnremovableAgent
     pos::Tuple{Int,Int}
     group::Int
     happy::Bool
 end
 
-struct AbusiveUnkillableModel
-    agents::Vector{AbusiveUnkillableAgent}
+struct AbusiveUnremovableModel
+    agents::Vector{AbusiveUnremovableAgent}
     space::Matrix{Int}
 end
 
-function initialize_abusiveunkillable()
-    model = AbusiveUnkillableModel(AbusiveUnkillableAgent[], fill(0, grid_size...))
+function initialize_abusiveunremovable()
+    model = AbusiveUnremovableModel(AbusiveUnremovableAgent[], fill(0, grid_size...))
     N = floor(Int, grid_size[1] * grid_size[2] * grid_occupation * 0.5)
 
     for i in 1:2N
@@ -26,17 +26,17 @@ function initialize_abusiveunkillable()
             pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
         end
 
-        push!(model.agents, AbusiveUnkillableAgent(pos, grp, false))
+        push!(model.agents, AbusiveUnremovableAgent(pos, grp, false))
         model.space[pos...] = length(model.agents)
     end
 
     return model
 end
 
-function simulate_abusiveunkillable!(model)
+function simulate_abusiveunremovable!(model)
     for i in eachindex(model.agents)
         agent = model.agents[i]
-        same_count = count_nearby_same_abusiveunkillable(agent, model)
+        same_count = count_nearby_same_abusiveunremovable(agent, model)
         if same_count >= min_to_be_happy
             agent.happy = true
         else
@@ -52,7 +52,7 @@ function simulate_abusiveunkillable!(model)
     end
 end
 
-function count_nearby_same_abusiveunkillable(agent, model)
+function count_nearby_same_abusiveunremovable(agent, model)
     same_count = 0
     for offset in moore
         new_pos = agent.pos .+ offset
@@ -65,9 +65,9 @@ function count_nearby_same_abusiveunkillable(agent, model)
     return same_count
 end
 
-model_abusiveunkillable = initialize_abusiveunkillable()
-println("Benchmarking abusive unkillable version")
-@btime simulate_abusiveunkillable!($model_abusiveunkillable) setup = (model_abusiveunkillable = initialize_abusiveunkillable())
-println("Benchmarking abusive unkillable version: count nearby same")
-model_abusiveunkillable = initialize_abusiveunkillable()
-@btime count_nearby_same_abusiveunkillable(agent, model_abusiveunkillable) setup = (agent = rand(model_abusiveunkillable.agents))
+model_abusiveunremovable = initialize_abusiveunremovable()
+println("Benchmarking abusive unremovable version")
+@btime simulate_abusiveunremovable!($model_abusiveunremovable) setup = (model_abusiveunremovable = initialize_abusiveunremovable())
+println("Benchmarking abusive unremovable version: count nearby same")
+model_abusiveunremovable = initialize_abusiveunremovable()
+@btime count_nearby_same_abusiveunremovable(agent, model_abusiveunremovable) setup = (agent = rand(model_abusiveunremovable.agents))

@@ -234,7 +234,7 @@ SUITE["continuous"]["neighbors"]["nearest"] =
 # Benchmark takes too long to be reasonable, even with a small sample.
 # This needs to be looked at in the future, but it's being ignored for the moment
 # (until ContinuousSpace is implemented)
-#genocide!(continuous_model, 50)
+#remove_all!(continuous_model, 50)
 #SUITE["continuous"]["neighbors"]["interacting"] =
 #@benchmarkable interacting_pairs($continuous_model, 3, :all) samples=5 seconds=60
 
