@@ -37,6 +37,9 @@ using StableRNGs
         agent = model[3]
         move_agent_single!(agent, model)
         @test agent.pos == posx
+        if SpaceType == GridSpaceSingle
+            @test_throws ErrorException add_agent!(posx, model)
+        end
     end
 
     @testset "positions + empty" begin
