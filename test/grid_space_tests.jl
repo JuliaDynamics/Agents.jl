@@ -63,8 +63,9 @@ using StableRNGs
         random_positions = positions(model, :random)
         @test all(n ∈ pos_map for n in random_positions)
 
-        # Also test ids_in_position stuff for GridSpace
+        # Also test ids_in_position and agents_in_position for GridSpace
         if SpaceType == GridSpace
+            #ids_in_position
             pos1 = ids_in_position((1, 3), model)
             @test isempty(pos1)
             pos2 = ids_in_position((1, 1), model)
@@ -75,6 +76,18 @@ using StableRNGs
                 [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
             @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
             @test_throws ErrorException positions(model, :notreal)
+
+            #agents_in_position
+            agent1 = model[1]
+            #test for 1 agent in the position
+            @test agents_in_position(agent1, model)[1] == agent1
+            @test agents_in_position(agent1.pos, model)[1] == agent1
+            #test for 2 agents in the position
+            agent2 = add_agent!(agent1.pos, model)
+            @test agents_in_position(agent1, model)[2] == agent2
+            @test agents_in_position(agent1.pos, model)[2] == agent2
+            #test for no agents in the position
+            @test agents_in_position((1, 3), model) == nothing
         end
     end
 
