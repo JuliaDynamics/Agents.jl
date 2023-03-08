@@ -378,10 +378,7 @@ end
 
 Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
 
-The function uses the same Reservoir Sampling algorithm as [`random_nearby_id`](@ref). 
-
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
-
 """
 function random_nearby_position(pos, model, r=1; kwargs...)
     # Uses the same Reservoir Sampling algorithm than nearby_ids
