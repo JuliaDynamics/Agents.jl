@@ -37,6 +37,9 @@ using StableRNGs
         agent = model[3]
         move_agent_single!(agent, model)
         @test agent.pos == posx
+        if SpaceType == GridSpaceSingle
+            @test_throws ErrorException add_agent!(posx, model)
+        end
     end
 
     @testset "positions + empty" begin
@@ -163,9 +166,9 @@ using StableRNGs
             for m in models; fill_space!(m); end
             near_pos = [collect(nearby_positions((5,5), m, 3.4)) for m in models]
             near_ids = [collect(nearby_ids((5,5), m, 3.4)) for m in models] # this is 1 more
-            @test length(near_pos[1]) == length(near_pos[2]) + 12
+            @test length(near_pos[1]) == length(near_pos[2]) + 4
             @test length(near_pos[3]) == 7^2 - 1
-            @test length(near_ids[1]) == length(near_ids[2]) + 12
+            @test length(near_ids[1]) == length(near_ids[2]) + 4
             @test length(near_ids[1]) == length(near_pos[1]) + 1
             @test length(near_ids[3]) == 7^2
         end
