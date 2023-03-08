@@ -37,8 +37,9 @@ end
 
 #Used in sample!
 function add_newids!(model, org_ids, newids)
-    n = nextid(model)
+    # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
     count_newids = counter(newids)
+    n = nextid(model)
     for id in org_ids
         noccurances = count_newids[id]
         agent = model[id]
