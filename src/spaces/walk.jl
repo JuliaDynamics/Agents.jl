@@ -137,7 +137,7 @@ function randomwalk!(
 end
 
 """
-    randomwalk!(agent, model::ABM{<:ContinuousSpace}, r = 1;
+    randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r];
         polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
     )
 
@@ -155,7 +155,7 @@ Anything that supports `rand` can be used as an angle distribution instead.
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
-    r = 1;
+    r::Real;
     polar=Uniform(-π,π),
 )
     if r ≤ 0
@@ -183,7 +183,7 @@ end
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
-    r = 1;
+    r::Real;
     polar=Uniform(-π,π),
     azimuthal=Arccos(-1,1),
 )
