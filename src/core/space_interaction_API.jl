@@ -374,13 +374,39 @@ function random_nearby_agent(a, model, r = 1; kwargs...)
 end
 
 """
-    random_nearby_position(position, model::ABM) → agent
+    random_nearby_position(position, model::ABM, r=1; kwargs...) → position
 
-Return a random position near the given `position`.
+Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
 
-A nearby position is a position within a "radius" of `r=1` from `position`.
+The function uses the same Reservoir Sampling algorithm as [`random_nearby_id`](@ref). 
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
 """
-function random_nearby_position(pos, model)
-    return rand(abmrng(model), collect(nearby_positions(pos, model)))
+function random_nearby_position(pos, model, r=1; kwargs...)
+    # Uses the same Reservoir Sampling algorithm than nearby_ids
+    iter = nearby_positions(pos, model, r; kwargs...)
+
+    res = iterate(iter)
+    isnothing(res) && return    # `iterate` returns `nothing` when it ends
+
+    choice, state = res         # random position to return, and the state of the iterator
+    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
+
+    skip_counter = 0            # skip entries in the iterator
+    while !isnothing(state) && !isnothing(iter)
+        if skip_counter == 0
+            choice, state = res
+            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
+            w *= max(rand(model.rng), eps())
+        else
+            _, state = res
+            skip_counter -= 1
+        end
+
+        res = iterate(iter, state)
+        isnothing(res) && break
+    end
+
+    return choice
 end
