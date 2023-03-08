@@ -41,7 +41,7 @@ function add_newids!(model, org_ids, newids)
     count_newids = counter(newids)
     for id in org_ids
         noccurances = count_newids[id]
-        agent = model.agents[id]
+        agent = model[id]
         if noccurances == 0
             kill_agent!(agent, model)
         else
