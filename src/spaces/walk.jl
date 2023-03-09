@@ -80,7 +80,7 @@ end
 
 
 """
-    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r; kwargs...)
+    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; kwargs...)
 
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
 and space metric.
@@ -99,7 +99,7 @@ will move to any of the 4 surrounding cells
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:AbstractGridSpace},
-    r::Real;
+    r::Real = 1;
     kwargs...
 )
     if abmspace(model).metric == :euclidean
@@ -115,7 +115,7 @@ end
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:GridSpaceSingle},
-    r::Real;
+    r::Real = 1;
     kwargs...
 )
     if abmspace(model).metric == :euclidean
