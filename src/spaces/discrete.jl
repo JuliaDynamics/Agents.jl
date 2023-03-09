@@ -11,7 +11,7 @@ agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, npositions, ids_in_position, agents_in_position,
-       empty_positions, random_empty, has_empty_positions
+       empty_positions, random_empty, has_empty_positions, empty_nearby_positions
 
 
 positions(model::ABM) = positions(model.space)
@@ -116,6 +116,21 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         return rand(model.rng, collect(empty))
     end
 end
+
+"""
+    empty_nearby_positions(position, model::ABM{<:DiscreteSpace}, r = 1; kwargs)
+    empty_nearby_positions(agent, model::ABM{<:DiscreteSpace}, r = 1; kwargs)
+
+Return an iterable of all empty positions within "radius" `r` of the given `position` or `agent`.
+
+The value of r and possible keywords operate identically to `nearby_positions`.
+
+This function only exists for discrete spaces with a finite amount of positions.
+"""
+empty_nearby_positions(agent::A, model, r = 1) where {A<:AbstractAgent} = 
+    empty_nearby_positions(agent.pos, model, r)
+empty_nearby_positions(pos, model, r = 1) = filter(x -> isempty(x, model), collect(nearby_positions(pos, model, r)))
+
 
 #######################################################################################
 # Discrete space extra agent adding stuff
