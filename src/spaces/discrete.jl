@@ -132,7 +132,7 @@ function empty_nearby_positions(agent::A, model, r = 1) where {A<:AbstractAgent}
     return empty_nearby_positions(agent.pos, model, r)
 end
 function empty_nearby_positions(pos, model, r = 1)
-    return Iterators.filter(x -> isempty(x, model), nearby_positions(pos, model, r))
+    return Iterators.filter(Base.Fix2(isempty, model), nearby_positions(pos, model, r))
 end
 
 
