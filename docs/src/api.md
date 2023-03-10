@@ -6,7 +6,7 @@ In this page we list the remaining API functions, which constitute the bulk of A
 ## [Concrete ABM implementations](@id ABM_Implementations)
 ```@docs
 StandardABM
-UnkillableABM
+UnremovableABM
 FixedMassABM
 ```
 
@@ -73,8 +73,8 @@ is_stationary
 
 ## Removing agents
 ```@docs
-kill_agent!
-genocide!
+remove_agent!
+remove_all!
 sample!
 ```
 
@@ -160,11 +160,11 @@ add_agent!((1, 1, 1, 1), model)
 add_agent!((1, 1, 1, 1), model)
 add_agent!((2, 1, 1, 1), model)
 for id in ids_in_position((1, 1, 1, 1), model)
-    kill_agent!(id, model)
+    remove_agent!(id, model)
 end
 collect(allids(model))
 ```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
+You will notice that only 1 agent was removed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
 To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.

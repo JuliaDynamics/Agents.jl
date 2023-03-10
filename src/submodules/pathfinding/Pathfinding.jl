@@ -46,5 +46,6 @@ export CostMetric,
 # Deprecations
 @deprecate set_target! plan_route!
 @deprecate set_best_target! plan_best_route!
+@deprecate kill_agent! remove_agent!
 
 end # module
