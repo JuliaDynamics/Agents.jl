@@ -362,7 +362,7 @@ end
 """
     random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
 
-Return a random agent near the position of the given `agent`. Return `nothing` if no agent
+Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -388,7 +388,7 @@ function random_nearby_position(pos, model, r=1; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
 
     res = iterate(iter)
-    isnothing(res) && return    # `iterate` returns `nothing` when it ends
+    isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
 
     choice, state = res         # random position to return, and the state of the iterator
     w = max(rand(model.rng), eps())  # rand returns in range [0,1)
