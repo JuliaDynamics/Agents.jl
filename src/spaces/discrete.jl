@@ -127,9 +127,13 @@ The value of r and possible keywords operate identically to `nearby_positions`.
 
 This function only exists for discrete spaces with a finite amount of positions.
 """
-empty_nearby_positions(agent::A, model, r = 1) where {A<:AbstractAgent} = 
-    empty_nearby_positions(agent.pos, model, r)
-empty_nearby_positions(pos, model, r = 1) = filter(x -> isempty(x, model), collect(nearby_positions(pos, model, r)))
+
+function empty_nearby_positions(agent::A, model, r = 1) where {A<:AbstractAgent}
+    return empty_nearby_positions(agent.pos, model, r)
+end
+function empty_nearby_positions(pos, model, r = 1)
+    return Iterators.filter(x -> isempty(x, model), nearby_positions(pos, model, r))
+end
 
 
 #######################################################################################
