@@ -57,16 +57,14 @@ ids_in_position(agent::A, model) where {A<:AbstractAgent} =
     ids_in_position(agent.pos, model)
 
 """
-    agents_in_position(position, model::ABM{<:DiscreteSpace}) → Vector{agent}
-    agents_in_position(agent, model::ABM{<:DiscreteSpace}) → Vector{agent}
+    agents_in_position(position, model::ABM{<:DiscreteSpace})
+    agents_in_position(agent, model::ABM{<:DiscreteSpace})
 
-Return a `Vector` of `agent`s that are in `position`, or in the position of `agent`.
-
-If there are no agents it returns `nothing`.
+Return an iterable of the agents in `position``, or in the position of `agent`.
 """
 agents_in_position(agent::A, model) where {A<:AbstractAgent} =
     agents_in_position(agent.pos, model)
-agents_in_position(pos, model) = isempty(ids_in_position(pos, model)) ? nothing : [model[id] for id in ids_in_position(pos, model)]
+agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
 
 """
     empty_positions(model)

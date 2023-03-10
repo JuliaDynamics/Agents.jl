@@ -80,14 +80,18 @@ using StableRNGs
             #agents_in_position
             agent1 = model[1]
             #test for 1 agent in the position
-            @test agents_in_position(agent1, model)[1] == agent1
-            @test agents_in_position(agent1.pos, model)[1] == agent1
+            @test length(agents_in_position(agent1, model)) == 1
+            @test collect(agents_in_position(agent1, model))[1] == agent1
+            @test length(agents_in_position(agent1.pos, model)) == 1
+            @test collect(agents_in_position(agent1.pos, model))[1] == agent1
             #test for 2 agents in the position
             agent2 = add_agent!(agent1.pos, model)
-            @test agents_in_position(agent1, model)[2] == agent2
-            @test agents_in_position(agent1.pos, model)[2] == agent2
+            @test length(agents_in_position(agent1, model)) == 2
+            @test collect(agents_in_position(agent1, model))[2] == agent2
+            @test length(agents_in_position(agent1.pos, model)) == 2
+            @test collect(agents_in_position(agent1.pos, model))[2] == agent2
             #test for no agents in the position
-            @test agents_in_position((1, 3), model) == nothing
+            @test length(agents_in_position((1, 3), model)) == 0
         end
     end
 
