@@ -61,12 +61,12 @@ using StableRNGs
         @test collect(positions(model)) == pos_map
 
         random_positions = positions(model, :random)
-        @test all(n ∈ pos_map for n in random_positions)
+        @test all(n in pos_map for n in random_positions)
 
         #test empty_nearby_positions
         empty_near_positions =  empty_nearby_positions(model[5], model)
-        @test all(n ∈ nearby_positions(model[5], model) for n in empty_near_positions)
-        @test all(n ∈ [(1, 3), (2, 3)] for n in empty_near_positions)
+        @test all(n in nearby_positions(model[5], model) for n in empty_near_positions)
+        @test all(n in [(1, 3), (2, 3)] for n in empty_near_positions)
 
         # Also test ids_in_position stuff for GridSpace
         if SpaceType == GridSpace
