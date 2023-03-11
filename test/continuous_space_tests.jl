@@ -20,7 +20,7 @@ using LinearAlgebra: norm, dot
         model2 = ABM(SpeedyContinuousAgent, space2)
     end
 
-    @testset "add/kill/move agent" begin
+    @testset "add/remove/move agent" begin
         space1 = ContinuousSpace((1, 1))
         model = ABM(SpeedyContinuousAgent, space1; rng = StableRNG(42))
         @test nagents(model) == 0
@@ -45,8 +45,8 @@ using LinearAlgebra: norm, dot
         @test agent.pos ≠ pos0
         # move at position OUTSIDE extend. Must lead to invalid position
         @test_throws ErrorException move_agent!(agent, (1.5, 1.5), model)
-        # kill
-        kill_agent!(agent, model)
+        # remove
+        remove_agent!(agent, model)
         @test nagents(model) == 0
     end
 
@@ -60,7 +60,7 @@ using LinearAlgebra: norm, dot
         # With this space size, the internal grid space which has size (10,10)
         # Hence, the "cell centers" from which search starts have positions:
         @testset "all cell centers" begin
-            genocide!(model)
+            remove_all!(model)
             # we can parallelize these cell center coordinates with the coordinates
             # in the documentation figure showing the different GridSpace metric types.
             cell_centers = [(0.05 + 0.1i, 0.05 + 0.1j) for i in 0:9, j in 0:9]
@@ -84,7 +84,7 @@ using LinearAlgebra: norm, dot
         end
 
         @testset "within same cell" begin
-            genocide!(model)
+            remove_all!(model)
             # Note that these two should NOT be in the same cell
             r0 = 0.01
             r1 = 0.08

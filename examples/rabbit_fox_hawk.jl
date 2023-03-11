@@ -215,7 +215,7 @@ function rabbit_step!(rabbit, model)
     rabbit.energy -= model.dt
     ## All animals die if their energy reaches 0
     if rabbit.energy <= 0
-        kill_agent!(rabbit, model, model.landfinder)
+        remove_agent!(rabbit, model, model.landfinder)
         return
     end
 
@@ -275,7 +275,7 @@ function fox_step!(fox, model)
     ## Look for nearby rabbits that can be eaten
     food = [x for x in nearby_agents(fox, model) if x.type == :rabbit]
     if !isempty(food)
-        kill_agent!(rand(model.rng, food), model, model.landfinder)
+        remove_agent!(rand(model.rng, food), model, model.landfinder)
         fox.energy += model.Δe_rabbit
     end
 
@@ -285,7 +285,7 @@ function fox_step!(fox, model)
     fox.energy -= model.dt
     ## All animals die once their energy reaches 0
     if fox.energy <= 0
-        kill_agent!(fox, model, model.landfinder)
+        remove_agent!(fox, model, model.landfinder)
         return
     end
 
@@ -319,8 +319,8 @@ function hawk_step!(hawk, model)
     ## Look for rabbits nearby
     food = [x for x in nearby_agents(hawk, model) if x.type == :rabbit]
     if !isempty(food)
-        ## Eat (kill) the rabbit
-        kill_agent!(rand(model.rng, food), model, model.airfinder)
+        ## Eat (remove) the rabbit
+        remove_agent!(rand(model.rng, food), model, model.airfinder)
         hawk.energy += model.Δe_rabbit
         ## Fly back up
         plan_route!(hawk, hawk.pos .+ (0., 0., 7.), model.airfinder)
@@ -330,7 +330,7 @@ function hawk_step!(hawk, model)
     ## different pathfinder
     hawk.energy -= model.dt
     if hawk.energy <= 0
-        kill_agent!(hawk, model, model.airfinder)
+        remove_agent!(hawk, model, model.airfinder)
         return
     end
 

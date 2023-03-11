@@ -70,7 +70,7 @@ using Agents.Pathfinding
             @test plan_best_route!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
             @test length(model.pf.agent_paths) == 1
 
-            kill_agent!(a, model, model.pf)
+            remove_agent!(a, model, model.pf)
             @test length(model.pf.agent_paths) == 0
 
             @test isnothing(penaltymap(model.pf))
@@ -138,7 +138,7 @@ using Agents.Pathfinding
             @test all(plan_best_route!(a, [(3., 0.3), (2.5, 2.5)], model.pf) .≈ (2.5, 2.5))
             @test isnothing(plan_best_route!(a, [(3., 0.3), (1., 0.1)], model.pf))
 
-            kill_agent!(a, model, model.pf)
+            remove_agent!(a, model, model.pf)
             @test length(model.pf.agent_paths) == 0
 
             @test isnothing(penaltymap(model.pf))

@@ -14,8 +14,8 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 export move_agent!,
     add_agent!,
     add_agent_pos!,
-    kill_agent!,
-    genocide!,
+    remove_agent!,
+    remove_all!,
     random_position,
     nearby_positions,
     nearby_ids,
@@ -112,7 +112,7 @@ has been set for it. Used in setups where using [`move_along_route!`](@ref) is v
 is_stationary(agent, model) = notimplemented(model)
 
 #######################################################################################
-# %% Space agnostic killing and moving
+# %% Space agnostic removing and moving
 #######################################################################################
 """
     move_agent!(agent [, pos], model::ABM) → agent
@@ -133,57 +133,57 @@ function move_agent!(agent, model::ABM)
 end
 
 """
-    kill_agent!(agent::AbstractAgent, model::ABM)
-    kill_agent!(id::Int, model::ABM)
+    remove_agent!(agent::AbstractAgent, model::ABM)
+    remove_agent!(id::Int, model::ABM)
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM)
+function remove_agent!(a::AbstractAgent, model::ABM)
     remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
-kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
+remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 
 """
-    genocide!(model::ABM)
-Kill all the agents of the model.
+    remove_all!(model::ABM)
+Remove all the agents of the model.
 """
-function genocide!(model::ABM)
+function remove_all!(model::ABM)
     for a in allagents(model)
-        kill_agent!(a, model)
+        remove_agent!(a, model)
     end
     model.maxid[] = 0
 end
 
 """
-    genocide!(model::ABM, n::Int)
-Kill the agents whose IDs are larger than n.
+    remove_all!(model::ABM, n::Int)
+Remove the agents whose IDs are larger than n.
 """
-function genocide!(model::ABM, n::Integer)
+function remove_all!(model::ABM, n::Integer)
     for id in allids(model)
-        id > n && kill_agent!(id, model)
+        id > n && remove_agent!(id, model)
     end
     model.maxid[] = n
 end
 
 
 """
-    genocide!(model::ABM, IDs)
-Kill the agents with the given IDs.
+    remove_all!(model::ABM, IDs)
+Remove the agents with the given IDs.
 """
-function genocide!(model::ABM, ids)
+function remove_all!(model::ABM, ids)
     for id in ids
-        kill_agent!(id, model)
+        remove_agent!(id, model)
     end
 end
 
 """
-    genocide!(model::ABM, f::Function)
-Kill all agents where the function `f(agent)` returns `true`.
+    remove_all!(model::ABM, f::Function)
+Remove all agents where the function `f(agent)` returns `true`.
 """
-function genocide!(model::ABM, f::Function)
+function remove_all!(model::ABM, f::Function)
     for a in allagents(model)
-        f(a) && kill_agent!(a, model)
+        f(a) && remove_agent!(a, model)
     end
 end
 

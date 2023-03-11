@@ -226,11 +226,11 @@ function penaltymap(pathfinder::AStar)
 end
 
 """
-    Pathfinding.kill_agent!(agent, model, pathfinder)
-The same as `kill_agent!(agent, model)`, but also removes the agent's path data
+    Pathfinding.remove_agent!(agent, model, pathfinder)
+The same as `remove_agent!(agent, model)`, but also removes the agent's path data
 from `pathfinder`.
 """
-function Agents.kill_agent!(
+function Agents.remove_agent!(
     agent::A,
     model::ABM{S,A},
     pathfinder::AStar,

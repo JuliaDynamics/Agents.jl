@@ -11,7 +11,7 @@ the argument `agents_first` is `false` (which then first calls `model_step!` and
 activates the agents).
 
 `step!` ignores scheduled IDs that do not exist within the model, allowing
-you to safely kill agents dynamically.
+you to safely remove agents dynamically.
 
     step!(model, agent_step!, model_step!, n::Function, agents_first::Bool = true)
 

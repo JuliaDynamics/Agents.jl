@@ -1,5 +1,5 @@
 # The following simple model has a variable number of agent types,
-# but there is no killing or creating of additional agents.
+# but there is no removing or creating of additional agents.
 # It creates a model that has the same number of agents and does
 # overall the same number of operations, but these operations
 # are split in a varying number of agents. It shows how much of a

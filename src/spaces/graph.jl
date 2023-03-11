@@ -130,7 +130,7 @@ export rem_node!, add_node!, rem_vertex!, add_vertex!, add_edge!, rem_edge!
 
 """
      rem_node!(model::ABM{<: GraphSpace}, n::Int)
-Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
+Remove node (i.e. position) `n` from the model's graph. All agents in that node are removed from the model.
 **Warning:** Graphs.jl (and thus Agents.jl) swaps the index of the last node with
 that of the one to be removed, while every other node remains as is. This means that
  when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
@@ -138,7 +138,7 @@ that of the one to be removed, while every other node remains as is. This means 
  """
  function rem_node!(model::ABM{<:GraphSpace}, n::Int)
      for id in copy(ids_in_position(n, model))
-         kill_agent!(model[id], model)
+         remove_agent!(model[id], model)
      end
     V = nv(model)
     success = Graphs.rem_vertex!(model.space.graph, n)
@@ -161,7 +161,7 @@ end
 
 """
     rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
-Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
+Remove node (i.e. position) `n` from the model's graph. All agents in that node are removed from the model.
 
 **Warning:** Graphs.jl (and thus Agents.jl) swaps the index of the last node with
 that of the one to be removed, while every other node remains as is. This means that
@@ -170,7 +170,7 @@ when doing `rem_vertex!(n, model)` the last node becomes the `n`-th node while t
 """
 function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
     for id in copy(ids_in_position(n, model))
-        kill_agent!(model[id], model)
+        remove_agent!(model[id], model)
     end
     V = nv(model)
     success = Graphs.rem_vertex!(model.space.graph, n)

@@ -1,9 +1,14 @@
 # main
-- `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster. 
+- `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster.
 - A memory bug about offsets calculation has been solved; besides, the `calculate_offsets` function has been sped-up by a significant amount.
+- The following renames have been done (with deprecations):
+  - `genocide! -> remove_all!`
+  - `kill_agent! -> remove_agent!`
+  - `UnkillableABM -> UnremovableABM`
+- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
+- New function `random_nearby_position` that returns a random neighbouring position.
 
 # v5.8
-- New function `random_nearby_position` that returns a random neighboring position. 
 - `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 - New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
 - Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
@@ -28,6 +33,7 @@
   It now also allows inheriting fields from any other type.
 - The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
   Directly creating structs by hand is no longer mentioned in the documentation at all. This will allow us in the future to utilize additional fields that the user does not have to know about, which may bring new features or performance gains by being part of the agent structures.
+  - EDIT: This has been _retracted_ in future versions. `@agent` is the recommended way, but manual creation is also valid.
 - The minimal agent types like `GraphAgent` can be used normally as standard agent
   types that only have the mandatory fields. This is now clear in the docs.
   (this was possible also before v5.4, just not clear)

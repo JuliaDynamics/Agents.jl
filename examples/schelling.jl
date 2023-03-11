@@ -113,21 +113,21 @@ nagents(schelling)
 agent = schelling[2]
 
 
-# ## Using an `UnkillableABM`
+# ## Using an `UnremovableABM`
 
 # We know that the number of agents in the model never change.
 # This means that we shouldn't use the the default version of ABM that is initialized
 # by `ABM`, becuase this allows deleting agents (at a performance defecit).
-# Instead, we should use [`UnkillableABM`](@ref). The only change necessary
-# for this to work is to simply change the call to `ABM` to a call to `UnkillableABM`.
+# Instead, we should use [`UnremovableABM`](@ref). The only change necessary
+# for this to work is to simply change the call to `ABM` to a call to `UnremovableABM`.
 
-schelling = UnkillableABM(SchellingAgent, space; properties)
+schelling = UnremovableABM(SchellingAgent, space; properties)
 
 # _note: we should be using [`FixedMassABM`](@ref) instead, since the number of agents
 # stays constant. However, we do not really need this number in the simulation,
 # and [`FixedMassABM`](@ref) is a bit more involved to initialize, as it requires
 # passing all agents in in advance before making the model. So, we stick with
-# [`UnkillableABM`](@ref) for simplicity,
+# [`UnremovableABM`](@ref) for simplicity,
 # and because it doens't make a significant performance difference._
 
 # ## Creating the ABM through a function
@@ -145,7 +145,7 @@ function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy =
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(seed)
-    model = UnkillableABM(
+    model = UnremovableABM(
         SchellingAgent, space;
         properties, rng, scheduler = Schedulers.Randomly()
     )

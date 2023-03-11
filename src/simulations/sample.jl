@@ -44,7 +44,7 @@ function add_newids!(model, org_ids, newids)
         noccurances = count_newids[id]
         agent = model[id]
         if noccurances == 0
-            kill_agent!(agent, model)
+            remove_agent!(agent, model)
         else
             for _ in 2:noccurances
                 newagent = deepcopy(agent)
