@@ -94,6 +94,7 @@ agents_in_position
 fill_space!
 has_empty_positions
 empty_positions
+empty_nearby_positions
 random_empty
 add_agent_single!
 move_agent_single!

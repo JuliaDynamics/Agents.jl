@@ -7,6 +7,7 @@
   - `UnkillableABM -> UnremovableABM`
 - `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 - New function `random_nearby_position` that returns a random neighbouring position.
+- New function `empty_nearby_positions` that returns an iterable of all empty neighboring positions.
 
 # v5.8
 - `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
