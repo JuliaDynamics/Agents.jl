@@ -118,21 +118,23 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
 end
 
 """
-    empty_nearby_positions(position, model::ABM{<:DiscreteSpace}, r = 1; kwargs)
-    empty_nearby_positions(agent, model::ABM{<:DiscreteSpace}, r = 1; kwargs)
+    empty_nearby_positions(position, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
+    empty_nearby_positions(agent, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
 
-Return an iterable of all empty positions within "radius" `r` of the given `position` or `agent`.
+Return an iterable of all empty positions within "radius" `r` of the given `position`
+or the position of an `agent::AbstractAgent`.
 
-The value of r and possible keywords operate identically to `nearby_positions`.
+The value of `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
 This function only exists for discrete spaces with a finite amount of positions.
 """
-
-function empty_nearby_positions(agent::A, model, r = 1) where {A<:AbstractAgent}
-    return empty_nearby_positions(agent.pos, model, r)
+function empty_nearby_positions(agent::AbstractAgent, model, r = 1; kwargs...)
+    return empty_nearby_positions(agent.pos, model, r; kwargs...)
 end
-function empty_nearby_positions(pos, model, r = 1)
-    return Iterators.filter(Base.Fix2(isempty, model), nearby_positions(pos, model, r))
+function empty_nearby_positions(pos, model, r = 1; kwargs...)
+    return Iterators.filter(
+        Base.Fix2(isempty, model), nearby_positions(pos, model, r; kwargs...)
+    )
 end
 
 
