@@ -1,12 +1,13 @@
 # main
-- `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster. 
+- `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster.
 - A memory bug about offsets calculation has been solved; besides, the `calculate_offsets` function has been sped-up by a significant amount.
+- The following renames have been done (with deprecations):
+  - `genocide! -> remove_all!`
+  - `kill_agent! -> remove_agent!`
+  - `UnkillableABM -> UnremovableABM`
+- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 
 # v5.8
-- New function `remove_all!` replaces `genocide!` (now deprecated).
-- New function `remove_agent!` replaces `kill_agent!` (now deprecated).
-- New ABM implementation `UnremovableABM` replaces `UnkillableABM` (now deprecated).
-- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 - New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
 - Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
 - Huge improvement of performance of the `get_direction` function in the periodic case.
