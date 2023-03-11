@@ -14,9 +14,9 @@ struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,
 end
 
 const SCABM = SingleContainerABM
-const StandardABM{A,S} = SingleContainerABM{A,S,Dict{Int,A}}
-const UnremovableABM{A,S} = SingleContainerABM{A,S,Vector{A}}
-const FixedMassABM{A,S} = SingleContainerABM{A,S,SizedVector{A}}
+const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A,C}
+const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A,C}
+const FixedMassABM = SingleContainerABM{S,A,SizedVector{A}} where {S,A,C}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
