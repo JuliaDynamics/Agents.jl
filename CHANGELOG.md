@@ -8,6 +8,8 @@
 - `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 
 # v5.8
+- New function `random_nearby_position` that returns a random neighboring position. 
+- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 - New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
 - Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
 - Huge improvement of performance of the `get_direction` function in the periodic case.

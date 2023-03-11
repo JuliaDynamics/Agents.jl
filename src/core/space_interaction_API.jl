@@ -22,6 +22,7 @@ export move_agent!,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
+    random_nearby_position,
     plan_route!,
     plan_best_route!,
     move_along_route!,
@@ -361,7 +362,7 @@ end
 """
     random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
 
-Return the a random agent near the position of the given `agent`. Return `nothing` if no agent
+Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -370,4 +371,39 @@ function random_nearby_agent(a, model, r = 1; kwargs...)
     id = random_nearby_id(a, model, r; kwargs...)
     isnothing(id) && return
     return model[id]
+end
+
+"""
+    random_nearby_position(position, model::ABM, r=1; kwargs...) → position
+
+Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
+"""
+function random_nearby_position(pos, model, r=1; kwargs...)
+    # Uses the same Reservoir Sampling algorithm than nearby_ids
+    iter = nearby_positions(pos, model, r; kwargs...)
+
+    res = iterate(iter)
+    isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
+
+    choice, state = res         # random position to return, and the state of the iterator
+    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
+
+    skip_counter = 0            # skip entries in the iterator
+    while !isnothing(state) && !isnothing(iter)
+        if skip_counter == 0
+            choice, state = res
+            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
+            w *= max(rand(model.rng), eps())
+        else
+            _, state = res
+            skip_counter -= 1
+        end
+
+        res = iterate(iter, state)
+        isnothing(res) && break
+    end
+
+    return choice
 end

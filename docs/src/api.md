@@ -143,6 +143,7 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
+random_nearby_position
 ```
 
 ## A note on iteration

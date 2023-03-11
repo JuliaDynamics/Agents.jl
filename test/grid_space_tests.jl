@@ -185,6 +185,9 @@ using StableRNGs
         nearby_agent = random_nearby_agent(abm[1], abm, 5)
         @test nearby_agent.id in valid_ids
 
+        valid_positions = collect(nearby_positions(abm[1].pos, abm, 3))
+        nearby_position = random_nearby_position(abm[1].pos, abm, 3)
+        @test nearby_position in valid_positions
         remove_all!(abm)
         a = add_agent!((1, 1), abm)
         @test isnothing(random_nearby_id(a, abm))
