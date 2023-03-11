@@ -49,7 +49,7 @@ function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
-            activate_agents(model::ABM, agent_step!)
+            activate_agents(model, agent_step!)
         end
         agents_first && model_step!(model)
         s += 1
