@@ -40,7 +40,7 @@ A model is typically constructed with:
 which creates a model expecting agents of type `AgentType` living in the given `space`.
 `AgentBasedModel(...)` defaults to [`StandardABM`](@ref), which stores agents in a
 dictionary that maps unique IDs (integers) to agents.
-See also [`UnkillableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
+See also [`UnremovableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
 that yield better performance in case number of agents can only increase, or stays constant,
 during the model evolution.
 

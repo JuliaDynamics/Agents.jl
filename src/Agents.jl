@@ -64,9 +64,9 @@ Noteworthy changes:
   variants of `AgentBasedModel` that are more specialized in their applications.
 - The old `AgentBasedModel` is now `StandardABM`
   Nothing is breaking because the call to `AgentBasedModel` gives `StandardABM`.
-- Two new variants of agent based models: `UnkillableABM` and `FixedMassABM`.
+- Two new variants of agent based models: `UnremovableABM` and `FixedMassABM`.
   They yield huge performance benefits **(up to twice the speed!!!)**
-  on iterating over agents if the agents can't get killed, or even added,
+  on iterating over agents if the agents can't get removed, or even added,
   during model evolution!
 """
 

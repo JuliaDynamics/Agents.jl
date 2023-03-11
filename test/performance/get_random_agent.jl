@@ -8,7 +8,7 @@ end
 
 n_agents = 100
 agents = [LabelledAgent(id, id<=n_agents/3) for id in 1:n_agents]
-noremove_model = UnkillableABM(LabelledAgent)
+noremove_model = UnremovableABM(LabelledAgent)
 dict_model = ABM(LabelledAgent)
 fixed_model = FixedMassABM(agents)
 for a in agents
@@ -37,7 +37,7 @@ end
 @benchmark random_agent($fixed_model, $cond)
 @benchmark old_random_agent($fixed_model, $cond)
 
-# UnkillableABM
+# UnremovableABM
 @benchmark optimistic_random_agent($noremove_model, $cond)
 @benchmark allocating_random_agent($noremove_model, $cond)
 @benchmark random_agent($noremove_model, $cond)

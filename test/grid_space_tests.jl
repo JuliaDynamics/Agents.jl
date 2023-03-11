@@ -13,7 +13,7 @@ using StableRNGs
         end
     end
 
-    @testset "add/move/kill" begin
+    @testset "add/move/remove" begin
         space = SpaceType((3, 3))
         model = ABM(GridAgent{2}, space; rng = StableRNG(42))
         pos0 = (2,2)
@@ -26,17 +26,20 @@ using StableRNGs
         move_agent!(agent, model)
         @test agent.pos != (3,3)
         move_agent!(agent, (2,2), model)
-        kill_agent!(agent, model)
+        remove_agent!(agent, model)
         @test id0 ∉ allids(model)
         # Test move single
         fill_space!(model)
         agent = model[2]
         posx = agent.pos
-        kill_agent!(agent, model)
+        remove_agent!(agent, model)
         # now the only position that is left unoccupied is `posx`
         agent = model[3]
         move_agent_single!(agent, model)
         @test agent.pos == posx
+        if SpaceType == GridSpaceSingle
+            @test_throws ErrorException add_agent!(posx, model)
+        end
     end
 
     @testset "positions + empty" begin
@@ -68,8 +71,9 @@ using StableRNGs
         @test all(n in nearby_positions(model[5], model) for n in empty_near_positions)
         @test all(n in [(1, 3), (2, 3)] for n in empty_near_positions)
 
-        # Also test ids_in_position stuff for GridSpace
+        # Also test ids_in_position and agents_in_position for GridSpace
         if SpaceType == GridSpace
+            #ids_in_position
             pos1 = ids_in_position((1, 3), model)
             @test isempty(pos1)
             pos2 = ids_in_position((1, 1), model)
@@ -80,6 +84,22 @@ using StableRNGs
                 [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
             @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
             @test_throws ErrorException positions(model, :notreal)
+
+            #agents_in_position
+            agent1 = model[1]
+            #test for 1 agent in the position
+            @test length(agents_in_position(agent1, model)) == 1
+            @test collect(agents_in_position(agent1, model))[1] == agent1
+            @test length(agents_in_position(agent1.pos, model)) == 1
+            @test collect(agents_in_position(agent1.pos, model))[1] == agent1
+            #test for 2 agents in the position
+            agent2 = add_agent!(agent1.pos, model)
+            @test length(agents_in_position(agent1, model)) == 2
+            @test collect(agents_in_position(agent1, model))[2] == agent2
+            @test length(agents_in_position(agent1.pos, model)) == 2
+            @test collect(agents_in_position(agent1.pos, model))[2] == agent2
+            #test for no agents in the position
+            @test length(agents_in_position((1, 3), model)) == 0
         end
     end
 
@@ -140,7 +160,7 @@ using StableRNGs
                     end
                 end
 
-                genocide!(model)
+                remove_all!(model)
                 add_agent!((1, 1), model)
                 a = add_agent!((2, 1), model)
                 add_agent!((3, 2), model) # this is neighbor only in chebyshev
@@ -168,9 +188,9 @@ using StableRNGs
             for m in models; fill_space!(m); end
             near_pos = [collect(nearby_positions((5,5), m, 3.4)) for m in models]
             near_ids = [collect(nearby_ids((5,5), m, 3.4)) for m in models] # this is 1 more
-            @test length(near_pos[1]) == length(near_pos[2]) + 12
+            @test length(near_pos[1]) == length(near_pos[2]) + 4
             @test length(near_pos[3]) == 7^2 - 1
-            @test length(near_ids[1]) == length(near_ids[2]) + 12
+            @test length(near_ids[1]) == length(near_ids[2]) + 4
             @test length(near_ids[1]) == length(near_pos[1]) + 1
             @test length(near_ids[3]) == 7^2
         end
@@ -187,7 +207,10 @@ using StableRNGs
         nearby_agent = random_nearby_agent(abm[1], abm, 5)
         @test nearby_agent.id in valid_ids
 
-        genocide!(abm)
+        valid_positions = collect(nearby_positions(abm[1].pos, abm, 3))
+        nearby_position = random_nearby_position(abm[1].pos, abm, 3)
+        @test nearby_position in valid_positions
+        remove_all!(abm)
         a = add_agent!((1, 1), abm)
         @test isnothing(random_nearby_id(a, abm))
         @test isnothing(random_nearby_agent(a, abm))

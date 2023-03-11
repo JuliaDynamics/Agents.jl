@@ -72,25 +72,25 @@ end
     @test agent2.pos == (1, 1)
 end
 
-@testset "kill_agent!" begin
+@testset "remove_agent!" begin
     # No Space
     model = ABM(NoSpaceAgent)
     add_agent!(model)
     agent = add_agent!(model)
     @test nagents(model) == 2
-    kill_agent!(agent, model)
+    remove_agent!(agent, model)
     @test nagents(model) == 1
     add_agent!(model)
-    genocide!(model, [1, 3])
+    remove_all!(model, [1, 3])
     @test nagents(model) == 0
     # GraphSpace
     model = ABM(Agent5, GraphSpace(path_graph(6)))
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
-    kill_agent!(model[1], model)
+    remove_agent!(model[1], model)
     @test nagents(model) == 1
-    kill_agent!(2, model)
+    remove_agent!(2, model)
     @test nagents(model) == 0
     # GridSpace
     model = ABM(Agent1, GridSpace((5, 5)))
@@ -99,27 +99,27 @@ end
     add_agent!((5, 2), model)
     @test nagents(model) == 3
     for id in copy(ids_in_position((1, 3), model))
-        kill_agent!(id, model)
+        remove_agent!(id, model)
     end
     @test nagents(model) == 1
 end
 
-@testset "kill_agent! (vector container)" begin
+@testset "remove_agent! (vector container)" begin
     # No Space
-    model = UnkillableABM(NoSpaceAgent)
+    model = UnremovableABM(NoSpaceAgent)
     add_agent!(model)
     agent = add_agent!(model)
     @test agent.id == 2
     @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
     @test nagents(model) == 2
-    @test_throws ErrorException kill_agent!(agent, model)
-    @test_throws ErrorException genocide!(model, [1, 3])
+    @test_throws ErrorException remove_agent!(agent, model)
+    @test_throws ErrorException remove_all!(model, [1, 3])
     # GraphSpace
-    model = UnkillableABM(Agent5, GraphSpace(path_graph(6)))
+    model = UnremovableABM(Agent5, GraphSpace(path_graph(6)))
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
-    @test_throws ErrorException kill_agent!(model[1], model)
+    @test_throws ErrorException remove_agent!(model[1], model)
 end
 
 #TODO better tests for FixedMassABM
@@ -132,8 +132,8 @@ end
     @test_throws ErrorException agent = add_agent!(model)
     @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
     @test nagents(model) == n_agents
-    @test_throws ErrorException kill_agent!(model[1], model)
-    @test_throws ErrorException genocide!(model, [1, 3])
+    @test_throws ErrorException remove_agent!(model[1], model)
+    @test_throws ErrorException remove_all!(model, [1, 3])
 
     for (i,a) in enumerate(allagents(model))
         @test a.id == i
@@ -145,54 +145,54 @@ end
     # add_agent!(model, 5.3)
     # add_agent!(model, 2.7)
     # @test nagents(model) == 2
-    # @test_throws ErrorException kill_agent!(model[1], model)
+    # @test_throws ErrorException remove_agent!(model[1], model)
 end
 
-@testset "genocide!" begin
+@testset "remove_all!" begin
     # Testing no space
     model = ABM(NoSpaceAgent)
     for i in 1:10
         a = NoSpaceAgent(i)
         add_agent!(a, model)
     end
-    genocide!(model)
+    remove_all!(model)
     @test nagents(model) == 0
     for i in 1:10
         a = NoSpaceAgent(i)
         add_agent!(a, model)
     end
-    genocide!(model, 5)
+    remove_all!(model, 5)
     @test nagents(model) == 5
-    genocide!(model, a -> a.id < 3)
+    remove_all!(model, a -> a.id < 3)
     @test nagents(model) == 3
 
     model = ABM(GridAgent{2}, GridSpace((10, 10)))
 
-    # Testing genocide!(model::ABM)
+    # Testing remove_all!(model::ABM)
     for i in 1:20
         agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
-    genocide!(model)
+    remove_all!(model)
     @test nagents(model) == 0
 
-    # Testing genocide!(model::ABM, n::Int)
+    # Testing remove_all!(model::ABM, n::Int)
     for i in 1:20
         # Explicitly override agents each time we replenish the population,
-        # so we always start the genocide with 20 agents.
+        # so we always start the remove_all with 20 agents.
         agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
-    genocide!(model, 10)
+    remove_all!(model, 10)
     @test nagents(model) == 10
 
-    # Testing genocide!(model::ABM, f::Function) with an anonymous function
+    # Testing remove_all!(model::ABM, f::Function) with an anonymous function
     for i in 11:20
         agent = GridAgent{2}(i, (1, 1))
         add_agent_single!(agent, model)
     end
     @test nagents(model) == 20
-    genocide!(model, a -> a.id > 5)
+    remove_all!(model, a -> a.id > 5)
     @test nagents(model) == 5
 
 end

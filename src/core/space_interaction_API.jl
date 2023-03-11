@@ -14,14 +14,15 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 export move_agent!,
     add_agent!,
     add_agent_pos!,
-    kill_agent!,
-    genocide!,
+    remove_agent!,
+    remove_all!,
     random_position,
     nearby_positions,
     nearby_ids,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
+    random_nearby_position,
     plan_route!,
     plan_best_route!,
     move_along_route!,
@@ -111,7 +112,7 @@ has been set for it. Used in setups where using [`move_along_route!`](@ref) is v
 is_stationary(agent, model) = notimplemented(model)
 
 #######################################################################################
-# %% Space agnostic killing and moving
+# %% Space agnostic removing and moving
 #######################################################################################
 """
     move_agent!(agent [, pos], model::ABM) → agent
@@ -132,57 +133,57 @@ function move_agent!(agent, model::ABM)
 end
 
 """
-    kill_agent!(agent::AbstractAgent, model::ABM)
-    kill_agent!(id::Int, model::ABM)
+    remove_agent!(agent::AbstractAgent, model::ABM)
+    remove_agent!(id::Int, model::ABM)
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM)
+function remove_agent!(a::AbstractAgent, model::ABM)
     remove_agent_from_model!(a, model)
     remove_agent_from_space!(a, model)
 end
-kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
+remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 
 """
-    genocide!(model::ABM)
-Kill all the agents of the model.
+    remove_all!(model::ABM)
+Remove all the agents of the model.
 """
-function genocide!(model::ABM)
+function remove_all!(model::ABM)
     for a in allagents(model)
-        kill_agent!(a, model)
+        remove_agent!(a, model)
     end
     model.maxid[] = 0
 end
 
 """
-    genocide!(model::ABM, n::Int)
-Kill the agents whose IDs are larger than n.
+    remove_all!(model::ABM, n::Int)
+Remove the agents whose IDs are larger than n.
 """
-function genocide!(model::ABM, n::Integer)
+function remove_all!(model::ABM, n::Integer)
     for id in allids(model)
-        id > n && kill_agent!(id, model)
+        id > n && remove_agent!(id, model)
     end
     model.maxid[] = n
 end
 
 
 """
-    genocide!(model::ABM, IDs)
-Kill the agents with the given IDs.
+    remove_all!(model::ABM, IDs)
+Remove the agents with the given IDs.
 """
-function genocide!(model::ABM, ids)
+function remove_all!(model::ABM, ids)
     for id in ids
-        kill_agent!(id, model)
+        remove_agent!(id, model)
     end
 end
 
 """
-    genocide!(model::ABM, f::Function)
-Kill all agents where the function `f(agent)` returns `true`.
+    remove_all!(model::ABM, f::Function)
+Remove all agents where the function `f(agent)` returns `true`.
 """
-function genocide!(model::ABM, f::Function)
+function remove_all!(model::ABM, f::Function)
     for a in allagents(model)
-        f(a) && kill_agent!(a, model)
+        f(a) && remove_agent!(a, model)
     end
 end
 
@@ -361,7 +362,7 @@ end
 """
     random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
 
-Return the a random agent near the position of the given `agent`. Return `nothing` if no agent
+Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -370,4 +371,39 @@ function random_nearby_agent(a, model, r = 1; kwargs...)
     id = random_nearby_id(a, model, r; kwargs...)
     isnothing(id) && return
     return model[id]
+end
+
+"""
+    random_nearby_position(position, model::ABM, r=1; kwargs...) → position
+
+Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
+"""
+function random_nearby_position(pos, model, r=1; kwargs...)
+    # Uses the same Reservoir Sampling algorithm than nearby_ids
+    iter = nearby_positions(pos, model, r; kwargs...)
+
+    res = iterate(iter)
+    isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
+
+    choice, state = res         # random position to return, and the state of the iterator
+    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
+
+    skip_counter = 0            # skip entries in the iterator
+    while !isnothing(state) && !isnothing(iter)
+        if skip_counter == 0
+            choice, state = res
+            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
+            w *= max(rand(model.rng), eps())
+        else
+            _, state = res
+            skip_counter -= 1
+        end
+
+        res = iterate(iter, state)
+        isnothing(res) && break
+    end
+
+    return choice
 end

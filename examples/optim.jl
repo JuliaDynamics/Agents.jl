@@ -135,7 +135,7 @@
 # Unfortunately we've not given the optimiser information we probably needed to.
 # Notice that the death rate is 96%, with reinfection quite low.
 # When all the infected individuals die, infection doesn't transmit - the optimiser has
-# managed to reduce the infection rate by killing the infected.
+# managed to reduce the infection rate by removing the infected.
 
 # This is not the work of some sadistic AI, just an oversight in our instructions.
 # Let's modify the cost function to also keep the mortality rate low.

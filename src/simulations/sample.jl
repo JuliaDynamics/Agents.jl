@@ -24,7 +24,7 @@ function sample!(
     weight = nothing;
     replace = true,
 )
-    nagents(model) > 0 || return
+    nagents(model) == 0 && return nothing
     org_ids = collect(allids(model))
     if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
@@ -35,16 +35,19 @@ function sample!(
     add_newids!(model, org_ids, newids)
 end
 
-"Used in sample!"
+#Used in sample!
 function add_newids!(model, org_ids, newids)
+    # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
+    count_newids = counter(newids)
     n = nextid(model)
     for id in org_ids
-        if !in(id, newids)
-            kill_agent!(model.agents[id], model)
+        noccurances = count_newids[id]
+        agent = model[id]
+        if noccurances == 0
+            remove_agent!(agent, model)
         else
-            noccurances = count(x -> x == id, newids)
-            for t in 2:noccurances
-                newagent = deepcopy(model.agents[id])
+            for _ in 2:noccurances
+                newagent = deepcopy(agent)
                 newagent.id = n
                 add_agent_pos!(newagent, model)
                 n += 1

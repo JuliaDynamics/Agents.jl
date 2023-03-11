@@ -88,7 +88,7 @@ end
 
 function agent_step!(agent::Daisy, model::DaisyWorld)
     agent.age += 1
-    agent.age >= model.max_age && kill_agent!(agent, model)
+    agent.age >= model.max_age && remove_agent!(agent, model)
 end
 
 agent_step!(agent::Land, model::DaisyWorld) = nothing

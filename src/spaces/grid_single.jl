@@ -12,8 +12,8 @@ struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Int,D}
     metric::Symbol
     offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
-    offsets_within_radius::Dict{Float64,Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Dict{Float64,Vector{NTuple{D,Int}}}
+    offsets_within_radius::Dict{Int,Vector{NTuple{D,Int}}}
+    offsets_within_radius_no_0::Dict{Int,Vector{NTuple{D,Int}}}
 end
 
 """
@@ -31,15 +31,18 @@ function GridSpaceSingle(d::NTuple{D,Int}; periodic = true, metric = :chebyshev)
     s = zeros(Int, d)
     return GridSpaceSingle{D,periodic}(s, metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
-        Dict{Float64,Vector{NTuple{D,Int}}}(),
+        Dict{Int,Vector{NTuple{D,Int}}}(),
+        Dict{Int,Vector{NTuple{D,Int}}}(),
     )
 end
 # Implementation of space API
 function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
-    model.space.stored_ids[a.pos...] = a.id
+    pos = a.pos
+    !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
+    model.space.stored_ids[pos...] = a.id
     return a
 end
+
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     model.space.stored_ids[a.pos...] = 0
     return a
@@ -107,7 +110,7 @@ end
 # Contrary to `GridSpace`, we also extend here `nearby_ids(a::Agent)`.
 # Because, we know that one agent exists per position, and hence we can skip the
 # call to `filter(id -> id ≠ a.id, ...)` that happens in core/space_interaction_API.jl.
-# Here we implement a new version for neighborhoods, similar to abusive_unkillable.jl.
+# Here we implement a new version for neighborhoods, similar to abusive_unremovable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
     a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}

@@ -60,7 +60,7 @@ ids_in_position(agent::A, model) where {A<:AbstractAgent} =
     agents_in_position(position, model::ABM{<:DiscreteSpace})
     agents_in_position(agent, model::ABM{<:DiscreteSpace})
 
-Return the agents in the position corresponding to `position` or position of `agent`.
+Return an iterable of the agents in `position``, or in the position of `agent`.
 """
 agents_in_position(agent::A, model) where {A<:AbstractAgent} =
     agents_in_position(agent.pos, model)

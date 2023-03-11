@@ -3,6 +3,9 @@
 @deprecate edistance euclidean_distance
 @deprecate rem_node! rem_vertex!
 @deprecate add_node! add_vertex!
+@deprecate kill_agent! remove_agent!
+@deprecate genocide! remove_all!
+@deprecate UnkillableABM UnremovableABM
 
 function ContinuousSpace(extent, spacing; kwargs...)
     @warn "Specifying `spacing` by position is deprecated. Use keyword `spacing` instead."

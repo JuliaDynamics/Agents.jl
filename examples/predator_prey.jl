@@ -125,7 +125,7 @@ function sheepwolf_step!(sheep::Sheep, model)
     randomwalk!(sheep, model)
     sheep.energy -= 1
     if sheep.energy < 0
-        kill_agent!(sheep, model)
+        remove_agent!(sheep, model)
         return
     end
     eat!(sheep, model)
@@ -138,7 +138,7 @@ function sheepwolf_step!(wolf::Wolf, model)
     randomwalk!(wolf, model; ifempty=false)
     wolf.energy -= 1
     if wolf.energy < 0
-        kill_agent!(wolf, model)
+        remove_agent!(wolf, model)
         return
     end
     ## If there is any sheep on this grid cell, it's dinner time!
@@ -169,7 +169,7 @@ function eat!(sheep::Sheep, model)
 end
 
 function eat!(wolf::Wolf, sheep::Sheep, model)
-    kill_agent!(sheep, model)
+    remove_agent!(sheep, model)
     wolf.energy += wolf.Δenergy
     return
 end
