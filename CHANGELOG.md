@@ -1,4 +1,7 @@
 # main
+
+# v5.9
+
 - `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster.
 - A memory bug about offsets calculation has been solved; besides, the `calculate_offsets` function has been sped-up by a significant amount.
 - The following renames have been done (with deprecations):
