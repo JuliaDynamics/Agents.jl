@@ -365,10 +365,10 @@ function random_nearby_position(pos, model, r=1; kwargs...)
 end
 
 function resorvoir_sampling_single(iter, model)
-    rng = abmrng(model)
     res = iterate(iter)
     isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
-
+    
+    rng = abmrng(model)
     choice, state = res               # random position to return, and the state of the iterator
     w = max(rand(rng), eps())         # rand returns in range [0,1)
 
