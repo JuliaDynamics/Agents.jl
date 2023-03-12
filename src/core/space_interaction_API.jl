@@ -334,29 +334,7 @@ The value of the argument `r` and possible keywords operate identically to [`nea
 function random_nearby_id(a, model, r = 1; kwargs...)
     # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
     iter = nearby_ids(a, model, r; kwargs...)
-
-    res = iterate(iter)
-    isnothing(res) && return    # `iterate` returns `nothing` when it ends
-
-    choice, state = res         # random ID to return, and the state of the iterator
-    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
-
-    skip_counter = 0            # skip entries in the iterator
-    while !isnothing(state) && !isnothing(iter)
-        if skip_counter == 0
-            choice, state = res
-            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
-            w *= max(rand(model.rng), eps())
-        else
-            _, state = res
-            skip_counter -= 1
-        end
-
-        res = iterate(iter, state)
-        isnothing(res) && break
-    end
-
-    return choice
+    return resorvoir_sampling_single(iter, model)
 end
 
 """
@@ -383,27 +361,29 @@ The value of the argument `r` and possible keywords operate identically to [`nea
 function random_nearby_position(pos, model, r=1; kwargs...)
     # Uses the same Reservoir Sampling algorithm than nearby_ids
     iter = nearby_positions(pos, model, r; kwargs...)
+    return resorvoir_sampling_single(iter, model)
+end
 
+function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
     isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
+    
+    rng = abmrng(model)
+    choice, state = res               # random position to return, and the state of the iterator
+    w = max(rand(rng), eps())         # rand returns in range [0,1)
 
-    choice, state = res         # random position to return, and the state of the iterator
-    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
-
-    skip_counter = 0            # skip entries in the iterator
+    skip_counter = 0                  # skip entries in the iterator
     while !isnothing(state) && !isnothing(iter)
         if skip_counter == 0
             choice, state = res
-            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
-            w *= max(rand(model.rng), eps())
+            skip_counter = floor(log(rand(rng)) / log(1 - w))
+            w *= max(rand(rng), eps())
         else
             _, state = res
             skip_counter -= 1
         end
-
         res = iterate(iter, state)
         isnothing(res) && break
     end
-
     return choice
 end
