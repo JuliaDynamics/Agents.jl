@@ -40,9 +40,8 @@ A model is typically constructed with:
 which creates a model expecting agents of type `AgentType` living in the given `space`.
 `AgentBasedModel(...)` defaults to [`StandardABM`](@ref), which stores agents in a
 dictionary that maps unique IDs (integers) to agents.
-See also [`UnremovableABM`](@ref) and [`FixedMassABM`](@ref) for different storage types
-that yield better performance in case number of agents can only increase, or stays constant,
-during the model evolution.
+See also [`UnremovableABM`](@ref) for better performance in case number of agents can
+only increase during the model evolution.
 
 Agents.jl supports multiple agent types by passing a `Union` of agent types
 as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential

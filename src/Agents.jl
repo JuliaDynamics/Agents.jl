@@ -49,7 +49,7 @@ include("deprecations.jl")
 using Scratch
 
 function __init__()
-display_update = true
+display_update = false
 version_number = "5.7"
 update_name = "update_v$(version_number)"
 update_message = """
@@ -57,17 +57,6 @@ Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
 
 Noteworthy changes:
-
-- Internals of `AgentBasedModel` got reworked.
-  It is now an abstract type, defining an abstract interface that concrete
-  implementations may satisfy. This paves the way for flexibly defining new
-  variants of `AgentBasedModel` that are more specialized in their applications.
-- The old `AgentBasedModel` is now `StandardABM`
-  Nothing is breaking because the call to `AgentBasedModel` gives `StandardABM`.
-- Two new variants of agent based models: `UnremovableABM` and `FixedMassABM`.
-  They yield huge performance benefits **(up to twice the speed!!!)**
-  on iterating over agents if the agents can't get removed, or even added,
-  during model evolution!
 """
 
 if display_update

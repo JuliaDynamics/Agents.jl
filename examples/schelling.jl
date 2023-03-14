@@ -123,13 +123,6 @@ agent = schelling[2]
 
 schelling = UnremovableABM(SchellingAgent, space; properties)
 
-# _note: we should be using [`FixedMassABM`](@ref) instead, since the number of agents
-# stays constant. However, we do not really need this number in the simulation,
-# and [`FixedMassABM`](@ref) is a bit more involved to initialize, as it requires
-# passing all agents in in advance before making the model. So, we stick with
-# [`UnremovableABM`](@ref) for simplicity,
-# and because it doens't make a significant performance difference._
-
 # ## Creating the ABM through a function
 
 # Here we put the model instantiation in a function so that
