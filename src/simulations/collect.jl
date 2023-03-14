@@ -219,7 +219,7 @@ function single_agent_types!(
     model::ABM,
     properties::AbstractArray,
 )
-    a = first(model.agents).second
+    a = model[first(allids(model))]
     for (i, k) in enumerate(properties)
         current_type = typeof(get_data(a, k, identity))
         isconcretetype(current_type) || @warn(
