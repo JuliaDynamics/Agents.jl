@@ -120,37 +120,44 @@ end
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-nextid(model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A} = getfield(model, :maxid)[] + 1
-nextid(model::SingleContainerABM{<:SpaceType,A,Vector{A}}) where {A} = nagents(model) + 1
-nextid(::SingleContainerABM{<:SpaceType,A,<:SizedVector}) where {A} = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
+nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
+nextid(model::UnremovableABM) = nagents(model) + 1
+nextid(model::FixedMassABM) = error("There is no `nextid` in a `FixedMassABM`. Most likely an internal error.")
 
-function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Dict{Int, A}}) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
         agent_container(model)[agent.id] = agent
     end
-    # Only the `Dict` implementation actually uses the `maxid` field.
-    # The `Vector` one uses the defaults, and the `Sized` one errors anyways.
+    # Only the `StandardABM` implementation actually uses the `maxid` field.
     maxid = getfield(model, :maxid)
-    if maxid[] < agent.id; maxid[] = agent.id; end
+    new_id = agent.id 
+    if maxid[] < new_id; maxid[] = new_id; end
     return
 end
 
-function add_agent_to_model!(agent, model::SingleContainerABM{<:SpaceType,A,Vector{A}}) where {A}
-    agent.id == nagents(model) + 1 || error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+function add_agent_to_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
+    agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::SingleContainerABM{<:SpaceType,A,<:AbstractDict{Int,A}}) where {A<:AbstractAgent}
-    delete!(agent_container(model), agent.id)
+function add_agent_to_model!(agent::A, model::FixedMassABM) where {A<:AbstractAgent}
+    error("Cannot add agents in a `FixedMassABM`")
 end
-function remove_agent_from_model!(::A, model::SingleContainerABM{<:SpaceType,A,<:AbstractVector}) where {A<:AbstractAgent}
-    error(
-    "Cannot remove agents stored in $(containertype(model)). "*
-    "Use the vanilla `SingleContainerABM` to be able to remove agents."
-    )
+
+function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+    delete!(agent_container(model), agent.id)
+    return
+end
+
+function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
+    error("Cannot remove agents in a `UnremovableABM`")
+end
+
+function remove_agent_from_model!(agent::A, model::FixedMassABM) where {A<:AbstractAgent}
+    error("Cannot remove agents in a FixedMassABM`")
 end
 
 #######################################################################################
