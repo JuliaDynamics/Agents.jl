@@ -7,7 +7,6 @@ In this page we list the remaining API functions, which constitute the bulk of A
 ```@docs
 StandardABM
 UnremovableABM
-FixedMassABM
 ```
 
 ## Agent/model retrieval and access

@@ -1,5 +1,9 @@
 # main
 
+# v5.10
+
+- `FixedMassABM` is now deprecated and will be removed in future versions. Turns out, there is no performance benefit of using it over `UnremovableABM`. In fact, there is a performance **deficit** in doing so.
+
 # v5.9
 
 - `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster.

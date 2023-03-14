@@ -122,32 +122,6 @@ end
     @test_throws ErrorException remove_agent!(model[1], model)
 end
 
-#TODO better tests for FixedMassABM
-@testset "xyz_agent! (sized-vector container)" begin
-    # No Space
-    n_agents = 10
-    agents = [NoSpaceAgent(id) for id in 1:n_agents]
-    model = FixedMassABM(agents)
-    @test_throws ErrorException add_agent!(model)
-    @test_throws ErrorException agent = add_agent!(model)
-    @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
-    @test nagents(model) == n_agents
-    @test_throws ErrorException remove_agent!(model[1], model)
-    @test_throws ErrorException remove_all!(model, [1, 3])
-
-    for (i,a) in enumerate(allagents(model))
-        @test a.id == i
-    end
-
-    #TODO: we gotta make helper functions for initialisation of FixedMassABMs
-    # GraphSpace
-    # model = FixedMassABM([Agent5() for id in 1:n_agents], GraphSpace(path_graph(6)))
-    # add_agent!(model, 5.3)
-    # add_agent!(model, 2.7)
-    # @test nagents(model) == 2
-    # @test_throws ErrorException remove_agent!(model[1], model)
-end
-
 @testset "remove_all!" begin
     # Testing no space
     model = ABM(NoSpaceAgent)
