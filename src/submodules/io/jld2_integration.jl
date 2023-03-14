@@ -42,9 +42,10 @@ Refer to [`AgentsIO.to_serializable`](@ref) for more info.
 """
 from_serializable(t; kwargs...) = t
 
-struct SerializableABM{S,A<:AbstractAgent,P,R<:AbstractRNG}
+struct SerializableABM{S,A<:AbstractAgent,C,P,R<:AbstractRNG}
     agents::Vector{A}
     space::S
+    agents_container::C
     properties::P
     rng::R
     maxid::Int64
@@ -88,6 +89,7 @@ function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
         collect(allagents(t)),
         to_serializable(t.space),
+        typeof(t.agents),
         to_serializable(t.properties),
         t.rng,
         t.maxid.x,
@@ -120,7 +122,8 @@ JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     abm = ABM(
         A,
-        from_serializable(t.space; kwargs...);
+        from_serializable(t.space; kwargs...),
+        container = t.agents_container,
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
