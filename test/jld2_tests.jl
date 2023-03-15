@@ -84,7 +84,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test Set(allids(model)) == Set(allids(other))
         @test all(model[i].weight == other[i].weight for i in allids(model))
         # properties
         @test model.abc == other.abc
@@ -102,7 +102,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test Set(allids(model)) == Set(allids(other))
         @test all(model[i].mood == other[i].mood for i in allids(model))
         @test all(model[i].group == other[i].group for i in allids(model))
         # properties
@@ -136,7 +136,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test Set(allids(model)) == Set(allids(other))
         @test all(model[i].mood == other[i].mood for i in allids(model))
         @test all(model[i].group == other[i].group for i in allids(model))
         # properties
@@ -158,7 +158,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test Set(allids(model)) == Set(allids(other))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].vel == other[i].vel for i in allids(model))
         @test all(model[i].speed == other[i].speed for i in allids(model))
