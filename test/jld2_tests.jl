@@ -84,7 +84,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test Set(allids(model)) == Set(allids(other))
         @test all(model[i].weight == other[i].weight for i in allids(model))
         # properties
         @test model.abc == other.abc
@@ -93,87 +93,57 @@
 
         rm("test.jld2")
     end
+    
+    @testset "$(ModelType)" for ModelType in (StandardABM, UnremovableABM)
 
-    @testset "GridSpace" begin
-        model, astep, mstep = Models.schelling()
-        step!(model, astep, mstep, 50)
-        AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+        @testset "ContinuousSpace" begin
+            model, astep, mstep = flocking_model(ModelType)
+            step!(model, astep, mstep, 100)
+            AgentsIO.save_checkpoint("test.jld2", model)
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
 
-        # agent data
-        @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].mood == other[i].mood for i in allids(model))
-        @test all(model[i].group == other[i].group for i in allids(model))
-        # properties
-        @test model.min_to_be_happy == other.min_to_be_happy
-        # model data
-        test_model_data(model, other)
-        # space data
-        @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_space(model.space, other.space)
+            # agent data
+            @test nagents(other) == nagents(model)
+            @test Set(allids(model)) == Set(allids(other))
+            @test all(model[i].pos == other[i].pos for i in allids(model))
+            @test all(model[i].vel == other[i].vel for i in allids(model))
+            @test all(model[i].speed == other[i].speed for i in allids(model))
+            @test all(model[i].cohere_factor == other[i].cohere_factor for i in allids(model))
+            @test all(model[i].separation == other[i].separation for i in allids(model))
+            @test all(model[i].separate_factor == other[i].separate_factor for i in allids(model))
+            @test all(model[i].match_factor == other[i].match_factor for i in allids(model))
+            @test all(model[i].visual_distance == other[i].visual_distance for i in allids(model))
+            # model data
+            test_model_data(model, other)
+            # space data
+            @test typeof(model.space) == typeof(other.space)    # to check periodicity
+            test_space(model.space, other.space)
 
-        rm("test.jld2")
-    end
-
-    @testset "GridSpaceSingle" begin
-        function schelling_single(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
-            @assert numagents < prod(griddims)
-            space = GridSpaceSingle(griddims, periodic = false)
-            properties = Dict(:min_to_be_happy => min_to_be_happy)
-            model = ABM(Models.SchellingAgent, space; properties, scheduler = Schedulers.Randomly())
-            for n in 1:numagents
-                agent = Models.SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-                add_agent_single!(agent, model)
-            end
-            return model, Models.schelling_agent_step!, dummystep
+            rm("test.jld2")
         end
 
-        model, astep, mstep = Models.schelling()
-        step!(model, astep, mstep, 50)
-        AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+        @testset "$(SpaceType)" for SpaceType in (GridSpace, GridSpaceSingle)
+        
+            model, astep, mstep = schelling_model(ModelType, SpaceType)
+            step!(model, astep, mstep, 5)
+            AgentsIO.save_checkpoint("test.jld2", model)
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
 
-        # agent data
-        @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].mood == other[i].mood for i in allids(model))
-        @test all(model[i].group == other[i].group for i in allids(model))
-        # properties
-        @test model.min_to_be_happy == other.min_to_be_happy
-        # model data
-        test_model_data(model, other)
-        # space data
-        @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_space(model.space, other.space)
+            # agent data
+            @test nagents(other) == nagents(model)
+            @test Set(allids(model)) == Set(allids(other))
+            @test all(model[i].mood == other[i].mood for i in allids(model))
+            @test all(model[i].group == other[i].group for i in allids(model))
+            # properties
+            @test model.min_to_be_happy == other.min_to_be_happy
+            # model data
+            test_model_data(model, other)
+            # space data
+            @test typeof(model.space) == typeof(other.space)    # to check periodicity
+            test_space(model.space, other.space)
 
-        rm("test.jld2")
-    end
-
-    @testset "ContinuousSpace" begin
-        model, astep, mstep = Models.flocking(n_birds = 300)
-        step!(model, astep, mstep, 100)
-        AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
-
-        # agent data
-        @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
-        @test all(model[i].pos == other[i].pos for i in allids(model))
-        @test all(model[i].vel == other[i].vel for i in allids(model))
-        @test all(model[i].speed == other[i].speed for i in allids(model))
-        @test all(model[i].cohere_factor == other[i].cohere_factor for i in allids(model))
-        @test all(model[i].separation == other[i].separation for i in allids(model))
-        @test all(model[i].separate_factor == other[i].separate_factor for i in allids(model))
-        @test all(model[i].match_factor == other[i].match_factor for i in allids(model))
-        @test all(model[i].visual_distance == other[i].visual_distance for i in allids(model))
-        # model data
-        test_model_data(model, other)
-        # space data
-        @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_space(model.space, other.space)
-
-        rm("test.jld2")
+            rm("test.jld2")
+        end
     end
 
     @testset "GraphSpace" begin

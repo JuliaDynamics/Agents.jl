@@ -39,7 +39,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].old_opinion == empty_model[i].old_opinion for i in allids(model))
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
@@ -48,7 +48,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv", HKAgent, Dict(:id => 1, :op1 => 3, :op2 => 2))
     
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].old_opinion == empty_model[i].old_opinion for i in allids(model))
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
@@ -63,7 +63,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv"; row_number_is_id = true)
 
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].old_opinion == empty_model[i].old_opinion for i in allids(model))
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
@@ -72,7 +72,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv", HKAgent, Dict(:op1 => 1, :op2 => 1); row_number_is_id = true)
     
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].old_opinion == empty_model[i].old_opinion for i in allids(model))
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
@@ -87,7 +87,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].old_opinion == empty_model[i].old_opinion for i in allids(model))
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
@@ -99,7 +99,7 @@
     AgentsIO.populate_from_csv!(empty_model, "test.csv")
 
     @test nagents(empty_model) == nagents(model)
-    @test all(haskey(empty_model.agents, i) for i in allids(model))
+    @test Set(allids(empty_model)) == Set(allids(model))
     @test all(model[i].pos == empty_model[i].pos for i in allids(model))
     @test all(model[i].mood == empty_model[i].mood for i in allids(model))
     @test all(model[i].group == empty_model[i].group for i in allids(model))
