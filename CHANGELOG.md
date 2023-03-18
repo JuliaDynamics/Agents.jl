@@ -1,6 +1,6 @@
 # main
 
-- Iterating over ids in a `GridSpace` is now 2 times faster than before.
+- Iterating in neighborhood searches (with `nearby_ids` and derivative functions) is now about 2 times faster than before.
 
 # v5.10
 
