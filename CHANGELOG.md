@@ -1,5 +1,9 @@
 # main
 
+# v5.11
+
+- Iterating in neighborhood searches (with `nearby_ids` and derivative functions) in `GridSpace` and `ContinuousSpace` is now about 2 times faster than before.
+
 # v5.10
 
 - `FixedMassABM` is now deprecated and will be removed in future versions. Turns out, there is no performance benefit of using it over `UnremovableABM`. In fact, there is a performance **deficit** in doing so.

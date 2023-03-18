@@ -133,7 +133,11 @@ Base.IteratorSize(::Type{<:GridSpaceIdIterator}) = Base.SizeUnknown()
 # Instructs how to combine two positions. Just to avoid code duplication for periodic
 combine_positions(pos, origin, ::GridSpaceIdIterator{false}) = pos .+ origin
 function combine_positions(pos, origin, iter::GridSpaceIdIterator{true})
-    mod1.(pos .+ origin, iter.space_size)
+    # the mod function is not needed for many positions and it's expensive compared
+    # with checking for bounds so it is better to apply it only as a fallback.
+    off_pos = pos .+ origin
+    checkbounds(Bool, iter.stored_ids, off_pos...) && return off_pos
+    return mod1.(off_pos, iter.space_size)
 end
 
 # Initialize iteration
@@ -154,16 +158,14 @@ function Base.iterate(iter::GridSpaceIdIterator)
     # We have a valid position index and a non-empty position
     ids_in_pos = stored_ids[pos_index...]
     id = ids_in_pos[1]
-    return (id, (pos_i, 2))
     end
+    return (id, (pos_i, 2, ids_in_pos))
 end
 
 # Must return `true` if the access is invalid
 function invalid_access(pos_index, iter::GridSpaceIdIterator{false})
     valid_bounds = checkbounds(Bool, iter.stored_ids, pos_index...)
-    empty_pos = valid_bounds && @inbounds isempty(iter.stored_ids[pos_index...])
-    valid = valid_bounds && !empty_pos
-    return !valid
+    return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
 end
 function invalid_access(pos_index, iter::GridSpaceIdIterator{true})
     @inbounds isempty(iter.stored_ids[pos_index...])
@@ -176,10 +178,7 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
     @inbounds begin
     stored_ids, indices, L, origin = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin))
-    pos_i, inner_i = state
-    pos_index = combine_positions(indices[pos_i], origin, iter)
-    # We know guaranteed from previous iteration that `pos_index` is valid index
-    ids_in_pos = stored_ids[pos_index...]
+    pos_i, inner_i, ids_in_pos = state
     X = length(ids_in_pos)
     if inner_i > X
         # we have exhausted IDs in current position, so we reset and go to next
@@ -198,10 +197,9 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
     end
     # We reached the next valid position and non-empty position
     id = ids_in_pos[inner_i]
-    return (id, (pos_i, inner_i + 1))
+    return (id, (pos_i, inner_i + 1, ids_in_pos))
     end
 end
-
 
 
 ##########################################################################################
