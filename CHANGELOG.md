@@ -1,5 +1,7 @@
 # main
 
+- Iterating over ids in a `GridSpace` is now 2 times faster than before.
+
 # v5.10
 
 - `FixedMassABM` is now deprecated and will be removed in future versions. Turns out, there is no performance benefit of using it over `UnremovableABM`. In fact, there is a performance **deficit** in doing so.
