@@ -2,7 +2,7 @@
 
 # v5.11
 
-- Iterating in neighborhood searches (with `nearby_ids` and derivative functions) is now about 2 times faster than before.
+- Iterating in neighborhood searches (with `nearby_ids` and derivative functions) in `GridSpace` and `ContinuousSpace` is now about 2 times faster than before.
 
 # v5.10
 
