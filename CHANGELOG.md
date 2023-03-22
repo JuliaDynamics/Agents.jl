@@ -1,5 +1,7 @@
 # main
 
+- The `random_nearby_position` function is now much faster for GridSpaces.
+
 # v5.11
 
 - Iterating in neighborhood searches (with `nearby_ids` and derivative functions) in `GridSpace` and `ContinuousSpace` is now about 2 times faster than before.
@@ -16,7 +18,6 @@
   - `genocide! -> remove_all!`
   - `kill_agent! -> remove_agent!`
   - `UnkillableABM -> UnremovableABM`
-- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
 - New function `random_nearby_position` that returns a random neighbouring position.
 - New function `empty_nearby_positions` that returns an iterable of all empty neighboring positions.
 
