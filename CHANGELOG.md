@@ -1,5 +1,7 @@
 # main
 
+# v5.12
+
 - The `random_nearby_position` function is now much faster for GridSpaces.
 
 # v5.11
