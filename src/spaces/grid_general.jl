@@ -161,9 +161,11 @@ end
 
 function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(model.space, r)
+    stored_ids = model.space.stored_ids
     chosen_offset = rand(abmrng(model), nindices)
-    chosen_pos = mod1.(pos .+ chosen_offset, spacesize(model))
-    return chosen_pos
+    chosen_pos = pos .+ chosen_offset
+    checkbounds(Bool, stored_ids, chosen_pos...) && return chosen_pos
+    return mod1.(chosen_pos, spacesize(model))
 end
   
 ###################################################################
