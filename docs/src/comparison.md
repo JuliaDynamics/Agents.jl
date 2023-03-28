@@ -18,13 +18,13 @@ For LOC, we use the following convention: code is formatted using standard pract
 
 | Model/Framework | Agents 5.12.0 | Mesa 1.2.0 | Netlogo 6.3.0 | MASON 21.0 |
 |---|---|---|---|---|
-|Wolf Sheep Grass|1|21.5x|12.4x|NA|
+|Wolf Sheep Grass|1|50.2x|28.2x|NA|
 |(LOC)|122|227|137 (871)| . |
-|Flocking|1|26.8x|10.3xᕯ|2.1x|
+|Flocking|1|129.8x|25.5xᕯ|9.0x|
 |(LOC)|62|102|82 (689)|369|
-|Forest Fire|1|120.5x|53.8x|NA|
+|Forest Fire|1|303.7x|222.2x|NA|
 |(LOC)|23|35|43 (545)|.|
-|Schelling|1|84.7x|40.9x|73.1x|
+|Schelling|1|209.4x|166.4x|195.9x|
 |(LOC)|31|56|60 (743)|248|
 
 ᕯ Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
