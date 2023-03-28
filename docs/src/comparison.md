@@ -16,15 +16,15 @@ Time taken is presented in normalised units, measured against the runtime of Age
 
 For LOC, we use the following convention: code is formatted using standard practices & linting for the associated language. Documentation strings and in-line comments (residing on lines of their own) are discarded, as well as any benchmark infrastructure. NetLogo is assigned two values since its files have a code base section and an encoding of the GUI. Since many parameters live in the GUI, we must take this into account. Thus `375 (785)` in a NetLogo count means 375 lines in the code section, 785 lines total in the file. An additional complication to this value in NetLogo is that it stores plotting information (colours, shapes, sizes) as agent properties, and as such the number outside of the bracket may be slightly inflated.
 
-| Model/Framework | Agents 4.5.3 | Mesa 0.8.9| Netlogo 6.2 | MASON 20.0 |
+| Model/Framework | Agents 5.12.0 | Mesa 1.2.0 | Netlogo 6.4 | MASON 21.0 |
 |---|---|---|---|---|
-|Wolf Sheep Grass|1|21.5x|12.4x|NA|
+|Wolf Sheep Grass|1|50.2x|28.2x|NA|
 |(LOC)|122|227|137 (871)| . |
-|Flocking|1|26.8x|10.3xᕯ|2.1x|
+|Flocking|1|129.8x|25.5xᕯ|9.0x|
 |(LOC)|62|102|82 (689)|369|
-|Forest Fire|1|120.5x|53.8x|NA|
+|Forest Fire|1|303.7x|222.2x|NA|
 |(LOC)|23|35|43 (545)|.|
-|Schelling|1|84.7x|40.9x|73.1x|
+|Schelling|1|209.4x|166.4x|195.9x|
 |(LOC)|31|56|60 (743)|248|
 
 ᕯ Netlogo has a different implementation to the other three frameworks here. It cheats a little by only choosing one nearest neighbor in some cases rather than considering all neighbors within vision. So a true comparison would ultimately see a slower result.
