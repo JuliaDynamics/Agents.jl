@@ -106,6 +106,9 @@ function cell_center(pos::NTuple{D,<:AbstractFloat}, model) where {D}
     model.space.spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
+distance_from_cell_center(pos, model::ABM) =
+    euclidean_distance(pos, cell_center(pos, model), model)
+
 function add_agent_to_space!(
     a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
     push!(model.space.grid.stored_ids[cell_index...], a.id)
@@ -188,7 +191,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
         nearby_ids_exact(pos, model, r)
     end
     # Calculate maximum grid distance (distance + distance from cell center)
-    δ = euclidean_distance(pos, cell_center(pos, model), model)
+    δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the number of ids
     grid_r = ceil(Int, (r + δ) / model.space.spacing)
     # Then return the ids within this distance, using the internal grid space
