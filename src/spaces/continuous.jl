@@ -141,7 +141,6 @@ end
 
 
 
-
 """
     move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
 Propagate the agent forwards one step according to its velocity, _after_ updating the
