@@ -14,7 +14,7 @@
 
 # ## The system simulated
 #
-# The example will illustrate how to simulate a set of particles in 2 dimensions, interaction
+# The example will illustrate how to simulate a set of particles in 2 dimensions, interacting
 # through a simple repulsive potential of the form:
 #
 # $U(r) = k_i k_j\left[r^2 - (r_i+r_j)^2\right]^2~~~\textrm{for}~~~r \leq (r_i+r_j)$
