@@ -16,7 +16,7 @@ Time taken is presented in normalised units, measured against the runtime of Age
 
 For LOC, we use the following convention: code is formatted using standard practices & linting for the associated language. Documentation strings and in-line comments (residing on lines of their own) are discarded, as well as any benchmark infrastructure. NetLogo is assigned two values since its files have a code base section and an encoding of the GUI. Since many parameters live in the GUI, we must take this into account. Thus `375 (785)` in a NetLogo count means 375 lines in the code section, 785 lines total in the file. An additional complication to this value in NetLogo is that it stores plotting information (colours, shapes, sizes) as agent properties, and as such the number outside of the bracket may be slightly inflated.
 
-| Model/Framework | Agents 5.12.0 | Mesa 1.2.0 | Netlogo 6.4 | MASON 21.0 |
+| Model/Framework | Agents 5.12.0 | Mesa 1.2.0 | Netlogo 6.3.0 | MASON 21.0 |
 |---|---|---|---|---|
 |Wolf Sheep Grass|1|50.2x|28.2x|NA|
 |(LOC)|122|227|137 (871)| . |

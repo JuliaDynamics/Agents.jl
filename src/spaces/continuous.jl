@@ -98,20 +98,16 @@ function random_position(model::ABM{<:ContinuousSpace})
 end
 
 "given position in continuous space, return cell coordinates in grid space."
-pos2cell(pos::Tuple, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
+pos2cell(pos::Tuple, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
 
 "given position in continuous space, return continuous space coordinates of cell center."
 function cell_center(pos::NTuple{D,<:AbstractFloat}, model) where {D}
-    ε = model.space.spacing
-    (pos2cell(pos, model) .- 1) .* ε .+ ε/2
+    model.space.spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
 distance_from_cell_center(pos, model::ABM) =
-    distance_from_cell_center(pos, cell_center(pos, model))
-function distance_from_cell_center(pos::Tuple, center::Tuple)
-    sqrt(sum(abs2.(pos .- center)))
-end
+    euclidean_distance(pos, cell_center(pos, model), model)
 
 function add_agent_to_space!(
     a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
@@ -134,9 +130,8 @@ end
 # move the agent in the GridSpace; only change its position field
 function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
     ) where {D, A<:AbstractAgent}
-    for i in 1:D
-        pos[i] > spacesize(model)[i] && error("position is outside space extent!")
-    end
+    space_size = spacesize(model)
+    all(i -> 0 <= pos[i] < space_size[i], 1:D) || error("position is outside space extent!")
     oldcell = pos2cell(agent, model)
     newcell = pos2cell(pos, model)
     if oldcell ≠ newcell
@@ -196,8 +191,8 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
         nearby_ids_exact(pos, model, r)
     end
     # Calculate maximum grid distance (distance + distance from cell center)
-    δ = distance_from_cell_center(pos, cell_center(pos, model))
-    # Ceiling since the grid has euclidean metric
+    δ = distance_from_cell_center(pos, model)
+    # Ceiling since we want always to overestimate the radius
     grid_r = ceil(Int, (r + δ) / model.space.spacing)
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
