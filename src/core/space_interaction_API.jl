@@ -367,23 +367,19 @@ end
 function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
     isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
-    
     rng = abmrng(model)
-    choice, state = res               # random position to return, and the state of the iterator
     w = max(rand(rng), eps())         # rand returns in range [0,1)
-
-    skip_counter = 0                  # skip entries in the iterator
-    while !isnothing(state) && !isnothing(iter)
-        if skip_counter == 0
-            choice, state = res
-            skip_counter = floor(log(rand(rng)) / log(1 - w))
-            w *= max(rand(rng), eps())
-        else
-            _, state = res
+    while true
+        choice, state = res           # random position to return, and the state of the iterator
+        skip_counter = floor(log(rand(rng)) / log(1 - w))  # skip entries in the iterator
+        while skip_counter != 0
+            skip_res = iterate(iter, state)
+            isnothing(skip_res) && return choice
+            state = skip_res[2]
             skip_counter -= 1
         end
         res = iterate(iter, state)
-        isnothing(res) && break
+        isnothing(res) && return choice
+        w *= max(rand(rng), eps())
     end
-    return choice
 end
