@@ -371,8 +371,7 @@ function resorvoir_sampling_single(iter, model)
     w = max(rand(rng), eps())         # rand returns in range [0,1)
     while true
         choice, state = res           # random position to return, and the state of the iterator
-        skip_counter = floor(log(rand(rng)) / log(1 - w))
-        w *= max(rand(rng), eps())
+        skip_counter = floor(log(rand(rng)) / log(1 - w))  # skip entries in the iterator
         while skip_counter != 0
             skip_res = iterate(iter, state)
             isnothing(skip_res) && return choice
@@ -381,5 +380,6 @@ function resorvoir_sampling_single(iter, model)
         end
         res = iterate(iter, state)
         isnothing(res) && return choice
+        w *= max(rand(rng), eps())
     end
 end
