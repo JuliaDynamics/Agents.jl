@@ -1,5 +1,9 @@
 # main
 
+# v5.13
+
+- `random_nearby_position`, `random_nearby_ids` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
+
 # v5.12
 
 - The `random_nearby_position` function is now much faster for GridSpaces.
