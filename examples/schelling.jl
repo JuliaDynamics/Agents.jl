@@ -115,11 +115,13 @@ agent = schelling[2]
 
 # ## Using an `UnremovableABM`
 
-# We know that the number of agents in the model never change.
-# This means that we shouldn't use the the default version of ABM that is initialized
-# by `ABM`, becuase this allows deleting agents (at a performance defecit).
-# Instead, we should use [`UnremovableABM`](@ref). The only change necessary
-# for this to work is to simply change the call to `ABM` to a call to `UnremovableABM`.
+# We know that the number of agents in the model never changes.
+# This means that we shouldn't use the default version of ABM that is initialized
+# by `ABM` because it allows deletion of agents (at a performance deficit) and we
+# don't need that feature here.
+# Instead, we should use [`UnremovableABM`](@ref).
+# The only change necessary for this to work is to simply change the call to 
+# `ABM` to a call to `UnremovableABM`.
 
 schelling = UnremovableABM(SchellingAgent, space; properties)
 
