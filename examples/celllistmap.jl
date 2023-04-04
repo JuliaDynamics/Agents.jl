@@ -34,7 +34,7 @@ using Agents
 
 # Below we define the `Particle` type, which represents the agents of the
 # simulation. The `Particle` type, for the `ContinousAgent{2}` space, will have additionally
-# an `id` and `pos` (positon) and `vel` (velocity) fields, which are automatically added
+# an `id` and `pos` (position) and `vel` (velocity) fields, which are automatically added
 # by the `@agent` macro.
 @agent Particle ContinuousAgent{2} begin
     r::Float64 # radius

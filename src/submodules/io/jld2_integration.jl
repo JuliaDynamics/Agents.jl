@@ -24,7 +24,7 @@ function.
 This function, and [`AgentsIO.from_serializable`](@ref)
 is not called recursively on every type/value during serialization. The final
 serialization functionality is enabled by JLD2.jl. To define custom serialization
-for every occurence of a specific type (such as agent structs), refer to the
+for every occurrence of a specific type (such as agent structs), refer to the
 Custom Serialization section of JLD2.jl documentation.
 """
 to_serializable(t) = t

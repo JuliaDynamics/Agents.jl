@@ -227,7 +227,7 @@ Note that in general a 3D rotation requires 1 angle and 1 axis of rotation (or 3
 Here, using only 2 angles, `w` is first rotated by angle `θ`
 about an arbitrarily chosen vector (`u`) normal to it (`u⋅w=0`);
 this new rotated vector (`a`) is then rotated about the original `w` by the angle `ϕ`.
-The resulting vector (`v`) satifies (v⋅w)/(|v|*|w|) = cos(θ) ∀ ϕ.
+The resulting vector (`v`) satisfies (v⋅w)/(|v|*|w|) = cos(θ) ∀ ϕ.
 """
 function rotate(w::SVector{3}, θ::Real, ϕ::Real)
     # find a vector normal to w

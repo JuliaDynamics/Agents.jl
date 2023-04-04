@@ -73,7 +73,7 @@ end
 #######################################################################################
 # Implementation of nearby_stuff
 #######################################################################################
-# The following functions utilize the 1-agent-per-posiiton knowledge,
+# The following functions utilize the 1-agent-per-position knowledge,
 # hence giving faster nearby looping than `GridSpace`.
 # Notice that the code here is a near duplication of `nearby_positions`
 # defined in spaces/grid_general.jl. Unfortunately

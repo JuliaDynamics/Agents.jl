@@ -22,7 +22,7 @@ end
 """
     ContinuousAgent{D} <: AbstractAgent
 The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
-It has the additoinal fields `pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
+It has the additional fields `pos::NTuple{D,Float64}, vel::NTuple{D,Float64}`.
 See also [`@agent`](@ref).
 """
 @agent ContinuousAgent{D} NoSpaceAgent begin
@@ -373,7 +373,7 @@ The argument `method` provides three pairing scenarios
   (similar to `:all`), only capturing pairs of differing types. For example, a model of
   `Union{Sheep,Wolf}` will only return pairs of `(Sheep, Wolf)`. In the case of multiple
   agent types, e.g. `Union{Sheep, Wolf, Grass}`, skipping pairings that involve
-  `Grass`, can be achived by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
+  `Grass`, can be achieved by a [`scheduler`](@ref Schedulers) that doesn't schedule `Grass`
   types, i.e.: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
 
 The following keywords can be used:
@@ -381,7 +381,7 @@ The following keywords can be used:
   pairs. Especially in the `:nearest` case, this is important, as different sequencing
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
-  on whether `a` was scheduelr first or not).
+  on whether `a` was scheduler first or not).
 - `nearby_f = nearby_ids_exact` is the function that decides how to find nearby IDs
   in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
 

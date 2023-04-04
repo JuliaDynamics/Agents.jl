@@ -224,7 +224,7 @@ function single_agent_types!(
         current_type = typeof(get_data(a, k, identity))
         isconcretetype(current_type) || @warn(
             "Type is not concrete when using $(k) " *
-            "on agents. Consider narrowning the type signature of $(k).",
+            "on agents. Consider narrowing the type signature of $(k).",
         )
         types[i+2] = current_type[]
     end
