@@ -57,7 +57,7 @@ Create a fresh instance of a space with the same properties if you need to do th
 - `properties = nothing`: additional model-level properties that the user may decide upon
   and include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
-- `scheduler = Schedulers.fastest`: is the scheduelr that decides the (default)
+- `scheduler = Schedulers.fastest`: is the scheduler that decides the (default)
   activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
 - `rng = Random.default_rng()`: the random number generation stored and used by the model
   in all calls to random functions. Accepts any subtype of `AbstractRNG`.

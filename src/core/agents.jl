@@ -30,7 +30,7 @@ See below for examples.
 
 Using `@agent` is the recommended way to create agent types for Agents.jl,
 however keep in mind that the macro (currently) doesn't work with `Base.@kwdef`
-or `const` declerations in individual fields (for Julia v1.8+).
+or `const` declarations in individual fields (for Julia v1.8+).
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
@@ -54,7 +54,7 @@ The existing minimal agent types are:
 
 All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
 a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
-that the resulting new agent type will have. The `id` is an unchangable field.
+that the resulting new agent type will have. The `id` is an unchangeable field.
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
 ## Examples

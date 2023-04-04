@@ -49,7 +49,7 @@ to specify the level of discretisation of the space.
 ## Keywords
 - `diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
   tile, or only orthogonal neighbors. Only available for [`GridSpace`](@ref)
-- `admissibility = 0.0` allows the algorithm to aprroximate paths to speed up pathfinding.
+- `admissibility = 0.0` allows the algorithm to approximate paths to speed up pathfinding.
   A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
   length.
 - `walkmap = trues(size(space))` specifies the (un)walkable positions of the
