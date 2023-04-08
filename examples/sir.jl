@@ -173,6 +173,8 @@ model = model_initiation(; params...)
 
 # Now we define the functions for modelling the virus spread in time
 
+using StatsBase
+
 function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
