@@ -331,7 +331,7 @@ Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
-A filter function `f` can be passed so that to restrict the sampling on only those ids for which
+A filter function `f(id, model)` can be passed so that to restrict the sampling on only those ids for which
 the function returns true.
 """
 function random_nearby_id(a, model, r = 1, f = nothing; kwargs...)
@@ -351,7 +351,7 @@ is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
-A filter function `f` can be passed so that to restrict the sampling on only those agents for which
+A filter function `f(agent, model)` can be passed so that to restrict the sampling on only those agents for which
 the function returns true.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing; kwargs...)
@@ -372,7 +372,7 @@ Return a random position near the given `position`. Return `nothing` if the spac
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
-A filter function `f` can be passed so that to restrict the sampling on only those positions for which
+A filter function `f(pos, model)` can be passed so that to restrict the sampling on only those positions for which
 the function returns true.
 """
 function random_nearby_position(pos, model, r=1, f = nothing; kwargs...)
@@ -436,4 +436,3 @@ function resorvoir_sampling_single(iter, model)
         w *= max(rand(rng), eps())
     end
 end
-
