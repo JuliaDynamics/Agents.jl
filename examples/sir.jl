@@ -44,6 +44,7 @@
 cd(@__DIR__) #src
 using Agents, Random
 using Agents.DataFrames, Agents.Graphs
+using StatsBase: sample, Weights
 using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
@@ -172,8 +173,6 @@ model = model_initiation(; params...)
 # ## SIR Stepping functions
 
 # Now we define the functions for modelling the virus spread in time
-
-using StatsBase
 
 function agent_step!(agent, model)
     migrate!(agent, model)
