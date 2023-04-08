@@ -44,6 +44,7 @@
 cd(@__DIR__) #src
 using Agents, Random
 using Agents.DataFrames, Agents.Graphs
+using StatsBase: sample, Weights
 using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
