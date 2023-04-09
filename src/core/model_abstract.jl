@@ -257,4 +257,3 @@ function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*
     "or other variants of an `add_agent_...` function to add agents to an ABM.")
 end
-
