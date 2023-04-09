@@ -162,21 +162,8 @@ function random_agent(model, condition; optimistic=false)
     if optimistic
         return optimistic_random_agent(model, condition)
     else
-        return allocating_random_agent(model, condition)
+        return sampling_with_condition_agents_single(allids(model), condition, model)
     end
-end
-
-function allocating_random_agent(model, condition)
-    ids = collect(allids(model))
-    rng = abmrng(model)
-    while !isempty(ids)
-        index_id = rand(rng, eachindex(ids))
-        id = ids[index_id]
-        condition(model[id]) && return model[id]
-        ids[index_id], ids[end] = ids[end], ids[index_id]
-        pop!(ids)
-    end
-    return nothing
 end
 
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
@@ -186,7 +173,7 @@ function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model)
         condition(model[idx]) && return model[idx]
     end
     # Fallback after n_attempts tries to find an agent
-    return allocating_random_agent(model, condition)
+    return sampling_with_condition_agents_single(allids(model), condition, model)
 end
 
 # TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
