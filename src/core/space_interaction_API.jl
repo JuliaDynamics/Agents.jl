@@ -323,7 +323,7 @@ nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
 
 """
-    random_nearby_id(agent, model::ABM, r = 1, f=nothing; kwargs...) → id
+    random_nearby_id(agent, model::ABM, r = 1, f = nothing; kwargs...) → id
 Return the `id` of a random agent near the position of the given `agent` using an optimized
 algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
 Return `nothing` if no agents are nearby.
@@ -343,7 +343,7 @@ function random_nearby_id(a, model, r = 1, f = nothing; kwargs...)
 end
 
 """
-    random_nearby_agent(agent, model::ABM, r = 1, f=nothing; kwargs...) → agent
+    random_nearby_agent(agent, model::ABM, r = 1, f = nothing; kwargs...) → agent
 Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
@@ -364,7 +364,7 @@ function random_nearby_agent(a, model, r = 1, f = nothing; kwargs...)
 end
 
 """
-    random_nearby_position(position, model::ABM, r=1, f=nothing; kwargs...) → position
+    random_nearby_position(position, model::ABM, r=1, f = nothing; kwargs...) → position
 Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
