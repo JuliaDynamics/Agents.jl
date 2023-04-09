@@ -205,7 +205,7 @@ using StableRNGs
             valid_ids = collect(nearby_ids(abm[1], abm, 5))
             @test nearby_id in valid_ids
             some_ids = valid_ids[1:3]
-            f(id, model) = id in some_ids
+            f(id) = id in some_ids
             filtered_nearby_id = random_nearby_id(abm[1], abm, 5, f)
             @test filtered_nearby_id in some_ids
             # test random_nearby_position
@@ -213,7 +213,7 @@ using StableRNGs
             nearby_position = random_nearby_position(abm[1].pos, abm, 3)
             @test nearby_position in valid_positions
             some_positions = valid_positions[3:5]
-            g(pos, model) = pos in some_positions
+            g(pos) = pos in some_positions
             filtered_nearby_position = random_nearby_position(abm[1].pos, abm, 3, g)
             @test filtered_nearby_position in some_positions
             # test random_nearby_agent
@@ -221,7 +221,7 @@ using StableRNGs
             nearby_agent = random_nearby_agent(abm[1], abm, 2)
             @test nearby_agent in valid_agents
             some_agents = valid_agents[2:4]
-            h(agent, model) = agent in some_agents
+            h(agent) = agent in some_agents
             filtered_nearby_agent = random_nearby_agent(abm[1], abm, 2, h)
             @test filtered_nearby_agent in some_agents
             # test methods after removal of all agents
