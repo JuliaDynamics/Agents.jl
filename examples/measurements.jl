@@ -70,15 +70,9 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         temperature = model[ids[1]].temperature
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
         if rand(model.rng) < seed_threshold
-            empty_neighbors = Tuple{Int,Int}[]
-            neighbors = nearby_positions(pos, model)
-            for n in neighbors
-                if length(ids_in_position(n, model)) == 1
-                    push!(empty_neighbors, n)
-                end
-            end
-            if !isempty(empty_neighbors)
-                seeding_place = rand(model.rng, empty_neighbors)
+            filter_place_daisy(pos) = length(ids_in_position(pos, model)) == 1
+            seeding_place = random_nearby_position(pos, model, 1, filter_place_daisy)
+            if !isnothing(seeding_place)
                 a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
                 add_agent_pos!(a, model)
             end
