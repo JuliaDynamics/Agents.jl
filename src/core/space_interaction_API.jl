@@ -323,47 +323,97 @@ nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
 
 """
-    random_nearby_id(agent, model::ABM, r = 1; kwargs...) → id
-
+    random_nearby_id(agent, model::ABM, r = 1, f = nothing; kwargs...) → id
 Return the `id` of a random agent near the position of the given `agent` using an optimized
 algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
 Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+
+A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
+the function returns `true`.
 """
-function random_nearby_id(a, model, r = 1; kwargs...)
-    # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
+function random_nearby_id(a, model, r = 1, f = nothing; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
-    return resorvoir_sampling_single(iter, model)
+    if isnothing(f)
+        return resorvoir_sampling_single(iter, model)
+    else
+        return sampling_with_condition_single(iter, f, model)
+    end
 end
 
 """
-    random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
-
+    random_nearby_agent(agent, model::ABM, r = 1, f = nothing; kwargs...) → agent
 Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+
+A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
+the function returns `true`.
 """
-function random_nearby_agent(a, model, r = 1; kwargs...)
-    id = random_nearby_id(a, model, r; kwargs...)
-    isnothing(id) && return
-    return model[id]
+function random_nearby_agent(a, model, r = 1, f = nothing; kwargs...)
+    if isnothing(f)
+        id = random_nearby_id(a, model, r; kwargs...)
+        isnothing(id) && return nothing
+        return model[id]
+    else
+        iter = nearby_ids(a, model, r; kwargs...)
+        return sampling_with_condition_agents_single(iter, f, model)
+    end
 end
 
 """
-    random_nearby_position(position, model::ABM, r=1; kwargs...) → position
-
+    random_nearby_position(position, model::ABM, r=1, f = nothing; kwargs...) → position
 Return a random position near the given `position`. Return `nothing` if the space doesn't allow for nearby positions.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
+
+A filter function `f(pos)` can be passed so that to restrict the sampling on only those positions for which
+the function returns `true`.
 """
-function random_nearby_position(pos, model, r=1; kwargs...)
-    # Uses the same Reservoir Sampling algorithm than nearby_ids
+function random_nearby_position(pos, model, r=1, f = nothing; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
-    return resorvoir_sampling_single(iter, model)
+    if isnothing(f)
+        return resorvoir_sampling_single(iter, model)
+    else
+        return sampling_with_condition_single(iter, f, model)
+    end
 end
 
+#######################################################################################
+# %% sampling functions
+#######################################################################################
+
+function sampling_with_condition_single(iter, condition, model)
+    population = collect(iter)
+    rng = abmrng(model)
+    while !isempty(population)
+        index_id = rand(rng, eachindex(population))
+        el = population[index_id]
+        condition(el) && return el
+        population[index_id], population[end] = population[end], population[index_id]
+        pop!(population)
+    end
+    return nothing
+end
+
+# almost a copy of sampling_with_condition_single, but it's better to call this one
+# when selecting an agent since collecting ids is less costly than collecting agents
+function sampling_with_condition_agents_single(iter, condition, model)
+    population = collect(iter)
+    rng = abmrng(model)
+    while !isempty(population)
+        index_id = rand(rng, eachindex(population))
+        el = population[index_id]
+        condition(model[el]) && return model[el]
+        population[index_id], population[end] = population[end], population[index_id]
+        pop!(population)
+    end
+    return nothing
+end
+
+# Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
 function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
     isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
