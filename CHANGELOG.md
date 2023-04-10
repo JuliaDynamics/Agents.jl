@@ -2,11 +2,11 @@
 
 # v5.14
 
-- New optional filtering functionality to restrict the sampling added to `random_nearby_position`, `random_nearby_ids` and `random_nearby_agent`.
+- New optional filtering functionality to restrict the sampling added to `random_nearby_position`, `random_nearby_id` and `random_nearby_agent`.
 
 # v5.13
 
-- `random_nearby_position`, `random_nearby_ids` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
+- `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
 
 # v5.12
 
