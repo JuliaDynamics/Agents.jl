@@ -415,7 +415,6 @@ function sampling_with_condition_agents_single(iter, condition, model)
     return nothing
 end
 
-
 # Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
 function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
