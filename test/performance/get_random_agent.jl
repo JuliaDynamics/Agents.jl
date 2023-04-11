@@ -1,5 +1,4 @@
 using Agents, Random, BenchmarkTools
-using Agents: optimistic_random_agent, allocating_random_agent
 
 mutable struct LabelledAgent <: AbstractAgent
     id::Int
@@ -33,13 +32,11 @@ end
 # All times are median
 
 # UnremovableABM
-@benchmark optimistic_random_agent($noremove_model, $cond)
-@benchmark allocating_random_agent($noremove_model, $cond)
-@benchmark random_agent($noremove_model, $cond)
+@benchmark random_agent($noremove_model, $cond, optimistic=true)
+@benchmark random_agent($noremove_model, $cond, optimistic=false)
 @benchmark old_random_agent($noremove_model, $cond)
 
 # DictionaryABM
-@benchmark optimistic_random_agent($dict_model, $cond)
-@benchmark allocating_random_agent($dict_model, $cond)
-@benchmark random_agent($dict_model, $cond)
-@benchmark old_random_agent($dict_model, $cond)
+@benchmark random_agent($noremove_model, $cond, optimistic=true)
+@benchmark random_agent($noremove_model, $cond, optimistic=false)
+@benchmark old_random_agent($noremove_model, $cond)
