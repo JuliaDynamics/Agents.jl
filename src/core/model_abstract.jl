@@ -168,9 +168,10 @@ end
 
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
     rng = abmrng(model)
-    for _ in 1:n_attempts
-        idx = rand(rng, allids(model))
+    @inbounds while n_attempts != 0
+        idx = rand(rng, ids)
         condition(model[idx]) && return model[idx]
+        n_attempts -= 1
     end
     # Fallback after n_attempts tries to find an agent
     return sampling_with_condition_agents_single(allids(model), condition, model)
