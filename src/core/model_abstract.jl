@@ -168,6 +168,7 @@ end
 
 function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
     rng = abmrng(model)
+    ids = allids(model)
     @inbounds while n_attempts != 0
         idx = rand(rng, ids)
         condition(model[idx]) && return model[idx]
