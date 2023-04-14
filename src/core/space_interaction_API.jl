@@ -387,13 +387,14 @@ end
 
 function sampling_with_condition_single(iter, condition, model)
     population = collect(iter)
+    n = length(population)
     rng = abmrng(model)
-    while !isempty(population)
-        index_id = rand(rng, eachindex(population))
+    @inbounds while n != 0
+        index_id = rand(rng, 1:n)
         el = population[index_id]
         condition(el) && return el
-        population[index_id], population[end] = population[end], population[index_id]
-        pop!(population)
+        population[index_id], population[n] = population[n], population[index_id]
+        n -= 1
     end
     return nothing
 end
@@ -402,13 +403,14 @@ end
 # when selecting an agent since collecting ids is less costly than collecting agents
 function sampling_with_condition_agents_single(iter, condition, model)
     population = collect(iter)
+    n = length(population)
     rng = abmrng(model)
-    while !isempty(population)
-        index_id = rand(rng, eachindex(population))
+    @inbounds while n != 0
+        index_id = rand(rng, 1:n)
         el = population[index_id]
         condition(model[el]) && return model[el]
-        population[index_id], population[end] = population[end], population[index_id]
-        pop!(population)
+        population[index_id], population[n] = population[n], population[index_id]
+        n -= 1
     end
     return nothing
 end

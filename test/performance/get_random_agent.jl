@@ -5,17 +5,14 @@ mutable struct LabelledAgent <: AbstractAgent
     label::Bool
 end
 
-n_agents = 100
-agents = [LabelledAgent(id, id<=n_agents/3) for id in 1:n_agents]
-noremove_model = UnremovableABM(LabelledAgent)
-dict_model = ABM(LabelledAgent)
-
-for a in agents
-    add_agent!(a, dict_model)
-    add_agent!(a, noremove_model)
+function create_model(ModelType, n_agents_with_condition, n_agents=1000)
+    agents = [LabelledAgent(id, id<=n_agents_with_condition) for id in 1:n_agents]
+    model = ModelType(LabelledAgent)
+    for a in agents
+        add_agent!(a, model)
+    end
+    return model
 end
-
-cond(agent) = agent.label
 
 function old_random_agent(model, condition)
     ids = shuffle!(abmrng(model), collect(allids(model)))
@@ -29,14 +26,28 @@ function old_random_agent(model, condition)
     return a
 end
 
-# All times are median
+cond(agent) = agent.label
+
+# common condition
 
 # UnremovableABM
-@benchmark random_agent($noremove_model, $cond, optimistic=true)
-@benchmark random_agent($noremove_model, $cond, optimistic=false)
-@benchmark old_random_agent($noremove_model, $cond)
+@benchmark random_agent(model, $cond, optimistic=true) setup=(model=create_model(UnremovableABM, 200))
+@benchmark random_agent(model, $cond, optimistic=false) setup=(model=create_model(UnremovableABM, 200))
+@benchmark old_random_agent(model, $cond) setup=(model=create_model(UnremovableABM, 200))
 
 # DictionaryABM
-@benchmark random_agent($noremove_model, $cond, optimistic=true)
-@benchmark random_agent($noremove_model, $cond, optimistic=false)
-@benchmark old_random_agent($noremove_model, $cond)
+@benchmark random_agent(model, $cond, optimistic=true) setup=(model=create_model(StandardABM, 200))
+@benchmark random_agent(model, $cond, optimistic=false) setup=(model=create_model(StandardABM, 200))
+@benchmark old_random_agent(model, $cond) setup=(model=create_model(StandardABM, 200))
+
+# rare condition
+
+# UnremovableABM
+@benchmark random_agent(model, $cond, optimistic=true) setup=(model=create_model(UnremovableABM, 2))
+@benchmark random_agent(model, $cond, optimistic=false) setup=(model=create_model(UnremovableABM, 2))
+@benchmark old_random_agent(model, $cond) setup=(model=create_model(UnremovableABM, 2))
+
+# DictionaryABM
+@benchmark random_agent(model, $cond, optimistic=true) setup=(model=create_model(StandardABM, 2))
+@benchmark random_agent(model, $cond, optimistic=false) setup=(model=create_model(StandardABM, 2))
+@benchmark old_random_agent(model, $cond) setup=(model=create_model(StandardABM, 2))
