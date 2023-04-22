@@ -301,3 +301,11 @@ function (sched::ByType)(model::ABM)
 
     return Iterators.flatten(it for it in sched.ids)
 end
+
+@deprecate by_id ById
+@deprecate randomly Randomly
+@deprecate partially Partially
+@deprecate by_property ByProperty
+@deprecate by_type ByType
+
+end # Schedulers submodule
