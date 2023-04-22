@@ -47,6 +47,13 @@ function get_ids!(ids::Vector{Int}, model::ABM)
     end
 end
 
+function get_ids!(ids::Vector{Int}, model::UnremovableABM)
+    n_sched = length(ids)
+    nagents(model) == n_sched && return nothing
+    resize!(ids, nagents(model))
+    ids[n_sched+1:end] = allids(model)[n_sched+1:end]
+end
+
 """
     Schedulers.fastest
 A scheduler that activates all agents once per step in the order dictated by the
@@ -78,6 +85,8 @@ function (sched::ByID)(model::ABM)
     get_ids!(sched.ids, model)
     sort!(sched.ids)
 end
+
+(sched::ByID)(model::UnremovableABM) = allids(model)
 
 """
     Schedulers.randomly
@@ -149,11 +158,11 @@ function by_property(p)
     end
 end
 
-struct ByProperty{P}
+mutable struct ByProperty{P}
     p::P
-    properties::Vector{Float64} # TODO: don't assume Float64
     ids::Vector{Int}
     perm::Vector{Int}
+    properties::Vector
 end
 
 """
@@ -163,15 +172,12 @@ their `property`, with agents with greater `property` acting first. `property` c
 `Symbol`, which just dictates which field of the agents to compare, or a function which
 inputs an agent and outputs a real number.
 """
-ByProperty(p::P) where {P} = ByProperty{P}(p, Float64[], Int[], Int[])
+ByProperty(p::P) where {P} = ByProperty{P}(p, Int[], Int[], [])
 
 function (sched::ByProperty)(model::ABM)
     get_ids!(sched.ids, model)
-    resize!(sched.properties, length(sched.ids))
-
-    for (i, id) in enumerate(sched.ids)
-        sched.properties[i] = Agents.get_data(model[id], sched.p)
-    end
+    
+    sched.properties = [Agents.get_data(model[id], sched.p) for id in sched.ids]
 
     initialized = true
     if length(sched.perm) != length(sched.ids)
@@ -295,11 +301,3 @@ function (sched::ByType)(model::ABM)
 
     return Iterators.flatten(it for it in sched.ids)
 end
-
-@deprecate by_id ById
-@deprecate randomly Randomly
-@deprecate partially Partially
-@deprecate by_property ByProperty
-@deprecate by_type ByType
-
-end # Schedulers submodule
