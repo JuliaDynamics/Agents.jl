@@ -1,5 +1,7 @@
 # main
 
+- The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
+
 # v5.14
 
 - New optional filtering functionality to restrict the sampling added to `random_nearby_position`, `random_nearby_id` and `random_nearby_agent`.
