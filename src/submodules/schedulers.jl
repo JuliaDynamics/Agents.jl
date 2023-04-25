@@ -158,11 +158,10 @@ function by_property(p)
     end
 end
 
-mutable struct ByProperty{P}
+struct ByProperty{P}
     p::P
     ids::Vector{Int}
     perm::Vector{Int}
-    properties::Vector
 end
 
 """
@@ -177,7 +176,7 @@ ByProperty(p::P) where {P} = ByProperty{P}(p, Int[], Int[], [])
 function (sched::ByProperty)(model::ABM)
     get_ids!(sched.ids, model)
     
-    sched.properties = [Agents.get_data(model[id], sched.p) for id in sched.ids]
+    properties = [Agents.get_data(model[id], sched.p) for id in sched.ids]
 
     initialized = true
     if length(sched.perm) != length(sched.ids)
@@ -185,7 +184,7 @@ function (sched::ByProperty)(model::ABM)
         initialized = false
     end
 
-    sortperm!(sched.perm, sched.properties; initialized)
+    sortperm!(sched.perm, properties; initialized)
     return Iterators.map(i -> sched.ids[i], sched.perm)
 end
 
