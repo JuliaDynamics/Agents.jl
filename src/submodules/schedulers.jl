@@ -171,7 +171,7 @@ their `property`, with agents with greater `property` acting first. `property` c
 `Symbol`, which just dictates which field of the agents to compare, or a function which
 inputs an agent and outputs a real number.
 """
-ByProperty(p::P) where {P} = ByProperty{P}(p, Int[], Int[], [])
+ByProperty(p::P) where {P} = ByProperty{P}(p, Int[], Int[])
 
 function (sched::ByProperty)(model::ABM)
     get_ids!(sched.ids, model)
