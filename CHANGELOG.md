@@ -1,6 +1,6 @@
 # main
 
-- The `ByProperty` scheduler can now accept any type of properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
+- The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
 
 # v5.14
 
