@@ -80,7 +80,7 @@ end
 
 
 """
-    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; ifempty = true)
+    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; kwargs...)
 
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
 and space metric. For Chebyshev and Manhattan metric, the step size `r` is rounded to 
