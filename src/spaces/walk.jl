@@ -80,16 +80,15 @@ end
 
 
 """
-    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; kwargs...)
+    randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; ifempty = true)
 
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
-and space metric.
-For Chebyshev and Manhattan metric, the step size `r` is rounded to `floor(Int,r)`;
-for Euclidean metric in a GridSpace, random walks are ill defined and hence not supported.t
+and space metric. For Euclidean metric in a GridSpace, random walks are ill defined 
+and hence not supported.
 
 For example, for `Chebyshev` metric and `r=1`, this will move the agent with equal
 probability to any of the 8 surrounding cells. For Manhattan metric, it
-will move to any of the 4 surrounding cells
+will move to any of the 4 surrounding cells.
 
 ## Keywords
 - `ifempty` will check that the target position is unoccupied and only move if that's true.
@@ -110,30 +109,6 @@ function randomwalk!(
     end
     offsets = offsets_at_radius(model, r)
     walk!(agent, rand(abmrng(model), offsets), model; kwargs...)
-end
-
-function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:GridSpaceSingle},
-    r::Real = 1;
-    kwargs...
-)
-    if abmspace(model).metric == :euclidean
-        throw(ArgumentError(
-            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
-            "You might want to use a `ContinuousSpace` or a different metric."
-        ))
-    end
-    offsets = offsets_at_radius(model, r)
-    target_positions = map(β -> normalize_position(agent.pos .+ β, model), offsets)
-    idx = findall(pos -> id_in_position(pos, model) == 0, target_positions)
-    available_offsets = @view offsets[idx]
-    if isempty(available_offsets)
-        # don't move, return agent only for type stability
-        agent
-    else
-        walk!(agent, rand(abmrng(model), available_offsets), model; ifempty=false)
-    end
 end
 
 """
