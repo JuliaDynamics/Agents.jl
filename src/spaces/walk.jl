@@ -83,7 +83,8 @@ end
     randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; ifempty = true)
 
 Move `agent` for a distance `r` in a random direction respecting boundary conditions
-and space metric. For Euclidean metric in a GridSpace, random walks are ill defined 
+and space metric. For Chebyshev and Manhattan metric, the step size `r` is rounded to 
+`floor(Int,r)`; for Euclidean metric in a GridSpace, random walks are ill defined 
 and hence not supported.
 
 For example, for `Chebyshev` metric and `r=1`, this will move the agent with equal
