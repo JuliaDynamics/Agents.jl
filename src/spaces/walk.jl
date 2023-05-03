@@ -112,6 +112,22 @@ function randomwalk!(
     walk!(agent, rand(abmrng(model), offsets), model; kwargs...)
 end
 
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:GridSpaceSingle},
+    r::Real = 1;
+    kwargs...
+)
+    if abmspace(model).metric == :euclidean
+        throw(ArgumentError(
+            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
+            "You might want to use a `ContinuousSpace` or a different metric."
+        ))
+    end
+    offsets = offsets_at_radius(model, r)
+    walk!(agent, rand(abmrng(model), offsets), model; ifempty=true)
+end
+
 """
     randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r];
         polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
