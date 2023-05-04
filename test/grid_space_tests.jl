@@ -359,7 +359,7 @@ using StableRNGs
             while agent_1.pos == pos_1
                 randomwalk!(agent_1, model, 1)
             end
-            @test model.agents[1].pos == (49,50)
+            @test agent_1.pos == (49,50)
         elseif SpaceType == GridSpace
             # if ifempty=true (default), agent 1 should not move since there are
             # no available offsets
