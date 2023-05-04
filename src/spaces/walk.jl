@@ -270,7 +270,7 @@ the agent's velocity is updated to be equal to the random vector generated
 for the random walk. 
 
 This is a specialized version of `randomwalk!` for more performant isotropic/uniform 
-random walks; it also works for any number of dimensions of the space.
+random walks; it also works for any number of dimensions.
 """
 function uniform_randomwalk!(
     agent::AbstractAgent,
