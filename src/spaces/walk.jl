@@ -2,7 +2,7 @@ using Distributions: Distributions, Uniform, ContinuousUnivariateDistribution
 using Rotations
 using StaticArrays: SVector, setindex
 
-export walk!, randomwalk!, normalize_position
+export walk!, randomwalk!, uniform_randomwalk!, normalize_position
 export Arccos, Uniform
 
 #######################################################################################
@@ -149,8 +149,8 @@ Here, the agent's velocity is taken into account. First, the velocity vector
 is rotated using random angles given by the distributions
 for polar (2D and 3D) and azimuthal (3D only) angles, and scaled to have
 measure `r`. After the re-orientation the agent is moved for `r` in the new direction.
-
-Anything that supports `rand` can be used as an angle distribution instead.
+Anything that supports `rand` can be used as an angle distribution instead. this can be
+useful to create correlated random walks.
 """
 function randomwalk!(
     agent::AbstractAgent,
@@ -258,3 +258,35 @@ function Arccos(a::Real, b::Real; check_args = true)
 end
 Arccos() = Arccos(-1,1)
 Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
+
+"""
+    uniform_randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r])
+
+Re-orient and move `agent` for a distance `r` in a random direction
+respecting space boundary conditions. By default `r = norm(agent.vel)`.
+
+The `ContinuousSpace` version is slightly different than the grid space:
+the agent's velocity is updated to be equal to the random vector generated 
+for the random walk. 
+
+This is a specialized version of `randomwalk!` for more performant isotropic/uniform 
+random walks; it also works for any number of dimensions of the space.
+"""
+function uniform_randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{D}},
+    r::Real=sqrt(sum(abs2.(agent.vel)))
+) where {D}
+    if r ≤ 0
+        throw(ArgumentError("The displacement must be larger than 0."))
+    end
+    rng = abmrng(model)
+    gauss_vec = ntuple(_ -> randn(rng), Val(D))
+    norm_vec = sqrt(sum(abs2.(gauss_vec)))
+    if iszero(norm_vec)
+        norm_vec = 1
+    end
+    direction = gauss_vec ./ norm_vec .* r
+    agent.vel = direction
+    walk!(agent, direction, model)
+end
