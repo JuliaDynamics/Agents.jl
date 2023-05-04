@@ -351,8 +351,14 @@ using StableRNGs
             @test model.agents[1].pos == pos
             # if agent 2 (49,50) moves, then agent 1 can only move
             # to the position that was just freed
-            randomwalk!(model.agents[2], model, 1)
-            randomwalk!(model.agents[1], model, 1)
+            agent_1, agent_2 = model.agents[1], model.agents[2]
+            pos_1, pos_2 = agent_1.pos, agent_2.pos
+            while agent_2.pos == pos_2
+                randomwalk!(agent_2, model, 1)
+            end
+            while agent_1.pos == pos_1
+                randomwalk!(agent_1, model, 1)
+            end
             @test model.agents[1].pos == (49,50)
         elseif SpaceType == GridSpace
             # if ifempty=true (default), agent 1 should not move since there are
