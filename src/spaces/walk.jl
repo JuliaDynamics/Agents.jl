@@ -42,6 +42,17 @@ end
 
 function walk!(
     agent::AbstractAgent,
+    direction::NTuple{D,Int},
+    model::ABM{<:GridSpaceSingle}
+) where {D}
+    target = normalize_position(agent.pos .+ direction, model)
+    if isempty(target, model) # if target unoccupied
+        move_agent!(agent, target, model)
+    end
+end
+
+function walk!(
+    agent::AbstractAgent,
     direction::NTuple{D,Float64},
     model::ABM{<:ContinuousSpace}
 ) where {D}
