@@ -281,12 +281,14 @@ function uniform_randomwalk!(
         throw(ArgumentError("The displacement must be larger than 0."))
     end
     rng = abmrng(model)
-    gauss_vec = ntuple(_ -> randn(rng), Val(D))
-    norm_vec = sqrt(sum(abs2.(gauss_vec)))
-    if iszero(norm_vec)
-        norm_vec = 1
+    dim = Val(D)
+    v = ntuple(_ -> randn(rng), dim)
+    norm_v = sqrt(sum(abs2.(v)))
+    if !iszero(norm_v)
+        direction = v ./ norm_v .* r
+    else
+        direction = ntuple(_ -> r, dim) ./ sqrt(D)
     end
-    direction = gauss_vec ./ norm_vec .* r
     agent.vel = direction
     walk!(agent, direction, model)
 end
