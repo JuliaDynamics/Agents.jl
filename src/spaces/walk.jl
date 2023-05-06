@@ -136,7 +136,7 @@ function randomwalk!(
         ))
     end
     offsets = offsets_at_radius(model, r)
-    walk!(agent, rand(abmrng(model), offsets), model; ifempty=true)
+    walk!(agent, rand(abmrng(model), offsets), model)
 end
 
 """
