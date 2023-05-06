@@ -287,7 +287,7 @@ function uniform_randomwalk!(
     if !iszero(norm_v)
         direction = v ./ norm_v .* r
     else
-        direction = ntuple(_ -> r, dim) ./ sqrt(D)
+        direction = ntuple(_ -> r / sqrt(D), dim)
     end
     agent.vel = direction
     walk!(agent, direction, model)
