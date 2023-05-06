@@ -160,6 +160,21 @@ This can be useful to create correlated random walks.
 """
 function randomwalk!(
     agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{D}},
+    r::Real;
+) where {D}
+    return uniform_randomwalk!(agent, model, r)
+end
+
+function randomwalk!(
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{D}},
+) where {D}
+    return uniform_randomwalk!(agent, model)
+end
+
+function randomwalk!(
+    agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
     r::Real;
     polar=nothing,
@@ -177,6 +192,7 @@ function randomwalk!(
     agent.vel = direction
     walk!(agent, direction, model)
 end
+
 # Code degeneracy here but makes much faster version without r
 function randomwalk!(
     agent::AbstractAgent,
@@ -192,7 +208,6 @@ function randomwalk!(
     agent.vel = direction
     walk!(agent, direction, model)
 end
-
 
 function randomwalk!(
     agent::AbstractAgent,
