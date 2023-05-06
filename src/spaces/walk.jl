@@ -2,7 +2,7 @@ using Distributions: Distributions, Uniform, ContinuousUnivariateDistribution
 using Rotations
 using StaticArrays: SVector, setindex
 
-export walk!, randomwalk!, uniform_randomwalk!, normalize_position
+export walk!, randomwalk!, normalize_position
 export Arccos, Uniform
 
 #######################################################################################
@@ -138,26 +138,36 @@ end
 
 """
     randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r];
-        polar=Uniform(-π,π), azimuthal=Arccos(-1,1)
+        [polar=Uniform(-π,π), azimuthal=Arccos(-1,1)]
     )
 
 Re-orient and move `agent` for a distance `r` in a random direction
 respecting space boundary conditions. By default `r = norm(agent.vel)`.
 
 The `ContinuousSpace` version is slightly different than the grid space.
-Here, the agent's velocity is taken into account. First, the velocity vector
-is rotated using random angles given by the distributions
-for polar (2D and 3D) and azimuthal (3D only) angles, and scaled to have
-measure `r`. After the re-orientation the agent is moved for `r` in the new direction.
-Anything that supports `rand` can be used as an angle distribution instead. this can be
-useful to create correlated random walks.
+Here, the agent's velocity is updated by the random vector generated for
+the random walk. 
+
+Uniform/isotropic random walks are supported in any number of dimensions
+while an angles distribution can be specified for 2D and 3D random walks.
+In this case, the velocity vector is rotated using random angles given by 
+the distributions for polar (2D and 3D) and azimuthal (3D only) angles, and 
+scaled to have measure `r`. After the re-orientation the agent is moved for 
+`r` in the new direction.
+
+Anything that supports `rand` can be used as an angle distribution instead. 
+This can be useful to create correlated random walks.
 """
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}},
     r::Real;
-    polar=Uniform(-π,π),
+    polar=nothing,
 )
+    if isnothing(polar)
+        uniform_randomwalk!(agent, model, r)
+        return
+    end
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
@@ -171,8 +181,12 @@ end
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{2}};
-    polar=Uniform(-π,π),
+    polar=nothing,
 )
+    if isnothing(polar)
+        uniform_randomwalk!(agent, model)
+        return
+    end
     θ = rand(abmrng(model), polar)
     direction = Tuple(rotate(SVector(agent.vel), θ))
     agent.vel = direction
@@ -184,14 +198,18 @@ function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}},
     r::Real;
-    polar=Uniform(-π,π),
-    azimuthal=Arccos(-1,1),
+    polar=nothing,
+    azimuthal=nothing,
 )
+    if isnothing(polar) && isnothing(azimuthal)
+        uniform_randomwalk!(agent, model, r)
+        return
+    end
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    θ = rand(abmrng(model), polar)
-    ϕ = rand(abmrng(model), azimuthal)
+    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
+    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     relative_r = r/LinearAlgebra.norm(agent.vel)
     direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* relative_r
     agent.vel = direction
@@ -201,11 +219,15 @@ end
 function randomwalk!(
     agent::AbstractAgent,
     model::ABM{<:ContinuousSpace{3}};
-    polar=Uniform(-π,π),
-    azimuthal=Arccos(-1,1),
+    polar=nothing,
+    azimuthal=nothing,
 )
-    θ = rand(abmrng(model), polar)
-    ϕ = rand(abmrng(model), azimuthal)
+    if isnothing(polar) && isnothing(azimuthal)
+        uniform_randomwalk!(agent, model)
+        return
+    end
+    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
+    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     direction = Tuple(rotate(SVector(agent.vel), θ, ϕ))
     agent.vel = direction
     walk!(agent, direction, model)
@@ -260,16 +282,7 @@ Arccos() = Arccos(-1,1)
 Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
 
 """
-    uniform_randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r])
-
-Re-orient and move `agent` for a distance `r` in a random direction
-respecting space boundary conditions. By default `r = norm(agent.vel)`.
-
-The `ContinuousSpace` version is slightly different than the grid space:
-the agent's velocity is updated to be equal to the random vector generated 
-for the random walk. 
-
-This is a specialized version of `randomwalk!` for more performant isotropic/uniform 
+This is called internally by `randomwalk!` for more performant isotropic/uniform 
 random walks; it also works for any number of dimensions.
 """
 function uniform_randomwalk!(
