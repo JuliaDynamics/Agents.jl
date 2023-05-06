@@ -1,5 +1,6 @@
 # main
 
+- The `randomwalk!` function is now supported for any number of dimensions in ContinuousSpace when used to create isotropic/uniform random walks, besides, in this case random walks are up to 2 times faster than before.
 - The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
 
 # v5.14
