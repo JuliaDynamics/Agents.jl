@@ -347,6 +347,10 @@ using LinearAlgebra: norm, dot
             @test norm(model[1].pos .- x₀) ≃ r
             @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
 
+            # velocity module remains equal to previous r
+            randomwalk!(model[1], model)
+            @test norm(model[1].vel) ≃ r
+
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10), periodic=true)
             model = ABM(ContinuousAgent{2}, space)
@@ -408,6 +412,10 @@ using LinearAlgebra: norm, dot
             @test norm(model[1].pos .- x₀) ≃ r
             @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
 
+            # velocity module remains equal to previous r
+            randomwalk!(model[1], model)
+            @test norm(model[1].vel) ≃ r
+
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10,10), periodic=true)
             model = ABM(ContinuousAgent{3}, space)
@@ -445,7 +453,24 @@ using LinearAlgebra: norm, dot
             add_agent!(model, v₀)
             randomwalk!(model[1], model, 2)
             @test norm(model[1].vel) ≈ 2
+        end
 
+        @testset "4D" begin
+            space = ContinuousSpace((3,3,3,3), periodic=true)
+            model = ABM(ContinuousAgent{4}, space)
+            x₀ = (2.0, 2.0, 2.0, 2.0)
+            v₀ = (0.2, 0.0, 0.0, 0.0)
+            add_agent!(x₀, model, v₀)
+            r = 0.5
+            randomwalk!(model[1], model, r)
+            # distance between initial and new position
+            # should be equal to Δr and independent of v₀
+            @test norm(model[1].pos .- x₀) ≃ r
+            @test !(norm(model[1].pos .- x₀) ≃ norm(v₀))
+
+            # velocity module remains equal to previous r
+            randomwalk!(model[1], model)
+            @test norm(model[1].vel) ≃ r
         end
     end
 end
