@@ -122,16 +122,19 @@ function randomwalk!(
     end
     offsets = offsets_at_radius(model, r)
     if ifempty && force_motion
-        n_attempt = length(offsets)
+        n_attempts = 2*length(offsets)
         while n_attempts != 0
             pos_choice = agent.pos .+ rand(abmrng(model), offsets)
-            isempty(pos_choice, model) && walk!(agent, rand(abmrng(model), offsets), model;
-            randomwalk!(agent_2, model, 1)
+            if isempty(pos_choice, model)
+                return walk!(agent, pos_choice, model; ifempty=ifempty)
+            end
             n_attempts -= 1
         end
         targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
+        check_empty = pos -> isempty(pos, model)
         pos_choice = sampling_with_condition_single(targets, check_empty, model)
-        !isnothing(pos_choice) && walk!(agent, pos_choice, model; ifempty=ifempty)
+        isnothing(pos_choice) && return agent
+        walk!(agent, pos_choice, model; ifempty=ifempty)
     else
         walk!(agent, rand(abmrng(model), offsets), model; ifempty=ifempty)
     end
@@ -152,21 +155,23 @@ function randomwalk!(
     end
     offsets = offsets_at_radius(model, r)
     if ifempty && force_motion
-        n_attempt = length(offsets)
-        while agent_2.pos == pos_2
-            randomwalk!(agent_2, model, 1)
+        n_attempts = 2*length(offsets)
+        while n_attempts != 0
+            pos_choice = agent.pos .+ rand(abmrng(model), offsets)
+            if isempty(pos_choice, model)
+                return walk!(agent, pos_choice, model)
+            end
+            n_attempts -= 1
         end
         targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
-        choice = sampling_with_condition_single(targets, check_empty, model)
-        isnothing(choice) && return agent
-        walk!(agent, choice, model; ifempty=ifempty)
+        check_empty = pos -> isempty(pos, model)
+        pos_choice = sampling_with_condition_single(targets, check_empty, model)
+        isnothing(pos_choice) && return agent
+        walk!(agent, pos_choice, model)
     else
         walk!(agent, rand(abmrng(model), offsets), model)
     end
 end
-
-# just a simple redirection used in randomwalk!
-check_empty(pos) = isempty(pos, model)
 
 """
     randomwalk!(agent, model::ABM{<:ContinuousSpace} [, r];
