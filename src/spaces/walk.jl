@@ -130,9 +130,7 @@ function randomwalk!(
         n_attempts = 2*length(offsets)
         while n_attempts != 0
             pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
-            if isempty(pos_choice, model)
-                return move_agent!(agent, pos_choice, model)
-            end
+            isempty(pos_choice, model) && return move_agent!(agent, pos_choice, model)
             n_attempts -= 1
         end
         targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
@@ -163,9 +161,7 @@ function randomwalk!(
         n_attempts = 2*length(offsets)
         while n_attempts != 0
             pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
-            if isempty(pos_choice, model)
-                return move_agent!(agent, pos_choice, model)
-            end
+            isempty(pos_choice, model) && return move_agent!(agent, pos_choice, model)
             n_attempts -= 1
         end
         targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
