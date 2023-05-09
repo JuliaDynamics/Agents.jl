@@ -129,9 +129,9 @@ function randomwalk!(
     if ifempty && force_motion
         n_attempts = 2*length(offsets)
         while n_attempts != 0
-            pos_choice = agent.pos .+ rand(abmrng(model), offsets)
+            pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
             if isempty(pos_choice, model)
-                return walk!(agent, pos_choice, model; ifempty=ifempty)
+                return move_agent!(agent, pos_choice, model)
             end
             n_attempts -= 1
         end
@@ -162,9 +162,9 @@ function randomwalk!(
     if force_motion
         n_attempts = 2*length(offsets)
         while n_attempts != 0
-            pos_choice = agent.pos .+ rand(abmrng(model), offsets)
+            pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
             if isempty(pos_choice, model)
-                return walk!(agent, pos_choice, model)
+                return move_agent!(agent, pos_choice, model)
             end
             n_attempts -= 1
         end
