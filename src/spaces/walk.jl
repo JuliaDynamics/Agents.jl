@@ -218,8 +218,7 @@ function randomwalk!(
     polar=nothing,
 )
     if isnothing(polar)
-        uniform_randomwalk!(agent, model, r)
-        return
+        return uniform_randomwalk!(agent, model, r)
     end
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
@@ -238,8 +237,7 @@ function randomwalk!(
     polar=nothing,
 )
     if isnothing(polar)
-        uniform_randomwalk!(agent, model)
-        return
+        return uniform_randomwalk!(agent, model)
     end
     θ = rand(abmrng(model), polar)
     direction = Tuple(rotate(SVector(agent.vel), θ))
@@ -255,8 +253,7 @@ function randomwalk!(
     azimuthal=nothing,
 )
     if isnothing(polar) && isnothing(azimuthal)
-        uniform_randomwalk!(agent, model, r)
-        return
+        return uniform_randomwalk!(agent, model, r)
     end
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
@@ -276,8 +273,7 @@ function randomwalk!(
     azimuthal=nothing,
 )
     if isnothing(polar) && isnothing(azimuthal)
-        uniform_randomwalk!(agent, model)
-        return
+        return uniform_randomwalk!(agent, model)
     end
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
