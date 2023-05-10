@@ -349,11 +349,6 @@ using StableRNGs
             @test model.agents[1].pos == pos
             randomwalk!(model.agents[1], model, 1; ifempty=true)
             @test model.agents[1].pos == pos
-            # if agent 2 (49,50) moves, then agent 1 can only move
-            # to the position that was just freed
-            randomwalk!(model.agents[2], model, 1)
-            randomwalk!(model.agents[1], model, 1)
-            @test model.agents[1].pos == (49,50)
         elseif SpaceType == GridSpace
             # if ifempty=true (default), agent 1 should not move since there are
             # no available offsets
@@ -366,7 +361,20 @@ using StableRNGs
             # 5 agents but only 4 unique positions
             unique_pos = unique([a.second.pos for a in model.agents])
             @test (length(model.agents)==5) && length(unique_pos)==4
+            move_agent!(model.agents[1], pos, model)
         end
+        agent_1, agent_2 = model.agents[1], model.agents[2]
+        # agent 1 can't move to surronding cells since none is empty
+        randomwalk!(agent_1, model, 1; force_motion=true)
+        @test agent_1.pos == (50,50)
+        # if agent 2 (49,50) moves, then agent 1 can only move
+        # to the position that was just freed
+        pos_1, pos_2 = agent_1.pos, agent_2.pos
+        randomwalk!(agent_2, model, 1; force_motion=true)
+        while agent_1.pos == pos_1
+            randomwalk!(agent_1, model, 1)
+        end
+        @test agent_1.pos == (49,50)
     end
 
 end
