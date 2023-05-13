@@ -38,6 +38,7 @@ function walk!(
     if !ifempty || isempty(target, model)
         move_agent!(agent, target, model)
     end
+    return agent
 end
 
 function walk!(
@@ -49,6 +50,7 @@ function walk!(
     if isempty(target, model) # if target unoccupied
         move_agent!(agent, target, model)
     end
+    return agent
 end
 
 function walk!(
@@ -58,6 +60,7 @@ function walk!(
 ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
     move_agent!(agent, target, model)
+    return agent
 end
 
 """
