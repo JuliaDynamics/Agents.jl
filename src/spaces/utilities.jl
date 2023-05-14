@@ -53,7 +53,7 @@ sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 manhattan_distance(a::A, b::B, model::ABM
 ) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model.space)
 
-manhattan_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, model.space)
+manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, model.space)
 
 function manhattan_distance(
     p1::ValidPos,
@@ -86,7 +86,7 @@ function get_direction(
 ) where {D}
     direct_dir = to .- from
     inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
-    return map((x, y) -> argmin(abs, (x, y)), direct_dir, inverse_dir)
+    return map((x, y) -> abs(x) <= abs(y) ? x : y, direct_dir, inverse_dir)
 end
 
 function get_direction(
