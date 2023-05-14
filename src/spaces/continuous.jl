@@ -448,7 +448,8 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
         end
     end
     to_remove = Int[]
-    for doubles in symdiff(unique(Iterators.flatten(pairs)), collect(Iterators.flatten(pairs)))
+    # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
+    for doubles in [k for (k,v) in counter(Iterators.flatten(pairs)) if v>1]
         # This list is the set of pairs that have two distances in the pair list.
         # The one with the largest distance value must be dropped.
         fidx = findfirst(isequal(doubles), first.(pairs))
