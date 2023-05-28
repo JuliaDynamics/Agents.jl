@@ -91,6 +91,7 @@ makedocs(
             "examples/zombies.md",
             "examples/predator_prey.md",
             "examples/rabbit_fox_hawk.md",
+            "examples/simugames.md",
             "models.md",
             "examples.md"
         ],
