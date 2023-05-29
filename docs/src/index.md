@@ -6,17 +6,18 @@ Agents
 using CairoMakie, Agents
 ```
 
-Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
-Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
-To get started, please read the [Tutorial](@ref) page.
-
 !!! info "Star us on GitHub!"
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
 !!! tip "Latest news: Agents.jl v5.15"
     - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
-    - lalala.
+    - DEI-motivated name change for all names that remove agents:
+      - `genocide! -> remove_all!`
+      - `kill_agent! -> remove_agent!`
+      - `UnkillableABM -> UnremovableABM`
+    - Several new API functions and functionality increase: `random_nearby_position, empty_nearby_position, randomwalk!, random_agent`.
+    - We have created an objective, fully automated, extensive framework for comparing performance of agent based modelling software. It shows that Agents.jl is routinely 100x faster than competing alternatives (MASON, NetLogo, Mesa). The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
 
 
 ## Features
