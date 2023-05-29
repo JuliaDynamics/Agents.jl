@@ -16,23 +16,25 @@ To get started, please read the [Tutorial](@ref) page.
 
 !!! tip "Latest news: Agents.jl v5.15"
     - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
-    -
+    - lalala.
 
 
 ## Features
-* Free, open source and extremely transparent.
-* Intuitive simple-to-learn software with high quality, extensive documentation.
+* Free and open source.
+* Small learning carve due to intuitive design based on a space-agnostic modelling implementation.
+* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
+* Objectively the fastest open source ABM framework out there, routinely being 100x faster than competing open software (MASON, NetLogo, Mesa).
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).
-* Powerful, feature-full and extendable [API](@ref).
+* Extendable [API](@ref) that provides out of the box thousands of possible agent actions.
 * Modular, function-based design.
 * Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
-- Multi-agent support, for interactions between disparate agent species.
+* Multi-agent support, for interactions between disparate agent species.
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
 * Automatic data collection in a `DataFrame` at desired intervals
 * Aggregating collected data during model evolution
 * Distributed computing
 * Batch running and batch data collection
-* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem.
+* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem: publication-quality graphics and video output
 * Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:
 
 ```@raw html
