@@ -1,6 +1,5 @@
 module Agents
 
-using Requires
 using Distributed
 using DataStructures
 using Graphs
