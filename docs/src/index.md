@@ -1,4 +1,10 @@
-![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents4_logo.gif?raw=true)
+```@docs
+Agents
+```
+
+```@setup MAIN
+using CairoMakie, Agents
+```
 
 Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
 Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
@@ -8,14 +14,9 @@ To get started, please read the [Tutorial](@ref) page.
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v5.5"
-    New minor release with a major change on creating agents!
-    - The `@agent` macro has been re-written and is now more general and more safe. It now also allows inheriting fields from any other type.
-    - The `@agent` macro is now THE way to create agent types for Agents.jl simulations. Directly creating structs by hand is no longer mentioned in the documentation at all.
-    - In the future, making agent types manually (without `@agent`) may be completely disallowed, resulting in error. Therefore, making agent types manually is considered deprecated.
-    - The minimal agent types like `GraphAgent` can be used normally as standard  types that only have the mandatory fields. This is now clear in the docs. (this was possible also before, just not clear)
-
-    Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for more details!
+!!! tip "Latest news: Agents.jl v5.15"
+    - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
+    -
 
 
 ## Features
@@ -40,13 +41,16 @@ To get started, please read the [Tutorial](@ref) page.
 </video>
 ```
 
-## Installation
+## Getting started
 
-The package is in Julia's package list. Install it using this command:
+To install Agents.jl, launch Julia and then run this command:
 
 ```
 using Pkg; Pkg.add("Agents")
 ```
+
+To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything else.
+
 
 ## Design philosophy of Agents.jl
 Agents.jl was designed with the following philosophy in mind:
