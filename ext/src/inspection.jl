@@ -6,7 +6,7 @@
 
 # 2D space
 function Makie.show_data(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Agents.ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
             idx, source::Scatter) where {S<:SUPPORTED_SPACES}
     if plot._used_poly[]
         return show_data_poly(inspector, plot, idx, source)
@@ -16,7 +16,7 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 function show_data_2D(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Agents.ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
             idx, source::Scatter) where {S<:SUPPORTED_SPACES}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
@@ -27,7 +27,7 @@ function show_data_2D(inspector::DataInspector,
     size = source.markersize[] isa Vector ? source.markersize[][idx] : source.markersize[]
 
     model = plot.abmobs[].model[]
-    id = collect(Agents.allids(model))[idx]
+    id = collect(allids(model))[idx]
     a.text[] = agent2string(model, model[id].pos)
     a.visible[] = true
 
@@ -36,7 +36,7 @@ end
 
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Agents.ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
             idx, ::Makie.Poly) where {S<:SUPPORTED_SPACES}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
@@ -45,9 +45,9 @@ function show_data_poly(inspector::DataInspector,
     Makie.update_tooltip_alignment!(inspector, proj_pos)
     sizes = plot.sizes[]
 
-    if S <: Agents.ContinuousSpace
+    if S <: ContinuousSpace
         agent_pos = Tuple(plot[:pos][][idx])
-    elseif S <: Agents.GridSpace
+    elseif S <: GridSpace
         agent_pos = Tuple(Int.(plot[:pos][][idx]))
     end
     a.text[] = agent2string(plot.abmobs[].model[], agent_pos)
@@ -58,14 +58,14 @@ end
 
 # 3D space
 function Makie.show_data(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Agents.ABM{<:SUPPORTED_SPACES}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:SUPPORTED_SPACES}}}},
             idx, source::MeshScatter)
     # need to dispatch here should we for example have 3D polys at some point
     return show_data_3D(inspector, plot, idx, source)
 end
 
 function show_data_3D(inspector::DataInspector,
-            plot::_ABMPlot{<:ABMObservable{<:Tuple{<:Agents.ABM{<:S}}}},
+            plot::_ABMPlot{<:ABMObservable{<:Tuple{<:ABM{<:S}}}},
             idx, source::MeshScatter) where {S<:SUPPORTED_SPACES}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
@@ -76,7 +76,7 @@ function show_data_3D(inspector::DataInspector,
     size = source.markersize[] isa Vector ? source.markersize[][idx] : source.markersize[]
 
     model = plot.abmobs[].model[]
-    id = collect(Agents.allids(model))[idx]
+    id = collect(allids(model))[idx]
     a.text[] = agent2string(model, model[id].pos)
     a.visible[] = true
 
@@ -87,7 +87,7 @@ end
 # Agent to string conversion
 ##########################################################################################
 
-function agent2string(model::Agents.ABM{<:S}, agent_pos) where {S<:SUPPORTED_SPACES}
+function agent2string(model::ABM{<:S}, agent_pos) where {S<:SUPPORTED_SPACES}
     ids = ids_to_inspect(model, agent_pos)
     s = ""
 
@@ -98,10 +98,10 @@ function agent2string(model::Agents.ABM{<:S}, agent_pos) where {S<:SUPPORTED_SPA
     return s
 end
 
-ids_to_inspect(model::Agents.ABM{<:Agents.AbstractGridSpace}, agent_pos) =
-    Agents.ids_in_position(agent_pos, model)
-function ids_to_inspect(model::Agents.ABM{<:Agents.GridSpaceSingle}, agent_pos)
-    id = Agents.id_in_position(agent_pos, model)
+ids_to_inspect(model::ABM{<:AbstractGridSpace}, agent_pos) =
+    ids_in_position(agent_pos, model)
+function ids_to_inspect(model::ABM{<:GridSpaceSingle}, agent_pos)
+    id = id_in_position(agent_pos, model)
     if id == 0
         return ()
     else
@@ -109,13 +109,13 @@ function ids_to_inspect(model::Agents.ABM{<:Agents.GridSpaceSingle}, agent_pos)
     end
 end
 
-ids_to_inspect(model::Agents.ABM{<:Agents.ContinuousSpace}, agent_pos) =
-    Agents.nearby_ids(agent_pos, model, 0.0)
-ids_to_inspect(model::Agents.ABM{<:Agents.OpenStreetMapSpace}, agent_pos) =
-    Agents.nearby_ids(agent_pos, model, 0.0)
-ids_to_inspect(model::Agents.ABM{<:Agents.GraphSpace}, agent_pos) =
+ids_to_inspect(model::ABM{<:ContinuousSpace}, agent_pos) =
+    nearby_ids(agent_pos, model, 0.0)
+ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, agent_pos) =
+    nearby_ids(agent_pos, model, 0.0)
+ids_to_inspect(model::ABM{<:GraphSpace}, agent_pos) =
     model.space.stored_ids[agent_pos]
-ids_to_inspect(model::Agents.ABM, agent_pos) = []
+ids_to_inspect(model::ABM, agent_pos) = []
 
 """
     agent2string(agent::A)
@@ -136,7 +136,7 @@ function InteractiveDynamics.agent2string(agent::SpecialAgent)
 end
 ```
 """
-function agent2string(agent::A) where {A<:Agents.AbstractAgent}
+function agent2string(agent::A) where {A<:AbstractAgent}
     agentstring = "▶ $(nameof(A))\n"
 
     agentstring *= "id: $(getproperty(agent, :id))\n"
