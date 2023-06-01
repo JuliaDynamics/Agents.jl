@@ -1,109 +1,7 @@
 include("model_observable.jl")
 export abmplot, abmplot!
 
-"""
-    abmplot(model::ABM; kwargs...) → fig, ax, abmobs
-    abmplot!(ax::Axis/Axis3, model::ABM; kwargs...) → abmobs
-
-Plot an agent based model by plotting each individual agent as a marker and using
-the agent's position field as its location on the plot. The same function is used
-to make custom composite plots and interactive applications for the model evolution
-using the returned `abmobs`. `abmplot` is also used to launch interactive GUIs for
-evolving agent based models, see "Interactivity" below.
-
-Requires `Agents`. See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
-
-## Keyword arguments
-
-### Agent related
-* `ac, as, am` : These three keywords decide the color, size, and marker, that
-  each agent will be plotted as. They can each be either a constant or a *function*,
-  which takes as an input a single agent and outputs the corresponding value. If the model
-  uses a `GraphSpace`, `ac, as, am` functions instead take an *iterable of agents* in each
-  position (i.e. node of the graph).
-
-  Using constants: `ac = "#338c54", as = 15, am = :diamond`
-
-  Using functions:
-  ```julia
-  ac(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
-  as(a) = 10rand()
-  am(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
-  ```
-  Notice that for 2D models, `am` can be/return a `Polygon` instance, which plots each agent
-  as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
-  creating the polygon. In this case, the keyword `as` is meaningless, as each polygon has
-  its own size. Use the functions `scale, rotate2D` to transform this polygon.
-
-  3D models currently do not support having different markers. As a result, `am` cannot be
-  a function. It should be a `Mesh` or 3D primitive (such as `Sphere` or `Rect3D`).
-* `offset = nothing` : If not `nothing`, it must be a function taking as an input an
-  agent and outputting an offset position tuple to be added to the agent's position
-  (which matters only if there is overlap).
-* `scatterkwargs = ()` : Additional keyword arguments propagated to the `scatter!` call.
-
-### Preplot related
-* `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
-  as a heatmap over the space.
-  Its values can be standard data accessors given to functions like `run!`, i.e.
-  either a symbol (directly obtain model property) or a function of the model.
-  If the space is `AbstractGridSpace` then matrix must be the same size as the underlying
-  space. For `ContinuousSpace` any size works and will be plotted over the space extent.
-  For example `heatarray = :temperature` is used in the Daisyworld example.
-  But you could also define `f(model) = create_matrix_from_model...` and set
-  `heatarray = f`. The heatmap will be updated automatically during model evolution
-  in videos and interactive applications.
-* `heatkwargs = NamedTuple()` : Keywords given to `Makie.heatmap` function
-  if `heatarray` is not nothing.
-* `add_colorbar = true` : Whether or not a Colorbar should be added to the right side of the
-  heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
-  instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
-  placed naturally.
-* `static_preplot!` : A function `f(ax, model)` that plots something after the heatmap
-  but before the agents.
-* `osmkwargs = NamedTuple()` : keywords directly passed to `OSMMakie.osmplot!`
-  if model space is `OpenStreetMapSpace`.
-* `graphplotkwargs = NamedTuple()` : keywords directly passed to
-  [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
-  if model space is `GraphSpace`.
-
-The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
-`axis` which can be used to change the automatically created `Figure` and `Axis` objects.
-
-# Interactivity
-
-## Evolution related
-* `agent_step!, model_step! = Agents.dummystep`: Stepping functions to pass to
-  [`ABMObservable`](@ref) which itself passes to `Agents.step!`.
-* `add_controls::Bool`: If `true`, `abmplot` switches to "interactive application" mode.
-  This is by default `true` if either `agent_step!` or `model_step!` keywords are provided.
-  These stepping functions are used to evolve the model interactively using `Agents.step!`.
-  The application has the following interactive elements:
-  1. "step": advances the simulation once for `spu` steps.
-  1. "run": starts/stops the continuous evolution of the model.
-  1. "reset model": resets the model to its initial state from right after starting the
-     interactive application.
-  1. Two sliders control the animation speed: "spu" decides how many model steps should be
-     done before the plot is updated, and "sleep" the `sleep()` time between updates.
-* `enable_inspection = add_controls`: If `true`, enables agent inspection on mouse hover.
-* `spu = 1:50`: The values of the "spu" slider.
-* `params = Dict()` : This is a dictionary which decides which parameters of the model will
-  be configurable from the interactive application. Each entry of `params` is a pair of
-  `Symbol` to an `AbstractVector`, and provides a range of possible values for the parameter
-  named after the given symbol (see example online). Changing a value in the parameter
-  slides is only propagated to the actual model after a press of the "update" button.
-
-## Data collection related
-* `adata, mdata, when`: Same as the keyword arguments of `Agents.run!`. If either or both
-  `adata, mdata` are given, data are collected and stored in the `abmobs`,
-  see [`ABMObservable`](@ref). The same keywords provide the data plots
-  of [`abmexploration`](@ref). This also adds the button "clear data" which deletes
-  previously collected agent and model data by emptying the underlying
-  `DataFrames` `adf`/`mdf`. Reset model and clear data are independent processes.
-
-See the documentation string of [`ABMObservable`](@ref) for custom interactive plots.
-"""
-function abmplot(model::Agents.ABM;
+function Agents.abmplot(model::Agents.ABM;
         figure = NamedTuple(),
         axis = NamedTuple(),
         kwargs...)
@@ -115,7 +13,7 @@ function abmplot(model::Agents.ABM;
     return fig, ax, abmobs
 end
 
-function abmplot!(ax, model::Agents.ABM;
+function Agents.abmplot!(ax, model::Agents.ABM;
         # These keywords are given to `ABMObservable`
         agent_step! = Agents.dummystep,
         model_step! = Agents.dummystep,
@@ -136,8 +34,7 @@ end
 Same functionality as `abmplot(model; kwargs...)`/`abmplot!(ax, model; kwargs...)`
 but allows to link an already existing `ABMObservable` to the created plots.
 """
-
-function abmplot(abmobs::ABMObservable;
+function Agents.abmplot(abmobs::ABMObservable;
         figure = NamedTuple(),
         axis = NamedTuple(),
         kwargs...)
@@ -149,7 +46,7 @@ function abmplot(abmobs::ABMObservable;
     return fig, ax, abmobs
 end
 
-function abmplot!(ax, abmobs::ABMObservable;
+function ABMObservable.abmplot!(ax, abmobs::ABMObservable;
         # These keywords are propagated to the _ABMPlot recipe
         add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
         enable_inspection = add_controls,
