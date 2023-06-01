@@ -45,6 +45,10 @@ include("models/Models.jl")
 # Don't forget to update deprecations between versions!
 include("deprecations.jl")
 
+# visualizations (singleton methods for package extension)
+include("visualizations.jl")
+
+
 # Update messages:
 using Scratch
 
