@@ -23,21 +23,21 @@ using CairoMakie, Agents
 ## Features
 
 * Free and open source.
-* Small learning carve due to intuitive design based on a space-agnostic modelling implementation.
-* The most performant ABM software versus other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* User-created models typically have much smaller source code versus implementations in other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* Small learning carve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
+* The most performant ABM software versus other open source frameworks, routinely being 100x faster ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
-* Objectively the fastest open source ABM framework out there, routinely being 100x faster than competing open software (MASON, NetLogo, Mesa).
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).
 * Extendable [API](@ref) that provides out of the box thousands of possible agent actions.
-* Modular, function-based design.
-* Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
+* Support for many types of space: arbitrary graphs, regular grids, continuous space
+* Support for simulations on Open Street Maps including support for utilizing the road's max speed limit, finding neighboring agents/paths/destinations and pathfinding.
 * Multi-agent support, for interactions between disparate agent species.
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
 * Automatic data collection in a `DataFrame` at desired intervals
 * Aggregating collected data during model evolution
 * Distributed computing
 * Batch running and batch data collection
+* Extensive pathfinding capabilities in continuous or discrete spaces
 * Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem: publication-quality graphics and video output
 * Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:
 
