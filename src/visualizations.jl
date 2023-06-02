@@ -27,7 +27,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   as(a) = 10rand()
   am(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
   ```
-  Notice that for 2D models, `am` can be/return a `Polygon` instance, which plots each agent
+  Notice that for 2D models, `am` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
   creating the polygon. In this case, the keyword `as` is meaningless, as each polygon has
   its own size. Use the functions `scale, rotate2D` to transform this polygon.

@@ -123,7 +123,7 @@ CairoMakie.activate!() # hide
 # create a `Polygon`: a triangle with same orientation as the bird's velocity.
 # It is as simple as defining the following function:
 
-const bird_polygon = Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
+const bird_polygon = Makie.Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
 function bird_marker(b::Bird)
     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
     scale(rotate2D(bird_polygon, φ), 2)

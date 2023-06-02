@@ -1,5 +1,4 @@
 include("model_observable.jl")
-export abmplot, abmplot!
 
 function Agents.abmplot(model::Agents.ABM;
         figure = NamedTuple(),
@@ -46,7 +45,7 @@ function Agents.abmplot(abmobs::ABMObservable;
     return fig, ax, abmobs
 end
 
-function ABMObservable.abmplot!(ax, abmobs::ABMObservable;
+function Agents.abmplot!(ax, abmobs::ABMObservable;
         # These keywords are propagated to the _ABMPlot recipe
         add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
         enable_inspection = add_controls,
@@ -191,7 +190,7 @@ function Makie.plot!(abmplot::_ABMPlot)
             abmplot.graphplotkwargs..., # must come first to not overwrite lifted kwargs
             edge_color, edge_width)
     elseif T<:Vector{Point2f} # 2d space
-        if typeof(marker[])<:Vector{<:Polygon{2}}
+        if typeof(marker[])<:Vector{<:Makie.Polygon{2}}
             poly_plot = poly!(abmplot, marker; color, abmplot.scatterkwargs...)
             poly_plot.inspectable[] = false # disable inspection for poly until fixed
         else

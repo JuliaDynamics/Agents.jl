@@ -94,8 +94,8 @@ abmplot_marker(model::ABM{<:GraphSpace}, used_poly, am::Function, pos, ids) =
     [am(model[id] for id in model.space.stored_ids[idx]) for idx in ids]
 
 user_used_polygons(am, marker) = false
-user_used_polygons(am::Polygon, marker) = true
-user_used_polygons(am::Function, marker::Vector{<:Polygon}) = true
+user_used_polygons(am::Makie.Polygon, marker) = true
+user_used_polygons(am::Function, marker::Vector{<:Makie.Polygon}) = true
 
 
 #####

@@ -1,6 +1,7 @@
 module AgentsVisualizations
 
 using Agents, Makie
+using Agents: AbstractGridSpace
 
 include("src/abmplot.jl")
 include("src/lifting.jl")

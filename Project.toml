@@ -27,7 +27,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [extensions]
-DynamicalSystemsVisualizations = "Makie"
+AgentsVisualizations = "Makie"
 
 [compat]
 CSV = "0.9.7, 0.10"
