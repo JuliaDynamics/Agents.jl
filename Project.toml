@@ -23,6 +23,12 @@ Scratch = "6c6a2e73-6563-6170-7368-637461726353"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
+[weakdeps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+
+[extensions]
+DynamicalSystemsVisualizations = "Makie"
+
 [compat]
 CSV = "0.9.7, 0.10"
 DataFrames = "0.21, 0.22, 1"
