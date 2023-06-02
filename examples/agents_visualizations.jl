@@ -253,7 +253,8 @@ end
 # In the example below, the `edge_color` function colors all edges to a semi-transparent
 # shade of grey and the `edge_width` function makes use of the special ability of
 # `linesegments` to be tapered (i.e. one end is wider than the other).
-using GraphMakie.Graphs
+using Graphs: edges
+using GraphMakie: Shell
 edge_color(model) = fill((:grey, 0.25), ne(model.space.graph))
 function edge_width(model)
     w = zeros(ne(model.space.graph))

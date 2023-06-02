@@ -47,11 +47,6 @@ for file in readdir(indir)
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
 end
 
-# Also bring in visualizations from interactive dynamics docs:
-infile = joinpath(pkgdir(InteractiveDynamics), "docs", "src", "agents.jl")
-outdir = joinpath(@__DIR__, "src")
-Literate.markdown(infile, outdir; credit = false, name = "agents_visualizations")
-
 # %%
 println("Documentation Build")
 

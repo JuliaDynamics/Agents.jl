@@ -59,14 +59,28 @@ include("visualizations.jl")
 using Scratch
 
 function __init__()
-display_update = false
-version_number = "5.7"
+display_update = true
+version_number = "5.15"
 update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
 
 Noteworthy changes:
+
+- Agents.jl moved to Julia 1.9+, and now exports visualization
+  and interactive applications automatically once Makie (or Makie backends
+  such as GLMakie) come into scope, using the new package extension system.
+- Several performance improvements all across the board.
+- DEI-motivated name change for all names that remove agents:
+    - `genocide! -> remove_all!`
+    - `kill_agent! -> remove_agent!`
+    - `UnkillableABM -> UnremovableABM`
+- We have created an objective fully automated framework for comparing open source
+  agent based modelling software. It shows that Agents.jl is routinely 100x faster
+  than competing alternatives (MASON, NetLogo, Mesa).
+
+See the online documentation for more!
 """
 
 if display_update
