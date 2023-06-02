@@ -17,14 +17,15 @@ using CairoMakie, Agents
       - `kill_agent! -> remove_agent!`
       - `UnkillableABM -> UnremovableABM`
     - Several new API functions and functionality increase: `random_nearby_position, empty_nearby_position, randomwalk!, random_agent`.
-    - We have created an objective, fully automated, extensive framework for comparing performance of agent based modelling software. It shows that Agents.jl is routinely 100x faster than competing alternatives (MASON, NetLogo, Mesa). The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
+    - We have created an objective, fully automated, extensive framework for comparing open source agent based modelling software. It shows that Agents.jl is routinely 100x faster than competing alternatives (MASON, NetLogo, Mesa). It also shows that models implemented in Agents.jl have significantly smaller and simpler code. The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
 
 
 ## Features
+
 * Free and open source.
 * Small learning carve due to intuitive design based on a space-agnostic modelling implementation.
-* By far the most performance software versus other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* User-created models typically have very small source code versus implementations in other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* The most performant ABM software versus other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* User-created models typically have much smaller source code versus implementations in other open source frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
 * Objectively the fastest open source ABM framework out there, routinely being 100x faster than competing open software (MASON, NetLogo, Mesa).
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).

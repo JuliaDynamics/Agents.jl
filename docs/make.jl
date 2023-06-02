@@ -2,8 +2,8 @@ cd(@__DIR__)
 println("Loading packages...")
 using Agents
 import Literate
-using InteractiveDynamics
 using LightOSM
+using CairoMakie
 
 pages = [
     "Introduction" => "index.md",
