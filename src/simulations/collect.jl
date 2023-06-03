@@ -1,4 +1,5 @@
 export run!,
+    offline_run!,
     collect_agent_data!,
     collect_model_data!,
     init_agent_dataframe,
@@ -101,7 +102,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
-* `showprogress=false` : Whether to show a progress bar.
+* `showprogress=false` : Whether to show progress
 """
 function run! end
 
@@ -137,6 +138,11 @@ function run!(
         end
     end
 
+    agent_count_collections = 0
+    model_count_collections = 0
+    agent_collected = false
+    model_collected = false
+
     s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
@@ -146,22 +152,145 @@ function run!(
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
+            agent_count_collections += 1
+            agent_collected = true
         end
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
+            model_count_collections += 1
+            model_collected = true
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
+
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
+        agent_collected = true
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_collected = true
     end
+
     ProgressMeter.finish!(p)
     return df_agent, df_model
+end
+
+"""
+    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
+    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
+
+Run the model while dumping data to CSV files. See [`run!`](@ref) for details.
+
+## Keywords
+* `writing_interval=1` : write to file every `writing_interval` times the data is collected. Small values have larger effects on performance.
+* `adata_savefile="adata.csv"` : a file to write agent data on.
+* `mdata_savefile="mdata.csv"`: a file to write the model data on.
+"""
+function offline_run! end
+
+offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
+    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+
+function offline_run!(
+    model,
+    agent_step!,
+    model_step!,
+    n;
+    when = true,
+    when_model = when,
+    mdata = nothing,
+    adata = nothing,
+    obtainer = identity,
+    agents_first = true,
+    showprogress = false,
+    writing_interval = 1,
+    adata_savefile = "adata.csv",
+    mdata_savefile = "mdata.csv"
+)
+
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    close(open(adata_savefile, "w"))
+    close(open(mdata_savefile, "w"))
+    model_appendtocsv = false
+    agent_appendtocsv = false
+
+    agent_count_collections = 0
+    model_count_collections = 0
+    agent_collected = false
+    model_collected = false
+
+    s = 0
+    p = if typeof(n) <: Int
+        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+    else
+        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    end
+    while until(s, n, model)
+        if should_we_collect(s, model, when)
+            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            agent_count_collections += 1
+            agent_collected = true
+        end
+        if should_we_collect(s, model, when_model)
+            collect_model_data!(df_model, model, mdata, s; obtainer)
+            model_count_collections += 1
+            model_collected = true
+        end
+        step!(model, agent_step!, model_step!, 1, agents_first)
+        s += 1
+
+        if model_collected && model_count_collections % writing_interval == 0
+            AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+            df_model = init_model_dataframe(model, mdata)
+            model_collected = false
+            model_appendtocsv = true
+        end
+        if agent_collected && agent_count_collections % writing_interval == 0
+            AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+            df_agent = init_agent_dataframe(model, adata)
+            agent_collected = false
+            agent_appendtocsv = true
+        end
+
+        ProgressMeter.next!(p)
+    end
+    if should_we_collect(s, model, when)
+        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        agent_collected = true
+    end
+    if should_we_collect(s, model, when_model)
+        collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_collected = true
+    end
+
+    if model_collected
+        AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+        df_model = init_model_dataframe(model, mdata)
+    end
+    if agent_collected
+        AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+        df_agent = init_agent_dataframe(model, adata)
+    end
+
+    ProgressMeter.finish!(p)
+    return nothing
 end
 
 ###################################################
