@@ -113,7 +113,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     end
     return ids_iterator
 end
- 
+
 # Contrary to `GridSpace`, we also extend here `nearby_ids(a::Agent)`.
 # Because, we know that one agent exists per position, and hence we can skip the
 # call to `filter(id -> id ≠ a.id, ...)` that happens in core/space_interaction_API.jl.
