@@ -134,10 +134,12 @@ function nearby_positions(
     ) where {D}
     stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
-    positions_iterator = (n .+ pos for n in nindices)
-    return Base.Iterators.filter(
-        pos -> checkbounds(Bool, stored_ids, pos...), positions_iterator
-    )
+    space_size = size(stored_ids)
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        return (n .+ pos for n in nindices)
+    else
+        return (n .+ pos for n in nindices if checkbounds(Bool, stored_ids, (n .+ pos)...))
+    end
 end
 function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,true}, r = 1,
@@ -145,7 +147,11 @@ function nearby_positions(
     ) where {D}
     nindices = get_indices_f(space, r)
     space_size = size(space)
-    return (mod1.(n .+ pos, space_size) for n in nindices)
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        return (n .+ pos for n in nindices)
+    else
+        return (mod1.(n .+ pos, space_size) for n in nindices)
+    end
 end
 
 function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
