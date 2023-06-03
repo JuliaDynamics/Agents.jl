@@ -228,7 +228,7 @@ end
 # At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
 # utilize the [`ABMObservable`](@ref). We do not need to collect data here,
 # only the current status of the model will be used in visualization
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
 abmobs = ABMObservable(model; agent_step!)

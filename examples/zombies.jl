@@ -91,7 +91,7 @@ function agent_step!(agent, model)
 end
 
 # ## Visualising the fall of humanity
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
 ac(agent) = agent.infected ? :green : :black

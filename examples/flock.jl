@@ -114,7 +114,7 @@ function agent_step!(bird, model)
 end
 
 # ## Plotting the flock
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
 

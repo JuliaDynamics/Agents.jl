@@ -381,7 +381,7 @@ end
 # the visualization.
 
 # ```julia
-# using InteractiveDynamics
+#
 # using GLMakie # CairoMakie doesn't do 3D plots
 # ```
 

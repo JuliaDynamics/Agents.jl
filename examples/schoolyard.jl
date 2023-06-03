@@ -140,7 +140,7 @@ model = schoolyard()
 # ## Visualising the system
 
 # Now, we can watch the dynamics of the social system unfold:
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
 

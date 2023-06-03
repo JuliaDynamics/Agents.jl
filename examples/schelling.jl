@@ -120,7 +120,7 @@ agent = schelling[2]
 # by `ABM` because it allows deletion of agents (at a performance deficit) and we
 # don't need that feature here.
 # Instead, we should use [`UnremovableABM`](@ref).
-# The only change necessary for this to work is to simply change the call to 
+# The only change necessary for this to work is to simply change the call to
 # `ABM` to a call to `UnremovableABM`.
 
 schelling = UnremovableABM(SchellingAgent, space; properties)
@@ -208,16 +208,15 @@ step!(model, agent_step!)
 step!(model, agent_step!, 3)
 
 # ## Visualizing the data
+
 # There is a dedicated tutorial for visualization, animation, and interaction for
 # agent based models. See [Visualizations and Animations for Agent Based Models](@ref).
 
 # We can use the [`abmplot`](@ref) function to plot the distribution of agents on a
-# 2D grid at every generation, via the
-# [InteractiveDynamics.jl](https://juliadynamics.github.io/InteractiveDynamics.jl/dev/) package
-# and the [Makie.jl](http://makie.juliaplots.org/stable/) plotting ecosystem.
+# 2D grid at every generation, using the
+# and the [Makie](http://makie.juliaplots.org/stable/) plotting ecosystem.
 
 # Let's color the two groups orange and blue and make one a square and the other a circle.
-using InteractiveDynamics
 using CairoMakie # choosing a plotting backend
 CairoMakie.activate!() # hide
 
