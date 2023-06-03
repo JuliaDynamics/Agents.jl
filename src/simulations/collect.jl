@@ -136,7 +136,7 @@ function run!(
                 sizehint!(c, n)
             end
         end
-    end=
+    end
 
     s = 0
     p = if typeof(n) <: Int
