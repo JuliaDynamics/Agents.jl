@@ -192,4 +192,4 @@ The plotting is identical as in [`abmplot`](@ref) and applicable keywords are pr
 * `kwargs...`: All other keywords are propagated to [`abmplot`](@ref).
 """
 function abmvideo end
-export abmvide
+export abmvideo
