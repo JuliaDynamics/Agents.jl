@@ -152,26 +152,19 @@ function run!(
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
-            agent_count_collections += 1
-            agent_collected = true
         end
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
-            model_count_collections += 1
-            model_collected = true
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
-
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
-        agent_collected = true
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
-        model_collected = true
     end
 
     ProgressMeter.finish!(p)
