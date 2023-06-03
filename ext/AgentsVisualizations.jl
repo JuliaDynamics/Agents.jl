@@ -13,6 +13,7 @@ JULIADYNAMICS_COLORS = [
 ]
 JULIADYNAMICS_CMAP = reverse(cgrad(:dense)[20:end])
 
+include("src/utils.jl")
 include("src/abmplot.jl")
 include("src/lifting.jl")
 include("src/interaction.jl")
