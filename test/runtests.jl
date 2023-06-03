@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 using Test, Agents, Random, LinearAlgebra
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean

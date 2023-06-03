@@ -202,6 +202,31 @@ end
             mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
+
+        @testset "Writing to file while running" begin
+
+            agent_data, model_data = run!(
+                model,
+                agent_step!,
+                model_step!,
+                365 * 5;
+                when_model=each_year,
+                when=six_months,
+                mdata=[:flag, :year],
+                adata=[(:weight, mean)],
+                write_during_run=true,
+                writing_interval=3
+            )
+
+            adata_saved = CSV.read("adata.csv", DataFrame)
+            @test size(adata_saved) == (11, 2)
+            @test propertynames(adata_saved) == [:step, :mean_weight]
+            
+            mdata_saved = CSV.read("mdata.csv", DataFrame)
+            @test size(mdata_saved) == (6, 3)
+            @test propertynames(mdata_saved) == [:step, :flag, :year]
+
+        end
     end
 
     @testset "Low-level API for Collections" begin
