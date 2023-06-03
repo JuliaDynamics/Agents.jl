@@ -205,7 +205,7 @@ end
 
         @testset "Writing to file while running" begin
 
-            agent_data, model_data = run!(
+            offline_run!(
                 model,
                 agent_step!,
                 model_step!,
@@ -214,7 +214,6 @@ end
                 when=six_months,
                 mdata=[:flag, :year],
                 adata=[(:weight, mean)],
-                write_during_run=true,
                 writing_interval=3
             )
 
@@ -226,6 +225,10 @@ end
             @test size(mdata_saved) == (6, 3)
             @test propertynames(mdata_saved) == [:step, :flag, :year]
 
+            rm("adata.csv")
+            rm("mdata.csv")
+            @test !isfile("adata.csv")
+            @test !isfile("mdata.csv")
         end
     end
 
