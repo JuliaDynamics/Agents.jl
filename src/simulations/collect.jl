@@ -136,12 +136,7 @@ function run!(
                 sizehint!(c, n)
             end
         end
-    end
-
-    agent_count_collections = 0
-    model_count_collections = 0
-    agent_collected = false
-    model_collected = false
+    end=
 
     s = 0
     p = if typeof(n) <: Int
@@ -166,7 +161,6 @@ function run!(
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
     end
-
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
