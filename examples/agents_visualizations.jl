@@ -19,31 +19,36 @@ Pkg.status(["Agents", "CairoMakie"];
 )
 
 # ## Static plotting of ABMs
+
 # Static plotting, which is also the basis for creating custom plots that include
-# an abm plot, is done using the [`abmplot`](@ref) function. Its usage is exceptionally
+# an ABM plot, is done using the [`abmplot`](@ref) function. Its usage is exceptionally
 # straight-forward, and in principle one simply defines functions for how the
 # agents should be plotted. Here we will use a pre-defined model, the Daisyworld
 # as an example throughout this docpage.
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
-daisypath = joinpath(dirname(pathof(InteractiveDynamics)), "agents", "daisyworld_def.jl")
+
+daisypath = joinpath(pathof(Agents), "../../", "ext", "src", "daisyworld_def.jl")
 include(daisypath)
 model, daisy_step!, daisyworld_step! = daisyworld(;
     solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
 )
 model
 
-# Now, to plot daisyworld is as simple as
-daisycolor(a::Daisy) = a.breed # color of agents
-as = 20 # size of agents
-am = '✿' # marker of agents
+# Now, to plot daisyworld we provide a function for the color
+# for the agents that depend on the agent properties, and
+# a size and marker style that are constants,
+daisycolor(a::Daisy) = a.breed # agent color
+as = 20    # agent size
+am = '✿'  # agent marker
 scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
 fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, scatterkwargs)
 fig
 
-# To this, we can also plot the temperature of the planet by providing the access field
-# as a heat array:
+# Besides agents, we can also plot spatial properties as a heatmap.
+# Here we plot the temperature of the planet by providing the name
+# of the property as the "heat array":
 heatarray = :temperature
 heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;

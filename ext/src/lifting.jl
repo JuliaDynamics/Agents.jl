@@ -123,10 +123,10 @@ function abmplot_heatobs(model, heatarray)
             # and do heatmap!(ax, x, y, heatobs)
             #
             # TODO: use surface!(heatobs) here?
-            matrix = get_data(model, heatarray, identity)
+            matrix = Agents.get_data(model, heatarray, identity)
             # Check for correct size for discrete space
-            if abmspace(model) isa AbstractGridSpace
-                if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
+            if Agents.abmspace(model) isa AbstractGridSpace
+                if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(Agents.abmspace(model))
                     error("The heat array property must yield a matrix of same size as the grid!")
                 end
             end
