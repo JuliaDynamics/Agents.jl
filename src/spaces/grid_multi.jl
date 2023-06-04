@@ -139,8 +139,7 @@ function combine_positions(pos, origin, iter::GridSpaceIdIterator{true}, nocheck
     # the mod function is not needed for many positions and it's expensive compared
     # with checking for bounds so it is better to apply it only as a fallback.
     off_pos = pos .+ origin
-    nocheck && return off_pos
-    checkbounds(Bool, iter.stored_ids, off_pos...) && return off_pos
+    (nocheck || checkbounds(Bool, iter.stored_ids, off_pos...)) && return off_pos
     return mod1.(off_pos, iter.space_size)
 end
 
