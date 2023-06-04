@@ -477,7 +477,7 @@ end
 
 # Plotting for neighbors in continuous space
 #=
-using GLMakie, InteractiveDynamics
+using GLMakie
 function test_neighbors_continuous(;
     extent = (1.0, 1.5)
     spacing = 0.05

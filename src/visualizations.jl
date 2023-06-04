@@ -201,9 +201,10 @@ values in the tooltip on mouse hover. Concatenates strings if there are multiple
 at one position.
 Custom tooltips for agents can be implemented by adding a specialised method
 for `agent2string`.
+
 Example:
 ```julia
-function InteractiveDynamics.agent2string(agent::SpecialAgent)
+function Agents.agent2string(agent::SpecialAgent)
     \"\"\"
     ✨ SpecialAgent ✨
     ID = \$(agent.id)

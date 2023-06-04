@@ -66,7 +66,7 @@ This is the internal recipe for creating an `_ABMPlot`.
 """
 @recipe(_ABMPlot, abmobs) do scene
     Theme(
-        # insert InteractiveDynamics theme here?
+        # TODO: insert JuliaDynamics theme here?
     )
     Attributes(
         # Axis

@@ -375,17 +375,17 @@ function model_step!(model)
 end
 
 # ## Visualization
-# Now we use `InteractiveDynamics` to create a visualization of the model running in 3D space
+# Now we use `Makie` to create a visualization of the model running in 3D space
 #
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
 
 # ```julia
 #
-# using GLMakie # CairoMakie doesn't do 3D plots
+# using GLMakie # CairoMakie doesn't do 3D plots well
 # ```
 
-animalcolor(a) =
+function animalcolor(a)
     if a.type == :rabbit
         :brown
     elseif a.type == :fox
@@ -393,6 +393,7 @@ animalcolor(a) =
     else
         :blue
     end
+end
 
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
