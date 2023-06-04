@@ -202,7 +202,7 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
             pos_i > L && return nothing
             pos_index = combine_positions(indices[pos_i], origin, iter, nocheck)
         end
-        ids_in_pos = @inbounds stored_ids[pos_index...]
+        ids_in_pos = stored_ids[pos_index...]
     end
     # We reached the next valid position and non-empty position
     id = ids_in_pos[inner_i]
