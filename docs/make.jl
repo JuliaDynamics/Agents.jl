@@ -1,9 +1,9 @@
 cd(@__DIR__)
 println("Loading packages...")
 using Agents
-import Literate
-using LightOSM
+using Agents.LightOSM
 using CairoMakie
+import Literate
 
 pages = [
     "Introduction" => "index.md",
@@ -19,7 +19,7 @@ pages = [
         "examples.md"
     ],
     "api.md",
-    "Plotting and Interactivity" => "agents_visualizations.md",
+    "Plotting and Interactivity" => "examples/agents_visualizations.md",
     "Ecosystem Integration" => [
         "BlackBoxOptim.jl" => "examples/optim.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",
