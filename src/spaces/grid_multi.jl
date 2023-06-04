@@ -122,7 +122,7 @@ struct GridSpaceIdIterator{P,D}
     origin::NTuple{D,Int}             # origin position nearby is measured from
     L::Int                            # length of `indices`
     space_size::NTuple{D,Int}         # size of `stored_ids`
-    nocheck::Bool
+    nocheck::Bool                          # skip bound checks if we are far from the edges
 end
 function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D,Int}, nocheck) where {P,D}
     L = length(indices)

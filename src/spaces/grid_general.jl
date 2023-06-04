@@ -135,6 +135,7 @@ function nearby_positions(
     stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
     space_size = size(stored_ids)
+    # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         return (n .+ pos for n in nindices)
     else
