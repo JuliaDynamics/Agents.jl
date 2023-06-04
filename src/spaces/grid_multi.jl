@@ -111,7 +111,7 @@ function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) whe
     stored_ids = space.stored_ids
     space_size = size(stored_ids)
     nocheck = all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-    return GridSpaceIdIterator{P}(stored_ids, nindices, pos, nocheck)
+    return GridSpaceIdIterator{P}(stored_ids, nindices, pos, space_size, nocheck)
 end
 
 # Iterator struct. State is `(pos_i, inner_i)` with `pos_i` the index to the nearby indices
@@ -122,12 +122,11 @@ struct GridSpaceIdIterator{P,D}
     origin::NTuple{D,Int}             # origin position nearby is measured from
     L::Int                            # length of `indices`
     space_size::NTuple{D,Int}         # size of `stored_ids`
-    nocheck::Bool                          # skip bound checks if we are far from the edges
+    nocheck::Bool                     # skip bound checks if we are far from the edges
 end
-function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D,Int}, nocheck) where {P,D}
+function GridSpaceIdIterator{P}(stored_ids, indices, origin::NTuple{D,Int}, space_size, nocheck) where {P,D}
     L = length(indices)
     @assert L > 0
-    space_size = size(stored_ids)
     return GridSpaceIdIterator{P,D}(stored_ids, indices, origin, L, space_size, nocheck)
 end
 Base.eltype(::Type{<:GridSpaceIdIterator}) = Int # It returns IDs
@@ -139,13 +138,17 @@ function combine_positions(pos, origin, iter::GridSpaceIdIterator{true}, nocheck
     # the mod function is not needed for many positions and it's expensive compared
     # with checking for bounds so it is better to apply it only as a fallback.
     npos = pos .+ origin
-    (nocheck || checkbounds(Bool, iter.stored_ids, npos...)) ? npos : mod1.(npos, iter.space_size)
+    if nocheck || checkbounds(Bool, iter.stored_ids, npos...)
+        return npos
+    else
+        return mod1.(npos, iter.space_size)
+    end
 end
 
 # Initialize iteration
 function Base.iterate(iter::GridSpaceIdIterator)
     @inbounds begin
-        stored_ids, indices, L, origin, nocheck = getproperty.(
+    stored_ids, indices, L, origin, nocheck = getproperty.(
         Ref(iter), (:stored_ids, :indices, :L, :origin, :nocheck))
     pos_i = 1
     pos_index = combine_positions(indices[pos_i], origin, iter, nocheck)
@@ -166,9 +169,12 @@ end
 
 # Must return `true` if the access is invalid
 function invalid_access(pos_index, iter::GridSpaceIdIterator{false}, nocheck)
-    nocheck && return @inbounds isempty(iter.stored_ids[pos_index...])
-    valid_bounds = checkbounds(Bool, iter.stored_ids, pos_index...)
-    return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
+    if nocheck
+        return @inbounds isempty(iter.stored_ids[pos_index...])
+    else
+        valid_bounds = checkbounds(Bool, iter.stored_ids, pos_index...)
+        return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
+    end
 end
 function invalid_access(pos_index, iter::GridSpaceIdIterator{true}, ::Bool)
     @inbounds isempty(iter.stored_ids[pos_index...])
@@ -196,7 +202,7 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
             pos_i > L && return nothing
             pos_index = combine_positions(indices[pos_i], origin, iter, nocheck)
         end
-        ids_in_pos = stored_ids[pos_index...]
+        ids_in_pos = @inbounds stored_ids[pos_index...]
     end
     # We reached the next valid position and non-empty position
     id = ids_in_pos[inner_i]
