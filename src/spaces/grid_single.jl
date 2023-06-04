@@ -87,12 +87,14 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
     position_iterator = (pos .+ β for β in nindices)
+    # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         ids_iterator = (stored_ids[p...] for p in position_iterator 
                         if stored_ids[p...] != 0)
     else
-        ids_iterator = (stored_ids[mod1.(p, space_size)...] for p in position_iterator
-                        if stored_ids[mod1.(p, space_size)...] != 0)
+        ids_iterator = (checkbounds(Bool, stored_ids, p...) ? 
+                        stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
+                        for p in position_iterator if stored_ids[mod1.(p, space_size)...] != 0)
     end
     return ids_iterator
 end
@@ -104,6 +106,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
     position_iterator = (pos .+ β for β in nindices)
+    # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         ids_iterator = (stored_ids[p...] for p in position_iterator 
                         if stored_ids[p...] != 0)
