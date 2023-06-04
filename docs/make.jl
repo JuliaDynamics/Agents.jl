@@ -57,7 +57,7 @@ Downloads.download(
 )
 include("build_docs_with_style.jl")
 
-build_docs_with_style(pages, Agents, InteractiveDynamics, LightOSM;
+build_docs_with_style(pages, Agents, LightOSM;
     expandfirst = ["index.md"],
     authors = "George Datseris and contributors.",
 )

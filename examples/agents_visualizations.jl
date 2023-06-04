@@ -146,9 +146,9 @@ abmvideo(
 
 # ![RabbitFoxHawk inspection example](https://github.com/JuliaDynamics/JuliaDynamics/tree/master/videos/agents/RabbitFoxHawk_inspection.png)
 
-# The tooltip can be customized by extending `InteractiveDynamics.agent2string`.
+# The tooltip can be customized by extending `Agents.agent2string`.
 # ```@docs
-# InteractiveDynamics.agent2string
+# Agents.agent2string
 # ```
 
 # ## Creating custom ABM plots

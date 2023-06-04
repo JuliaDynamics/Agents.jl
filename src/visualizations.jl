@@ -193,3 +193,24 @@ The plotting is identical as in [`abmplot`](@ref) and applicable keywords are pr
 """
 function abmvideo end
 export abmvideo
+
+"""
+    agent2string(agent::A)
+Convert agent data into a string which is used to display all agent variables and their
+values in the tooltip on mouse hover. Concatenates strings if there are multiple agents
+at one position.
+Custom tooltips for agents can be implemented by adding a specialised method
+for `agent2string`.
+Example:
+```julia
+function InteractiveDynamics.agent2string(agent::SpecialAgent)
+    \"\"\"
+    ✨ SpecialAgent ✨
+    ID = \$(agent.id)
+    Main weapon = \$(agent.charisma)
+    Side weapon = \$(agent.pistol)
+    \"\"\"
+end
+```
+"""
+function agent2string end
