@@ -92,6 +92,7 @@ This is the internal recipe for creating an `_ABMPlot`.
         heatkwargs = NamedTuple(),
         add_colorbar = true,
         static_preplot! = nothing,
+        adjust_aspect = true,
 
         # Interactive application
         add_controls = false,
@@ -125,7 +126,7 @@ function Makie.plot!(abmplot::_ABMPlot)
         error("Space type $(typeof(model.space)) is not supported for plotting.")
     end
     ax = abmplot.ax[]
-    isnothing(ax.aspect[]) && (ax.aspect = DataAspect())
+    abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
     if !(model.space isa Agents.GraphSpace)
         set_axis_limits!(ax, model)
     end

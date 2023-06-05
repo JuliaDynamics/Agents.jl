@@ -1,6 +1,11 @@
 # main
 
 # v5.15
+- Agents.jl moved to Julia 1.9+, and now exports visualization
+  and interactive applications automatically once Makie (or Makie backends
+  such as GLMakie) come into scope, using the new package extension system.
+  The only downside of this is that now to visualize ABMs on open street
+  maps, the package OSMMakie.jl must be explicitly loaded as well.
 - Nearby look-ups with `nearby_positions`, `nearby_ids` and derivatives are now incrementally faster than before more the radius increases.
 - The `randomwalk!` function is now supported for any number of dimensions in ContinuousSpace when used to create isotropic/uniform random walks. For all type of `AbstractGridSpace`, the `randomwalk!` function supports a new keyword `force_motion`, which is false by default. See the docs to be informed on the effect of setting this keyword. Besides, in the continuous space default case random walks are up to 2 times faster than before.
 - The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
