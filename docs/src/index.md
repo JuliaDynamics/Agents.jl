@@ -108,6 +108,16 @@ You're looking for support for Agents.jl? Look no further! Here's some things yo
 3. Post a question in the [Julia discourse](https://discourse.julialang.org/) in the category “Modelling and simulations”, using “agent” as a tag!
 4. If you believe that you have encountered unexpected behavior or a bug in Agents.jl, then please do open an issue on our [GitHub page](https://github.com/JuliaDynamics/Agents.jl) providing a minimal working example!
 
+## Contributing
+
+Any contribution to Agents.jl is welcome! For example you can:
+
+* Add new feature or improve an existing one (plenty to choose from the "Issues" page)
+* Improve the existing documentation
+* Add new example ABMs into our existing pool of examples
+* Report bugs and suggestions in the Issues page
+
+Have a look at [contributor's guide](https://github.com/SciML/ColPrac) of the SciML organization for some good information on contributing to Julia packages!
 
 ## Citation
 
