@@ -76,7 +76,7 @@ using StaticArrays
 # ## Model initialization
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
 # The keywords here control number of particles and sizes.
-function initialize_model(;
+function initialize_bouncing(;
     number_of_particles=10_000,
     sides=SVector(500.0, 500.0),
     dt=0.001,
@@ -200,14 +200,14 @@ end
 # Finally, the function below runs an example simulation, for 1000 steps.
 function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
     if isnothing(model)
-        model = initialize_model(number_of_particles=number_of_particles)
+        model = initialize_bouncing(number_of_particles=number_of_particles)
     end
     Agents.step!(
         model, agent_step!, model_step!, nsteps, false,
     )
 end
 # Which should be quite fast
-model = initialize_model()
+model = initialize_bouncing()
 simulate(model) # compile
 @time simulate(model)
 
@@ -218,11 +218,11 @@ simulate(model) # compile
 
 using CairoMakie
 CairoMakie.activate!() # hide
-model = initialize_model(number_of_particles=1000)
+model = initialize_bouncing(number_of_particles=1000)
 abmvideo(
     "celllistmap.mp4", model, agent_step!, model_step!;
     framerate=20, frames=200, spf=5,
-    title="Bouncing particles with CellListMap.jl acceleration",
+    title="Softly bouncing particles with CellListMap.jl",
     as=p -> p.r, # marker size
     ac=p -> p.k # marker color
 )
