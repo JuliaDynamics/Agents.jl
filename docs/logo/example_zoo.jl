@@ -23,8 +23,8 @@ steps_per_frame = [
     50,
     50,
 ]
-models = ABMObservable[]
-rules = []
+models = Any[nothing for _ in 1:9]
+rules = Any[nothing for _ in 1:9]
 
 fig = Figure(resolution = (1200, 1200))
 axs = Axis[]
@@ -34,8 +34,7 @@ for (i, c) in enumerate(CartesianIndices((3,3)))
     push!(axs, ax)
 end
 
-
-# %% DaisyWorld
+# DaisyWorld
 daisypath = joinpath(pathof(Agents), "../../", "ext", "src", "daisyworld_def.jl")
 include(daisypath)
 daisy_model, daisy_step!, daisyworld_step! = daisyworld(;
@@ -53,11 +52,11 @@ plotkwargs = (;
     heatarray, heatkwargs, add_colorbar = false,
 )
 
-daisy_obs = abmplot!(axs[1], daisy_model; plotkwargs...)
-push!(models, daisy_obs)
-push!(rules, (daisy_step!, daisyworld_step!))
+daisy_obs = abmplot!(axs[1], daisy_model; plotkwargs..., adjust_aspect = false,)
+models[1] = daisy_obs
+rules[1] = (daisy_step!, daisyworld_step!)
 
-# %% Flocking
+# Flocking
 @agent Bird ContinuousAgent{2} begin
     speed::Float64
     cohere_factor::Float64
@@ -128,11 +127,11 @@ function bird_marker(b::Bird)
 end
 
 flock_model = flocking_model()
-flock_obs = abmplot!(axs[2], flock_model; am = bird_marker)
-push!(models, flock_obs)
-push!(rules, (bird_step!, dummystep))
+flock_obs = abmplot!(axs[2], flock_model; am = bird_marker, adjust_aspect = false,)
+models[2] = flock_obs
+rules[2] = (bird_step!, dummystep)
 
-# %% Zombie outbreak
+# Zombie outbreak
 using OSMMakie
 
 @agent Zombie OSMAgent begin
@@ -182,5 +181,182 @@ zombies = initialise_zombies()
 zombies_obs = abmplot!(axs[7], zombies;
     ac = zombie_color, as = zombie_size, adjust_aspect = false,
 )
-push!(models, zombies_obs)
-push!(rules, (zombie_step!, dummystep))
+models[7] = zombies_obs
+rules[7] = (zombie_step!, dummystep)
+
+# Growing bacteria
+using Agents, LinearAlgebra
+using Random # hide
+mutable struct SimpleCell <: AbstractAgent
+    id::Int
+    pos::NTuple{2,Float64}
+    length::Float64
+    orientation::Float64
+    growthprog::Float64
+    growthrate::Float64
+
+    ## node positions/forces
+    p1::NTuple{2,Float64}
+    p2::NTuple{2,Float64}
+    f1::NTuple{2,Float64}
+    f2::NTuple{2,Float64}
+end
+function SimpleCell(id, pos, l, φ, g, γ)
+    a = SimpleCell(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    update_nodes!(a)
+    return a
+end
+
+function update_nodes!(a::SimpleCell)
+    offset = 0.5 * a.length .* unitvector(a.orientation)
+    a.p1 = a.pos .+ offset
+    a.p2 = a.pos .- offset
+end
+unitvector(φ) = reverse(sincos(φ))
+cross2D(a, b) = a[1] * b[2] - a[2] * b[1]
+function bacteria_model_step!(model)
+    for a in allagents(model)
+        if a.growthprog ≥ 1
+            ## When a cell has matured, it divides into two daughter cells on the
+            ## positions of its nodes.
+            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            kill_agent!(a, model)
+        else
+            ## The rest lengh of the internal spring grows with time. This causes
+            ## the nodes to physically separate.
+            uv = unitvector(a.orientation)
+            internalforce = model.hardness * (a.length - a.growthprog) .* uv
+            a.f1 = -1 .* internalforce
+            a.f2 = internalforce
+        end
+    end
+    ## Bacteria can interact with more than on other cell at the same time, therefore,
+    ## we need to specify the option `:all` in `interacting_pairs`
+    for (a1, a2) in interacting_pairs(model, 2.0, :all)
+        interact!(a1, a2, model)
+    end
+end
+function bacterium_step!(agent::SimpleCell, model::ABM)
+    fsym, compression, torque = transform_forces(agent)
+    direction =  model.dt * model.mobility .* fsym
+    walk!(agent, direction, model)
+    agent.length += model.dt * model.mobility .* compression
+    agent.orientation += model.dt * model.mobility .* torque
+    agent.growthprog += model.dt * agent.growthrate
+    update_nodes!(agent)
+    return agent.pos
+end
+function interact!(a1::SimpleCell, a2::SimpleCell, model)
+    n11 = noderepulsion(a1.p1, a2.p1, model)
+    n12 = noderepulsion(a1.p1, a2.p2, model)
+    n21 = noderepulsion(a1.p2, a2.p1, model)
+    n22 = noderepulsion(a1.p2, a2.p2, model)
+    a1.f1 = @. a1.f1 + (n11 + n12)
+    a1.f2 = @. a1.f2 + (n21 + n22)
+    a2.f1 = @. a2.f1 - (n11 + n21)
+    a2.f2 = @. a2.f2 - (n12 + n22)
+end
+
+function noderepulsion(p1::NTuple{2,Float64}, p2::NTuple{2,Float64}, model::ABM)
+    delta = p1 .- p2
+    distance = norm(delta)
+    if distance ≤ 1
+        uv = delta ./ distance
+        return (model.hardness * (1 - distance)) .* uv
+    end
+    return (0, 0)
+end
+
+function transform_forces(agent::SimpleCell)
+    ## symmetric forces (CM movement)
+    fsym = agent.f1 .+ agent.f2
+    ## antisymmetric forces (compression, torque)
+    fasym = agent.f1 .- agent.f2
+    uv = unitvector(agent.orientation)
+    compression = dot(uv, fasym)
+    torque = 0.5 * cross2D(uv, fasym)
+    return fsym, compression, torque
+end
+
+bacteria_model = ABM(
+    SimpleCell,
+    ContinuousSpace((14, 9); spacing = 1.0, periodic = false);
+    properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
+    rng = MersenneTwister(1680)
+)
+
+add_agent!((6.5, 4.0), bacteria_model, 0.0, 0.3, 0.0, 0.1)
+add_agent!((7.5, 4.0), bacteria_model, 0.0, 0.0, 0.0, 0.1)
+
+function cassini_oval(agent)
+    t = LinRange(0, 2π, 50)
+    a = agent.growthprog
+    b = 1
+    m = @. 2 * sqrt((b^4 - a^4) + a^4 * cos(2 * t)^2) + 2 * a^2 * cos(2 * t)
+    C = sqrt.(m / 2)
+
+    x = C .* cos.(t)
+    y = C .* sin.(t)
+
+    uv = reverse(sincos(agent.orientation))
+    θ = atan(uv[2], uv[1])
+    R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
+
+    bacteria = R * permutedims([x y])
+    coords = [Point2f(x, y) for (x, y) in zip(bacteria[1, :], bacteria[2, :])]
+    scale_polygon(Makie.Polygon(coords), 0.5)
+end
+bacteria_color(b) = RGBf(b.id * 3.14 % 1, 0.2, 0.2)
+
+bacteria_obs = abmplot!(axs[4], bacteria_model;
+    am = cassini_oval, ac = bacteria_color, adjust_aspect = false,
+)
+models[4] = bacteria_obs
+rules[4] = (bacterium_step!, bacteria_model_step!)
+
+# Mountain runners
+@agent Runner GridAgent{2} begin end
+function initialize_runners(map_url; goal = (128, 409), seed = 88)
+    heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
+    space = GridSpace(size(heightmap); periodic = false)
+    pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
+    model = ABM(
+        Runner,
+        space;
+        rng = MersenneTwister(seed),
+        properties = Dict(:goal => goal, :pathfinder => pathfinder)
+    )
+    for _ in 1:10
+        runner = add_agent!((rand(model.rng, 100:350), rand(model.rng, 50:200)), model)
+        plan_route!(runner, goal, model.pathfinder)
+    end
+    return model
+end
+runner_step!(agent, model) = move_along_route!(agent, model, model.pathfinder)
+
+map_url =
+    "https://raw.githubusercontent.com/JuliaDynamics/" *
+    "JuliaDynamics/master/videos/agents/runners_heightmap.jpg"
+runners_model = initialize_runners(map_url)
+
+runners_preplot!(ax, model) = scatter!(ax, model.goal; color = (:red, 50), marker = 'x')
+
+plotkw = (
+    figurekwargs = (resolution = (700, 700),),
+    ac = :black,
+    as = 8,
+    scatterkwargs = (strokecolor = :white, strokewidth = 2),
+    heatarray = model -> penaltymap(model.pathfinder),
+    heatkwargs = (colormap = :terrain,),
+    static_preplot! = runners_preplot!,
+)
+
+runners_obs = abmplot!(axs[3], runners_model;
+    plotkw..., adjust_aspect = false,
+)
+models[3] = runners_obs
+rules[3] = (runner_step!, dummystep)
+
+
+fig
