@@ -86,10 +86,17 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
     space_size = size(stored_ids)
-    array_accesses_iterator = (stored_ids[(mod1.(pos .+ β, space_size))...] for β in nindices)
-    # Notice that not all positions are valid; some are empty! Need to filter:
-    valid_pos_iterator = Base.Iterators.filter(x -> x ≠ 0, array_accesses_iterator)
-    return valid_pos_iterator
+    position_iterator = (pos .+ β for β in nindices)
+    # check if we are far from the wall to skip bounds checks
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        ids_iterator = (stored_ids[p...] for p in position_iterator 
+                        if stored_ids[p...] != 0)
+    else
+        ids_iterator = (checkbounds(Bool, stored_ids, p...) ? 
+                        stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
+                        for p in position_iterator if stored_ids[mod1.(p, space_size)...] != 0)
+    end
+    return ids_iterator
 end
 
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1,
@@ -97,14 +104,17 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     ) where {D}
     nindices = get_offset_indices(model, r)
     stored_ids = model.space.stored_ids
-    positions_iterator = (pos .+ β for β in nindices)
-    # Here we combine in one filtering step both valid accesses to the space array
-    # but also that the accessed location is not empty (i.e., id is not 0)
-    array_accesses_iterator = Base.Iterators.filter(
-        pos -> checkbounds(Bool, stored_ids, pos...) && stored_ids[pos...] ≠ 0,
-        positions_iterator
-    )
-    return (stored_ids[pos...] for pos in array_accesses_iterator)
+    space_size = size(stored_ids)
+    position_iterator = (pos .+ β for β in nindices)
+    # check if we are far from the wall to skip bounds checks
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        ids_iterator = (stored_ids[p...] for p in position_iterator 
+                        if stored_ids[p...] != 0)
+    else
+        ids_iterator = (stored_ids[p...] for p in position_iterator 
+                        if checkbounds(Bool, stored_ids, p...) && stored_ids[p...] != 0)
+    end
+    return ids_iterator
 end
 
 # Contrary to `GridSpace`, we also extend here `nearby_ids(a::Agent)`.
