@@ -30,7 +30,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   Notice that for 2D models, `am` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
   creating the polygon. In this case, the keyword `as` is meaningless, as each polygon has
-  its own size. Use the functions `scale, rotate2D` to transform this polygon.
+  its own size. Use the functions `scale, rotate_polygon` to transform this polygon.
 
   3D models currently do not support having different markers. As a result, `am` cannot be
   a function. It should be a `Mesh` or 3D primitive (such as `Sphere` or `Rect3D`).
@@ -101,6 +101,10 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
 See the documentation string of [`ABMObservable`](@ref) for custom interactive plots.
 """
 function abmplot end
+"""
+    abmplot!(ax::Axis, model::ABM; kwargs...)
+See `abmplot`.
+"""
 function abmplot! end
 export abmplot, abmplot!
 
@@ -215,3 +219,24 @@ end
 ```
 """
 function agent2string end
+
+"""
+    translate_polygon(p::Polygon, point)
+Translate given polygon by given `point`.
+"""
+function translate_polygon end
+"""
+    rotate_polygon(p::Polygon, θ)
+Rotate given polygon counter-clockwise by `θ` (in radians).
+"""
+function rotate_polygon end
+"""
+    scale_polygon(p::Polygon, s)
+Scale given polygon by `s`, assuming polygon's center of reference is the origin.
+"""
+function scale_polygon end
+export translate_polygon, scale_polygon, rotate_polygon
+
+# Some cheat function that only exists so that we can have
+# a conditional dependency on OSMMakie
+function agents_osmplot! end

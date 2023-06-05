@@ -15,8 +15,8 @@
 # walk on suitable portions of the map, hawks are capable of flight and can fly over a much
 # larger region of the map.
 #
-# Similar to the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/)
-# example, agent types are distinguished using a
+# Because agents share all their properties, to optimize performance
+# agent types are distinguished using a
 # `type` field. Agents also have an additional `energy` field, which is consumed to move around
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding

@@ -1,6 +1,5 @@
 export subscript, superscript
 export record_interaction
-export rotate2D, scale, Polygon, Point2f
 
 ##########################################################################################
 # Check/get/set
@@ -186,13 +185,10 @@ CYCLIC_COLORS = CyclicContainer(JULIADYNAMICS_COLORS)
 ##########################################################################################
 using Makie.GeometryBasics # for using Polygons
 
-translate(p::Polygon, point) = Polygon(decompose(Point2f, p.exterior) .+ point)
 
-"""
-    rotate2D(p::Polygon, θ)
-Rotate given polygon counter-clockwise by `θ` (in radians).
-"""
-function rotate2D(p::Polygon, θ)
+Agents.translate_polygon(p::Polygon, point) = Polygon(decompose(Point2f, p.exterior) .+ point)
+
+function Agents.rotate_polygon(p::Polygon, θ)
     sinφ, cosφ = sincos(θ)
     Polygon(map(
         p -> Point2f(cosφ*p[1] - sinφ*p[2], sinφ*p[1] + cosφ*p[2]),
@@ -200,8 +196,4 @@ function rotate2D(p::Polygon, θ)
     ))
 end
 
-"""
-    scale(p::Polygon, s)
-Scale given polygon by `s`, assuming polygon's "center" is the origin.
-"""
-scale(p::Polygon, s) = Polygon(decompose(Point2f, p.exterior) .* Float32(s))
+Agents.scale_polygon(p::Polygon, s) = Polygon(decompose(Point2f, p.exterior) .* Float32(s))

@@ -83,7 +83,7 @@ function abmplot_marker(model::ABM{<:SUPPORTED_SPACES}, used_poly, am::Function,
     # need to update used_poly Observable here for use with inspection
     used_poly[] = user_used_polygons(am, marker)
     if used_poly[]
-        marker = [translate(m, p) for (m, p) in zip(marker, pos)]
+        marker = [translate_polygon(m, p) for (m, p) in zip(marker, pos)]
     end
     return marker
 end

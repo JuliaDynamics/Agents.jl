@@ -47,11 +47,11 @@ end
 # a model object using default values.
 function initialize_model(;
     n_birds = 100,
-    speed = 1.0,
-    cohere_factor = 0.25,
+    speed = 2.0,
+    cohere_factor = 0.4,
     separation = 4.0,
     separate_factor = 0.25,
-    match_factor = 0.01,
+    match_factor = 0.02,
     visual_distance = 5.0,
     extent = (100, 100),
     seed = 42,
@@ -123,14 +123,15 @@ CairoMakie.activate!() # hide
 # create a `Polygon`: a triangle with same orientation as the bird's velocity.
 # It is as simple as defining the following function:
 
-const bird_polygon = Makie.Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
+const bird_polygon = Makie.Polygon(Point2f[(-1, -1), (2, 0), (-1, 1)])
 function bird_marker(b::Bird)
     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
-    scale(rotate2D(bird_polygon, φ), 2)
+    rotate_polygon(bird_polygon, φ)
 end
 
-# Where we have used the utility functions `scale` and `rotate2D` to act on a
-# predefined polygon. We now give `bird_marker` to `abmplot`, and notice how
+# Where we have used the utility functions `scale_polygon` and `rotate_polygon` to act on a
+# predefined polygon. `translate_polygon` is also available.
+# We now give `bird_marker` to `abmplot`, and notice how
 # the `as` keyword is meaningless when using polygons as markers.
 
 model = initialize_model()

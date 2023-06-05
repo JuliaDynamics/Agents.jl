@@ -38,7 +38,7 @@ end
 # Unfortunately one of the population has turned and will begin infecting anyone who
 # comes close.
 
-function initialise(; seed = 1234)
+function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
     model = ABM(
@@ -70,7 +70,7 @@ end
 # business, but start eating people along the way. Perhaps they can finally express their distaste
 # for city commuting.
 
-function agent_step!(agent, model)
+function zombie_step!(agent, model)
     ## Each agent will progress along their route
     ## Keep track of distance left to move this step, in case the agent reaches its
     ## destination early
@@ -92,14 +92,18 @@ end
 
 # ## Visualising the fall of humanity
 
-using CairoMakie
+# Notice that to visualize Open Street Maps, the package OSMMakie.jl must be loaded
+# as well, besides any Makie plotting backend such as CairoMakie.jl.
+using CairoMakie, OSMMakie
 CairoMakie.activate!() # hide
-ac(agent) = agent.infected ? :green : :black
-as(agent) = agent.infected ? 10 : 8
-model = initialise()
+zombie_color(agent) = agent.infected ? :green : :black
+zombie_size(agent) = agent.infected ? 10 : 8
+zombies = initialise_zombies()
 
-abmvideo("outbreak.mp4", model, agent_step!;
-title = "Zombie outbreak", framerate = 15, frames = 200, as, ac)
+abmvideo("outbreak.mp4", zombies, zombie_step!;
+    title = "Zombie outbreak", framerate = 15, frames = 200,
+    ac = zombie_color, as = zombie_size
+)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
