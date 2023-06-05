@@ -10,21 +10,22 @@ model_names = [
     "Ant colony",
     "Zombie outbreak",
     "Fractal growth",
-    "Bouncing particles",
+    "Social distancing",
 ]
 steps_per_frame = [
     1,
-    50,
-    50,
-    50,
+    2,
     5,
+    100,
     1,
     2,
-    50,
+    1,
+    20,
     3,
 ]
 models = Any[nothing for _ in 1:9]
 rules = Any[nothing for _ in 1:9]
+unikwargs = (add_colorbar = false, add_controls = false, adjust_aspect = false,)
 
 fig = Figure(resolution = (1200, 1200))
 axs = Axis[]
@@ -41,20 +42,21 @@ daisy_model, daisy_step!, daisyworld_step! = daisyworld(;
     solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
 )
 daisycolor(a::Daisy) = a.breed # agent color
-as = 20    # agent size
+as = 15    # agent size
 am = '✿'  # agent marker
 scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
 heatarray = :temperature
 heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     ac = daisycolor, as, am,
-    scatterkwargs = (strokewidth = 1.0,),
-    heatarray, heatkwargs, add_colorbar = false,
+    scatterkwargs = (strokewidth = 0.5,),
+    heatarray, heatkwargs, unikwargs...,
 )
 
-daisy_obs = abmplot!(axs[1], daisy_model; plotkwargs..., adjust_aspect = false,)
+daisy_obs = abmplot!(axs[1], daisy_model;
+agent_step! = daisy_step!, model_step! = daisyworld_step!,
+plotkwargs..., unikwargs...,)
 models[1] = daisy_obs
-rules[1] = (daisy_step!, daisyworld_step!)
 
 # Flocking
 @agent Bird ContinuousAgent{2} begin
@@ -127,12 +129,18 @@ function bird_marker(b::Bird)
 end
 
 flock_model = flocking_model()
-flock_obs = abmplot!(axs[2], flock_model; am = bird_marker, adjust_aspect = false,)
+flock_obs = abmplot!(axs[2], flock_model;
+    agent_step! = bird_step!,
+    am = bird_marker,  unikwargs...,
+)
 models[2] = flock_obs
-rules[2] = (bird_step!, dummystep)
 
 # Zombie outbreak
 using OSMMakie
+default_colors = OSMMakie.WAYTYPECOLORS
+default_colors["primary"] = colorant"#a1777f"
+default_colors["secondary"] = colorant"#a18f78"
+default_colors["tertiary"] = colorant"#b3b381"
 
 @agent Zombie OSMAgent begin
     infected::Bool
@@ -176,13 +184,15 @@ function zombie_step!(agent, model)
 end
 
 zombie_color(agent) = agent.infected ? :green : :black
-zombie_size(agent) = agent.infected ? 10 : 8
+zombie_size(agent) = agent.infected ? 15 : 10
 zombies = initialise_zombies()
 zombies_obs = abmplot!(axs[7], zombies;
-    ac = zombie_color, as = zombie_size, adjust_aspect = false,
+    ac = zombie_color, as = zombie_size, unikwargs...,
+    scatterkwargs = (strokecolor = :white, strokewidth = 1),
+    agent_step! = zombie_step!,
+
 )
 models[7] = zombies_obs
-rules[7] = (zombie_step!, dummystep)
 
 # Growing bacteria
 using Agents, LinearAlgebra
@@ -221,7 +231,7 @@ function bacteria_model_step!(model)
             ## positions of its nodes.
             add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
             add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
-            kill_agent!(a, model)
+            remove_agent!(a, model)
         else
             ## The rest lengh of the internal spring grows with time. This causes
             ## the nodes to physically separate.
@@ -310,10 +320,10 @@ end
 bacteria_color(b) = RGBf(b.id * 3.14 % 1, 0.2, 0.2)
 
 bacteria_obs = abmplot!(axs[4], bacteria_model;
-    am = cassini_oval, ac = bacteria_color, adjust_aspect = false,
+    am = cassini_oval, ac = bacteria_color, unikwargs...,
+    agent_step! = bacterium_step!, model_step! = bacteria_model_step!,
 )
 models[4] = bacteria_obs
-rules[4] = (bacterium_step!, bacteria_model_step!)
 
 # Mountain runners
 using Agents.Pathfinding
@@ -349,7 +359,7 @@ plotkw = (
     figurekwargs = (resolution = (700, 700),),
     ac = :black,
     as = 8,
-    add_colorbar = false,
+    unikwargs...,
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
     heatarray = model -> penaltymap(model.pathfinder),
     heatkwargs = (colormap = :terrain,),
@@ -357,10 +367,10 @@ plotkw = (
 )
 
 runners_obs = abmplot!(axs[3], runners_model;
-    plotkw..., adjust_aspect = false,
+    plotkw..., unikwargs...,
+    agent_step! = runner_step!,
 )
 models[3] = runners_obs
-rules[3] = (runner_step!, dummystep)
 
 # Forest fire
 function forest_fire(; density = 0.7, griddims = (100, 100), seed = 2)
@@ -392,7 +402,7 @@ function forest_step!(forest)
 end
 forest_model = forest_fire()
 forestkwargs = (
-    add_colorbar = false,
+    unikwargs...,
     heatarray = :trees,
     heatkwargs = (
         colorrange = (0, 3),
@@ -401,11 +411,10 @@ forestkwargs = (
 )
 
 forest_obs = abmplot!(axs[5], forest_model;
-    forestkwargs..., adjust_aspect = false,
+    forestkwargs..., unikwargs..., model_step! = forest_step!,
 )
 
 models[5] = forest_obs
-rules[5] = (dummystep, forest_step!)
 
 # Ants
 @agent Ant GridAgent{2} begin
@@ -595,12 +604,8 @@ function ant_step!(agent::Ant, model::AntWorld)
 end
 function antworld_step!(model::AntWorld)
     diffuse(model.pheremone_trails, model.diffusion_rate)
-    map!((x) -> x ≥ model.pheremone_floor ? x * (100 - model.evaporation_rate) / 100 : 0., model.pheremone_trails, model.pheremone_trails)
-
+    map!((x) -> x ≥ model.pheremone_floor ? x * (100 - model.evaporation_rate) / 100 : 0.0, model.pheremone_trails, model.pheremone_trails)
     model.tick += 1
-    if mod1(model.tick, 100) == 100
-        @info "Step $(model.tick)"
-    end
 end
 
 function antworld_heatmap(model::AntWorld)
@@ -625,17 +630,17 @@ ant_color(ant::Ant) = ant.has_food ? :red : :black
 
 plotkwargs = (
     ac = ant_color, as = 20, am = '♦',
-    heatarray = antworld_heatmap, add_colorbar = false,
+    heatarray = antworld_heatmap, unikwargs...,
     heatkwargs = (colormap = Reverse(:viridis), colorrange = (0, 200),)
 )
 antworld = initialize_antworld(;number_ants = 125, random_seed = 6666, pheremone_amount = 60, evaporation_rate = 5)
 
 antworld_obs = abmplot!(axs[6], antworld;
-    plotkwargs..., adjust_aspect = false,
+    plotkwargs..., unikwargs...,
+    agent_step! = ant_step!, model_step! = antworld_step!,
 )
 
 models[6] = antworld_obs
-rules[6] = (ant_step!, antworld_step!)
 
 # Fractal growth
 @agent FractalParticle ContinuousAgent{2} begin
@@ -681,7 +686,7 @@ function initialize_fractal(;
         :spawn_count => 0,
     )
     ## space is periodic to allow particles going off one edge to wrap around to the opposite
-    space = ContinuousSpace(space_extents, 1.0; periodic = true)
+    space = ContinuousSpace(space_extents; spacing = 1.0, periodic = true)
     model = ABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
     center = space_extents ./ 2.0
     for i in 1:initial_particles
@@ -753,11 +758,12 @@ fractal_obs = abmplot!(axs[8], model;
     ac = fparticle_color,
     as = fparticle_size,
     am = '●',
-    adjust_aspect = false,
+    unikwargs...,
+    agent_step! = fractal_particle_step!,
+    model_step! = fractal_step!,
 )
 
 models[8] = fractal_obs
-rules[8] = (fractal_particle_step!, fractal_step!)
 
 # Social distancing
 @agent PoorSoul ContinuousAgent{2} begin
@@ -834,7 +840,7 @@ update!(agent) = agent.status == :I && (agent.days_infected += 1)
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
         if rand(model.rng) ≤ model.death_rate
-            kill_agent!(agent, model)
+            remove_agent!(agent, model)
         else
             agent.status = :R
             agent.days_infected = 0
@@ -849,32 +855,18 @@ function sir_model_step!(model)
     end
 end
 
-sir_model = socialdistancing_init()
+sir_model = socialdistancing_init(isolated = 0.8)
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
-
-abmvideo(
-    "socialdist4.mp4",
-    sir_model,
-    sir_agent_step!,
-    sir_model_step!;
-    title = "SIR model",
-    frames = 50,
-    framerate = 20,
-)
 
 sir_obs = abmplot!(axs[9], sir_model;
 ac = sir_colors,
-as = 10,
-spf = 1,
-adjust_aspect = false,
+as = 10, unikwargs...,
+agent_step! = sir_agent_step!, model_step! = sir_model_step!,
 )
 
 models[9] = sir_obs
-rules[9] = (sir_agent_step!, sir_model_step!)
 
 display(fig)
-
-# %% Attempt video...
 
 record(fig, "showcase.mp4", 1:100; framerate = 10) do i
     for j in 1:9
@@ -882,3 +874,5 @@ record(fig, "showcase.mp4", 1:100; framerate = 10) do i
         Agents.step!(obs, steps_per_frame[j])
     end
 end
+
+display(fig)
