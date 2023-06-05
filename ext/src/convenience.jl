@@ -1,7 +1,7 @@
 export abmexploration, abmvideo
 
 function Agents.abmexploration(model;
-        figure = NamedTuple(),
+        figure = (resolution = (1200, 800),),
         axis = NamedTuple(),
         alabels = nothing,
         mlabels = nothing,

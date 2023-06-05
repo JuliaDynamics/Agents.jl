@@ -34,8 +34,9 @@ Same functionality as `abmplot(model; kwargs...)`/`abmplot!(ax, model; kwargs...
 but allows to link an already existing `ABMObservable` to the created plots.
 """
 function Agents.abmplot(abmobs::ABMObservable;
-        figure = NamedTuple(),
         axis = NamedTuple(),
+        add_controls = false,
+        figure = add_controls ? (resolution = (800, 600),) : (resolution = (800,800),),
         kwargs...)
     fig = Figure(; figure...)
     ax = fig[1,1][1,1] = agents_space_dimensionality(abmobs.model[]) == 3 ?
