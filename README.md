@@ -6,8 +6,14 @@
 [![codecov](https://codecov.io/gh/JuliaDynamics/Agents.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaDynamics/Agents.jl)
 [![Package Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/Agents)](https://pkgs.genieframework.com?packages=Agents)
 
-Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM). Agents.jl is [objectively the fastest open source ABM framework](https://github.com/JuliaDynamics/ABM_Framework_Comparisons) out there, routinely being 100x faster than competing open software (MASON, NetLogo, Mesa). Agents.jl is also the only open source ABM framework that fully implements simulations on Open Street Maps.
+Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM): a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules.
+Some major highlights of Agents.jl are:
 
-Besides its incredible performance, two more major highlights of Agents.jl are its simplicity and the total amount of features. Agents.jl is designed to require writing minimal code and being very simple to learn and use, even though it provides an extensive API with thousands of possibilities for agent actions. This simplicity is due to the intuitive space-agnostic modelling approach we have implemented: agent actions are specified using generically named functions that do not depend on the actual space the agents exist in or on the properties of the agents themselves. Overall this leads to ultra fast model prototyping where even changing the space of the agents is matter of only a couple of lines of code.
+1. It is fast (faster than MASON, NetLogo, or Mesa)
+2. It is simple: has a very short learning curve and requires writing minimal code
+3. Has an extensive interface of thousands of out-of-the box possible agent actions
+4. Straightforwardly allows simulations on Open Street Maps
+
+The simplicity of Agents.jl is due to the intuitive space-agnostic modelling approach we have implemented: agent actions are specified using generically named functions (such as "move agent" or "find nearby agents") that do not depend on the actual space the agents exist in, nor on the properties of the agents themselves. Overall this leads to ultra fast model prototyping where even changing the space the agents live in is matter of only a couple of lines of code.
 
 More information and an extensive list of features can be found in the documentation, which you can either find [online](https://juliadynamics.github.io/Agents.jl/stable/) or build locally by running the `docs/make.jl` file.

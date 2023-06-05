@@ -26,10 +26,11 @@ using CairoMakie, Agents
 
 * Free and open source.
 * Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
-* The most performant ABM software versus other open source frameworks, routinely being 100x faster ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
 
+<small zoo figure here>
 
 ### Agent based modelling
 
