@@ -73,6 +73,7 @@ Noteworthy changes:
   such as GLMakie) come into scope, using the new package extension system.
   The only downside of this is that now to visualize ABMs on open street
   maps, the package OSMMakie.jl must be explicitly loaded as well.
+  InteractiveDynamics.jl is now obsolete.
 - Several performance improvements all across the board.
 - DEI-motivated name change for all names that remove agents:
     - `genocide! -> remove_all!`

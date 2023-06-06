@@ -11,6 +11,12 @@ using CairoMakie, Agents
     This gives us an accurate lower bound of the (satisfied) user count.
 
 !!! tip "Latest news: Agents.jl v5.15"
+    - Agents.jl moved to Julia 1.9+, and now exports visualization
+      and interactive applications automatically once Makie (or Makie backends
+      such as GLMakie) come into scope, using the new package extension system.
+      The only downside of this is that now to visualize ABMs on open street
+      maps, the package OSMMakie.jl must be explicitly loaded as well.
+      InteractiveDynamics.jl is now obsolete.
     - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
     - DEI-motivated name change for all names that remove agents:
       - `genocide! -> remove_all!`
