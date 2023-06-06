@@ -30,7 +30,13 @@ using CairoMakie, Agents
 * User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
 
-<small zoo figure here>
+
+```@raw html
+<video width="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/showcase.mp4?raw=true" type="video/mp4">
+</video>
+```
+
 
 ### Agent based modelling
 

@@ -27,13 +27,20 @@ models = Any[nothing for _ in 1:9]
 rules = Any[nothing for _ in 1:9]
 unikwargs = (add_colorbar = false, add_controls = false, adjust_aspect = false,)
 
-fig = Figure(resolution = (1200, 1200))
+fig = Figure(resolution = (1200, 1220))
 axs = Axis[]
 for (i, c) in enumerate(CartesianIndices((3,3)))
     ax = Axis(fig[c.I...]; title = model_names[i])
     hidedecorations!(ax)
     push!(axs, ax)
 end
+
+Label(fig[0, :], "Agents.jl zoo of examples";
+    tellheight = true, tellwidth = false,
+    valign = :bottom, padding = (0,0,0,0),
+    font = "TeX Gyre Heros Bold",
+    height = 20, fontsize = 30,
+)
 
 # DaisyWorld
 daisypath = joinpath(pathof(Agents), "../../", "ext", "src", "daisyworld_def.jl")
