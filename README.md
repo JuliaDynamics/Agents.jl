@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/JuliaDynamics/Agents.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaDynamics/Agents.jl)
 [![Package Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/Agents)](https://pkgs.genieframework.com?packages=Agents)
 
-Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM): a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules.
+Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM): a computational simulation methodology where autonomous agents react to their environment (including other agents) given a predefined set of rules.
 Some major highlights of Agents.jl are:
 
 1. It is fast (faster than MASON, NetLogo, or Mesa)
