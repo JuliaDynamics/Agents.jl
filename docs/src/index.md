@@ -23,7 +23,7 @@ using CairoMakie, Agents
       - `kill_agent! -> remove_agent!`
       - `UnkillableABM -> UnremovableABM`
     - Several new API functions and functionality increase: `random_nearby_position, empty_nearby_position, randomwalk!, random_agent`.
-    - We have created an objective, fully automated, extensive framework for comparing open source agent based modelling software. It shows that Agents.jl is routinely 100x faster than competing alternatives (MASON, NetLogo, Mesa). It also shows that models implemented in Agents.jl have significantly smaller and simpler code than MASON or NetLogo. The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
+    - We have created an objective, fully automated, extensive framework for comparing open source agent based modelling software. It shows that Agents.jl is much faster than competing alternatives (MASON, NetLogo, Mesa). It also shows that models implemented in Agents.jl have significantly smaller and simpler code than MASON or NetLogo. The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
 
 
 ## Highlights

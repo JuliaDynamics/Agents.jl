@@ -80,7 +80,7 @@ Noteworthy changes:
     - `kill_agent! -> remove_agent!`
     - `UnkillableABM -> UnremovableABM`
 - We have created an objective fully automated framework for comparing open source
-  agent based modelling software. It shows that Agents.jl is routinely 100x faster
+  agent based modelling software. It shows that Agents.jl is much faster
   than competing alternatives (MASON, NetLogo, Mesa).
 
 See the online documentation for more!
