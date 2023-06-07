@@ -15,8 +15,8 @@
 # walk on suitable portions of the map, hawks are capable of flight and can fly over a much
 # larger region of the map.
 #
-# Similar to the [Predator-prey dynamics](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/predator_prey_fast/)
-# example, agent types are distinguished using a
+# Because agents share all their properties, to optimize performance
+# agent types are distinguished using a
 # `type` field. Agents also have an additional `energy` field, which is consumed to move around
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
@@ -375,17 +375,17 @@ function model_step!(model)
 end
 
 # ## Visualization
-# Now we use `InteractiveDynamics` to create a visualization of the model running in 3D space
+# Now we use `Makie` to create a visualization of the model running in 3D space
 #
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
 
 # ```julia
-# using InteractiveDynamics
-# using GLMakie # CairoMakie doesn't do 3D plots
+#
+# using GLMakie # CairoMakie doesn't do 3D plots well
 # ```
 
-animalcolor(a) =
+function animalcolor(a)
     if a.type == :rabbit
         :brown
     elseif a.type == :fox
@@ -393,6 +393,7 @@ animalcolor(a) =
     else
         :blue
     end
+end
 
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,

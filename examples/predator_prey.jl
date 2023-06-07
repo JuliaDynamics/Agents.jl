@@ -205,7 +205,7 @@ end
 # %% #src
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
 # grass patches after each step. First: initialize the model.
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
 

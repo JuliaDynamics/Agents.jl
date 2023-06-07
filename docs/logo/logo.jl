@@ -1,7 +1,6 @@
 using Agents, Random
 using StatsBase: sample
 using GLMakie
-using InteractiveDynamics
 
 # Input
 
