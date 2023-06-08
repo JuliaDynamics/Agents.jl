@@ -1,9 +1,10 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["George Datseris", "Tim DuBois", "Aayush Sabharwal", "Ali Vahdati", "Adriano Meligrana"]
-version = "5.15.0"
+version = "5.15.1"
 
 [deps]
+CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
@@ -32,6 +33,7 @@ AgentsVisualizations = "Makie"
 AgentsOSMVisualizations = "OSMMakie"
 
 [compat]
+CommonSolve = "0.2.4"
 CSV = "0.9.7, 0.10"
 DataFrames = "0.21, 0.22, 1"
 DataStructures = "0.18"
