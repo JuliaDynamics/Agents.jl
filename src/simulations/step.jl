@@ -1,4 +1,5 @@
 import CommonSolve
+using CommonSolve: step!
 export step!, dummystep
 
 """
