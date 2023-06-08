@@ -39,7 +39,7 @@ using CairoMakie, Agents
 
 ```@raw html
 <video width="auto" controls autoplay loop>
-<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/showcase.mp4?raw=true" type="video/mp4">
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
 </video>
 ```
 
