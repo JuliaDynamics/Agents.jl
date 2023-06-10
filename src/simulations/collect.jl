@@ -166,15 +166,22 @@ function run!(
 end
 
 """
-    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
-    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
+    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...)
+    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...)
 
-Run the model while dumping data to CSV files. See [`run!`](@ref) for details.
+Do the same as [`run`](@ref), but write output to a CSV file instead of collecting
+it into an in-memory dataframe.
+Useful when the amount of collected data is expected to exceed the memory available
+during execution.
 
 ## Keywords
-* `writing_interval=1` : write to file every `writing_interval` times the data is collected. Small values have larger effects on performance.
 * `adata_savefile="adata.csv"` : a file to write agent data on.
 * `mdata_savefile="mdata.csv"`: a file to write the model data on.
+* `writing_interval=1` : write to file every `writing_interval` times data collection \
+is triggered. If the `when` keyword is not set, this corresponds to writing to file \
+every `writing_interval` steps; otherwise, the data will be written every \
+`writing_interval` times the `when` condition is satisfied \
+(the same applies to `when_model`).
 """
 function offline_run! end
 
@@ -245,13 +252,13 @@ function offline_run!(
 
         if model_collected && model_count_collections % writing_interval == 0
             AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
-            df_model = init_model_dataframe(model, mdata)
+            empty!(df_model)
             model_collected = false
             model_appendtocsv = true
         end
         if agent_collected && agent_count_collections % writing_interval == 0
             AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
-            df_agent = init_agent_dataframe(model, adata)
+            empty!(df_agent)
             agent_collected = false
             agent_appendtocsv = true
         end
@@ -269,11 +276,11 @@ function offline_run!(
 
     if model_collected
         AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
-        df_model = init_model_dataframe(model, mdata)
+        empty!(df_model)
     end
     if agent_collected
         AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
-        df_agent = init_agent_dataframe(model, adata)
+        empty!(df_agent)
     end
 
     ProgressMeter.finish!(p)
