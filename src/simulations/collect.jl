@@ -177,11 +177,11 @@ during execution.
 ## Keywords
 * `adata_savefile="adata.csv"` : a file to write agent data on.
 * `mdata_savefile="mdata.csv"`: a file to write the model data on.
-* `writing_interval=1` : write to file every `writing_interval` times data collection \
-is triggered. If the `when` keyword is not set, this corresponds to writing to file \
-every `writing_interval` steps; otherwise, the data will be written every \
-`writing_interval` times the `when` condition is satisfied \
-(the same applies to `when_model`).
+* `writing_interval=1` : write to file every `writing_interval` times data collection
+  is triggered. If the `when` keyword is not set, this corresponds to writing to file
+  every `writing_interval` steps; otherwise, the data will be written every
+  `writing_interval` times the `when` condition is satisfied
+  (the same applies to `when_model`).
 """
 function offline_run! end
 
@@ -251,13 +251,13 @@ function offline_run!(
         s += 1
 
         if model_collected && model_count_collections % writing_interval == 0
-            AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+            AgentsIO.CSV.write(mdata_savefile, df_model; append=model_appendtocsv)
             empty!(df_model)
             model_collected = false
             model_appendtocsv = true
         end
         if agent_collected && agent_count_collections % writing_interval == 0
-            AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+            AgentsIO.CSV.write(adata_savefile, df_agent; append=agent_appendtocsv)
             empty!(df_agent)
             agent_collected = false
             agent_appendtocsv = true
@@ -275,11 +275,11 @@ function offline_run!(
     end
 
     if model_collected
-        AgentsIO.CSV.write(mdata_savefile, df_model, append=model_appendtocsv)
+        AgentsIO.CSV.write(mdata_savefile, df_model; append=model_appendtocsv)
         empty!(df_model)
     end
     if agent_collected
-        AgentsIO.CSV.write(adata_savefile, df_agent, append=agent_appendtocsv)
+        AgentsIO.CSV.write(adata_savefile, df_agent; append=agent_appendtocsv)
         empty!(df_agent)
     end
 
