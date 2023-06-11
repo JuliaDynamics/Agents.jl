@@ -35,6 +35,8 @@ Run the model (step it with the input arguments propagated into [`step!`](@ref))
 data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
 
+See also [`offline_run!`](@ref) to write data to file while running the model.
+
 ## Data-deciding keywords
 * `adata::Vector` means "agent data to collect". If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
