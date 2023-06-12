@@ -1,5 +1,9 @@
 # main
 
+# v5.16
+
+- New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports only CSV files.
+
 - The `randomwalk!` function is now supported for any number of dimensions in ContinuousSpace when used to create isotropic/uniform random walks. For all type of `AbstractGridSpace`, the `randomwalk!` function supports a new keyword `force_motion`, which is false by default. See the docs to be informed on the effect of setting this keyword. Besides, in the continuous space default case random walks are up to 2 times faster than before.
 - The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
 
