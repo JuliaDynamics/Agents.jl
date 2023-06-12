@@ -171,12 +171,13 @@ end
     offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...)
     offline_run!(model, agent_step!, model_step!, n::Function; kwargs...)
 
-Do the same as [`run`](@ref), but write output to a CSV file instead of collecting
+Do the same as [`run`](@ref), but write output to file instead of collecting
 it into an in-memory dataframe.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
 
 ## Keywords
+* `backend="csv"` : backend to use for writing data; only "csv" supported at the moment.
 * `adata_savefile="adata.csv"` : a file to write agent data on.
 * `mdata_savefile="mdata.csv"`: a file to write the model data on.
 * `writing_interval=1` : write to file every `writing_interval` times data collection
@@ -204,8 +205,11 @@ function offline_run!(
     showprogress = false,
     writing_interval = 1,
     adata_savefile = "adata.csv",
-    mdata_savefile = "mdata.csv"
+    mdata_savefile = "mdata.csv",
+    backend = "csv"
 )
+
+    writer = make_writer(backend)
 
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
@@ -224,8 +228,8 @@ function offline_run!(
 
     close(open(adata_savefile, "w"))
     close(open(mdata_savefile, "w"))
-    model_appendtocsv = false
-    agent_appendtocsv = false
+    model_append = false
+    agent_append = false
 
     agent_count_collections = 0
     model_count_collections = 0
@@ -253,16 +257,16 @@ function offline_run!(
         s += 1
 
         if model_collected && model_count_collections % writing_interval == 0
-            AgentsIO.CSV.write(mdata_savefile, df_model; append=model_appendtocsv)
+            write_to_file(writer, mdata_savefile, df_model, model_append)
             empty!(df_model)
             model_collected = false
-            model_appendtocsv = true
+            model_append = true
         end
         if agent_collected && agent_count_collections % writing_interval == 0
-            AgentsIO.CSV.write(adata_savefile, df_agent; append=agent_appendtocsv)
+            write_to_file(writer, adata_savefile, df_agent, agent_append)
             empty!(df_agent)
             agent_collected = false
-            agent_appendtocsv = true
+            agent_append = true
         end
 
         ProgressMeter.next!(p)
@@ -277,16 +281,36 @@ function offline_run!(
     end
 
     if model_collected
-        AgentsIO.CSV.write(mdata_savefile, df_model; append=model_appendtocsv)
+        write_to_file(writer, mdata_savefile, df_model, model_append)
         empty!(df_model)
     end
     if agent_collected
-        AgentsIO.CSV.write(adata_savefile, df_agent; append=agent_appendtocsv)
+        write_to_file(writer, adata_savefile, df_agent, agent_append)
         empty!(df_agent)
     end
 
     ProgressMeter.finish!(p)
     return nothing
+end
+
+"""
+    make_writer(backend)
+Return a function to write to file using a given `backend`.
+The returned writer function will take three arguments:
+filename, data to write, whether to append to existing file or not.
+"""
+function make_writer(backend)
+    s = lowercase(backend)
+    if s == "csv"
+        writer(filename, data, append) = AgentsIO.CSV.write(filename, data; append)
+        return writer
+    else
+        throw(ArgumentError("Backend $(backend) not supported."))
+    end 
+end
+
+function write_to_file(writer, filename, data, append)
+    writer(filename, data, append)
 end
 
 ###################################################

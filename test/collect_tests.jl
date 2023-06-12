@@ -229,6 +229,19 @@ end
             rm("mdata.csv")
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
+
+            @test_throws ArgumentError offline_run!(
+                model,
+                agent_step!,
+                model_step!,
+                365 * 5;
+                when_model=each_year,
+                when=six_months,
+                mdata=[:floag, :year],
+                adata=[(:weight, mean)],
+                writing_interval=3,
+                backend="hdf5"
+            )
         end
     end
 
