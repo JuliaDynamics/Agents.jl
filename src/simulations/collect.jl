@@ -228,6 +228,35 @@ function offline_run!(
 
     close(open(adata_savefile, "w"))
     close(open(mdata_savefile, "w"))
+    run_and_write!(
+        model, agent_step!, model_step!,
+        df_agent, df_model, writer, n;
+        when, when_model,
+        mdata, adata,
+        obtainer, agents_first,
+        showprogress,
+        writing_interval, adata_savefile, mdata_savefile
+    )
+end
+
+function run_and_write!(
+    model,
+    agent_step!,
+    model_step!,
+    df_agent,
+    df_model,
+    writer,
+    n;
+    when,
+    when_model,
+    mdata, adata,
+    obtainer,
+    agents_first,
+    showprogress,
+    writing_interval,
+    adata_savefile,
+    mdata_savefile,
+)
     model_append = false
     agent_append = false
 
