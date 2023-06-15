@@ -43,7 +43,7 @@ using Agents
 end
 Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 
-# ## Required and data structures for CellListMap.jl 
+# ## Required and data structures for CellListMap.jl
 #
 # We will use the high-level interface provided by the `PeriodicSystems` module
 # (requires version ≥0.7.22):
@@ -60,23 +60,23 @@ using StaticArrays
 # 1. `positions`: `CellListMap` requires a vector of (preferentially) static vectors as the positions
 #    of the particles. To avoid creating this array on every call, a buffer to
 #    which the `agent.pos` positions will be copied is stored in this data structure.
-# 2. `forces`: In this example, the property to be computed using `CellListMap.jl` is 
+# 2. `forces`: In this example, the property to be computed using `CellListMap.jl` is
 #    the forces between particles, which are stored here in a `Vector{<:SVector}`, of
 #    the same type as the positions. These forces will be updated by the `map_pairwise!`
 #    function.
 #
 # Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
 # which will be twice the maximum interacting radii of the particles, and the geometry of the
-# the system, given by the `unitcell` of the periodic box. 
-# 
-# More complex output data, variable system geometries and other options are supported, 
-# according to the [CellListMap.PeriodicSystems](https://m3g.github.io/CellListMap.jl/stable/PeriodicSystems/) 
+# the system, given by the `unitcell` of the periodic box.
+#
+# More complex output data, variable system geometries and other options are supported,
+# according to the [CellListMap.PeriodicSystems](https://m3g.github.io/CellListMap.jl/stable/PeriodicSystems/)
 # user guide.
 #
 # ## Model initialization
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
 # The keywords here control number of particles and sizes.
-function initialize_model(;
+function initialize_bouncing(;
     number_of_particles=10_000,
     sides=SVector(500.0, 500.0),
     dt=0.001,
@@ -162,7 +162,7 @@ end
 # forces for all particles. The first argument of the call is
 # the function to be computed for each pair of particles, which closes-over
 # the `model` data to call the `calc_forces!` function defined above.
-# 
+#
 function model_step!(model::ABM)
     ## Update the pairwise forces at this step
     map_pairwise!(
@@ -200,14 +200,14 @@ end
 # Finally, the function below runs an example simulation, for 1000 steps.
 function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
     if isnothing(model)
-        model = initialize_model(number_of_particles=number_of_particles)
+        model = initialize_bouncing(number_of_particles=number_of_particles)
     end
     Agents.step!(
         model, agent_step!, model_step!, nsteps, false,
     )
 end
 # Which should be quite fast
-model = initialize_model()
+model = initialize_bouncing()
 simulate(model) # compile
 @time simulate(model)
 
@@ -215,14 +215,14 @@ simulate(model) # compile
 # to see them bouncing around. The marker size is set by the
 # radius of each particle, and the marker color by the
 # corresponding repulsion constant.
-using InteractiveDynamics
+
 using CairoMakie
 CairoMakie.activate!() # hide
-model = initialize_model(number_of_particles=1000)
+model = initialize_bouncing(number_of_particles=1000)
 abmvideo(
     "celllistmap.mp4", model, agent_step!, model_step!;
     framerate=20, frames=200, spf=5,
-    title="Bouncing particles with CellListMap.jl acceleration",
+    title="Softly bouncing particles with CellListMap.jl",
     as=p -> p.r, # marker size
     ac=p -> p.k # marker color
 )

@@ -1,37 +1,63 @@
-![Agents.jl](https://github.com/JuliaDynamics/JuliaDynamics/blob/master/videos/agents/agents4_logo.gif?raw=true)
+```@docs
+Agents
+```
 
-Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM).
-Agents.jl is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/).
-To get started, please read the [Tutorial](@ref) page.
+```@setup MAIN
+using CairoMakie, Agents
+```
 
 !!! info "Star us on GitHub!"
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v5.5"
-    New minor release with a major change on creating agents!
-    - The `@agent` macro has been re-written and is now more general and more safe. It now also allows inheriting fields from any other type.
-    - The `@agent` macro is now THE way to create agent types for Agents.jl simulations. Directly creating structs by hand is no longer mentioned in the documentation at all.
-    - In the future, making agent types manually (without `@agent`) may be completely disallowed, resulting in error. Therefore, making agent types manually is considered deprecated.
-    - The minimal agent types like `GraphAgent` can be used normally as standard  types that only have the mandatory fields. This is now clear in the docs. (this was possible also before, just not clear)
+!!! tip "Latest news: Agents.jl v5.15"
+    - Agents.jl moved to Julia 1.9+, and now exports visualization
+      and interactive applications automatically once Makie (or Makie backends
+      such as GLMakie) come into scope, using the new package extension system.
+      The only downside of this is that now to visualize ABMs on open street
+      maps, the package OSMMakie.jl must be explicitly loaded as well.
+      InteractiveDynamics.jl is now obsolete.
+    - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
+    - DEI-motivated name change for all names that remove agents:
+      - `genocide! -> remove_all!`
+      - `kill_agent! -> remove_agent!`
+      - `UnkillableABM -> UnremovableABM`
+    - Several new API functions and functionality increase: `random_nearby_position, empty_nearby_position, randomwalk!, random_agent`.
+    - We have created an objective, fully automated, extensive framework for comparing open source agent based modelling software. It shows that Agents.jl is much faster than competing alternatives (MASON, NetLogo, Mesa). It also shows that models implemented in Agents.jl have significantly smaller and simpler code than MASON or NetLogo. The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
 
-    Please see the [CHANGELOG.md](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for more details!
+
+## Highlights
+
+### Software quality
+
+* Free and open source.
+* Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
+* Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
 
 
-## Features
-* Free, open source and extremely transparent.
-* Intuitive simple-to-learn software with high quality, extensive documentation.
+```@raw html
+<video width="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
+</video>
+```
+
+
+### Agent based modelling
+
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).
-* Powerful, feature-full and extendable [API](@ref).
-* Modular, function-based design.
-* Support for many types of space: arbitrary graphs, regular grids, continuous space, or even instances of Open Street Map.
-- Multi-agent support, for interactions between disparate agent species.
+* Extendable [API](@ref) that provides out of the box thousands of possible agent actions.
+* Support for many types of space: arbitrary graphs, regular grids, continuous space
+* Support for simulations on Open Street Maps including support for utilizing the road's max speed limit, finding nearby agents/roads/destinations and pathfinding
+* Multi-agent support, for interactions between disparate agent species
 * Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
 * Automatic data collection in a `DataFrame` at desired intervals
 * Aggregating collected data during model evolution
 * Distributed computing
 * Batch running and batch data collection
-* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem.
+* Extensive pathfinding capabilities in continuous or discrete spaces
+* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem: publication-quality graphics and video output
 * Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:
 
 ```@raw html
@@ -40,13 +66,16 @@ To get started, please read the [Tutorial](@ref) page.
 </video>
 ```
 
-## Installation
+## Getting started
 
-The package is in Julia's package list. Install it using this command:
+To install Agents.jl, launch Julia and then run this command:
 
 ```
 using Pkg; Pkg.add("Agents")
 ```
+
+To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything else.
+
 
 ## Design philosophy of Agents.jl
 Agents.jl was designed with the following philosophy in mind:
@@ -91,6 +120,16 @@ You're looking for support for Agents.jl? Look no further! Here's some things yo
 3. Post a question in the [Julia discourse](https://discourse.julialang.org/) in the category “Modelling and simulations”, using “agent” as a tag!
 4. If you believe that you have encountered unexpected behavior or a bug in Agents.jl, then please do open an issue on our [GitHub page](https://github.com/JuliaDynamics/Agents.jl) providing a minimal working example!
 
+## Contributing
+
+Any contribution to Agents.jl is welcome! For example you can:
+
+* Add new feature or improve an existing one (plenty to choose from the "Issues" page)
+* Improve the existing documentation
+* Add new example ABMs into our existing pool of examples
+* Report bugs and suggestions in the Issues page
+
+Have a look at [contributor's guide](https://github.com/SciML/ColPrac) of the SciML organization for some good information on contributing to Julia packages!
 
 ## Citation
 

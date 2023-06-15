@@ -1,6 +1,12 @@
 module Agents
 
-using Requires
+# Use the README as the module docs
+@doc let
+    path = joinpath(dirname(@__DIR__), "README.md")
+    include_dependency(path)
+    read(path, String)
+end Agents
+
 using Distributed
 using DataStructures
 using Graphs
@@ -45,18 +51,39 @@ include("models/Models.jl")
 # Don't forget to update deprecations between versions!
 include("deprecations.jl")
 
+# visualizations (singleton methods for package extension)
+include("visualizations.jl")
+
+
 # Update messages:
 using Scratch
 
 function __init__()
-display_update = false
-version_number = "5.7"
+display_update = true
+version_number = "5.15"
 update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
 
 Noteworthy changes:
+
+- Agents.jl moved to Julia 1.9+, and now exports visualization
+  and interactive applications automatically once Makie (or Makie backends
+  such as GLMakie) come into scope, using the new package extension system.
+  The only downside of this is that now to visualize ABMs on open street
+  maps, the package OSMMakie.jl must be explicitly loaded as well.
+  InteractiveDynamics.jl is now obsolete.
+- Several performance improvements all across the board.
+- DEI-motivated name change for all names that remove agents:
+    - `genocide! -> remove_all!`
+    - `kill_agent! -> remove_agent!`
+    - `UnkillableABM -> UnremovableABM`
+- We have created an objective fully automated framework for comparing open source
+  agent based modelling software. It shows that Agents.jl is much faster
+  than competing alternatives (MASON, NetLogo, Mesa).
+
+See the online documentation for more!
 """
 
 if display_update
