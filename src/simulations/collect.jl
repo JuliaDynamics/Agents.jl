@@ -204,13 +204,10 @@ function offline_run!(
     agents_first = true,
     showprogress = false,
     backend = :csv,
+    adata_filename = "adata.$backend",
+    mdata_filename = "mdata.$backend",
     writing_interval = 1,
-    adata_savefile = "adata.csv",
-    mdata_savefile = "mdata.csv",
-    backend = "csv"
 )
-
-    writer = make_writer(backend)
 
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
@@ -227,44 +224,25 @@ function offline_run!(
         end
     end
 
-    close(open(adata_savefile, "w"))
-    close(open(mdata_savefile, "w"))
-    run_and_write!(
-        model, agent_step!, model_step!,
-        df_agent, df_model, writer, n;
+    run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
         obtainer, agents_first,
         showprogress,
-        writing_interval, adata_savefile, mdata_savefile
+        backend, adata_filename, mdata_filename, writing_interval
     )
 end
 
-function run_and_write!(
-    model,
-    agent_step!,
-    model_step!,
-    df_agent,
-    df_model,
-    writer,
-    n;
-    when,
-    when_model,
+function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+    when, when_model,
     mdata, adata,
-    obtainer,
-    agents_first,
+    obtainer, agents_first,
     showprogress,
-    writing_interval,
-    adata_savefile,
-    mdata_savefile,
+    backend, adata_filename, mdata_filename, writing_interval
 )
-    model_append = false
-    agent_append = false
-
-    agent_count_collections = 0
-    model_count_collections = 0
-    agent_collected = false
-    model_collected = false
+    model_append = isfile(mdata_filename)
+    agent_append = isfile(adata_filename)
+    writer = get_writer(backend)
 
     s = 0
     p = if typeof(n) <: Int
@@ -272,51 +250,40 @@ function run_and_write!(
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
+
+    agent_count_collections = 0
+    model_count_collections = 0
     while until(s, n, model)
         if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata, s; obtainer)
             agent_count_collections += 1
-            agent_collected = true
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, agent_append)
+                empty!(df_agent)
+            end
         end
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
             model_count_collections += 1
-            model_collected = true
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, model_append)
+                empty!(df_model)
+            end
         end
         step!(model, agent_step!, model_step!, 1, agents_first)
         s += 1
-
-        if model_collected && model_count_collections % writing_interval == 0
-            write_to_file(writer, mdata_savefile, df_model, model_append)
-            empty!(df_model)
-            model_collected = false
-            model_append = true
-        end
-        if agent_collected && agent_count_collections % writing_interval == 0
-            write_to_file(writer, adata_savefile, df_agent, agent_append)
-            empty!(df_agent)
-            agent_collected = false
-            agent_append = true
-        end
-
         ProgressMeter.next!(p)
     end
+
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
-        agent_collected = true
+        writer(adata_filename, df_agent, agent_append)
+        empty!(df_agent)
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
-        model_collected = true
-    end
-
-    if model_collected
-        write_to_file(writer, mdata_savefile, df_model, model_append)
+        writer(mdata_filename, df_model, model_append)
         empty!(df_model)
-    end
-    if agent_collected
-        write_to_file(writer, adata_savefile, df_agent, agent_append)
-        empty!(df_agent)
     end
 
     ProgressMeter.finish!(p)
