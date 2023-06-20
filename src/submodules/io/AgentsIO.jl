@@ -11,4 +11,6 @@ using Agents
 
 include("csv_integration.jl")
 include("jld2_integration.jl")
+include("arrow_integration.jl")
+
 end
