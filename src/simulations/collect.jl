@@ -203,6 +203,7 @@ function offline_run!(
     obtainer = identity,
     agents_first = true,
     showprogress = false,
+    backend = :csv,
     writing_interval = 1,
     adata_savefile = "adata.csv",
     mdata_savefile = "mdata.csv",
@@ -323,23 +324,32 @@ function run_and_write!(
 end
 
 """
-    make_writer(backend)
+    get_writer(backend)
 Return a function to write to file using a given `backend`.
 The returned writer function will take three arguments:
 filename, data to write, whether to append to existing file or not.
 """
-function make_writer(backend)
-    s = lowercase(backend)
-    if s == "csv"
-        writer(filename, data, append) = AgentsIO.CSV.write(filename, data; append)
-        return writer
+function get_writer(backend)
+    if backend == :csv
+        return writer_csv
+    elseif backend == :arrow
+        return writer_arrow
     else
-        throw(ArgumentError("Backend $(backend) not supported."))
-    end 
+        throw(ArgumentError("""
+            Backend $backend not supported.
+            Currently supported backends are `:csv` and `:arrow`.
+        """))
+    end
 end
 
-function write_to_file(writer, filename, data, append)
-    writer(filename, data, append)
+writer_csv(filename, data, append) = AgentsIO.CSV.write(filename, data; append)
+
+function writer_arrow(filename, data, append)
+    if append
+        AgentsIO.Arrow.append(filename, data)
+    else
+        AgentsIO.Arrow.write(filename, data; file = false)
+    end
 end
 
 ###################################################
