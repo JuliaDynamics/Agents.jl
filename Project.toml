@@ -4,8 +4,9 @@ authors = ["George Datseris", "Tim DuBois", "Aayush Sabharwal", "Ali Vahdati", "
 version = "5.16.0"
 
 [deps]
-CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CommonSolve = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -29,12 +30,12 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 
 [extensions]
-AgentsVisualizations = "Makie"
 AgentsOSMVisualizations = "OSMMakie"
+AgentsVisualizations = "Makie"
 
 [compat]
-CommonSolve = "0.2.4"
 CSV = "0.9.7, 0.10"
+CommonSolve = "0.2.4"
 DataFrames = "0.21, 0.22, 1"
 DataStructures = "0.18"
 Distributions = "0.25"
