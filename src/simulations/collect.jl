@@ -234,10 +234,6 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
     showprogress,
     backend, adata_filename, mdata_filename, writing_interval
 )
-    model_append = isfile(mdata_filename)
-    agent_append = isfile(adata_filename)
-    writer = get_writer(backend)
-
     s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
@@ -245,6 +241,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
+    writer = get_writer(backend)
     agent_count_collections = 0
     model_count_collections = 0
     while until(s, n, model)
@@ -252,7 +249,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
             collect_agent_data!(df_agent, model, adata, s; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
-                writer(adata_filename, df_agent, agent_append)
+                writer(adata_filename, df_agent, isfile(adata_filename))
                 empty!(df_agent)
             end
         end
@@ -260,7 +257,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
             collect_model_data!(df_model, model, mdata, s; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
-                writer(mdata_filename, df_model, model_append)
+                writer(mdata_filename, df_model, isfile(mdata_filename))
                 empty!(df_model)
             end
         end
@@ -271,12 +268,12 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
 
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
-        writer(adata_filename, df_agent, agent_append)
+        writer(adata_filename, df_agent, isfile(adata_filename))
         empty!(df_agent)
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
-        writer(mdata_filename, df_model, model_append)
+        writer(mdata_filename, df_model, isfile(mdata_filename))
         empty!(df_model)
     end
 
