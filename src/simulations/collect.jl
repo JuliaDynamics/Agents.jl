@@ -291,15 +291,11 @@ The returned writer function will take three arguments:
 filename, data to write, whether to append to existing file or not.
 """
 function get_writer(backend)
+    @assert backend in (:csv, :arrow) "Backend $backend not supported."
     if backend == :csv
         return writer_csv
     elseif backend == :arrow
         return writer_arrow
-    else
-        throw(ArgumentError("""
-            Backend $backend not supported.
-            Currently supported backends are `:csv` and `:arrow`.
-        """))
     end
 end
 
