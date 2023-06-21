@@ -218,12 +218,13 @@ function offline_run!(model, agent_step!, model_step!, n;
         end
     end
 
+    writer = get_writer(backend)
     run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
         obtainer, agents_first,
         showprogress,
-        backend, adata_filename, mdata_filename, writing_interval
+        writer, adata_filename, mdata_filename, writing_interval
     )
 end
 
@@ -232,7 +233,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
     mdata, adata,
     obtainer, agents_first,
     showprogress,
-    backend, adata_filename, mdata_filename, writing_interval
+    writer, adata_filename, mdata_filename, writing_interval
 )
     s = 0
     p = if typeof(n) <: Int
@@ -241,7 +242,6 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
-    writer = get_writer(backend)
     agent_count_collections = 0
     model_count_collections = 0
     while until(s, n, model)
