@@ -205,16 +205,13 @@ end
 
         @testset "Writing to file while running" begin
 
-            offline_run!(
-                model,
-                agent_step!,
-                model_step!,
-                365 * 5;
-                when_model=each_year,
-                when=six_months,
-                mdata=[:flag, :year],
-                adata=[(:weight, mean)],
-                writing_interval=3
+            # CSV
+            offline_run!(model, agent_step!, model_step!, 365 * 5;
+                when_model = each_year,
+                when = six_months,
+                mdata = [:flag, :year],
+                adata = [(:weight, mean)],
+                writing_interval = 3
             )
 
             adata_saved = CSV.read("adata.csv", DataFrame)
@@ -230,18 +227,39 @@ end
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
 
-            @test_throws ArgumentError offline_run!(
-                model,
-                agent_step!,
-                model_step!,
-                365 * 5;
-                when_model=each_year,
-                when=six_months,
-                mdata=[:floag, :year],
-                adata=[(:weight, mean)],
-                writing_interval=3,
-                backend="hdf5"
+            # Arrow
+            offline_run!(model, agent_step!, model_step!, 365 * 5;
+                when_model = each_year,
+                when = six_months,
+                backend = :arrow,
+                mdata = [:flag, :year],
+                adata = [(:weight, mean)],
+                writing_interval = 3
             )
+
+            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+            @test size(adata_saved) == (11, 2)
+            @test propertynames(adata_saved) == [:step, :mean_weight]
+            
+            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+            @test size(mdata_saved) == (6, 3)
+            @test propertynames(mdata_saved) == [:step, :flag, :year]
+
+            @test sum(length(t) for t in Arrow.Stream("adata.arrow")) == 11
+            @test sum(length(t) for t in Arrow.Stream("mdata.arrow")) == 6
+
+            rm("adata.arrow")
+            rm("mdata.arrow")
+            @test !isfile("adata.arrow")
+            @test !isfile("mdata.arrow")
+
+            # Backends
+            @test_throws TypeError begin
+                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = "hdf5")
+            end
+            @test_throws AssertionError begin
+                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = :hdf5)
+            end
         end
     end
 
