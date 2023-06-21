@@ -245,8 +245,8 @@ end
             @test size(mdata_saved) == (6, 3)
             @test propertynames(mdata_saved) == [:step, :flag, :year]
 
-            @test sum(length(t) for t in Arrow.Stream("adata.arrow")) == 11
-            @test sum(length(t) for t in Arrow.Stream("mdata.arrow")) == 6
+            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
 
             rm("adata.arrow")
             rm("mdata.arrow")
