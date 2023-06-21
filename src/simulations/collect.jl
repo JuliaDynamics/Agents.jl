@@ -305,13 +305,7 @@ end
 
 writer_csv(filename, data, append) = AgentsIO.CSV.write(filename, data; append)
 
-function writer_arrow(filename, data, append)
-    if append
-        AgentsIO.Arrow.append(filename, data)
-    else
-        AgentsIO.Arrow.write(filename, data; file = false)
-    end
-end
+function writer_arrow end
 
 ###################################################
 # core data collection functions per step
