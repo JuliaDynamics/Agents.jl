@@ -1,5 +1,5 @@
-using Test, Agents, Random, LinearAlgebra, CSV
-using Agents.AgentsIO.Arrow
+using Test, Agents, Random, LinearAlgebra
+using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
@@ -7,7 +7,8 @@ using StableRNGs
 using Distributed
 addprocs(2)
 @everywhere begin
-    using Test, Agents, Random, LinearAlgebra, CSV
+    using Test, Agents, Random, LinearAlgebra
+    using CSV, Arrow
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
