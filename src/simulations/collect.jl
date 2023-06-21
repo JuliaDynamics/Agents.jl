@@ -111,20 +111,15 @@ function run! end
 run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
     run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function run!(
-    model,
-    agent_step!,
-    model_step!,
-    n;
-    when = true,
-    when_model = when,
-    mdata = nothing,
-    adata = nothing,
-    obtainer = identity,
-    agents_first = true,
-    showprogress = false,
-)
-
+function run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+    )
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -195,24 +190,19 @@ function offline_run! end
 offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
     offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function offline_run!(
-    model,
-    agent_step!,
-    model_step!,
-    n;
-    when = true,
-    when_model = when,
-    mdata = nothing,
-    adata = nothing,
-    obtainer = identity,
-    agents_first = true,
-    showprogress = false,
-    backend = :csv,
-    adata_filename = "adata.$backend",
-    mdata_filename = "mdata.$backend",
-    writing_interval = 1,
-)
-
+function offline_run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+        backend::Symbol = :csv,
+        adata_filename = "adata.$backend",
+        mdata_filename = "mdata.$backend",
+        writing_interval = 1,
+    )
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
