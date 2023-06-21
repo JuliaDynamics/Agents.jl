@@ -175,9 +175,9 @@ during execution.
 ## Keywords
 * `backend=:csv` : backend to use for writing data.
   Currently supported backends: `:csv`, `:arrow`
-* `adata_filename="adata.$backend"` : a file to write agent data on.
+* `adata_filename="adata.\$backend"` : a file to write agent data on.
   Appends to the file if it already exists, otherwise creates the file.
-* `mdata_filename="mdata.$backend"`: a file to write the model data on.
+* `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
 * `writing_interval=1` : write to file every `writing_interval` times data collection
   is triggered. If the `when` keyword is not set, this corresponds to writing to file
