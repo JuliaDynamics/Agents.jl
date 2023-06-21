@@ -268,11 +268,18 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
 
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata, s; obtainer)
-        writer(adata_filename, df_agent, isfile(adata_filename))
-        empty!(df_agent)
+        agent_count_collections += 1
     end
     if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_count_collections += 1
+    end
+    # catch collected data that was not yet written to disk
+    if !isempty(df_agent)
+        writer(adata_filename, df_agent, isfile(adata_filename))
+        empty!(df_agent)
+    end
+    if !isempty(df_model)
         writer(mdata_filename, df_model, isfile(mdata_filename))
         empty!(df_model)
     end
