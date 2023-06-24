@@ -258,7 +258,7 @@ function add_agent!(model::ABM{S,A}, properties::Vararg{Any, N}; kwargs...) wher
     add_agent!(A, model, properties...; kwargs...)
 end
 
-@inline function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
 
