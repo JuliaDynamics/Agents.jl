@@ -164,7 +164,7 @@ end
 Same as `add_agent!(model, properties...; kwargs...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
 """
-function add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
+function add_agent_single!(model::ABM{<:DiscreteSpace}, properties::Vararg{Any, N}; kwargs...) where {N}
     position = random_empty(model)
     isnothing(position) && return nothing
     agent = add_agent!(position, model, properties...; kwargs...)
@@ -183,15 +183,15 @@ applying `f` where `pos` is each position (tuple for grid, integer index for gra
 An optional first argument is an agent **type** to be created, and targets mixed agent
 models where the agent constructor cannot be deduced (since it is a union).
 """
-fill_space!(model::ABM{S,A}, args...; kwargs...) where {S,A<:AbstractAgent} =
+fill_space!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent} =
     fill_space!(A, model, args...; kwargs...)
 
 function fill_space!(
     ::Type{A},
     model::ABM{<:DiscreteSpace,U},
-    args...;
+    args::Vararg{Any, N};
     kwargs...,
-) where {A<:AbstractAgent,U<:AbstractAgent}
+) where {N,A<:AbstractAgent,U<:AbstractAgent}
     for p in positions(model)
         id = nextid(model)
         add_agent_pos!(A(id, p, args...; kwargs...), model)

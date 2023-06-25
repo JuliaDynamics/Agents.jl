@@ -50,7 +50,7 @@ function SingleContainerABM(
     return SingleContainerABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
 end
 
-function SingleContainerABM(agent::AbstractAgent, args...; kwargs...)
+function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
     return SingleContainerABM(typeof(agent), args...; kwargs...)
 end
 
@@ -68,7 +68,7 @@ as well as the default version of the generic [`AgentBasedModel`](@ref) construc
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
 See also [`UnremovableABM`](@ref).
 """
-StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
+StandardABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Dict{Int})
 
 """
     UnremovableABM(AgentType [, space]; properties, kwargs...) → model
@@ -81,7 +81,7 @@ It is mandatory that the agent ID is exactly the same as the agent insertion
 order (i.e., the 5th agent added to the model must have ID 5). If not,
 an error will be thrown by [`add_agent!`](@ref).
 """
-UnremovableABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Vector)
+UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Vector)
 
 
 #######################################################################################

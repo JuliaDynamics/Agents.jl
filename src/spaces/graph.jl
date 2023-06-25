@@ -198,7 +198,7 @@ Returns a boolean, true if the operation was successful.
 
 `args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
-Graphs.add_edge!(model::ABM{<:GraphSpace}, args...; kwargs...) = add_edge!(model.space.graph, args...; kwargs...)
+Graphs.add_edge!(model::ABM{<:GraphSpace}, args::Vararg{Any, N}; kwargs...) where {N} = add_edge!(model.space.graph, args...; kwargs...)
 
 """
     rem_edge!(model::ABM{<:GraphSpace}, n, m)
