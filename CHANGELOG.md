@@ -1,4 +1,5 @@
 # main
+- Adding agents through `properties...` is an order of magnitude faster, now matching the performance of the other versions.
 
 # v5.15
 - Agents.jl moved to Julia 1.9+, and now exports visualization
