@@ -54,11 +54,11 @@ This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble
 """
 function ensemblerun!(
     generator,
-    args...;
+    args::Vararg{Any, N};
     ensemble = 5,
     seeds = rand(UInt32, ensemble),
     kwargs...,
-)
+) where {N}
     models = [generator(seed) for seed in seeds]
     ensemblerun!(models, args...; kwargs...)
 end
