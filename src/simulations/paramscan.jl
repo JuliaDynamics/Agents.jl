@@ -1,19 +1,27 @@
 export paramscan
 
 """
-    paramscan(parameters, initialize; kwargs...) → adf, mdf
+    paramscan(parameters::AbstractDict, initialize; kwargs...) → adf, mdf
 
-Perform a parameter scan of a ABM simulation output by collecting data from all
+Perform a parameter scan of an ABM simulation output by collecting data from all
 parameter combinations into dataframes (one for agent data, one for model data).
 The dataframes columns are both the collected data (as in [`run!`](@ref)) but also the
 input parameter values used.
 
-`parameters` is a dictionary with key type `Symbol` which contains various parameters that
-will be scanned over (as well as other parameters that remain constant).
-This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
-convention. This means that every entry of `parameters` that is a `Vector`
-contains many parameters and thus is scanned. All other entries of
-`parameters` that are not `Vector`s are not expanded in the scan.
+`parameters` is a dictionary with key type `Symbol`. Each entry of the dictionary
+maps a parameter key to the parameter values that should be scanned over
+(or to a single paramter value that will remain constant throughout the scans).
+The approach regarding `parameters` is as follows:
+
+- If the value of a specific key is a `Vector`, all values of the vector are expended
+  as values for the parameter to scan over.
+- If the value of a specific key is not a `Vector`, it is assumed that whatever this
+  value is, it corresponds to a single and constant parameter value and therefore it is not
+  expanded or scanned over.
+
+This is done so that parameter values that are inherently iterable (such as a `String`)
+are not wrongly expanded into their constitutents. (if the value of a parameter
+is itself a `Vector`, then you need to pass in a vector of vectors to scan the parameter)
 
 The second argument `initialize` is a function that creates an ABM and returns it.
 It must accept keyword arguments which are the *keys* of the `parameters` dictionary.
@@ -24,8 +32,8 @@ see the example below.
 ## Keywords
 The following keywords modify the `paramscan` function:
 
-- `include_constants::Bool = false`: by default, only the varying parameters (Vector in
-  `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
+- `include_constants::Bool = false`: by default, only the varying parameters (`Vector` values
+  in `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
   (non-Vector in `parameters`) will also be included.
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
   in parallel. This must be used in conjunction with `@everywhere` (see
@@ -69,11 +77,9 @@ parameters = Dict(
 
 adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
 ```
-
-
 """
 function paramscan(
-    parameters::Dict,
+    parameters::AbstractDict,
     initialize;
     include_constants::Bool = false,
     parallel::Bool = false,
