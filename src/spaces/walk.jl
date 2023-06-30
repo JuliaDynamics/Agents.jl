@@ -92,7 +92,6 @@ end
 # %% Random walks
 #######################################################################################
 
-
 """
     randomwalk!(agent, model::ABM{<:AbstractGridSpace}, r::Real = 1; kwargs...)
 
@@ -107,12 +106,12 @@ will move to any of the 4 surrounding cells.
 
 ## Keywords
 - `ifempty` will check that the target position is unoccupied and only move if that's true.
-  So if `ifempty` is true, this can resultin the agent not moving even if there are available 
+  So if `ifempty` is true, this can result in the agent not moving even if there are available 
   positions. By default this is true, set it to false if different agents can occupy the same 
   position. In a `GridSpaceSingle`, agents cannot overlap anyways and this keyword has no effect.
 - `force_motion` has an effect only if `ifempty` is true or the space is a `GridSpaceSingle`. 
   If set to true, the search for the random walk will be done only on the empty positions, 
-  so in this case the agent will move if there is at least one empty position to choose from. 
+  so in this case the agent will always move if there is at least one empty position to choose from. 
   By default this is false.
 """
 function randomwalk!(
@@ -129,18 +128,10 @@ function randomwalk!(
         ))
     end
     offsets = offsets_at_radius(model, r)
-    if ifempty && force_motion
-        n_attempts = 2*length(offsets)
-        while n_attempts != 0
-            pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
-            isempty(pos_choice, model) && return move_agent!(agent, pos_choice, model)
-            n_attempts -= 1
-        end
-        targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
-        check_empty = pos -> isempty(pos, model)
-        pos_choice = sampling_with_condition_single(targets, check_empty, model)
-        isnothing(pos_choice) && return agent
-        walk!(agent, pos_choice, model; ifempty=ifempty)
+    if force_motion && ifempty
+        choice = random_empty_pos_in_offsets(offsets, agent, model)
+        isnothing(choice) && return agent
+        walk!(agent, choice, model; ifempty=ifempty)
     else
         walk!(agent, rand(abmrng(model), offsets), model; ifempty=ifempty)
     end
@@ -161,20 +152,24 @@ function randomwalk!(
     end
     offsets = offsets_at_radius(model, r)
     if force_motion
-        n_attempts = 2*length(offsets)
-        while n_attempts != 0
-            pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
-            isempty(pos_choice, model) && return move_agent!(agent, pos_choice, model)
-            n_attempts -= 1
-        end
-        targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
-        check_empty = pos -> isempty(pos, model)
-        pos_choice = sampling_with_condition_single(targets, check_empty, model)
-        isnothing(pos_choice) && return agent
-        walk!(agent, pos_choice, model)
+        choice = random_empty_pos_in_offsets(offsets, agent, model)
+        isnothing(choice) && return agent
+        walk!(agent, choice, model)
     else
         walk!(agent, rand(abmrng(model), offsets), model)
     end
+end
+
+function random_empty_pos_in_offsets(offsets, agent, model)
+    n_attempts = 2*length(offsets)
+    while n_attempts != 0
+        pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
+        isempty(pos_choice, model) && return pos_choice
+        n_attempts -= 1
+    end
+    targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
+    check_empty = pos -> isempty(pos, model)
+    return sampling_with_condition_single(targets, check_empty, model)
 end
 
 """
