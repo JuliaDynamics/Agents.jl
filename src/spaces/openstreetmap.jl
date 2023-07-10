@@ -975,7 +975,7 @@ function Agents.nearby_ids(
     filter!(i -> i ≠ agent.id, all)
 end
 
-Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args...; kwargs...) =
+Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args::Vararg{Any, N}; kwargs...) where {N} =
     nearby_positions(pos[1], model, args...; kwargs...)
 
 function Agents.nearby_positions(

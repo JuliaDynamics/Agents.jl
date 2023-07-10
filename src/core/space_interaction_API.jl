@@ -254,20 +254,20 @@ add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{S,A}, properties...; kwargs...) where {S,A<:AbstractAgent}
+function add_agent!(model::ABM{S,A}, properties::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent}
     add_agent!(A, model, properties...; kwargs...)
 end
 
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(random_position(model), A, model, properties...; kwargs...)
 end
 
 function add_agent!(
     pos::ValidPos,
     model::ABM{S,A},
-    properties...;
+    properties::Vararg{Any, N};
     kwargs...,
-) where {S,A<:AbstractAgent}
+) where {N,S,A<:AbstractAgent}
     add_agent!(pos, A, model, properties...; kwargs...)
 end
 
@@ -276,9 +276,9 @@ function add_agent!(
     pos::ValidPos,
     A::Type{<:AbstractAgent},
     model::ABM,
-    properties...;
+    properties::Vararg{Any, N};
     kwargs...,
-)
+) where {N}
     id = nextid(model)
     newagent = A(id, pos, properties...; kwargs...)
     add_agent_pos!(newagent, model)

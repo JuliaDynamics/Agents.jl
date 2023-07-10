@@ -125,7 +125,7 @@ end
 # utilizes the above `offsets_within_radius_no_0`. We complicated it a bit more because
 # we want to be able to re-use it in `ContinuousSpace`, so we allow it to either
 # find positions with the 0 or without.
-function nearby_positions(pos::ValidPos, model::ABM{<:AbstractGridSpace}, args...)
+function nearby_positions(pos::ValidPos, model::ABM{<:AbstractGridSpace}, args::Vararg{Any, N}) where {N}
     return nearby_positions(pos, model.space, args...)
 end
 function nearby_positions(
