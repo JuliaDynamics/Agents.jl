@@ -202,6 +202,67 @@ end
             mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
+
+        @testset "Writing to file while running" begin
+
+            # CSV
+            offline_run!(model, agent_step!, model_step!, 365 * 5;
+                when_model = each_year,
+                when = six_months,
+                mdata = [:flag, :year],
+                adata = [(:weight, mean)],
+                writing_interval = 3
+            )
+
+            adata_saved = CSV.read("adata.csv", DataFrame)
+            @test size(adata_saved) == (11, 2)
+            @test propertynames(adata_saved) == [:step, :mean_weight]
+            
+            mdata_saved = CSV.read("mdata.csv", DataFrame)
+            @test size(mdata_saved) == (6, 3)
+            @test propertynames(mdata_saved) == [:step, :flag, :year]
+
+            rm("adata.csv")
+            rm("mdata.csv")
+            @test !isfile("adata.csv")
+            @test !isfile("mdata.csv")
+
+            # Arrow, fails on Windows (see issue #826 (https://github.com/JuliaDynamics/Agents.jl/issues/826))
+            if !(Sys.iswindows())
+                offline_run!(model, agent_step!, model_step!, 365 * 5;
+                    when_model = each_year,
+                    when = six_months,
+                    backend = :arrow,
+                    mdata = [:flag, :year],
+                    adata = [(:weight, mean)],
+                    writing_interval = 3
+                )
+
+                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:step, :mean_weight]
+                
+                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:step, :flag, :year]
+
+                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+
+                rm("adata.arrow")
+                rm("mdata.arrow")
+                @test !isfile("adata.arrow")
+                @test !isfile("mdata.arrow")
+            end
+
+            # Backends
+            @test_throws TypeError begin
+                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = "hdf5")
+            end
+            @test_throws AssertionError begin
+                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = :hdf5)
+            end
+        end
     end
 
     @testset "Low-level API for Collections" begin

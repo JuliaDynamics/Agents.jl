@@ -328,5 +328,10 @@ AgentsIO.populate_from_csv!
 AgentsIO.dump_to_csv
 ```
 
+It is also possible to write data to file at predefined intervals while running your model, instead of storing it in memory:
+```@docs
+offline_run!
+```
+
 In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
 for details.

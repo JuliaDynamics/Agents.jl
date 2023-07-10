@@ -1,5 +1,9 @@
 # main
 
+# v5.16
+
+- New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports [CSV](https://csv.juliadata.org/stable/) and [Arrow](https://apache.github.io/arrow-julia/stable/) files.
+
 # v5.15
 - Agents.jl moved to Julia 1.9+, and now exports visualization
   and interactive applications automatically once Makie (or Makie backends

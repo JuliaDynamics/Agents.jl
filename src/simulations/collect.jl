@@ -1,4 +1,5 @@
 export run!,
+    offline_run!,
     collect_agent_data!,
     collect_model_data!,
     init_agent_dataframe,
@@ -33,6 +34,8 @@ should_we_collect(s, model, when) = when(model, s)
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, one for agent-level data and one for model-level data.
+
+See also [`offline_run!`](@ref) to write data to file while running the model.
 
 ## Data-deciding keywords
 * `adata::Vector` means "agent data to collect". If an entry is a `Symbol`, e.g. `:weight`,
@@ -101,27 +104,22 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
 * `agents_first=true` : Whether to update agents first and then the model, or vice versa.
-* `showprogress=false` : Whether to show a progress bar.
+* `showprogress=false` : Whether to show progress
 """
 function run! end
 
 run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
     run!(model::ABM, agent_step!, dummystep, n; kwargs...)
 
-function run!(
-    model,
-    agent_step!,
-    model_step!,
-    n;
-    when = true,
-    when_model = when,
-    mdata = nothing,
-    adata = nothing,
-    obtainer = identity,
-    agents_first = true,
-    showprogress = false,
-)
-
+function run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+    )
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -163,6 +161,156 @@ function run!(
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
+
+"""
+    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...)
+    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...)
+
+Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory 
+dataframe, write the output to a file after collecting data `writing_interval` times and 
+empty the dataframe after each write.
+Useful when the amount of collected data is expected to exceed the memory available
+during execution.
+
+## Keywords
+* `backend=:csv` : backend to use for writing data.
+  Currently supported backends: `:csv`, `:arrow`
+* `adata_filename="adata.\$backend"` : a file to write agent data on.
+  Appends to the file if it already exists, otherwise creates the file.
+* `mdata_filename="mdata.\$backend"`: a file to write the model data on.
+  Appends to the file if it already exists, otherwise creates the file.
+* `writing_interval=1` : write to file every `writing_interval` times data collection
+  is triggered. If the `when` keyword is not set, this corresponds to writing to file
+  every `writing_interval` steps; otherwise, the data will be written every
+  `writing_interval` times the `when` condition is satisfied
+  (the same applies to `when_model`).
+"""
+function offline_run! end
+
+offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
+    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+
+function offline_run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+        backend::Symbol = :csv,
+        adata_filename = "adata.$backend",
+        mdata_filename = "mdata.$backend",
+        writing_interval = 1,
+    )
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    writer = get_writer(backend)
+    run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+        when, when_model,
+        mdata, adata,
+        obtainer, agents_first,
+        showprogress,
+        writer, adata_filename, mdata_filename, writing_interval
+    )
+end
+
+function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+    when, when_model,
+    mdata, adata,
+    obtainer, agents_first,
+    showprogress,
+    writer, adata_filename, mdata_filename, writing_interval
+)
+    s = 0
+    p = if typeof(n) <: Int
+        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+    else
+        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    end
+
+    agent_count_collections = 0
+    model_count_collections = 0
+    while until(s, n, model)
+        if should_we_collect(s, model, when)
+            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            agent_count_collections += 1
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, isfile(adata_filename))
+                empty!(df_agent)
+            end
+        end
+        if should_we_collect(s, model, when_model)
+            collect_model_data!(df_model, model, mdata, s; obtainer)
+            model_count_collections += 1
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, isfile(mdata_filename))
+                empty!(df_model)
+            end
+        end
+        step!(model, agent_step!, model_step!, 1, agents_first)
+        s += 1
+        ProgressMeter.next!(p)
+    end
+
+    if should_we_collect(s, model, when)
+        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        agent_count_collections += 1
+    end
+    if should_we_collect(s, model, when_model)
+        collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_count_collections += 1
+    end
+    # catch collected data that was not yet written to disk
+    if !isempty(df_agent)
+        writer(adata_filename, df_agent, isfile(adata_filename))
+        empty!(df_agent)
+    end
+    if !isempty(df_model)
+        writer(mdata_filename, df_model, isfile(mdata_filename))
+        empty!(df_model)
+    end
+
+    ProgressMeter.finish!(p)
+    return nothing
+end
+
+"""
+    get_writer(backend)
+Return a function to write to file using a given `backend`.
+The returned writer function will take three arguments:
+filename, data to write, whether to append to existing file or not.
+"""
+function get_writer(backend)
+    @assert backend in (:csv, :arrow) "Backend $backend not supported."
+    if backend == :csv
+        return writer_csv
+    elseif backend == :arrow
+        if Sys.iswindows()
+            error("""Arrow.jl integration currently does not work on Windows.
+            Please use another backend like `:csv` until the issue has been resolved.
+            Further info: https://github.com/JuliaDynamics/Agents.jl/issues/826""")
+        end
+        return writer_arrow
+    end
+end
+
+writer_csv(filename, data, append) = AgentsIO.CSV.write(filename, data; append)
+
+function writer_arrow end
 
 ###################################################
 # core data collection functions per step
