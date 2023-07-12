@@ -54,7 +54,7 @@ include("deprecations.jl")
 # visualizations (singleton methods for package extension)
 include("visualizations.jl")
 
-# precompile some example models to reduce TTFX#
+# precompile some example models to reduce TTFX
 include("precompile.jl")
 
 # Update messages:
