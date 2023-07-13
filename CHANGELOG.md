@@ -1,7 +1,7 @@
 # main
 
-- New function `replicate!` allows to create a new instance of an agent given in input with the possibility to specify some fields with
-  new values.
+- New function `replicate!` allows to create a new instance of a given agent at the same position with the possibility to specify some
+  fields with new values.
 - The `sample!` function is 3x faster than before.
   
 # v5.16
