@@ -1,5 +1,9 @@
 # main
 
+- New function `replicate!` allows to create new instances of an agent given in input specyfing some fields with
+  new values.
+- The `sample!` function is 3x faster than before.
+  
 # v5.16
 
 - New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports [CSV](https://csv.juliadata.org/stable/) and [Arrow](https://apache.github.io/arrow-julia/stable/) files.
