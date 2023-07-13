@@ -57,7 +57,7 @@ function add_newids!(model, org_ids, newids)
 end
 
 """
-replicate!(agent, model; kwargs...) 
+    replicate!(agent, model; kwargs...) 
 
 Create a new agent at the same position of the given agent, copying the values
 of its fields. With the `kwargs` it is possible to override the values by specifying
