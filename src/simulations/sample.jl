@@ -1,4 +1,4 @@
-export sample!
+export sample!, replicate!
 using StatsBase: sample, Weights
 
 """
@@ -54,4 +54,39 @@ function add_newids!(model, org_ids, newids)
             end
         end
     end
+end
+
+"""
+    replicate!(agent, model; kwargs...) 
+
+Create a new agent at the same position of the given agent, copying the values
+of its fields. With the `kwargs` it is possible to override the values by specifying
+new ones for some fields. 
+Return the new agent instance.
+
+## Example
+```julia
+using Agents
+@agent A GridAgent{2} begin
+    k::Float64
+    w::Float64
+end
+
+model = ABM(A, GridSpace((5, 5)))
+a = A(1, (2, 2), 0.5, 0.5)
+b = replicate!(a, model; w = 0.8)
+```
+"""
+function replicate!(agent, model; kwargs...)
+    newagent = deepcopy(agent)
+    for (key, value) in kwargs
+        setfield!(newagent, key, value)
+    end
+    newagent.id = nextid(model)
+    add_agent_pos!(newagent, model)
+    return newagent
+end
+
+function Base.deepcopy(agent::A) where {A<:AbstractAgent}
+    return A((deepcopy(getfield(agent, name)) for name in fieldnames(A))...)
 end

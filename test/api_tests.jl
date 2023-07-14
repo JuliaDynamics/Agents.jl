@@ -281,3 +281,14 @@ end
     @test idx_second_filtered[15] == (7, 2)
     @test idx_second_filtered[end] == (9, 10)
 end
+
+@testset "replicate!" begin
+    model = ABM(Agent8, ContinuousSpace((5, 5)))
+    a = Agent8(1, (2.0, 2.0), true, 1)
+    b = replicate!(a, model)
+    @test b.pos == a.pos && b.f1 == a.f1 && b.f2 == a.f2
+    c = replicate!(a, model; f2 = 2)
+    @test c.pos == a.pos && c.f1 == a.f1 && c.f2 == 2
+    d = replicate!(a, model; f1 = false, f2 = 2)
+    @test d.pos == a.pos && d.f1 == false && d.f2 == 2
+end
