@@ -208,7 +208,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
             expr = quote
                 # Also notice that we escape supertype and interpolate it twice
                 # because this is expected to already be defined in the calling module
-                Base.@kwdef mutable struct $name <: $$(esc(super_type))
+                @kwdef mutable struct $name <: $$(esc(super_type))
                     $(base_fields...)
                     $(additional_fields...)
                 end
