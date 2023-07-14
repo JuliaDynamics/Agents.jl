@@ -88,5 +88,5 @@ function replicate!(agent, model; kwargs...)
 end
 
 function Base.deepcopy(agent::A) where {A<:AbstractAgent}
-    return A((deepcopy(getfield(agent, k)) for k ∈ fieldnames(A))...)
+    return A((deepcopy(getfield(agent, name)) for name in fieldnames(A))...)
 end
