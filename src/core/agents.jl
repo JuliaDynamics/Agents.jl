@@ -211,8 +211,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
                 consts_args = string.(eval(splice!(additional_fields, index_consts)))
                 for arg in consts_args
                     i = findfirst(a -> startswith(a, arg), args_str)
-                    str_f = string(additional_fields[i])
-                    additional_fields[i] = Meta.parse("const " * str_f)
+                    additional_fields[i] = Expr(:const, additional_fields[i])
                 end
             end
             # Now we start an inner quote. This is because our macro needs to call `eval`
