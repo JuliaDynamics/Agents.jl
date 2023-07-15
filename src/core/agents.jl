@@ -213,9 +213,8 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
             additional_fields = $(QuoteNode(extra_fields.args))
-            # Now we start an inner quote. This is because our macro needs to call `eval`
-            # However, this should never happen inside the main body of a macro
-            # There are several reasons for that, see the cited discussion at the top
+            # here, we mutate are any const fields defined by the consts variable
+            # in the macro
             additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
             args_names = map(f -> f.args[1], additional_fields)
             index_consts = findfirst(f -> f == :consts, args_names)
@@ -227,6 +226,9 @@ macro agent(new_name, base_type, super_type, extra_fields)
                     additional_fields[i] = Expr(:const, additional_fields[i])
                 end
             end
+            # Now we start an inner quote. This is because our macro needs to call `eval`
+            # However, this should never happen inside the main body of a macro
+            # There are several reasons for that, see the cited discussion at the top
             expr = quote
                 # Also notice that we escape supertype and interpolate it twice
                 # because this is expected to already be defined in the calling module
