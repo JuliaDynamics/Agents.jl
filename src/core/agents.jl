@@ -207,8 +207,11 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to obtain it
             base_fieldnames = fieldnames($(esc(base_type)))
+            base_fieldconsts = isconst.($(esc(base_type)), base_fieldnames)
             base_fieldtypes = [t for t in getproperty($(esc(base_type)), :types)]
-            base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_fieldtypes)]
+            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
+            base_fields = [ifelse(c, Expr(:const, :($f::$T)), :($f::$T))
+                           for (f, T, c) in iter_fields]
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
