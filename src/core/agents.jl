@@ -204,9 +204,10 @@ macro agent(new_name, base_type, super_type, extra_fields)
         let
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to obtain it
-            base_fieldnames = fieldnames($(esc(base_type)))
-            base_fieldconsts = isconst.($(esc(base_type)), base_fieldnames)
-            base_fieldtypes = [t for t in getproperty($(esc(base_type)), :types)]
+            base_T = $(esc(base_type))
+            base_fieldnames = fieldnames(base_T)
+            base_fieldtypes = fieldtypes(base_T)
+            base_fieldconsts = isconst.(base_T, base_fieldnames)
             iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
             base_fields = [ifelse(c, Expr(:const, :($f::$T)), :($f::$T))
                            for (f, T, c) in iter_fields]
