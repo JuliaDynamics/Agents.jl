@@ -28,7 +28,9 @@ Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
-Using `@agent` is the recommended way to create agent types for Agents.jl.
+Using `@agent` is the recommended way to create agent types for Agents.jl,
+however keep in mind that the macro (currently) doesn't work with `const` 
+declarations in individual fields (for Julia v1.8+).
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
@@ -66,21 +68,6 @@ end
 ```
 will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
 
-Notice that you can also use default values for some fields, in this case you 
-will need to specify the field names with the non-default values:
-
-```julia
-@agent Person{T} GridAgent{2} begin
-    age::Int = 30
-    moneyz::T
-end
-
-# default age value
-Person(id = 1, pos = (1, 1), moneyz = 2000)
-# new age value
-Person(1, (1, 1), 40, 2000)
-```
-
 ```julia
 mutable struct Person{T} <: AbstractAgent
     id::Int
@@ -104,6 +91,32 @@ mutable struct Baker{T} <: AbstractAgent
     moneyz::T
     breadz_per_day::T
 end
+```
+Notice that you can also use default values for some fields, in this case you 
+will need to specify the field names with the non-default values
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int = 30
+    moneyz::T
+end
+
+# default age value
+Person(id = 1, pos = (1, 1), moneyz = 2000)
+# new age value
+Person(1, (1, 1), 40, 2000)
+```
+It is also possible to specify that some fields are immutable
+using the special `consts` variable inside the macro:
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int
+    moneyz::T
+    consts = (:age, )
+end
+
+agent = Person(1, (1, 1), 40, 2000)
+agent.moneyz = 1000
+agent.age = 20 # this throws an error
 ```
 ### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
@@ -200,21 +213,20 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
             additional_fields = $(QuoteNode(extra_fields.args))
-            # we do some parsing to find if there are any const fields defined by
-            # the consts variable in the macro
+            # Now we start an inner quote. This is because our macro needs to call `eval`
+            # However, this should never happen inside the main body of a macro
+            # There are several reasons for that, see the cited discussion at the top
             additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
-            args_str = map(f -> string(f.args[1]), additional_fields)
-            index_consts = findfirst(f -> f == "consts", args_str)
+            args_names = map(f -> f.args[1], additional_fields)
+            index_consts = findfirst(f -> f == :consts, args_names)
             if index_consts != nothing
                 consts_args = string.(eval(splice!(additional_fields, index_consts)))
+                args_str = string.(args_names)
                 for arg in consts_args
                     i = findfirst(a -> startswith(a, arg), args_str)
                     additional_fields[i] = Expr(:const, additional_fields[i])
                 end
             end
-            # Now we start an inner quote. This is because our macro needs to call `eval`
-            # However, this should never happen inside the main body of a macro
-            # There are several reasons for that, see the cited discussion at the top
             expr = quote
                 # Also notice that we escape supertype and interpolate it twice
                 # because this is expected to already be defined in the calling module
