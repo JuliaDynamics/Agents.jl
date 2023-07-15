@@ -202,6 +202,19 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
             additional_fields = $(QuoteNode(extra_fields.args))
+            # we do some parsing to find if there are any const fields defined by
+            # the consts variable in the macro
+            additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
+            args_str = map(f -> string(f.args[1]), additional_fields)
+            index_consts = findfirst(f -> f == "consts", args_str)
+            if index_consts != nothing
+                consts_args = string.(eval(splice!(additional_fields, index_consts)))
+                for arg in consts_args
+                    i = findfirst(a -> startswith(a, arg), args_str)
+                    str_f = string(additional_fields[i])
+                    additional_fields[i] = Meta.parse("const " * str_f)
+                end
+            end
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
