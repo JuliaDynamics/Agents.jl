@@ -209,7 +209,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
             base_fieldtypes = fieldtypes(base_T)
             base_fieldconsts = isconst.(base_T, base_fieldnames)
             iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
-            base_fields = [ifelse(c, Expr(:const, :($f::$T)), :($f::$T))
+            base_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
                            for (f, T, c) in iter_fields]
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
@@ -217,7 +217,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
             additional_fields = $(QuoteNode(extra_fields.args))
             # here, we mutate any const fields defined by the consts variable in the macro
             additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
-            args_names = map(f -> f.args[1], additional_fields)
+            args_names = map(f -> f isa Expr ? f.args[1] : f, additional_fields)
             index_consts = findfirst(f -> f == :consts, args_names)
             if index_consts != nothing
                 consts_args = string.(eval(splice!(additional_fields, index_consts)))
