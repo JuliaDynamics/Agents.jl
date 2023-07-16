@@ -39,7 +39,6 @@ end
 function add_newids!(model, org_ids, newids)
     # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
     count_newids = counter(newids)
-    n = nextid(model)
     for id in org_ids
         noccurances = count_newids[id]
         agent = model[id]
@@ -47,10 +46,7 @@ function add_newids!(model, org_ids, newids)
             remove_agent!(agent, model)
         else
             for _ in 2:noccurances
-                newagent = deepcopy(agent)
-                newagent.id = n
-                add_agent_pos!(newagent, model)
-                n += 1
+                replicate!(agent, model)
             end
         end
     end
@@ -77,16 +73,23 @@ a = A(1, (2, 2), 0.5, 0.5)
 b = replicate!(a, model; w = 0.8)
 ```
 """
-function replicate!(agent, model; kwargs...)
-    newagent = deepcopy(agent)
-    for (key, value) in kwargs
-        setfield!(newagent, key, value)
-    end
-    newagent.id = nextid(model)
+function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
+    args = new_args(agent::A, model; kwargs...) 
+    newagent = A(nextid(model), args...)
     add_agent_pos!(newagent, model)
     return newagent
 end
 
-function Base.deepcopy(agent::A) where {A<:AbstractAgent}
-    return A((deepcopy(getfield(agent, name)) for name in fieldnames(A))...)
+function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
+    fields = fieldnames(A)
+    idx_id = findfirst(x -> x == :id, fields)
+    fields_no_id = tuple(fields[1:idx_id-1]..., fields[idx_id+1:end]...)
+    if isempty(kwargs)
+        new_args = map(x -> deepcopy(getfield(agent, x)), fields_no_id)
+    else
+        kwargs_ntuple = NamedTuple(kwargs)
+        new_args = map(x -> hasproperty(kwargs_ntuple, x) ? 
+                       deepcopy(kwargs_ntuple[x]) : deepcopy(getfield(agent, x)), 
+                       fields_no_id)
+    end
 end
