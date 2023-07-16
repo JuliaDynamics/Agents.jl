@@ -220,10 +220,9 @@ macro agent(new_name, base_type, super_type, extra_fields)
             args_names = map(f -> f isa Expr ? f.args[1] : f, additional_fields)
             index_consts = findfirst(f -> f == :consts, args_names)
             if index_consts != nothing
-                consts_args = string.(eval(splice!(additional_fields, index_consts)))
-                args_str = string.(args_names)
+                consts_args = eval(splice!(additional_fields, index_consts))
                 for arg in consts_args
-                    i = findfirst(a -> startswith(a, arg), args_str)
+                    i = findfirst(a -> a == arg, args_names)
                     additional_fields[i] = Expr(:const, additional_fields[i])
                 end
             end
