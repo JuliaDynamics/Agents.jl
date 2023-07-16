@@ -91,6 +91,12 @@ end
     consts = (:f1, :f2)
 end
 
+@agent Agent12 Agent11 begin
+    f4
+    f5::Float64
+    consts = (:f4, )
+end
+
 @agent SchellingAgent GridAgent{2} begin
     mood::Bool
     group::Int
