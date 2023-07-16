@@ -45,16 +45,16 @@ using Test, Agents, Random
 
     agent_consts = Agent10(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
+    @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent10), values))
     agent_consts.f1 = 5
-    @test agents_consts.f1 == 5
+    @test agent_consts.f1 == 5
     @test_throws ErrorException agent_consts.f2 = 5
     agent_consts = Agent11(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
+    @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent11), values))
     agent_consts.f3 = 2.0
-    @test agents_consts.f3 == 2.0
-    @test_throws ErrorException agents_consts.f1 = 5
+    @test agent_consts.f3 == 2.0
+    @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
 end
 
