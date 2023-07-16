@@ -47,7 +47,6 @@ OpenStreetMapSpace
 ```@docs
 add_agent!
 add_agent_pos!
-replicate!
 nextid
 random_position
 ```
