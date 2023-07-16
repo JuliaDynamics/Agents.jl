@@ -77,6 +77,20 @@ Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
     f3::Float64 = 3.0
 end
 
+@agent Agent10 NoSpaceAgent begin
+    f1::Int
+    f2::Int
+    f3::Float64
+    consts = (:f2, )
+end
+
+@agent Agent11 NoSpaceAgent begin
+    f1::Int
+    f2
+    f3::Float64
+    consts = (:f1, :f2)
+end
+
 @agent SchellingAgent GridAgent{2} begin
     mood::Bool
     group::Int
