@@ -61,7 +61,8 @@ end
 
 Create a new agent at the same position of the given agent, copying the values
 of its fields. With the `kwargs` it is possible to override the values by specifying
-new ones for some fields. 
+new ones for some fields.
+Return the new agent instance.
 
 ## Example
 ```julia
