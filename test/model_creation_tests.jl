@@ -57,6 +57,17 @@ using Test, Agents, Random
     @test agent_consts.f3 == 2.0
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
+
+    agent_consts = Agent12(1, 2, 10, 5.0, true, 3.0)
+    values = (1, 2, 10, 5.0, true, 3.0)
+    @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent11), values))
+    agent_consts.f3 = 2.0
+    @test agent_consts.f3 == 2.0
+    agent_consts.f5 = 4.0
+    @test agent_consts.f5 == 4.0
+    @test_throws ErrorException agent_consts.f1 = 5
+    @test_throws ErrorException agent_consts.f2 = 5
+    @test_throws ErrorException agent_consts.f4 = false
 end
 
 
