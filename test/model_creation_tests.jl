@@ -49,6 +49,7 @@ using Test, Agents, Random
     agent_consts.f1 = 5
     @test agent_consts.f1 == 5
     @test_throws ErrorException agent_consts.f2 = 5
+
     agent_consts = Agent11(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
     @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent11), values))
