@@ -85,10 +85,10 @@ function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
     idx_id = findfirst(x -> x == :id, fields)
     fields_no_id = tuple(fields[1:idx_id-1]..., fields[idx_id+1:end]...)
     if isempty(kwargs)
-        new_args = map(x -> deepcopy(getfield(agent, x)), fields_no_id)
+        new_args = (deepcopy(getfield(agent, x)) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
-        new_args = map(x -> choose_arg(x, kwargs_nt, agent), fields_no_id)
+        new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
     end
 end
 
