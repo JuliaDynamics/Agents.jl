@@ -50,6 +50,7 @@ end
     @test allunique(allweights)
 
     model3 = ABM(Agent2; rng = rng)
+    # Guarantee all starting weights are unique
     while true
         for i in 1:20
             add_agent!(model3, rand(abmrng(model3)) / rand(abmrng(model3)))
