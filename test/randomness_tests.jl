@@ -40,13 +40,13 @@ end
         for i in 1:20
             add_agent!(model2, rand(abmrng(model2)) / rand(abmrng(model2)))
         end
-        allweights = [i.weight for i in allagents(model3)]
+        allweights = [i.weight for i in allagents(model2)]
         allunique(allweights) && break
     end
     # Cannot draw 50 samples out of a pool of 20 without replacement
     @test_throws ErrorException sample!(model2, 50, :weight; replace = false)
     sample!(model2, 15, :weight; replace = false)
-    allweights = [i.weight for i in allagents(model3)]
+    allweights = [i.weight for i in allagents(model2)]
     @test allunique(allweights)
 
     model3 = ABM(Agent2; rng = rng)
