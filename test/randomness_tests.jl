@@ -25,7 +25,7 @@ end
     rng = StableRNG(42)
     model = ABM(Agent2; rng = rng)
     for i in 1:20
-        add_agent!(model, rand(abmrng(model2)))
+        add_agent!(model, rand(abmrng(model)))
     end
     allweights = [i.weight for i in allagents(model)]
     mean_weights = sum(allweights) / length(allweights)
