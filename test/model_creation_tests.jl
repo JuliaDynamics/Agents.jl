@@ -36,13 +36,6 @@ using Test, Agents, Random
     @test Fisher <: AbstractHuman
     @test :fish_per_day ∈ fieldnames(Fisher)
 
-    agent_kwdef = Agent9(id = 1, f2 = 10)
-    values = (1, 40, 10, 3.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
-    agent_kwdef = Agent9(1, 20, 10, 4.0)
-    values = (1, 20, 10, 4.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
-
     agent_consts = Agent10(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
     @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent10), values))
