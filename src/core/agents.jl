@@ -29,8 +29,8 @@ as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
 Using `@agent` is the recommended way to create agent types for Agents.jl,
-however keep in mind that the macro (currently) doesn't work with `Base.@kwdef`
-or `const` declarations in individual fields (for Julia v1.8+).
+however keep in mind that the macro (currently) doesn't work with `const` 
+declarations in individual fields (for Julia v1.8+).
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
