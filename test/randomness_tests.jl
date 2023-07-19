@@ -23,7 +23,7 @@ end
 
 @testset "sample!" begin
     rng = StableRNG(42)
-    model = ABM(Agent2)
+    model = ABM(Agent2; rng = rng)
     for i in 1:20
         add_agent!(model, rand(abmrng(model)))
     end
@@ -35,25 +35,25 @@ end
     mean_weights_new = sum(allweights) / length(allweights)
     @test mean_weights_new > mean_weights
 
-    Random.seed!(6459)
-    #Guarantee all starting weights are unique
-    model3 = ABM(Agent2)
+    model2 = ABM(Agent2; rng = rng)
     while true
         for i in 1:20
-            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
+            add_agent!(model2, rand(abmrng(model2)) / rand(abmrng(model2)))
         end
-        allweights = [i.weight for i in allagents(model3)]
+        allweights = [i.weight for i in allagents(model2)]
         allunique(allweights) && break
     end
     # Cannot draw 50 samples out of a pool of 20 without replacement
-    @test_throws ErrorException sample!(model3, 50, :weight; replace = false)
-    sample!(model3, 15, :weight; replace = false)
-    allweights = [i.weight for i in allagents(model3)]
+    @test_throws ErrorException sample!(model2, 50, :weight; replace = false)
+    sample!(model2, 15, :weight; replace = false)
+    allweights = [i.weight for i in allagents(model2)]
     @test allunique(allweights)
-    model3 = ABM(Agent2)
+
+    model3 = ABM(Agent2; rng = rng)
+    # Guarantee all starting weights are unique
     while true
         for i in 1:20
-            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
+            add_agent!(model3, rand(abmrng(model3)) / rand(abmrng(model3)))
         end
         allweights = [i.weight for i in allagents(model3)]
         allunique(allweights) && break
