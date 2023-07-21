@@ -29,8 +29,8 @@ as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
 Using `@agent` is the recommended way to create agent types for Agents.jl,
-however keep in mind that the macro (currently) doesn't work with `Base.@kwdef`
-or `const` declarations in individual fields (for Julia v1.8+).
+however keep in mind that the macro (currently) doesn't work with `const` 
+declarations in individual fields (for Julia v1.8+).
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
@@ -90,6 +90,18 @@ mutable struct Baker{T} <: AbstractAgent
     moneyz::T
     breadz_per_day::T
 end
+```
+Notice that you can also use default values for some fields, in this case you 
+will need to specify the field names with the non-default values
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int = 30
+    moneyz::T
+end
+# default age value
+Person(id = 1, pos = (1, 1), moneyz = 2000)
+# new age value
+Person(1, (1, 1), 40, 2000)
 ```
 ### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
@@ -192,7 +204,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
             expr = quote
                 # Also notice that we escape supertype and interpolate it twice
                 # because this is expected to already be defined in the calling module
-                mutable struct $name <: $$(esc(super_type))
+                @kwdef mutable struct $name <: $$(esc(super_type))
                     $(base_fields...)
                     $(additional_fields...)
                 end
