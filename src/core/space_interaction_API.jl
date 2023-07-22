@@ -277,10 +277,14 @@ function add_agent!(
     A::Type{<:AbstractAgent},
     model::ABM,
     properties::Vararg{Any, N};
-    kwargs...,
+    kwproperties...,
 ) where {N}
     id = nextid(model)
-    newagent = A(id, pos, properties...; kwargs...)
+    if isempty(kwproperties)
+        newagent = A(id, pos, properties...)
+    else
+        newagent = A(; id = id, pos = pos, kwproperties...)
+    end
     add_agent_pos!(newagent, model)
 end
 
