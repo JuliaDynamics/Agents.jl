@@ -91,6 +91,12 @@ end
     consts = (:f4, )
 end
 
+@agent Agent9 NoSpaceAgent begin
+    f1::Int = 40
+    f2::Int
+    f3::Float64 = 3.0
+end
+
 @agent SchellingAgent GridAgent{2} begin
     mood::Bool
     group::Int

@@ -1,3 +1,7 @@
+# main
+
+- The `@agents` macro now supports fields with default values.
+
 # v5.17
 
 - New function `replicate!` allows to create a new instance of a given agent at the same position with the possibility to specify some

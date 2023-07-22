@@ -61,6 +61,13 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
     @test_throws ErrorException agent_consts.f4 = false
+
+    agent_kwdef = Agent9(id = 1, f2 = 10)
+    values = (1, 40, 10, 3.0)
+    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
+    agent_kwdef = Agent9(1, 20, 10, 4.0)
+    values = (1, 20, 10, 4.0)
+    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
 end
 
 
