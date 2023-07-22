@@ -1,6 +1,6 @@
 # main
 
-- The `@agents` macro now supports fields with default values.
+- The `@agent` macro now supports fields with default values.
 
 # v5.17
 
