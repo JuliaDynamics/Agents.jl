@@ -28,7 +28,7 @@ Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
-Using `@agent` is the recommended way to create agent types for Agents.jl.
+Using `@agent` is the only supported way to create agent types for Agents.jl.
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
