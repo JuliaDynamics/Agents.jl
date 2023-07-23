@@ -52,8 +52,7 @@ The existing minimal agent types are:
 
 All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
 a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
-that the resulting new agent type will have. The `id` is an unchangeable field, it is 
-declared as constant.
+that the resulting new agent type will have. The `id` is an unchangeable field.
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
 ## Examples
