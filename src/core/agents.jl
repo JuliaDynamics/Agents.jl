@@ -91,12 +91,12 @@ mutable struct Baker{T} <: AbstractAgent
 end
 ```
 It is also possible to specify that some fields are immutable
-using the special `consts` variable inside the macro:
+using the special `constants` variable inside the macro:
 ```julia
 @agent Person{T} GridAgent{2} begin
     age::Int
     moneyz::T
-    consts = (:age, )
+    constants = (:age, )
 end
 
 agent = Person(1, (1, 1), 40, 2000)
@@ -217,7 +217,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # here, we mutate any const fields defined by the consts variable in the macro
             additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
             args_names = map(f -> f isa Expr ? f.args[1] : f, additional_fields)
-            index_consts = findfirst(f -> f == :consts, args_names)
+            index_consts = findfirst(f -> f == :constants, args_names)
             if index_consts != nothing
                 consts_args = eval(splice!(additional_fields, index_consts))
                 for arg in consts_args
