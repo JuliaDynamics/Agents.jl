@@ -13,7 +13,7 @@ may also require additional fields that may,
 or may not, be communicated as part of the public API.
 
 The [`@agent`](@ref) macro ensures that all of these constrains are in place
-and hence it is the recommended way to generate new agent types.
+and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
@@ -52,7 +52,8 @@ The existing minimal agent types are:
 
 All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
 a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
-that the resulting new agent type will have. The `id` is an unchangeable field.
+that the resulting new agent type will have. The `id` is an unchangeable field, it is 
+declared as constant.
 Use functions like [`move_agent!`](@ref) etc., to change the position.
 
 ## Examples
@@ -89,6 +90,17 @@ mutable struct Baker{T} <: AbstractAgent
     moneyz::T
     breadz_per_day::T
 end
+Notice that you can also use default values for some fields, in this case you 
+will need to specify the field names with the non-default values
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int = 30
+    moneyz::T
+end
+# default age value
+Person(id = 1, pos = (1, 1), moneyz = 2000)
+# new age value
+Person(1, (1, 1), 40, 2000)
 ```
 It is also possible to specify that some fields are immutable
 using the special `constants` variable inside the macro:
@@ -102,18 +114,6 @@ end
 agent = Person(1, (1, 1), 40, 2000)
 agent.moneyz = 1000
 agent.age = 20 # this throws an error
-```
-Notice that you can also use default values for some fields, in this case you 
-will need to specify the field names with the non-default values
-```julia
-@agent Person{T} GridAgent{2} begin
-    age::Int = 30
-    moneyz::T
-end
-# default age value
-Person(id = 1, pos = (1, 1), moneyz = 2000)
-# new age value
-Person(1, (1, 1), 40, 2000)
 ```
 ### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
@@ -264,5 +264,5 @@ It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
-    id::Int
+    const id::Int
 end
