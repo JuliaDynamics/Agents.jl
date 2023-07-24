@@ -81,7 +81,8 @@ To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything
 
 Agents.jl was designed with the following philosophy in mind:
 
-**Simple to learn and use, yet extendable and highly performant, allowing fast and scalable model creation and evolution.**
+**Simple to learn and use, yet extendable and highly performant, allowing for fast and scalable model creation and evolution.**
+
 
 There are multiple examples that highlight this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user may create an entirely new kind of space (e.g. one representing a planet, or whatever else) by only extending 5 functions, as discussed in our [Creating a new space type](@ref) documentation.
 
