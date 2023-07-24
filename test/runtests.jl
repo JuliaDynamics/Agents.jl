@@ -48,11 +48,7 @@ end
     f2::Int
 end
 
-@agent Agent9 NoSpaceAgent begin
-    f1::Int = 40
-    f2::Int
-    f3::Float64 = 3.0
-end
+Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
 @agent SchellingAgent GridAgent{2} begin
     mood::Bool

@@ -13,7 +13,7 @@ may also require additional fields that may,
 or may not, be communicated as part of the public API.
 
 The [`@agent`](@ref) macro ensures that all of these constrains are in place
-and hence it is the recommended way to generate new agent types.
+and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
@@ -28,9 +28,7 @@ Define an agent struct which includes all fields that `AnotherAgentType` has,
 as well as any additional ones the user may provide via the `begin` block.
 See below for examples.
 
-Using `@agent` is the recommended way to create agent types for Agents.jl,
-however keep in mind that the macro (currently) doesn't work with `const` 
-declarations in individual fields (for Julia v1.8+).
+Using `@agent` is the only supported way to create agent types for Agents.jl.
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
@@ -67,6 +65,7 @@ Using
 end
 ```
 will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
+
 ```julia
 mutable struct Person{T} <: AbstractAgent
     id::Int
@@ -90,7 +89,6 @@ mutable struct Baker{T} <: AbstractAgent
     moneyz::T
     breadz_per_day::T
 end
-```
 Notice that you can also use default values for some fields, in this case you 
 will need to specify the field names with the non-default values
 ```julia
@@ -102,6 +100,19 @@ end
 Person(id = 1, pos = (1, 1), moneyz = 2000)
 # new age value
 Person(1, (1, 1), 40, 2000)
+```
+It is also possible to specify that some fields are immutable (constants)
+using the special `constants` variable inside the macro:
+```julia
+@agent Person{T} GridAgent{2} begin
+    age::Int
+    moneyz::T
+    constants = (:age, )
+end
+
+agent = Person(1, (1, 1), 40, 2000)
+agent.moneyz = 1000
+agent.age = 20 # this throws an error
 ```
 ### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
@@ -191,13 +202,28 @@ macro agent(new_name, base_type, super_type, extra_fields)
         let
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to obtain it
-            base_fieldnames = fieldnames($(esc(base_type)))
-            base_fieldtypes = [t for t in getproperty($(esc(base_type)), :types)]
-            base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_fieldtypes)]
+            base_T = $(esc(base_type))
+            base_fieldnames = fieldnames(base_T)
+            base_fieldtypes = fieldtypes(base_T)
+            base_fieldconsts = isconst.(base_T, base_fieldnames)
+            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
+            base_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
+                           for (f, T, c) in iter_fields]
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_name))
             additional_fields = $(QuoteNode(extra_fields.args))
+            # here, we mutate any const fields defined by the consts variable in the macro
+            additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
+            args_names = map(f -> f isa Expr ? f.args[1] : f, additional_fields)
+            index_consts = findfirst(f -> f == :constants, args_names)
+            if index_consts != nothing
+                consts_args = eval(splice!(additional_fields, index_consts))
+                for arg in consts_args
+                    i = findfirst(a -> a == arg, args_names)
+                    additional_fields[i] = Expr(:const, additional_fields[i])
+                end
+            end
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
@@ -237,5 +263,5 @@ It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
-    id::Int
+    const id::Int
 end

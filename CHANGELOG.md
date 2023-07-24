@@ -1,6 +1,6 @@
 # main
 
-- The `@agent` macro now supports fields with default values.
+- The `@agent` macro now supports fields with default and const values (through the special `constants` field). Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
 - The `add_agent!` function supports adding agent propagating keywords arguments.
 
 # v5.17

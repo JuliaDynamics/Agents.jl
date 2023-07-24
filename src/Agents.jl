@@ -60,7 +60,7 @@ using Scratch
 
 function __init__()
 display_update = true
-version_number = "5.15"
+version_number = "5.18"
 update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
@@ -75,6 +75,11 @@ Noteworthy changes:
   maps, the package OSMMakie.jl must be explicitly loaded as well.
   InteractiveDynamics.jl is now obsolete.
 - Several performance improvements all across the board.
+- The `@agent` macro is now THE way to create agent types for Agents.jl simulations since
+  now supports declaring default and constant fields. Directly creating structs by hand is 
+  no longer mentioned in the documentation at all. This will allow us in the future to utilize
+  additional fields that the user does not have to know about, which may bring new features or
+  performance gains by being part of the agent structures.
 - DEI-motivated name change for all names that remove agents:
     - `genocide! -> remove_all!`
     - `kill_agent! -> remove_agent!`
