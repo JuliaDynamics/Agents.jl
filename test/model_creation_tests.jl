@@ -36,6 +36,24 @@ using Test, Agents, Random
     @test Fisher <: AbstractHuman
     @test :fish_per_day ∈ fieldnames(Fisher)
 
+    @agent Agent9 NoSpaceAgent begin
+        f1::Int = 40
+        f2::Int
+        f3::Float64 = 3.0
+    end
+    agent_kwdef = Agent9(id = 1, f2 = 10)
+    values = (1, 40, 10, 3.0)
+    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
+    agent_kwdef = Agent9(1, 20, 10, 4.0)
+    values = (1, 20, 10, 4.0)
+    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
+
+    @agent Agent10 NoSpaceAgent begin
+        f1::Int
+        f2::Int
+        f3::Float64
+        constants = (:f2, )
+    end
     agent_consts = Agent10(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
     @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent10), values))
@@ -43,6 +61,12 @@ using Test, Agents, Random
     @test agent_consts.f1 == 5
     @test_throws ErrorException agent_consts.f2 = 5
 
+    @agent Agent11 NoSpaceAgent begin
+        f1::Int
+        f2
+        f3::Float64
+        constants = (:f1, :f2)
+    end
     agent_consts = Agent11(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
     @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent11), values))
@@ -51,6 +75,11 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
 
+    @agent Agent12 Agent11 begin
+        f4
+        f5::Float64
+        constants = (:f4, )
+    end
     agent_consts = Agent12(1, 2, 10, 5.0, true, 3.0)
     values = (1, 2, 10, 5.0, true, 3.0)
     @test all(getfield(agent_consts, n) == v for (n, v) in zip(fieldnames(Agent11), values))
@@ -61,13 +90,6 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
     @test_throws ErrorException agent_consts.f4 = false
-
-    agent_kwdef = Agent9(id = 1, f2 = 10)
-    values = (1, 40, 10, 3.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
-    agent_kwdef = Agent9(1, 20, 10, 4.0)
-    values = (1, 20, 10, 4.0)
-    @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
 end
 
 
