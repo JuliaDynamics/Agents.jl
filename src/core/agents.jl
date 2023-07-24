@@ -101,7 +101,7 @@ Person(id = 1, pos = (1, 1), moneyz = 2000)
 # new age value
 Person(1, (1, 1), 40, 2000)
 ```
-It is also possible to specify that some fields are immutable
+It is also possible to specify that some fields are immutable (constants)
 using the special `constants` variable inside the macro:
 ```julia
 @agent Person{T} GridAgent{2} begin
