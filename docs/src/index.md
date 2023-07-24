@@ -78,11 +78,11 @@ To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything
 
 
 ## Design philosophy of Agents.jl
+
 Agents.jl was designed with the following philosophy in mind:
 
-**Simple to learn and use, yet extendable, focusing on fast and scalable model creation and evolution.**
+**Simple to learn and use, yet extendable and highly performant, allowing for fast and scalable model creation and evolution.**
 
-(it should be said nevertheless, that when we have to make a choice between a simpler API or a more performant implementation, we tend to lean in favor of simplicity)
 
 There are multiple examples that highlight this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user may create an entirely new kind of space (e.g. one representing a planet, or whatever else) by only extending 5 functions, as discussed in our [Creating a new space type](@ref) documentation.
 
@@ -91,6 +91,7 @@ In the page [ABM Framework Comparison](@ref) we compare how our design philosoph
 **Fascinatingly, even though the main focus of Agents.jl is simplicity and ease of use, it outperforms all software we compared it with.**
 
 ## Crash course on agent based modeling
+
 An agent-based (or individual-based) model is a computational simulation of autonomous agents that react to their environment (including other agents) given a predefined set of rules [[1](http://doi.org/10.1016/j.ecolmodel.2006.04.023)].
 ABMs have been adopted and studied in a variety of research disciplines.
 One reason for their popularity is that they enable a relaxation of many simplifying assumptions usually made by mathematical models.
@@ -113,6 +114,7 @@ Schelling's model shows that even small preferences of agents to have neighbors 
 This is an example of emergent behavior from simple interactions of agents that can only be captured in an agent-based model.
 
 ## Getting help
+
 You're looking for support for Agents.jl? Look no further! Here's some things you can do to resolve your questions about Agents.jl:
 
 1. Read the online documentation! It is likely that the thing you want to know is already documented, so use the search bar and search away!
