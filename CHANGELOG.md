@@ -1,6 +1,7 @@
 # main
 
 - The `@agent` macro now supports fields with default values.
+- The `add_agent!` function supports adding agent propagating keywords arguments.
 
 # v5.17
 
