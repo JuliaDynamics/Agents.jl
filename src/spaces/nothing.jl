@@ -15,12 +15,17 @@ end
 
 # We need to extend this one, because otherwise there is a `pos` that
 # is attempted to be given to the agent creation...
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, properties::Vararg{Any, N}; kwargs...) where {N}
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, properties::Vararg{Any, N}; kwproperties...) where {N}
     id = nextid(model)
-    newagent = A(id, properties...; kwargs...)
+    if isempty(kwproperties)
+        newagent = A(id, properties...)
+    else
+        newagent = A(; id = id, kwproperties...)
+    end
     add_agent_pos!(newagent, model)
 end
 
 nearby_ids(position, model::ABM{Nothing}, r = 1) = allids(model)
 remove_agent_from_space!(agent, model::ABM{Nothing}) = nothing
 add_agent_to_space!(agent, model::ABM{Nothing}) = nothing
+

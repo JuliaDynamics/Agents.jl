@@ -284,7 +284,7 @@ end
 
 @testset "replicate!" begin
     model = ABM(Agent8, ContinuousSpace((5, 5)))
-    a = Agent8(1, (2.0, 2.0), true, 1)
+    a = Agent8(1, (2.0, 2.0), (1.0, 1.0), true, 1)
     b = replicate!(a, model)
     @test b.pos == a.pos && b.f1 == a.f1 && b.f2 == a.f2
     c = replicate!(a, model; f2 = 2)

@@ -14,57 +14,36 @@ addprocs(2)
     using StableRNGs
 end
 
-mutable struct Agent0 <: AbstractAgent
-    id::Int
-end
+@agent Agent0 NoSpaceAgent begin end
 
-mutable struct Agent1 <: AbstractAgent
-    id::Int
-    pos::Dims{2}
-end
+@agent Agent1 GridAgent{2} begin end
 
-mutable struct Agent2 <: AbstractAgent
-    id::Int
+@agent Agent2 NoSpaceAgent begin 
     weight::Float64
 end
 
-mutable struct Agent3 <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent Agent3 GridAgent{2} begin 
     weight::Float64
 end
 
-mutable struct Agent4 <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent Agent4 GridAgent{2} begin 
     p::Int
 end
 
-mutable struct Agent5 <: AbstractAgent
-    id::Int
-    pos::Int
+@agent Agent5 GraphAgent begin 
     weight::Float64
 end
 
-mutable struct Agent6 <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent Agent6 ContinuousAgent{2} begin 
     weight::Float64
 end
 
-mutable struct Agent7 <: AbstractAgent
-    id::Int
-    pos::Int
+@agent Agent7 GraphAgent begin 
     f1::Bool
     f2::Int
 end
 
-Agent7(id, pos; f1, f2) = Agent7(id, pos, f1, f2)
-
-mutable struct Agent8 <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
+@agent Agent8 ContinuousAgent{2} begin 
     f1::Bool
     f2::Int
 end
