@@ -231,7 +231,7 @@ the agent to as *first argument*, which must match the space position type.
 This function takes care of setting the agent's id *and* position.
 The extra provided `args...` or `kwargs...` are propagated to other fields
 of the agent constructor (see example below). Mixing `args...` and `kwargs...`
-is not allowed, only one of the two can be used to set the fields.
+is not possible, only one of the two can be used to set the fields.
 
     add_agent!([pos,] A::Type, model::ABM, args...) → newagent
     add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
