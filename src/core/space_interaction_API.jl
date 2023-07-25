@@ -224,7 +224,7 @@ end
     add_agent!([pos,] A::Type, model::ABM, args...) → newagent
     add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
 
-Use one of these two version to create and add a new agent to the model using the 
+Use one of these two versions to create and add a new agent to the model using the 
 constructor of the agent type of the model. Optionally provide a position to add 
 the agent to as *first argument*, which must match the space position type.
 
@@ -236,7 +236,7 @@ is not possible, only one of the two can be used to set the fields.
     add_agent!([pos,] A::Type, model::ABM, args...) → newagent
     add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
 
-Use one of these two version for mixed agent models, with `A` the agent type you wish to create, 
+Use one of these two versions for mixed agent models, with `A` the agent type you wish to create, 
 because it is otherwise not possible to deduce a constructor for `A`.
 
 ## Example
