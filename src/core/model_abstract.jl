@@ -69,7 +69,7 @@ Create a fresh instance of a space with the same properties if you need to do th
 Here we the most important information on how to query an instance of `AgentBasedModel`:
 
 - `model[id]` gives the agent with given `id`.
-- `abmproperties(model)` gives the `properies` container stored in the model.
+- `abmproperties(model)` gives the `properties` container stored in the model.
 - `model.property`:  If the model properties is a dictionary with
   key type `Symbol`, or if it is a composite type (`struct`), then the syntax
   `model.property` will return the model property with key `:property`.

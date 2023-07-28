@@ -180,7 +180,7 @@ abmobs
 
 #
 
-# create a new layout to add new plots to to the right of the abmplot
+# create a new layout to add new plots to the right of the abmplot
 plot_layout = fig[:,end+1] = GridLayout()
 
 # create a sublayout on its first row and column

@@ -64,7 +64,7 @@ fastest(model::ABM) = allids(model)
 
 """
     Schedulers.by_id
-A scheduler that activates all agents agents at each step according to their id.
+A scheduler that activates all agents at each step according to their id.
 """
 function by_id(model::ABM)
     agent_ids = sort(collect(allids(model)))
@@ -77,7 +77,7 @@ end
 
 """
     Schedulers.ByID()
-A non-allocating scheduler that activates all agents agents at each step according to their id.
+A non-allocating scheduler that activates all agents at each step according to their id.
 """
 ByID() = ByID(Int[])
 

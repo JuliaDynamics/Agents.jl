@@ -135,7 +135,7 @@ using StableRNGs
         # All following are with r=1
         @testset "periodic=$(periodic)" for periodic in periodics
             @testset "Metric=$(metric)" for metric in metrics
-                # To undersatnd where the numbers here are coming from,
+                # To understand where the numbers here are coming from,
                 # check out the plot in the docs that shows the metrics
                 model = ABM(GridAgent{2}, SpaceType((5, 5); metric, periodic))
                 if metric ∈ (:euclidean, :mahnattan) # for r = 1 they give the same

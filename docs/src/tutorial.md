@@ -61,7 +61,7 @@ To use only a model step function, users can use the built-in [`dummystep`](@ref
 
 The stepping functions are created using the [API](@ref) functions, and the Examples hosted in this documentation showcase several different variants.
 
-After you have defined the stepping functions functions, you can evolve your model with `step!`:
+After you have defined the stepping functions, you can evolve your model with `step!`:
 ```@docs
 step!
 dummystep
@@ -125,7 +125,7 @@ If this is the case in your model, here's a helpful tip to keep things clean: us
 ```julia
 function assets(model)
     total_savings(model) = model.bank_balance + sum(model.assets)
-    function stategy(model)
+    function strategy(model)
         if model.year == 0
             return model.initial_strategy
         else
