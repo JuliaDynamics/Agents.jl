@@ -10,7 +10,7 @@ input parameter values used.
 
 `parameters` is a dictionary with key type `Symbol`. Each entry of the dictionary
 maps a parameter key to the parameter values that should be scanned over
-(or to a single paramter value that will remain constant throughout the scans).
+(or to a single parameter value that will remain constant throughout the scans).
 The approach regarding `parameters` is as follows:
 
 - If the value of a specific key is a `Vector`, all values of the vector are expended
@@ -20,7 +20,7 @@ The approach regarding `parameters` is as follows:
   expanded or scanned over.
 
 This is done so that parameter values that are inherently iterable (such as a `String`)
-are not wrongly expanded into their constitutents. (if the value of a parameter
+are not wrongly expanded into their constituents. (if the value of a parameter
 is itself a `Vector`, then you need to pass in a vector of vectors to scan the parameter)
 
 The second argument `initialize` is a function that creates an ABM and returns it.

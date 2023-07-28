@@ -376,7 +376,7 @@ end
         props = [:UNKNOWN]
         @test_throws ErrorException init_agent_dataframe(model, props)
 
-        # Aggregates should behave in a similiar fashion
+        # Aggregates should behave in a similar fashion
         pos1(a) = a.pos[1]
         props = [(:pos, length), (pos1, sum)]
         df = init_agent_dataframe(model, props)
@@ -409,7 +409,7 @@ end
         @test typeof(df.sum_weight_a3) <: Vector{Float64}
         @test df[1, :sum_weight_a3] ≈ 74.46
 
-        # Handle missmatches
+        # Handle mismatches
         # In this example, weight exists in both agents, but they have different types
         mutable struct Agent3Int <: AbstractAgent
             id::Int

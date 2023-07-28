@@ -240,7 +240,7 @@ function bacteria_model_step!(model)
             add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
             remove_agent!(a, model)
         else
-            ## The rest lengh of the internal spring grows with time. This causes
+            ## The rest length of the internal spring grows with time. This causes
             ## the nodes to physically separate.
             uv = unitvector(a.orientation)
             internalforce = model.hardness * (a.length - a.growthprog) .* uv

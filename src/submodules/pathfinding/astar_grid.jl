@@ -3,7 +3,7 @@
 Calculate and store the shortest path to move the agent from its current position to
 `dest` (a position e.g. `(1, 5)` or `(1.3, 5.2)`) using the provided `pathfinder`.
 
-Use this method in conjuction with [`move_along_route!`](@ref).
+Use this method in conjunction with [`move_along_route!`](@ref).
 """
 function Agents.plan_route!(
     agent::A,
@@ -20,7 +20,7 @@ end
 Calculate, store, and return the best path to move the agent from its current position to
 a chosen destination taken from `dests` using `pathfinder`.
 
-The `condition = :shortest` keyword retuns the shortest path which is shortest out of the
+The `condition = :shortest` keyword returns the shortest path which is shortest out of the
 possible destinations. Alternatively, the `:longest` path may also be requested.
 
 Return the position of the chosen destination. Return `nothing` if none of the supplied

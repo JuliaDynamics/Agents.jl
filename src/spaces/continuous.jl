@@ -477,8 +477,8 @@ function type_pairs!(
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
         for nid in nearby_f(model[id], model, r)
-            neigbor_type = typeof(model[nid])
-            if neigbor_type ∈ available_types && neigbor_type !== typeof(model[id])
+            neighbor_type = typeof(model[nid])
+            if neighbor_type ∈ available_types && neighbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues
                 new_pair = isless(id, nid) ? (id, nid) : (nid, id)
                 new_pair ∉ pairs && push!(pairs, new_pair)
