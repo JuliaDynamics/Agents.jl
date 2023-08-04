@@ -76,6 +76,16 @@ using Pkg; Pkg.add("Agents")
 
 To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything else.
 
+!!! tip "Use the latest released version"
+    After adding Agents.jl to your project, please check if the most up to date
+    [stable version](https://github.com/JuliaDynamics/Agents.jl/releases/latest) 
+    has been installed.
+    The versions of the installed packages in the project can be checked by 
+    running `Pkg.status()`.
+    Only the latest version of Agents.jl provides all the features described
+    in this documentation.
+    It is generally advised against using earlier versions as they will likely
+    only work partially and are not supported anymore.
 
 ## Design philosophy of Agents.jl
 
