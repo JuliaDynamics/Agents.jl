@@ -1,6 +1,10 @@
 # main
 
-- The `@agent` macro now supports fields with default and const values (through the special `constants` field). Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
+# v5.18
+
+- The `@agent` macro now supports fields with default values
+- The `@agent` macro now supports fields with constant values (through the special `constants` field).
+- Since now the macro supports these features, **using `@agent` is the only supported way to create agent types for Agents.jl**.
 - The `add_agent!` function supports adding an agent propagating keywords arguments.
 
 # v5.17
@@ -8,7 +12,7 @@
 - New function `replicate!` allows to create a new instance of a given agent at the same position with the possibility to specify some
   fields with new values.
 - The `sample!` function is 3x faster than before.
-  
+
 # v5.16
 
 - New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports [CSV](https://csv.juliadata.org/stable/) and [Arrow](https://apache.github.io/arrow-julia/stable/) files.

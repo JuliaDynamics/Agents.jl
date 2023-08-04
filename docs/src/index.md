@@ -10,20 +10,10 @@ using CairoMakie, Agents
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v5.15"
-    - Agents.jl moved to Julia 1.9+, and now exports visualization
-      and interactive applications automatically once Makie (or Makie backends
-      such as GLMakie) come into scope, using the new package extension system.
-      The only downside of this is that now to visualize ABMs on open street
-      maps, the package OSMMakie.jl must be explicitly loaded as well.
-      InteractiveDynamics.jl is now obsolete.
-    - Overall big performance increase in the following functionality: random walks, random nearby agents, nearby agent searches.
-    - DEI-motivated name change for all names that remove agents:
-      - `genocide! -> remove_all!`
-      - `kill_agent! -> remove_agent!`
-      - `UnkillableABM -> UnremovableABM`
-    - Several new API functions and functionality increase: `random_nearby_position, empty_nearby_position, randomwalk!, random_agent`.
-    - We have created an objective, fully automated, extensive framework for comparing open source agent based modelling software. It shows that Agents.jl is much faster than competing alternatives (MASON, NetLogo, Mesa). It also shows that models implemented in Agents.jl have significantly smaller and simpler code than MASON or NetLogo. The repository is here: <https://github.com/JuliaDynamics/ABM_Framework_Comparisons>
+!!! tip "Latest news: Agents.jl v5.18"
+    - The `@agent` macro now supports fields with default values
+    - The `@agent` macro now supports fields with constant values (through the special `constants` field).
+    - Since now the macro supports these features, **using `@agent` is the only supported way to create agent types for Agents.jl**.
 
 
 ## Highlights
@@ -32,10 +22,9 @@ using CairoMakie, Agents
 
 * Free and open source.
 * Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
-* Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* Extremely high performance, sometimes being up to 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
+* User-created models have source code of minimal complexity, typically with much less lines of code (and more readable code) versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
 * High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
-
 
 ```@raw html
 <video width="auto" controls autoplay loop>
@@ -82,7 +71,6 @@ To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything
 Agents.jl was designed with the following philosophy in mind:
 
 **Simple to learn and use, yet extendable and highly performant, allowing for fast and scalable model creation and evolution.**
-
 
 There are multiple examples that highlight this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user may create an entirely new kind of space (e.g. one representing a planet, or whatever else) by only extending 5 functions, as discussed in our [Creating a new space type](@ref) documentation.
 
