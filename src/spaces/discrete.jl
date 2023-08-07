@@ -137,6 +137,38 @@ function empty_nearby_positions(pos, model, r = 1; kwargs...)
     )
 end
 
+function random_id_in_position(pos, model, r = 1, f = nothing, alloc = false)
+    if isnothing(f)
+        ids = ids_in_position(pos, model)
+        isempty(ids) && return nothing
+        return rand(abmrng(model), ids)
+    else
+        iter_ids = ids_in_position(pos, model)
+        if alloc
+            return sampling_with_condition_agents_single(iter_ids, f, model)
+        else
+            iter_filtered = Iterators.filter(id -> f(id), iter_agents)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end
+    end
+end
+
+function random_agent_in_position(a, model, r = 1, f = nothing, alloc = false)
+    if isnothing(f)
+        ids = ids_in_position(pos, model)
+        isempty(ids) && return nothing
+        return model[rand(abmrng(model), ids)]
+    else
+        if alloc
+            iter_ids = ids_in_position(pos, model)
+            return sampling_with_condition_agents_single(iter_ids, f, model)
+        else
+            iter_agents = agents_in_position(pos, model)
+            iter_filtered = Iterators.filter(agent -> f(agent), iter_agents)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end
+    end
+end
 
 #######################################################################################
 # Discrete space extra agent adding stuff

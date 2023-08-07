@@ -340,12 +340,17 @@ The value of the argument `r` and possible keywords operate identically to [`nea
 A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
 the function returns `true`.
 """
-function random_nearby_id(a, model, r = 1, f = nothing; kwargs...)
+function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
         return resorvoir_sampling_single(iter, model)
     else
-        return sampling_with_condition_single(iter, f, model)
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
+        else
+            iter_filtered = Iterators.filter(id -> f(id), iter)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end
     end
 end
 
@@ -359,14 +364,20 @@ The value of the argument `r` and possible keywords operate identically to [`nea
 A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
 the function returns `true`.
 """
-function random_nearby_agent(a, model, r = 1, f = nothing; kwargs...)
+function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     if isnothing(f)
         id = random_nearby_id(a, model, r; kwargs...)
         isnothing(id) && return nothing
         return model[id]
     else
-        iter = nearby_ids(a, model, r; kwargs...)
-        return sampling_with_condition_agents_single(iter, f, model)
+        if alloc
+            iter_ids = nearby_ids(a, model, r; kwargs...)
+            return sampling_with_condition_agents_single(iter_ids, f, model)
+        else
+            iter_agents = nearby_agents(a, model, r; kwargs...)
+            iter_filtered = Iterators.filter(agent -> f(agent), iter_agents)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end
     end
 end
 
@@ -381,12 +392,17 @@ A filter function `f(pos)` can be passed so that to restrict the sampling on onl
 the function returns `true`. In this case `nothing` is also returned if no nearby position
 satisfies `f`.
 """
-function random_nearby_position(pos, model, r=1, f = nothing; kwargs...)
+function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
         return resorvoir_sampling_single(iter, model)
     else
-        return sampling_with_condition_single(iter, f, model)
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
+        else
+            iter_filtered = Iterators.filter(pos -> f(pos), iter)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end    
     end
 end
 
@@ -427,11 +443,11 @@ end
 # Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
 function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
-    isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
+    isnothing(res) && return nothing                       # `iterate` returns `nothing` when it ends
     rng = abmrng(model)
-    w = max(rand(rng), eps())         # rand returns in range [0,1)
+    w = rand(rng)
     while true
-        choice, state = res           # random position to return, and the state of the iterator
+        choice, state = res                                # random position to return, and the state of the iterator
         skip_counter = floor(log(rand(rng)) / log(1 - w))  # skip entries in the iterator
         while skip_counter != 0
             skip_res = iterate(iter, state)
@@ -441,6 +457,6 @@ function resorvoir_sampling_single(iter, model)
         end
         res = iterate(iter, state)
         isnothing(res) && return choice
-        w *= max(rand(rng), eps())
+        w *= rand(rng)
     end
 end
