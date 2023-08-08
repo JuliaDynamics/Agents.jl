@@ -144,7 +144,7 @@ function random_id_in_position(pos, model)
 
 function random_id_in_position(pos, model, f = nothing, alloc = false)
     if isnothing(f)
-        random_id_in_position(pos, model)
+        return random_id_in_position(pos, model)
     else
         iter_ids = ids_in_position(pos, model)
         if alloc
