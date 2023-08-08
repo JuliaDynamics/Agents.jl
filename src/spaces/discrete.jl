@@ -155,7 +155,7 @@ function random_id_in_position(pos, model, f = nothing, alloc = false)
     end
 end
 
-function random_agent_in_position(a, model, f = nothing, alloc = false)
+function random_agent_in_position(pos, model, f = nothing, alloc = false)
     if isnothing(f)
         id = random_id_in_position(pos, model)
         isnothing(id) && return nothing
