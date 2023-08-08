@@ -338,7 +338,9 @@ Return `nothing` if no agents are nearby.
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
-the function returns `true`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby id satisfies `f`.
 """
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
@@ -362,7 +364,9 @@ is nearby.
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
-the function returns `true`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby agent satisfies `f`.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     if isnothing(f)
@@ -389,8 +393,9 @@ Return `nothing` if the space doesn't allow for nearby positions.
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
 A filter function `f(pos)` can be passed so that to restrict the sampling on only those positions for which
-the function returns `true`. In this case `nothing` is also returned if no nearby position
-satisfies `f`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby position satisfies `f`.
 """
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
