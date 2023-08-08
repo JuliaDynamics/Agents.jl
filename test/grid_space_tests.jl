@@ -200,27 +200,30 @@ using StableRNGs
         @testset "Random nearby" begin
             abm = ABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42))
             fill_space!(abm)
-            fill_space!(abm)
+            if SpaceType == GridSpace
+                fill_space!(abm)
+            end
             # test random_id_in_position
             if SpaceType == GridSpace
                 pos = abm[1].pos
                 valid_ids = ids_in_position(pos, abm)
                 random_id = random_id_in_position(pos, abm)
                 @test random_id in valid_ids
-                not_self(id) = id != abm[1].id
+                t_1(id) = id != abm[1].id
                 for alloc in (true, false)
-                    random_id = random_id_in_position(pos, abm, not_self, alloc)
+                    random_id = random_id_in_position(pos, abm, t_1, alloc)
                     @test !isnothing(random_id) && random_id != abm[1].pos
                 end 
+            end
             # test random_agent_in_position
             if SpaceType == GridSpace
                 pos = abm[1].pos
                 valid_agents = agents_in_position(pos, abm)
                 random_a = random_agent_in_position(pos, abm)
                 @test random_a in valid_agents
-                not_self(a) = a != abm[1]
+                t_2(a) = a != abm[1]
                 for alloc in (true, false)
-                    random_a = random_agent_in_position(pos, abm, not_self, alloc)
+                    random_a = random_agent_in_position(pos, abm, t_2, alloc)
                     @test !isnothing(random_a) && random_a != abm[1]
                 end 
             end

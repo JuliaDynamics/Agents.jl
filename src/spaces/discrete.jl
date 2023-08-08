@@ -11,7 +11,8 @@ agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, npositions, ids_in_position, agents_in_position,
-       empty_positions, random_empty, has_empty_positions, empty_nearby_positions
+       empty_positions, random_empty, has_empty_positions, empty_nearby_positions,
+       random_id_in_position, random_agent_in_position
 
 
 positions(model::ABM) = positions(model.space)
