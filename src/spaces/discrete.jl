@@ -136,6 +136,7 @@ function empty_nearby_positions(pos, model, r = 1; kwargs...)
         Base.Fix2(isempty, model), nearby_positions(pos, model, r; kwargs...)
     )
 end
+
 function random_id_in_position(pos, model)
     ids = ids_in_position(pos, model)
     isempty(ids) && return nothing
