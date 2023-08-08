@@ -165,13 +165,13 @@ condition is expensive an allocating fallback can be more performant.
 """
 function random_agent(model, condition; optimistic = true, alloc = false)
     if optimistic
-        return optimistic_random_agent(model, condition)
+        return optimistic_random_agent(model, condition, alloc)
     else
         return fallback_random_agent(model, condition, alloc)
     end
 end
 
-function optimistic_random_agent(model, condition; n_attempts = nagents(model))
+function optimistic_random_agent(model, condition, alloc; n_attempts = nagents(model))
     rng = abmrng(model)
     ids = allids(model)
     @inbounds while n_attempts != 0
