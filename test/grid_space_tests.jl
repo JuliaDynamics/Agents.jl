@@ -200,30 +200,60 @@ using StableRNGs
         @testset "Random nearby" begin
             abm = ABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42))
             fill_space!(abm)
+            fill_space!(abm)
+            # test random_id_in_position
+            if SpaceType == GridSpace
+                pos = abm[1].pos
+                valid_ids = ids_in_position(pos, abm)
+                random_id = random_id_in_position(pos, abm)
+                @test random_id in valid_ids
+                not_self(id) = id != abm[1].id
+                for alloc in (true, false)
+                    random_id = random_id_in_position(pos, abm, not_self, alloc)
+                    @test !isnothing(random_id) && random_id != abm[1].pos
+                end 
+            # test random_agent_in_position
+            if SpaceType == GridSpace
+                pos = abm[1].pos
+                valid_agents = agents_in_position(pos, abm)
+                random_a = random_agent_in_position(pos, abm)
+                @test random_a in valid_agents
+                not_self(a) = a != abm[1]
+                for alloc in (true, false)
+                    random_a = random_agent_in_position(pos, abm, not_self, alloc)
+                    @test !isnothing(random_a) && random_a != abm[1]
+                end 
+            end
             # test random_nearby_id
             nearby_id = random_nearby_id(abm[1], abm, 5)
             valid_ids = collect(nearby_ids(abm[1], abm, 5))
             @test nearby_id in valid_ids
             some_ids = valid_ids[1:3]
             f(id) = id in some_ids
-            filtered_nearby_id = random_nearby_id(abm[1], abm, 5, f)
-            @test filtered_nearby_id in some_ids
+            for alloc in (true, false)
+                filtered_nearby_id = random_nearby_id(abm[1], abm, 5, f, alloc)
+                @test filtered_nearby_id in some_ids
+            end
             # test random_nearby_position
             valid_positions = collect(nearby_positions(abm[1].pos, abm, 3))
             nearby_position = random_nearby_position(abm[1].pos, abm, 3)
             @test nearby_position in valid_positions
             some_positions = valid_positions[3:5]
             g(pos) = pos in some_positions
-            filtered_nearby_position = random_nearby_position(abm[1].pos, abm, 3, g)
-            @test filtered_nearby_position in some_positions
+            for alloc in (true, false)
+                filtered_nearby_position = random_nearby_position(abm[1].pos, abm, 3, g, alloc)
+                @test filtered_nearby_position in some_positions
+            end
             # test random_nearby_agent
             valid_agents = collect(nearby_agents(abm[1], abm, 2))
             nearby_agent = random_nearby_agent(abm[1], abm, 2)
             @test nearby_agent in valid_agents
             some_agents = valid_agents[2:4]
             h(agent) = agent in some_agents
-            filtered_nearby_agent = random_nearby_agent(abm[1], abm, 2, h)
-            @test filtered_nearby_agent in some_agents
+            for alloc in (true, false)
+                filtered_nearby_agent = random_nearby_agent(abm[1], abm, 2, h, alloc)
+                @test filtered_nearby_agent in some_agents
+            end
             # test methods after removal of all agents
             remove_all!(abm)
             a = add_agent!((1, 1), abm)
@@ -233,6 +263,7 @@ using StableRNGs
             add_agent!((2,1), abm)
             rand_nearby_ids = Set([random_nearby_id(a, abm, 2) for _ in 1:100])
             @test length(rand_nearby_ids) == 2
+
        end
     end
 
