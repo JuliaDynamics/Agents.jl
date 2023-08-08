@@ -150,7 +150,7 @@ function random_id_in_position(pos, model, f = nothing, alloc = false)
         if alloc
             return sampling_with_condition_agents_single(iter_ids, f, model)
         else
-            iter_filtered = Iterators.filter(id -> f(id), iter_agents)
+            iter_filtered = Iterators.filter(id -> f(id), iter_ids)
             return resorvoir_sampling_single(iter_filtered, model)
         end
     end
