@@ -136,12 +136,14 @@ function empty_nearby_positions(pos, model, r = 1; kwargs...)
         Base.Fix2(isempty, model), nearby_positions(pos, model, r; kwargs...)
     )
 end
+function random_id_in_position(pos, model)
+    ids = ids_in_position(pos, model)
+    isempty(ids) && return nothing
+    return rand(abmrng(model), ids)
 
-function random_id_in_position(pos, model, r = 1, f = nothing, alloc = false)
+function random_id_in_position(pos, model, f = nothing, alloc = false)
     if isnothing(f)
-        ids = ids_in_position(pos, model)
-        isempty(ids) && return nothing
-        return rand(abmrng(model), ids)
+        random_id_in_position(pos, model)
     else
         iter_ids = ids_in_position(pos, model)
         if alloc
@@ -153,11 +155,11 @@ function random_id_in_position(pos, model, r = 1, f = nothing, alloc = false)
     end
 end
 
-function random_agent_in_position(a, model, r = 1, f = nothing, alloc = false)
+function random_agent_in_position(a, model, f = nothing, alloc = false)
     if isnothing(f)
-        ids = ids_in_position(pos, model)
-        isempty(ids) && return nothing
-        return model[rand(abmrng(model), ids)]
+        id = random_id_in_position(pos, model)
+        isnothing(id) && return nothing
+        return model[id]
     else
         if alloc
             iter_ids = ids_in_position(pos, model)
