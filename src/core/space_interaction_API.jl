@@ -374,13 +374,14 @@ function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs
         isnothing(id) && return nothing
         return model[id]
     else
+        iter_ids = nearby_ids(a, model, r; kwargs...)
         if alloc
-            iter_ids = nearby_ids(a, model, r; kwargs...)
             return sampling_with_condition_agents_single(iter_ids, f, model)
         else
-            iter_agents = nearby_agents(a, model, r; kwargs...)
-            iter_filtered = Iterators.filter(agent -> f(agent), iter_agents)
-            return resorvoir_sampling_single(iter_filtered, model)
+            iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
+            id = resorvoir_sampling_single(iter_filtered, model)
+            isnothing(id) && return nothing
+            return model[id]
         end
     end
 end
