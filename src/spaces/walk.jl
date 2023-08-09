@@ -9,15 +9,17 @@ export Arccos, Uniform
 # %% Walking
 #######################################################################################
 """
-    walk!(agent, direction::NTuple, model; ifempty = true)
+    walk!(agent, direction::NTuple, model::ABM{<:AbstractGridSpace}; ifempty = true)
+    walk!(agent, direction::SVector, model::ABM{<:ContinuousSpace})
 
 Move agent in the given `direction` respecting periodic boundary conditions.
 For non-periodic spaces, agents will walk to, but not exceed the boundary value.
 Available for both `AbstractGridSpace` and `ContinuousSpace`s.
 
 The type of `direction` must be the same as the space position. `AbstractGridSpace` asks
-for `Int`, and `ContinuousSpace` for `Float64` tuples, describing the walk distance in
-each direction. `direction = (2, -3)` is an example of a valid direction on a
+for `Int` tuples, and `ContinuousSpace` for `Float64` static vectors,
+describing the walk distance in each direction.
+`direction = (2, -3)` is an example of a valid direction on a
 `AbstractGridSpace`, which moves the agent to the right 2 positions and down 3 positions.
 Agent velocity is ignored for this operation in `ContinuousSpace`.
 
@@ -55,7 +57,7 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::NTuple{D,Float64},
+    direction::SVector{D,Float64},
     model::ABM{<:ContinuousSpace}
 ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
@@ -73,11 +75,11 @@ spaces this clamps the position to the space extent.
 normalize_position(pos, model::ABM) = normalize_position(pos, abmspace(model))
 
 function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
-    return mod.(pos, spacesize(space))
+    return SVector(mod.(pos, spacesize(space)))
 end
 
 function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
-    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
+    return SVector(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
 end
 
 function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
@@ -223,7 +225,7 @@ function randomwalk!(
     end
     θ = rand(abmrng(model), polar)
     relative_r = r/LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ)) .* relative_r
+    direction = rotate(agent.vel, θ) .* relative_r
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -238,7 +240,7 @@ function randomwalk!(
         return uniform_randomwalk!(agent, model)
     end
     θ = rand(abmrng(model), polar)
-    direction = Tuple(rotate(SVector(agent.vel), θ))
+    direction = rotate(agent.vel, θ)
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -259,7 +261,7 @@ function randomwalk!(
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     relative_r = r/LinearAlgebra.norm(agent.vel)
-    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ)) .* relative_r
+    direction = rotate(agent.vel, θ, ϕ) .* relative_r
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -275,7 +277,7 @@ function randomwalk!(
     end
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
-    direction = Tuple(rotate(SVector(agent.vel), θ, ϕ))
+    direction = rotate(agent.vel, θ, ϕ)
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -341,13 +343,12 @@ function uniform_randomwalk!(
         throw(ArgumentError("The displacement must be larger than 0."))
     end
     rng = abmrng(model)
-    dim = Val(D)
-    v = ntuple(_ -> randn(rng), dim)
+    v = randn(rng, SVector{D})
     norm_v = sqrt(sum(abs2.(v)))
     if !iszero(norm_v)
         direction = v ./ norm_v .* r
     else
-        direction = ntuple(_ -> rand(rng, (-1, 1)) * r / sqrt(D), dim)
+        direction = SVector{D}(rand(rng, (-1, 1)) * r / sqrt(D) for _ in 1:D)
     end
     agent.vel = direction
     walk!(agent, direction, model)

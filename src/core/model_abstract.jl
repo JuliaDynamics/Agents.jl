@@ -21,7 +21,7 @@ SpaceType = Union{Nothing,AbstractSpace}
 ValidPos = Union{
     Int, # graph
     NTuple{N,Int}, # grid
-    NTuple{M,<:AbstractFloat}, # continuous
+    SVector{M,<:AbstractFloat}, # continuous
     Tuple{Int,Int,Float64} # osm
 } where {N,M}
 

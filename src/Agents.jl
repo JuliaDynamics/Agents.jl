@@ -12,6 +12,7 @@ using DataStructures
 using Graphs
 using DataFrames
 using Random
+using StaticArrays
 import ProgressMeter
 import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra
