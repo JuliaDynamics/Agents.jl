@@ -106,24 +106,24 @@ using StableRNGs
     @testset "Distances" begin
     @testset "Euclidean distance" begin
         model = ABM(GridAgent{2}, SpaceType((12, 10); periodic = true))
-        a = add_agent!((1.0, 6.0), model)
-        b = add_agent!((11.0, 4.0), model)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
         @test euclidean_distance(a, b, model) ≈ 2.82842712
 
         model = ABM(GridAgent{2}, SpaceType((12, 10); periodic = false))
-        a = add_agent!((1.0, 6.0), model)
-        b = add_agent!((11.0, 4.0), model)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
         @test euclidean_distance(a, b, model) ≈ 10.198039
     end
     @testset "Manhattan Distance" begin
         model = ABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = true))
-        a = add_agent!((1.0, 6.0), model)
-        b = add_agent!((11.0, 4.0), model)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
         @test manhattan_distance(a, b, model) ≈ 4
 
         model = ABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = false))
-        a = add_agent!((1.0, 6.0), model)
-        b = add_agent!((11.0, 4.0), model)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
         @test manhattan_distance(a, b, model) ≈ 12
     end
     end

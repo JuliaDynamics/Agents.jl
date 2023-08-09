@@ -1,3 +1,5 @@
+using StaticArrays
+
 # TODO: Add tests for GridSpaceSingle
 # TODO: None of these tests should access internal fields like .stored_ids!
 # instead they should use public API like `ids_in_position` etc.
@@ -250,8 +252,8 @@
                 properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
-            add_agent!((1.3, 1.5), model, (0.0, 0.0), 0.0)
-            plan_route!(model[1], (9.7, 4.8), model.pathfinder)
+            add_agent!(SVector(1.3, 1.5), model, SVector(0.0, 0.0), 0.0)
+            plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
             step!(model, astep!, dummystep)
 
             AgentsIO.save_checkpoint("test.jld2", model)
