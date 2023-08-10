@@ -341,6 +341,9 @@ A filter function `f(id)` can be passed so that to restrict the sampling on only
 the function returns `true`. The argument `alloc` can be used if the filtering condition 
 is expensive since in this case the allocating version can be more performant. 
 `nothing` is returned if no nearby id satisfies `f`.
+
+For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
+position.
 """
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
@@ -367,6 +370,9 @@ A filter function `f(agent)` can be passed so that to restrict the sampling on o
 the function returns `true`. The argument `alloc` can be used if the filtering condition 
 is expensive since in this case the allocating version can be more performant. 
 `nothing` is returned if no nearby agent satisfies `f`.
+
+For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a random agent at a given 
+position.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     if isnothing(f)
