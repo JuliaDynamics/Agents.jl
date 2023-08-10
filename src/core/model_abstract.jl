@@ -148,25 +148,30 @@ Return a random agent from the model.
 random_agent(model) = model[rand(abmrng(model), allids(model))]
 
 """
-    random_agent(model, condition; optimistic=false) → agent
+    random_agent(model, condition; optimistic=true, alloc = false) → agent
 Return a random agent from the model that satisfies `condition(agent) == true`.
 The function generates a random permutation of agent IDs and iterates through
 them. If no agent satisfies the condition, `nothing` is returned instead.
+
 ## Keywords
-`optimistic = false` changes the algorithm used to be non-allocating but
+`optimistic = true` changes the algorithm used to be non-allocating but
 potentially more variable in performance. This should be faster if the condition
 is `true` for a large proportion of the population (for example if the agents
-are split into groups).
+are split into groups). 
+
+`alloc` can be used to employ a different fallback strategy in case the 
+optimistic version doesn't find any agent satisfying the condition: if the filtering 
+condition is expensive an allocating fallback can be more performant. 
 """
-function random_agent(model, condition; optimistic=false)
+function random_agent(model, condition; optimistic = true, alloc = false)
     if optimistic
-        return optimistic_random_agent(model, condition)
+        return optimistic_random_agent(model, condition, alloc)
     else
-        return sampling_with_condition_agents_single(allids(model), condition, model)
+        return fallback_random_agent(model, condition, alloc)
     end
 end
 
-function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model))
+function optimistic_random_agent(model, condition, alloc; n_attempts = nagents(model))
     rng = abmrng(model)
     ids = allids(model)
     @inbounds while n_attempts != 0
@@ -174,9 +179,19 @@ function optimistic_random_agent(model, condition; n_attempts = 3*nagents(model)
         condition(model[idx]) && return model[idx]
         n_attempts -= 1
     end
-    # Fallback after n_attempts tries to find an agent
-    return sampling_with_condition_agents_single(allids(model), condition, model)
+    return fallback_random_agent(model, condition, alloc)
 end
+
+function fallback_random_agent(model, condition, alloc)
+    if alloc
+        iter_ids = allids(model)
+        return sampling_with_condition_agents_single(iter_ids, condition, model)
+    else
+        iter_agents = allagents(model)
+        iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
+        return resorvoir_sampling_single(iter_filtered, model)
+    end
+end  
 
 # TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
 # Instead, use the API functions such as `abmrng, abmspace`, etc.

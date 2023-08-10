@@ -11,7 +11,8 @@ agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, npositions, ids_in_position, agents_in_position,
-       empty_positions, random_empty, has_empty_positions, empty_nearby_positions
+       empty_positions, random_empty, has_empty_positions, empty_nearby_positions,
+       random_id_in_position, random_agent_in_position
 
 
 positions(model::ABM) = positions(model.space)
@@ -137,6 +138,60 @@ function empty_nearby_positions(pos, model, r = 1; kwargs...)
     )
 end
 
+"""
+    random_id_in_position(pos, model::ABM, [f, alloc = false]) → id
+Return a random id in the position specified in `pos`.
+
+A filter function `f(id)` can be passed so that to restrict the sampling on only those agents
+for which the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby position satisfies `f`.
+
+Use [`random_nearby_id`](@ref) instead to return the `id` of a random agent near the position of a
+given `agent`.
+"""
+function random_id_in_position(pos, model)
+    ids = ids_in_position(pos, model)
+    isempty(ids) && return nothing
+    return rand(abmrng(model), ids)
+end
+function random_id_in_position(pos, model, f, alloc = false)
+    iter_ids = ids_in_position(pos, model)
+    if alloc
+        return sampling_with_condition_single(iter_ids, f, model)
+    else
+        iter_filtered = Iterators.filter(id -> f(id), iter_ids)
+        return resorvoir_sampling_single(iter_filtered, model)
+    end
+end
+
+"""
+    random_agent_in_position(pos, model::ABM, [f, alloc = false]) → agent
+Return a random agent in the position specified in `pos`.
+
+A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents
+for which the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby position satisfies `f`.
+
+Use [`random_nearby_agent`](@ref) instead to return a random agent near the position of a given `agent`.
+"""
+function random_agent_in_position(pos, model)
+    id = random_id_in_position(pos, model)
+    isnothing(id) && return nothing
+    return model[id]
+end
+function random_agent_in_position(pos, model, f, alloc = false)
+    iter_ids = ids_in_position(pos, model)
+    if alloc
+        return sampling_with_condition_agents_single(iter_ids, f, model)
+    else
+        iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
+        id = resorvoir_sampling_single(iter_filtered, model)
+        isnothing(id) && return nothing
+        return model[id]
+    end
+end
 
 #######################################################################################
 # Discrete space extra agent adding stuff

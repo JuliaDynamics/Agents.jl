@@ -91,6 +91,8 @@ npositions
 ids_in_position
 id_in_position
 agents_in_position
+random_id_in_position
+random_agent_in_position
 fill_space!
 has_empty_positions
 empty_positions

@@ -93,9 +93,6 @@ ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n
 # Neighbors
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
-    if r == 0
-        return ids_in_position(pos, model)
-    end
     np = nearby_positions(pos, model, r; kwargs...)
     vcat(model.space.stored_ids[pos], model.space.stored_ids[np]...)
 end

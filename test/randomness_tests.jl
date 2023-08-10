@@ -73,10 +73,14 @@ end
     @test typeof(a) <: Union{Daisy,Land}
 
     c1(a) = a isa Land
-    a = random_agent(model, c1)
-    @test a.id == 999
+    for alloc in (true, false)
+        a = random_agent(model, c1; alloc = alloc)
+        @test a.id == 999
+    end
 
     c2(a) = a isa Float64
-    a = random_agent(model, c2)
-    @test isnothing(a)
+    for alloc in (true, false)
+        a = random_agent(model, c2; alloc = alloc)
+        @test isnothing(a)
+    end
 end
