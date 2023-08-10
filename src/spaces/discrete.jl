@@ -147,8 +147,8 @@ for which the function returns `true`. The argument `alloc` can be used if the f
 is expensive since in this case the allocating version can be more performant.
 `nothing` is returned if no nearby position satisfies `f`.
 
-Use [`random_nearby_id`](@ref) instead to return the `id` of a random agent near the 
-position of a given `agent`.
+Use [`random_nearby_id`](@ref) instead to return the `id` of a random agent near the position of a
+given `agent`.
 """
 function random_id_in_position(pos, model)
     ids = ids_in_position(pos, model)
@@ -174,8 +174,7 @@ for which the function returns `true`. The argument `alloc` can be used if the f
 is expensive since in this case the allocating version can be more performant. 
 `nothing` is returned if no nearby position satisfies `f`.
 
-Use [`random_nearby_agent`](@ref) instead to return a random agent near the position
-of a given `agent`.
+Use [`random_nearby_agent`](@ref) instead to return a random agent near the position of a given `agent`.
 """
 function random_agent_in_position(pos, model)
     id = random_id_in_position(pos, model)
