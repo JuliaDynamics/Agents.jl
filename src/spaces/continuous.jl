@@ -99,7 +99,7 @@ end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::SVector, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
+pos2cell(pos::ValidPos, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
 
 "given position in continuous space, return continuous space coordinates of cell center."
 function cell_center(pos::SVector{D,<:AbstractFloat}, model) where {D}
