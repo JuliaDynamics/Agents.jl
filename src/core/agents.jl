@@ -196,17 +196,13 @@ macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    base_type_no_param = base_type isa Expr ? base_type.args[1] : Symbol()
+
     # We start with a quote. All macros return a quote to be evaluated
     quote
         let
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to obtain it
-            base_T = try
-                         $(esc(base_type))
-                     catch
-                         $(esc(base_type_no_param))
-                     end
+            base_T = $(esc(base_type))
             base_fieldnames = fieldnames(base_T)
             base_fieldtypes = fieldtypes(base_T)
             base_fieldconsts = isconst.(base_T, base_fieldnames)
