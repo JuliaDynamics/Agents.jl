@@ -154,7 +154,7 @@ function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D})
         abmrng(model),
         filter(x -> pathfinder.walkmap[x], CartesianIndices(pathfinder.walkmap))
     ))
-    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
+    half_cell_size = abmspace(model).extent ./ size(pathfinder.walkmap) ./ 2.
     return to_continuous_position(discrete_pos, pathfinder) .+
         Tuple(rand(abmrng(model), D) .- 0.5) .* half_cell_size
 end
@@ -195,13 +195,13 @@ function random_walkable(
         abmrng(model),
         options
     )
-    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
+    half_cell_size = abmspace(model).extent ./ size(pathfinder.walkmap) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
         Tuple(rand(abmrng(model), D) .- 0.5) .* half_cell_size
     dist = euclidean_distance(pos, cts_rand, model)
     dist > r && (cts_rand = mod1.(
         pos .+ get_direction(pos, cts_rand, model) ./ dist .* r,
-        model.space.extent
+        abmspace(model).extent
     ))
     return cts_rand
 end
