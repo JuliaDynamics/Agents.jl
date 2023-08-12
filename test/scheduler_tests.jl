@@ -8,7 +8,7 @@
     for i in 1:N
         add_agent!(model)
     end
-    @test sort!(collect(keys(model.agents))) == 1:N
+    @test sort!(collect(allids(model))) == 1:N
     @test abmscheduler(model)(model) == 1:N
 
     # fastest
@@ -24,7 +24,7 @@
     for i in 1:N
         add_agent!(model)
     end
-    fastest_order = collect(keys(model.agents))[1:3]
+    fastest_order = collect(allids(model))[1:3]
     @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
@@ -45,8 +45,8 @@
     Random.seed!(12)
     a = abmscheduler(model)(model)
 
-    ids = collect(keys(model.agents))
-    properties = [model.agents[id].weight for id in ids]
+    ids = collect(allids(model))
+    properties = [model[id].weight for id in ids]
 
     @test ids[sortperm(properties)] == a
 end
@@ -154,7 +154,7 @@ end
     function (ms::MyScheduler)(model::ABM)
         ms.n += 1 # increment internal counter by 1 for each step
         if ms.n < 5
-            return keys(model.agents) # order doesn't matter in this case
+            return allids(model) # order doesn't matter in this case
         else
             ids = collect(allids(model))
             # filter all ids whose agents have `w` less than some amount
@@ -188,7 +188,7 @@ end
     for i in 1:N
         add_agent!(model)
     end
-    @test sort!(collect(keys(model.agents))) == 1:N
+    @test sort!(collect(allids(model))) == 1:N
     @test abmscheduler(model)(model) == 1:N
 
     # random
@@ -196,7 +196,7 @@ end
     for i in 1:N
         add_agent!(model)
     end
-    fastest_order = collect(keys(model.agents))[1:3]
+    fastest_order = collect(allids(model))[1:3]
     @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
@@ -217,8 +217,8 @@ end
     Random.seed!(12)
     a = collect(abmscheduler(model)(model))
 
-    ids = collect(keys(model.agents))
-    properties = [model.agents[id].weight for id in ids]
+    ids = collect(allids(model))
+    properties = [model[id].weight for id in ids]
 
     @test ids[sortperm(properties)] == a
 

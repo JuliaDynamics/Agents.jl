@@ -406,7 +406,7 @@ function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
     elseif method == :types
         type_pairs!(pairs, model, r, scheduler, nearby_f)
     end
-    return PairIterator(pairs, model.agents)
+    return PairIterator(pairs, agent_container(model))
 end
 
 function all_pairs!(

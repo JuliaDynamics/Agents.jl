@@ -426,7 +426,7 @@ function multi_agent_types!(
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
-    alla = sort!(collect(values(model.agents)), by = a -> a.id)
+    alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a -> a.id, alla)
