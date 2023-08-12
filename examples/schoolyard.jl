@@ -68,7 +68,7 @@ function schoolyard(;
     )
     for student in 1:numStudents
         ## Students begin near the school building
-        position = model.space.extent .* 0.5 .+ Tuple(rand(abmrng(model), 2)) .- 0.5
+        position = abmspace(model).extent .* 0.5 .+ Tuple(rand(abmrng(model), 2)) .- 0.5
         add_agent!(position, model, velocity)
 
         ## Add one friend and one foe to the social network
@@ -91,7 +91,7 @@ scale(L, force) = (L / distance(force)) .* force
 
 function agent_step!(student, model)
     ## place a teacher in the center of the yard, so we don’t go too far away
-    teacher = (model.space.extent .* 0.5 .- student.pos) .* model.teacher_attractor
+    teacher = (abmspace(model).extent .* 0.5 .- student.pos) .* model.teacher_attractor
 
     ## add a bit of randomness
     noise = model.noise .* (Tuple(rand(abmrng(model), 2)) .- 0.5)

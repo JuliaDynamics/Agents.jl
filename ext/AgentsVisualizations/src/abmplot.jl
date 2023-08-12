@@ -122,12 +122,12 @@ const SUPPORTED_SPACES = Union{
 
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
-    if !(model.space isa SUPPORTED_SPACES)
-        error("Space type $(typeof(model.space)) is not supported for plotting.")
+    if !(abmspace(model) isa SUPPORTED_SPACES)
+        error("Space type $(typeof(abmspace(model))) is not supported for plotting.")
     end
     ax = abmplot.ax[]
     abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
-    if !(model.space isa Agents.GraphSpace)
+    if !(abmspace(model) isa Agents.GraphSpace)
         set_axis_limits!(ax, model)
     end
     fig = ax.parent
@@ -139,7 +139,7 @@ function Makie.plot!(abmplot::_ABMPlot)
             abmplot.offset, abmplot.heatarray, abmplot._used_poly)
 
     # OpenStreetMapSpace preplot
-    if model.space isa Agents.OpenStreetMapSpace
+    if abmspace(model) isa Agents.OpenStreetMapSpace
         Agents.agents_osmplot!(abmplot.ax[], model; abmplot.osmkwargs...)
     end
 
@@ -183,7 +183,7 @@ function Makie.plot!(abmplot::_ABMPlot)
         edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
         ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
         edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
-        graphplot!(abmplot, model.space.graph;
+        graphplot!(abmplot, abmspace(model).graph;
             node_color = color, node_marker = marker, node_size = markersize,
             abmplot.graphplotkwargs..., # must come first to not overwrite lifted kwargs
             edge_color, edge_width)
@@ -209,7 +209,7 @@ end
 
 "Plot space and/or set axis limits."
 function set_axis_limits!(ax, model)
-    if model.space isa Agents.OpenStreetMapSpace
+    if abmspace(model) isa Agents.OpenStreetMapSpace
         o = [Inf, Inf]
         e = [-Inf, -Inf]
         for i ∈ Agents.positions(model)
@@ -217,11 +217,11 @@ function set_axis_limits!(ax, model)
             o[1] = min(x, o[1]); o[2] = min(y, o[2])
             e[1] = max(x, e[1]); e[2] = max(y, e[2])
         end
-    elseif model.space isa Agents.ContinuousSpace
-        e = model.space.extent
+    elseif abmspace(model) isa Agents.ContinuousSpace
+        e = abmspace(model).extent
         o = zero.(e)
-    elseif model.space isa Agents.AbstractGridSpace
-        e = size(model.space) .+ 0.5
+    elseif abmspace(model) isa Agents.AbstractGridSpace
+        e = size(abmspace(model)) .+ 0.5
         o = zero.(e) .+ 0.5
     end
     xlims!(ax, o[1], e[1])

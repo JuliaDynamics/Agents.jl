@@ -260,12 +260,12 @@ end
 # `linesegments` to be tapered (i.e. one end is wider than the other).
 using Graphs: edges
 using GraphMakie: Shell
-edge_color(model) = fill((:grey, 0.25), ne(model.space.graph))
+edge_color(model) = fill((:grey, 0.25), ne(abmspace(model).graph))
 function edge_width(model)
-    w = zeros(ne(model.space.graph))
-    for e in edges(model.space.graph)
-        push!(w, 0.004 * length(model.space.stored_ids[e.src]))
-        push!(w, 0.004 * length(model.space.stored_ids[e.dst]))
+    w = zeros(ne(abmspace(model).graph))
+    for e in edges(abmspace(model).graph)
+        push!(w, 0.004 * length(abmspace(model).stored_ids[e.src]))
+        push!(w, 0.004 * length(abmspace(model).stored_ids[e.dst]))
     end
     return w
 end

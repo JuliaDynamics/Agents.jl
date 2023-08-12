@@ -730,7 +730,7 @@ function fractal_particle_step!(agent::FractalParticle, model)
         end
     end
     ## radial vector towards the center of the space
-    radial = model.space.extent ./ 2.0 .- agent.pos
+    radial = abmspace(model).extent ./ 2.0 .- agent.pos
     radial = radial ./ norm(radial)
     ## tangential vector in the direction of orbit of the particle
     tangent = Tuple(cross([radial..., 0.0], agent.spin_axis)[1:2])
@@ -750,7 +750,7 @@ function fractal_step!(model)
             nextid(model),
             particle_radius(model.min_radius, model.max_radius, abmrng(model)),
             rand(abmrng(model)) < model.clockwise_fraction;
-            pos = (rand_circle(abmrng(model)) .+ 1.0) .* model.space.extent .* 0.49,
+            pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49,
         )
         add_agent_pos!(particle, model)
         model.spawn_count -= 1
