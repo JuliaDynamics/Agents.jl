@@ -63,7 +63,7 @@ end
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-random_position(model::ABM{<:GraphSpace}) = rand(model.rng, 1:nv(model))
+random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 
 function remove_agent_from_space!(
     agent::A,

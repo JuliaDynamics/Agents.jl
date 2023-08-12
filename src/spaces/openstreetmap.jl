@@ -180,12 +180,12 @@ returns a location somewhere on a road heading in a random direction.
 """
 function random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
-    s = Int(rand(model.rng, 1:Agents.nv(model)))
+    s = Int(rand(abmrng(model), 1:Agents.nv(model)))
     if isempty(all_neighbors(model.space.map.graph, s))
         return (s, s, 0.0)
     end
-    d = Int(rand(model.rng, all_neighbors(model.space.map.graph, s)))
-    dist = rand(model.rng) * road_length(s, d, model)
+    d = Int(rand(abmrng(model), all_neighbors(model.space.map.graph, s)))
+    dist = rand(abmrng(model)) * road_length(s, d, model)
     return (s, d, dist)
 end
 
@@ -714,7 +714,7 @@ end
 # Agents.jl space API
 #######################################################################################
 function Agents.random_position(model::ABM{<:OpenStreetMapSpace})
-    vert = Int(rand(model.rng, 1:Agents.nv(model)))
+    vert = Int(rand(abmrng(model), 1:Agents.nv(model)))
     return (vert, vert, 0.0)
 end
 

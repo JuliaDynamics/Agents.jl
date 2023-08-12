@@ -94,7 +94,7 @@ A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 function randomly(model::ABM)
-    order = shuffle!(model.rng, collect(allids(model)))
+    order = shuffle!(abmrng(model), collect(allids(model)))
 end
 
 struct Randomly
@@ -109,7 +109,7 @@ Different random ordering is used at each different step.
 Randomly() = Randomly(Int[])
 function (sched::Randomly)(model::ABM)
     get_ids!(sched.ids, model)
-    shuffle!(model.rng, sched.ids)
+    shuffle!(abmrng(model), sched.ids)
 end
 
 """
@@ -119,7 +119,7 @@ A scheduler that at each step activates only `p` percentage of randomly chosen a
 function partially(p::Real)
     function partial(model::ABM)
         ids = collect(allids(model))
-        return randsubseq(model.rng, ids, p)
+        return randsubseq(abmrng(model), ids, p)
     end
     return partial
 end
@@ -139,7 +139,7 @@ Partially(p::R) where {R<:Real} = Partially{R}(p, Int[], Int[])
 
 function (sched::Partially)(model::ABM)
     get_ids!(sched.all_ids, model)
-    randsubseq!(model.rng, sched.schedule, sched.all_ids, sched.p)
+    randsubseq!(abmrng(model), sched.schedule, sched.all_ids, sched.p)
 end
 
 """
@@ -204,10 +204,10 @@ function by_type(shuffle_types::Bool, shuffle_agents::Bool)
             idx = findfirst(t -> t == typeof(agent), types)
             push!(sets[idx], agent.id)
         end
-        shuffle_types && shuffle!(model.rng, sets)
+        shuffle_types && shuffle!(abmrng(model), sets)
         if shuffle_agents
             for set in sets
-                shuffle!(model.rng, set)
+                shuffle!(abmrng(model), set)
             end
         end
         vcat(sets...)
@@ -233,7 +233,7 @@ function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
         end
         if shuffle_agents
             for set in sets
-                shuffle!(model.rng, set)
+                shuffle!(abmrng(model), set)
             end
         end
         vcat(sets...)
@@ -290,11 +290,11 @@ function (sched::ByType)(model::ABM)
         push!(sched.ids[sched.type_inds[typeof(agent)]], agent.id)
     end
 
-    sched.shuffle_types && shuffle!(model.rng, sched.ids)
+    sched.shuffle_types && shuffle!(abmrng(model), sched.ids)
 
     if sched.shuffle_agents
         for i in 1:length(sched.ids)
-            shuffle!(model.rng, sched.ids[i])
+            shuffle!(abmrng(model), sched.ids[i])
         end
     end
 

@@ -94,7 +94,7 @@ function ContinuousSpace(
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(model.rng) * dim, spacesize(model))
+    map(dim -> rand(abmrng(model)) * dim, spacesize(model))
 end
 
 "given position in continuous space, return cell coordinates in grid space."
@@ -349,7 +349,7 @@ end
 # interacting pairs
 #######################################################################################
 """
-    interacting_pairs(model, r, method; scheduler = model.scheduler) → piter
+    interacting_pairs(model, r, method; scheduler = abmscheduler(model)) → piter
 Return an iterator that yields **unique pairs** of agents `(a, b)` that are close
 neighbors to each other, within some interaction radius `r`.
 
@@ -377,7 +377,7 @@ The argument `method` provides three pairing scenarios
   types, i.e.: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
 
 The following keywords can be used:
-- `scheduler = model.scheduler`, which schedulers the agents during iteration for finding
+- `scheduler = abmscheduler(model)`, which schedulers the agents during iteration for finding
   pairs. Especially in the `:nearest` case, this is important, as different sequencing
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
@@ -395,7 +395,7 @@ Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/exampl
 
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
-        scheduler = model.scheduler, nearby_f = nearby_ids_exact,
+        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact,
     )
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]

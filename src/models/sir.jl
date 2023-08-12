@@ -104,7 +104,7 @@ end
 
 function sir_migrate!(agent, model)
     pid = agent.pos
-    m = sample(model.rng, 1:(model.C), Weights(model.migration_rates[pid, :]))
+    m = sample(abmrng(model), 1:(model.C), Weights(model.migration_rates[pid, :]))
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -118,13 +118,13 @@ function sir_transmit!(agent, model)
         model.β_det[agent.pos]
     end
 
-    n = rate * abs(randn(model.rng))
+    n = rate * abs(randn(abmrng(model)))
     n <= 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
+           (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n <= 0 && return
@@ -136,7 +136,7 @@ sir_update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function sir_recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand(model.rng) ≤ model.death_rate
+        if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
             agent.status = :R

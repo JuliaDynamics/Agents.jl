@@ -7,7 +7,7 @@ export step!, dummystep
     step!(model::ABM, agent_step!, model_step!, n::Int = 1, agents_first::Bool = true)
 
 Update agents `n` steps according to the stepping function `agent_step!`.
-Agents will be activated as specified by the `model.scheduler`.
+Agents will be activated as specified by the `abmscheduler(model)`.
 `model_step!` is triggered _after_ every scheduled agent has acted, unless
 the argument `agents_first` is `false` (which then first calls `model_step!` and then
 activates the agents).

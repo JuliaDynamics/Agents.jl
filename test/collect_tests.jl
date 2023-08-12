@@ -726,7 +726,7 @@ end
         fill_space!(abm, _ -> rand(abm.rng, 1:1000))
         abm
     end
-    as!(agent, model) = (agent.p = rand(model.rng, 1:1000))
+    as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     seeds = [1234, 563, 211]
     adata = [(:p, sum)]
     adf, _ = ensemblerun!(fake_model, as!, dummystep, 2; adata, seeds)

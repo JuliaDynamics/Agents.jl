@@ -178,7 +178,7 @@ This is a huge release!
 - Self-contained features of Agents.jl will from now own exist in their own submodules. This will make the public API less cluttered and functionality more contained. Currently the new submodules are `Schedulers, Pathfinding, OSM`.
 - Pathfinding using the A* algorithm is now possible! Available for `GridSpace`.
 - Extend `dataname` (formerly `aggname`) to provide unique column names in collection dataframes when using anonymous functions
-- Fixed omission which did not enable updating properties of a model when `model.properties` is a `struct`.
+- Fixed omission which did not enable updating properties of a model when `abmproperties(model)` is a `struct`.
 - New function `ensemblerun!` for running ensemble model simulations.
 - Scheduler `Schedulers.by_property` (previously `property_activation`) now allows as input arbitrary functions besides symbols.
 
@@ -193,7 +193,7 @@ This is a huge release!
 
 # v4.1
 - A new example: Fractal Growth, explores `ContinuousSpace` and interactive plotting.
-- Models now supply a random number generator pool that is used in all random-related functions like `random_position`. Access it with `model.rng` and seed it with `seed!(model, seed)`.
+- Models now supply a random number generator pool that is used in all random-related functions like `random_position`. Access it with `abmrng(model)` and seed it with `seed!(model, seed)`.
 - Higher-order agent grouping utilities to facilitate complex interactions, see e.g. `iter_agent_groups`.
 - Several documentation improvements targeting newcomers.
 
@@ -277,8 +277,8 @@ therefore are not "truly breaking".
 * New continuous space functions `nearest_neighbor` and `elastic_collision!`.
 * New iterator `interacting_pairs`.
 * Agents can be accessed from the model directly. `model[id]` is equivalent with `model.agents[id]` and replaces `id2agent`.
-* If `model.properties` is a dictionary with key type Symbol, then the
-  convenience syntax `model.prop` returns `model.properties[:prop]`.
+* If `abmproperties(model)` is a dictionary with key type Symbol, then the
+  convenience syntax `model.prop` returns `abmproperties(model)[:prop]`.
 * Version of `add_agent!` now has keyword propagation as well (in case you make your types with `@kwdef` or Parameters.jl).
 * New function `nextid`
 * Cool new logo.

@@ -4,8 +4,8 @@
 @testset "JLD2" begin
 
     function test_model_data(model, other)
-        @test (model.scheduler isa Function && model.scheduler == other.scheduler) || (!isa(model.scheduler, Function) && typeof(model.scheduler) == typeof(other.scheduler))
-        @test model.rng == other.rng
+        @test (abmscheduler(model) isa Function && abmscheduler(model) == other.scheduler) || (!isa(abmscheduler(model), Function) && typeof(abmscheduler(model)) == typeof(other.scheduler))
+        @test abmrng(model) == other.rng
         @test model.maxid.x == other.maxid.x
     end
 
@@ -77,7 +77,7 @@
     @testset "No space" begin
         model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42))
         for i in 1:100
-            add_agent!(model, rand(model.rng))
+            add_agent!(model, rand(abmrng(model)))
         end
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2")
@@ -161,7 +161,7 @@
         )
 
         for i in 1:30
-            add_agent_pos!(Agent7(i, i % 10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
+            add_agent_pos!(Agent7(i, i % 10 + 1, rand(abmrng(model)) < 0.5, rand(abmrng(model), Int)), model)
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)

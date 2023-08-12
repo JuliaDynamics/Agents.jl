@@ -31,7 +31,7 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
     itr = vec(n)
     if by == :random
-        shuffle!(model.rng, itr)
+        shuffle!(abmrng(model), itr)
     elseif by == :population
         sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
@@ -114,7 +114,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     else
         empty = empty_positions(model)
         isempty(empty) && return nothing
-        return rand(model.rng, collect(empty))
+        return rand(abmrng(model), collect(empty))
     end
 end
 

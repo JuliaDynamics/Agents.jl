@@ -102,7 +102,7 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
-    Tuple(rand(model.rng, CartesianIndices(model.space.stored_ids)))
+    Tuple(rand(abmrng(model), CartesianIndices(model.space.stored_ids)))
 end
 
 offsets_within_radius_no_0(model::ABM, r::Real) =

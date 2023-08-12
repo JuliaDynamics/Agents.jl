@@ -37,7 +37,7 @@ end
 function sir_model_step!(model)
     r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :all)
-        transmit!(a1, a2, model.reinfection_probability, model.rng)
+        transmit!(a1, a2, model.reinfection_probability, abmrng(model))
         elastic_collision!(a1, a2, :mass)
     end
 end
@@ -55,7 +55,7 @@ function recover_or_die!(agent, model)
     if agent.days_infected ≥ agent.recovery_period
         if agent.mass ≠ Inf
             kill_agent!(agent, model)
-        elseif rand(model.rng) ≤ model.death_rate
+        elseif rand(abmrng(model)) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
