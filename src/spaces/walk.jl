@@ -57,9 +57,9 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::SVector{D,Float64},
+    direction::ValidPos,
     model::ABM{<:ContinuousSpace}
-) where {D}
+)
     target = normalize_position(agent.pos .+ direction, model)
     move_agent!(agent, target, model)
     return agent
