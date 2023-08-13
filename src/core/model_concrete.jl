@@ -174,7 +174,11 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
             throw(ArgumentError("`pos` field in agent type must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
-            if !(pos_type <: SVector{D,<:AbstractFloat} where {D})
+            if pos_type <: NTuple{D,<:AbstractFloat} where {D}
+                if warn
+                    @warn "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Please consider using `SVector` instead."
+                end
+            elseif !(pos_type <: SVector{D,<:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if warn &&
