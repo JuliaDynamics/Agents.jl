@@ -51,6 +51,65 @@ using LinearAlgebra: norm, dot
         @test nagents(model) == 0
     end
 
+    @testset "support for ntuples after #846" begin
+        # agents with SVector types also work when passing tuples to functions
+        @agent SVecAgent ContinuousAgent{2} begin; end
+        space = ContinuousSpace((1,1))
+        model = ABM(SVecAgent, space)
+        x = (0.0, 0.0)
+        v = (0.1, 0.0)
+        dt = 1.0
+        add_agent!(x, model, v)
+        @test model[1].pos == SVector(x)
+        @test model[1].vel == SVector(v)
+        # different types of motion
+        move_agent!(model[1], model, dt)
+        @test model[1].pos == SVector(x .+ v.*dt)
+        y = (0.5, 0.2)
+        move_agent!(model[1], y, model)
+        @test model[1].pos == SVector(y)
+        walk!(model[1], 2 .* model[1].vel, model)
+        @test model[1].pos == SVector(y .+ 2 .* v)
+        # agent addition works also if pos is not specified
+        add_agent!(model, .-v)
+        @test model[2].pos isa SVector{2,Float64}
+        @test model[2].vel == SVector(.-v)
+
+        # agents with hard-coded tuple types should work but throw warnings on creation
+        mutable struct TupleManualAgent <: AbstractAgent
+            id::Int
+            pos::NTuple{2,Float64}
+            vel::NTuple{2,Float64}
+        end
+        space = ContinuousSpace((1,1))
+        @test_logs (
+            :warn,
+            "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Please consider using `SVector` instead."
+        ) (
+            :warn,
+            "`vel` field in agent type should be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."
+        ) ABM(TupleManualAgent, space)
+        model = ABM(TupleManualAgent, space)
+        x = (0.0, 0.0)
+        v = (0.1, 0.0)
+        dt = 1.0
+        add_agent!(x, model, v)
+        @test model[1].pos == x
+        @test model[1].vel == v
+        # normalize_position (in walk!) enforces SVector, cannot convert to NTuple
+        @test_broken move_agent!(model[1], model, dt)
+        #@test model[1].pos == x .+ v.*dt
+        model = ABM(TupleManualAgent, space)
+        # generates SVector position, cannot convert to NTuple
+        @test_broken add_agent!(model, v)
+        add_agent!(x, model, v)
+        y = (0.5, 0.2)
+        move_agent!(model[1], y, model)
+        @test model[1].pos == y
+        # normalize_position enforces SVector
+        @test_broken walk!(model[1], model[1].vel, model)
+    end
+
     @testset "nearby ids" begin
         # At the end of this file there is a plotting test piece of code!
         # I've run it for many combinations and I am generally happy with the result.
