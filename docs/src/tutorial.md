@@ -139,8 +139,8 @@ run!(model, agent_step!, model_step!, 10; mdata = assets)
 
 ## Seeding and Random numbers
 
-Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `model.rng` which by default coincides with the global RNG.
-For performance and reproducibility reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(model.rng)` or `rand(model.rng, 1:10, 100)`, etc.
+Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `abmrng(model)` which by default coincides with the global RNG.
+For performance and reproducibility reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
 
 Another benefit of this approach is deterministic models that can be run again and yield the same output.
 To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)`.

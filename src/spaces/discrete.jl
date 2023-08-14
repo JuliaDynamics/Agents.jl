@@ -15,7 +15,7 @@ export positions, npositions, ids_in_position, agents_in_position,
        random_id_in_position, random_agent_in_position
 
 
-positions(model::ABM) = positions(model.space)
+positions(model::ABM) = positions(abmspace(model))
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
 Return an iterator over all positions of a model with a discrete space.
@@ -31,7 +31,7 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
     itr = vec(n)
     if by == :random
-        shuffle!(model.rng, itr)
+        shuffle!(abmrng(model), itr)
     elseif by == :population
         sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
@@ -45,7 +45,7 @@ end
 
 Return the number of positions of a model with a discrete space.
 """
-npositions(model::ABM) = npositions(model.space)
+npositions(model::ABM) = npositions(abmspace(model))
 
 """
     ids_in_position(position, model::ABM{<:DiscreteSpace})
@@ -114,7 +114,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     else
         empty = empty_positions(model)
         isempty(empty) && return nothing
-        return rand(model.rng, collect(empty))
+        return rand(abmrng(model), collect(empty))
     end
 end
 

@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmproperties
+export abmrng, abmscheduler, abmspace, abmproperties
 export random_agent, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
@@ -116,6 +116,12 @@ abmproperties(model::ABM) = getfield(model, :properties)
 Return the default scheduler stored in `model`.
 """
 abmscheduler(model::ABM) = getfield(model, :scheduler)
+
+"""
+    abmspace(model::ABM)
+Return the space instance stored in the `model`.
+"""
+abmspace(model::ABM) = getfield(model, :space)
 
 """
     allids(model)
@@ -263,12 +269,6 @@ add_agent_to_model!(agent, model) = notimplemented(model)
 Remove the agent from the model's internal container.
 """
 remove_agent_from_model!(agent, model) = notimplemented(model)
-
-"""
-    abmspace(model::ABM)
-Return the space instance stored in the `model`.
-"""
-abmspace(model::ABM) = getfield(model, :space)
 
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*

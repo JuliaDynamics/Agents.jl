@@ -93,17 +93,17 @@ function initialize_model(;
     )
     ## Add agents
     for _ in 1:n_sheep
-        energy = rand(model.rng, 1:(Δenergy_sheep*2)) - 1
+        energy = rand(abmrng(model), 1:(Δenergy_sheep*2)) - 1
         add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
     end
     for _ in 1:n_wolves
-        energy = rand(model.rng, 1:(Δenergy_wolf*2)) - 1
+        energy = rand(abmrng(model), 1:(Δenergy_wolf*2)) - 1
         add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
     end
     ## Add grass with random initial growth
     for p in positions(model)
-        fully_grown = rand(model.rng, Bool)
-        countdown = fully_grown ? regrowth_time : rand(model.rng, 1:regrowth_time) - 1
+        fully_grown = rand(abmrng(model), Bool)
+        countdown = fully_grown ? regrowth_time : rand(abmrng(model), 1:regrowth_time) - 1
         model.countdown[p...] = countdown
         model.fully_grown[p...] = fully_grown
     end
@@ -129,7 +129,7 @@ function sheepwolf_step!(sheep::Sheep, model)
         return
     end
     eat!(sheep, model)
-    if rand(model.rng) ≤ sheep.reproduction_prob
+    if rand(abmrng(model)) ≤ sheep.reproduction_prob
         reproduce!(sheep, model)
     end
 end
@@ -144,7 +144,7 @@ function sheepwolf_step!(wolf::Wolf, model)
     ## If there is any sheep on this grid cell, it's dinner time!
     dinner = first_sheep_in_position(wolf.pos, model)
     !isnothing(dinner) && eat!(wolf, dinner, model)
-    if rand(model.rng) ≤ wolf.reproduction_prob
+    if rand(abmrng(model)) ≤ wolf.reproduction_prob
         reproduce!(wolf, model)
     end
 end

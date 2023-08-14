@@ -94,16 +94,16 @@ function ContinuousSpace(
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(model.rng) * dim, spacesize(model))
+    map(dim -> rand(abmrng(model)) * dim, spacesize(model))
 end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::Tuple, model::ABM) = @. floor(Int, pos/model.space.spacing) + 1
+pos2cell(pos::Tuple, model::ABM) = floor.(Int, pos./abmspace(model).spacing) .+ 1
 
 "given position in continuous space, return continuous space coordinates of cell center."
 function cell_center(pos::NTuple{D,<:AbstractFloat}, model) where {D}
-    model.space.spacing .* (pos2cell(pos, model) .- 0.5)
+    abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
 distance_from_cell_center(pos, model::ABM) =
@@ -111,7 +111,7 @@ distance_from_cell_center(pos, model::ABM) =
 
 function add_agent_to_space!(
     a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
-    push!(model.space.grid.stored_ids[cell_index...], a.id)
+    push!(abmspace(model).grid.stored_ids[cell_index...], a.id)
     return a
 end
 
@@ -120,7 +120,7 @@ function remove_agent_from_space!(
     model::ABM{<:ContinuousSpace,A},
     cell_index = pos2cell(a, model),
 ) where {A<:AbstractAgent}
-    prev = model.space.grid.stored_ids[cell_index...]
+    prev = abmspace(model).grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
@@ -162,7 +162,7 @@ function move_agent!(
     model::ABM{<:ContinuousSpace,A},
     dt::Real,
 ) where {A<:AbstractAgent}
-    model.space.update_vel!(agent, model)
+    abmspace(model).update_vel!(agent, model)
     direction = dt .* agent.vel
     walk!(agent, direction, model)
 end
@@ -180,7 +180,7 @@ end
 
 # Extend the gridspace function
 function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
-    return offsets_within_radius(model.space.grid, r)
+    return offsets_within_radius(abmspace(model).grid, r)
 end
 
 function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
@@ -193,11 +193,11 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
-    grid_r = ceil(Int, (r + δ) / model.space.spacing)
+    grid_r = ceil(Int, (r + δ) / abmspace(model).spacing)
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
     focal_cell = pos2cell(pos, model)
-    return nearby_ids(focal_cell, model.space.grid, grid_r)
+    return nearby_ids(focal_cell, abmspace(model).grid, grid_r)
 end
 
 """
@@ -218,8 +218,8 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
     # Remaining code isn't used, but is based on
     #  https://github.com/JuliaDynamics/Agents.jl/issues/313
     #=
-    gridspace = model.space.grid
-    spacing = model.space.spacing
+    gridspace = abmspace(model).grid
+    spacing = abmspace(model).spacing
     focal_cell = pos2cell(pos, model)
     max_dist_from_center = maximum(abs.(pos .- cell_center(pos, model)))
     crosses_at_least_one_cell_border = max_dist_from_center + r ≥ spacing
@@ -349,7 +349,7 @@ end
 # interacting pairs
 #######################################################################################
 """
-    interacting_pairs(model, r, method; scheduler = model.scheduler) → piter
+    interacting_pairs(model, r, method; scheduler = abmscheduler(model)) → piter
 Return an iterator that yields **unique pairs** of agents `(a, b)` that are close
 neighbors to each other, within some interaction radius `r`.
 
@@ -377,7 +377,7 @@ The argument `method` provides three pairing scenarios
   types, i.e.: `scheduler(model) = (a.id for a in allagents(model) if !(a isa Grass))`.
 
 The following keywords can be used:
-- `scheduler = model.scheduler`, which schedulers the agents during iteration for finding
+- `scheduler = abmscheduler(model)`, which schedulers the agents during iteration for finding
   pairs. Especially in the `:nearest` case, this is important, as different sequencing
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
@@ -395,7 +395,7 @@ Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/exampl
 
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
-        scheduler = model.scheduler, nearby_f = nearby_ids_exact,
+        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact,
     )
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
@@ -406,7 +406,7 @@ function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
     elseif method == :types
         type_pairs!(pairs, model, r, scheduler, nearby_f)
     end
-    return PairIterator(pairs, model.agents)
+    return PairIterator(pairs, agent_container(model))
 end
 
 function all_pairs!(

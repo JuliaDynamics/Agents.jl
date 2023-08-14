@@ -11,7 +11,7 @@ e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no uppe
 Index order is provided by the model scheduler by default,
 but can be altered with the `scheduler` keyword.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = model.scheduler) =
+iter_agent_groups(order::Int, model::ABM; scheduler = abmscheduler(model)) =
     Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
 
 """

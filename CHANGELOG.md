@@ -302,3 +302,4 @@ therefore are not "truly breaking".
 * It is now possible to `step!` until a boolean condition is met.
 # v2.0
 Changelog is kept with respect to version 2.0.
+

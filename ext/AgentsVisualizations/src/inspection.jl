@@ -114,7 +114,7 @@ ids_to_inspect(model::ABM{<:ContinuousSpace}, agent_pos) =
 ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, agent_pos) =
     nearby_ids(agent_pos, model, 0.0)
 ids_to_inspect(model::ABM{<:GraphSpace}, agent_pos) =
-    model.space.stored_ids[agent_pos]
+    abmspace(model).stored_ids[agent_pos]
 ids_to_inspect(model::ABM, agent_pos) = []
 
 function Agents.agent2string(agent::A) where {A<:AbstractAgent}

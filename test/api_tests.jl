@@ -39,7 +39,7 @@ end
     agent = add_agent!(model, 5.3)
     init_pos = agent.pos
     # Checking specific indexing
-    move_agent!(agent, rand(model.rng, [i for i in 1:6 if i != init_pos]), model)
+    move_agent!(agent, rand(abmrng(model), [i for i in 1:6 if i != init_pos]), model)
     new_pos = agent.pos
     @test new_pos != init_pos
     # Checking a random move
@@ -226,7 +226,7 @@ end
     for bool in (true, false)
         model = ABM(Agent2; properties = Dict(:count => 0))
         for i in 1:100
-            add_agent!(model, rand(model.rng))
+            add_agent!(model, rand(abmrng(model)))
         end
         step!(model, agent_step!, model_step!, 1, bool)
         if bool

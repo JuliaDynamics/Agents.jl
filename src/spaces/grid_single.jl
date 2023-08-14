@@ -39,22 +39,22 @@ end
 function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
     pos = a.pos
     !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
-    model.space.stored_ids[pos...] = a.id
+    abmspace(model).stored_ids[pos...] = a.id
     return a
 end
 
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
-    model.space.stored_ids[a.pos...] = 0
+    abmspace(model).stored_ids[a.pos...] = 0
     return a
 end
 # `random_position` comes from `AbstractGridSpace` in spaces/grid_general.jl
 # move_agent! does not need be implemented.
 # The generic version at core/space_interaction_API.jl covers it.
 # `random_empty` comes from spaces/discrete.jl as long as we extend:
-Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = model.space.stored_ids[pos...] == 0
+Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = abmspace(model).stored_ids[pos...] == 0
 # And we also need to extend the iterator of empty positions
 function empty_positions(model::ABM{<:GridSpaceSingle})
-    Iterators.filter(i -> model.space.stored_ids[i...] == 0, positions(model))
+    Iterators.filter(i -> abmspace(model).stored_ids[i...] == 0, positions(model))
 end
 
 """
@@ -66,7 +66,7 @@ This is similar to [`ids_in_position`](@ref), but specialized for `GridSpaceSing
 See also [`isempty`](@ref).
 """
 function id_in_position(pos, model::ABM{<:GridSpaceSingle})
-    return model.space.stored_ids[pos...]
+    return abmspace(model).stored_ids[pos...]
 end
 
 
@@ -84,7 +84,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D}
     nindices = get_offset_indices(model, r)
-    stored_ids = model.space.stored_ids
+    stored_ids = abmspace(model).stored_ids
     space_size = size(stored_ids)
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
@@ -103,7 +103,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D}
     nindices = get_offset_indices(model, r)
-    stored_ids = model.space.stored_ids
+    stored_ids = abmspace(model).stored_ids
     space_size = size(stored_ids)
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks

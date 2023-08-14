@@ -335,7 +335,7 @@ using StableRNGs
         model = ABM(GridAgent{2}, space)
         add_agent!(model)
         r = 1.0
-        @test_throws ArgumentError randomwalk!(model.agents[1], model, r)
+        @test_throws ArgumentError randomwalk!(model[1], model, r)
 
         # chebyshev metric
         space = SpaceType((100,100), metric=:chebyshev)
@@ -343,14 +343,14 @@ using StableRNGs
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
-        randomwalk!(model.agents[1], model, r)
-        x₁ = model.agents[1].pos
+        randomwalk!(model[1], model, r)
+        x₁ = model[1].pos
         # chebyshev distance after the random step should be 1
         @test maximum(abs.(x₁ .- x₀)) == 1
         # for r < 1 the agent should not move
         r = 0.5
-        randomwalk!(model.agents[1], model, r)
-        @test model.agents[1].pos == x₁
+        randomwalk!(model[1], model, r)
+        @test model[1].pos == x₁
 
         # manhattan metric
         space = SpaceType((100,100), metric=:manhattan)
@@ -358,14 +358,14 @@ using StableRNGs
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
-        randomwalk!(model.agents[1], model, r)
-        x₁ = model.agents[1].pos
+        randomwalk!(model[1], model, r)
+        x₁ = model[1].pos
         # manhattan distance after the random step should be 1
         @test manhattan_distance(x₁, x₀, model) == 1
         # for r < 1 the agent should not move
         r = 0.5
-        randomwalk!(model.agents[1], model, r)
-        @test model.agents[1].pos == x₁
+        randomwalk!(model[1], model, r)
+        @test model[1].pos == x₁
 
         space = SpaceType((100,100), metric=:manhattan)
         model = ABM(GridAgent{2}, space)
@@ -376,28 +376,28 @@ using StableRNGs
         for β in offsets; add_agent!(pos.+β, model); end
         if SpaceType == GridSpaceSingle
             # agent 1 should not move since there are no available offsets
-            randomwalk!(model.agents[1], model, 1)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1)
+            @test model[1].pos == pos
             # the keyword ifempty should have no effect in a GridSpaceSingle
-            randomwalk!(model.agents[1], model, 1; ifempty=false)
-            @test model.agents[1].pos == pos
-            randomwalk!(model.agents[1], model, 1; ifempty=true)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1; ifempty=false)
+            @test model[1].pos == pos
+            randomwalk!(model[1], model, 1; ifempty=true)
+            @test model[1].pos == pos
         elseif SpaceType == GridSpace
             # if ifempty=true (default), agent 1 should not move since there are
             # no available offsets
-            randomwalk!(model.agents[1], model, 1)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1)
+            @test model[1].pos == pos
             # if ifempty=false, agent 1 will move and occupy
             # the same position as one of the other agents
-            randomwalk!(model.agents[1], model, 1; ifempty=false)
-            @test model.agents[1].pos ≠ pos
+            randomwalk!(model[1], model, 1; ifempty=false)
+            @test model[1].pos ≠ pos
             # 5 agents but only 4 unique positions
-            unique_pos = unique([a.second.pos for a in model.agents])
-            @test (length(model.agents)==5) && length(unique_pos)==4
-            move_agent!(model.agents[1], pos, model)
+            unique_pos = unique([a.pos for a in allagents(model)])
+            @test (nagents(model)==5) && length(unique_pos)==4
+            move_agent!(model[1], pos, model)
         end
-        agent_1, agent_2 = model.agents[1], model.agents[2]
+        agent_1, agent_2 = model[1], model[2]
         # agent 1 can't move to surronding cells since none is empty
         randomwalk!(agent_1, model, 1; force_motion=true)
         @test agent_1.pos == (50,50)

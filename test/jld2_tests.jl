@@ -4,8 +4,8 @@
 @testset "JLD2" begin
 
     function test_model_data(model, other)
-        @test (model.scheduler isa Function && model.scheduler == other.scheduler) || (!isa(model.scheduler, Function) && typeof(model.scheduler) == typeof(other.scheduler))
-        @test model.rng == other.rng
+        @test (abmscheduler(model) isa Function && abmscheduler(model) == other.scheduler) || (!isa(abmscheduler(model), Function) && typeof(abmscheduler(model)) == typeof(other.scheduler))
+        @test abmrng(model) == other.rng
         @test model.maxid.x == other.maxid.x
     end
 
@@ -68,8 +68,8 @@
         # model data
         test_model_data(model, other)
         # space data
-        @test typeof(model.space) == typeof(other.space)    # to check periodicity
-        test_space(model.space, other.space)
+        @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
+        test_space(abmspace(model), other.space)
         # pathfinder data
         test_astar(model.pathfinder, other.pathfinder)
     end
@@ -77,7 +77,7 @@
     @testset "No space" begin
         model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42))
         for i in 1:100
-            add_agent!(model, rand(model.rng))
+            add_agent!(model, rand(abmrng(model)))
         end
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2")
@@ -116,8 +116,8 @@
             # model data
             test_model_data(model, other)
             # space data
-            @test typeof(model.space) == typeof(other.space)    # to check periodicity
-            test_space(model.space, other.space)
+            @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
+            test_space(abmspace(model), other.space)
 
             rm("test.jld2")
         end
@@ -139,8 +139,8 @@
             # model data
             test_model_data(model, other)
             # space data
-            @test typeof(model.space) == typeof(other.space)    # to check periodicity
-            test_space(model.space, other.space)
+            @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
+            test_space(abmspace(model), other.space)
 
             rm("test.jld2")
         end
@@ -161,7 +161,7 @@
         )
 
         for i in 1:30
-            add_agent_pos!(Agent7(i, i % 10 + 1, rand(model.rng) < 0.5, rand(model.rng, Int)), model)
+            add_agent_pos!(Agent7(i, i % 10 + 1, rand(abmrng(model)) < 0.5, rand(abmrng(model), Int)), model)
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -181,10 +181,10 @@
         # model data
         test_model_data(model, other)
         # space data
-        @test model.space.graph == other.space.graph
-        @test length(model.space.stored_ids) == length(other.space.stored_ids)
-        @test all(length(model.space.stored_ids[pos]) == length(other.space.stored_ids[pos]) for pos in eachindex(model.space.stored_ids))
-        @test all(all(x in other.space.stored_ids[pos] for x in model.space.stored_ids[pos]) for pos in eachindex(model.space.stored_ids))
+        @test abmspace(model).graph == other.space.graph
+        @test length(abmspace(model).stored_ids) == length(other.space.stored_ids)
+        @test all(length(abmspace(model).stored_ids[pos]) == length(other.space.stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
+        @test all(all(x in other.space.stored_ids[pos] for x in abmspace(model).stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
 
         rm("test.jld2")
     end
@@ -285,7 +285,7 @@
         # model data
         test_model_data(model, other)
         # space data
-        test_space(model.space, other.space)
+        test_space(abmspace(model), other.space)
 
         rm("test.jld2")
     end
@@ -320,12 +320,12 @@
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)
-        @test sort(collect(keys(model.space.routes))) == sort(collect(keys(other.space.routes)))
-        @test all(model.space.routes[i].route == other.space.routes[i].route for i in keys(model.space.routes))
-        @test all(model.space.routes[i].start == other.space.routes[i].start for i in keys(model.space.routes))
-        @test all(model.space.routes[i].dest == other.space.routes[i].dest for i in keys(model.space.routes))
-        @test all(model.space.routes[i].return_route == other.space.routes[i].return_route for i in keys(model.space.routes))
-        @test all(model.space.routes[i].has_to_return == other.space.routes[i].has_to_return for i in keys(model.space.routes))
+        @test sort(collect(keys(abmspace(model).routes))) == sort(collect(keys(other.space.routes)))
+        @test all(abmspace(model).routes[i].route == other.space.routes[i].route for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].start == other.space.routes[i].start for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].dest == other.space.routes[i].dest for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].return_route == other.space.routes[i].return_route for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].has_to_return == other.space.routes[i].has_to_return for i in keys(abmspace(model).routes))
 
         rm("test.jld2")
     end
