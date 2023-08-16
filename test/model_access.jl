@@ -68,7 +68,7 @@ end
     model = ABM(Agent3, GridSpace((5,5)))
     @test Agents.agenttype(model) == Agent3
     @test Agents.spacetype(model) <: GridSpace
-    @test size(model.space) == (5,5)
+    @test size(abmspace(model)) == (5,5)
     @test all(isempty(p, model) for p in positions(model))
 end
 

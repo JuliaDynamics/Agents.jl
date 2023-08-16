@@ -284,7 +284,7 @@ using LinearAlgebra: norm, dot
     @testset "walk" begin
         # ContinuousSpace
         model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10); periodic = false))
-        a = add_agent!(SVector(0.0, 0.0), model, (0.0, 0.0), rand(model.rng))
+        a = add_agent!(SVector(0.0, 0.0), model, (0.0, 0.0), rand(abmrng(model)))
         walk!(a, SVector(1.0, 1.0), model)
         @test a.pos == SVector(1.0, 1.0)
         walk!(a, SVector(15.0, 1.0), model)
@@ -328,7 +328,7 @@ using LinearAlgebra: norm, dot
             for i in 1:10, j in 1:10
                     pos = SVector(i/10, j/10)
                 if i > 5
-                    vel = SVector(sincos(2π*rand(model.rng)) .* speed)
+                    vel = SVector(sincos(2π*rand(abmrng(model))) .* speed)
                     mass = 1.33
                 else
                     # these agents have infinite mass and 0 velocity. They are fixed.
@@ -346,7 +346,7 @@ using LinearAlgebra: norm, dot
             for (a1, a2) in ipairs
                 e = elastic_collision!(a1, a2, :mass)
                 if e
-                    model.properties[:c] += 1
+                    abmproperties(model)[:c] += 1
                 end
             end
         end

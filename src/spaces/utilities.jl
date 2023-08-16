@@ -22,9 +22,9 @@ sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 Example usage in the [Flocking model](@ref).
 """
 euclidean_distance(a::A, b::B, model::ABM,
-) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model.space)
+) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, abmspace(model))
 
-euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, model.space)
+euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, abmspace(model))
 
 function euclidean_distance(
     p1::ValidPos,
@@ -51,9 +51,9 @@ respecting periodic boundary conditions (if in use). Works with any space where 
 sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 """
 manhattan_distance(a::A, b::B, model::ABM
-) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model.space)
+) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, abmspace(model))
 
-manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, model.space)
+manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, abmspace(model))
 
 function manhattan_distance(
     p1::ValidPos,
@@ -77,7 +77,7 @@ end
 Return the direction vector from the position `from` to position `to` taking into account
 periodicity of the space.
 """
-get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
+get_direction(from, to, model::ABM) = get_direction(from, to, abmspace(model))
 
 function get_direction(
     from::ValidPos,

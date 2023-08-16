@@ -84,12 +84,12 @@ end
 # %% Implementation of space API
 #######################################################################################
 function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
-    push!(model.space.stored_ids[a.pos...], a.id)
+    push!(abmspace(model).stored_ids[a.pos...], a.id)
     return a
 end
 
 function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
-    prev = model.space.stored_ids[a.pos...]
+    prev = abmspace(model).stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
     return a
@@ -105,7 +105,7 @@ end
 # Instead, here we create a dedicated iterator for going over IDs.
 
 # We allow this to be used with space directly because it is reused in `ContinuousSpace`.
-nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r::Real = 1) = nearby_ids(pos, model.space, r)
+nearby_ids(pos::NTuple, model::ABM{<:GridSpace}, r::Real = 1) = nearby_ids(pos, abmspace(model), r)
 function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) where {D,P}
     nindices = offsets_within_radius(space, r)
     stored_ids = space.stored_ids
@@ -228,16 +228,16 @@ function nearby_ids(
     model::ABM{<:GridSpace},
     r::Vector{Tuple{Int64, UnitRange{Int64}}},
 )
-    @assert model.space.metric == :chebyshev
+    @assert abmspace(model).metric == :chebyshev
     dims = first.(r)
     vidx = []
-    for d in 1:ndims(model.space.stored_ids)
+    for d in 1:ndims(abmspace(model).stored_ids)
         idx = findall(dim -> dim == d, dims)
         dim_range = isempty(idx) ? Colon() :
-            bound_range(pos[d] .+ last(r[only(idx)]), d, model.space)
+            bound_range(pos[d] .+ last(r[only(idx)]), d, abmspace(model))
         push!(vidx, dim_range)
     end
-    s = view(model.space.stored_ids, vidx...)
+    s = view(abmspace(model).stored_ids, vidx...)
     Iterators.flatten(s)
 end
 
@@ -249,7 +249,7 @@ end
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
-ids_in_position(pos::ValidPos, model::ABM{<:GridSpace}) = ids_in_position(pos, model.space)
+ids_in_position(pos::ValidPos, model::ABM{<:GridSpace}) = ids_in_position(pos, abmspace(model))
 function ids_in_position(pos::ValidPos, space::GridSpace)
     return space.stored_ids[pos...]
 end

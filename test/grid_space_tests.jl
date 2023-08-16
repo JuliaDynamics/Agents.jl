@@ -200,30 +200,63 @@ using StableRNGs
         @testset "Random nearby" begin
             abm = ABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42))
             fill_space!(abm)
+            if SpaceType == GridSpace
+                fill_space!(abm)
+            end
+            # test random_id_in_position
+            if SpaceType == GridSpace
+                pos = abm[1].pos
+                valid_ids = ids_in_position(pos, abm)
+                random_id = random_id_in_position(pos, abm)
+                @test random_id in valid_ids
+                t_1(id) = id != abm[1].id
+                for alloc in (true, false)
+                    random_id = random_id_in_position(pos, abm, t_1, alloc)
+                    @test !isnothing(random_id) && random_id != abm[1].pos
+                end 
+            end
+            # test random_agent_in_position
+            if SpaceType == GridSpace
+                pos = abm[1].pos
+                valid_agents = agents_in_position(pos, abm)
+                random_a = random_agent_in_position(pos, abm)
+                @test random_a in valid_agents
+                t_2(a) = a != abm[1]
+                for alloc in (true, false)
+                    random_a = random_agent_in_position(pos, abm, t_2, alloc)
+                    @test !isnothing(random_a) && random_a != abm[1]
+                end 
+            end
             # test random_nearby_id
             nearby_id = random_nearby_id(abm[1], abm, 5)
             valid_ids = collect(nearby_ids(abm[1], abm, 5))
             @test nearby_id in valid_ids
             some_ids = valid_ids[1:3]
             f(id) = id in some_ids
-            filtered_nearby_id = random_nearby_id(abm[1], abm, 5, f)
-            @test filtered_nearby_id in some_ids
+            for alloc in (true, false)
+                filtered_nearby_id = random_nearby_id(abm[1], abm, 5, f, alloc)
+                @test filtered_nearby_id in some_ids
+            end
             # test random_nearby_position
             valid_positions = collect(nearby_positions(abm[1].pos, abm, 3))
             nearby_position = random_nearby_position(abm[1].pos, abm, 3)
             @test nearby_position in valid_positions
             some_positions = valid_positions[3:5]
             g(pos) = pos in some_positions
-            filtered_nearby_position = random_nearby_position(abm[1].pos, abm, 3, g)
-            @test filtered_nearby_position in some_positions
+            for alloc in (true, false)
+                filtered_nearby_position = random_nearby_position(abm[1].pos, abm, 3, g, alloc)
+                @test filtered_nearby_position in some_positions
+            end
             # test random_nearby_agent
             valid_agents = collect(nearby_agents(abm[1], abm, 2))
             nearby_agent = random_nearby_agent(abm[1], abm, 2)
             @test nearby_agent in valid_agents
             some_agents = valid_agents[2:4]
             h(agent) = agent in some_agents
-            filtered_nearby_agent = random_nearby_agent(abm[1], abm, 2, h)
-            @test filtered_nearby_agent in some_agents
+            for alloc in (true, false)
+                filtered_nearby_agent = random_nearby_agent(abm[1], abm, 2, h, alloc)
+                @test filtered_nearby_agent in some_agents
+            end
             # test methods after removal of all agents
             remove_all!(abm)
             a = add_agent!((1, 1), abm)
@@ -233,6 +266,7 @@ using StableRNGs
             add_agent!((2,1), abm)
             rand_nearby_ids = Set([random_nearby_id(a, abm, 2) for _ in 1:100])
             @test length(rand_nearby_ids) == 2
+
        end
     end
 
@@ -301,7 +335,7 @@ using StableRNGs
         model = ABM(GridAgent{2}, space)
         add_agent!(model)
         r = 1.0
-        @test_throws ArgumentError randomwalk!(model.agents[1], model, r)
+        @test_throws ArgumentError randomwalk!(model[1], model, r)
 
         # chebyshev metric
         space = SpaceType((100,100), metric=:chebyshev)
@@ -309,14 +343,14 @@ using StableRNGs
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
-        randomwalk!(model.agents[1], model, r)
-        x₁ = model.agents[1].pos
+        randomwalk!(model[1], model, r)
+        x₁ = model[1].pos
         # chebyshev distance after the random step should be 1
         @test maximum(abs.(x₁ .- x₀)) == 1
         # for r < 1 the agent should not move
         r = 0.5
-        randomwalk!(model.agents[1], model, r)
-        @test model.agents[1].pos == x₁
+        randomwalk!(model[1], model, r)
+        @test model[1].pos == x₁
 
         # manhattan metric
         space = SpaceType((100,100), metric=:manhattan)
@@ -324,14 +358,14 @@ using StableRNGs
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
-        randomwalk!(model.agents[1], model, r)
-        x₁ = model.agents[1].pos
+        randomwalk!(model[1], model, r)
+        x₁ = model[1].pos
         # manhattan distance after the random step should be 1
         @test manhattan_distance(x₁, x₀, model) == 1
         # for r < 1 the agent should not move
         r = 0.5
-        randomwalk!(model.agents[1], model, r)
-        @test model.agents[1].pos == x₁
+        randomwalk!(model[1], model, r)
+        @test model[1].pos == x₁
 
         space = SpaceType((100,100), metric=:manhattan)
         model = ABM(GridAgent{2}, space)
@@ -342,28 +376,28 @@ using StableRNGs
         for β in offsets; add_agent!(pos.+β, model); end
         if SpaceType == GridSpaceSingle
             # agent 1 should not move since there are no available offsets
-            randomwalk!(model.agents[1], model, 1)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1)
+            @test model[1].pos == pos
             # the keyword ifempty should have no effect in a GridSpaceSingle
-            randomwalk!(model.agents[1], model, 1; ifempty=false)
-            @test model.agents[1].pos == pos
-            randomwalk!(model.agents[1], model, 1; ifempty=true)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1; ifempty=false)
+            @test model[1].pos == pos
+            randomwalk!(model[1], model, 1; ifempty=true)
+            @test model[1].pos == pos
         elseif SpaceType == GridSpace
             # if ifempty=true (default), agent 1 should not move since there are
             # no available offsets
-            randomwalk!(model.agents[1], model, 1)
-            @test model.agents[1].pos == pos
+            randomwalk!(model[1], model, 1)
+            @test model[1].pos == pos
             # if ifempty=false, agent 1 will move and occupy
             # the same position as one of the other agents
-            randomwalk!(model.agents[1], model, 1; ifempty=false)
-            @test model.agents[1].pos ≠ pos
+            randomwalk!(model[1], model, 1; ifempty=false)
+            @test model[1].pos ≠ pos
             # 5 agents but only 4 unique positions
-            unique_pos = unique([a.second.pos for a in model.agents])
-            @test (length(model.agents)==5) && length(unique_pos)==4
-            move_agent!(model.agents[1], pos, model)
+            unique_pos = unique([a.pos for a in allagents(model)])
+            @test (nagents(model)==5) && length(unique_pos)==4
+            move_agent!(model[1], pos, model)
         end
-        agent_1, agent_2 = model.agents[1], model.agents[2]
+        agent_1, agent_2 = model[1], model[2]
         # agent 1 can't move to surronding cells since none is empty
         randomwalk!(agent_1, model, 1; force_motion=true)
         @test agent_1.pos == (50,50)

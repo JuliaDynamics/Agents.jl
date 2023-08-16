@@ -45,7 +45,7 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(model.space, r::Real)
+offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r::Real)
 function offsets_within_radius(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
     r₀ = floor(Int, r)
@@ -64,7 +64,7 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(model.space, r::Real)
+offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r::Real)
 function offsets_at_radius(
     space::AbstractGridSpace{D}, r::Real
 )::Vector{NTuple{D, Int}} where {D}
@@ -102,11 +102,11 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
-    Tuple(rand(model.rng, CartesianIndices(model.space.stored_ids)))
+    Tuple(rand(abmrng(model), CartesianIndices(abmspace(model).stored_ids)))
 end
 
 offsets_within_radius_no_0(model::ABM, r::Real) =
-    offsets_within_radius_no_0(model.space, r::Real)
+    offsets_within_radius_no_0(abmspace(model), r::Real)
 function offsets_within_radius_no_0(
     space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
     r₀ = floor(Int, r)
@@ -126,7 +126,7 @@ end
 # we want to be able to re-use it in `ContinuousSpace`, so we allow it to either
 # find positions with the 0 or without.
 function nearby_positions(pos::ValidPos, model::ABM{<:AbstractGridSpace}, args::Vararg{Any, N}) where {N}
-    return nearby_positions(pos, model.space, args...)
+    return nearby_positions(pos, abmspace(model), args...)
 end
 function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,false}, r = 1,
@@ -159,8 +159,8 @@ function nearby_positions(
 end
 
 function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
-    nindices = offsets_within_radius_no_0(model.space, r)
-    stored_ids = model.space.stored_ids
+    nindices = offsets_within_radius_no_0(abmspace(model), r)
+    stored_ids = abmspace(model).stored_ids
     rng = abmrng(model)
     while true
         chosen_offset = rand(rng, nindices)
@@ -170,8 +170,8 @@ function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,
 end
 
 function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}, r=1; kwargs...) where {D}
-    nindices = offsets_within_radius_no_0(model.space, r)
-    stored_ids = model.space.stored_ids
+    nindices = offsets_within_radius_no_0(abmspace(model), r)
+    stored_ids = abmspace(model).stored_ids
     chosen_offset = rand(abmrng(model), nindices)
     chosen_pos = pos .+ chosen_offset
     checkbounds(Bool, stored_ids, chosen_pos...) && return chosen_pos

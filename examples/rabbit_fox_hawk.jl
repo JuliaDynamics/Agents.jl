@@ -147,7 +147,7 @@ function initialize_model(
                 nextid(model), ## Using `nextid` prevents us from having to manually keep track
                                ## of animal IDs
                 random_walkable(model, model.landfinder),
-                rand(model.rng, Δe_grass:2Δe_grass),
+                rand(abmrng(model), Δe_grass:2Δe_grass),
             ),
             model,
         )
@@ -157,7 +157,7 @@ function initialize_model(
             Fox(
                 nextid(model),
                 random_walkable(model, model.landfinder),
-                rand(model.rng, Δe_rabbit:2Δe_rabbit),
+                rand(abmrng(model), Δe_rabbit:2Δe_rabbit),
             ),
             model,
         )
@@ -167,7 +167,7 @@ function initialize_model(
             Hawk(
                 nextid(model),
                 random_walkable(model, model.airfinder),
-                rand(model.rng, Δe_rabbit:2Δe_rabbit),
+                rand(abmrng(model), Δe_rabbit:2Δe_rabbit),
             ),
             model,
         )
@@ -254,7 +254,7 @@ function rabbit_step!(rabbit, model)
 
     ## Reproduce with a random probability, scaling according to the time passed each
     ## step
-    rand(model.rng) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
+    rand(abmrng(model)) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
 
     ## If the rabbit isn't already moving somewhere, move to a random spot
     if is_stationary(rabbit, model.landfinder)
@@ -275,7 +275,7 @@ function fox_step!(fox, model)
     ## Look for nearby rabbits that can be eaten
     food = [x for x in nearby_agents(fox, model) if x.type == :rabbit]
     if !isempty(food)
-        remove_agent!(rand(model.rng, food), model, model.landfinder)
+        remove_agent!(rand(abmrng(model), food), model, model.landfinder)
         fox.energy += model.Δe_rabbit
     end
 
@@ -290,7 +290,7 @@ function fox_step!(fox, model)
     end
 
     ## Random chance to reproduce every step
-    rand(model.rng) <= model.fox_repr * model.dt && reproduce!(fox, model)
+    rand(abmrng(model)) <= model.fox_repr * model.dt && reproduce!(fox, model)
 
     ## If the fox isn't already moving somewhere
     if is_stationary(fox, model.landfinder)
@@ -305,7 +305,7 @@ function fox_step!(fox, model)
             )
         else
             ## Move toward a random rabbit
-            plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
+            plan_route!(fox, rand(abmrng(model), map(x -> x.pos, prey)), model.landfinder)
         end
     end
 
@@ -320,7 +320,7 @@ function hawk_step!(hawk, model)
     food = [x for x in nearby_agents(hawk, model) if x.type == :rabbit]
     if !isempty(food)
         ## Eat (remove) the rabbit
-        remove_agent!(rand(model.rng, food), model, model.airfinder)
+        remove_agent!(rand(abmrng(model), food), model, model.airfinder)
         hawk.energy += model.Δe_rabbit
         ## Fly back up
         plan_route!(hawk, hawk.pos .+ (0., 0., 7.), model.airfinder)
@@ -334,7 +334,7 @@ function hawk_step!(hawk, model)
         return
     end
 
-    rand(model.rng) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
+    rand(abmrng(model)) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
 
     if is_stationary(hawk, model.airfinder)
         prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if x.type == :rabbit]
@@ -345,7 +345,7 @@ function hawk_step!(hawk, model)
                 model.airfinder,
             )
         else
-            plan_route!(hawk, rand(model.rng, map(x -> x.pos, prey)), model.airfinder)
+            plan_route!(hawk, rand(abmrng(model), map(x -> x.pos, prey)), model.airfinder)
         end
     end
 
@@ -371,7 +371,7 @@ function model_step!(model)
     )
     ## Grass regrows with a random probability, scaling with the amount of time passing
     ## each step of the model
-    growable .= rand(model.rng, length(growable)) .< model.regrowth_chance * model.dt
+    growable .= rand(abmrng(model), length(growable)) .< model.regrowth_chance * model.dt
 end
 
 # ## Visualization

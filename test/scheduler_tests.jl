@@ -8,8 +8,8 @@
     for i in 1:N
         add_agent!(model)
     end
-    @test sort!(collect(keys(model.agents))) == 1:N
-    @test model.scheduler(model) == 1:N
+    @test sort!(collect(allids(model))) == 1:N
+    @test abmscheduler(model)(model) == 1:N
 
     # fastest
     Random.seed!(12)
@@ -17,15 +17,15 @@
     for i in 1:N
         add_agent!(model)
     end
-    @test sort!(collect(model.scheduler(model))) == 1:N
+    @test sort!(collect(abmscheduler(model)(model))) == 1:N
 
     # random
     model = ABM(Agent0; scheduler = Schedulers.randomly, rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
-    fastest_order = collect(keys(model.agents))[1:3]
-    @test model.scheduler(model)[1:3] != fastest_order
+    fastest_order = collect(allids(model))[1:3]
+    @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
     model = ABM(Agent0; scheduler = Schedulers.partially(0.1), rng = StableRNG(12))
@@ -33,20 +33,20 @@
         add_agent!(model)
     end
 
-    a = model.scheduler(model)
+    a = abmscheduler(model)(model)
     @test length(a) <= N/10
 
     # by property
     model = ABM(Agent2; scheduler = Schedulers.by_property(:weight))
     for i in 1:N
-        add_agent!(model, rand(model.rng) / rand(model.rng))
+        add_agent!(model, rand(abmrng(model)) / rand(abmrng(model)))
     end
 
     Random.seed!(12)
-    a = model.scheduler(model)
+    a = abmscheduler(model)(model)
 
-    ids = collect(keys(model.agents))
-    properties = [model.agents[id].weight for id in ids]
+    ids = collect(allids(model))
+    properties = [model[id].weight for id in ids]
 
     @test ids[sortperm(properties)] == a
 end
@@ -93,17 +93,17 @@ end
 @testset "Mixed Scheduler" begin
     # standard scheduler
     model = init_mixed_model()
-    @test sort!(collect(model.scheduler(model))) == 1:12
+    @test sort!(collect(abmscheduler(model)(model))) == 1:12
 
     # shuffling types scheduler
     Random.seed!(12)
     model = init_mixed_model(scheduler = Schedulers.by_type(true, false))
-    s1 = model.scheduler(model)
-    s2 = model.scheduler(model)
+    s1 = abmscheduler(model)(model)
+    s2 = abmscheduler(model)(model)
     @test unique([typeof(model[id]) for id in s1]) != unique([typeof(model[id]) for id in s2])
-    @test count(model[id] isa Agent2 for id in model.scheduler(model)) == 3
+    @test count(model[id] isa Agent2 for id in abmscheduler(model)(model)) == 3
     c = begin
-        x = 0; s = model.scheduler(model)
+        x = 0; s = abmscheduler(model)(model)
         x += count(a -> a == Agent0, typeof(model[id]) for id in s)
         x += count(a -> a == Agent1, typeof(model[id]) for id in s)
         x += count(a -> a == Agent2, typeof(model[id]) for id in s)
@@ -114,15 +114,15 @@ end
     # NOT shuffling types scheduler
     Random.seed!(12)
     model = init_mixed_model(scheduler = Schedulers.by_type(false, false))
-    s1 = model.scheduler(model)
-    s2 = model.scheduler(model)
+    s1 = abmscheduler(model)(model)
+    s2 = abmscheduler(model)(model)
     @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
     # Not shuffling types, but shuffling agents
     Random.seed!(12)
     model = init_mixed_model(scheduler = Schedulers.by_type(false, true))
-    s1 = model.scheduler(model)
-    s2 = model.scheduler(model)
+    s1 = abmscheduler(model)(model)
+    s2 = abmscheduler(model)(model)
     @test [typeof(model[id]) for id in s1] == [typeof(model[id]) for id in s2]
     # here we actually check whether agents of same type are shuffled
     @test model[s1[1]].id ≠ model[s2[1]] || model[s1[2]].id ≠ model[s2[2]]
@@ -139,7 +139,7 @@ end
         a0 = Agent0(id)
         add_agent!(a0, model)
     end
-    s = model.scheduler(model)
+    s = abmscheduler(model)(model)
     @test [typeof(model[id]) for id in s] ==
           [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
     @test all(x -> x < 4, s[1:3])
@@ -154,7 +154,7 @@ end
     function (ms::MyScheduler)(model::ABM)
         ms.n += 1 # increment internal counter by 1 for each step
         if ms.n < 5
-            return keys(model.agents) # order doesn't matter in this case
+            return allids(model) # order doesn't matter in this case
         else
             ids = collect(allids(model))
             # filter all ids whose agents have `w` less than some amount
@@ -171,7 +171,7 @@ end
         add_agent!(model, w)
     end
     for i in 1:10
-        ids = sort!(collect(model.scheduler(model)))
+        ids = sort!(collect(abmscheduler(model)(model)))
         if i < 5
             @test ids == 1:10
         else
@@ -188,16 +188,16 @@ end
     for i in 1:N
         add_agent!(model)
     end
-    @test sort!(collect(keys(model.agents))) == 1:N
-    @test model.scheduler(model) == 1:N
+    @test sort!(collect(allids(model))) == 1:N
+    @test abmscheduler(model)(model) == 1:N
 
     # random
     model = ABM(Agent0; scheduler = Schedulers.Randomly(), rng = StableRNG(12))
     for i in 1:N
         add_agent!(model)
     end
-    fastest_order = collect(keys(model.agents))[1:3]
-    @test model.scheduler(model)[1:3] != fastest_order
+    fastest_order = collect(allids(model))[1:3]
+    @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
     model = ABM(Agent0; scheduler = Schedulers.Partially(0.1), rng = StableRNG(12))
@@ -205,20 +205,20 @@ end
         add_agent!(model)
     end
 
-    a = model.scheduler(model)
+    a = abmscheduler(model)(model)
     @test length(a) <= N/10
 
     # by property
     model = ABM(Agent2; scheduler = Schedulers.ByProperty(:weight))
     for i in 1:N
-        add_agent!(model, rand(model.rng) / rand(model.rng))
+        add_agent!(model, rand(abmrng(model)) / rand(abmrng(model)))
     end
 
     Random.seed!(12)
-    a = collect(model.scheduler(model))
+    a = collect(abmscheduler(model)(model))
 
-    ids = collect(keys(model.agents))
-    properties = [model.agents[id].weight for id in ids]
+    ids = collect(allids(model))
+    properties = [model[id].weight for id in ids]
 
     @test ids[sortperm(properties)] == a
 
@@ -252,19 +252,19 @@ end
 
     # standard scheduler
     model = init_mixed_model2()
-    @test sort!(collect(model.scheduler(model))) == 1:12
+    @test sort!(collect(abmscheduler(model)(model))) == 1:12
 
     # shuffling types scheduler
     Random.seed!(12)
     model = init_mixed_model2(scheduler = Schedulers.ByType(true, false, Union{Agent0,Agent1,Agent2,Agent3}))
-    s1 = model.scheduler(model)
+    s1 = abmscheduler(model)(model)
     s1_types = unique([typeof(model[x]) for x in s1])
-    s2 = model.scheduler(model)
+    s2 = abmscheduler(model)(model)
     s2_types = unique([typeof(model[x]) for x in s2])
     @test s1_types != s2_types
-    @test count(model[id] isa Agent2 for id in model.scheduler(model)) == 3
+    @test count(model[id] isa Agent2 for id in abmscheduler(model)(model)) == 3
     c = begin
-        x = 0; s = model.scheduler(model)
+        x = 0; s = abmscheduler(model)(model)
         x += count(a -> a == Agent0, typeof(model[id]) for id in s)
         x += count(a -> a == Agent1, typeof(model[id]) for id in s)
         x += count(a -> a == Agent2, typeof(model[id]) for id in s)
@@ -275,15 +275,15 @@ end
     # NOT shuffling types scheduler
     Random.seed!(12)
     model = init_mixed_model2(scheduler = Schedulers.ByType(false, false, Union{Agent0,Agent1,Agent2,Agent3}))
-    s1 = model.scheduler(model)
-    s2 = model.scheduler(model)
+    s1 = abmscheduler(model)(model)
+    s2 = abmscheduler(model)(model)
     @test unique([typeof(model[id]) for id in s1]) == unique([typeof(model[id]) for id in s2])
 
     # Not shuffling types, but shuffling agents
     Random.seed!(12)
     model = init_mixed_model2(scheduler = Schedulers.ByType(false, true, Union{Agent0,Agent1,Agent2,Agent3}))
-    s1 = collect(model.scheduler(model))
-    s2 = collect(model.scheduler(model))
+    s1 = collect(abmscheduler(model)(model))
+    s2 = collect(abmscheduler(model)(model))
     @test [typeof(model[id]) for id in s1] == [typeof(model[id]) for id in s2]
     # here we actually check whether agents of same type are shuffled
     @test model[s1[1]].id ≠ model[s2[1]] || model[s1[2]].id ≠ model[s2[2]]
@@ -300,7 +300,7 @@ end
         a0 = Agent0(id)
         add_agent!(a0, model)
     end
-    s = collect(model.scheduler(model))
+    s = collect(abmscheduler(model)(model))
     @test [typeof(model[id]) for id in s] ==
             [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
     @test all(x -> x < 4, s[1:3])

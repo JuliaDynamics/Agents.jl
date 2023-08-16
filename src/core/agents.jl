@@ -228,9 +228,8 @@ macro agent(new_name, base_type, super_type, extra_fields)
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
             expr = quote
-                # Also notice that we escape supertype and interpolate it twice
-                # because this is expected to already be defined in the calling module
-                @kwdef mutable struct $name <: $$(esc(super_type))
+                # Also notice that we quote supertype and interpolate it twice
+                @kwdef mutable struct $name <: $$(QuoteNode(super_type))
                     $(base_fields...)
                     $(additional_fields...)
                 end

@@ -9,7 +9,7 @@
     function hk(; numagents = 100, ϵ = 0.2)
         model = ABM(HKAgent, scheduler = Schedulers.fastest, properties = Dict(:ϵ => ϵ))
         for i in 1:numagents
-            o = rand(model.rng)
+            o = rand(abmrng(model))
             add_agent!(model, o, o, -1)
         end
         return model
