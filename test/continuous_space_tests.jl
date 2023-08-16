@@ -107,6 +107,51 @@ using LinearAlgebra: norm, dot
         @test model[1].pos == y
         walk!(model[1], model[1].vel, model)
         @test model[1].pos == y .+ model[1].vel
+
+        ## random walks
+        ≃(x,y) = isapprox(x, y; atol = 1e-12) # \simeq
+        space = ContinuousSpace((10,10), periodic=true)
+        model = ABM(TupleManualAgent, space)
+        x₀ = (5.0, 5.0)
+        v₀ = (1.0, 0.0)
+        add_agent!(x₀, model, v₀)
+        r = 2.0
+        randomwalk!(model[1], model, r)
+        # distance between initial and new position should be r
+        @test norm(model[1].pos .- x₀) ≃ r
+        # velocity module remains equal to previous r
+        randomwalk!(model[1], model)
+        @test norm(model[1].vel) ≃ r
+        # verify that reorientations obey the specified angles
+        space = ContinuousSpace((10,10), periodic=true)
+        model = ABM(TupleManualAgent, space)
+        x₀ = (5.0, 5.0)
+        v₀ = (1.0, 0.0)
+        add_agent!(x₀, model, v₀)
+        r = 1.0
+        polar = [π/2] # degenerate distribution, only π/2 reorientations
+        v₁ = (0.0, 1.0) # π/2
+        x₁ = x₀ .+ v₁
+        randomwalk!(model[1], model, r; polar)
+        @test all(model[1].vel .≃ v₁)
+        @test all(model[1].pos .≃ x₁)
+
+        # verify boundary conditions are respected
+        space1 = ContinuousSpace((2,2), periodic=true)
+        space2 = ContinuousSpace((2,2), periodic=false)
+        model1 = ABM(TupleManualAgent, space1)
+        model2 = ABM(TupleManualAgent, space2)
+        x₀ = (1.0, 1.0)
+        v₀ = (1.0, 0.0)
+        add_agent!(x₀, model1, v₀)
+        add_agent!(x₀, model2, v₀)
+        r = 1.1
+        polar = [0.0] # no reorientation, move straight
+        randomwalk!(model1[1], model1, r; polar)
+        randomwalk!(model2[1], model2, r; polar)
+        @test model1[1].pos[1] ≈ 0.1
+        @test model2[1].pos[1] ≈ 2.0
+        @test norm(model1[1].vel) == 1.1
     end
 
     @testset "nearby ids" begin
