@@ -152,12 +152,12 @@ end
 
 function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}) where {D}
     discrete_pos = Tuple(rand(
-        model.rng,
+        abmrng(model),
         filter(x -> pathfinder.walkmap[x], CartesianIndices(pathfinder.walkmap))
     ))
-    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
+    half_cell_size = abmspace(model).extent ./ size(pathfinder.walkmap) ./ 2.
     return to_continuous_position(discrete_pos, pathfinder) .+
-        Tuple(rand(model.rng, D) .- 0.5) .* half_cell_size
+        Tuple(rand(abmrng(model), D) .- 0.5) .* half_cell_size
 end
 
 walkable_cells_in_radius(pos, r, pathfinder::AStar{D,false}) where {D} =
@@ -194,16 +194,16 @@ function random_walkable(
     options = collect(walkable_cells_in_radius(discrete_pos, discrete_r, pathfinder))
     isempty(options) && return pos
     discrete_rand = rand(
-        model.rng,
+        abmrng(model),
         options
     )
-    half_cell_size = model.space.extent ./ size(pathfinder.walkmap) ./ 2.
+    half_cell_size = abmspace(model).extent ./ size(pathfinder.walkmap) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
-        (T(rand(model.rng) for _ in 1:D) .- 0.5) .* half_cell_size
+        (T(rand(abmrng(model)) for _ in 1:D) .- 0.5) .* half_cell_size
     dist = euclidean_distance(pos, cts_rand, model)
     dist > r && (cts_rand = mod1.(
         pos .+ get_direction(pos, cts_rand, model) ./ dist .* r,
-        model.space.extent
+        abmspace(model).extent
     ))
     return cts_rand
 end

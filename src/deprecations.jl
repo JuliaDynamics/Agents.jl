@@ -38,12 +38,12 @@ This functionality is deprecated. Use [`randomwalk!`](@ref) instead.
 """
 function walk!(agent, ::typeof(rand), model::ABM{<:AbstractGridSpace{D}}; kwargs...) where {D}
     @warn "Producing random walks through `walk!` is deprecated. Use `randomwalk!` instead."
-    walk!(agent, Tuple(rand(model.rng, -1:1, D)), model; kwargs...)
+    walk!(agent, Tuple(rand(abmrng(model), -1:1, D)), model; kwargs...)
 end
 
 function walk!(agent, ::typeof(rand), model::ABM{<:ContinuousSpace{D}}) where {D}
     @warn "Producing random walks through `walk!` is deprecated. Use `randomwalk!` instead."
-    walk!(agent, Tuple(2.0 * rand(model.rng) - 1.0 for _ in 1:D), model)
+    walk!(agent, Tuple(2.0 * rand(abmrng(model)) - 1.0 for _ in 1:D), model)
 end
 
 # Fixed mass

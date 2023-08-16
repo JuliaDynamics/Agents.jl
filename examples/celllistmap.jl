@@ -181,7 +181,7 @@ end
 # structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
-    dt = model.properties.dt
+    dt = abmproperties(model).dt
     ## Retrieve the forces on agent id
     f = model.system.forces[id]
     a = f / agent.mass

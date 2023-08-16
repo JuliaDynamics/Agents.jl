@@ -330,7 +330,7 @@ nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
 
 """
-    random_nearby_id(agent, model::ABM, r = 1, f = nothing; kwargs...) → id
+    random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
 Return the `id` of a random agent near the position of the given `agent` using an optimized
 algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
 Return `nothing` if no agents are nearby.
@@ -338,55 +338,83 @@ Return `nothing` if no agents are nearby.
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
-the function returns `true`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby id satisfies `f`.
+
+For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
+position.
 """
-function random_nearby_id(a, model, r = 1, f = nothing; kwargs...)
+function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
         return resorvoir_sampling_single(iter, model)
     else
-        return sampling_with_condition_single(iter, f, model)
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
+        else
+            iter_filtered = Iterators.filter(id -> f(id), iter)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end
     end
 end
 
 """
-    random_nearby_agent(agent, model::ABM, r = 1, f = nothing; kwargs...) → agent
+    random_nearby_agent(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → agent
 Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
-the function returns `true`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby agent satisfies `f`.
+
+For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a random agent at a given 
+position.
 """
-function random_nearby_agent(a, model, r = 1, f = nothing; kwargs...)
+function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     if isnothing(f)
         id = random_nearby_id(a, model, r; kwargs...)
         isnothing(id) && return nothing
         return model[id]
     else
-        iter = nearby_ids(a, model, r; kwargs...)
-        return sampling_with_condition_agents_single(iter, f, model)
+        iter_ids = nearby_ids(a, model, r; kwargs...)
+        if alloc
+            return sampling_with_condition_agents_single(iter_ids, f, model)
+        else
+            iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
+            id = resorvoir_sampling_single(iter_filtered, model)
+            isnothing(id) && return nothing
+            return model[id]
+        end
     end
 end
 
 """
-    random_nearby_position(position, model::ABM, r=1, f = nothing; kwargs...) → position
+    random_nearby_position(position, model::ABM, r=1, f = nothing, alloc = false; kwargs...) → position
 Return a random position near the given `position`.
 Return `nothing` if the space doesn't allow for nearby positions.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
 A filter function `f(pos)` can be passed so that to restrict the sampling on only those positions for which
-the function returns `true`. In this case `nothing` is also returned if no nearby position
-satisfies `f`.
+the function returns `true`. The argument `alloc` can be used if the filtering condition 
+is expensive since in this case the allocating version can be more performant. 
+`nothing` is returned if no nearby position satisfies `f`.
 """
-function random_nearby_position(pos, model, r=1, f = nothing; kwargs...)
+function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
         return resorvoir_sampling_single(iter, model)
     else
-        return sampling_with_condition_single(iter, f, model)
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
+        else
+            iter_filtered = Iterators.filter(pos -> f(pos), iter)
+            return resorvoir_sampling_single(iter_filtered, model)
+        end    
     end
 end
 
@@ -427,11 +455,11 @@ end
 # Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
 function resorvoir_sampling_single(iter, model)
     res = iterate(iter)
-    isnothing(res) && return nothing  # `iterate` returns `nothing` when it ends
+    isnothing(res) && return nothing                       # `iterate` returns `nothing` when it ends
     rng = abmrng(model)
-    w = max(rand(rng), eps())         # rand returns in range [0,1)
+    w = rand(rng)
     while true
-        choice, state = res           # random position to return, and the state of the iterator
+        choice, state = res                                # random position to return, and the state of the iterator
         skip_counter = floor(log(rand(rng)) / log(1 - w))  # skip entries in the iterator
         while skip_counter != 0
             skip_res = iterate(iter, state)
@@ -441,6 +469,6 @@ function resorvoir_sampling_single(iter, model)
         end
         res = iterate(iter, state)
         isnothing(res) && return choice
-        w *= max(rand(rng), eps())
+        w *= rand(rng)
     end
 end

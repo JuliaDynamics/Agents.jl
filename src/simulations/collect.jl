@@ -426,7 +426,7 @@ function multi_agent_types!(
 end
 
 function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
-    alla = sort!(collect(values(model.agents)), by = a -> a.id)
+    alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
     dd[!, :id] = map(a -> a.id, alla)
@@ -629,7 +629,7 @@ function init_model_dataframe(model::ABM, properties::Vector)
     types[1] = Int[]
     for (i, k) in enumerate(properties)
         types[i+1] = if typeof(k) <: Symbol
-            current_props = model.properties
+            current_props = abmproperties(model)
             # How the properties are accessed depends on the type
             if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
                 typeof(current_props[k])[]

@@ -56,7 +56,7 @@ function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
 end
 
 function diffuse_temperature!(pos::Dims{2}, model::DaisyWorld)
-    ratio = get(model.properties, :ratio, 0.5)
+    ratio = get(abmproperties(model), :ratio, 0.5)
     ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land) / 8
     land = model[ids_in_position(pos, model)[1]]
@@ -69,7 +69,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand(model.rng) < seed_threshold
+        if rand(abmrng(model)) < seed_threshold
             filter_place_daisy(pos) = length(ids_in_position(pos, model)) == 1
             seeding_place = random_nearby_position(pos, model, 1, filter_place_daisy)
             if !isnothing(seeding_place)
@@ -149,14 +149,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
+        wd = Daisy(nextid(model), wp, :white, rand(abmrng(model), 0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
+        wd = Daisy(nextid(model), bp, :black, rand(abmrng(model), 0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 

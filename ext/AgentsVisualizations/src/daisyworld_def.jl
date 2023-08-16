@@ -34,7 +34,7 @@ function propagate!(pos, model::DaisyWorld)
     daisy = model[id_in_position(pos, model)]
     temperature = model.temperature[pos...]
     seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-    if rand(model.rng) < seed_threshold
+    if rand(abmrng(model)) < seed_threshold
         empty_near_pos = random_nearby_position(pos, model, 1, npos -> isempty(npos, model))
         if !isnothing(empty_near_pos)
             add_agent!(empty_near_pos, model, daisy.breed, 0, daisy.albedo)
@@ -100,14 +100,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
+        wd = Daisy(nextid(model), wp, :white, rand(abmrng(model), 0:max_age), albedo_white)
         add_agent_pos!(wd, model)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
+        wd = Daisy(nextid(model), bp, :black, rand(abmrng(model), 0:max_age), albedo_black)
         add_agent_pos!(wd, model)
     end
 
