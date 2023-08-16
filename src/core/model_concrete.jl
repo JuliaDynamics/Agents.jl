@@ -176,7 +176,7 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
         elseif space_type <: ContinuousSpace || space_type <: ContinuousSpace
             if pos_type <: NTuple{D,<:AbstractFloat} where {D}
                 if warn
-                    @warn "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Please consider using `SVector` instead."
+                    @warn "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Use `SVector` instead."
                 end
             elseif !(pos_type <: SVector{D,<:AbstractFloat} where {D})
                 throw(ArgumentError("`pos` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
