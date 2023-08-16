@@ -109,6 +109,14 @@ end
 distance_from_cell_center(pos, model::ABM) =
     euclidean_distance(pos, cell_center(pos, model), model)
 
+
+# required for backward compatibility with NTuples in ContinuousSpace
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{Any, N};
+    kwargs...) where {N,S<:ContinuousSpace}
+    T = (; zip(fieldnames(A), fieldtypes(A))...)[:pos]
+    add_agent!(T(random_position(model)), A, model, properties...; kwargs...)
+end
+
 function add_agent_to_space!(
     a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
     push!(abmspace(model).grid.stored_ids[cell_index...], a.id)

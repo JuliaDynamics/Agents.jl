@@ -99,9 +99,8 @@ using LinearAlgebra: norm, dot
         move_agent!(model[1], model, dt)
         @test model[1].pos == x .+ v.*dt
         model = ABM(TupleManualAgent, space; warn=false)
-        # generates SVector position, cannot convert to NTuple
-        @test_broken add_agent!(model, v)
-        add_agent!(x, model, v)
+        add_agent!(model, v)
+        @test model[1].pos isa NTuple && model[1].vel == v
         y = (0.5, 0.2)
         move_agent!(model[1], y, model)
         @test model[1].pos == y
