@@ -96,9 +96,8 @@ using LinearAlgebra: norm, dot
         add_agent!(x, model, v)
         @test model[1].pos == x
         @test model[1].vel == v
-        # normalize_position (in walk!) enforces SVector, cannot convert to NTuple
-        @test_broken move_agent!(model[1], model, dt)
-        #@test model[1].pos == x .+ v.*dt
+        move_agent!(model[1], model, dt)
+        @test model[1].pos == x .+ v.*dt
         model = ABM(TupleManualAgent, space)
         # generates SVector position, cannot convert to NTuple
         @test_broken add_agent!(model, v)
@@ -106,8 +105,8 @@ using LinearAlgebra: norm, dot
         y = (0.5, 0.2)
         move_agent!(model[1], y, model)
         @test model[1].pos == y
-        # normalize_position enforces SVector
-        @test_broken walk!(model[1], model[1].vel, model)
+        walk!(model[1], model[1].vel, model)
+        @test model[1].pos == y .+ model[1].vel
     end
 
     @testset "nearby ids" begin
