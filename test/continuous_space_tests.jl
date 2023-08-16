@@ -89,7 +89,7 @@ using LinearAlgebra: norm, dot
             :warn,
             "`vel` field in agent type should be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."
         ) ABM(TupleManualAgent, space)
-        model = ABM(TupleManualAgent, space)
+        model = ABM(TupleManualAgent, space; warn=false)
         x = (0.0, 0.0)
         v = (0.1, 0.0)
         dt = 1.0
@@ -98,7 +98,7 @@ using LinearAlgebra: norm, dot
         @test model[1].vel == v
         move_agent!(model[1], model, dt)
         @test model[1].pos == x .+ v.*dt
-        model = ABM(TupleManualAgent, space)
+        model = ABM(TupleManualAgent, space; warn=false)
         # generates SVector position, cannot convert to NTuple
         @test_broken add_agent!(model, v)
         add_agent!(x, model, v)
@@ -111,7 +111,7 @@ using LinearAlgebra: norm, dot
         ## random walks
         ≃(x,y) = isapprox(x, y; atol = 1e-12) # \simeq
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space)
+        model = ABM(TupleManualAgent, space; warn=false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
@@ -124,7 +124,7 @@ using LinearAlgebra: norm, dot
         @test norm(model[1].vel) ≃ r
         # verify that reorientations obey the specified angles
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space)
+        model = ABM(TupleManualAgent, space; warn=false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
@@ -139,8 +139,8 @@ using LinearAlgebra: norm, dot
         # verify boundary conditions are respected
         space1 = ContinuousSpace((2,2), periodic=true)
         space2 = ContinuousSpace((2,2), periodic=false)
-        model1 = ABM(TupleManualAgent, space1)
-        model2 = ABM(TupleManualAgent, space2)
+        model1 = ABM(TupleManualAgent, space1; warn=false)
+        model2 = ABM(TupleManualAgent, space2; warn=false)
         x₀ = (1.0, 1.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model1, v₀)
@@ -152,6 +152,31 @@ using LinearAlgebra: norm, dot
         @test model1[1].pos[1] ≈ 0.1
         @test model2[1].pos[1] ≈ 2.0
         @test norm(model1[1].vel) == 1.1
+
+        ## pathfinding
+        using Agents.Pathfinding
+        gspace = GridSpace((5, 5))
+        cspace = ContinuousSpace((5., 5.))
+        atol = 0.0001 
+        pathfinder = AStar(cspace; walkmap = trues(10, 10))
+        model = ABM(TupleManualAgent, cspace; properties = (pf = pathfinder,), warn = false)
+        a = add_agent!((0., 0.), model, (0., 0.))
+        @test is_stationary(a, model.pf)
+
+        plan_route!(a, (4., 4.), model.pf)
+        @test !is_stationary(a, model.pf)
+        @test length(model.pf.agent_paths) == 1
+        move_along_route!(a, model, model.pf, 0.35355)
+        @test all(isapprox.(a.pos, (4.75, 4.75); atol))
+
+        # test waypoint skipping
+        move_agent!(a, (0.25, 0.25), model)
+        plan_route!(a, (0.75, 1.25), model.pf)
+        move_along_route!(a, model, model.pf, 0.807106)
+        @test all(isapprox.(a.pos, (0.75, 0.849999); atol)) || all(isapprox.(a.pos, (0.467156, 0.967156); atol))
+        # make sure it doesn't overshoot the end
+        move_along_route!(a, model, model.pf, 20.)
+        @test all(isapprox.(a.pos, (0.75, 1.25); atol))
     end
 
     @testset "nearby ids" begin
