@@ -108,7 +108,7 @@ function flocking_model(
     space2d = ContinuousSpace(extent; spacing)
     model = ModelType(Bird, space2d, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
     for _ in 1:n_birds
-        vel = rand(rand(abmrng(model), SVector{2}) .* 2 .- 1
+        vel = rand(abmrng(model), SVector{2}) .* 2 .- 1
 
         add_agent!(
             model,
