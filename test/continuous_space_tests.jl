@@ -13,10 +13,10 @@ using LinearAlgebra: norm, dot
     @testset "space initialization" begin
         space1 = ContinuousSpace((1, 1))
         space2 = ContinuousSpace((1, 1, 1); spacing=0.25, periodic = false)
-        @test spacesize(space1) == (1.0, 1.0)
-        @test spacesize(space2) == (1.0, 1.0, 1.0)
+        @test spacesize(space1) == SVector(1.0, 1.0)
+        @test spacesize(space2) == SVector(1.0, 1.0, 1.0)
         @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
-        @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple
+        @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple or svector
         model = ABM(SpeedyContinuousAgent, space1)
         model2 = ABM(SpeedyContinuousAgent, space2)
     end
@@ -84,7 +84,7 @@ using LinearAlgebra: norm, dot
         space = ContinuousSpace((1,1))
         @test_logs (
             :warn,
-            "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Please consider using `SVector` instead."
+            "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Use `SVector` instead."
         ) (
             :warn,
             "`vel` field in agent type should be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."

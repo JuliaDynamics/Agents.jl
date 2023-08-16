@@ -7,7 +7,7 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     update_vel!::F
     dims::NTuple{D,Int}
     spacing::T
-    extent::NTuple{D,T}
+    extent::SVector{D,T}
 end
 Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
@@ -80,7 +80,7 @@ If you want exact searches use the slower [`nearby_ids_exact`](@ref).
   If you use `update_vel!`, the agent type must have a field `vel::SVector{D, <:Real}`.
 """
 function ContinuousSpace(
-    extent::NTuple{D,X};
+    extent::Union{SVector{D,X},NTuple{D,X}};
     spacing = minimum(extent)/20.0,
     update_vel! = no_vel_update,
     periodic = true,
@@ -88,21 +88,21 @@ function ContinuousSpace(
     if extent ./ spacing != floor.(extent ./ spacing)
         error("All dimensions in `extent` must be completely divisible by `spacing`")
     end
-    s = GridSpace(floor.(Int, extent ./ spacing); periodic, metric = :euclidean)
+    s = GridSpace(Tuple(floor.(Int, extent ./ spacing)); periodic, metric = :euclidean)
     Z = X <: AbstractFloat ? X : Float64
-    return ContinuousSpace(s, update_vel!, size(s), Z(spacing), Z.(extent))
+    return ContinuousSpace(s, update_vel!, size(s), Z(spacing), SVector{D,Z}(extent))
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(abmrng(model)) * dim, SVector(spacesize(model)))
+    map(dim -> rand(abmrng(model)) * dim, spacesize(model))
 end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::ValidPos, model::ABM) = floor.(Int, pos./abmspace(model).spacing) .+ 1
+pos2cell(pos::ValidPos, model::ABM) = Tuple(floor.(Int, pos./abmspace(model).spacing) .+ 1)
 
 "given position in continuous space, return continuous space coordinates of cell center."
-function cell_center(pos::SVector{D,<:AbstractFloat}, model) where {D}
+function cell_center(pos::ValidPos, model)
     abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
@@ -314,6 +314,7 @@ https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distanci
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+    T = typeof(a.pos) # assumes that a and b have same field types
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2 # B to A
@@ -325,12 +326,12 @@ function elastic_collision!(a, b, f = nothing)
     # mass weights
     m1 == m2 == Inf && return false
     if m1 == Inf
-        @assert v1 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v1 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
-        v1 = ntuple(x -> zero(eltype(v1)), length(v1))
+        v1 = T(zero(eltype(v1)) for _ in eachindex(v1))
         f1, f2 = 0.0, 2.0
     elseif m2 == Inf
-        @assert v2 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v2 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r2, v1) ≤ 0 && return false
         v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0

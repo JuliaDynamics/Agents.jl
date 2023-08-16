@@ -1,5 +1,6 @@
 using Random
 using JLD2
+using StaticArraysCore: SVector
 
 """
     AgentsIO.to_serializable(t)
@@ -64,7 +65,7 @@ struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
     grid::SerializableGridSpace{D,P}
     dims::NTuple{D,Int}
     spacing::T
-    extent::NTuple{D,T}
+    extent::SVector{D,T}
 end
 
 struct SerializableGraphSpace{G}
