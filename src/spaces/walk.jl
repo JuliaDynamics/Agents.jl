@@ -74,13 +74,24 @@ spaces this clamps the position to the space extent.
 """
 normalize_position(pos, model::ABM) = normalize_position(pos, abmspace(model))
 
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,true}) where {D}
-    return SVector(mod.(pos, spacesize(space)))
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,true}) where {D}
+    return mod.(pos, spacesize(space))
 end
 
-function normalize_position(pos::ValidPos, space::ContinuousSpace{D,false}) where {D}
-    return SVector(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,false}) where {D}
+    return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
 end
+
+#----
+# for backward compatibility 
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,true}) where {D}
+    return Tuple(mod.(pos, spacesize(space)))
+end
+
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,false}) where {D}
+    return Tuple(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
+end
+#----
 
 function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
     return mod1.(pos, spacesize(space))
