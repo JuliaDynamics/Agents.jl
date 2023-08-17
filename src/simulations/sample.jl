@@ -55,9 +55,9 @@ end
 """
     replicate!(agent, model; kwargs...) 
 
-Add a new agent to the `model` at the same position of the given agent, copying
-the values of its fields. With the `kwargs` it is possible to override the values
-by specifying new ones for some fields. 
+Add a new agent to the `model` copying the values of the fields of the given agent. 
+With the `kwargs` it is possible to override the values by specifying new ones for 
+some fields (except for the `id` field which is set to a new one automatically). 
 Return the new agent instance.
 
 ## Example
@@ -81,9 +81,8 @@ function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
 end
 
 function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    fields = fieldnames(A)
-    idx_id = findfirst(x -> x == :id, fields)
-    fields_no_id = tuple(fields[1:idx_id-1]..., fields[idx_id+1:end]...)
+    # the id is always the first field
+    fields_no_id = fieldnames(A)[2:end]
     if isempty(kwargs)
         new_args = (deepcopy(getfield(agent, x)) for x in fields_no_id)
     else
