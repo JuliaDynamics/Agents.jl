@@ -25,10 +25,11 @@ The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref
 It has the additional fields `pos::SVector{D,Float64}, vel::SVector{D,Float64}`.
 See also [`@agent`](@ref).
 """
-@agent ContinuousAgent{D} NoSpaceAgent begin
-    pos::SVector{D,Float64}
-    vel::SVector{D,Float64}
+@agent ContinuousAgent{D,T} NoSpaceAgent begin
+    pos::SVector{D,T}
+    vel::SVector{D,T}
 end
+ContinuousAgent{D}(args...; kwargs...) where D = ContinuousAgent{D,Float64}(args...; kwargs...)
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
