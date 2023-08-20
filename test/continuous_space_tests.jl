@@ -51,57 +51,22 @@ using LinearAlgebra: norm, dot
         @test nagents(model) == 0
     end
 
-    @testset "support for ntuples after #846" begin
-        # agents with SVector types also work when passing tuples to functions
-        @agent SVecAgent ContinuousAgent{2} begin; end
+    @testset "support for tuples use with ContinuousAgent" begin
+        # agents with SVector types work when passing tuples to functions
         space = ContinuousSpace((1,1))
-        model = ABM(SVecAgent, space)
-        x = (0.0, 0.0)
-        v = (0.1, 0.0)
-        dt = 1.0
-        add_agent!(x, model, v)
-        @test model[1].pos == SVector(x)
-        @test model[1].vel == SVector(v)
-        # different types of motion
-        move_agent!(model[1], model, dt)
-        @test model[1].pos == SVector(x .+ v.*dt)
-        y = (0.5, 0.2)
-        move_agent!(model[1], y, model)
-        @test model[1].pos == SVector(y)
-        walk!(model[1], 2 .* model[1].vel, model)
-        @test model[1].pos == SVector(y .+ 2 .* v)
-        # agent addition works also if pos is not specified
-        add_agent!(model, .-v)
-        @test model[2].pos isa SVector{2,Float64}
-        @test model[2].vel == SVector(.-v)
-
-        # agents with hard-coded tuple types should work but throw warnings on creation
-        mutable struct TupleManualAgent <: AbstractAgent
-            id::Int
-            pos::NTuple{2,Float64}
-            vel::NTuple{2,Float64}
-        end
-        space = ContinuousSpace((1,1))
-        @test_logs (
-            :warn,
-            "Using `NTuple` for the `pos` field of agent types in `ContinuousSpace` is deprecated. Use `SVector` instead."
-        ) (
-            :warn,
-            "`vel` field in agent type should be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."
-        ) ABM(TupleManualAgent, space)
-        model = ABM(TupleManualAgent, space; warn=false)
-        x = (0.0, 0.0)
-        v = (0.1, 0.0)
+        model = ABM(ContinuousAgent{2}, space; warn=false)
+        x = SVector{2}(0.0, 0.0)
+        v = SVector{2}(0.1, 0.0)
         dt = 1.0
         add_agent!(x, model, v)
         @test model[1].pos == x
         @test model[1].vel == v
         move_agent!(model[1], model, dt)
         @test model[1].pos == x .+ v.*dt
-        model = ABM(TupleManualAgent, space; warn=false)
+        model = ABM(ContinuousAgent{2}, space; warn=false)
         add_agent!(model, v)
-        @test model[1].pos isa NTuple && model[1].vel == v
-        y = (0.5, 0.2)
+        @test model[1].vel == v
+        y = SVector{2}(0.5, 0.2)
         move_agent!(model[1], y, model)
         @test model[1].pos == y
         walk!(model[1], model[1].vel, model)
@@ -110,7 +75,7 @@ using LinearAlgebra: norm, dot
         ## random walks
         ≃(x,y) = isapprox(x, y; atol = 1e-12) # \simeq
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space; warn=false)
+        model = ABM(ContinuousAgent{2}, space; warn=false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
@@ -123,13 +88,13 @@ using LinearAlgebra: norm, dot
         @test norm(model[1].vel) ≃ r
         # verify that reorientations obey the specified angles
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space; warn=false)
+        model = ABM(ContinuousAgent{2}, space; warn=false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
         r = 1.0
         polar = [π/2] # degenerate distribution, only π/2 reorientations
-        v₁ = (0.0, 1.0) # π/2
+        v₁ = SVector{2}(0.0, 1.0) # π/2
         x₁ = x₀ .+ v₁
         randomwalk!(model[1], model, r; polar)
         @test all(model[1].vel .≃ v₁)
@@ -138,8 +103,8 @@ using LinearAlgebra: norm, dot
         # verify boundary conditions are respected
         space1 = ContinuousSpace((2,2), periodic=true)
         space2 = ContinuousSpace((2,2), periodic=false)
-        model1 = ABM(TupleManualAgent, space1; warn=false)
-        model2 = ABM(TupleManualAgent, space2; warn=false)
+        model1 = ABM(ContinuousAgent{2}, space1; warn=false)
+        model2 = ABM(ContinuousAgent{2}, space2; warn=false)
         x₀ = (1.0, 1.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model1, v₀)
@@ -158,7 +123,7 @@ using LinearAlgebra: norm, dot
         cspace = ContinuousSpace((5., 5.))
         atol = 0.0001 
         pathfinder = AStar(cspace; walkmap = trues(10, 10))
-        model = ABM(TupleManualAgent, cspace; properties = (pf = pathfinder,), warn = false)
+        model = ABM(ContinuousAgent{2}, cspace; properties = (pf = pathfinder,), warn = false)
         a = add_agent!((0., 0.), model, (0., 0.))
         @test is_stationary(a, model.pf)
 
