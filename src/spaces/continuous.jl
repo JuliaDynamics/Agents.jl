@@ -115,7 +115,7 @@ distance_from_cell_center(pos, model::ABM) =
 # required for backward compatibility with NTuples in ContinuousSpace
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{Any, N};
     kwargs...) where {N,S<:ContinuousSpace}
-    T = (; zip(fieldnames(A), fieldtypes(A))...)[:pos]
+    T = fieldtype(A, :pos)
     add_agent!(T(random_position(model)), A, model, properties...; kwargs...)
 end
 
@@ -338,7 +338,7 @@ function elastic_collision!(a, b, f = nothing)
     if m1 == Inf
         @assert v1 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
-        v1 = T(zero(eltype(v1)) for _ in eachindex(v1))
+        v1 = T(zero(eltype(v1)) for _ in v1)
         f1, f2 = 0.0, 2.0
     elseif m2 == Inf
         @assert v2 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
