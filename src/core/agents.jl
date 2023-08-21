@@ -196,6 +196,8 @@ macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
+
+    # hack for backwards compatibility (PR #846)
     if base_type isa Expr
         if base_type.args[1] == :ContinuousAgent && length(base_type.args) == 2
             base_type = Expr(base_type.head, base_type.args..., :Float64)
