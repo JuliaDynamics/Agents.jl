@@ -1,3 +1,9 @@
+# v6
+- Agent types in `ContinuousSpace` now require `SVector` for their `pos` and `vel` fields rather than `NTuple`. 
+
+## BREAKING
+- `NTuple` in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples (which will silently fail).
+
 # main
 
 - The `@agent` macro now supports fields with default and const values (through the special `constants` field). Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
