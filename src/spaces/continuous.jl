@@ -101,15 +101,23 @@ end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::SVector, model::ABM) = Tuple(floor.(Int, pos./abmspace(model).spacing) .+ 1)
+pos2cell(pos::ValidPos, model::ABM) = Tuple(floor.(Int, pos./abmspace(model).spacing) .+ 1)
 
 "given position in continuous space, return continuous space coordinates of cell center."
-function cell_center(pos::SVector, model)
-    SVector(abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5))
+function cell_center(pos::ValidPos, model)
+    abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
 distance_from_cell_center(pos, model::ABM) =
     euclidean_distance(pos, cell_center(pos, model), model)
+
+
+# required for backward compatibility with NTuples in ContinuousSpace
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{Any, N};
+    kwargs...) where {N,S<:ContinuousSpace}
+    T = (; zip(fieldnames(A), fieldtypes(A))...)[:pos]
+    add_agent!(T(random_position(model)), A, model, properties...; kwargs...)
+end
 
 function add_agent_to_space!(
     a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
@@ -316,6 +324,7 @@ https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distanci
 function elastic_collision!(a, b, f = nothing)
     # Do elastic collision according to
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+    T = typeof(a.pos) # assumes that a and b have same field types
     v1, v2, x1, x2 = a.vel, b.vel, a.pos, b.pos
     length(v1) ≠ 2 && error("This function works only for two dimensions.")
     r1 = x1 .- x2 # B to A
@@ -327,14 +336,14 @@ function elastic_collision!(a, b, f = nothing)
     # mass weights
     m1 == m2 == Inf && return false
     if m1 == Inf
-        @assert v1 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v1 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r1, v2) ≤ 0 && return false
-        v1 = zero(v1)
+        v1 = T(zero(eltype(v1)) for _ in eachindex(v1))
         f1, f2 = 0.0, 2.0
     elseif m2 == Inf
-        @assert v2 == SVector(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
+        @assert v2 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r2, v1) ≤ 0 && return false
-        v2 = zero(v1)
+        v2 = ntuple(x -> zero(eltype(v1)), length(v1))
         f1, f2 = 2.0, 0.0
     else
         # Check if disks face or overtake each other, to avoid double collisions

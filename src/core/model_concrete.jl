@@ -174,11 +174,17 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
         elseif space_type <: GridSpace && !(pos_type <: NTuple{D,Integer} where {D})
             throw(ArgumentError("`pos` field in agent type must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace
-            if !(pos_type <: SVector{D,<:AbstractFloat} where {D} || (!isconcretetype(A) && pos_type <: SVector{D} where {D}))
+            if pos_type <: NTuple{D,<:AbstractFloat} where {D}
+                warn && @warn "Using `NTuple` for the `pos` and `vel` fields of agent types in ContinuousSpace is deprecated. Use `SVector` instead."
+            elseif !(pos_type <: SVector{D,<:AbstractFloat} where {D} || (!isconcretetype(A) && pos_type <: SVector{D} where {D}))
                 throw(ArgumentError("`pos` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if any(isequal(:vel), fieldnames(A)) &&
-               !(fieldtype(A, :vel) <: SVector{D,<:AbstractFloat} where {D} || (!isconcretetype(A) && fieldtype(A, :vel) <: SVector{D} where {D}))
+               !(
+                    fieldtype(A, :vel) <: NTuple{D,<:AbstractFloat} where {D} ||
+                    fieldtype(A, :vel) <: SVector{D,<:AbstractFloat} where {D} ||
+                    (!isconcretetype(A) && fieldtype(A, :vel) <: SVector{D} where {D})
+                )
                 throw(ArgumentError("`vel` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if eltype(space) != eltype(pos_type)
