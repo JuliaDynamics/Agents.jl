@@ -5,7 +5,7 @@ using LinearAlgebra: norm, dot
 # TODO: We need to write tests for get_spatial_index and stuff!
 
 @testset "ContinuousSpace" begin
-    @agent SpeedyContinuousAgent ContinuousAgent{2} begin
+    @agent SpeedyContinuousAgent ContinuousAgent{2,Float64} begin
         speed::Float64
     end
 
@@ -230,7 +230,7 @@ using LinearAlgebra: norm, dot
         walk!(a, SVector(15.0, 1.0), model)
         @test a.pos == SVector(prevfloat(12.0), 2.0)
 
-        @agent ContinuousAgent3D ContinuousAgent{3} begin end
+        @agent ContinuousAgent3D ContinuousAgent{3,Float64} begin end
         model = ABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2))
         a = add_agent!(SVector(0.0, 0.0, 0.0), model, SVector(0.0, 0.0, 0.0))
         walk!(a, SVector(1.0, 1.0, 1.0), model)
@@ -243,7 +243,7 @@ using LinearAlgebra: norm, dot
 
 
         @testset "periodic" begin
-            model = ABM(ContinuousAgent{2}, ContinuousSpace((12, 10); periodic = true))
+            model = ABM(ContinuousAgent{2,Float64}, ContinuousSpace((12, 10); periodic = true))
             a = add_agent!(SVector(11.0, 9.0), model, SVector(3.0, 1.0))
             move_agent!(a, model, 1.0)
             @test a.pos[1] == 2
@@ -256,7 +256,7 @@ using LinearAlgebra: norm, dot
         speed = 0.002
         dt = 1.0
         diameter = 0.1
-        @agent MassContinuousAgent ContinuousAgent{2} begin
+        @agent MassContinuousAgent ContinuousAgent{2,Float64} begin
             mass::Float64
         end
 
@@ -334,7 +334,7 @@ using LinearAlgebra: norm, dot
         ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
         @testset "2D" begin
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(ContinuousAgent{2}, space)
+            model = ABM(ContinuousAgent{2,Float64}, space)
             x₀ = SVector(5.0, 5.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -353,7 +353,7 @@ using LinearAlgebra: norm, dot
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(ContinuousAgent{2}, space)
+            model = ABM(ContinuousAgent{2,Float64}, space)
             x₀ = SVector(5.0, 5.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -382,8 +382,8 @@ using LinearAlgebra: norm, dot
             # verify boundary conditions are respected
             space1 = ContinuousSpace((2,2), periodic=true)
             space2 = ContinuousSpace((2,2), periodic=false)
-            model1 = ABM(ContinuousAgent{2}, space1)
-            model2 = ABM(ContinuousAgent{2}, space2)
+            model1 = ABM(ContinuousAgent{2,Float64}, space1)
+            model2 = ABM(ContinuousAgent{2,Float64}, space2)
             x₀ = SVector(1.0, 1.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model1, v₀)
@@ -399,7 +399,7 @@ using LinearAlgebra: norm, dot
 
         @testset "3D" begin
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3}, space)
+            model = ABM(ContinuousAgent{3,Float64}, space)
             x₀ = SVector(5.0, 5.0, 5.0)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -418,7 +418,7 @@ using LinearAlgebra: norm, dot
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3}, space)
+            model = ABM(ContinuousAgent{3,Float64}, space)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0
@@ -431,7 +431,7 @@ using LinearAlgebra: norm, dot
             @test dot(v₁, v₀) ≃ cos(θ)
 
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3}, space)
+            model = ABM(ContinuousAgent{3,Float64}, space)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0
@@ -448,7 +448,7 @@ using LinearAlgebra: norm, dot
 
             # test that velocity measure changes
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3}, space)
+            model = ABM(ContinuousAgent{3,Float64}, space)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             randomwalk!(model[1], model, 2)
@@ -457,7 +457,7 @@ using LinearAlgebra: norm, dot
 
         @testset "4D" begin
             space = ContinuousSpace((3,3,3,3), periodic=true)
-            model = ABM(ContinuousAgent{4}, space)
+            model = ABM(ContinuousAgent{4,Float64}, space)
             x₀ = SVector(2.0, 2.0, 2.0, 2.0)
             v₀ = SVector(0.2, 0.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)

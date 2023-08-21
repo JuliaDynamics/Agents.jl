@@ -34,7 +34,7 @@ end
     weight::Float64
 end
 
-@agent Agent6 ContinuousAgent{2} begin 
+@agent Agent6 ContinuousAgent{2,Float64} begin 
     weight::Float64
 end
 
@@ -43,7 +43,7 @@ end
     f2::Int
 end
 
-@agent Agent8 ContinuousAgent{2} begin 
+@agent Agent8 ContinuousAgent{2,Float64} begin 
     f1::Bool
     f2::Int
 end
@@ -55,7 +55,7 @@ Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
     group::Int
 end
 
-@agent Bird ContinuousAgent{2} begin
+@agent Bird ContinuousAgent{2,Float64} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
