@@ -91,7 +91,7 @@ function flocking_model(;
 
     model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = Tuple(rand(abmrng(model), 2) * 2 .- 1)
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
             model,
             vel,
@@ -659,9 +659,9 @@ FractalParticle(
     id::Int,
     radius::Float64,
     spin_clockwise::Bool;
-    pos = (0.0, 0.0),
+    pos = SVector(0.0, 0.0),
     is_stuck = false,
-) = FractalParticle(id, pos, (0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
+) = FractalParticle(id, pos, SVector(0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
 
 rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
 function particle_radius(min_radius::Float64, max_radius::Float64, rng)
@@ -733,7 +733,7 @@ function fractal_particle_step!(agent::FractalParticle, model)
     radial = abmspace(model).extent ./ 2.0 .- agent.pos
     radial = radial ./ norm(radial)
     ## tangential vector in the direction of orbit of the particle
-    tangent = Tuple(cross([radial..., 0.0], agent.spin_axis)[1:2])
+    tangent = SVector{2}(cross([radial..., 0.0], agent.spin_axis)[1:2])
     agent.vel =
         (
             radial .* model.attraction .+ tangent .* model.spin .+
