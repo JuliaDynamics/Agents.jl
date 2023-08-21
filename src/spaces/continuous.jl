@@ -343,7 +343,7 @@ function elastic_collision!(a, b, f = nothing)
     elseif m2 == Inf
         @assert v2 == T(0, 0) "An agent with ∞ mass cannot have nonzero velocity"
         dot(r2, v1) ≤ 0 && return false
-        v2 = ntuple(x -> zero(eltype(v1)), length(v1))
+        v2 = T(zero(eltype(v1)) for _ in v1)
         f1, f2 = 2.0, 0.0
     else
         # Check if disks face or overtake each other, to avoid double collisions
