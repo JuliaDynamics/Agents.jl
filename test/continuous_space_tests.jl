@@ -475,6 +475,36 @@ using LinearAlgebra: norm, dot
         end
     end
 
+    @testset "different continuous agent types" begin
+        for T in [Float16, Float32]
+            space = ContinuousSpace((1,1))
+            model = ABM(ContinuousAgent{2,T}, space)
+            x = spacesize(model) ./ 2
+            vel = randn(SVector{2}) ./ 20
+            add_agent!(x, model; vel)
+            # values at creation are converted
+            @test model[1].pos isa SVector{2,T} && model[1].pos == T.(x)
+            @test model[1].vel isa SVector{2,T} && model[1].vel == T.(vel)
+            dt = 1
+            x = model[1].pos
+            vel = model[1].vel
+            move_agent!(model[1], model, dt)
+            @test model[1].pos == x + vel .* dt
+            y1 = SVector{2,T}(0.3, 0.7)
+            move_agent!(model[1], y1, model)
+            @test model[1].pos == Float32.(y1)
+            y2 = SVector{2,T}(0.6, 0.3)
+            move_agent!(model[1], y2, model)
+            @test model[1].pos == y2
+            walk!(model[1], model[1].vel, model)
+            @test model[1].pos == y2 .+ model[1].vel
+            
+            r = 0.1
+            x = model[1].pos
+            randomwalk!(model[1], model, r)
+            @test norm(model[1].pos .- x) ≈ T(r)
+        end
+    end
 end
 
 # Plotting for neighbors in continuous space
