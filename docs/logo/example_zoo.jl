@@ -66,7 +66,7 @@ plotkwargs..., unikwargs...,)
 models[1] = daisy_obs
 
 # Flocking
-@agent Bird ContinuousAgent{2} begin
+@agent Bird ContinuousAgent{2,Float64} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -650,7 +650,7 @@ antworld_obs = abmplot!(axs[6], antworld;
 models[6] = antworld_obs
 
 # Fractal growth
-@agent FractalParticle ContinuousAgent{2} begin
+@agent FractalParticle ContinuousAgent{2,Float64} begin
     radius::Float64
     is_stuck::Bool
     spin_axis::Array{Float64,1}
@@ -773,7 +773,7 @@ fractal_obs = abmplot!(axs[8], model;
 models[8] = fractal_obs
 
 # Social distancing
-@agent PoorSoul ContinuousAgent{2} begin
+@agent PoorSoul ContinuousAgent{2,Float64} begin
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R

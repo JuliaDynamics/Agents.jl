@@ -21,7 +21,7 @@
 using Agents
 using Random, LinearAlgebra
 
-@agent Bird ContinuousAgent{2} begin
+@agent Bird ContinuousAgent{2,Float64} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64

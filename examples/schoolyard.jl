@@ -26,9 +26,9 @@ using SimpleWeightedGraphs: SimpleWeightedDiGraph # will make social network
 using SparseArrays: findnz                        # for social network connections
 using Random: MersenneTwister                     # reproducibility
 
-# And create an alias to `ContinuousAgent{2}`,
+# And create an alias to `ContinuousAgent{2,Float64}`,
 # as our agents don't need additional properties.
-const Student = ContinuousAgent{2}
+const Student = ContinuousAgent{2,Float64}
 
 # ## Rules of the schoolyard
 
