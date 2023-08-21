@@ -1,6 +1,5 @@
 using Agents, Test
 using Agents.Pathfinding
-using StaticArrays
 
 @testset "AStar" begin
     moore = Pathfinding.moore_neighborhood(2)

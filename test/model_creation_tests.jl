@@ -1,4 +1,4 @@
-using Test, Agents, Random, StaticArrays
+using Test, Agents, Random
 
 @testset "@agent macro" begin
     @test ContinuousAgent <: AbstractAgent

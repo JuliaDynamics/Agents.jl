@@ -2,7 +2,6 @@ using Test, Agents, Random, LinearAlgebra
 using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
-using StaticArrays
 using StableRNGs
 
 using Distributed
@@ -12,7 +11,6 @@ addprocs(2)
     using CSV, Arrow
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
-    using StaticArrays
     using StableRNGs
 end
 

@@ -1,6 +1,5 @@
 using Agents, Test
 using StableRNGs
-using StaticArrays
 using LinearAlgebra: norm, dot
 
 # TODO: We need to write tests for get_spatial_index and stuff!

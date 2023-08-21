@@ -1,6 +1,6 @@
 using Distributions: Distributions, Uniform, ContinuousUnivariateDistribution
 using Rotations
-using StaticArrays: SVector, setindex
+using StaticArrays: setindex
 
 export walk!, randomwalk!, normalize_position
 export Arccos, Uniform

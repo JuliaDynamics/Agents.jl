@@ -12,7 +12,8 @@ using DataStructures
 using Graphs
 using DataFrames
 using Random
-using StaticArraysCore
+using StaticArrays: SVector
+export SVector
 import ProgressMeter
 import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra

@@ -1,6 +1,5 @@
 using Random
 using JLD2
-using StaticArraysCore: SVector
 
 """
     AgentsIO.to_serializable(t)

@@ -22,7 +22,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 Scratch = "6c6a2e73-6563-6170-7368-637461726353"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]

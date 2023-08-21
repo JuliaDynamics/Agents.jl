@@ -1,5 +1,3 @@
-using StaticArrays
-
 # TODO: Add tests for GridSpaceSingle
 # TODO: None of these tests should access internal fields like .stored_ids!
 # instead they should use public API like `ids_in_position` etc.

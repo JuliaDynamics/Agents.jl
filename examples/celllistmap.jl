@@ -48,11 +48,6 @@ Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
 # We will use the high-level interface provided by the `PeriodicSystems` module
 # (requires version ≥0.7.22):
 using CellListMap.PeriodicSystems
-using StaticArrays
-# `StaticArrays` provides the `SVector` type, which is practical for the representation of
-# various vector types (e.g., positions or velocities) in small amount of dimensions.
-# Agents.jl uses `NTuple{D, Float64}` for that, which does not support vector operations
-# out of the box. In the future, Agents.jl may also switch the `pos` type to a static vector.
 
 # Two auxiliary arrays will be created on model initialization, to be passed to
 # the `PeriodicSystem` data structure:
@@ -90,7 +85,7 @@ function initialize_bouncing(;
     forces = similar(positions)
 
     ## Space and agents
-    space2d = ContinuousSpace(Tuple(sides); periodic=true)
+    space2d = ContinuousSpace(sides; periodic=true)
 
     ## Initialize CellListMap periodic system
     system = PeriodicSystem(
@@ -122,8 +117,8 @@ function initialize_bouncing(;
                 r=(0.5 + 0.9 * rand()) * max_radius,
                 k=(10 + 20 * rand()), # random force constants
                 mass=10.0 + 100 * rand(), # random masses
-                pos=Tuple(positions[id]),
-                vel=(100 * randn(), 100 * randn()), # initial velocities
+                pos=positions[id],
+                vel=100 * randn(SVector{2}), # initial velocities
             ),
             model)
     end
@@ -186,13 +181,13 @@ function agent_step!(agent, model::ABM)
     f = model.system.forces[id]
     a = f / agent.mass
     ## Update positions and velocities
-    v = SVector(agent.vel) + a * dt
-    x = SVector(agent.pos) + v * dt + (a / 2) * dt^2
-    x = normalize_position(Tuple(x), model)
-    agent.vel = Tuple(v)
+    v = agent.vel + a * dt
+    x = agent.pos + v * dt + (a / 2) * dt^2
+    x = normalize_position(x, model)
+    agent.vel = v
     move_agent!(agent, x, model)
     ## !!! IMPORTANT: Update positions in the CellListMap.PeriodicSystem
-    model.system.positions[id] = SVector(agent.pos)
+    model.system.positions[id] = agent.pos
     return nothing
 end
 
