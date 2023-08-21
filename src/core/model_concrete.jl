@@ -181,6 +181,9 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
                !(fieldtype(A, :vel) <: SVector{D,<:AbstractFloat} where {D} || (!isconcretetype(A) && fieldtype(A, :vel) <: SVector{D} where {D}))
                 throw(ArgumentError("`vel` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end
+            if eltype(space) != eltype(pos_type)
+                throw(ArgumentError("`pos` field in agent type must be of the same type of the `extent` field in ContinuousSpace."))
+            end
         end
     end
 end

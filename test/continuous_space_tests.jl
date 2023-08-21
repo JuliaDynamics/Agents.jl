@@ -476,17 +476,19 @@ using LinearAlgebra: norm, dot
 
     @testset "different continuous agent types" begin
         for T in [Float16, Float32]
-            space = ContinuousSpace((1,1))
+            space = ContinuousSpace((1,1)) # converted to SVector{2¸Float64}
+            @test_throws ArgumentError model = ABM(ContinuousAgent{2,T}, space)
+            space = ContinuousSpace(SVector{2,T}(1,1))
             model = ABM(ContinuousAgent{2,T}, space)
             x = spacesize(model) ./ 2
+            # vel is converted automatically
             vel = randn(SVector{2}) ./ 20
-            add_agent!(x, model; vel)
-            # values at creation are converted
+            add_agent!(x, model, vel)
             @test model[1].pos isa SVector{2,T} && model[1].pos == T.(x)
             @test model[1].vel isa SVector{2,T} && model[1].vel == T.(vel)
+
             dt = 1
-            x = model[1].pos
-            vel = model[1].vel
+            vel = T.(vel)
             move_agent!(model[1], model, dt)
             @test model[1].pos == x + vel .* dt
             y1 = SVector{2,T}(0.3, 0.7)
