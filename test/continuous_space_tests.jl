@@ -51,98 +51,6 @@ using LinearAlgebra: norm, dot
         @test nagents(model) == 0
     end
 
-    @testset "support for tuples use with ContinuousAgent" begin
-        # agents with SVector types work when passing tuples to functions
-        space = ContinuousSpace((1,1))
-        model = ABM(ContinuousAgent{2}, space; warn=false)
-        x = SVector{2}(0.0, 0.0)
-        v = SVector{2}(0.1, 0.0)
-        dt = 1.0
-        add_agent!(x, model, v)
-        @test model[1].pos == x
-        @test model[1].vel == v
-        move_agent!(model[1], model, dt)
-        @test model[1].pos == x .+ v.*dt
-        model = ABM(ContinuousAgent{2}, space; warn=false)
-        add_agent!(model, v)
-        @test model[1].vel == v
-        y = SVector{2}(0.5, 0.2)
-        move_agent!(model[1], y, model)
-        @test model[1].pos == y
-        walk!(model[1], model[1].vel, model)
-        @test model[1].pos == y .+ model[1].vel
-
-        ## random walks
-        ≃(x,y) = isapprox(x, y; atol = 1e-12) # \simeq
-        space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(ContinuousAgent{2}, space; warn=false)
-        x₀ = (5.0, 5.0)
-        v₀ = (1.0, 0.0)
-        add_agent!(x₀, model, v₀)
-        r = 2.0
-        randomwalk!(model[1], model, r)
-        # distance between initial and new position should be r
-        @test norm(model[1].pos .- x₀) ≃ r
-        # velocity module remains equal to previous r
-        randomwalk!(model[1], model)
-        @test norm(model[1].vel) ≃ r
-        # verify that reorientations obey the specified angles
-        space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(ContinuousAgent{2}, space; warn=false)
-        x₀ = (5.0, 5.0)
-        v₀ = (1.0, 0.0)
-        add_agent!(x₀, model, v₀)
-        r = 1.0
-        polar = [π/2] # degenerate distribution, only π/2 reorientations
-        v₁ = SVector{2}(0.0, 1.0) # π/2
-        x₁ = x₀ .+ v₁
-        randomwalk!(model[1], model, r; polar)
-        @test all(model[1].vel .≃ v₁)
-        @test all(model[1].pos .≃ x₁)
-
-        # verify boundary conditions are respected
-        space1 = ContinuousSpace((2,2), periodic=true)
-        space2 = ContinuousSpace((2,2), periodic=false)
-        model1 = ABM(ContinuousAgent{2}, space1; warn=false)
-        model2 = ABM(ContinuousAgent{2}, space2; warn=false)
-        x₀ = (1.0, 1.0)
-        v₀ = (1.0, 0.0)
-        add_agent!(x₀, model1, v₀)
-        add_agent!(x₀, model2, v₀)
-        r = 1.1
-        polar = [0.0] # no reorientation, move straight
-        randomwalk!(model1[1], model1, r; polar)
-        randomwalk!(model2[1], model2, r; polar)
-        @test model1[1].pos[1] ≈ 0.1
-        @test model2[1].pos[1] ≈ 2.0
-        @test norm(model1[1].vel) == 1.1
-
-        ## pathfinding
-        using Agents.Pathfinding
-        gspace = GridSpace((5, 5))
-        cspace = ContinuousSpace((5., 5.))
-        atol = 0.0001 
-        pathfinder = AStar(cspace; walkmap = trues(10, 10))
-        model = ABM(ContinuousAgent{2}, cspace; properties = (pf = pathfinder,), warn = false)
-        a = add_agent!((0., 0.), model, (0., 0.))
-        @test is_stationary(a, model.pf)
-
-        plan_route!(a, (4., 4.), model.pf)
-        @test !is_stationary(a, model.pf)
-        @test length(model.pf.agent_paths) == 1
-        move_along_route!(a, model, model.pf, 0.35355)
-        @test all(isapprox.(a.pos, (4.75, 4.75); atol))
-
-        # test waypoint skipping
-        move_agent!(a, (0.25, 0.25), model)
-        plan_route!(a, (0.75, 1.25), model.pf)
-        move_along_route!(a, model, model.pf, 0.807106)
-        @test all(isapprox.(a.pos, (0.75, 0.849999); atol)) || all(isapprox.(a.pos, (0.467156, 0.967156); atol))
-        # make sure it doesn't overshoot the end
-        move_along_route!(a, model, model.pf, 20.)
-        @test all(isapprox.(a.pos, (0.75, 1.25); atol))
-    end
-
     @testset "nearby ids" begin
         # At the end of this file there is a plotting test piece of code!
         # I've run it for many combinations and I am generally happy with the result.
@@ -566,6 +474,7 @@ using LinearAlgebra: norm, dot
             @test norm(model[1].vel) ≃ r
         end
     end
+
 end
 
 # Plotting for neighbors in continuous space

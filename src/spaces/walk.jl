@@ -57,9 +57,9 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::ValidPos,
+    direction::SVector{D,<:AbstractFloat},
     model::ABM{<:ContinuousSpace}
-)
+) where {D}
     target = normalize_position(agent.pos .+ direction, model)
     move_agent!(agent, target, model)
     return agent
@@ -81,17 +81,6 @@ end
 function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,false}) where {D}
     return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
 end
-
-#----
-# for backward compatibility 
-function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,true}) where {D}
-    return Tuple(mod.(pos, spacesize(space)))
-end
-
-function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,false}) where {D}
-    return Tuple(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
-end
-#----
 
 function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
     return mod1.(pos, spacesize(space))
@@ -234,10 +223,9 @@ function randomwalk!(
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    T = typeof(agent.pos)
     θ = rand(abmrng(model), polar)
     relative_r = r/LinearAlgebra.norm(agent.vel)
-    direction = T(rotate(SVector(agent.vel), θ) .* relative_r)
+    direction = rotate(agent.vel, θ) .* relative_r
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -251,9 +239,8 @@ function randomwalk!(
     if isnothing(polar)
         return uniform_randomwalk!(agent, model)
     end
-    T = typeof(agent.pos)
     θ = rand(abmrng(model), polar)
-    direction = T(rotate(SVector(agent.vel), θ))
+    direction = rotate(agent.vel, θ)
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -271,11 +258,10 @@ function randomwalk!(
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    T = typeof(agent.pos)
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     relative_r = r/LinearAlgebra.norm(agent.vel)
-    direction = T(rotate(SVector(agent.vel), θ, ϕ) .* relative_r)
+    direction = rotate(agent.vel, θ, ϕ) .* relative_r
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -289,10 +275,9 @@ function randomwalk!(
     if isnothing(polar) && isnothing(azimuthal)
         return uniform_randomwalk!(agent, model)
     end
-    T = typeof(agent.pos)
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
-    direction = T(rotate(SVector(agent.vel), θ, ϕ))
+    direction = rotate(agent.vel, θ, ϕ)
     agent.vel = direction
     walk!(agent, direction, model)
 end
@@ -357,14 +342,13 @@ function uniform_randomwalk!(
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
-    T = typeof(agent.pos)
     rng = abmrng(model)
-    v = T(randn(rng) for _ in 1:D)
+    v = randn(rng, SVector{D})
     norm_v = sqrt(sum(abs2.(v)))
     if !iszero(norm_v)
         direction = v ./ norm_v .* r
     else
-        direction = T(rand(rng, (-1, 1)) * r / sqrt(D) for _ in 1:D)
+        direction = SVector{D}(rand(rng, (-1, 1)) * r / sqrt(D) for _ in 1:D)
     end
     agent.vel = direction
     walk!(agent, direction, model)

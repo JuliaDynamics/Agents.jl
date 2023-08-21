@@ -16,8 +16,8 @@ in the discrete path to ensure continuous path is optimal.
 """
 function find_continuous_path(
     pathfinder::AStar{D},
-    from::Agents.ValidPos,
-    to::Agents.ValidPos,
+    from::SVector{D,Float64},
+    to::SVector{D,Float64},
 ) where {D}
     discrete_from = Tuple(to_discrete_position(from, pathfinder))
     discrete_to = Tuple(to_discrete_position(to, pathfinder))
@@ -56,7 +56,7 @@ end
 
 function Agents.plan_route!(
     agent::A,
-    dest::Agents.ValidPos,
+    dest::SVector{D,Float64},
     pathfinder::AStar{D,P,M,Float64},
 ) where {A<:AbstractAgent,D,P,M}
     path = find_continuous_path(pathfinder, agent.pos, dest)
@@ -107,9 +107,8 @@ function Agents.move_along_route!(
     isempty(agent.id, pathfinder) && return
     from = agent.pos
     next_pos = agent.pos
-    T = typeof(agent.pos)
     while true
-        next_waypoint = T(first(pathfinder.agent_paths[agent.id]))
+        next_waypoint = SVector(first(pathfinder.agent_paths[agent.id]))
         dir = get_direction(from, next_waypoint, model)
         dist_to_target = norm(dir)
         # edge case
@@ -124,9 +123,9 @@ function Agents.move_along_route!(
         end
         dir = dir ./ dist_to_target
         next_pos = from .+ dir .* (speed * dt)
-        next_pos = Agents.normalize_position(T(next_pos), model)
+        next_pos = Agents.normalize_position(next_pos, model)
         # overshooting means we reached the waypoint
-        dist_to_next = euclidean_distance(T(from), T(next_pos), model)
+        dist_to_next = euclidean_distance(SVector(from), SVector(next_pos), model)
         if dist_to_next > dist_to_target
             # change from and dt so it appears we're coming from the waypoint just skipped, instead
             # of directly where the agent was. E.g:
@@ -147,7 +146,7 @@ function Agents.move_along_route!(
             break
         end
     end
-    move_agent!(agent, T(next_pos), model)
+    move_agent!(agent, SVector(next_pos), model)
 end
 
 function random_walkable(model::ABM{<:ContinuousSpace{D}}, pathfinder::AStar{D}) where {D}
@@ -183,12 +182,11 @@ Return a random position within radius `r` of `pos` which is walkable, as specif
 Return `pos` if no such position exists.
 """
 function random_walkable(
-    pos::Agents.ValidPos,
+    pos::SVector{D,Float64},
     model::ABM{<:ContinuousSpace{D}},
     pathfinder::AStar{D},
     r = 1.0,
 ) where {D}
-    T = typeof(pos)
     discrete_r = to_discrete_position(r, pathfinder) .- 1
     discrete_pos = to_discrete_position(pos, pathfinder)
     options = collect(walkable_cells_in_radius(discrete_pos, discrete_r, pathfinder))
@@ -199,7 +197,7 @@ function random_walkable(
     )
     half_cell_size = abmspace(model).extent ./ size(pathfinder.walkmap) ./ 2.
     cts_rand = to_continuous_position(discrete_rand, pathfinder) .+
-        (T(rand(abmrng(model)) for _ in 1:D) .- 0.5) .* half_cell_size
+        (rand(abmrng(model), SVector{D}) .- 0.5).* half_cell_size
     dist = euclidean_distance(pos, cts_rand, model)
     dist > r && (cts_rand = mod1.(
         pos .+ get_direction(pos, cts_rand, model) ./ dist .* r,
