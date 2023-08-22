@@ -48,6 +48,14 @@ using LinearAlgebra: norm, dot
         # remove
         remove_agent!(agent, model)
         @test nagents(model) == 0
+        # test edge case described in #853
+        space = ContinuousSpace(SVector(1,1); periodic=true)
+        model = ABM(ContinuousAgent{2,Float64}, space)
+        pos = SVector(0.4936805014512577, 0.007750092779602313)
+        vel = SVector(0.6319498548742291, -0.7750092779602327)
+        add_agent!(pos, model, vel)
+        move_agent!(model[1], model, 0.01)
+        @test model[1].pos == SVector(0.5, 1.0)
     end
 
     @testset "support for tuples use with ContinuousAgent" begin
