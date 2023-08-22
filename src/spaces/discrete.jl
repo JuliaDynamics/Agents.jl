@@ -91,11 +91,8 @@ function has_empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
+    random_empty(model::ABM{<:DiscreteSpace})
 Return a random position without any agents, or `nothing` if no such positions exist.
-`cutoff` switches the search algorithm from probabilistic to a filter.
-Specifically, when `clamp(nagents(model)/npositions(model), 0.0, 1.0) < cutoff`,
-then the algorithm is probabilistic.
 """
 function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
@@ -113,29 +110,23 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        isempty(empty) && return nothing
-        return rand(abmrng(model), collect(empty))
+        return resorvoir_sampling_single(empty, model)
     end
 end
 
 """
-    empty_nearby_positions(position, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
+    empty_nearby_positions(pos, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
     empty_nearby_positions(agent, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
 
-Return an iterable of all empty positions within "radius" `r` of the given `position`
-or the position of an `agent::AbstractAgent`.
+Return an iterable of all empty positions within radius `r` from the given position or the given agent.
 
 The value of `r` and possible keywords operate identically to [`nearby_positions`](@ref).
-
-This function only exists for discrete spaces with a finite amount of positions.
 """
 function empty_nearby_positions(agent::AbstractAgent, model, r = 1; kwargs...)
     return empty_nearby_positions(agent.pos, model, r; kwargs...)
 end
 function empty_nearby_positions(pos, model, r = 1; kwargs...)
-    return Iterators.filter(
-        Base.Fix2(isempty, model), nearby_positions(pos, model, r; kwargs...)
-    )
+    return Iterators.filter(pos -> isempty(pos, model), nearby_positions(pos, model, r; kwargs...))
 end
 
 """
