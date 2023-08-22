@@ -98,7 +98,7 @@ function initialize_bouncing(;
     )
 
     ## define the model properties
-    ## The clmap_system field contains the data required for CellListMap.jl
+    ## The system field contains the data required for CellListMap.jl
     properties = (
         dt=dt,
         number_of_particles=number_of_particles,
@@ -141,12 +141,12 @@ end
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
 function calc_forces!(x, y, i, j, d2, forces, model)
-    pᵢ = model[i]
-    pⱼ = model[j]
+    pi = model[i]
+    pj = model[j]
     d = sqrt(d2)
-    if d ≤ (pᵢ.r + pⱼ.r)
-        dr = y - x
-        fij = 2 * (pᵢ.k * pⱼ.k) * (d2 - (pᵢ.r + pⱼ.r)^2) * (dr / d)
+    if d ≤ (pi.r + pj.r)
+        dr = y - x # x and y are minimum-image relative coordinates
+        fij = 2 * (pi.k * pj.k) * (d2 - (pi.r + pj.r)^2) * (dr / d)
         forces[i] += fij
         forces[j] -= fij
     end
@@ -170,9 +170,7 @@ end
 # ## Update agent positions and velocities
 # The `agent_step!` function will update the particle positions and velocities,
 # given the forces, which are computed in the `model_step!` function. A simple
-# Euler step is used here for simplicity. We need to convert the static vectors
-# to tuples to conform the `Agents` API for the positions and velocities
-# of the agents. Finally, the positions within the `CellListMap.PeriodicSystem`
+# Euler step is used here for simplicity. Finally, the positions within the `CellListMap.PeriodicSystem`
 # structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
@@ -203,7 +201,6 @@ function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
 end
 # Which should be quite fast
 model = initialize_bouncing()
-simulate(model) # compile
 @time simulate(model)
 
 # and let's make a nice video with less particles,
