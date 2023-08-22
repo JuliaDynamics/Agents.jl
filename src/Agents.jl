@@ -12,6 +12,8 @@ using DataStructures
 using Graphs
 using DataFrames
 using Random
+using StaticArrays: SVector
+export SVector
 import ProgressMeter
 import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra
@@ -60,33 +62,17 @@ using Scratch
 
 function __init__()
 display_update = true
-version_number = "5.18"
+version_number = "6"
 update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
 
-Noteworthy changes:
+Breaking changes:
 
-- Agents.jl moved to Julia 1.9+, and now exports visualization
-  and interactive applications automatically once Makie (or Makie backends
-  such as GLMakie) come into scope, using the new package extension system.
-  The only downside of this is that now to visualize ABMs on open street
-  maps, the package OSMMakie.jl must be explicitly loaded as well.
-  InteractiveDynamics.jl is now obsolete.
-- Several performance improvements all across the board.
-- The `@agent` macro is now THE way to create agent types for Agents.jl simulations since
-  now supports declaring default and constant fields. Directly creating structs by hand is 
-  no longer mentioned in the documentation at all. This will allow us in the future to utilize
-  additional fields that the user does not have to know about, which may bring new features or
-  performance gains by being part of the agent structures.
-- DEI-motivated name change for all names that remove agents:
-    - `genocide! -> remove_all!`
-    - `kill_agent! -> remove_agent!`
-    - `UnkillableABM -> UnremovableABM`
-- We have created an objective fully automated framework for comparing open source
-  agent based modelling software. It shows that Agents.jl is much faster
-  than competing alternatives (MASON, NetLogo, Mesa).
+- Agents in `ContinuousSpace` now require `SVector` for their `pos`
+  and `vel` fields instead of `NTuple`.
+  Using `NTuple`s in `ContinuousSpace` is now deprecated.
 
 See the online documentation for more!
 """

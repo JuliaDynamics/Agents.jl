@@ -21,7 +21,7 @@
 using Agents
 using Random, LinearAlgebra
 
-@agent Bird ContinuousAgent{2} begin
+@agent Bird ContinuousAgent{2,Float64} begin
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -61,7 +61,7 @@ function initialize_model(;
 
     model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = Tuple(rand(abmrng(model), 2) * 2 .- 1)
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
             model,
             vel,

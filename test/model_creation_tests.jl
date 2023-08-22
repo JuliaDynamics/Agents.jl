@@ -138,21 +138,13 @@ end
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
     mutable struct DiscreteVelocity <: AbstractAgent
         id::Int
-        pos::NTuple{2,Float64}
-        vel::NTuple{2,Int}
+        pos::SVector{2,Float64}
+        vel::SVector{2,Int}
         diameter::Float64
     end
-    @test_logs (
-        :warn,
-        "`vel` field in agent type should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
-    ) ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
-    agent = DiscreteVelocity(1, (1, 1), (2, 3), 2.4)
-    @test_logs (
-        :warn,
-        "`vel` field in agent type should be of type `NTuple{<:AbstractFloat}` when using ContinuousSpace.",
-    ) ABM(agent, ContinuousSpace((1, 1)))
-    # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(agent, ContinuousSpace((1, 1)); warn = false)) <: AbstractAgent
+    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
+    agent = DiscreteVelocity(1, SVector(1, 1), SVector(2, 3), 2.4)
+    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)))
     # Shouldn't use ParametricAgent since it is not a concrete type
     mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
         id::T
@@ -194,4 +186,5 @@ end
     ) ABM(Union{NoSpaceAgent,ValidAgent})
     @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
 end
+
 

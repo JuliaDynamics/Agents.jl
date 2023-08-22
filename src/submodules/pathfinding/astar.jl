@@ -97,7 +97,10 @@ function AStar(
 ) where {D,periodic}
     @assert walkmap isa BitArray{D} || cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
     isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
-    AStar(Agents.spacesize(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
+    AStar(Tuple(Agents.spacesize(space));
+        periodic, diagonal_movement = true,
+        admissibility, walkmap, cost_metric
+    )
 end
 
 

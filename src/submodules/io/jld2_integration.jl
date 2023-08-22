@@ -64,7 +64,7 @@ struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
     grid::SerializableGridSpace{D,P}
     dims::NTuple{D,Int}
     spacing::T
-    extent::NTuple{D,T}
+    extent::SVector{D,T}
 end
 
 struct SerializableGraphSpace{G}
