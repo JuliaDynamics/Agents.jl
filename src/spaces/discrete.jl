@@ -91,11 +91,8 @@ function has_empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
+    random_empty(model::ABM{<:DiscreteSpace})
 Return a random position without any agents, or `nothing` if no such positions exist.
-`cutoff` switches the search algorithm from probabilistic to a filter.
-Specifically, when `clamp(nagents(model)/npositions(model), 0.0, 1.0) < cutoff`,
-then the algorithm is probabilistic.
 """
 function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
@@ -113,8 +110,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        isempty(empty) && return nothing
-        return rand(abmrng(model), collect(empty))
+        return resorvoir_sampling_single(empty, model)
     end
 end
 
