@@ -28,28 +28,32 @@ function sample!(
     org_ids = collect(allids(model))
     if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in allagents(model)])
-        newids = sample(abmrng(model), org_ids, weights, n, replace = replace)
+        new_ids = sample(abmrng(model), org_ids, weights, n, replace = replace)
     else
-        newids = sample(abmrng(model), org_ids, n, replace = replace)
+        new_ids = sample(abmrng(model), org_ids, n, replace = replace)
     end
-    add_newids!(model, org_ids, newids)
+    add_newids!(model, org_ids, new_ids)
 end
 
 #Used in sample!
-function add_newids!(model, org_ids, newids)
-    # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
-    count_newids = counter(newids)
+function add_newids!(model, org_ids, new_ids)
+    sort!(org_ids); sort!(new_ids)
+    i, L = 1, length(new_ids)
     for id in org_ids
-        noccurances = count_newids[id]
+        id_new = new_ids[i]
         agent = model[id]
-        if noccurances == 0
+        if id_new != id
             remove_agent!(agent, model)
         else
-            for _ in 2:noccurances
+            i += 1
+            while i <= L && new_ids[i] == id
                 replicate!(agent, model)
+                i += 1
             end
+            i > L && return
         end
     end
+    return
 end
 
 """
