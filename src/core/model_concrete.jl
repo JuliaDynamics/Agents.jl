@@ -142,6 +142,9 @@ function agent_validator(
         (for example) to this function. You can also create an instance of your agent
         and pass it to this function. If you want to use `Union` types for mixed agent
         models, you can silence this warning.
+        If you are using `ContinuousAgent{D}` as agent type in version 6+, update
+        to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
+        the same behavior as previous Agents.jl versions.
         """
         for type in union_types(A)
             do_checks(type, space, warn)
@@ -188,7 +191,11 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
                 throw(ArgumentError("`vel` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end
             if eltype(space) != eltype(pos_type)
-                throw(ArgumentError("`pos` field in agent type must be of the same type of the `extent` field in ContinuousSpace."))
+                # extra condition for backward compatibility (#855)
+                # we don't want to throw an error if ContinuousAgent{D} is used with a Float64 space
+                if isnothing(match(r"ContinuousAgent{\d}", string(A))) || eltype(space) != Float64
+                    throw(ArgumentError("`pos` field in agent type must be of the same type of the `extent` field in ContinuousSpace."))
+                end
             end
         end
     end

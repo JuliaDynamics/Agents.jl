@@ -73,6 +73,11 @@ Breaking changes:
 - Agents in `ContinuousSpace` now require `SVector` for their `pos`
   and `vel` fields instead of `NTuple`.
   Using `NTuple`s in `ContinuousSpace` is now deprecated.
+- `ContinuousAgent{D}` is not a concrete type anymore.
+  The new interface requires two parameters `ContinuousAgent{D,T}`
+  where `T` is any `AbstractFloat` type.
+  If you want to use a type different from `Float64`, you will also
+  need to change the type of the `ContinuousSpace` extent accordingly.
 
 See the online documentation for more!
 """
