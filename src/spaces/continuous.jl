@@ -101,7 +101,7 @@ end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::ValidPos, model::ABM) = Tuple(floor.(Int, pos./abmspace(model).spacing) .+ 1)
+pos2cell(pos::ValidPos, model::ABM) = Tuple(max.(1, ceil.(Int, pos./abmspace(model).spacing)))
 
 "given position in continuous space, return continuous space coordinates of cell center."
 function cell_center(pos::ValidPos, model)
@@ -141,7 +141,7 @@ end
 function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
     ) where {D, A<:AbstractAgent}
     space_size = spacesize(model)
-    all(i -> 0 <= pos[i] < space_size[i], 1:D) || error("position is outside space extent!")
+    all(i -> 0 <= pos[i] <= space_size[i], 1:D) || error("position is outside space extent!")
     oldcell = pos2cell(agent, model)
     newcell = pos2cell(pos, model)
     if oldcell ≠ newcell
