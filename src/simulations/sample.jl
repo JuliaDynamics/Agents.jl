@@ -40,8 +40,8 @@ function add_newids!(model, org_ids, new_ids)
     sort!(org_ids); sort!(new_ids)
     i, L = 1, length(new_ids)
     sizehint!(agent_container(model), L)
+    id_new = new_ids[1]
     for id in org_ids
-        id_new = new_ids[i]
         agent = model[id]
         if id_new != id
             remove_agent!(agent, model)
@@ -51,7 +51,7 @@ function add_newids!(model, org_ids, new_ids)
                 replicate!(agent, model)
                 i += 1
             end
-            i > L && return
+            i <= L && (id_new = new_ids[i])
         end
     end
     return
