@@ -69,10 +69,16 @@ end
     sample!(model4, 4)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)), 
                               3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
     @test keys(model4.agents) == keys(res)
+    @test res_fields == agents_fields
     sample!(model4, 2)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
     @test keys(model4.agents) == keys(res)
+    @test res_fields == agents_fields
 end
 
 @testset "random agent" begin
