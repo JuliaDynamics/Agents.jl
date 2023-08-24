@@ -22,6 +22,25 @@ using Agents, Test
 end
 
 @testset "sample!" begin
+    rng = StableRNG(50)
+    model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng)
+    agents = model4.agents
+    add_agent_pos!(Agent1(1, (1,1)), model4)
+    add_agent_pos!(Agent1(2, (2,2)), model4)
+    sample!(model4, 4)
+    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)), 
+                              3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
+    @test keys(model4.agents) == keys(res)
+    @test res_fields == agents_fields
+    sample!(model4, 2)
+    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
+    @test keys(model4.agents) == keys(res)
+    @test res_fields == agents_fields
+
     rng = StableRNG(42)
     model = ABM(Agent2; rng = rng)
     for i in 1:20
@@ -61,24 +80,6 @@ end
     sample!(model3, 100, :weight; replace = true)
     allweights = [i.weight for i in allagents(model3)]
     @test !allunique(allweights)
-
-    rng = StableRNG(50)
-    model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng)
-    add_agent_pos!(Agent1(1, (1,1)), model4)
-    add_agent_pos!(Agent1(2, (2,2)), model4)
-    sample!(model4, 4)
-    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)), 
-                              3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
-    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
-    @test keys(model4.agents) == keys(res)
-    @test res_fields == agents_fields
-    sample!(model4, 2)
-    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
-    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
-    @test keys(model4.agents) == keys(res)
-    @test res_fields == agents_fields
 end
 
 @testset "random agent" begin
