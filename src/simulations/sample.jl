@@ -39,6 +39,7 @@ end
 function add_newids!(model, org_ids, new_ids)
     sort!(org_ids); sort!(new_ids)
     i, L = 1, length(new_ids)
+    sizehint!(agent_container(model), L)
     for id in org_ids
         id_new = new_ids[i]
         agent = model[id]
