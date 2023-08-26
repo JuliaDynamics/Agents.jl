@@ -70,14 +70,26 @@ Welcome to this new update of Agents.jl!
 
 Breaking changes:
 
-- Agents in `ContinuousSpace` now require `SVector` for their `pos`
-  and `vel` fields instead of `NTuple`.
+- Agents.jl moved to Julia 1.9+, and now exports visualization
+  and interactive applications automatically once Makie (or Makie backends
+  such as GLMakie) come into scope, using the new package extension system.
+  The only downside of this is that now to visualize ABMs on open street
+  maps, the package OSMMakie.jl must be explicitly loaded as well.
+  InteractiveDynamics.jl is now obsolete.
+- We have created an objective fully automated framework for comparing open source
+  agent based modelling software. It shows that Agents.jl is much faster
+  than competing alternatives (MASON, NetLogo, Mesa).
+- The `@agent` macro is now THE way to create agent types for Agents.jl simulations since
+  now supports declaring default and constant fields. Directly creating structs by hand is 
+  no longer mentioned in the documentation at all. This will allow us in the future to utilize
+  additional fields that the user does not have to know about, which may bring new features or
+  performance gains by being part of the agent structures.
+- `ContinuousAgent{D}` is not a concrete type anymore. The new interface requires two parameters
+  `ContinuousAgent{D,T}` where `T` is any `AbstractFloat` type. If you want to use a type different
+  from `Float64`, you will also need to change the type of the `ContinuousSpace` extent accordingly. 
+  Agents in `ContinuousSpace` now require `SVector` for their `pos` and `vel` fields instead of `NTuple`. 
   Using `NTuple`s in `ContinuousSpace` is now deprecated.
-- `ContinuousAgent{D}` is not a concrete type anymore.
-  The new interface requires two parameters `ContinuousAgent{D,T}`
-  where `T` is any `AbstractFloat` type.
-  If you want to use a type different from `Float64`, you will also
-  need to change the type of the `ContinuousSpace` extent accordingly.
+- Several performance improvements all across the board.
 
 See the online documentation for more!
 """
