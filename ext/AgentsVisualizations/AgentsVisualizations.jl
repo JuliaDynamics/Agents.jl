@@ -1,6 +1,6 @@
 module AgentsVisualizations
 
-using Agents, Makie
+using Agents, Makie, GraphMakie
 using Agents: AbstractGridSpace
 
 JULIADYNAMICS_COLORS = [

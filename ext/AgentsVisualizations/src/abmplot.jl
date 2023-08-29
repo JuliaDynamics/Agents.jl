@@ -1,7 +1,5 @@
 include("model_observable.jl")
 
-using GraphMakie
-
 function Agents.abmplot(model::Agents.ABM;
     figure=NamedTuple(),
     axis=NamedTuple(),
