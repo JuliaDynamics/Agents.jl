@@ -27,12 +27,13 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [weakdeps]
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 
 [extensions]
 AgentsArrow = "Arrow"
 AgentsOSMVisualizations = "OSMMakie"
-AgentsVisualizations = "Makie"
+AgentsVisualizations = ["Makie", "GraphMakie"]
 
 [compat]
 Arrow = "2"
