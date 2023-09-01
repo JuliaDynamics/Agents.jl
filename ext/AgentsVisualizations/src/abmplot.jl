@@ -1,25 +1,25 @@
 include("model_observable.jl")
 
 function Agents.abmplot(model::Agents.ABM;
-        figure = NamedTuple(),
-        axis = NamedTuple(),
-        kwargs...)
+    figure=NamedTuple(),
+    axis=NamedTuple(),
+    kwargs...)
     fig = Figure(; figure...)
-    ax = fig[1,1][1,1] = agents_space_dimensionality(model) == 3 ?
-        Axis3(fig; axis...) : Axis(fig; axis...)
+    ax = fig[1, 1][1, 1] = agents_space_dimensionality(model) == 3 ?
+                           Axis3(fig; axis...) : Axis(fig; axis...)
     abmobs = abmplot!(ax, model; kwargs...)
 
     return fig, ax, abmobs
 end
 
 function Agents.abmplot!(ax, model::Agents.ABM;
-        # These keywords are given to `ABMObservable`
-        agent_step! = Agents.dummystep,
-        model_step! = Agents.dummystep,
-        adata = nothing,
-        mdata = nothing,
-        when = true,
-        kwargs...)
+    # These keywords are given to `ABMObservable`
+    (agent_step!)=Agents.dummystep,
+    (model_step!)=Agents.dummystep,
+    adata=nothing,
+    mdata=nothing,
+    when=true,
+    kwargs...)
     abmobs = ABMObservable(model; agent_step!, model_step!, adata, mdata, when)
     abmplot!(ax, abmobs; kwargs...)
 
@@ -34,23 +34,23 @@ Same functionality as `abmplot(model; kwargs...)`/`abmplot!(ax, model; kwargs...
 but allows to link an already existing `ABMObservable` to the created plots.
 """
 function Agents.abmplot(abmobs::ABMObservable;
-        axis = NamedTuple(),
-        add_controls = false,
-        figure = add_controls ? (resolution = (800, 600),) : (resolution = (800,800),),
-        kwargs...)
+    axis=NamedTuple(),
+    add_controls=false,
+    figure=add_controls ? (resolution=(800, 600),) : (resolution=(800, 800),),
+    kwargs...)
     fig = Figure(; figure...)
-    ax = fig[1,1][1,1] = agents_space_dimensionality(abmobs.model[]) == 3 ?
-        Axis3(fig; axis...) : Axis(fig; axis...)
+    ax = fig[1, 1][1, 1] = agents_space_dimensionality(abmobs.model[]) == 3 ?
+                           Axis3(fig; axis...) : Axis(fig; axis...)
     abmplot!(ax, abmobs; kwargs...)
 
     return fig, ax, abmobs
 end
 
 function Agents.abmplot!(ax, abmobs::ABMObservable;
-        # These keywords are propagated to the _ABMPlot recipe
-        add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
-        enable_inspection = add_controls,
-        kwargs...)
+    # These keywords are propagated to the _ABMPlot recipe
+    add_controls=_default_add_controls(abmobs.agent_step!, abmobs.model_step!),
+    enable_inspection=add_controls,
+    kwargs...)
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover
@@ -67,7 +67,7 @@ This is the internal recipe for creating an `_ABMPlot`.
 """
 @recipe(_ABMPlot, abmobs) do scene
     Theme(
-        # TODO: insert JuliaDynamics theme here?
+    # TODO: insert JuliaDynamics theme here?
     )
     Attributes(
         # Axis
@@ -76,33 +76,33 @@ This is the internal recipe for creating an `_ABMPlot`.
         # Makie's recipe system still works on the old system of Scenes which have no
         # concept of a parent Axis. Makie devs plan to enable this in the future. Until then
         # we will have to work around it with this "little hack".
-        ax = nothing,
+        ax=nothing,
 
         # Agent
-        ac = JULIADYNAMICS_COLORS[1],
-        as = 15,
-        am = :circle,
-        offset = nothing,
-        scatterkwargs = NamedTuple(),
-        osmkwargs = NamedTuple(),
-        graphplotkwargs = NamedTuple(),
+        ac=JULIADYNAMICS_COLORS[1],
+        as=15,
+        am=:circle,
+        offset=nothing,
+        scatterkwargs=NamedTuple(),
+        osmkwargs=NamedTuple(),
+        graphplotkwargs=NamedTuple(),
 
         # Preplot
-        heatarray = nothing,
-        heatkwargs = NamedTuple(),
-        add_colorbar = true,
-        static_preplot! = nothing,
-        adjust_aspect = true,
+        heatarray=nothing,
+        heatkwargs=NamedTuple(),
+        add_colorbar=true,
+        (static_preplot!)=nothing,
+        adjust_aspect=true,
 
         # Interactive application
-        add_controls = false,
+        add_controls=false,
         # Add parameter sliders if params are provided
-        params = Dict(),
+        params=Dict(),
         # Animation evolution speed
-        spu = 1:50,
+        spu=1:50,
 
         # Internal Attributes necessary for inspection, controls, etc. to work
-        _used_poly = false,
+        _used_poly=false,
     )
 end
 
@@ -147,20 +147,20 @@ function Makie.plot!(abmplot::_ABMPlot)
     if !isnothing(heatobs[])
         if !(Agents.abmspace(model) isa Agents.ContinuousSpace)
             hmap = heatmap!(abmplot, heatobs;
-                colormap = JULIADYNAMICS_CMAP, abmplot.heatkwargs...
+                colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...
             )
         else # need special version for continuous space
             nbinx, nbiny = size(heatobs[])
             extx, exty = Agents.abmspace(model).extent
-            coordx = range(0, extx; length = nbinx)
-            coordy = range(0, exty; length = nbiny)
+            coordx = range(0, extx; length=nbinx)
+            coordy = range(0, exty; length=nbiny)
             hmap = heatmap!(abmplot, coordx, coordy, heatobs;
-                colormap = JULIADYNAMICS_CMAP, abmplot.heatkwargs...
+                colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...
             )
         end
 
         if abmplot.add_colorbar[]
-            Colorbar(fig[1, 1][1, 2], hmap, width = 20)
+            Colorbar(fig[1, 1][1, 2], hmap, width=20)
             # TODO: Set colorbar to be "glued" to axis
             # Problem with the following code, which comes from the tutorial
             # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
@@ -177,24 +177,24 @@ function Makie.plot!(abmplot::_ABMPlot)
 
     # Dispatch on type of agent positions
     T = typeof(pos[])
-    if T<:Nothing # GraphSpace
+    if T <: Nothing # GraphSpace
         hidedecorations!(ax)
         ec = get(abmplot.graphplotkwargs, :edge_color, Observable(:black))
         edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
         ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
         edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
         graphplot!(abmplot, abmspace(model).graph;
-            node_color = color, node_marker = marker, node_size = markersize,
+            node_color=color, node_marker=marker, node_size=markersize,
             abmplot.graphplotkwargs..., # must come first to not overwrite lifted kwargs
             edge_color, edge_width)
-    elseif T<:Vector{Point2f} # 2d space
-        if typeof(marker[])<:Vector{<:Makie.Polygon{2}}
+    elseif T <: Vector{Point2f} # 2d space
+        if typeof(marker[]) <: Vector{<:Makie.Polygon{2}}
             poly_plot = poly!(abmplot, marker; color, abmplot.scatterkwargs...)
             poly_plot.inspectable[] = false # disable inspection for poly until fixed
         else
             scatter!(abmplot, pos; color, marker, markersize, abmplot.scatterkwargs...)
         end
-    elseif T<:Vector{Point3f} # 3d space
+    elseif T <: Vector{Point3f} # 3d space
         marker[] == :circle && (marker = Sphere(Point3f(0), 1))
         meshscatter!(abmplot, pos; color, marker, markersize, abmplot.scatterkwargs...)
     else
@@ -214,8 +214,10 @@ function set_axis_limits!(ax, model)
         e = [-Inf, -Inf]
         for i ∈ Agents.positions(model)
             x, y = Agents.OSM.lonlat(i, model)
-            o[1] = min(x, o[1]); o[2] = min(y, o[2])
-            e[1] = max(x, e[1]); e[2] = max(y, e[2])
+            o[1] = min(x, o[1])
+            o[2] = min(y, o[2])
+            e[1] = max(x, e[1])
+            e[2] = max(y, e[2])
         end
     elseif abmspace(model) isa Agents.ContinuousSpace
         e = abmspace(model).extent
