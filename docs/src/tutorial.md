@@ -1,19 +1,19 @@
 # Tutorial
 
 !!! tip "YouTube video"
-      * This Tutorial is also available as a YouTube video: https://youtu.be/fgwAfAa4kt0
+      * This Tutorial is also available as a YouTube video: [https://youtu.be/fgwAfAa4kt0](https://youtu.be/fgwAfAa4kt0)
 
 
 In Agents.jl a central structure called `AgentBasedModel` contains all data of a simulation and maps unique IDs (integers) to agent instances.
-During the simulation, the model evolves in discrete steps. During one step, the user decides which agents will act, how will they act, how many times, and whether any model-level properties will be adjusted.
+During the simulation, the model evolves in discrete steps. During one step, the user decides which agents will act, how they will act, how many times, and whether any model-level properties will be adjusted.
 Once the time evolution is defined, collecting data during time evolution is straightforward by simply stating which data should be collected.
 
 In the spirit of simple design, all of this is done by defining simple Julia data types, like basic functions, structs and dictionaries.
 
 To set up an ABM simulation in Agents.jl, a user only needs to follow these steps:
 
-1. Choose in what kind of space the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
-2. Define the agent type (or types, for mixed models) that will populate the ABM. Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to user's choice.
+1. Choose what kind of space the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
+2. Define the agent type (or types, for mixed models) that will populate the ABM. Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
 3. The created agent type, the chosen space, optional additional model level properties, and other simulation tuning properties like schedulers or random number generators, are given to [`AgentBasedModel`](@ref). This instance defines the model within an Agents.jl simulation. More specialized structures are also available, see [`AgentBasedModel`](@ref).
 4. Provide functions that govern the time evolution of the ABM. A user can provide an agent-stepping function, that acts on each agent one by one, and/or a model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref). Once these functions are created, they are simply passed to [`step!`](@ref) to evolve the model.
 5. _(Optional)_ Visualize the model and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
@@ -40,7 +40,7 @@ AbstractAgent
 
 ## 3. The model
 Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
-Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`kill_agent!`](@ref).
+Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`remove_agent!`](@ref).
 The "model" here stands for an instance of [`AgentBasedModel`](@ref).
 
 ```@docs
@@ -49,7 +49,7 @@ AgentBasedModel
 
 ## 4. Evolving the model
 
-In Agents.jl, an agent based model should be accompanied with least one and at most two stepping functions.
+In Agents.jl, an agent based model should be accompanied with at least one and at most two stepping functions.
 An _agent step function_ is required by default.
 Such an agent step function defines what happens to an agent when it activates.
 Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
@@ -106,7 +106,7 @@ step!(model, dummystep, complex_step!, n)
 For defining your own schedulers, see [Schedulers](@ref).
 
 ## 5. Visualizations
-Once you have defined a model and the stepping functions you can visualize the model statically or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Visualizations and Animations for Agent Based Models](@ref). Furthermore, all models in the Examples showcase plotting.
+Once you have defined a model and the stepping functions, you can visualize the model statically, or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Visualizations and Animations for Agent Based Models](@ref). Furthermore, all models in the Examples showcase plotting.
 
 ## 6. Collecting data
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection while scanning ranges of the parameters of the model, and the [`ensemblerun!`](@ref) that performs ensemble simulations and data collection.
@@ -115,7 +115,7 @@ Running the model and collecting data while the model runs is done with the [`ru
 run!
 ```
 
-The [`run!`](@ref) function has been designed for maximum flexibility: nearly all scenarios of data collection are possible whether you need agent data, model data, aggregated data, or arbitrary combinations.
+The [`run!`](@ref) function has been designed for maximum flexibility: nearly all scenarios of data collection are possible, whether you need agent data, model data, aggregated data, or arbitrary combinations.
 
 Nevertheless, we also expose a simple data-collection API (see [Data collection](@ref)), that gives users even more flexibility, allowing them to make their own "data collection loops" arbitrarily calling `step!` and collecting data as, and when, needed.
 
