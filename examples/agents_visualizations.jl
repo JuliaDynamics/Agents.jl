@@ -262,10 +262,10 @@ using Graphs: edges
 using GraphMakie: Shell
 edge_color(model) = fill((:grey, 0.25), ne(abmspace(model).graph))
 function edge_width(model)
-    w = zeros(ne(model.space.graph))
-    for e in edges(model.space.graph)
-        w[e.src] = 0.004 * length(model.space.stored_ids[e.src])
-        w[e.dst] = 0.004 * length(model.space.stored_ids[e.dst])
+    w = zeros(ne(abmspace(model).graph))
+    for e in edges(abmspace(model).graph)
+        w[e.src] = 0.004 * length(abmspace(model).stored_ids[e.src])
+        w[e.dst] = 0.004 * length(abmspace(model).stored_ids[e.dst])
     end
     return w
 end
