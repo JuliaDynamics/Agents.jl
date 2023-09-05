@@ -29,7 +29,7 @@ Pkg.status(["Agents", "CairoMakie"];
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
 
-daisypath = joinpath(pathof(Agents), "../../", "ext", "src", "daisyworld_def.jl")
+daisypath = joinpath(splitpath(pathof(Agents))[1:end-2]..., "ext", "AgentsVisualizations", "src", "daisyworld_def.jl")
 include(daisypath)
 model, daisy_step!, daisyworld_step! = daisyworld(;
     solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
