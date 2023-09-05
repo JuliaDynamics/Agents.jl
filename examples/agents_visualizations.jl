@@ -29,9 +29,7 @@ Pkg.status(["Agents", "CairoMakie"];
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
 
-daisypath = joinpath(splitpath(pathof(Agents))[1:end-2]..., "ext", "AgentsVisualizations", "src", "daisyworld_def.jl")
-include(daisypath)
-model, daisy_step!, daisyworld_step! = daisyworld(;
+model, daisy_step!, daisyworld_step! = Models.daisyworld(;
     solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
 )
 model
@@ -39,7 +37,7 @@ model
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a::Daisy) = a.breed # agent color
+daisycolor(a::Models.Daisy) = a.breed # agent color
 as = 20    # agent size
 am = '✿'  # agent marker
 scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
@@ -118,7 +116,7 @@ nothing # hide
 # abmvideo
 # ```
 # E.g., continuing from above,
-model, daisy_step!, daisyworld_step! = daisyworld()
+model, daisy_step!, daisyworld_step! = Models.daisyworld()
 abmvideo(
     "daisyworld.mp4",
     model,  daisy_step!, daisyworld_step!;
@@ -167,7 +165,7 @@ abmvideo(
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model, = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+model, = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model;
     agent_step! = daisy_step!, model_step! = daisyworld_step!, params, plotkwargs...,
     adata, mdata, figure = (; resolution = (1600,800))
@@ -239,13 +237,15 @@ fig
 # If we want to use a function for this, we therefore need to handle an iterator of agents.
 # Keeping this in mind, we can create an [exemplary GraphSpace model](https://juliadynamics.github.io/Agents.jl/stable/examples/sir/)
 # and plot it with [`abmplot`](@ref).
+using Graphs
+using ColorTypes
 sir_model, sir_agent_step!, sir_model_step! = Models.sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
-    agents_here = length(agents_here)
+    l_agents_here = length(agents_here)
     infected = count(a.status == :I for a in agents_here)
     recovered = count(a.status == :R for a in agents_here)
-    return RGBf(infected / agents_here, recovered / agents_here, 0)
+    return RGB(infected / l_agents_here, recovered / l_agents_here, 0)
 end
 
 # To further style the edges and nodes of the resulting graph plot, we can leverage
@@ -258,7 +258,6 @@ end
 # In the example below, the `edge_color` function colors all edges to a semi-transparent
 # shade of grey and the `edge_width` function makes use of the special ability of
 # `linesegments` to be tapered (i.e. one end is wider than the other).
-using Graphs: edges
 using GraphMakie: Shell
 edge_color(model) = fill((:grey, 0.25), ne(abmspace(model).graph))
 function edge_width(model)
@@ -276,6 +275,7 @@ graphplotkwargs = (
     edge_width = edge_width,
     edge_plottype = :linesegments # needed for tapered edge widths
 )
+
 fig, ax, abmobs = abmplot(sir_model;
     agent_step! = sir_agent_step!, model_step! = sir_model_step!,
     as = city_size, ac = city_color, graphplotkwargs)

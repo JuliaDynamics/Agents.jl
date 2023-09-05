@@ -10,6 +10,7 @@ and the agent and model stepping functions.
 module Models
 using Agents
 
+include("daisyworld_def.jl")
 include("flocking.jl")
 include("schelling.jl")
 include("sir.jl")
