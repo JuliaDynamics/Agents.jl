@@ -33,7 +33,7 @@ OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 [extensions]
 AgentsArrow = "Arrow"
 AgentsOSMVisualizations = "OSMMakie"
-AgentsVisualizations = ["Makie"]
+AgentsVisualizations = "Makie"
 
 [compat]
 Arrow = "2"
