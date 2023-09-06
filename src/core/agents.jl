@@ -226,8 +226,13 @@ macro agent(struct_repr)
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
     # We start with a quote. All macros return a quote to be evaluated
     struct_parts = struct_repr.args[2:end]
-    new_type_with_super = struct_parts[1]
-    new_type = new_type_with_super.args[1]
+    if struct_parts[1] isa Symbol
+        new_type = struct_parts[1]
+        new_type_with_super = :($new_type <: Agents.AbstractAgent)
+    else
+        new_type_with_super = struct_parts[1]
+        new_type = new_type_with_super.args[1]
+    end
     fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
     fieldsof_base_type = fields_with_base_T[1]
     new_fields = fields_with_base_T[2:end]
