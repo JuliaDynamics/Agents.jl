@@ -221,10 +221,6 @@ f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
 macro agent(struct_repr)
-    # This macro was generated with the guidance of @rdeits on Discourse:
-    # https://discourse.julialang.org/t/
-    # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    # We start with a quote. All macros return a quote to be evaluated
     struct_parts = struct_repr.args[2:end]
     if struct_parts[1] isa Symbol
         new_type = struct_parts[1]
