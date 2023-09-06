@@ -46,14 +46,15 @@ function fieldsof(A::Type{<:AbstractAgent})
 end
 
 """
-    @agent YourAgentType{X} AnotherAgentType [OptionalSupertype] begin
+    @agent struct YourAgentType{X} [<: OptionalSupertype]
+        fieldsof(AnotherAgentType)
         extra_property::X
         other_extra_property::Int
         # etc...
     end
 
 Define an agent struct which includes all fields that `AnotherAgentType` has,
-as well as any additional ones the user may provide via the `begin` block.
+as well as any additional ones the user may provide.
 See below for examples.
 
 Using `@agent` is the only supported way to create agent types for Agents.jl.
@@ -87,7 +88,8 @@ Use functions like [`move_agent!`](@ref) etc., to change the position.
 ### Example without optional hierarchy
 Using
 ```julia
-@agent Person{T} GridAgent{2} begin
+@agent struct Person{T}
+    fieldsof(GridAgent{2}) 
     age::Int
     moneyz::T
 end
@@ -98,49 +100,22 @@ will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref
 mutable struct Person{T} <: AbstractAgent
     id::Int
     pos::NTuple{2, Int}
-    age::Int
+    const age::Int
     moneyz::T
 end
 ```
-and then, one can even do
-```julia
-@agent Baker{T} Person{T} begin
-    breadz_per_day::T
-end
-```
-which would make
-```julia
-mutable struct Baker{T} <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Int}
-    age::Int
-    moneyz::T
-    breadz_per_day::T
-end
 Notice that you can also use default values for some fields, in this case you 
 will need to specify the field names with the non-default values
 ```julia
-@agent Person{T} GridAgent{2} begin
+@agent struct Person2{T}
+    fieldsof(GridAgent{2})
     age::Int = 30
     moneyz::T
 end
 # default age value
-Person(id = 1, pos = (1, 1), moneyz = 2000)
+Person2(id = 1, pos = (1, 1), moneyz = 2000)
 # new age value
-Person(1, (1, 1), 40, 2000)
-```
-It is also possible to specify that some fields are immutable (constants)
-using the special `constants` variable inside the macro:
-```julia
-@agent Person{T} GridAgent{2} begin
-    age::Int
-    moneyz::T
-    constants = (:age, )
-end
-
-agent = Person(1, (1, 1), 40, 2000)
-agent.moneyz = 1000
-agent.age = 20 # this throws an error
+Person2(1, (1, 1), 40, 2000)
 ```
 ### Example with optional hierarchy
 An alternative way to make the above structs, that also establishes
@@ -148,12 +123,14 @@ a user-specific subtyping hierarchy would be to do:
 ```julia
 abstract type AbstractHuman <: AbstractAgent end
 
-@agent Worker GridAgent{2} AbstractHuman begin
+@agent struct Worker <: AbstractHuman
+    fieldsof(GridAgent{2}) 
     age::Int
     moneyz::Float64
 end
 
-@agent Fisher Worker AbstractHuman begin
+@agent struct Fisher <: AbstractHuman
+    fieldsof(Worker)
     fish_per_day::Float64
 end
 ```
@@ -172,11 +149,13 @@ inherited the fields from `Worker`.
 Notice that in Julia parametric types are union types.
 Hence, the following cannot be used:
 ```julia
-@agent Dummy{T} GridAgent{2} begin
+@agent struct Dummy{T}
+    fieldsof(GridAgent{2})
     moneyz::T
 end
 
-@agent Fisherino{T} Dummy{T} begin
+@agent struct Fisherino{T}
+    fieldsof(Dummy{T})
     fish_per_day::T
 end
 ```
@@ -188,7 +167,8 @@ You can only use `Dummy{Float64}`.
 It may be that you do not even need to create a subtyping relation if you want
 to utilize multiple dispatch. Consider the example:
 ```julia
-@agent CommonTraits GridSpace{2} begin
+@agent struct CommonTraits
+    fieldsof(GridAgent{2})
     age::Int
     speed::Int
     energy::Int
@@ -196,11 +176,13 @@ end
 ```
 and then two more structs are made from these traits:
 ```julia
-@agent Bird CommonTraits begin
+@agent struct Bird
+    fieldsof(CommonTraits)
     height::Float64
 end
 
-@agent Rabbit CommonTraits begin
+@agent struct Rabbit
+    fieldsof(CommonTraits)
     underground::Bool
 end
 ```
@@ -222,7 +204,7 @@ f(x::Person) = ... # uses fields that all "persons" have
 """
 macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
-    if struct_parts[1] isa Symbol
+    if struct_parts[1] isa Symbol || struct_parts[1].head == :curly
         new_type = struct_parts[1]
         new_type_with_super = :($new_type <: Agents.AbstractAgent)
     else
@@ -265,7 +247,8 @@ macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-
+    @warn "this version of the agent macro is deprecated. Use the new version described in 
+         the docs of the agent macro introduced in the 6.0 release."
     # hack for backwards compatibility (PR #846)
     if base_type isa Expr
         if base_type.args[1] == :ContinuousAgent && length(base_type.args) == 2
