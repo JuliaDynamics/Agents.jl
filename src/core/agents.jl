@@ -287,18 +287,18 @@ macro agent(struct_repr)
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
     # We start with a quote. All macros return a quote to be evaluated
-
     struct_parts = struct_repr.args[2:end]
     new_type_with_super = struct_parts[1]
+    new_type = new_type_with_super.args[1]
     fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
-    base_type = fields_with_base_T[1]
+    fieldsof_base_type = fields_with_base_T[1]
     new_fields = fields_with_base_T[2:end]
-    
     quote
         let
             # Here we collect the field names and types from the base type
-            # Because the base type already exists, we escape the symbols to obtain its
-            base_fields = $(esc(base_type))
+            # Because the base type already exists, we escape the symbols to 
+            # obtain its fields
+            base_fields = $(esc(fieldsof_base_type))
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))
@@ -307,7 +307,6 @@ macro agent(struct_repr)
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
             expr = quote
-                # Also notice that we quote supertype and interpolate it twice
                 @kwdef mutable struct $name
                     $(base_fields...)
                     $(additional_fields...)
@@ -318,7 +317,7 @@ macro agent(struct_repr)
             Core.eval($(__module__), expr)
         end
         # allow attaching docstrings to the new struct, issue #715
-        #Core.@__doc__($(esc(Docs.namify(new_name))))
+        Core.@__doc__($(esc(Docs.namify(new_type))))
         nothing
     end
 end
