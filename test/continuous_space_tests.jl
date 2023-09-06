@@ -392,8 +392,6 @@ using LinearAlgebra: norm, dot
             mass::Float64
         end
 
-        println(fieldsof(MassContinuousAgent))
-
         function model_initiation()
             space = ContinuousSpace((10,10); periodic=true)
             model = ABM(MassContinuousAgent, space;
