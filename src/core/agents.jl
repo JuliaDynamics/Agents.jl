@@ -17,6 +17,24 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
+"""
+    fieldsof(AgentType)
+
+Return a vector of the fields of the given `AgentType`.
+
+## Examples
+Using 
+```julia
+fields = fieldsof(GridAgent{2})
+println(fields)
+```
+will return 
+```julia
+2-element Vector{Expr}:
+ :(const id::Int64)
+ :(pos::Tuple{Int64, Int64})
+```
+"""
 function fieldsof(A::Type{<:AbstractAgent})
     A_fieldnames = fieldnames(A)
     A_fieldtypes = fieldtypes(A)
@@ -202,6 +220,46 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
+macro agent(struct_repr)
+    # This macro was generated with the guidance of @rdeits on Discourse:
+    # https://discourse.julialang.org/t/
+    # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
+    # We start with a quote. All macros return a quote to be evaluated
+    struct_parts = struct_repr.args[2:end]
+    new_type_with_super = struct_parts[1]
+    new_type = new_type_with_super.args[1]
+    fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
+    fieldsof_base_type = fields_with_base_T[1]
+    new_fields = fields_with_base_T[2:end]
+    quote
+        let
+            # Here we collect the field names and types from the base type
+            # Because the base type already exists, we escape the symbols to 
+            # obtain its fields
+            base_fields = $(esc(fieldsof_base_type))
+            # Then, we prime the additional name and fields into QuoteNodes
+            # We have to do this to be able to interpolate them into an inner quote.
+            name = $(QuoteNode(new_type_with_super))
+            additional_fields = $(QuoteNode(new_fields))
+            # Now we start an inner quote. This is because our macro needs to call `eval`
+            # However, this should never happen inside the main body of a macro
+            # There are several reasons for that, see the cited discussion at the top
+            expr = quote
+                @kwdef mutable struct $name
+                    $(base_fields...)
+                    $(additional_fields...)
+                end
+            end
+            # @show expr # uncomment this to see that the final expression looks as desired
+            # It is important to evaluate the macro in the module that it was called at
+            Core.eval($(__module__), expr)
+        end
+        # allow attaching docstrings to the new struct, issue #715
+        Core.@__doc__($(esc(Docs.namify(new_type))))
+        nothing
+    end
+end
+
 macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
@@ -279,45 +337,4 @@ are not documented as part of the public API. See also [`@agent`](@ref).
 """
 mutable struct NoSpaceAgent <: AbstractAgent
     const id::Int
-end
-
-
-macro agent(struct_repr)
-    # This macro was generated with the guidance of @rdeits on Discourse:
-    # https://discourse.julialang.org/t/
-    # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    # We start with a quote. All macros return a quote to be evaluated
-    struct_parts = struct_repr.args[2:end]
-    new_type_with_super = struct_parts[1]
-    new_type = new_type_with_super.args[1]
-    fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
-    fieldsof_base_type = fields_with_base_T[1]
-    new_fields = fields_with_base_T[2:end]
-    quote
-        let
-            # Here we collect the field names and types from the base type
-            # Because the base type already exists, we escape the symbols to 
-            # obtain its fields
-            base_fields = $(esc(fieldsof_base_type))
-            # Then, we prime the additional name and fields into QuoteNodes
-            # We have to do this to be able to interpolate them into an inner quote.
-            name = $(QuoteNode(new_type_with_super))
-            additional_fields = $(QuoteNode(new_fields))
-            # Now we start an inner quote. This is because our macro needs to call `eval`
-            # However, this should never happen inside the main body of a macro
-            # There are several reasons for that, see the cited discussion at the top
-            expr = quote
-                @kwdef mutable struct $name
-                    $(base_fields...)
-                    $(additional_fields...)
-                end
-            end
-            # @show expr # uncomment this to see that the final expression looks as desired
-            # It is important to evaluate the macro in the module that it was called at
-            Core.eval($(__module__), expr)
-        end
-        # allow attaching docstrings to the new struct, issue #715
-        Core.@__doc__($(esc(Docs.namify(new_type))))
-        nothing
-    end
 end
