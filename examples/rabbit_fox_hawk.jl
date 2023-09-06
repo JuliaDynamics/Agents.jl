@@ -24,7 +24,8 @@ using Random
 import ImageMagick
 using FileIO: load
 
-@agent Animal ContinuousAgent{3,Float64} begin
+@agent struct Animal 
+    fieldsof(ContinuousAgent{3,Float64})
     type::Symbol # one of :rabbit, :fox or :hawk
     energy::Float64
 end

@@ -36,7 +36,8 @@ using Agents
 # simulation. The `Particle` type, for the `ContinuousAgent{2,Float64}` space, will have additionally
 # an `id` and `pos` (position) and `vel` (velocity) fields, which are automatically added
 # by the `@agent` macro.
-@agent Particle ContinuousAgent{2,Float64} begin
+@agent struct Particle 
+    fieldsof(ContinuousAgent{2,Float64})
     r::Float64 # radius
     k::Float64 # repulsion force constant
     mass::Float64

@@ -587,7 +587,9 @@ end
 end
 
 @testset "Parameter scan" begin
-    @everywhere @agent Automata GridAgent{2} begin end
+    @everywhere @agent struct Automata 
+        fieldsof(GridAgent{2})
+    end
     function forest_fire(; density = 0.7, griddims = (100, 100))
         space = GridSpace(griddims; periodic = false, metric = :euclidean)
         forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))

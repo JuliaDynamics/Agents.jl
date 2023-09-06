@@ -1,6 +1,7 @@
 using Random
 
-@agent Zombie OSMAgent begin
+@agent struct Zombie 
+    fieldsof(OSMAgent)
     infected::Bool
     speed::Float64
 end

@@ -22,7 +22,8 @@ abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
 It has an additional `pos::NTuple{D,Int}` field. See also [`@agent`](@ref).
 """
-@agent GridAgent{D} NoSpaceAgent begin
+@agent struct GridAgent{D} 
+    fieldsof(NoSpaceAgent)
     pos::NTuple{D, Int}
 end
 

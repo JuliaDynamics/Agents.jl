@@ -2,7 +2,8 @@ using Test, Agents, Random
 
 @testset "@agent macro" begin
     @test ContinuousAgent <: AbstractAgent
-    @agent A3 GridAgent{2} begin
+    @agent struct A3 
+        fieldsof(GridAgent{2})
         weight::Float64
     end
     @test A3 <: AbstractAgent
@@ -12,7 +13,8 @@ using Test, Agents, Random
     """
     This is a test docstring for agent A4
     """
-    @agent A4 A3 begin
+    @agent struct A4 
+        fieldsof(A3)
         z::Bool
     end
     @test A4 <: AbstractAgent
@@ -23,20 +25,23 @@ using Test, Agents, Random
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end
 
-    @agent Worker GridAgent{2} AbstractHuman begin
+    @agent struct Worker <: AbstractHuman
+        fieldsof(GridAgent{2})
         age::Int
         moneyz::Float64
     end
     @test Worker <: AbstractHuman
     @test :age ∈ fieldnames(Worker)
 
-    @agent Fisher Worker AbstractHuman begin
+    @agent struct Fisher <: AbstractHuman
+        fieldsof(Worker)
         fish_per_day::Float64
     end
     @test Fisher <: AbstractHuman
     @test :fish_per_day ∈ fieldnames(Fisher)
 
-    @agent Agent9 NoSpaceAgent begin
+    @agent struct Agent9 
+        fieldsof(NoSpaceAgent)
         f1::Int = 40
         f2::Int
         f3::Float64 = 3.0
@@ -48,11 +53,11 @@ using Test, Agents, Random
     values = (1, 20, 10, 4.0)
     @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
 
-    @agent Agent10 NoSpaceAgent begin
+    @agent struct Agent10 
+        fieldsof(NoSpaceAgent)
         f1::Int
-        f2::Int
+        const f2::Int
         f3::Float64
-        constants = (:f2, )
     end
     agent_consts = Agent10(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
@@ -61,11 +66,11 @@ using Test, Agents, Random
     @test agent_consts.f1 == 5
     @test_throws ErrorException agent_consts.f2 = 5
 
-    @agent Agent11 NoSpaceAgent begin
-        f1::Int
-        f2
+    @agent struct Agent11 
+        fieldsof(NoSpaceAgent)
+        const f1::Int
+        const f2
         f3::Float64
-        constants = (:f1, :f2)
     end
     agent_consts = Agent11(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
@@ -75,10 +80,10 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
 
-    @agent Agent12 Agent11 begin
-        f4
+    @agent struct Agent12 
+        fieldsof(Agent11)
+        const f4
         f5::Float64
-        constants = (:f4, )
     end
     agent_consts = Agent12(1, 2, 10, 5.0, true, 3.0)
     values = (1, 2, 10, 5.0, true, 3.0)
@@ -173,7 +178,8 @@ end
     agent = ParametricAgent(1, (1, 1), 5, "Info")
     @test Agents.agenttype(ABM(agent, GridSpace((1, 1)))) <: AbstractAgent
     #Mixed agents
-    @agent ValidAgent NoSpaceAgent begin
+    @agent struct ValidAgent 
+        fieldsof(NoSpaceAgent)
         dummy::Bool
     end
 

@@ -36,9 +36,11 @@ will return
 ```
 """
 function fieldsof(A::Type{<:AbstractAgent})
+    #println(A)
     A_fieldnames = fieldnames(A)
     A_fieldtypes = fieldtypes(A)
     A_fieldconsts = isconst.(A, A_fieldnames)
+    #println(A_fieldconsts)
     iter_fields = zip(A_fieldnames, A_fieldtypes, A_fieldconsts)
     A_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
                    for (f, T, c) in iter_fields]
@@ -212,14 +214,14 @@ macro agent(struct_repr)
         new_type = new_type_with_super.args[1]
     end
     fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
-    fieldsof_base_type = fields_with_base_T[1]
+    base_type = fields_with_base_T[1].args[2]
     new_fields = fields_with_base_T[2:end]
     quote
         let
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to 
             # obtain its fields
-            base_fields = $(esc(fieldsof_base_type))
+            base_fields = fieldsof($(esc(base_type)))
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))

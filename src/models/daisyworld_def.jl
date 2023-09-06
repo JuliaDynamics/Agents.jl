@@ -2,7 +2,8 @@ using Agents
 import StatsBase
 using Random
 
-@agent Daisy GridAgent{2} begin
+@agent struct Daisy 
+    fieldsof(GridAgent{2})
     breed::Symbol
     age::Int
     albedo::Float64 # 0-1 fraction

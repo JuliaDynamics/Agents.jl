@@ -5,7 +5,8 @@ using LinearAlgebra: norm, dot
 # TODO: We need to write tests for get_spatial_index and stuff!
 
 @testset "ContinuousSpace" begin
-    @agent SpeedyContinuousAgent ContinuousAgent{2,Float64} begin
+    @agent struct SpeedyContinuousAgent 
+        fieldsof(ContinuousAgent{2,Float64})
         speed::Float64
     end
 
@@ -60,7 +61,9 @@ using LinearAlgebra: norm, dot
 
     @testset "support for tuples use with ContinuousAgent" begin
         # agents with SVector types also work when passing tuples to functions
-        @agent SVecAgent ContinuousAgent{2,Float64} begin; end
+        @agent struct SVecAgent 
+            fieldsof(ContinuousAgent{2,Float64})
+        end
         space = ContinuousSpace((1,1))
         model = ABM(SVecAgent, space)
         x = (0.0, 0.0)
@@ -356,7 +359,9 @@ using LinearAlgebra: norm, dot
         walk!(a, SVector(15.0, 1.0), model)
         @test a.pos == SVector(prevfloat(12.0), 2.0)
 
-        @agent ContinuousAgent3D ContinuousAgent{3,Float64} begin end
+        @agent struct ContinuousAgent3D 
+            fieldsof(ContinuousAgent{3,Float64})
+        end
         model = ABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2))
         a = add_agent!(SVector(0.0, 0.0, 0.0), model, SVector(0.0, 0.0, 0.0))
         walk!(a, SVector(1.0, 1.0, 1.0), model)
@@ -382,9 +387,12 @@ using LinearAlgebra: norm, dot
         speed = 0.002
         dt = 1.0
         diameter = 0.1
-        @agent MassContinuousAgent ContinuousAgent{2,Float64} begin
+        @agent struct MassContinuousAgent 
+            fieldsof(ContinuousAgent{2,Float64})
             mass::Float64
         end
+
+        println(fieldsof(MassContinuousAgent))
 
         function model_initiation()
             space = ContinuousSpace((10,10); periodic=true)

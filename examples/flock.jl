@@ -21,7 +21,8 @@
 using Agents
 using Random, LinearAlgebra
 
-@agent Bird ContinuousAgent{2,Float64} begin
+@agent struct Bird 
+    fieldsof(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64

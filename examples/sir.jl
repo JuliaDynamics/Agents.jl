@@ -49,7 +49,8 @@ using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
 
-@agent PoorSoul GraphAgent begin
+@agent struct PoorSoul 
+    fieldsof(GraphAgent)
     days_infected::Int  # number of days since is infected
     status::Symbol  # 1: S, 2: I, 3:R
 end
