@@ -206,9 +206,8 @@ models[7] = zombies_obs
 # Growing bacteria
 using Agents, LinearAlgebra
 using Random # hide
-mutable struct SimpleCell <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
+@agent struct SimpleCell
+    fieldsof(ContinuousAgent{2,Float64})
     length::Float64
     orientation::Float64
     growthprog::Float64

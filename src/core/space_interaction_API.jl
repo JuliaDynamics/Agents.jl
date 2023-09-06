@@ -242,9 +242,8 @@ because it is otherwise not possible to deduce a constructor for `A`.
 ## Example
 ```julia
 using Agents
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::Int
+@agent struct Agent
+    fieldsof(GraphAgent)
     w::Float64
     k::Bool = false
 end

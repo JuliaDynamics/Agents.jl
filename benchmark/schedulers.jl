@@ -2,14 +2,14 @@ using BenchmarkTools, Agents
 
 const SUITE = BenchmarkGroup(["Schedulers"])
 
-mutable struct FakeAgent <: AbstractAgent
-    id::Int
+@agent struct FakeAgent
+    fieldsof(NoSpaceAgent)
     group::Int
     incr::Int
 end
 
-mutable struct OtherFakeAgent <: AbstractAgent
-    id::Int
+@agent struct OtherFakeAgent
+    fieldsof(NoSpaceAgent)
     group::Int
     incr::Int
 end

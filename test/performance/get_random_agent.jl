@@ -1,7 +1,7 @@
 using Agents, Random, BenchmarkTools
 
-mutable struct LabelledAgent <: AbstractAgent
-    id::Int
+@agent struct LabelledAgent
+    fieldsof(NoSpaceAgent)
     label::Bool
 end
 

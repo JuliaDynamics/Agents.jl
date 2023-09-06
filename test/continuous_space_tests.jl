@@ -268,15 +268,11 @@ using LinearAlgebra: norm, dot
             @test (1, 4) ∉ pairs
         end
         @testset "union types" begin
-            mutable struct AgentU1 <: AbstractAgent
-                id::Int
-                pos::SVector{2,Float64}
-                vel::SVector{2,Float64}
+            @agent struct AgentU1
+                fieldsof(ContinuousAgent{2,Float64})
             end
-            mutable struct AgentU2 <: AbstractAgent
-                id::Int
-                pos::SVector{2,Float64}
-                vel::SVector{2,Float64}
+            @agent struct AgentU2 <: AbstractAgent
+                fieldsof(ContinuousAgent{2,Float64})
             end
             function ignore_normal(model::ABM)
                 [a.id for a in allagents(model) if !(typeof(a) <: SpeedyContinuousAgent)]
@@ -327,10 +323,8 @@ using LinearAlgebra: norm, dot
     end
 
     @testset "nearest neighbor" begin
-        mutable struct AgentNNContinuous <: AbstractAgent
-            id::Int
-            pos::SVector{2,Float64}
-            vel::SVector{2,Float64}
+        @agent struct AgentNNContinuous
+            fieldsof(ContinuousAgent{2,Float64})
             f1::Union{Int,Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)

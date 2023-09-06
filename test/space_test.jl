@@ -55,16 +55,13 @@
 
     end
 
-    mutable struct Agent3D <: AbstractAgent
-        id::Int
-        pos::Dims{3}
+    @agent struct Agent3D
+        fieldsof(GridAgent{3})
         weight::Float64
     end
 
-    mutable struct Agent63 <: AbstractAgent
-        id::Int
-        pos::NTuple{3,Float64}
-        vel::NTuple{3,Float64}
+    @agent struct Agent63
+        fieldsof(ContinuousAgent{3,Float64})
         weight::Float64
     end
 

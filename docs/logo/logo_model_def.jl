@@ -10,10 +10,8 @@ const SPEED = 0.004
 const AGENTS_IN_TEXT = 800 # how many agents to create inside the text
 const steps_per_day = 24
 
-mutable struct PoorSoul <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent struct PoorSoul
+    fieldsof(ContinuousAgent{2,Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R

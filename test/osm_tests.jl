@@ -2,9 +2,8 @@ using Test, Agents, Random
 using Agents.Graphs
 using StableRNGs
 
-mutable struct AgentOSM <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
+@agent struct AgentOSM
+    fielsof(OSMAgent)
 end
 
 @testset "OpenStreetMap space" begin

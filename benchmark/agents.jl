@@ -1,86 +1,68 @@
-mutable struct GraphAgent <: AbstractAgent
-    id::Int
-    pos::Int
+using Agents
+
+@agent struct GraphAgentOne
+    fieldsof(GraphAgent)
     one::Float64
     two::Bool
 end
 
-mutable struct GraphAgentTwo <: AbstractAgent
-    id::Int
-    pos::Int
+@agent struct GraphAgentTwo
+    fieldsof(GraphAgent)
 end
 
-mutable struct GraphAgentThree <: AbstractAgent
-    id::Int
-    pos::Int
+@agent struct GraphAgentThree
+    fieldsof(GraphAgent)
 end
 
-mutable struct GraphAgentFour <: AbstractAgent
-    id::Int
-    pos::Int
+@agent struct GraphAgentFour
+    fieldsof(GraphAgent)
 end
 
-mutable struct GraphAgentFive <: AbstractAgent
-    id::Int
-    pos::Int
+@agent struct GraphAgentFive
+    fieldsof(GraphAgent)
 end
 
-mutable struct GridAgent <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentOne
+    fieldsof(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-mutable struct GridAgentTwo <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentTwo <: AbstractAgent
+    fieldsof(GridAgent{2})
 end
 
-mutable struct GridAgentThree <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentThree <: AbstractAgent
+    fieldsof(GridAgent{2})
 end
 
-mutable struct GridAgentFour <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentFour <: AbstractAgent
+    fieldsof(GridAgent{2})
 end
 
-mutable struct GridAgentFive <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentFive <: AbstractAgent
+    fieldsof(GridAgent{2})
 end
 
-mutable struct ContinuousAgent <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+@agent struct ContinuousAgentOne <: AbstractAgent
+    fieldsof(ContinuousAgent{3,Float64})
     one::Float64
     two::Bool
 end
 
-mutable struct ContinuousAgentTwo <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+@agent struct ContinuousAgentTwo
+    fieldsof(ContinuousAgent{3,Float64})
 end
 
-mutable struct ContinuousAgentThree <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+@agent struct ContinuousAgentThree
+    fieldsof(ContinuousAgent{3,Float64})
 end
 
-mutable struct ContinuousAgentFour <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+@agent struct ContinuousAgentFour
+    fieldsof(ContinuousAgent{3,Float64})
 end
 
-mutable struct ContinuousAgentFive <: AbstractAgent
-    id::Int
-    pos::NTuple{3,Float64}
-    vel::NTuple{3,Float64}
+@agent struct ContinuousAgentFive
+    fieldsof(ContinuousAgent{3,Float64})
 end
 

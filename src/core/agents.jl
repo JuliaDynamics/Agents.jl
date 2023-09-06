@@ -95,7 +95,6 @@ Using
 end
 ```
 will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref)
-
 ```julia
 mutable struct Person{T} <: AbstractAgent
     id::Int

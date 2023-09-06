@@ -411,9 +411,8 @@ end
 
         # Handle mismatches
         # In this example, weight exists in both agents, but they have different types
-        mutable struct Agent3Int <: AbstractAgent
-            id::Int
-            pos::Dims{2}
+        @agent struct Agent3Int
+            fieldsof(GridAgent{2})
             weight::Int
         end
         model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)

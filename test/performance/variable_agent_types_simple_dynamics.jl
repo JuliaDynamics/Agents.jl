@@ -7,93 +7,79 @@
 
 using Agents, Random
 
-mutable struct Agent1 <: AbstractAgent
+@agent struct Agent1
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent2
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent3
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent4
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent5
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent6
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent7
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent8
+    fieldsof(GridAgent{2})
+    money::Int
+end
+
+@agent struct Agent9
     id::Int
     pos::Tuple{Int,Int}
     money::Int
 end
 
-mutable struct Agent2 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent10
+    fieldsof(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent3 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent11
+    fieldsof(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent4 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent12
+    fieldsof(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent5 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent13
+    fieldsof(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent6 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent14
+    fieldsof(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent7 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent8 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent9 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent10 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent11 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent12 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent13 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent14 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
-    money::Int
-end
-
-mutable struct Agent15 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent15
+    fieldsof(GridAgent{2})
     money::Int
 end
 
