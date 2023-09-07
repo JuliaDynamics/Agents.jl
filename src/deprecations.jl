@@ -89,3 +89,74 @@ function remove_agent_from_model!(agent::A, model::FixedMassABM) where {A<:Abstr
     error("Cannot remove agents in a FixedMassABM`")
 end
 modelname(::SizedVector) = "FixedMassABM"
+
+macro agent(new_name, base_type, super_type, extra_fields)
+    # This macro was generated with the guidance of @rdeits on Discourse:
+    # https://discourse.julialang.org/t/
+    # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
+    @warn "this version of the agent macro is deprecated. Use the new version described in 
+         the docs of the agent macro introduced in the 6.0 release."
+    # hack for backwards compatibility (PR #846)
+    if base_type isa Expr
+        if base_type.args[1] == :ContinuousAgent && length(base_type.args) == 2
+            base_type = Expr(base_type.head, base_type.args..., :Float64)
+        end
+    end
+    # We start with a quote. All macros return a quote to be evaluated
+    quote
+        let
+            # Here we collect the field names and types from the base type
+            # Because the base type already exists, we escape the symbols to obtain it
+            base_T = $(esc(base_type))
+            base_fieldnames = fieldnames(base_T)
+            base_fieldtypes = fieldtypes(base_T)
+            base_fieldconsts = isconst.(base_T, base_fieldnames)
+            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
+            base_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
+                           for (f, T, c) in iter_fields]
+            # Then, we prime the additional name and fields into QuoteNodes
+            # We have to do this to be able to interpolate them into an inner quote.
+            name = $(QuoteNode(new_name))
+            additional_fields = $(QuoteNode(extra_fields.args))
+            # here, we mutate any const fields defined by the consts variable in the macro
+            additional_fields = filter(f -> typeof(f) != LineNumberNode, additional_fields)
+            args_names = map(f -> f isa Expr ? f.args[1] : f, additional_fields)
+            index_consts = findfirst(f -> f == :constants, args_names)
+            if index_consts != nothing
+                consts_args = eval(splice!(additional_fields, index_consts))
+                for arg in consts_args
+                    i = findfirst(a -> a == arg, args_names)
+                    additional_fields[i] = Expr(:const, additional_fields[i])
+                end
+            end
+            # Now we start an inner quote. This is because our macro needs to call `eval`
+            # However, this should never happen inside the main body of a macro
+            # There are several reasons for that, see the cited discussion at the top
+            expr = quote
+                # Also notice that we quote supertype and interpolate it twice
+                @kwdef mutable struct $name <: $$(QuoteNode(super_type))
+                    $(base_fields...)
+                    $(additional_fields...)
+                end
+            end
+            # @show expr # uncomment this to see that the final expression looks as desired
+            # It is important to evaluate the macro in the module that it was called at
+            Core.eval($(__module__), expr)
+        end
+        # allow attaching docstrings to the new struct, issue #715
+        Core.@__doc__($(esc(Docs.namify(new_name))))
+        nothing
+    end
+end
+
+macro agent(new_name, base_type, extra_fields)
+    # Here we nest one macro call into another because there is no way to provide 
+    # defaults for macro arguments. We proceed to call the actual macro with the default
+    # `super_type = AbstractAgent`. This requires us to disable 'macro hygiene', see here
+    # for a brief explanation of the potential issues with this: 
+    # https://discourse.julialang.org/t/calling-a-macro-from-within-a-macro-revisited/19680/16?u=fbanning
+    esc(quote
+        Agents.@agent($new_name, $base_type, Agents.AbstractAgent, $extra_fields)
+    end)
+end
+
