@@ -68,23 +68,19 @@ function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = Schedulers.fastest
     atypes = (Agent0,Agent1,Agent2,Agent3)
     id = 1
     for i in 1:choices[1]
-        a0 = Agent0(id)
-        add_agent!(a0, model)
+        add_agent!(Agent0, model)
         id += 1
     end
     for i in 1:choices[2]
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
+        add_agent!(Agent1, model, (0, 0))
         id +=1
     end
     for i in 1:choices[3]
-        a2 = Agent2(id, 5.0)
-        add_agent!(a2, model)
+        add_agent!(Agent2, model, 5.0)
         id += 1
     end
     for i in 1:choices[4]
-        a3 = Agent3(id, (0, 0), 5.0)
-        add_agent!(a3, model)
+        add_agent!(Agent3, model, (0, 0), 5.0)
         id += 1
     end
     return model
@@ -132,12 +128,10 @@ end
     model =
         ABM(Union{Agent1,Agent0}, scheduler = Schedulers.by_type((Agent1, Agent0), true), warn = false)
     for id in 1:3
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
+        add_agent!(Agent1, model, (0, 0))
     end
     for id in 4:6
-        a0 = Agent0(id)
-        add_agent!(a0, model)
+        add_agent!(Agent0, model)
     end
     s = abmscheduler(model)(model)
     @test [typeof(model[id]) for id in s] ==
@@ -228,23 +222,19 @@ end
         atypes = (Agent0,Agent1,Agent2,Agent3)
         id = 1
         for i in 1:choices[1]
-            a0 = Agent0(id)
-            add_agent!(a0, model)
+            add_agent!(Agent0, model)
             id += 1
         end
         for i in 1:choices[2]
-            a1 = Agent1(id, (0, 0))
-            add_agent!(a1, model)
+            add_agent!(Agent1, model, (0, 0))
             id +=1
         end
         for i in 1:choices[3]
-            a2 = Agent2(id, 5.0)
-            add_agent!(a2, model)
+            add_agent!(Agent2, model, 5.0)
             id += 1
         end
         for i in 1:choices[4]
-            a3 = Agent3(id, (0, 0), 5.0)
-            add_agent!(a3, model)
+            add_agent!(Agent3, model, (0, 0), 5.0)
             id += 1
         end
         return model
@@ -293,12 +283,10 @@ end
     model =
         ABM(Union{Agent1,Agent0}, scheduler = Schedulers.ByType((Agent1, Agent0), true), warn = false)
     for id in 1:3
-        a1 = Agent1(id, (0, 0))
-        add_agent!(a1, model)
+        add_agent!(Agent1, model, (0, 0))
     end
     for id in 4:6
-        a0 = Agent0(id)
-        add_agent!(a0, model)
+        add_agent!(Agent0, model)
     end
     s = collect(abmscheduler(model)(model))
     @test [typeof(model[id]) for id in s] ==

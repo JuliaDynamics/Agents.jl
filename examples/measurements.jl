@@ -73,8 +73,7 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
             filter_place_daisy(pos) = length(ids_in_position(pos, model)) == 1
             seeding_place = random_nearby_position(pos, model, 1, filter_place_daisy)
             if !isnothing(seeding_place)
-                a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
-                add_agent_pos!(a, model)
+                add_agent!(seeding_place, Daisy, model, daisy.breed, 0, daisy.albedo)
             end
         end
     end
@@ -149,17 +148,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(abmrng(model), 0:max_age), albedo_white)
-        add_agent_pos!(wd, model)
+        add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(abmrng(model), 0:max_age), albedo_black)
-        add_agent_pos!(wd, model)
+        add_agent!(bp, Daisy, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end
-
     return model
 end
 

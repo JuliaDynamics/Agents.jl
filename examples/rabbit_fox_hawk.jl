@@ -142,37 +142,17 @@ function initialize_model(
 
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
-        add_agent_pos!(
-            Rabbit(
-                nextid(model), ## Using `nextid` prevents us from having to manually keep track
-                               ## of animal IDs
-                random_walkable(model, model.landfinder),
-                rand(abmrng(model), Δe_grass:2Δe_grass),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.landfinder)
+        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_grass:2Δe_grass))
     end
     for _ in 1:n_foxes
-        add_agent_pos!(
-            Fox(
-                nextid(model),
-                random_walkable(model, model.landfinder),
-                rand(abmrng(model), Δe_rabbit:2Δe_rabbit),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.landfinder)
+        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
     for _ in 1:n_hawks
-        add_agent_pos!(
-            Hawk(
-                nextid(model),
-                random_walkable(model, model.airfinder),
-                rand(abmrng(model), Δe_rabbit:2Δe_rabbit),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.airfinder)
+        add_agent!(pos, Hawk, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
-
     return model
 end
 
@@ -357,7 +337,7 @@ end
 
 function reproduce!(animal, model)
     animal.energy = Float64(ceil(Int, animal.energy / 2))
-    add_agent_pos!(Animal(nextid(model), animal.pos, v0, animal.type, animal.energy), model)
+    add_agent!(animal.pos, Animal, model, v0, animal.type, animal.energy)
 end
 
 # The model stepping function simulates the growth of grass

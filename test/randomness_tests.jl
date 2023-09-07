@@ -9,10 +9,8 @@ using Agents, Test
     rng0 = StableRNG(42)
 
     model = ABM(Agent1, GridSpace((3,3)); rng)
-    agent = Agent1(1, (1,1))
-    add_agent_pos!(agent, model)
-    agent = Agent1(2, (1,1))
-    add_agent_single!(agent, model)
+    add_agent!(Agent1, model)
+    add_agent_single!(Agent1, model)
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
     @test agent.pos == (2,1)
@@ -25,8 +23,8 @@ end
     rng = StableRNG(50)
     model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng)
     agents = model4.agents
-    add_agent_pos!(Agent1(1, (1,1)), model4)
-    add_agent_pos!(Agent1(2, (2,2)), model4)
+    add_agent!((1,1), Agent1, model4)
+    add_agent!((2,2), Agent1, model4)
     sample!(model4, 4)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)), 
                               3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
@@ -86,7 +84,7 @@ end
     space = GridSpace((10, 10))
     model = ABM(Union{Daisy,Land}, space; warn = false)
     fill_space!(Daisy, model, "black")
-    add_agent!(Land(999, (1, 1), 999), model)
+    add_agent!(Land, model, 999)
 
     a = random_agent(model)
     @test typeof(a) <: Union{Daisy,Land}

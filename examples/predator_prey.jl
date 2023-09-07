@@ -130,7 +130,8 @@ function sheepwolf_step!(sheep::Sheep, model)
     end
     eat!(sheep, model)
     if rand(abmrng(model)) ≤ sheep.reproduction_prob
-        reproduce!(sheep, model)
+        sheep.energy /= 2
+        replicate!(sheep, model)
     end
 end
 
@@ -145,7 +146,8 @@ function sheepwolf_step!(wolf::Wolf, model)
     dinner = first_sheep_in_position(wolf.pos, model)
     !isnothing(dinner) && eat!(wolf, dinner, model)
     if rand(abmrng(model)) ≤ wolf.reproduction_prob
-        reproduce!(wolf, model)
+        wolf.energy /= 2
+        replicate!(wolf, model)
     end
 end
 
@@ -154,8 +156,6 @@ function first_sheep_in_position(pos, model)
     j = findfirst(id -> model[id] isa Sheep, ids)
     isnothing(j) ? nothing : model[ids[j]]::Sheep
 end
-
-
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
 # additional energy and the grass will not be available for consumption until regrowth time
@@ -171,17 +171,6 @@ end
 function eat!(wolf::Wolf, sheep::Sheep, model)
     remove_agent!(sheep, model)
     wolf.energy += wolf.Δenergy
-    return
-end
-
-# Sheep and wolves share a common reproduction method. Reproduction has a cost of 1/2 the
-# current energy level of the parent. The offspring is an exact copy of the parent, with
-# exception of `id`.
-function reproduce!(agent::A, model) where {A}
-    agent.energy /= 2
-    id = nextid(model)
-    offspring = A(id, agent.pos, agent.energy, agent.reproduction_prob, agent.Δenergy)
-    add_agent_pos!(offspring, model)
     return
 end
 

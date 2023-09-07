@@ -26,9 +26,9 @@ function fake_model_multi(; nagents, scheduler)
     model = ABM(Union{FakeAgent,OtherFakeAgent}; scheduler, warn = false)
     for i in 1:nagents
         if i % 2 == 0
-            add_agent!(FakeAgent(i, 0, 0), model)
+            add_agent!(FakeAgent, model, 0, 0)
         else
-            add_agent!(OtherFakeAgent(i, 1, 0), model)
+            add_agent!(OtherFakeAgent, model, 1, 0)
         end
     end
     model
