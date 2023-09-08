@@ -236,21 +236,21 @@ add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5, k becomes true
 ```
 """
-function add_agent!(model::ABM{S,A}, properties::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent}
-    add_agent!(A, model, properties...; kwargs...)
+function add_agent!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent}
+    add_agent!(A, model, args...; kwargs...)
 end
 
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
-    add_agent!(random_position(model), A, model, properties...; kwargs...)
+function add_agent!(A::Type{<:AbstractAgent}, model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
+    add_agent!(random_position(model), A, model, args...; kwargs...)
 end
 
 function add_agent!(
     pos::ValidPos,
     model::ABM{S,A},
-    properties::Vararg{Any, N};
+    args::Vararg{Any, N};
     kwargs...,
 ) where {N,S,A<:AbstractAgent}
-    add_agent!(pos, A, model, properties...; kwargs...)
+    add_agent!(pos, A, model, args...; kwargs...)
 end
 
 # lowest level:
@@ -258,14 +258,14 @@ function add_agent!(
     pos::ValidPos,
     A::Type{<:AbstractAgent},
     model::ABM,
-    properties::Vararg{Any, N};
-    kwproperties...,
+    args::Vararg{Any, N};
+    kwargs...,
 ) where {N}
     id = nextid(model)
-    if isempty(kwproperties)
-        newagent = A(id, pos, properties...)
+    if isempty(kwargs)
+        newagent = A(id, pos, args...)
     else
-        newagent = A(; id = id, pos = pos, kwproperties...)
+        newagent = A(; id = id, pos = pos, kwargs...)
     end
     add_agent_pos!(newagent, model)
 end
