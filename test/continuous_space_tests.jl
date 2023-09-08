@@ -256,7 +256,7 @@ using LinearAlgebra: norm, dot
             space2 = ContinuousSpace((10, 10); spacing = 0.1, periodic = false)
             model2 = ABM(SpeedyContinuousAgent, space2; scheduler = Schedulers.ByID())
             for i in 1:4
-                add_agent!(pos[i], SpeedyContinuousAgent, model, SVector(0.0, 0.0), 0)
+                add_agent!(pos[i], SpeedyContinuousAgent, model2, SVector(0.0, 0.0), 0)
             end
             pairs = interacting_pairs(model2, 2.0, :nearest).pairs
             @test length(pairs) == 1
