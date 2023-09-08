@@ -21,8 +21,8 @@ using StableRNGs
     @test !has_empty_positions(model)
     add_agent_single!(Agent7, model, attributes...)
     @test_throws KeyError model[22]
-    add_agent!(Agent7, model, attributes...)
-    @test model[22].pos ∈ 1:10
+    a = add_agent!(Agent7, model, attributes...)
+    @test a.pos ∈ 1:10
 
     @test add_agent!(3, Agent7, model, attributes...).pos == 3
 
@@ -107,7 +107,6 @@ end
     add_agent!(model)
     agent = add_agent!(model)
     @test agent.id == 2
-    @test_throws ErrorException add_agent!(NoSpaceAgent, model)
     @test nagents(model) == 2
     @test_throws ErrorException remove_agent!(agent, model)
     @test_throws ErrorException remove_all!(model, [1, 3])

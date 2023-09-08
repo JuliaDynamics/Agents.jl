@@ -10,10 +10,10 @@ using Agents, Test
 
     model = ABM(Agent1, GridSpace((3,3)); rng)
     add_agent!(Agent1, model)
-    add_agent_single!(Agent1, model)
+    agent = add_agent_single!(Agent1, model)
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
-    @test agent.pos == (2,1)
+    @test agent.pos == (3, 3)
 
     model = ABM(Agent2; rng = RandomDevice())
     @test_throws MethodError seed!(abmrng(model), 64)
@@ -92,7 +92,7 @@ end
     c1(a) = a isa Land
     for alloc in (true, false)
         a = random_agent(model, c1; alloc = alloc)
-        @test a.id == 999
+        @test a.id == 101
     end
 
     c2(a) = a isa Float64

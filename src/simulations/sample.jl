@@ -80,8 +80,9 @@ b = replicate!(a, model; w = 0.8)
 ```
 """
 function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    args = new_args(agent::A, model; kwargs...) 
-    add_agent!(A, model, args...)
+    args = new_args(agent, model; kwargs...) 
+    newagent = A(nextid(model), args...)
+    add_agent_pos!(newagent, model)
     return newagent
 end
 
