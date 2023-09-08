@@ -89,3 +89,42 @@ function remove_agent_from_model!(agent::A, model::FixedMassABM) where {A<:Abstr
     error("Cannot remove agents in a FixedMassABM`")
 end
 modelname(::SizedVector) = "FixedMassABM"
+
+"""
+    add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
+
+Add the `agent` to a random position in the space while respecting a maximum of one agent
+per position, updating the agent's position to the new one.
+
+This function does nothing if there aren't any empty positions.
+"""
+function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
+    @warn "Adding agent created by A(...) is deprecated. Use a different method."
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent.pos = position
+    add_agent_pos!(agent, model)
+    return agent
+end
+
+"""
+    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
+Add the `agent` to the model in the given position.
+If `pos` is not given, the `agent` is added to a random position.
+The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
+the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
+the `agent`'s position.
+
+The type of `pos` must match the underlying space position type.
+"""
+function add_agent!(agent::AbstractAgent, model::ABM)
+    @warn "Adding agent created by A(...) is deprecated. Use a different method."
+    agent.pos = random_position(model)
+    add_agent_pos!(agent, model)
+end
+
+function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+    @warn "Adding agent created by A(...) is deprecated. Use a different method."
+    agent.pos = pos
+    add_agent_pos!(agent, model)
+end
