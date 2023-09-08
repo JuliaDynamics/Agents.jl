@@ -299,7 +299,7 @@
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
-            add_agent_pos!(start, Zombie, model, false)
+            human = add_agent!(start, Zombie, model, false)
             plan_route!(human, finish, model)
         end
 

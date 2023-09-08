@@ -71,7 +71,7 @@ graph_union_model = ABM(
 SUITE["graph"]["add"]["agent"] =
     @benchmarkable add_agent!($GraphAgent, $graph_model, 6.5, false) samples = 100
 SUITE["graph"]["add"]["agent_pos"] =
-    @benchmarkable add_agent_pos!($GraphAgent, $graph_model, 6.5, false) samples = 100
+    @benchmarkable add_agent!(1, $GraphAgent, $graph_model, 6.5, false) samples = 100
 SUITE["graph"]["add"]["agent_single"] =
     @benchmarkable add_agent_single!($GraphAgent, $graph_model, 6.5, false) samples = 100
 SUITE["graph"]["add"]["create_pos"] =
@@ -84,7 +84,7 @@ SUITE["graph"]["add"]["create"] =
 SUITE["graph"]["add_union"]["agent"] =
     @benchmarkable add_agent!($GraphAgent, $graph_union_model, 6.5, false) samples = 100
 SUITE["graph"]["add_union"]["agent_pos"] =
-    @benchmarkable add_agent_pos!($GraphAgent, $graph_union_model, 6.5, false) samples = 100
+    @benchmarkable add_agent!(1, $GraphAgent, $graph_union_model, 6.5, false) samples = 100
 SUITE["graph"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($GraphAgent, $graph_union_model, 6.5, false) samples = 100
 
@@ -134,7 +134,7 @@ SUITE["grid"]["add"]["create_fill"] =
     @benchmarkable fill_space!($grid_model, 6.5, false) samples = 100
 
 SUITE["grid"]["add_union"]["agent_pos"] =
-    @benchmarkable add_agent_pos!($(2, 3), $GridAgent, $grid_union_model, 6.5, false) samples = 100
+    @benchmarkable add_agent!($(2, 3), $GridAgent, $grid_union_model, 6.5, false) samples = 100
 SUITE["grid"]["add_union"]["agent_fill"] =
     @benchmarkable fill_space!(GridAgent, $grid_union_model, 6.5, false) samples = 100
 
@@ -186,7 +186,7 @@ SUITE["continuous"]["add"]["agent_pos"] =
         100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
-    @benchmarkable add_agent_pos!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup = (
+    @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup = (
         cmodel = ABM(
             Union{
                 ContinuousAgent,

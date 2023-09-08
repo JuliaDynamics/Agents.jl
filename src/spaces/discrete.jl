@@ -218,6 +218,18 @@ function add_agent_single!(model::ABM{<:DiscreteSpace}, properties::Vararg{Any, 
 end
 
 """
+    add_agent_single!(A, model::ABM{<:DiscreteSpace}, properties...; kwargs...)
+Same as `add_agent!(A, model, properties...; kwargs...)` but ensures that it adds an agent
+into a position with no other agents (does nothing if no such position exists).
+"""
+function add_agent_single!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent = add_agent!(position, A, model, properties...; kwargs...)
+    return agent
+end
+
+"""
     fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, args...; kwargs...)
     fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, f::Function; kwargs...)
 Add one agent to each position in the model's space. Similarly with [`add_agent!`](@ref),

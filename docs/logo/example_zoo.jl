@@ -166,8 +166,7 @@ function initialise_zombies(; seed = 1234)
     for id in 1:100
         start = random_position(model) # At an intersection
         speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
-        human = Zombie(id, start, false, speed)
-        add_agent_pos!(human, model)
+        human = add_agent!(start, Zombie, model, false, speed)
         OSM.plan_random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     start = OSM.nearest_road((9.9351811, 51.5328328), model)
@@ -523,8 +522,7 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
     )
 
     for n in 1:number_ants
-        add_agent_pos!((x_center, y_center), Ant, model, 
-                       false, rand(abmrng(model), range(1, 8)), 0, false)
+        add_agent!((x_center, y_center), Ant, model, false, rand(abmrng(model), range(1, 8)), 0, false)
     end
     return model
 end

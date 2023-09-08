@@ -51,7 +51,7 @@ function initialise_zombies(; seed = 1234)
     for id in 1:100
         start = random_position(model) # At an intersection
         speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
-        add_agent!(start, Zombie, model, false, speed)
+        human = add_agent!(start, Zombie, model, false, speed)
         OSM.plan_random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     ## We'll add patient zero at a specific (longitude, latitude)
