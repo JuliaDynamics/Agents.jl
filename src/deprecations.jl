@@ -99,7 +99,8 @@ per position, updating the agent's position to the new one.
 This function does nothing if there aren't any empty positions.
 """
 function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
-    @warn "Adding agent created by A(...) is deprecated. Use a different method."
+    @warn "Adding agent with add_agent_single!(agent::AbstractAgent, model::ABM) is deprecated. 
+           Use add_agent_single!([pos,] A::Type, model::ABM; kwargs...) or add_agent_single!([pos,] A::Type, model::ABM, args...)."
     position = random_empty(model)
     isnothing(position) && return nothing
     agent.pos = position
@@ -118,14 +119,14 @@ the `agent`'s position.
 The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
-    @warn "Adding agent created by add_agent!(agent::AbstractAgent, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated. 
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     agent.pos = random_position(model)
     add_agent_pos!(agent, model)
 end
 
 function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    @warn "Adding agent created by  add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated. 
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     agent.pos = pos
     add_agent_pos!(agent, model)
