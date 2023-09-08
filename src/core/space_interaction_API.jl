@@ -201,26 +201,6 @@ function add_agent_pos!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
-Add the `agent` to the model in the given position.
-If `pos` is not given, the `agent` is added to a random position.
-The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
-the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
-the `agent`'s position.
-
-The type of `pos` must match the underlying space position type.
-"""
-function add_agent!(agent::AbstractAgent, model::ABM)
-    agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    agent.pos = pos
-    add_agent_pos!(agent, model)
-end
-
-"""
     add_agent!([pos,] A::Type, model::ABM, args...) → newagent
     add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
 

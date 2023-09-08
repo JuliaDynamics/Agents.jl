@@ -13,8 +13,7 @@ function initialize_sologridspace()
     N = grid_size[1]*grid_size[2]*grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2
-        agent = SoloGridSpaceAgent(n, (1, 1), group, false)
-        add_agent_single!(agent, model)
+        add_agent_single!(SoloGridSpaceAgent, model, group, false)
     end
     return model
 end

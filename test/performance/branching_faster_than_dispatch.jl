@@ -49,16 +49,11 @@ model1 = ABM(
 )
 
 for _ in 1:50
-    a = GridAgentOne(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
-    add_agent!(a, model1)
-    a = GridAgentTwo(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
-    add_agent!(a, model1)
-    a = GridAgentThree(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
-    add_agent!(a, model1)
-    a = GridAgentFour(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
-    add_agent!(a, model1)
-    a = GridAgentFive(nextid(model1), (1,1), rand(model1.rng), rand(model1.rng, Bool))
-    add_agent!(a, model1)
+    add_agent!(GridAgentOne, model1, rand(model1.rng), rand(model1.rng, Bool))
+    add_agent!(GridAgentTwo, model1, rand(model1.rng), rand(model1.rng, Bool))
+    add_agent!(GridAgentThree, model1, rand(model1.rng), rand(model1.rng, Bool))
+    add_agent!(GridAgentFour, model1, rand(model1.rng), rand(model1.rng, Bool))
+    add_agent!(GridAgentFive, model1, rand(model1.rng), rand(model1.rng, Bool))
 end
 
 agent_step!(agent::GridAgentOne, model1) = walk!(agent, rand, model1)
@@ -99,16 +94,11 @@ model2 = ABM(
 )
 
 for _ in 1:50
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :one)
-    add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :two)
-    add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :three)
-    add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :four)
-    add_agent!(a, model2)
-    a = GridAgentAll(nextid(model2), (1,1), rand(model2.rng), rand(model2.rng, Bool), :five)
-    add_agent!(a, model2)
+    add_agent!(GridAgentAll, model2, rand(model2.rng), rand(model2.rng, Bool), :one)
+    add_agent!(GridAgentAll, model2, rand(model2.rng), rand(model2.rng, Bool), :two)
+    add_agent!(GridAgentAll, model2, rand(model2.rng), rand(model2.rng, Bool), :three)
+    add_agent!(GridAgentAll, model2, rand(model2.rng), rand(model2.rng, Bool), :four)
+    add_agent!(GridAgentAll, model2, rand(model2.rng), rand(model2.rng, Bool), :five)
 end
 
 function agent_step!(agent::GridAgentAll, model2)

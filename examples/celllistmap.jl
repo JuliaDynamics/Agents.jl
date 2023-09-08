@@ -42,7 +42,7 @@ using Agents
     k::Float64 # repulsion force constant
     mass::Float64
 end
-Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
+PropParticle(; vel, r, k, mass) = (vel, r, k, mass)
 
 # ## Required and data structures for CellListMap.jl
 #
@@ -112,16 +112,14 @@ function initialize_bouncing(;
 
     ## Create active agents
     for id in 1:number_of_particles
-        add_agent_pos!(
-            Particle(
-                id=id,
-                r=(0.5 + 0.9 * rand()) * max_radius,
-                k=(10 + 20 * rand()), # random force constants
-                mass=10.0 + 100 * rand(), # random masses
-                pos=positions[id],
-                vel=100 * randn(SVector{2}), # initial velocities
-            ),
-            model)
+        pos = positions[id]
+        prop_particle = PropParticle(
+            r = (0.5 + 0.9 * rand()) * max_radius,
+            k = 10 + 20 * rand(), # random force constants
+            mass = 10.0 + 100 * rand(), # random masses
+            vel = 100 * randn(SVector{2}) # initial velocities)
+            )
+        add_agent!(pos, Particle, model, prop_particle...)
     end
 
     return model

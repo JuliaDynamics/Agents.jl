@@ -21,8 +21,7 @@ using Agents, Test
     @test model.b == "Changed"
     @test_throws ErrorException model.c = 5
 
-    newa = NoSpaceAgent(6)
-    add_agent!(newa, model)
+    newa = add_agent!(NoSpaceAgent, model)
     @test model[6] == newa
     # setindex must errors
     @test_throws ErrorException model[7] = newa

@@ -190,22 +190,6 @@ end
 export add_agent_single!, fill_space!, move_agent_single!
 
 """
-    add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
-
-Add the `agent` to a random position in the space while respecting a maximum of one agent
-per position, updating the agent's position to the new one.
-
-This function does nothing if there aren't any empty positions.
-"""
-function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
-    position = random_empty(model)
-    isnothing(position) && return nothing
-    agent.pos = position
-    add_agent_pos!(agent, model)
-    return agent
-end
-
-"""
     add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
 Same as `add_agent!(model, properties...; kwargs...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
@@ -214,6 +198,18 @@ function add_agent_single!(model::ABM{<:DiscreteSpace}, properties::Vararg{Any, 
     position = random_empty(model)
     isnothing(position) && return nothing
     agent = add_agent!(position, model, properties...; kwargs...)
+    return agent
+end
+
+"""
+    add_agent_single!(A, model::ABM{<:DiscreteSpace}, properties...; kwargs...)
+Same as `add_agent!(A, model, properties...; kwargs...)` but ensures that it adds an agent
+into a position with no other agents (does nothing if no such position exists).
+"""
+function add_agent_single!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent = add_agent!(position, A, model, properties...; kwargs...)
     return agent
 end
 

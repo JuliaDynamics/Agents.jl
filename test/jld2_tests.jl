@@ -161,7 +161,7 @@
         )
 
         for i in 1:30
-            add_agent_pos!(Agent7(i, i % 10 + 1, rand(abmrng(model)) < 0.5, rand(abmrng(model), Int)), model)
+            add_agent!(i % 10 + 1, Agent7, model, rand(abmrng(model)) < 0.5, rand(abmrng(model), Int))
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
@@ -300,8 +300,7 @@
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
-            human = Zombie(id, start, false)
-            add_agent_pos!(human, model)
+            human = add_agent!(start, Zombie, model, false)
             plan_route!(human, finish, model)
         end
 

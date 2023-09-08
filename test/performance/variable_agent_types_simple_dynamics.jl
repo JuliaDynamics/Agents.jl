@@ -88,8 +88,7 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     model = ABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
     id = 0
     for id in 1:n_agents
-        agent = Agent1(id, (0,0), 10)
-        add_agent!(agent, model)
+        add_agent!(Agent1, model, 10)
     end
     return model
 end
@@ -105,8 +104,7 @@ function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
     for A in agents_used
         for _ in 1:agents_per_type
             id += 1
-            agent = A(id, (0,0), 10)
-            add_agent!(agent, model)
+            add_agent!(A, model, 10)
         end
     end
     return model

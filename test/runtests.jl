@@ -83,8 +83,7 @@ function schelling_model(ModelType, SpaceType; numagents = 30, griddims = (8, 8)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ModelType(SchellingAgent, space; properties, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
     for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-        add_agent_single!(agent, model)
+        add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
     end
     return model, schelling_model_agent_step!, dummystep
 end
