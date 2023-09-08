@@ -131,3 +131,9 @@ function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
     agent.pos = pos
     add_agent_pos!(agent, model)
 end
+
+function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated. 
+           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
+    add_agent_pos!(agent, model)
+end
