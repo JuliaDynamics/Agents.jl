@@ -42,8 +42,7 @@ function ensemble_benchmark(f, parallel, nreplicates)
                         properties = properties, scheduler = Schedulers.randomly)
 
             for n in 1:numagents
-                agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-                add_agent_single!(agent, model)
+                add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
             end
 
             return model

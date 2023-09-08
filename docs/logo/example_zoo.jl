@@ -166,8 +166,7 @@ function initialise_zombies(; seed = 1234)
     for id in 1:100
         start = random_position(model) # At an intersection
         speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
-        human = Zombie(id, start, false, speed)
-        add_agent_pos!(human, model)
+        human = add_agent!(start, Zombie, model, false, speed)
         OSM.plan_random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     start = OSM.nearest_road((9.9351811, 51.5328328), model)
@@ -523,8 +522,7 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
     )
 
     for n in 1:number_ants
-        agent = Ant(n, (x_center, y_center), false, rand(abmrng(model), range(1, 8)), 0, false)
-        add_agent_pos!(agent, model)
+        add_agent!((x_center, y_center), Ant, model, false, rand(abmrng(model), range(1, 8)), 0, false)
     end
     return model
 end
@@ -655,13 +653,11 @@ models[6] = antworld_obs
     is_stuck::Bool
     spin_axis::Array{Float64,1}
 end
-FractalParticle(
-    id::Int,
+PropFractalParticle(
     radius::Float64,
     spin_clockwise::Bool;
-    pos = SVector(0.0, 0.0),
     is_stuck = false,
-) = FractalParticle(id, pos, SVector(0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
+) = (SVector(0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
 
 rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
 function particle_radius(min_radius::Float64, max_radius::Float64, rng)
@@ -697,30 +693,20 @@ function initialize_fractal(;
     model = ABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
     center = space_extents ./ 2.0
     for i in 1:initial_particles
-        particle = FractalParticle(
-            i,
-            particle_radius(min_radius, max_radius, abmrng(model)),
-            rand(abmrng(model)) < clockwise_fraction,
-        )
+        p_r = particle_radius(min_radius, max_radius, abmrng(model))
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < clockwise_fraction)
         ## `add_agent!` automatically gives the particle a random position in the space
-        add_agent!(particle, model)
+        add_agent!(FractalParticle, model, prop_particle...)
     end
     ## create the seed particle
-    particle = FractalParticle(
-        initial_particles + 1,
-        particle_radius(min_radius, max_radius, abmrng(model)),
-        true;
-        pos = center,
-        is_stuck = true,
-    )
-    ## `add_agent_pos!` will use the position of the agent passed in, instead of assigning it
-    ## to a random value
-    add_agent_pos!(particle, model)
+    p_r = particle_radius(min_radius, max_radius, abmrng(model))
+    prop_particle = PropFractalParticle(p_r, true; is_stuck = true)
+    ## here, we specified a position to give to the agent
+    add_agent!(center, FractalParticle, model, prop_particle...)
     return model
 end
 function fractal_particle_step!(agent::FractalParticle, model)
-    agent.is_stuck && return
-
+    agent.is_stuck && returnS
     for id in nearby_ids(agent.pos, model, agent.radius)
         if model[id].is_stuck
             agent.is_stuck = true
@@ -746,13 +732,10 @@ end
 # as they get stuck to the growing fractal.
 function fractal_step!(model)
     while model.spawn_count > 0
-        particle = FractalParticle(
-            nextid(model),
-            particle_radius(model.min_radius, model.max_radius, abmrng(model)),
-            rand(abmrng(model)) < model.clockwise_fraction;
-            pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49,
-        )
-        add_agent_pos!(particle, model)
+        p_r = particle_radius(model.min_radius, model.max_radius, abmrng(model))
+        pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction))
+        add_agent!(pos, FractalParticle, model, prop_particle...)
         model.spawn_count -= 1
     end
 end

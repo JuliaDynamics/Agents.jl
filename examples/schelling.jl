@@ -97,8 +97,7 @@ schelling2 = ABM(
 nagents(schelling)
 
 # We can add agents to this model using [`add_agent!`](@ref).
-first_agent = SchellingAgent(1, (1, 1), false, 1)
-add_agent!(first_agent, schelling)
+add_agent!(SchellingAgent, schelling, false, 1)
 nagents(schelling)
 
 # However, there is a much more convenient way to do this.
@@ -147,8 +146,7 @@ function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy =
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model
     for n in 1:total_agents
-        agent = SchellingAgent(n, (1, 1), false, n < total_agents / 2 ? 1 : 2)
-        add_agent_single!(agent, model)
+        add_agent_single!(SchellingAgent, model, false, n < total_agents / 2 ? 1 : 2)
     end
     return model
 end
@@ -344,8 +342,7 @@ figure
 
 # For starters, let's see what happens if we add 100 more agents of group 1
 for i in 1:100
-    agent = SchellingAgent(nextid(model), (1, 1), false, 1)
-    add_agent_single!(agent, model)
+    add_agent_single!(SchellingAgent, model, false, 1)
 end
 
 # Let's see what our model looks like now.
@@ -364,8 +361,7 @@ figure
 model = AgentsIO.load_checkpoint("schelling.jld2"; scheduler = Schedulers.Randomly())
 
 for i in 1:100
-    agent = SchellingAgent(nextid(model), (1, 1), false, 3)
-    add_agent_single!(agent, model)
+    add_agent_single!(SchellingAgent, model, false, 3)
 end
 
 # To visualize the model, we need to redefine `groupcolor` and `groupmarker`

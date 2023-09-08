@@ -6,10 +6,9 @@ mutable struct LabelledAgent <: AbstractAgent
 end
 
 function create_model(ModelType, n_agents_with_condition, n_agents=1000)
-    agents = [LabelledAgent(id, id<=n_agents_with_condition) for id in 1:n_agents]
     model = ModelType(LabelledAgent)
-    for a in agents
-        add_agent!(a, model)
+    for id in 1:n_agents
+        add_agent!(LabelledAgent, model, id<=n_agents_with_condition)
     end
     return model
 end

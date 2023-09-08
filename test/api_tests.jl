@@ -19,18 +19,15 @@ using StableRNGs
     @test add_agent_single!(model, attributes...).pos ∈ 1:10
     fill_space!(model, attributes...)
     @test !has_empty_positions(model)
-    agent = Agent7(22, 5, attributes...)
-    add_agent_single!(agent, model)
+    add_agent_single!(Agent7, model, attributes...)
     @test_throws KeyError model[22]
-    add_agent!(agent, model)
-    @test model[22].pos ∈ 1:10
+    a = add_agent!(Agent7, model, attributes...)
+    @test a.pos ∈ 1:10
 
-    agent = Agent7(44, 5, attributes...)
-    @test add_agent!(agent, 3, model).pos == 3
+    @test add_agent!(3, Agent7, model, attributes...).pos == 3
 
     model = ABM(Agent1, GridSpace((10, 10)))
-    agent = Agent1(1, (3, 6))
-    @test add_agent!(agent, (7, 8), model).pos == (7, 8)
+    @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
 end
 
 @testset "move_agent!" begin
@@ -110,7 +107,6 @@ end
     add_agent!(model)
     agent = add_agent!(model)
     @test agent.id == 2
-    @test_throws ErrorException add_agent!(NoSpaceAgent(4), model)
     @test nagents(model) == 2
     @test_throws ErrorException remove_agent!(agent, model)
     @test_throws ErrorException remove_all!(model, [1, 3])
@@ -126,14 +122,12 @@ end
     # Testing no space
     model = ABM(NoSpaceAgent)
     for i in 1:10
-        a = NoSpaceAgent(i)
-        add_agent!(a, model)
+        add_agent!(NoSpaceAgent, model)
     end
     remove_all!(model)
     @test nagents(model) == 0
     for i in 1:10
-        a = NoSpaceAgent(i)
-        add_agent!(a, model)
+        add_agent!(NoSpaceAgent, model)
     end
     remove_all!(model, 5)
     @test nagents(model) == 5
@@ -144,8 +138,7 @@ end
 
     # Testing remove_all!(model::ABM)
     for i in 1:20
-        agent = GridAgent{2}(i, (1, 1))
-        add_agent_single!(agent, model)
+        add_agent_single!(GridAgent{2}, model)
     end
     remove_all!(model)
     @test nagents(model) == 0
@@ -154,16 +147,14 @@ end
     for i in 1:20
         # Explicitly override agents each time we replenish the population,
         # so we always start the remove_all with 20 agents.
-        agent = GridAgent{2}(i, (1, 1))
-        add_agent_single!(agent, model)
+        add_agent_single!(GridAgent{2}, model)
     end
     remove_all!(model, 10)
     @test nagents(model) == 10
 
     # Testing remove_all!(model::ABM, f::Function) with an anonymous function
     for i in 11:20
-        agent = GridAgent{2}(i, (1, 1))
-        add_agent_single!(agent, model)
+        add_agent_single!(GridAgent{2}, model)
     end
     @test nagents(model) == 20
     remove_all!(model, a -> a.id > 5)

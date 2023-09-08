@@ -100,15 +100,13 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(abmrng(model), 0:max_age), albedo_white)
-        add_agent_pos!(wd, model)
+        add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(abmrng(model), 0:max_age), albedo_black)
-        add_agent_pos!(wd, model)
+        add_agent!(bp, Daisy, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end
 
     for p in positions(model)

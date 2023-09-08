@@ -247,7 +247,7 @@ using LinearAlgebra: norm, dot
                 (3.9715633336430156, 4.8106570045816675)
             ])
             for i in 1:4
-                add_agent_pos!(SpeedyContinuousAgent(i+2, pos[i], SVector(0.0, 0.0), 0), model)
+                add_agent!(pos[i], SpeedyContinuousAgent, model, SVector(0.0, 0.0), 0)
             end
             pairs = interacting_pairs(model, 2.0, :all).pairs
             @test length(pairs) == 5
@@ -256,7 +256,7 @@ using LinearAlgebra: norm, dot
             space2 = ContinuousSpace((10, 10); spacing = 0.1, periodic = false)
             model2 = ABM(SpeedyContinuousAgent, space2; scheduler = Schedulers.ByID())
             for i in 1:4
-                add_agent_pos!(SpeedyContinuousAgent(i, pos[i], SVector(0.0, 0.0), 0), model2)
+                add_agent!(pos[i], SpeedyContinuousAgent, model2, SVector(0.0, 0.0), 0)
             end
             pairs = interacting_pairs(model2, 2.0, :nearest).pairs
             @test length(pairs) == 1
@@ -281,13 +281,13 @@ using LinearAlgebra: norm, dot
             space3 = ContinuousSpace((10,10); spacing = 1.0, periodic = false)
             model3 = ABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3; warn = false)
             for i in 1:10
-                add_agent_pos!(SpeedyContinuousAgent(i, SVector(i/10, i/10), SVector(0.0, 0.0), 0), model3)
+                add_agent!(SVector(i/10, i/10), SpeedyContinuousAgent, model3, SVector(0.0, 0.0), 0)
             end
             for i in 11:20
-                add_agent_pos!(AgentU1(i, SVector(i/10-1, 0.5), SVector(0.0, 0.0)), model3)
+                add_agent!(SVector(i/10-1, 0.5), AgentU1, model3, SVector(0.0, 0.0))
             end
             for i in 21:30
-                add_agent_pos!(AgentU2(i, SVector(0.45, i/10-2), SVector(0.0, 0.0)), model3)
+                add_agent!(SVector(0.45, i/10-2), AgentU2, model3, SVector(0.0, 0.0))
             end
             pairs = interacting_pairs(model3, 0.1, :types).pairs
             @test length(pairs) == 7
