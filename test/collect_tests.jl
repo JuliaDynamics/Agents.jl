@@ -323,8 +323,8 @@ end
 
     @testset "Mixed-ABM collections" begin
         model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
-        add_agent!(Agent3, model, 54.65)
-        add_agent!(Agent4, model, 5)
+        add_agent!((6, 8), Agent3, model, 54.65)
+        add_agent!((10, 7), Agent4, model, 5)
 
         # Expect position type (both agents have it)
         props = [:pos]
@@ -360,8 +360,8 @@ end
         @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, dataname(props[2])])
 
-        add_agent!(Agent3, model, 19.81)
-        add_agent!(Agent4, model, 3)
+        add_agent!((2, 4), Agent3, model, 19.81)
+        add_agent!((4, 1), Agent4, model, 3)
 
         props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
@@ -417,10 +417,10 @@ end
             weight::Int
         end
         model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
-        add_agent!(Agent3, model, 54.65)
-        add_agent!(Agent3Int, model, 5)
-        add_agent!(Agent3, model, 19.81)
-        add_agent!(Agent3Int, model, 3)
+        add_agent!((6, 8), Agent3, model, 54.65)
+        add_agent!((10, 7), Agent3Int, model, 5)
+        add_agent!((2, 4), Agent3, model, 19.81)
+        add_agent!((4, 1), Agent3Int, model, 3)
 
         props = [:weight]
         df = init_agent_dataframe(model, props)
@@ -442,7 +442,7 @@ end
 
         # Handle dataframe initialization when one agent type is absent
         model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
-        add_agent!(Agent3, model, 54.65)
+        add_agent!((6, 8), Agent3, model, 54.65)
 
         # get fieldtype from Agent4 struct definition when agent is absent 
         props = [:weight, :p]
@@ -450,7 +450,7 @@ end
         @test eltype(df[!, :p]) == Union{Int, Missing}
         
         # Add Agent4 and check data collection
-        add_agent!(Agent4, model, 3)
+        add_agent!((4, 1), Agent4, model, 3)
         collect_agent_data!(df, model, props)
         @test size(df) == (2, 5)
         @test df[1, :weight] == model[1].weight

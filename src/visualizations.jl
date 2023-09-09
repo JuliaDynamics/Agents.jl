@@ -238,6 +238,8 @@ Scale given polygon by `s`, assuming polygon's center of reference is the origin
 function scale_polygon end
 export translate_polygon, scale_polygon, rotate_polygon
 
-# Some cheat function that only exists so that we can have
-# a conditional dependency on OSMMakie
+# Some cheat functions that only exist so that we can have
+# a conditional dependency on OSMMakie and GraphMakie
 function agents_osmplot! end
+function agents_graphplot! end
+
