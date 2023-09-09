@@ -183,9 +183,9 @@ function Makie.plot!(abmplot::_ABMPlot)
         edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
         ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
         edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
-        graphplot!(abmplot, abmspace(model).graph;
+        Agents.agents_graphplot!(abmplot, abmspace(model).graph;
             node_color=color, node_marker=marker, node_size=markersize,
-            abmplot.graphplotkwargs..., # must come first to not overwrite lifted kwargs
+            abmplot.graphplotkwargs, # must come first to not overwrite lifted kwargs
             edge_color, edge_width)
     elseif T <: Vector{Point2f} # 2d space
         if typeof(marker[]) <: Vector{<:Makie.Polygon{2}}
