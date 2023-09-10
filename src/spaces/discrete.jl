@@ -228,7 +228,7 @@ models where the agent constructor cannot be deduced (since it is a union).
 fill_space!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent} =
     fill_space!(A, model, args...; kwargs...)
 
-function cc!(
+function fill_space!(
     ::Type{A},
     model::ABM{<:DiscreteSpace,U},
     args::Vararg{Any, N};
