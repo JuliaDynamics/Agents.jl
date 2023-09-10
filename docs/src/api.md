@@ -100,6 +100,7 @@ empty_nearby_positions
 random_empty
 add_agent_single!
 move_agent_single!
+swap_agents!
 isempty(::Integer, ::ABM)
 ```
 

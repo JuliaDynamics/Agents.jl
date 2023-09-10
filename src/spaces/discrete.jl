@@ -228,7 +228,7 @@ models where the agent constructor cannot be deduced (since it is a union).
 fill_space!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent} =
     fill_space!(A, model, args...; kwargs...)
 
-function fill_space!(
+function cc!(
     ::Type{A},
     model::ABM{<:DiscreteSpace,U},
     args::Vararg{Any, N};
@@ -272,4 +272,36 @@ function move_agent_single!(
     isnothing(position) && return nothing
     move_agent!(agent, position, model)
     return agent
+end
+
+"""
+    swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+
+Swaps agents function used for swapping the postion of two agents.
+"""
+function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+    agents_no_pos = []
+
+    pos_a = agent1.pos    
+    pos_b = agent2.pos
+
+    if(isnothing(pos_a))
+        push!(agents_no_pos,agent1)
+    end 
+
+    if(isnothing(pos_b))
+        push!(agents_no_pos,agent2)
+    end 
+
+    if (pos_a == pos_b)
+        return 
+    end
+
+    random_agent_from_space!(agent1, model)
+    random_agent_from_space!(agent2, model)
+
+    add_agent_to_space!(agent1, model, pos_a)    
+    add_agent_to_space!(agent2, model, pos_b)
+
+    return nothing
 end
