@@ -11,6 +11,17 @@ using StableRNGs
             @test size(poss) == dims
             @test size(space) == dims
         end
+        # mixed boundary conditions
+        if D > 1
+            periodic = ntuple(i -> i==1 ? true : false, D)
+            space = SpaceType(dims; periodic)
+            poss = positions(space)
+            @test spacesize(space) == dims
+            @test size(poss) == dims
+            @test size(space) == dims
+            get_P(::Union{GridSpace{D,P},GridSpaceSingle{D,P}}) where {D,P} = P
+            @test get_P(space) == periodic
+        end
     end
 
     @testset "add/move/remove" begin
@@ -114,6 +125,11 @@ using StableRNGs
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test euclidean_distance(a, b, model) ≈ 10.198039
+
+        model = ABM(GridAgent{2}, SpaceType((10, 10); periodic = (false, true)))
+        a = add_agent!((1, 1), model)
+        b = add_agent!((9, 9), model)
+        @test euclidean_distance(a, b, model) ≈ 8.24621125
     end
     @testset "Manhattan Distance" begin
         model = ABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = true))
@@ -125,6 +141,11 @@ using StableRNGs
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test manhattan_distance(a, b, model) ≈ 12
+
+        model = ABM(GridAgent{2}, SpaceType((10, 10); periodic = (false, true)))
+        a = add_agent!((1, 1), model)
+        b = add_agent!((9, 9), model)
+        @test manhattan_distance(a, b, model) ≈ 10
     end
     end
 
