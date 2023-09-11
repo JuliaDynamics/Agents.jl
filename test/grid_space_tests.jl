@@ -336,6 +336,21 @@ using StableRNGs
         walk!(a, (-1, -1), model) # Boundary in one direction, not in the other, attempt South west
         @test a.pos == (1, 2)
         @test_throws MethodError walk!(a, (1.0, 1.5), model) # Must use Int for gridspace
+        # mixed boundary
+        model = ABM(GridAgent{2}, GridSpace((3, 3); periodic = (true, false)))
+        a = add_agent!((1, 1), model)
+        walk!(a, (0, 1), model) # North
+        @test a.pos == (1, 2)
+        walk!(a, (1, 1), model) # North east
+        @test a.pos == (2, 3)
+        walk!(a, (1, 0), model) # East
+        @test a.pos == (3, 3)
+        walk!(a, (1, 0), model) # PBC, East
+        @test a.pos == (1, 3)
+        walk!(a, (0, 1), model) # Boundary, attempt North
+        @test a.pos == (1, 3)
+        walk!(a, (-1, -3), model) # PBC West, Boundary South
+        @test a.pos == (3, 1)
 
         # GridSpaceSingle
         model = ABM(GridAgent{2}, GridSpaceSingle((5, 5)))
