@@ -280,12 +280,9 @@ end
 Swaps agents function used for swapping the postion of two agents.
 """
 function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
-    pos_a = agent1.pos    
-    pos_b = agent2.pos
-
     remove_agent_from_space!(agent1, model)
     remove_agent_from_space!(agent2, model)
-    pos_a, pos_b = pos_b, pos_a
+    agent1.pos, agent2.pos = agent2.pos, agent1.pos
     add_agent_to_space!(agent1, model)    
     add_agent_to_space!(agent2, model)
 
