@@ -142,17 +142,21 @@ function rsample(iter, rng, n, condition; alloc = true, iter_type = Any)
     end
 end
 
-sampling_single(iter, rng) = rand(rng, collect(iter))
+function sampling_single(iter, rng)
+    pop = collect(iter)
+    isempty(pop) && return nothing
+    return rand(rng, pop)
+end
 
 function sampling_with_condition_single(iter, rng, condition)
-    population = collect(iter)
-    n = length(population)
-    while n != 0
-        index_id = rand(rng, 1:n)
-        el = population[index_id]
+    pop = collect(iter)
+    n_p = length(pop)
+    while n_p != 0
+        idx = rand(rng, 1:n_p)
+        el = pop[idx]
         condition(el) && return el
-        population[index_id], population[n] = population[n], population[index_id]
-        n -= 1
+        pop[idx], pop[n_p] = pop[n_p], pop[idx]
+        n_p -= 1
     end
     return nothing
 end
@@ -177,28 +181,29 @@ function resorvoir_sampling_single(iter, rng)
 end
 
 function sampling_multi(iter, rng, n)
-    population = collect(iter)
-    return sample(rng, population, n; replace=false)  
+    pop = collect(iter)
+    pop <= n && return pop
+    return sample(rng, pop, n; replace=false)  
 end
 
 function sampling_with_condition_multi(iter, rng, n, condition)
-    population = collect(iter)
-    length(population) <= n && return filter(obs -> condition(obs), population)
-    res = Vector{eltype(population)}(undef, n)
-    n_pop = length(population)
-    i = 1
-    while n_pop != 0
-        index_id = rand(rng, 1:n_pop)
-        el = population[index_id]
+    pop = collect(iter)
+    n_p = length(pop)
+    n_p <= n && return filter(el -> condition(el), pop)
+    res = Vector{eltype(pop)}(undef, n)
+    i = 0
+    while n_p != 0
+        idx = rand(rng, 1:n_p)
+        el = pop[idx]
         if condition(el)
+            i += 1
             res[i] = el
-            i == n && return res
-            i += 1         
+            i == n && return res       
         end
-        population[index_id], population[n_pop] = population[n_pop], population[index_id]
-        n_pop -= 1
+        pop[idx], pop[n_p] = pop[n_p], pop[idx]
+        n_p -= 1
     end
-    return res[1:i-1] 
+    return res[1:i] 
 end
 
 function resorvoir_sampling_multi(iter, rng, n, iter_type = Any)
