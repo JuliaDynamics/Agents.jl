@@ -144,20 +144,6 @@ end
 
 sampling_single(iter, rng) = rand(rng, collect(iter))
 
-function simplest(iter, rng, condition)
-    q = Iterators.filter(x -> condition(x), iter)
-    s = collect(q)
-    isempty(s) && return nothing
-    return rand(rng, s)
-end
-
-function simplest(iter, rng, n, condition)
-    q = Iterators.filter(x -> condition(x), iter)
-    s = collect(q)
-    length(s) <= n && return s
-    return sample(rng, s, n; replace=false)
-end
-
 function sampling_with_condition_single(iter, rng, condition)
     population = collect(iter)
     n = length(population)
