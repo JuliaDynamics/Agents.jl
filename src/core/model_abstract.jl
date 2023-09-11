@@ -26,6 +26,14 @@ ValidPos = Union{
     Tuple{Int,Int,Float64} # osm
 } where {N,M}
 
+# Type used to internally represent periodicity of spaces
+struct Periodic{D}
+    isperiodic::SVector{D,Bool}
+    Periodic{D}(p::Bool) where {D} = new{D}(fill(p, SVector{D}))
+    Periodic{D}(p) where {D} = new{D}(SVector{D}(p))
+end
+isperiodic(P::Periodic) = P.isperiodic
+
 
 """
     AgentBasedModel
