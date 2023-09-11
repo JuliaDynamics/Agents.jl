@@ -1,4 +1,4 @@
-export sample!, replicate!
+export rsample, sample!, replicate!
 using StatsBase: sample, Weights
 
 """
@@ -105,10 +105,10 @@ end
 # %% sampling functions
 #######################################################################################
 
-# sample(iter, rng, [condition])
-# sample(iter, rng, [n, condition])
+# rsample(iter, rng, [condition])
+# rsample(iter, rng, [n, condition])
 
-function sample(iter, rng; alloc = false)
+function rsample(iter, rng; alloc = false)
     if alloc 
         sampling_single(iter, rng)
     else
@@ -116,16 +116,16 @@ function sample(iter, rng; alloc = false)
     end
 end
 
-function sample(iter, rng, condition; alloc = false)
+function rsample(iter, rng, condition; alloc = false)
     if alloc 
         sampling_with_condition_single(iter, rng, condition)
     else
         iter_filtered = Iterators.filter(x -> condition(x), iter)
-        sampling_with_condition_single(iter_filtered, rng)
+        resorvoir_sampling_single(iter_filtered, rng)
     end
 end
 
-function sample(iter, rng, n::Int; alloc = true, iter_type = Any)
+function rsample(iter, rng, n::Int; alloc = true, iter_type = Any)
     if alloc 
         sampling_multi(iter, rng, n)
     else
@@ -133,9 +133,9 @@ function sample(iter, rng, n::Int; alloc = true, iter_type = Any)
     end
 end
 
-function sample(iter, rng, n, condition; alloc = true)
+function rsample(iter, rng, n, condition; alloc = true, iter_type = Any)
     if alloc 
-        sampling_with_condition_multi(iter, rng, n)
+        sampling_with_condition_multi(iter, rng, n, condition)
     else
         iter_filtered = Iterators.filter(x -> condition(x), iter)
         resorvoir_sampling_multi(iter_filtered, rng, n, iter_type)
@@ -144,10 +144,24 @@ end
 
 sampling_single(iter, rng) = rand(rng, collect(iter))
 
+function simplest(iter, rng, condition)
+    q = Iterators.filter(x -> condition(x), iter)
+    s = collect(q)
+    isempty(s) && return nothing
+    return rand(rng, s)
+end
+
+function simplest(iter, rng, n, condition)
+    q = Iterators.filter(x -> condition(x), iter)
+    s = collect(q)
+    length(s) <= n && return s
+    return sample(rng, s, n; replace=false)
+end
+
 function sampling_with_condition_single(iter, rng, condition)
     population = collect(iter)
     n = length(population)
-    @inbounds while n != 0
+    while n != 0
         index_id = rand(rng, 1:n)
         el = population[index_id]
         condition(el) && return el
@@ -157,14 +171,13 @@ function sampling_with_condition_single(iter, rng, condition)
     return nothing
 end
 
-# Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
 function resorvoir_sampling_single(iter, rng)
     res = iterate(iter)
     isnothing(res) && return nothing
     w = rand(rng)
     while true
         choice, state = res
-        skip_counter = floor(log(rand(rng))/log(1 - w))
+        skip_counter = floor(log(rand(rng))/log(1-w))
         while skip_counter != 0
             skip_res = iterate(iter, state)
             isnothing(skip_res) && return choice
@@ -179,16 +192,16 @@ end
 
 function sampling_multi(iter, rng, n)
     population = collect(iter)
-    return sample(rng, population, n; replace=true)  
+    return sample(rng, population, n; replace=false)  
 end
 
-function sampling_with_condition_multi(iter, rng, condition, n)
+function sampling_with_condition_multi(iter, rng, n, condition)
     population = collect(iter)
-    length(population) <= m && return filter(obs -> condition(obs), population)
+    length(population) <= n && return filter(obs -> condition(obs), population)
     res = Vector{eltype(population)}(undef, n)
     n_pop = length(population)
     i = 1
-    @inbounds while n_pop != 0
+    while n_pop != 0
         index_id = rand(rng, 1:n_pop)
         el = population[index_id]
         if condition(el)
@@ -204,7 +217,7 @@ end
 
 function resorvoir_sampling_multi(iter, rng, n, iter_type = Any)
     it = iterate(iter)
-    isnothing(it) && return type_iter[]
+    isnothing(it) && return iter_type[]
     el, state = it
     reservoir = Vector{iter_type}(undef, n)
     reservoir[1] = el
@@ -216,7 +229,7 @@ function resorvoir_sampling_multi(iter, rng, n, iter_type = Any)
     end
     w = rand(rng)^(1/n)
     while true
-        skip_counter = floor(log(rand(rng))/log(1 - w))
+        skip_counter = floor(log(rand(rng))/log(1-w))
         while skip_counter != 0
             skip_it = iterate(iter, state)
             isnothing(skip_it) && return reservoir
