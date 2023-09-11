@@ -17,8 +17,6 @@ to vector of indices within each radius.
 """
 abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 
-isperiodic(::AbstractGridSpace{D,P}) where {D,P} = isperiodic(P)
-
 """
     GridAgent{D} <: AbstractAgent
 The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).

@@ -27,7 +27,10 @@ with non-zero IDs, either positive or negative. This is not checked internally.
 
 All arguments and keywords behave exactly as in [`GridSpace`](@ref).
 """
-function GridSpaceSingle(d::NTuple{D,Int}; periodic = true, metric = :chebyshev) where {D}
+function GridSpaceSingle(d::NTuple{D,Int};
+        periodic::Union{Bool,SVector{D,Bool},NTuple{D,Bool}} = true,
+        metric = :chebyshev
+    ) where {D}
     s = zeros(Int, d)
     return GridSpaceSingle{D,periodic}(s, metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),

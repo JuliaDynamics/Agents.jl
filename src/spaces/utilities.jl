@@ -26,11 +26,10 @@ euclidean_distance(a::A, b::B, model::ABM,
 
 euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, abmspace(model))
 
-#==
 function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
-    space::Union{ContinuousSpace{D,Periodic{D}(false)},AbstractGridSpace{D,Periodic{D}(false)}},
+    space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sqrt(sum(abs2.(p1 .- p2)))
 end
@@ -38,12 +37,11 @@ end
 function euclidean_distance(
     p1::ValidPos,
     p2::ValidPos,
-    space::Union{ContinuousSpace{D,Periodic{D}(true)},AbstractGridSpace{D,Periodic{D}(true)}},
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}},
 ) where {D}
     direct = abs.(p1 .- p2)
     sqrt(sum(min.(direct, spacesize(space) .- direct).^2))
 end
-==#
 
 function euclidean_distance(
     p1::ValidPos,
@@ -51,10 +49,9 @@ function euclidean_distance(
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     s = spacesize(space)
-    periodic = isperiodic(P)
     distance_squared = 0.0
     for i in eachindex(p1)
-        if periodic[i]
+        if P[i]
             distance_squared += euclidean_distance_periodic(p1[i], p2[i], s[i])^2
         else
             distance_squared += euclidean_distance_direct(p1[i], p2[i])^2
@@ -83,11 +80,10 @@ manhattan_distance(a::A, b::B, model::ABM
 
 manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, abmspace(model))
 
-#==
 function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
-    space::Union{ContinuousSpace{D,Periodic{D}(false)},AbstractGridSpace{D,Periodic{D}(false)}},
+    space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sum(manhattan_distance_direct.(p1, p2))
 end
@@ -95,11 +91,10 @@ end
 function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
-    space::Union{ContinuousSpace{D,Periodic{D}(true)},AbstractGridSpace{D,Periodic{D}(true)}}
+    space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
     sum(manhattan_distance_periodic.(p1, p2, spacesize(space)))
 end
-==#
 
 function manhattan_distance(
     p1::ValidPos,
@@ -107,10 +102,9 @@ function manhattan_distance(
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     s = spacesize(space)
-    periodic = isperiodic(P)
     distance = zero(eltype(p1))
     for i in eachindex(p1)
-        if periodic[i]
+        if P[i]
             distance += manhattan_distance_periodic(p1[i], p2[i], s[i])
         else
             distance += manhattan_distance_direct(p1[i], p2[i])
