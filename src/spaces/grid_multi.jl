@@ -64,13 +64,13 @@ example for usage of this advanced specification of dimension-dependent distance
 where one dimension is used as a categorical one.
 """
 function GridSpace(
-        d::NTuple{D,Int}; periodic::Bool = true, metric::Symbol = :chebyshev
+        d::NTuple{D,Int}; periodic = true, metric::Symbol = :chebyshev
     ) where {D}
     stored_ids = Array{Vector{Int},D}(undef, d)
     for i in eachindex(stored_ids)
         stored_ids[i] = Int[]
     end
-    return GridSpace{D,periodic}(
+    return GridSpace{D,Periodic{D}(periodic)}(
         stored_ids,
         metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),
