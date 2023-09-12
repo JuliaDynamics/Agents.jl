@@ -3,12 +3,14 @@ export GridSpace
 # type P stands for Periodic and is a boolean
 struct GridSpace{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Vector{Int},D}
+    extent::NTuple{D,Int}
     metric::Symbol
     offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
     offsets_within_radius::Dict{Int,Vector{NTuple{D,Int}}}
     offsets_within_radius_no_0::Dict{Int,Vector{NTuple{D,Int}}}
     indices_within_radius_tuple::Dict{NTuple{D,Int},Vector{NTuple{D,Int}}}
 end
+spacesize(space::GridSpace) = space.extent
 
 """
     GridSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
@@ -72,6 +74,7 @@ function GridSpace(
     end
     return GridSpace{D,periodic}(
         stored_ids,
+        d,
         metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),
         Dict{Int,Vector{NTuple{D,Int}}}(),
@@ -110,7 +113,7 @@ function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) whe
     nindices = offsets_within_radius(space, r)
     L = length(nindices)
     stored_ids = space.stored_ids
-    space_size = size(stored_ids)
+    space_size = spacesize(space)
     nocheck = all(i -> r < pos[i] <= space_size[i] - r, 1:D)
     return GridSpaceIdIterator{P, D}(stored_ids, nindices, pos, L, space_size, nocheck)
 end
@@ -231,7 +234,7 @@ function nearby_ids(
 end
 
 function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
-    return range(max(unbound.start, 1), stop = min(unbound.stop, size(space)[d]))
+    return range(max(unbound.start, 1), stop = min(unbound.stop, spacesize(space)[d]))
 end
 
 

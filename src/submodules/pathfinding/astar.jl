@@ -52,7 +52,7 @@ to specify the level of discretisation of the space.
 - `admissibility = 0.0` allows the algorithm to approximate paths to speed up pathfinding.
   A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
   length.
-- `walkmap = trues(size(space))` specifies the (un)walkable positions of the
+- `walkmap = trues(spacesize(space))` specifies the (un)walkable positions of the
   space. If specified, it should be a `BitArray` of the same size as the corresponding
   `GridSpace`. By default, agents can walk anywhere in the space.
 - `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
@@ -84,7 +84,7 @@ AStar(
     space::GridSpace{D,periodic};
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(size(space)),
+    walkmap::BitArray{D} = trues(spacesize(space)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
     AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
