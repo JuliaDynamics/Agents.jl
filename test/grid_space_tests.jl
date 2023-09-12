@@ -227,7 +227,7 @@ using StableRNGs
         end
     end
 
-    @testset "$(periodic)" for periodic in (true, false)
+    @testset "$(periodic)" for periodic in (true, false, (true,false))
         @testset "Random nearby" begin
             abm = ABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42))
             fill_space!(abm)
