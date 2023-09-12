@@ -9,6 +9,12 @@ position_delta(pathfinder::GridPathfinder{D,true}, from::Dims{D}, to::Dims{D}) w
 position_delta(pathfinder::GridPathfinder{D,false}, from::Dims{D}, to::Dims{D}) where {D} =
     abs.(to .- from)
 
+@inline function position_delta(pathfinder::GridPathfinder{D,P}, from::Dims{D}, to::Dims{D}) where {D,P}
+    s = size(pathfinder.walkmap)
+    delta = abs(to .- from)
+    ntuple(i -> P[i] ? min(abs(delta[i]), s[i] - delta[i]) : delta[i], D)
+end
+
 """
     Pathfinding.delta_cost(pathfinder::GridPathfinder{D}, metric::M, from, to) where {M<:CostMetric}
 Calculate an approximation for the cost of travelling from `from` to `to` (both of
