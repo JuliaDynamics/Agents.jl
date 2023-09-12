@@ -157,6 +157,26 @@ function nearby_positions(
                 n .+ pos : mod1.(n .+ pos, space_size) for n in nindices)
     end
 end
+function nearby_positions(
+    pos::ValidPos, space::AbstractGridSpace{D,P}, r = 1,
+    get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+) where {D,P}
+    stored_ids = space.stored_ids
+    nindices = get_indices_f(space, r)
+    space_size = size(space)
+    # check if we are far from the wall to skip bounds checks
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        return (n .+ pos for n in nindices)
+    else
+        return (
+            checkbounds(Bool, stored_ids, (n .+ pos)...) ?
+            n .+ pos : mod1.(n .+ pos, space_size)
+            for n in nindices
+            if all(checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) || P[i] for i in 1:D)
+        )
+    end
+end
+
 
 function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)

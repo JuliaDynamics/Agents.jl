@@ -63,7 +63,7 @@ Utilization of all features of `AStar` occurs in the
 """
 function AStar(
     dims::NTuple{D,T};
-    periodic::Union{Bool,SVector{D,Bool},NTuple{D,Bool}} = false,
+    periodic::Union{Bool,Tuple{D,Bool}} = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkmap::BitArray{D} = trues(dims),
