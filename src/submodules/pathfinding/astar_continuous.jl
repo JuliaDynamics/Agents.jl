@@ -7,6 +7,14 @@ sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} =
     sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
 sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
     sum((from .- to) .^ 2)
+@inline function sqr_distance(from, to, pathfinder::AStar{D,P}) where {D,P}
+    s = pathfinder.dims
+    delta = abs.(from .- to)
+    sum(
+        P[i] ? (min(delta[i], s[i] - delta[i]))^2 : delta[i]^2
+        for i in 1:D
+    )
+end
 
 """
     find_continuous_path(pathfinder, from, to)

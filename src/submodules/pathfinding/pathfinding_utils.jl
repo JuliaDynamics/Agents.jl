@@ -11,8 +11,8 @@ position_delta(pathfinder::GridPathfinder{D,false}, from::Dims{D}, to::Dims{D}) 
 
 @inline function position_delta(pathfinder::GridPathfinder{D,P}, from::Dims{D}, to::Dims{D}) where {D,P}
     s = size(pathfinder.walkmap)
-    delta = abs(to .- from)
-    ntuple(i -> P[i] ? min(abs(delta[i]), s[i] - delta[i]) : delta[i], D)
+    delta = abs.(to .- from)
+    ntuple(i -> P[i] ? min(delta[i], s[i] - delta[i]) : delta[i], D)
 end
 
 """
