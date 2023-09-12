@@ -146,6 +146,21 @@ function get_direction(
     return to .- from
 end
 
+function get_direction(
+    from::ValidPos,
+    to::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    direct_dir = to .- from
+    inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
+    return map(
+        i -> P[i] ?
+        (abs(direct_dir[i]) <= abs(inverse_dir[i]) ? direct_dir[i] : inverse_dir[i]) :
+        direct_dir[i],
+        1:D
+    )
+end
+
 #######################################################################################
 # %% Utilities for graph-based spaces (Graph/OpenStreetMap)
 #######################################################################################
