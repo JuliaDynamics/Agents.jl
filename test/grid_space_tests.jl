@@ -151,7 +151,7 @@ using StableRNGs
 
     @testset "Nearby pos/ids/agents" begin
         metrics = [:euclidean, :manhattan, :chebyshev]
-        periodics = [false, true]
+        periodics = [false, true, (true,false)]
 
         # All following are with r=1
         @testset "periodic=$(periodic)" for periodic in periodics
@@ -162,22 +162,28 @@ using StableRNGs
                 if metric ∈ (:euclidean, :mahnattan) # for r = 1 they give the same
                     @test sort!(collect(nearby_positions((2, 2), model))) ==
                         sort!([(2, 1), (1, 2), (3, 2), (2, 3)])
-                    if !periodic
+                    if periodic == false
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                         sort!([(1, 2), (2, 1)])
-                    else # in periodic case we still have all nearby 4 positions
+                    elseif periodic == true # in periodic case we still have all nearby 4 positions
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                         sort!([(1, 2), (2, 1), (1 ,5), (5, 1)])
+                    elseif periodic == (true,false)
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                        sort!([(1, 2), (2, 1), (5, 1)])
                     end
                 elseif metric == :chebyshev
                     @test sort!(collect(nearby_positions((2, 2), model))) ==
                         [(1,1), (1,2), (1,3), (2,1), (2,3), (3,1), (3,2), (3,3)]
-                    if !periodic
+                    if periodic == false
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                             [(1,2), (2,1), (2,2)]
-                    else
+                    elseif periodic == true
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                             [(1,2), (1,5), (2,1), (2,2), (2,5), (5,1), (5,2), (5,5)]
+                    elseif periodic == (true,false)
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                            [(1,2), (2,1), (2,2), (5,1), (5,2)]
                     end
                 end
 
@@ -185,7 +191,7 @@ using StableRNGs
                 add_agent!((1, 1), model)
                 a = add_agent!((2, 1), model)
                 add_agent!((3, 2), model) # this is neighbor only in chebyshev
-                add_agent!((5, 1), model)
+                add_agent!((2, 5), model) # this is neighbor in periodic but not in (true,false)
 
                 near_agent = sort!(collect(nearby_ids(a, model)))
                 near_pos = sort!(collect(nearby_ids(a.pos, model)))
@@ -193,14 +199,18 @@ using StableRNGs
                 @test 2 ∉ near_agent
                 @test near_pos == sort!(vcat(near_agent, 2))
 
-                if !periodic && metric ∈ (:euclidean, :mahnattan)
+                if periodic == false && metric ∈ (:euclidean, :mahnattan)
                     near_agent == [1]
-                elseif periodic && metric ∈ (:euclidean, :mahnattan)
+                elseif periodic == true && metric ∈ (:euclidean, :mahnattan)
                     near_agent == [1,4]
-                elseif !periodic && metric == :chebyshev
+                elseif periodic == (true,false) && metric ∈ (:euclidean, :manhattan)
+                    near_agent == [1]
+                elseif periodic == false && metric == :chebyshev
                     near_agent == [1,3]
-                elseif periodic && metric == :chebyshev
+                elseif periodic == true && metric == :chebyshev
                     near_agent == [1,3,4]
+                elseif periodic == (true,false) && metric == :chebyshev
+                    near_agent == [1,3]
                 end
 
             end
