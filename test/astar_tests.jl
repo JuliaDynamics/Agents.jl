@@ -93,6 +93,18 @@ using Agents.Pathfinding
             a = add_agent!((1, 3), model, 0.)
             @test plan_best_route!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
             @test isnothing(plan_best_route!(a, [(5, 3), (4, 1)], model.pf))
+
+            sp = GridSpace((5, 5); periodic = (true, false))
+            pf = AStar(sp)
+            model = ABM(Agent3, sp; properties = (pf = pf,))
+            model.pf.walkmap[3, :] .= 0
+            model.pf.walkmap[:, 2] .= 0
+            a = add_agent!((1, 3), model, 0.)
+            # agent cannot move to (1,1) because y is not periodic
+            @test isnothing(plan_best_route!(a, [(1,1)], model.pf))
+            # but it can move to (5,3) because x is periodic
+            # and (5,3) is only one step away while (2,4) is two steps away
+            @test plan_best_route!(a, [(5,3), (2,4)], model.pf) == (5,3)
         end
 
         @testset "ContinuousSpace" begin
@@ -133,6 +145,7 @@ using Agents.Pathfinding
             move_along_route!(a, model, model.pf, 1.0)
             @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
+
             model.pf.walkmap[:, 3] .= 0
             move_agent!(a, SVector(2.5, 2.5), model)
             @test all(plan_best_route!(a, SVector.([(3., 0.3), (2.5, 2.5)]), model.pf) .≈ (2.5, 2.5))
@@ -149,6 +162,18 @@ using Agents.Pathfinding
             @test all(get_spatial_property(random_walkable(model, model.pf), model.pf.walkmap, model) for _ in 1:10)
             rpos = [random_walkable(SVector(2.5, 0.75), model, model.pf, 2.0) for _ in 1:50]
             @test all(get_spatial_property(x, model.pf.walkmap, model) && euclidean_distance(x, SVector(2.5, 0.75), model) <= 2.0 + atol for x in rpos)
+
+            # mixed boundary
+            space = ContinuousSpace((5., 5.); periodic = (false, true))
+            pathfinder = AStar(space; walkmap = trues(10, 10))
+            model = ABM(Agent6, space; properties = (pf = pathfinder,))
+            model.pf.walkmap[2,:] .= 0
+            a = add_agent!(SVector(0., 0.), model, SVector(0., 0.), 0.)
+            @test isnothing(plan_best_route!(a, [SVector(4.0, 0.)], model.pf))
+            @test plan_best_route!(a, [SVector(0., 4.0)], model.pf) == SVector(0., 4.0)
+            move_along_route!(a, model, model.pf, 0.5)
+            # WRONG
+            # @test isapprox(a.pos, SVector(0, 4.5); atol)
         end
     end
 
