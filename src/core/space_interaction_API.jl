@@ -328,14 +328,9 @@ position.
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        return resorvoir_sampling_single(iter, model)
+        return itsample(iter, abmrng(model); alloc=alloc)
     else
-        if alloc
-            return sampling_with_condition_single(iter, f, model)
-        else
-            iter_filtered = Iterators.filter(id -> f(id), iter)
-            return resorvoir_sampling_single(iter_filtered, model)
-        end
+        return itsample(iter, abmrng(model), f; alloc=alloc)
     end
 end
 
@@ -355,21 +350,14 @@ For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a 
 position.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
+    iter_ids = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        id = random_nearby_id(a, model, r; kwargs...)
-        isnothing(id) && return nothing
-        return model[id]
+        id = itsample(iter_ids, abmrng(model); alloc=alloc)
     else
-        iter_ids = nearby_ids(a, model, r; kwargs...)
-        if alloc
-            return sampling_with_condition_agents_single(iter_ids, f, model)
-        else
-            iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-            id = resorvoir_sampling_single(iter_filtered, model)
-            isnothing(id) && return nothing
-            return model[id]
-        end
+        id = itsample(iter_ids, abmrng(model), id -> f(model[id]); alloc=alloc)
     end
+    isnothing(id) && return nothing
+    return model[id]
 end
 
 """
@@ -387,13 +375,8 @@ is expensive since in this case the allocating version can be more performant.
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
-        return resorvoir_sampling_single(iter, model)
+        return itsample(iter, abmrng(model); alloc=alloc)
     else
-        if alloc
-            return sampling_with_condition_single(iter, f, model)
-        else
-            iter_filtered = Iterators.filter(pos -> f(pos), iter)
-            return resorvoir_sampling_single(iter_filtered, model)
-        end    
+        return itsample(iter, abmrng(model), f; alloc=alloc)  
     end
 end
