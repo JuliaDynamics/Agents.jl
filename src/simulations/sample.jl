@@ -1,4 +1,4 @@
-export rsample, sample!, replicate!
+export itsample, sample!, replicate!
 using StatsBase: sample, Weights
 
 """
@@ -101,14 +101,42 @@ function choose_arg(x, kwargs_nt, agent)
     return deepcopy(getfield(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
 end
 
+# todo: make a package out of it for its general importance
 #######################################################################################
-# %% sampling functions
+# %% sampling API
 #######################################################################################
+"""
+    itsample(iter, [rng, condition::Function]; [alloc])
 
-# rsample(iter, rng, [condition])
-# rsample(iter, rng, [n, condition])
+Return a random element of the given iterator, optionally specifying a `rng` 
+(which defaults to `Random.GLOBAL_RNG`) and a condition to restrict the
+sampling on only those elements for which the function returns `true`. 
+If the iterator is empty or no random element satisfies the condition, 
+it returns `nothing`.
 
-function rsample(iter, rng; alloc = false)
+## Keywords
+* `alloc = false`: this keyword chooses the algorithm to perform, if
+`alloc = false` the algorithm doesn't allocate a new collection to 
+perform the sampling, which should be better when the number of elements is
+large.
+
+    itsample(iter, [rng, condition::Function], n::Int; [alloc, iter_type])
+
+Return a vector of `n` random elements of the given iterator, optionally 
+specifying a `rng` (which defaults to `Random.GLOBAL_RNG`) and a condition
+to restrict  the sampling on only those elements for which the function returns
+`true`. If the iterator has less than `n` elements or less than `n` elements 
+satisfy the condition, it returns a vector of these elements.
+
+## Keywords
+* `alloc = true`: when the function returns a vector, it happens to be much
+better to use the allocating version for small iterators.
+* `iter_type = Any`: the iterator type of the given iterator, if not given
+it defaults to `Any`, which means that the returned vector will be also of
+`Any` type. For performance reasons, if you know the type of the iterator, 
+it is better to pass it.
+"""
+function itsample(iter, rng = Random.GLOBAL_RNG; alloc = false)
     if alloc 
         sampling_single(iter, rng)
     else
@@ -116,7 +144,7 @@ function rsample(iter, rng; alloc = false)
     end
 end
 
-function rsample(iter, rng, condition; alloc = false)
+function itsample(iter, rng = Random.GLOBAL_RNG, condition::Function; alloc = false)
     if alloc 
         sampling_with_condition_single(iter, rng, condition)
     else
@@ -125,7 +153,7 @@ function rsample(iter, rng, condition; alloc = false)
     end
 end
 
-function rsample(iter, rng, n::Int; alloc = true, iter_type = Any)
+function itsample(iter, rng = Random.GLOBAL_RNG, n::Int; alloc = true, iter_type = Any)
     if alloc 
         sampling_multi(iter, rng, n)
     else
@@ -133,7 +161,7 @@ function rsample(iter, rng, n::Int; alloc = true, iter_type = Any)
     end
 end
 
-function rsample(iter, rng, n, condition; alloc = true, iter_type = Any)
+function itsample(iter, rng = Random.GLOBAL_RNG, condition::Function, n::Int; alloc = true, iter_type = Any)
     if alloc 
         sampling_with_condition_multi(iter, rng, n, condition)
     else
