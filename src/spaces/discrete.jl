@@ -148,12 +148,7 @@ function random_id_in_position(pos, model)
 end
 function random_id_in_position(pos, model, f, alloc = false)
     iter_ids = ids_in_position(pos, model)
-    if alloc
-        return sampling_with_condition_single(iter_ids, f, model)
-    else
-        iter_filtered = Iterators.filter(id -> f(id), iter_ids)
-        return resorvoir_sampling_single(iter_filtered, model)
-    end
+    return itsample(iter_ids, abmrng(model), f; alloc=alloc)
 end
 
 """
@@ -174,14 +169,7 @@ function random_agent_in_position(pos, model)
 end
 function random_agent_in_position(pos, model, f, alloc = false)
     iter_ids = ids_in_position(pos, model)
-    if alloc
-        return sampling_with_condition_agents_single(iter_ids, f, model)
-    else
-        iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-        id = resorvoir_sampling_single(iter_filtered, model)
-        isnothing(id) && return nothing
-        return model[id]
-    end
+    return itsample(iter_ids, abmrng(model), id -> f(model[id]); alloc=alloc)
 end
 
 #######################################################################################
