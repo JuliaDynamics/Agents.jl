@@ -192,13 +192,12 @@ end
 function fallback_random_agent(model, condition, alloc)
     if alloc
         iter_ids = allids(model)
-        return sampling_with_condition_agents_single(iter_ids, condition, model)
+        return itsample(iter_ids, abmrng(model), condition; alloc=alloc)
     else
         iter_agents = allagents(model)
-        iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
-        return resorvoir_sampling_single(iter_filtered, model)
+        return itsample(iter_agents, abmrng(model), condition; alloc=alloc)
     end
-end  
+end
 
 # TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
 # Instead, use the API functions such as `abmrng, abmspace`, etc.
