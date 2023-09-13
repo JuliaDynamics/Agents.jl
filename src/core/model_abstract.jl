@@ -192,7 +192,9 @@ end
 function fallback_random_agent(model, condition, alloc)
     if alloc
         iter_ids = allids(model)
-        return itsample(iter_ids, abmrng(model), condition; alloc=alloc)
+        id = itsample(iter_ids, abmrng(model), id -> condition(model[id]); alloc=alloc)
+        isnothing(id) && return nothing
+        return model[id]
     else
         iter_agents = allagents(model)
         return itsample(iter_agents, abmrng(model), condition; alloc=alloc)
