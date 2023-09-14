@@ -13,11 +13,16 @@ Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
-    s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*
+    periodic = get_periodic_type(space)
+    s = "$(periodic)continuous space with $(spacesize(space)) extent"*
     " and spacing=$(space.spacing)"
     space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
     print(io, s)
 end
+get_periodic_type(space::ContinuousSpace{D,true}) where {D} = "periodic "
+get_periodic_type(space::ContinuousSpace{D,false}) where {D} = ""
+get_periodic_type(space::ContinuousSpace{D,P}) where {D,P} = "mixed-periodicity "
+
 
 """
     ContinuousAgent{D,T} <: AbstractAgent

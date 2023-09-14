@@ -64,7 +64,9 @@ example for usage of this advanced specification of dimension-dependent distance
 where one dimension is used as a categorical one.
 """
 function GridSpace(
-        d::NTuple{D,Int}; periodic::Bool = true, metric::Symbol = :chebyshev
+        d::NTuple{D,Int};
+        periodic::Union{Bool,NTuple{D,Bool}} = true,
+        metric::Symbol = :chebyshev
     ) where {D}
     stored_ids = Array{Vector{Int},D}(undef, d)
     for i in eachindex(stored_ids)
@@ -190,6 +192,16 @@ combine_positions(pos, origin, ::GridSpaceIdIterator{false}) = pos .+ origin
     # checking for bounds is less expensive than calling mod1
     checkbounds(Bool, stored_ids, npos...) ? npos : mod1.(npos, space_size)
 end
+@inline function combine_positions(pos, origin, iter::GridSpaceIdIterator{P,D}) where {P,D}
+    npos = pos .+ origin
+    space_size = iter.space_size
+    stored_ids = iter.stored_ids
+    ntuple(i ->
+        (!P[i] || checkbounds(Bool, axes(stored_ids, i), npos[i])) ?
+        npos[i] : mod1(npos[i], space_size[i]),
+        D
+    )
+end
 combine_positions_nocheck(pos, origin, ::GridSpaceIdIterator) = pos .+ origin
 
 # Must return `true` if the access is invalid
@@ -198,6 +210,10 @@ combine_positions_nocheck(pos, origin, ::GridSpaceIdIterator) = pos .+ origin
     return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
 end
 invalid_access(pos_index, iter::GridSpaceIdIterator{true}) = @inbounds isempty(iter.stored_ids[pos_index...])
+@inline function invalid_access(pos_index, iter::GridSpaceIdIterator{P,D}) where {P,D}
+    valid_bounds = all(P[i] || checkbounds(Bool, axes(iter.stored_ids, i), pos_index[i]) for i in 1:D)
+    return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
+end
 invalid_access_nocheck(pos_index, iter::GridSpaceIdIterator) = @inbounds isempty(iter.stored_ids[pos_index...])
 
 ##########################################################################################

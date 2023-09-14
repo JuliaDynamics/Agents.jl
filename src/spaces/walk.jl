@@ -82,14 +82,30 @@ function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,false}) wh
     return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
 end
 
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,P}) where {D,P}
+    s = spacesize(space)
+    return SVector{D}(
+        P[i] ? mod(pos[i], s[i]) : clamp(pos[i], 0.0, prevfloat(s[i]))
+        for i in 1:D
+    )
+end
+
 #----
-# for backward compatibility 
+# for backward compatibility
 function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,true}) where {D}
     return Tuple(mod.(pos, spacesize(space)))
 end
 
 function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,false}) where {D}
     return Tuple(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
+end
+
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,P}) where {D,P}
+    s = spacesize(space)
+    return ntuple(
+        i -> P[i] ? mod(pos[i], s[i]) : clamp(pos[i], 0.0, prevfloat(s[i])),
+        D
+    )
 end
 #----
 
@@ -99,6 +115,14 @@ end
 
 function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
     return clamp.(pos, 1, spacesize(space))
+end
+
+function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,P}) where {D,P}
+    s = spacesize(space)
+    return ntuple(
+        i -> P[i] ? mod1(pos[i], s[i]) : clamp(pos[i], 1, s[i]),
+        D
+    )
 end
 
 #######################################################################################

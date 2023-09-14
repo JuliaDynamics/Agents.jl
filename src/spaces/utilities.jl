@@ -43,6 +43,31 @@ function euclidean_distance(
     sqrt(sum(min.(direct, spacesize(space) .- direct).^2))
 end
 
+function euclidean_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    s = spacesize(space)
+    distance_squared = zero(eltype(p1))
+    for i in eachindex(p1)
+        if P[i]
+            distance_squared += euclidean_distance_periodic(p1[i], p2[i], s[i])^2
+        else
+            distance_squared += euclidean_distance_direct(p1[i], p2[i])^2
+        end
+    end
+    return sqrt(distance_squared)
+end
+
+function euclidean_distance_direct(x1::Real, x2::Real)
+    abs(x1 - x2)
+end
+function euclidean_distance_periodic(x1::Real, x2::Real, l::Real)
+    direct = abs(x1 - x2)
+    min(direct, l - direct)
+end
+
 """
     manhattan_distance(a, b, model::ABM)
 
@@ -60,7 +85,7 @@ function manhattan_distance(
     p2::ValidPos,
     space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
-    sum(abs.(p1 .- p2))
+    sum(manhattan_distance_direct.(p1, p2))
 end
 
 function manhattan_distance(
@@ -68,8 +93,32 @@ function manhattan_distance(
     p2::ValidPos,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
-    direct = abs.(p1 .- p2)
-    sum(min.(direct, spacesize(space) .- direct))
+    sum(manhattan_distance_periodic.(p1, p2, spacesize(space)))
+end
+
+function manhattan_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    s = spacesize(space)
+    distance = zero(eltype(p1))
+    for i in eachindex(p1)
+        if P[i]
+            distance += manhattan_distance_periodic(p1[i], p2[i], s[i])
+        else
+            distance += manhattan_distance_direct(p1[i], p2[i])
+        end
+    end
+    return distance
+end
+
+function manhattan_distance_direct(x1::Real, x2::Real)
+    abs(x1 - x2)
+end
+function manhattan_distance_periodic(x1::Real, x2::Real, s::Real)
+    direct = abs(x1 - x2)
+    min(direct, s - direct)
 end
 
 """
@@ -95,6 +144,21 @@ function get_direction(
     space::Union{AbstractGridSpace{D,false},ContinuousSpace{D,false}},
 ) where {D}
     return to .- from
+end
+
+function get_direction(
+    from::ValidPos,
+    to::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    direct_dir = to .- from
+    inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
+    return map(
+        i -> P[i] ?
+        (abs(direct_dir[i]) <= abs(inverse_dir[i]) ? direct_dir[i] : inverse_dir[i]) :
+        direct_dir[i],
+        1:D
+    )
 end
 
 #######################################################################################

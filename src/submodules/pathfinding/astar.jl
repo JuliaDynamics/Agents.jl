@@ -63,7 +63,7 @@ Utilization of all features of `AStar` occurs in the
 """
 function AStar(
     dims::NTuple{D,T};
-    periodic::Bool = false,
+    periodic::Union{Bool,NTuple{D,Bool}} = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkmap::BitArray{D} = trues(dims),
@@ -115,13 +115,16 @@ function vonneumann_neighborhood(D)
 end
 
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
-    periodic = P ? "periodic, " : ""
+    periodic = get_periodic_type(pathfinder)
     moore = M ? "diagonal, " : "orthogonal, "
     s =
         "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), " *
         "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
+get_periodic_type(::AStar{D,false,M}) where {D,M} = ""
+get_periodic_type(::AStar{D,true,M}) where {D,M} = "periodic, "
+get_periodic_type(::AStar{D,P,M}) where {D,P,M} = "mixed periodicity, "
 
 struct GridCell
     f::Int
@@ -195,6 +198,13 @@ end
     (mod1.(cur .+ β.I, size(pathfinder.walkmap)) for β in pathfinder.neighborhood)
 @inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
     (cur .+ β.I for β in pathfinder.neighborhood)
+@inline function get_neighbors(cur, pathfinder::AStar{D,P}) where {D,P}
+    s = size(pathfinder.walkmap)
+    (
+        ntuple(i -> P[i] ? mod1(cur[i] + β[i], s[i]) : cur[i] + β[i], D)
+        for β in pathfinder.neighborhood
+    )
+end
 @inline inbounds(n, pathfinder, closed) =
     all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
 
