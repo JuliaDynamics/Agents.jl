@@ -283,3 +283,24 @@ end
     d = replicate!(a, model; f1 = false, f2 = 2)
     @test d.pos == a.pos && d.f1 == false && d.f2 == 2
 end
+
+@testset "swap_agents!" begin
+    # GraphSpace
+    model = ABM(Agent5, GraphSpace(path_graph(6)))
+    agent1 = add_agent!(model, 5.3)
+    agent2 = add_agent!(model, 9.9)
+    pos_a, pos_b = agent1.pos, agent2.pos
+    swap_agents!(agent1, agent2, model)
+    @test agent2.pos == pos_a
+    @test agent1.pos == pos_b
+    @test agent2.weight == 9.9
+    @test agent1.weight == 5.3
+     
+    # GridSpace
+    model = ABM(Agent1, GridSpace((5, 5)))
+    agent1 = add_agent!((2, 4), model)
+    agent2 = add_agent!((1, 3), model)
+    swap_agents!(agent1, agent2, model)
+    @test agent1.pos == (1, 3)
+    @test agent2.pos == (2, 4)
+end
