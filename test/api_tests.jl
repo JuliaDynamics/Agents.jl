@@ -295,7 +295,7 @@ end
     @test agent1.pos == pos_b
     @test agent2.weight == 9.9
     @test agent1.weight == 5.3
-     
+    
     # GridSpace
     model = ABM(Agent1, GridSpace((5, 5)))
     agent1 = add_agent!((2, 4), model)
