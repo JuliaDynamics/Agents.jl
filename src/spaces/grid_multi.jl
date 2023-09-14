@@ -192,13 +192,12 @@ combine_positions(pos, origin, ::GridSpaceIdIterator{false}) = pos .+ origin
     # checking for bounds is less expensive than calling mod1
     checkbounds(Bool, stored_ids, npos...) ? npos : mod1.(npos, space_size)
 end
-function combine_positions(pos, origin, iter::GridSpaceIdIterator{P,D}) where {P,D}
+@inline function combine_positions(pos, origin, iter::GridSpaceIdIterator{P,D}) where {P,D}
     npos = pos .+ origin
     space_size = iter.space_size
     stored_ids = iter.stored_ids
     ntuple(i ->
-        #(P[i] && checkbounds(Bool, stored_ids, npos[i])) ?
-        (!P[i] || checkbounds(Bool, stored_ids, npos[i])) ?
+        (!P[i] || checkbounds(Bool, axes(stored_ids, i), npos[i])) ?
         npos[i] : mod1(npos[i], space_size[i]),
         D
     )
@@ -211,8 +210,8 @@ combine_positions_nocheck(pos, origin, ::GridSpaceIdIterator) = pos .+ origin
     return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
 end
 invalid_access(pos_index, iter::GridSpaceIdIterator{true}) = @inbounds isempty(iter.stored_ids[pos_index...])
-function invalid_access(pos_index, iter::GridSpaceIdIterator{P,D}) where {P,D}
-    valid_bounds = any((!P[i] && checkbounds(Bool, iter.stored_ids, pos_index[i]) for i in 1:D))
+@inline function invalid_access(pos_index, iter::GridSpaceIdIterator{P,D}) where {P,D}
+    valid_bounds = all(P[i] || checkbounds(Bool, axes(iter.stored_ids, i), pos_index[i]) for i in 1:D)
     return !valid_bounds || @inbounds isempty(iter.stored_ids[pos_index...])
 end
 invalid_access_nocheck(pos_index, iter::GridSpaceIdIterator) = @inbounds isempty(iter.stored_ids[pos_index...])

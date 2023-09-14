@@ -172,7 +172,7 @@ function nearby_positions(
             checkbounds(Bool, stored_ids, (n .+ pos)...) ?
             n .+ pos : mod1.(n .+ pos, space_size)
             for n in nindices
-            if all(checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) || P[i] for i in 1:D)
+            if all(P[i] || checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) for i in 1:D)
         )
     end
 end

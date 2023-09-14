@@ -137,7 +137,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,P}}, r =
             stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
             for p in position_iterator
             if stored_ids[mod1.(p, space_size)...] != 0 &&
-            all(checkbounds(Bool, axes(stored_ids, i), p[i]) || P[i] for i in 1:D)
+            all(P[i] || checkbounds(Bool, axes(stored_ids, i), p[i]) for i in 1:D)
         )
     end
     return ids_iterator

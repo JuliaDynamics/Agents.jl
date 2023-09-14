@@ -49,7 +49,7 @@ function euclidean_distance(
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     s = spacesize(space)
-    distance_squared = 0.0
+    distance_squared = zero(eltype(p1))
     for i in eachindex(p1)
         if P[i]
             distance_squared += euclidean_distance_periodic(p1[i], p2[i], s[i])^2
