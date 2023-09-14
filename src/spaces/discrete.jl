@@ -187,7 +187,7 @@ end
 #######################################################################################
 # Discrete space extra agent adding stuff
 #######################################################################################
-export add_agent_single!, fill_space!, move_agent_single!
+export add_agent_single!, fill_space!, move_agent_single!, swap_agents!
 
 """
     add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
@@ -272,4 +272,19 @@ function move_agent_single!(
     isnothing(position) && return nothing
     move_agent!(agent, position, model)
     return agent
+end
+
+"""
+    swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+
+Swap the given agents positions, moving each of them to the position
+of the other agent.
+"""
+function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+    remove_agent_from_space!(agent1, model)
+    remove_agent_from_space!(agent2, model)
+    agent1.pos, agent2.pos = agent2.pos, agent1.pos
+    add_agent_to_space!(agent1, model)    
+    add_agent_to_space!(agent2, model)
+    return nothing
 end
