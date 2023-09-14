@@ -167,13 +167,12 @@ using Agents.Pathfinding
             space = ContinuousSpace((5., 5.); periodic = (false, true))
             pathfinder = AStar(space; walkmap = trues(10, 10))
             model = ABM(Agent6, space; properties = (pf = pathfinder,))
-            model.pf.walkmap[2,:] .= 0
+            model.pf.walkmap[5,:] .= 0
             a = add_agent!(SVector(0., 0.), model, SVector(0., 0.), 0.)
             @test isnothing(plan_best_route!(a, [SVector(4.0, 0.)], model.pf))
-            @test plan_best_route!(a, [SVector(0., 4.0)], model.pf) == SVector(0., 4.0)
-            move_along_route!(a, model, model.pf, 0.5)
-            # WRONG
-            # @test isapprox(a.pos, SVector(0, 4.5); atol)
+            @test plan_best_route!(a, [SVector(1.0, 1.0)], model.pf) == SVector(1.0, 1.0)
+            move_along_route!(a, model, model.pf, 1.0)
+            @test isapprox(a.pos, SVector(1/sqrt(2), 1/sqrt(2)); atol)
         end
     end
 
