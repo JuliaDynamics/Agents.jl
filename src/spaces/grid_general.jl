@@ -37,7 +37,50 @@ npositions(space::AbstractGridSpace) = length(space.stored_ids)
 # We initialize a vector of tuples of indices within radius `r` from origin position.
 # We store this vector. When we have to loop over nearby_stuff, we call this vector
 # and add it to the given position. That is what the concrete implementations of
-# nearby_stuff do in the concrete spaces files.
+# nearby_stuff do in the concrete spaces files. 
+# !! Important !! Notice that all implementation of different position metrics 
+# should start by calling `calculate_hyperrectangle` since the calculated hyperrectagle 
+# respects the periodicity of the space.
+
+function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
+    space_size = spacesize(space)
+    if r < minimum(space_size) ÷ 2
+        hyperrect = Iterators.product(repeat([-r:r], D)...)
+    else
+        odd_s, half_s = space_size .% 2, space_size .÷ 2
+        r_dims = min.(r, half_s)
+        from_to = (-rm:rm-(rm == hs && os == 1)
+                   for (rm, hs, os) in zip(r_dims, half_s, odd_s))
+        hyperrect = Iterators.product(from_to...)
+    end
+    return hyperrect
+end
+function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
+    space_size = spacesize(space)
+    if r < minimum(space_size)
+        hyperrect = Iterators.product(repeat([-r:r], D)...) 
+    else
+        r_dims = min.(r, space_size)
+        hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
+    end
+    return hyperrect
+end
+function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
+    space_size = spacesize(space)
+    r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
+    if all(r_notover)
+        hyperrect = Iterators.product(repeat([-r:r], D)...) 
+    else
+        odd_s, half_s = space_size .% 2, space_size .÷ 2
+        r_dims_P = min.(r, space_size)
+        r_dims_notP = min.(r, half_s)
+        from_to = (P[i] ? 
+                    (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 1)) : 
+                    (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
+        hyperrect = Iterators.product(from_to...)
+    end
+    return hyperrect
+end
 
 """
     offsets_within_radius(model::ABM{<:AbstractGridSpace}, r::Real)
@@ -82,45 +125,6 @@ function offsets_at_radius(
         end
     end
     return βs::Vector{NTuple{D,Int}}
-end
-function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
-    space_size = spacesize(space)
-    if r < minimum(space_size) ÷ 2
-        hyperrect = Iterators.product(repeat([-r:r], D)...)
-    else
-        odd_s, half_s = space_size .% 2, space_size .÷ 2
-        r_dims = min.(r, half_s)
-        from_to = (-rm:rm-(rm == hs && os == 1)
-                   for (rm, hs, os) in zip(r_dims, half_s, odd_s))
-        hyperrect = Iterators.product(from_to...)
-    end
-    return hyperrect
-end
-function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
-    space_size = spacesize(space)
-    if r < minimum(space_size)
-        hyperrect = Iterators.product(repeat([-r:r], D)...) 
-    else
-        r_dims = min.(r, space_size)
-        hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
-    end
-    return hyperrect
-end
-function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
-    space_size = spacesize(space)
-    r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
-    if all(r_notover)
-        hyperrect = Iterators.product(repeat([-r:r], D)...) 
-    else
-        odd_s, half_s = space_size .% 2, space_size .÷ 2
-        r_dims_P = min.(r, space_size)
-        r_dims_notP = min.(r, half_s)
-        from_to = (P[i] ? 
-                    (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 1)) : 
-                    (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
-        hyperrect = Iterators.product(from_to...)
-    end
-    return hyperrect
 end
 
 # Make grid space Abstract if indeed faster
