@@ -187,10 +187,11 @@ using StableRNGs
                     end
                 end
                 # test presence of duplicates
-                all_positions = collect(nearby_positions((2, 2), model, 10))
-                @test length(all_positions) == 24
-                @test length(unique(all_positions)) == 24
-                @test min.(all_positions...) == (1, 1) && max.(all_positions...) == (5, 5)
+                model2 = ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic))
+                all_positions = collect(nearby_positions((2, 2, 7), model2, 5))
+                @test length(all_positions) == 131
+                @test length(unique(all_positions)) == 131
+                @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (5, 4, 12)
                 
                 remove_all!(model)
                 add_agent!((1, 1), model)
