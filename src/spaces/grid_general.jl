@@ -72,8 +72,8 @@ function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
         hyperrect = Iterators.product(repeat([-r:r], D)...) 
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
-        r_dims_P = min.(r, space_size)
-        r_dims_notP = min.(r, half_s)
+        r_dims_P = min.(r, half_s)
+        r_dims_notP = min.(r, space_size)
         from_to = (P[i] ? 
                     (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 0)) : 
                     (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
