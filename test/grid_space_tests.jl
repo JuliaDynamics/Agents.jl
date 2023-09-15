@@ -187,13 +187,15 @@ using StableRNGs
                     end
                 end
                 # test presence of duplicates
-                model2 = periodic == (true, false) ?
-                            ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, (true, false, true)) :
-                            ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic)
-                all_positions = collect(nearby_positions((2, 2, 7), model2, 5))
-                @test length(all_positions) == 131
-                @test length(unique(all_positions)) == 131
-                @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
+                if metric == :chebyshev
+                    model2 = periodic == (true, false) ?
+                                ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic=(true,false,true))) :
+                                ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic))
+                    all_positions = collect(nearby_positions((2, 2, 7), model2, 5))
+                    @test length(all_positions) == 131
+                    @test length(unique(all_positions)) == 131
+                    @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
+                end
                 
                 remove_all!(model)
                 add_agent!((1, 1), model)
