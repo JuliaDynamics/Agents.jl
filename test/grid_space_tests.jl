@@ -187,7 +187,9 @@ using StableRNGs
                     end
                 end
                 # test presence of duplicates
-                model2 = ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic))
+                model2 = periodic == (true, false) ?
+                            ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, (true, false, true)) :
+                            ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic)
                 all_positions = collect(nearby_positions((2, 2, 7), model2, 5))
                 @test length(all_positions) == 131
                 @test length(unique(all_positions)) == 131
