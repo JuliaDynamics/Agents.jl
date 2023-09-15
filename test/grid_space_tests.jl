@@ -225,6 +225,17 @@ using StableRNGs
             @test length(near_ids[1]) == length(near_pos[1]) + 1
             @test length(near_ids[3]) == 7^2
         end
+
+        @testset "radius > space extent" begin
+            periodics = [false, true, (true,false,true)]
+            @testset "$(periodic)" for periodic in periodics
+                model = ABM(GridAgent{2}, GridSpace((3, 4, 15); periodic))
+                all_positions = collect(nearby_positions((2, 2, 7), model, 5))
+                @test length(all_positions) == 131
+                @test length(unique(all_positions)) == 131
+                @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
+            end
+        end
     end
 
     @testset "$(periodic)" for periodic in (true, false, (true,false))
