@@ -190,7 +190,7 @@ using StableRNGs
                 all_positions = collect(nearby_positions((2, 2), model, 10))
                 @test length(all_positions) == 25
                 @test length(unique(all_positions)) == 25
-                @test min.(all_positions) == (1, 1) && max.(all_positions) == (5, 5)
+                @test min.(all_positions...) == (1, 1) && max.(all_positions...) == (5, 5)
                 
                 remove_all!(model)
                 add_agent!((1, 1), model)
