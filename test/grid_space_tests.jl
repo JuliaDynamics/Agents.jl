@@ -186,17 +186,7 @@ using StableRNGs
                             [(1,2), (2,1), (2,2), (5,1), (5,2)]
                     end
                 end
-                # test presence of duplicates
-                if metric == :chebyshev
-                    model2 = periodic == (true, false) ?
-                                ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic=(true,false,true))) :
-                                ABM(GridAgent{2}, SpaceType((3, 4, 15); metric, periodic))
-                    all_positions = collect(nearby_positions((2, 2, 7), model2, 5))
-                    @test length(all_positions) == 131
-                    @test length(unique(all_positions)) == 131
-                    @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
-                end
-                
+
                 remove_all!(model)
                 add_agent!((1, 1), model)
                 a = add_agent!((2, 1), model)
@@ -234,6 +224,17 @@ using StableRNGs
             @test length(near_ids[1]) == length(near_ids[2]) + 4
             @test length(near_ids[1]) == length(near_pos[1]) + 1
             @test length(near_ids[3]) == 7^2
+        end
+
+        @testset "radius > space extent" begin
+            periodics = [false, true, (true,false,true)]
+            @testset "$(periodic)" for periodic in periodics
+                model = ABM(GridAgent{2}, GridSpace((3, 4, 15); periodic))
+                all_positions = collect(nearby_positions((2, 2, 7), model, 5))
+                @test length(all_positions) == 131
+                @test length(unique(all_positions)) == 131
+                @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
+            end
         end
     end
 
