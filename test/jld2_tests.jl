@@ -291,7 +291,7 @@
     end
 
     @testset "OSMSpace" begin
-        @agent Zombie OSMAgent begin
+        @agent struct Zombie(OSMAgent)
             infected::Bool
         end
         model = ABM(Zombie, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))

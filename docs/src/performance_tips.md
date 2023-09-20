@@ -24,7 +24,7 @@ For distributed computing to work, all definitions must be preceded with
 using Distributed
 @everywhere using Agents
 @everywhere function initialized
-@everywhere mutable struct SchellingAgent(...) ...
+@everywhere @agent struct SchellingAgent(...) ...
 @everywhere function agent_step!(...) = ...
 @everywhere adata = ...
 ```
@@ -46,7 +46,7 @@ in `schelling.jl`:
 ```
 using Agents
 function initialize(...) ...
-mutable struct SchellingAgent(...) ...
+@agent struct SchellingAgent(...) ...
 function agent_step!(...) = ...
 ```
 then `include` the file with `everywhere`:
@@ -66,8 +66,7 @@ This tip is actually not related to Agents.jl and you will also read about it in
 
 ```julia
 using Agents
-struct MyAgent <: AbstractAgent
-	id::Int
+@agent struct MyAgent(NoSpaceAgent) <: AbstractAgent
 end
 properties = Dict(:par1 => 1, :par2 => 1.0, :par3 => "Test")
 model = ABM(MyAgent; properties = properties)
@@ -97,7 +96,7 @@ which makes the model stepping function have type instability due to the model p
 
 The solution is to use a Dictionary for model properties only when all values are of the same type, or to use a custom `mutable struct` for model properties where each property is type annotated, e.g:
 ```julia
-Base.@kwdef mutable struct Parameters
+@kwdef mutable struct Parameters
 	par1::Int = 1
 	par2::Float64 = 1.0
 	par3::String = "Test"

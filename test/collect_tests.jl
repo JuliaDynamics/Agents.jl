@@ -411,9 +411,7 @@ end
 
         # Handle mismatches
         # In this example, weight exists in both agents, but they have different types
-        mutable struct Agent3Int <: AbstractAgent
-            id::Int
-            pos::Dims{2}
+        @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
         model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
@@ -587,7 +585,8 @@ end
 end
 
 @testset "Parameter scan" begin
-    @everywhere @agent Automata GridAgent{2} begin end
+    @everywhere @agent struct Automata(GridAgent{2})
+    end
     function forest_fire(; density = 0.7, griddims = (100, 100))
         space = GridSpace(griddims; periodic = false, metric = :euclidean)
         forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))

@@ -14,48 +14,50 @@ addprocs(2)
     using StableRNGs
 end
 
-@agent Agent0 NoSpaceAgent begin end
+@agent struct Agent0(NoSpaceAgent)
+end
 
-@agent Agent1 GridAgent{2} begin end
+@agent struct Agent1(GridAgent{2})
+end
 
-@agent Agent2 NoSpaceAgent begin 
+@agent struct Agent2(NoSpaceAgent) 
     weight::Float64
 end
 
-@agent Agent3 GridAgent{2} begin 
+@agent struct Agent3(GridAgent{2}) 
     weight::Float64
 end
 
-@agent Agent4 GridAgent{2} begin 
+@agent struct Agent4(GridAgent{2}) 
     p::Int
 end
 
-@agent Agent5 GraphAgent begin 
+@agent struct Agent5(GraphAgent) 
     weight::Float64
 end
 
-@agent Agent6 ContinuousAgent{2,Float64} begin 
+@agent struct Agent6(ContinuousAgent{2,Float64}) 
     weight::Float64
 end
 
-@agent Agent7 GraphAgent begin 
+@agent struct Agent7(GraphAgent) 
     f1::Bool
     f2::Int
 end
 
-@agent Agent8 ContinuousAgent{2,Float64} begin 
+@agent struct Agent8(ContinuousAgent{2,Float64}) 
     f1::Bool
     f2::Int
 end
 
 Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
-@agent SchellingAgent GridAgent{2} begin
+@agent struct SchellingAgent(GridAgent{2})
     mood::Bool
     group::Int
 end
 
-@agent Bird ContinuousAgent{2,Float64} begin
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64

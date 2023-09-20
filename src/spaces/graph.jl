@@ -56,7 +56,7 @@ end
 The minimal agent struct for usage with [`GraphSpace`](@ref).
 It has an additional `pos::Int` field. See also [`@agent`](@ref).
 """
-@agent GraphAgent NoSpaceAgent begin
+@agent struct GraphAgent(NoSpaceAgent)
     pos::Int
 end
 

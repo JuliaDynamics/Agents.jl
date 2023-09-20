@@ -1,6 +1,7 @@
 using Agents, BenchmarkTools
 
-@agent FakeAgent NoSpaceAgent begin end
+@agent struct FakeAgent(NoSpaceAgent)
+end
 
 function fake_model(; nagents)
     model = StandardABM(FakeAgent)

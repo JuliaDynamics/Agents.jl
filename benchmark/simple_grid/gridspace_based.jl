@@ -1,6 +1,4 @@
-mutable struct GridSpaceAgent <: AbstractAgent
-    id::Int
-    pos::NTuple{2, Int} # Notice that position type depends on space-to-be-used
+@agent struct GridSpaceAgent(GridAgent{2})
     group::Int
     happy::Bool
 end

@@ -62,7 +62,7 @@ end
 
 graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(200)))
 graph_union_model = ABM(
-    Union{GraphAgent,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
+    Union{GraphAgentOne,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
     GraphSpace(complete_digraph(200)),
     warn = false,
 )
@@ -123,7 +123,7 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 grid_model = ABM(GridAgent, GridSpace((15, 15)))
 grid_union_model = ABM(
-    Union{GridAgent,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
+    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
     GridSpace((15, 15));
     warn = false,
 )
@@ -189,7 +189,7 @@ SUITE["continuous"]["add_union"]["agent_pos"] =
     @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup = (
         cmodel = ABM(
             Union{
-                ContinuousAgent,
+                ContinuousAgentOne,
                 ContinuousAgentTwo,
                 ContinuousAgentThree,
                 ContinuousAgentFour,

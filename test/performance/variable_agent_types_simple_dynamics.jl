@@ -7,93 +7,63 @@
 
 using Agents, Random
 
-mutable struct Agent1 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent1(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent2 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent2(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent3 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent3(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent4 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent4(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent5 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent5(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent6 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent6(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent7 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent7(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent8 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent8(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent9 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent9(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent10 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent10(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent11 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent11(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent12 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent12(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent13 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent13(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent14 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent14(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent15 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent15(GridAgent{2})
     money::Int
 end
 

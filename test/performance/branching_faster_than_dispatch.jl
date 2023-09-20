@@ -9,37 +9,29 @@
 ################### DEFINITION 1 ###############
 using Agents, Random, BenchmarkTools
 
-mutable struct GridAgentOne <: AbstractAgent
+@agent struct GridAgentOne <: AbstractAgent
     id::Int
     pos::Dims{2}
     one::Float64
     two::Bool
 end
 
-mutable struct GridAgentTwo <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentTwo(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-mutable struct GridAgentThree <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentThree(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-mutable struct GridAgentFour <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentFour(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-mutable struct GridAgentFive <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentFive(GridAgent{2})
     one::Float64
     two::Bool
 end
@@ -83,9 +75,7 @@ end
 
 ################### DEFINITION 2 ###############
 
-mutable struct GridAgentAll <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentAll(GridAgent{2})
     one::Float64
     two::Bool
     type::Symbol

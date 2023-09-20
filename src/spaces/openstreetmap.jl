@@ -154,7 +154,7 @@ end
 The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
 It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
 """
-@agent OSMAgent NoSpaceAgent begin
+@agent struct OSMAgent(NoSpaceAgent)
     pos::Tuple{Int,Int,Float64}
 end
 

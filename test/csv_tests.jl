@@ -20,8 +20,10 @@
     
     Models.SchellingAgent(id, p1, p2, mood, group) = Models.SchellingAgent(id, (p1, p2), mood, group)
 
-    @agent Foo GridAgent{2} begin end
-    @agent Bar GridAgent{2} begin end
+    @agent struct Foo(GridAgent{2})
+    end
+    @agent struct Bar(GridAgent{2})
+    end
 
     model = ABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false)
     

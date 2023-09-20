@@ -162,14 +162,10 @@ end
 
 end
 
-mutable struct Daisy <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct Daisy(GridAgent{2})
     breed::String
 end
-mutable struct Land <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct Land(GridAgent{2})
     temperature::Float64
 end
 @testset "fill space" begin
@@ -229,9 +225,7 @@ end
 end
 
 @testset "Higher order groups" begin
-    mutable struct AgentWithWeight <: AbstractAgent
-        id::Int
-        pos::Dims{2}
+    @agent struct AgentWithWeight(GridAgent{2})
         weight::Float64
     end
 
