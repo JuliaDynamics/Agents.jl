@@ -7,79 +7,63 @@
 
 using Agents, Random
 
-@agent struct Agent1
-    fieldsof(GridAgent{2})
+@agent struct Agent1(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent2
-    fieldsof(GridAgent{2})
+@agent struct Agent2(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent3
-    fieldsof(GridAgent{2})
+@agent struct Agent3(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent4
-    fieldsof(GridAgent{2})
+@agent struct Agent4(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent5
-    fieldsof(GridAgent{2})
+@agent struct Agent5(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent6
-    fieldsof(GridAgent{2})
+@agent struct Agent6(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent7
-    fieldsof(GridAgent{2})
+@agent struct Agent7(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent8
-    fieldsof(GridAgent{2})
+@agent struct Agent8(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent9
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent9(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent10
-    fieldsof(GridAgent{2})
+@agent struct Agent10(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent11
-    fieldsof(GridAgent{2})
+@agent struct Agent11(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent12
-    fieldsof(GridAgent{2})
+@agent struct Agent12(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent13
-    fieldsof(GridAgent{2})
+@agent struct Agent13(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent14
-    fieldsof(GridAgent{2})
+@agent struct Agent14(GridAgent{2})
     money::Int
 end
 
-@agent struct Agent15
-    fieldsof(GridAgent{2})
+@agent struct Agent15(GridAgent{2})
     money::Int
 end
 

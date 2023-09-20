@@ -66,8 +66,7 @@ plotkwargs..., unikwargs...,)
 models[1] = daisy_obs
 
 # Flocking
-@agent struct Bird
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -150,8 +149,7 @@ default_colors["primary"] = colorant"#a1777f"
 default_colors["secondary"] = colorant"#a18f78"
 default_colors["tertiary"] = colorant"#b3b381"
 
-@agent struct Zombie
-    fieldsof(OSMAgent)
+@agent struct Zombie(OSMAgent)
     infected::Bool
     speed::Float64
 end
@@ -205,8 +203,7 @@ models[7] = zombies_obs
 # Growing bacteria
 using Agents, LinearAlgebra
 using Random # hide
-@agent struct SimpleCell
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct SimpleCell(ContinuousAgent{2,Float64})
     length::Float64
     orientation::Float64
     growthprog::Float64
@@ -334,8 +331,7 @@ models[4] = bacteria_obs
 
 # Mountain runners
 using Agents.Pathfinding
-@agent struct Runner 
-    fieldsof(GridAgent{2})
+@agent struct Runner(GridAgent{2})
 end
 using FileIO
 
@@ -426,8 +422,7 @@ forest_obs = abmplot!(axs[5], forest_model;
 models[5] = forest_obs
 
 # Ants
-@agent struct Ant
-    fieldsof(GridAgent{2})
+@agent struct Ant(GridAgent{2})
     has_food::Bool
     facing_direction::Int
     food_collected::Int
@@ -652,8 +647,7 @@ antworld_obs = abmplot!(axs[6], antworld;
 models[6] = antworld_obs
 
 # Fractal growth
-@agent struct FractalParticle 
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct FractalParticle(ContinuousAgent{2,Float64})
     radius::Float64
     is_stuck::Bool
     spin_axis::Array{Float64,1}
@@ -761,8 +755,7 @@ fractal_obs = abmplot!(axs[8], model;
 models[8] = fractal_obs
 
 # Social distancing
-@agent struct PoorSoul 
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct PoorSoul(ContinuousAgent{2,Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R

@@ -1,7 +1,6 @@
 using Agents, BenchmarkTools
 
-@agent struct FakeAgent 
-    fieldsof(NoSpaceAgent)
+@agent struct FakeAgent(NoSpaceAgent)
 end
 
 function fake_model(; nagents)

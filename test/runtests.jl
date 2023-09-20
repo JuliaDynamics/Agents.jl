@@ -14,61 +14,50 @@ addprocs(2)
     using StableRNGs
 end
 
-@agent struct Agent0 
-    fieldsof(NoSpaceAgent)
+@agent struct Agent0(NoSpaceAgent)
 end
 
-@agent struct Agent1 
-    fieldsof(GridAgent{2})
+@agent struct Agent1(GridAgent{2})
 end
 
-@agent struct Agent2 
-    fieldsof(NoSpaceAgent) 
+@agent struct Agent2(NoSpaceAgent) 
     weight::Float64
 end
 
-@agent struct Agent3 
-    fieldsof(GridAgent{2}) 
+@agent struct Agent3(GridAgent{2}) 
     weight::Float64
 end
 
-@agent struct Agent4 
-    fieldsof(GridAgent{2}) 
+@agent struct Agent4(GridAgent{2}) 
     p::Int
 end
 
-@agent struct Agent5 
-    fieldsof(GraphAgent) 
+@agent struct Agent5(GraphAgent) 
     weight::Float64
 end
 
-@agent struct Agent6 
-    fieldsof(ContinuousAgent{2,Float64}) 
+@agent struct Agent6(ContinuousAgent{2,Float64}) 
     weight::Float64
 end
 
-@agent struct Agent7 
-    fieldsof(GraphAgent) 
+@agent struct Agent7(GraphAgent) 
     f1::Bool
     f2::Int
 end
 
-@agent struct Agent8 
-    fieldsof(ContinuousAgent{2,Float64}) 
+@agent struct Agent8(ContinuousAgent{2,Float64}) 
     f1::Bool
     f2::Int
 end
 
 Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
-@agent struct SchellingAgent 
-    fieldsof(GridAgent{2})
+@agent struct SchellingAgent(GridAgent{2})
     mood::Bool
     group::Int
 end
 
-@agent struct Bird 
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64

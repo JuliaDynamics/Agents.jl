@@ -13,15 +13,13 @@
 using Agents
 using Measurements
 
-@agent struct Daisy 
-    fieldsof(GridAgent{2})
+@agent struct Daisy(GridAgent{2})
     breed::Symbol
     age::Int
     albedo::AbstractFloat # Allow Measurements
 end
 
-@agent struct Land 
-    fieldsof(GridAgent{2})
+@agent struct Land(GridAgent{2})
     temperature::AbstractFloat # Allow Measurements
 end
 

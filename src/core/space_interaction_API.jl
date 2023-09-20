@@ -222,8 +222,7 @@ because it is otherwise not possible to deduce a constructor for `A`.
 ## Example
 ```julia
 using Agents
-@agent struct Agent
-    fieldsof(GraphAgent)
+@agent struct Agent(GraphAgent)
     w::Float64
     k::Bool = false
 end

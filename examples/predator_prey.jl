@@ -49,15 +49,13 @@
 # Nevertheless, for the sake of example, we will use two different types.)
 using Agents, Random
 
-@agent struct Sheep 
-    fieldsof(GridAgent{2})
+@agent struct Sheep(GridAgent{2})
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
 end
 
-@agent struct Wolf 
-    fieldsof(GridAgent{2})
+@agent struct Wolf(GridAgent{2})
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64

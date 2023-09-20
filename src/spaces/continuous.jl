@@ -26,8 +26,7 @@ It has the additional fields `pos::SVector{D,T}, vel::SVector{D,T}` where `T`
 can be any `AbstractFloat` type.
 See also [`@agent`](@ref).
 """
-@agent struct ContinuousAgent{D,T} 
-    fieldsof(NoSpaceAgent)
+@agent struct ContinuousAgent{D,T}(NoSpaceAgent)
     pos::SVector{D,T}
     vel::SVector{D,T}
 end

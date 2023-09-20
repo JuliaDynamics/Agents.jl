@@ -1,5 +1,4 @@
-@agent struct GridSpaceAgent
-    fieldsof(GridAgent{2})
+@agent struct GridSpaceAgent(GridAgent{2})
     group::Int
     happy::Bool
 end

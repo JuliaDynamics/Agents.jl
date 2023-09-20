@@ -36,8 +36,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 using Random # hide
 
-@agent struct Fisher 
-    fieldsof(NoSpaceAgent)
+@agent struct Fisher(NoSpaceAgent)
     competence::Int
     yearly_catch::Float64
 end

@@ -1,68 +1,53 @@
 using Agents
 
-@agent struct GraphAgentOne
-    fieldsof(GraphAgent)
+@agent struct GraphAgentOne(GraphAgent)
     one::Float64
     two::Bool
 end
 
-@agent struct GraphAgentTwo
-    fieldsof(GraphAgent)
+@agent struct GraphAgentTwo(GraphAgent)
 end
 
-@agent struct GraphAgentThree
-    fieldsof(GraphAgent)
+@agent struct GraphAgentThree(GraphAgent)
 end
 
-@agent struct GraphAgentFour
-    fieldsof(GraphAgent)
+@agent struct GraphAgentFour(GraphAgent)
 end
 
-@agent struct GraphAgentFive
-    fieldsof(GraphAgent)
+@agent struct GraphAgentFive(GraphAgent)
 end
 
-@agent struct GridAgentOne
-    fieldsof(GridAgent{2})
+@agent struct GridAgentOne(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-@agent struct GridAgentTwo <: AbstractAgent
-    fieldsof(GridAgent{2})
+@agent struct GridAgentTwo(GridAgent{2}) <: AbstractAgent
 end
 
-@agent struct GridAgentThree <: AbstractAgent
-    fieldsof(GridAgent{2})
+@agent struct GridAgentThree(GridAgent{2}) <: AbstractAgent
 end
 
-@agent struct GridAgentFour <: AbstractAgent
-    fieldsof(GridAgent{2})
+@agent struct GridAgentFour(GridAgent{2}) <: AbstractAgent
 end
 
-@agent struct GridAgentFive <: AbstractAgent
-    fieldsof(GridAgent{2})
+@agent struct GridAgentFive(GridAgent{2}) <: AbstractAgent
 end
 
-@agent struct ContinuousAgentOne <: AbstractAgent
-    fieldsof(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentOne(ContinuousAgent{3,Float64}) <: AbstractAgent
     one::Float64
     two::Bool
 end
 
-@agent struct ContinuousAgentTwo
-    fieldsof(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentTwo(ContinuousAgent{3,Float64})
 end
 
-@agent struct ContinuousAgentThree
-    fieldsof(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentThree(ContinuousAgent{3,Float64})
 end
 
-@agent struct ContinuousAgentFour
-    fieldsof(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentFour(ContinuousAgent{3,Float64})
 end
 
-@agent struct ContinuousAgentFive
-    fieldsof(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentFive(ContinuousAgent{3,Float64})
 end
 

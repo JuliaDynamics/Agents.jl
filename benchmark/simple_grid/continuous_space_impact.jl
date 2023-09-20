@@ -6,8 +6,7 @@ extent = (1.0, 1.0)
 spacing = 0.1
 r = 0.1
 space = ContinuousSpace(extent, spacing)
-@agent struct Agent 
-  fieldsof(ContinuousAgent{2,Float64})
+@agent struct Agent(ContinuousAgent{2,Float64})
 end
 model = ABM(Agent, space; rng = StableRNG(42))
 

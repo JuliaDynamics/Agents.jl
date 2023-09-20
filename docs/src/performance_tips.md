@@ -66,8 +66,7 @@ This tip is actually not related to Agents.jl and you will also read about it in
 
 ```julia
 using Agents
-struct MyAgent <: AbstractAgent
-	id::Int
+@agent struct MyAgent(NoSpaceAgent) <: AbstractAgent
 end
 properties = Dict(:par1 => 1, :par2 => 1.0, :par3 => "Test")
 model = ABM(MyAgent; properties = properties)

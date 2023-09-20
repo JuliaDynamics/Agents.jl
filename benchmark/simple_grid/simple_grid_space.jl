@@ -1,5 +1,4 @@
-@agent struct SoloGridSpaceAgent
-    fieldsof(GridAgent{2})
+@agent struct SoloGridSpaceAgent(GridAgent{2})
     group::Int
     happy::Bool
 end

@@ -1,7 +1,6 @@
 using LinearAlgebra
 
-@agent struct Bird 
-    fieldsof(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64

@@ -16,26 +16,22 @@ using Agents, Random, BenchmarkTools
     two::Bool
 end
 
-@agent struct GridAgentTwo
-    fieldsof(GridAgent{2})
+@agent struct GridAgentTwo(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-@agent struct GridAgentThree
-    fieldsof(GridAgent{2})
+@agent struct GridAgentThree(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-@agent struct GridAgentFour
-    fieldsof(GridAgent{2})
+@agent struct GridAgentFour(GridAgent{2})
     one::Float64
     two::Bool
 end
 
-@agent struct GridAgentFive
-    fieldsof(GridAgent{2})
+@agent struct GridAgentFive(GridAgent{2})
     one::Float64
     two::Bool
 end
@@ -79,8 +75,7 @@ end
 
 ################### DEFINITION 2 ###############
 
-@agent struct GridAgentAll
-    fieldsof(GridAgent{2})
+@agent struct GridAgentAll(GridAgent{2})
     one::Float64
     two::Bool
     type::Symbol

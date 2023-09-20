@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, NoSpaceAgent, fieldsof
+export AbstractAgent, @agent, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
@@ -25,7 +25,7 @@ Return a vector of the fields of the given `AgentType`.
 ## Examples
 Using 
 ```julia
-fields = fieldsof(GridAgent{2})
+fields =(GridAgent{2})
 println(fields)
 ```
 will return 
@@ -46,8 +46,7 @@ function fieldsof(A::Type{<:AbstractAgent})
 end
 
 """
-    @agent struct YourAgentType{X} [<: OptionalSupertype]
-        fieldsof(AnotherAgentType)
+    @agent struct YourAgentType{X} [<: OptionalSupertype](AnotherAgentType)
         extra_property::X
         other_extra_property::Int
         # etc...
@@ -88,8 +87,7 @@ Use functions like [`move_agent!`](@ref) etc., to change the position.
 ### Example without optional hierarchy
 Using
 ```julia
-@agent struct Person{T}
-    fieldsof(GridAgent{2}) 
+@agent struct Person{T}(GridAgent{2}) 
     age::Int
     moneyz::T
 end
@@ -106,8 +104,7 @@ end
 Notice that you can also use default values for some fields, in this case you 
 will need to specify the field names with the non-default values
 ```julia
-@agent struct Person2{T}
-    fieldsof(GridAgent{2})
+@agent struct Person2{T}(GridAgent{2})
     age::Int = 30
     moneyz::T
 end
@@ -122,14 +119,12 @@ a user-specific subtyping hierarchy would be to do:
 ```julia
 abstract type AbstractHuman <: AbstractAgent end
 
-@agent struct Worker <: AbstractHuman
-    fieldsof(GridAgent{2}) 
+@agent struct Worker(GridAgent{2}) <: AbstractHuman
     age::Int
     moneyz::Float64
 end
 
-@agent struct Fisher <: AbstractHuman
-    fieldsof(Worker)
+@agent struct Fisher(Worker) <: AbstractHuman
     fish_per_day::Float64
 end
 ```
@@ -148,13 +143,11 @@ inherited the fields from `Worker`.
 Notice that in Julia parametric types are union types.
 Hence, the following cannot be used:
 ```julia
-@agent struct Dummy{T}
-    fieldsof(GridAgent{2})
+@agent struct Dummy{T}(GridAgent{2})
     moneyz::T
 end
 
-@agent struct Fisherino{T}
-    fieldsof(Dummy{T})
+@agent struct Fisherino{T}(Dummy{T})
     fish_per_day::T
 end
 ```
@@ -166,8 +159,7 @@ You can only use `Dummy{Float64}`.
 It may be that you do not even need to create a subtyping relation if you want
 to utilize multiple dispatch. Consider the example:
 ```julia
-@agent struct CommonTraits
-    fieldsof(GridAgent{2})
+@agent struct CommonTraits(GridAgent{2})
     age::Int
     speed::Int
     energy::Int
@@ -175,13 +167,11 @@ end
 ```
 and then two more structs are made from these traits:
 ```julia
-@agent struct Bird
-    fieldsof(CommonTraits)
+@agent struct Bird(CommonTraits)
     height::Float64
 end
 
-@agent struct Rabbit
-    fieldsof(CommonTraits)
+@agent struct Rabbit(CommonTraits)
     underground::Bool
 end
 ```
@@ -203,16 +193,17 @@ f(x::Person) = ... # uses fields that all "persons" have
 """
 macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
-    if struct_parts[1] isa Symbol || struct_parts[1].head == :curly
-        new_type = struct_parts[1]
-        new_type_with_super = :($new_type <: Agents.AbstractAgent)
+    struct_def = struct_parts[1]
+    if struct_def.head == :call
+        new_type, base_type = struct_def.args
+        abstract_type = :(Agents.AbstractAgent)
+        new_type_with_super = :($new_type <: $abstract_type)
     else
-        new_type_with_super = struct_parts[1]
-        new_type = new_type_with_super.args[1]
+        new_base_types, abstract_type =  struct_def.args
+        new_type, base_type = new_base_types.args
+        new_type_with_super = :($new_type <: $abstract_type)
     end
-    fields_with_base_T = filter(f -> typeof(f) != LineNumberNode, struct_parts[2].args)
-    base_type = fields_with_base_T[1].args[2]
-    new_fields = fields_with_base_T[2:end]
+    new_fields = struct_parts[2].args
     quote
         let
             # Here we collect the field names and types from the base type

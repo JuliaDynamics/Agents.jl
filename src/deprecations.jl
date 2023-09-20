@@ -94,8 +94,14 @@ macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    @warn "this version of the agent macro is deprecated. Use the new version described in 
-         the docs of the agent macro introduced in the 6.0 release."
+    @warn "this version of the agent macro is deprecated. Use the new version of 
+         the agent macro introduced in the 6.0 release. 
+         The new structure is the following:
+
+              @agent struct NewAgent(BaseAgent) <: AbstractSuperType
+                  x::Int
+              end
+          "
     # hack for backwards compatibility (PR #846)
     if base_type isa Expr
         if base_type.args[1] == :ContinuousAgent && length(base_type.args) == 2

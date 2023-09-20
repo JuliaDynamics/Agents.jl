@@ -1,7 +1,6 @@
 using Agents, Random, BenchmarkTools
 
-@agent struct LabelledAgent
-    fieldsof(NoSpaceAgent)
+@agent struct LabelledAgent(NoSpaceAgent)
     label::Bool
 end
 

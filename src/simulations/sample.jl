@@ -69,8 +69,7 @@ Return the new agent instance.
 ## Example
 ```julia
 using Agents
-@agent struct A 
-    fieldsof(GridAgent{2})
+@agent struct A(GridAgent{2})
     k::Float64
     w::Float64
 end

@@ -162,12 +162,10 @@ end
 
 end
 
-@agent struct Daisy
-    fieldsof(GridAgent{2})
+@agent struct Daisy(GridAgent{2})
     breed::String
 end
-@agent struct Land
-    fieldsof(GridAgent{2})
+@agent struct Land(GridAgent{2})
     temperature::Float64
 end
 @testset "fill space" begin
@@ -227,8 +225,7 @@ end
 end
 
 @testset "Higher order groups" begin
-    @agent struct AgentWithWeight
-        fieldsof(GridAgent{2})
+    @agent struct AgentWithWeight(GridAgent{2})
         weight::Float64
     end
 

@@ -2,8 +2,7 @@ using Test, Agents, Random
 using Agents.Graphs
 using StableRNGs
 
-@agent struct AgentOSM
-    fielsof(OSMAgent)
+@agent struct AgentOSM(OSMAgent)
 end
 
 @testset "OpenStreetMap space" begin

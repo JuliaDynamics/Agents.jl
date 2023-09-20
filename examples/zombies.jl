@@ -16,8 +16,7 @@ using Random
 # `Tuple{Int,Int,Float64}`. For simplicity though we shall build this with the [`@agent`](@ref)
 # macro.
 
-@agent struct Zombie 
-    fieldsof(OSMAgent)
+@agent struct Zombie(OSMAgent)
     infected::Bool
     speed::Float64
 end

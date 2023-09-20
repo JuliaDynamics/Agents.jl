@@ -55,13 +55,11 @@
 
     end
 
-    @agent struct Agent3D
-        fieldsof(GridAgent{3})
+    @agent struct Agent3D(GridAgent{3})
         weight::Float64
     end
 
-    @agent struct Agent63
-        fieldsof(ContinuousAgent{3,Float64})
+    @agent struct Agent63(ContinuousAgent{3,Float64})
         weight::Float64
     end
 
