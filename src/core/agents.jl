@@ -18,34 +18,6 @@ and hence it is the **the only supported way to create agent types**.
 abstract type AbstractAgent end
 
 """
-    fieldsof(AgentType)
-
-Return a vector of the fields of the given `AgentType`.
-
-## Examples
-Using 
-```julia
-fields =(GridAgent{2})
-println(fields)
-```
-will return 
-```julia
-2-element Vector{Expr}:
- :(const id::Int64)
- :(pos::Tuple{Int64, Int64})
-```
-"""
-function fieldsof(A::Type{<:AbstractAgent})
-    A_fieldnames = fieldnames(A)
-    A_fieldtypes = fieldtypes(A)
-    A_fieldconsts = Tuple(isconst(A, f) for f in A_fieldnames)
-    iter_fields = zip(A_fieldnames, A_fieldtypes, A_fieldconsts)
-    A_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
-                   for (f, T, c) in iter_fields]
-    return A_fields
-end
-
-"""
     @agent struct YourAgentType{X} [<: OptionalSupertype](AnotherAgentType)
         extra_property::X
         other_extra_property::Int
