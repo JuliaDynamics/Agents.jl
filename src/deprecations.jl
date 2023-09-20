@@ -97,9 +97,12 @@ macro agent(new_name, base_type, super_type, extra_fields)
     @warn "this version of the agent macro is deprecated. Use the new version of 
          the agent macro introduced in the 6.0 release. 
          The new structure is the following:
-
-              @agent struct NewAgent(BaseAgent) [<: AbstractSuperType]
-                  x::Int
+    
+              @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
+                  extra_property::X
+                  other_extra_property_with_default::Bool = true
+                  const other_extra_const_property::Int
+                  # etc...
               end
           "
     # hack for backwards compatibility (PR #846)
