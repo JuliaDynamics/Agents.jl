@@ -18,9 +18,10 @@ and hence it is the **the only supported way to create agent types**.
 abstract type AbstractAgent end
 
 """
-    @agent struct YourAgentType{X} [<: OptionalSupertype](AnotherAgentType)
+    @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
         extra_property::X
-        other_extra_property::Int
+        other_extra_property_with_default::Bool = true
+        const other_extra_const_property::Int
         # etc...
     end
 
