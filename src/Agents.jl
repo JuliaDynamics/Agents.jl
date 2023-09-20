@@ -83,7 +83,9 @@ Breaking changes:
   now supports declaring default and constant fields. Directly creating structs by hand is 
   no longer mentioned in the documentation at all. This will allow us in the future to utilize
   additional fields that the user does not have to know about, which may bring new features or
-  performance gains by being part of the agent structures.
+  performance gains by being part of the agent structures. The macro has been rewritten to make it
+  possible to declare fields as constants. The old version still works but it's deprecated. 
+  Refer to the documentation of the macro for the new syntax.
 - `ContinuousAgent{D}` is not a concrete type anymore. The new interface requires two parameters
   `ContinuousAgent{D,T}` where `T` is any `AbstractFloat` type. If you want to use a type different
   from `Float64`, you will also need to change the type of the `ContinuousSpace` extent accordingly. 
