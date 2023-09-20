@@ -98,7 +98,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
          the agent macro introduced in the 6.0 release. 
          The new structure is the following:
 
-              @agent struct NewAgent(BaseAgent) <: AbstractSuperType
+              @agent struct NewAgent(BaseAgent) [<: AbstractSuperType]
                   x::Int
               end
           "
