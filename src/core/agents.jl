@@ -1,5 +1,5 @@
 export AbstractAgent, @agent, NoSpaceAgent
-export __AGENT_GENERATOR__, @newagent
+export __AGENT_GENERATOR__
 
 """
     YourAgentType <: AbstractAgent
@@ -167,6 +167,7 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
+#==
 macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
@@ -214,9 +215,10 @@ macro agent(struct_repr)
         nothing
     end
 end
+==#
 
 
-macro newagent(struct_repr)
+macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
