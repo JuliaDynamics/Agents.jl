@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, NoSpaceAgent
+export AbstractAgent, @agent, @oldagent, NoSpaceAgent
 export __AGENT_GENERATOR__
 
 """
@@ -167,8 +167,7 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
-#==
-macro agent(struct_repr)
+macro oldagent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
@@ -215,7 +214,6 @@ macro agent(struct_repr)
         nothing
     end
 end
-==#
 
 
 macro agent(struct_repr)
@@ -249,7 +247,14 @@ macro agent(struct_repr)
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))
             additional_fields = $(QuoteNode(new_fields))
-            BaseAgent = __AGENT_GENERATOR__[Symbol(split(string($(esc(base_type))), ".")[end])]
+            # Name of base type needs the string split to remove the module prefix
+            base_T = $(esc(base_type))
+            if base_T isa DataType
+                base_type_name = split(string(base_T.name.wrapper), ".")[end]
+            elseif base_T isa UnionAll
+                base_type_name = split(string(base_T.body.name.wrapper), ".")[end]
+            end
+            BaseAgent = __AGENT_GENERATOR__[Symbol(base_type_name)]
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
@@ -288,8 +293,21 @@ macro helpme(struct_repr)
         let
             name = $(QuoteNode(new_type_with_super))
             additional_fields = $(QuoteNode(new_fields))
-            base_T = $(esc(base_type)).name.wrapper
-            BaseAgent = __AGENT_GENERATOR__[Symbol(split(string(base_T), ".")[end])]
+            base_T = $(esc(base_type))
+            if base_T isa DataType
+                basetype_name = base_T.name.wrapper
+            elseif base_T isa UnionAll
+                basetype_name = base_T.body.name.wrapper
+            end
+            BaseAgent = __AGENT_GENERATOR__[Symbol(basetype_name)]
+            expr = quote
+                S = @expr JLKwStruct mutable struct $(name)
+                    $(additional_fields...)
+                end
+                S.fields = vcat($BaseAgent.fields, S.fields)
+                S
+            end
+            fieldtypes(BaseAgent)
         end
     end
 end
