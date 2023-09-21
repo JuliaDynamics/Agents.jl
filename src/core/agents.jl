@@ -231,30 +231,11 @@ macro agent(struct_repr)
     new_fields = struct_parts[2].args
     quote
         let
-            # Here we collect the field names and types from the base type
-            # Because the base type already exists, we escape the symbols to 
-            # obtain its fields
-            #==
-            base_T = $(esc(base_type))
-            base_fieldnames = fieldnames(base_T)
-            base_fieldtypes = fieldtypes(base_T)
-            base_fieldconsts = Tuple(isconst(base_T, f) for f in base_fieldnames)
-            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
-            base_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
-                           for (f, T, c) in iter_fields]
-            ==#
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))
             additional_fields = $(QuoteNode(new_fields))
-            # Name of base type needs the string split to remove the module prefix
-            base_T = $(esc(base_type))
-            if base_T isa DataType
-                base_type_name = split(string(base_T.name.wrapper), ".")[end]
-            elseif base_T isa UnionAll
-                base_type_name = split(string(base_T.body.name.wrapper), ".")[end]
-            end
-            BaseAgent = __AGENT_GENERATOR__[Symbol(base_type_name)]
+            BaseAgent = __AGENT_GENERATOR__[$(QuoteNode(base_type))]
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
@@ -276,52 +257,12 @@ macro agent(struct_repr)
     end
 end
 
-macro helpme(struct_repr)
-    struct_parts = struct_repr.args[2:end]
-    struct_def = struct_parts[1]
-    if struct_def.head == :call
-        new_type, base_type = struct_def.args
-        abstract_type = :(Agents.AbstractAgent)
-        new_type_with_super = :($new_type <: $abstract_type)
-    else
-        new_base_types, abstract_type =  struct_def.args
-        new_type, base_type = new_base_types.args
-        new_type_with_super = :($new_type <: $abstract_type)
-    end
-    new_fields = struct_parts[2].args
-    quote
-        let
-            name = $(QuoteNode(new_type_with_super))
-            additional_fields = $(QuoteNode(new_fields))
-            base_T = $(esc(base_type))
-            if base_T isa DataType
-                basetype_name = base_T.name.wrapper
-            elseif base_T isa UnionAll
-                basetype_name = base_T.body.name.wrapper
-            end
-            BaseAgent = __AGENT_GENERATOR__[Symbol(basetype_name)]
-            expr = quote
-                S = @expr JLKwStruct mutable struct $(name)
-                    $(additional_fields...)
-                end
-                S.fields = vcat($BaseAgent.fields, S.fields)
-                S
-            end
-            fieldtypes(BaseAgent)
-        end
-    end
-end
-
 """
     NoSpaceAgent <: AbstractAgent
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
-mutable struct NoSpaceAgent <: AbstractAgent
-    const id::Int
-end
-
 __AGENT_GENERATOR__[:NoSpaceAgent] = @expr JLKwStruct mutable struct NoSpaceAgent
-    const id::Int
-end;
+                                                          const id::Int
+                                                      end;
