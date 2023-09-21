@@ -86,6 +86,10 @@ Breaking changes:
   performance gains by being part of the agent structures. The macro has been rewritten to make it
   possible to declare fields as constants. The old version still works but it's deprecated. 
   Refer to the documentation of the macro for the new syntax.
+- Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered 
+  a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. 
+  As a consequence,  `add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)`  and 
+  `add_agent!(agent::AbstractAgent, model::ABM)`  have been deprecated.
 - `ContinuousAgent{D}` is not a concrete type anymore. The new interface requires two parameters
   `ContinuousAgent{D,T}` where `T` is any `AbstractFloat` type. If you want to use a type different
   from `Float64`, you will also need to change the type of the `ContinuousSpace` extent accordingly. 

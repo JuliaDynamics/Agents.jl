@@ -17,7 +17,6 @@
 # ## Defining the core structures
 
 # We begin by calling the required packages and defining an agent type representing a bird.
-
 using Agents
 using Random, LinearAlgebra
 
@@ -47,11 +46,11 @@ end
 # a model object using default values.
 function initialize_model(;
     n_birds = 100,
-    speed = 2.0,
-    cohere_factor = 0.4,
-    separation = 4.0,
+    speed = 1.5,
+    cohere_factor = 0.1,
+    separation = 2.0,
     separate_factor = 0.25,
-    match_factor = 0.02,
+    match_factor = 0.04,
     visual_distance = 5.0,
     extent = (100, 100),
     seed = 42,
@@ -90,7 +89,7 @@ function agent_step!(bird, model)
     for id in neighbor_ids
         N += 1
         neighbor = model[id].pos
-        heading = neighbor .- bird.pos
+        heading = get_direction(bird.pos, neighbor, model)
 
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
@@ -142,7 +141,7 @@ figure
 abmvideo(
     "flocking.mp4", model, agent_step!;
     am = bird_marker,
-    framerate = 20, frames = 100,
+    framerate = 20, frames = 150,
     title = "Flocking"
 )
 
