@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @newagent, NoSpaceAgent
+export AbstractAgent, @agent, @oldagent, NoSpaceAgent
 export __AGENT_GENERATOR__
 
 """
@@ -167,7 +167,7 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
-macro agent(struct_repr)
+macro oldagent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
@@ -216,7 +216,7 @@ macro agent(struct_repr)
 end
 
 
-macro newagent(struct_repr)
+macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
@@ -234,7 +234,17 @@ macro newagent(struct_repr)
             # Here we collect the field names and types from the base type
             # Because the base type already exists, we escape the symbols to 
             # obtain its fields
-            BaseAgent = __AGENT_GENERATOR__[Symbol($(esc(base_type)))].args[end] # constructor
+            base_type_esc = $(esc(base_type))
+            if base_type_esc isa UnionAll
+                base_type_name = base_type_esc
+            elseif base_type_esc isa DataType
+                base_type_name = $(QuoteNode(base_type))
+                if base_type_name isa Expr # this occurs if parameters are specified
+                    parameters = base_type_name.args[2:end]
+                    base_type_name = base_type_name.args[1]
+                end
+            end
+            BaseAgent = __AGENT_GENERATOR__[Symbol(base_type_name)].args[end] # constructor
             if BaseAgent.args[1] isa Expr # true for non parametric types
                 base_fieldexpr = BaseAgent.args[1].args[2].args # args from constructor
             else # for parametric types
