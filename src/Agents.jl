@@ -11,8 +11,6 @@ using Distributed
 using DataStructures
 using Graphs
 using DataFrames
-using ExproniconLite
-export @expr, JLKwStruct, JLKwField, codegen_ast
 using Random
 using StaticArrays: SVector
 export SVector

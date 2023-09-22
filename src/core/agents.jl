@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @oldagent, NoSpaceAgent
+export AbstractAgent, @agent, @newagent, NoSpaceAgent
 export __AGENT_GENERATOR__
 
 """
@@ -18,7 +18,7 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
-__AGENT_GENERATOR__ = Dict{Symbol, JLKwStruct}()
+__AGENT_GENERATOR__ = Dict{Symbol, Any}()
 
 """
     @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
@@ -167,7 +167,7 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
-macro oldagent(struct_repr)
+macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
@@ -216,7 +216,7 @@ macro oldagent(struct_repr)
 end
 
 
-macro agent(struct_repr)
+macro newagent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
@@ -231,21 +231,41 @@ macro agent(struct_repr)
     new_fields = struct_parts[2].args
     quote
         let
+            # Here we collect the field names and types from the base type
+            # Because the base type already exists, we escape the symbols to 
+            # obtain its fields
+            BaseAgent = __AGENT_GENERATOR__[Symbol($(esc(base_type)))].args[end] # constructor
+            base_fieldexpr = BaseAgent.args[1].args[2].args # args from constructor
+            base_T = $(esc(base_type))
+            base_fieldnames = fieldnames(base_T)
+            base_fieldtypes = fieldtypes(base_T)
+            base_fieldconsts = Tuple(isconst(base_T, f) for f in base_fieldnames)
+            base_fieldhasdefault = Tuple(isa(f,Expr) for f in base_fieldexpr)
+            base_fielddefaults = Tuple(isa(f,Expr) ? f.args[2] : nothing for f in base_fieldexpr)
+            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts,
+                base_fieldhasdefault, base_fielddefaults)
+            base_fields = [
+                hasdef ? (c ? Expr(:const, :($f::$T=$d)) : (:($f::$T=$d))) :
+                c ? Expr(:const, :($f::$T)) : (:($f::$T))
+                for (f, T, c, hasdef, d) in iter_fields
+            ]
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))
             additional_fields = $(QuoteNode(new_fields))
-            BaseAgent = __AGENT_GENERATOR__[$(QuoteNode(base_type))]
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
             # There are several reasons for that, see the cited discussion at the top
             expr = quote
-                S = @expr JLKwStruct mutable struct $(name)
+                # get expression for new agent type
+                G = @macroexpand @kwdef mutable struct $name
+                    $(base_fields...)
                     $(additional_fields...)
                 end
-                S.fields = vcat($BaseAgent.fields, S.fields)
-                __AGENT_GENERATOR__[S.name] = S
-                Core.eval($$(__module__), codegen_ast(S))
+                # evaluate in current scope
+                Core.eval($$(__module__), G)
+                # add expression to generator
+                __AGENT_GENERATOR__[Symbol($$(QuoteNode(new_type)))] = G
             end
             # @show expr # uncomment this to see that the final expression looks as desired
             # It is important to evaluate the macro in the module that it was called at
@@ -263,6 +283,11 @@ The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
-__AGENT_GENERATOR__[:NoSpaceAgent] = @expr JLKwStruct mutable struct NoSpaceAgent
-                                                          const id::Int
-                                                      end;
+mutable struct NoSpaceAgent <: AbstractAgent
+    const id::Int
+end
+__AGENT_GENERATOR__[:NoSpaceAgent] = @macroexpand(
+    @kwdef mutable struct NoSpaceAgent <: AbstractAgent
+        const id::Int
+    end
+)
