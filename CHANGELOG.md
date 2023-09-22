@@ -1,6 +1,6 @@
 # v6
 - The `@agent` macro has been rewritten to support fields with default and const values. The old version still works but it's deprecated. Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
-- The `add_agent!` function supports adding an agent propagating keywords arguments. `add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)` and `add_agent!(agent::AbstractAgent, model::ABM)` have been deprecated to allow controlling the ids given to the agents, see issue #861.
+- Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. As a consequence, `add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)`  and `add_agent!(agent::AbstractAgent, model::ABM)`  have been deprecated. See issue #861 for more.
 - Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. 
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering). 
 - A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
