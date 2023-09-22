@@ -235,7 +235,11 @@ macro newagent(struct_repr)
             # Because the base type already exists, we escape the symbols to 
             # obtain its fields
             BaseAgent = __AGENT_GENERATOR__[Symbol($(esc(base_type)))].args[end] # constructor
-            base_fieldexpr = BaseAgent.args[1].args[2].args # args from constructor
+            if BaseAgent.args[1] isa Expr # true for non parametric types
+                base_fieldexpr = BaseAgent.args[1].args[2].args # args from constructor
+            else # for parametric types
+                base_fieldexpr = BaseAgent.args[2].args[1].args[2].args # args from constructor
+            end
             base_T = $(esc(base_type))
             base_fieldnames = fieldnames(base_T)
             base_fieldtypes = fieldtypes(base_T)
@@ -246,12 +250,13 @@ macro newagent(struct_repr)
                 base_fieldhasdefault, base_fielddefaults)
             base_fields = [
                 hasdef ? (c ? Expr(:const, :($f::$T=$d)) : (:($f::$T=$d))) :
-                c ? Expr(:const, :($f::$T)) : (:($f::$T))
+                (c ? Expr(:const, :($f::$T)) : (:($f::$T)))
                 for (f, T, c, hasdef, d) in iter_fields
             ]
             # Then, we prime the additional name and fields into QuoteNodes
             # We have to do this to be able to interpolate them into an inner quote.
             name = $(QuoteNode(new_type_with_super))
+            name_clean = match(r"\.{0,1}([a-zA-Z0-9_]*)\{{0,1}", string(name)).captures[end]
             additional_fields = $(QuoteNode(new_fields))
             # Now we start an inner quote. This is because our macro needs to call `eval`
             # However, this should never happen inside the main body of a macro
@@ -265,7 +270,7 @@ macro newagent(struct_repr)
                 # evaluate in current scope
                 Core.eval($$(__module__), G)
                 # add expression to generator
-                __AGENT_GENERATOR__[Symbol($$(QuoteNode(new_type)))] = G
+                __AGENT_GENERATOR__[Symbol($name_clean)] = G
             end
             # @show expr # uncomment this to see that the final expression looks as desired
             # It is important to evaluate the macro in the module that it was called at
