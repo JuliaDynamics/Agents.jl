@@ -61,9 +61,9 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     # Trigger correct, and efficient, linking of x-axis
     linkxaxes!(axs[end], axs[1:end-1]...)
     on(stepclick) do clicks
-        xlims!(axs[1], Makie.MakieLayout.xautolimits(axs[1]))
+        xlims!(axs[1], Makie.xautolimits(axs[1]))
         for ax in axs
-            ylims!(ax, Makie.MakieLayout.yautolimits(ax))
+            ylims!(ax, Makie.yautolimits(ax))
         end
     end
     on(resetclick) do clicks
