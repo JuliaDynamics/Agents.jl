@@ -33,7 +33,7 @@ end
 
 npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
-# ALright, so here is the design for basic nearby_stuff looping.
+# ALright, so here is the design for basic nearby_stuff looping. 
 # We initialize a vector of tuples of indices within radius `r` from origin position.
 # We store this vector. When we have to loop over nearby_stuff, we call this vector
 # and add it to the given position. That is what the concrete implementations of
@@ -175,13 +175,13 @@ function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,false}, r = 1,
         get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
-    stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
-    space_size = size(stored_ids)
+    space_size = spacesize(space)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         return (n .+ pos for n in nindices)
     else
+        stored_ids = space.stored_ids
         return (n .+ pos for n in nindices if checkbounds(Bool, stored_ids, (n .+ pos)...))
     end
 end
@@ -189,13 +189,13 @@ function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,true}, r = 1,
         get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
-    stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
-    space_size = size(space)
+    space_size = spacesize(space)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         return (n .+ pos for n in nindices)
     else
+        stored_ids = space.stored_ids
         return (checkbounds(Bool, stored_ids, (n .+ pos)...) ? 
                 n .+ pos : mod1.(n .+ pos, space_size) for n in nindices)
     end

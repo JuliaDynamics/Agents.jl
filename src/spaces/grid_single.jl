@@ -10,11 +10,13 @@ export GridSpaceSingle, id_in_position
 # type P stands for Periodic and is a boolean
 struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Int,D}
+    extent::NTuple{D,Int}
     metric::Symbol
     offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
     offsets_within_radius::Dict{Int,Vector{NTuple{D,Int}}}
     offsets_within_radius_no_0::Dict{Int,Vector{NTuple{D,Int}}}
 end
+spacesize(space::GridSpaceSingle) = space.extent
 
 """
     GridSpaceSingle(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
@@ -32,7 +34,7 @@ function GridSpaceSingle(d::NTuple{D,Int};
         metric = :chebyshev
     ) where {D}
     s = zeros(Int, d)
-    return GridSpaceSingle{D,periodic}(s, metric,
+    return GridSpaceSingle{D,periodic}(s, d, metric,
         Dict{Int,Vector{NTuple{D,Int}}}(),
         Dict{Int,Vector{NTuple{D,Int}}}(),
         Dict{Int,Vector{NTuple{D,Int}}}(),
@@ -88,7 +90,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     ) where {D}
     nindices = get_offset_indices(model, r)
     stored_ids = abmspace(model).stored_ids
-    space_size = size(stored_ids)
+    space_size = spacesize(model)
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
@@ -107,7 +109,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     ) where {D}
     nindices = get_offset_indices(model, r)
     stored_ids = abmspace(model).stored_ids
-    space_size = size(stored_ids)
+    space_size = spacesize(model)
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
