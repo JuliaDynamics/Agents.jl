@@ -151,8 +151,8 @@ end
     include("api_tests.jl")
     include("randomness_tests.jl")
     include("scheduler_tests.jl")
-    include("model_access.jl")
-    include("space_test.jl")
+    include("model_access_tests.jl")
+    include("space_tests.jl")
     include("grid_space_tests.jl")
     include("collect_tests.jl")
     include("continuous_space_tests.jl")
@@ -161,4 +161,5 @@ end
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")
+    include("visualization_tests.jl")
 end

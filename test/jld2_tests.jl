@@ -291,15 +291,15 @@
     end
 
     @testset "OSMSpace" begin
-        @agent struct Zombie(OSMAgent)
+        @agent struct Zombiee(OSMAgent)
             infected::Bool
         end
-        model = ABM(Zombie, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
+        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
 
         for id in 1:100
             start = random_position(model)
             finish = OSM.random_road_position(model)
-            human = add_agent!(start, Zombie, model, false)
+            human = add_agent!(start, Zombiee, model, false)
             plan_route!(human, finish, model)
         end
 

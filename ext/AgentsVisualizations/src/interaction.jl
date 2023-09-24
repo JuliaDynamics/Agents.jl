@@ -69,7 +69,7 @@ function add_controls!(fig, abmobs, spu)
         collect_data!(model[], when, adata, mdata, adf, mdf, abmobs.s[])
     end
     # Layout buttons
-    controllayout[2, :] = MakieLayout.hbox!(step, run, reset, clear; tellwidth = false)
+    controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
 
     return step.clicks, reset.clicks
 end

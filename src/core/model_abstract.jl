@@ -94,11 +94,11 @@ end
 ###########################################################################################
 """
     model[id]
-    getindex(model::ABM, id::Integer)
+    getindex(model::ABM, id::Int)
 
 Return an agent given its ID.
 """
-Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
+Base.getindex(m::ABM, id::Int) = agent_container(m)[id]
 
 """
     abmrng(model::ABM)
