@@ -33,7 +33,7 @@ end
 
 npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
-# ALright, so here is the design for basic nearby_stuff looping.
+# ALright, so here is the design for basic nearby_stuff looping. 
 # We initialize a vector of tuples of indices within radius `r` from origin position.
 # We store this vector. When we have to loop over nearby_stuff, we call this vector
 # and add it to the given position. That is what the concrete implementations of
