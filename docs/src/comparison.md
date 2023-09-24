@@ -10,7 +10,7 @@ Time taken is presented in normalised units, measured against the runtime of Age
 
 For LOC, we use the following convention: code is formatted using standard practices & linting for the associated language. Documentation strings and in-line comments (residing on lines of their own) are discarded, as well as any benchmark infrastructure. NetLogo is assigned two values since its files have a code base section and an encoding of the GUI. Since many parameters live in the GUI, we must take this into account. Thus `375 (785)` in a NetLogo count means 375 lines in the code section, 785 lines total in the file. An additional complication to this value in NetLogo is that it stores plotting information (colours, shapes, sizes) as agent properties, and as such the number outside of the bracket may be slightly inflated.
 
-You can find the latest results in the `README.md` of the [ABM_Framework_Comparisons](https://github.com/JuliaDynamics/ABM_Framework_Comparisons) repository where you can find also the details on the parameters used for each comparison in the `DECLARATION.md` files inside each model subfolder. 
+The latest results are available at the `README.md` of the [ABM_Framework_Comparisons](https://github.com/JuliaDynamics/ABM_Framework_Comparisons) repository, where you can also find inside each model subfolder a `DECLARATION.md` file with the details on the parameters used for each comparison. 
 
 In the majority of cases, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.
 
