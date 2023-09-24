@@ -94,7 +94,6 @@ end
 # Notice that to visualize Open Street Maps, the package OSMMakie.jl must be loaded
 # as well, besides any Makie plotting backend such as CairoMakie.jl.
 using CairoMakie, OSMMakie
-CairoMakie.activate!() # hide
 zombie_color(agent) = agent.infected ? :green : :black
 zombie_size(agent) = agent.infected ? 10 : 8
 zombies = initialise_zombies()
