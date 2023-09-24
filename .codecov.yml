@@ -1,6 +1,7 @@
 ignore:
   - "examples"   # No need to cover the examples
   - "src/models" # Examples provide integration testing here
+  - "src/deprecations"
   - "src/visualizations"
   - "ext/AgentsVisualizations"
   - "ext/AgentsOSMVisualizations"
