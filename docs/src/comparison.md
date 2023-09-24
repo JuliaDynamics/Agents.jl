@@ -2,13 +2,6 @@
 Many agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for a review).
 Notable examples are [NetLogo](https://ccl.northwestern.edu/netlogo/), [Repast](https://repast.github.io/index.html), [MASON](https://journals.sagepub.com/doi/10.1177/0037549705058073), and [Mesa](https://github.com/projectmesa/mesa).
 
-We used the following models for the comparison:
-
-- [Predator-prey dynamics](@ref) (Wolf Sheep Grass), a [`GridSpace`](@ref) model, which requires agents to be added, removed and moved; as well as identify properties of neighbouring positions.
-- The [Flocking model](@ref) (Flocking), a [`ContinuousSpace`](@ref) model, chosen over other models to include a MASON benchmark. Agents must move in accordance with social rules over the space.
-- The [Forest fire](@ref) model, provides comparisons for cellular automata type ABMs (i.e. when agents do not move). NOTE: The Agents.jl implementation of this model has been changed in v4.0 to be directly comparable to Mesa and NetLogo. As a consequence it no longer follows the [original rule-set](https://en.wikipedia.org/wiki/Forest-fire_model).
-- [Schelling's-segregation-model](@ref) (Schelling), an additional [`GridSpace`](@ref) model to compare with MASON. Simpler rules than Wolf Sheep Grass.
-
 The results are characterised in two ways: how long it took each model to perform the same scenario (initial conditions, grid size, run length etc. are the same across all frameworks), and how many lines of code (LOC) it took to describe each model and its dynamics. We use this result as a metric to represent the complexity of learning and working with a framework.
 
 Time taken is presented in normalised units, measured against the runtime of Agents.jl. In other words: the results can only vary slightly from the ones presented here with a different hardware.
@@ -17,7 +10,7 @@ For LOC, we use the following convention: code is formatted using standard pract
 
 You can find the latest results in the `README.md` of the [ABM_Framework_Comparisons](https://github.com/JuliaDynamics/ABM_Framework_Comparisons) repository where you can find also the details on the parameters used for each comparison in the `DECLARATION.md` files inside each model subfolder. 
 
-Across all four models, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.
+In the majority of cases, Agents.jl's performance is exceptional whilst using the least amount of code. This removes many frustrating barriers-to-entry for new users, and streamlines the development process for established ones.
 
 ## Table-based comparison
 
