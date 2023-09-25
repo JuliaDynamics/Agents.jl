@@ -26,37 +26,33 @@ if you have no model stepping dynamics).
 See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
 not be convenient.
 """
-function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true)
-    step!(model, agent_step!, dummystep, n, agents_first)
-end
-
-function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
+function CommonSolve.step!(model::ABM, n::Int = 1, agents_first::Bool = true)
+    agentstep!, modelstep! = agent_step_field(model), model_step_field(model)
     s = 0
     while until(s, n, model)
-        !agents_first && model_step!(model)
-        if agent_step! ≠ dummystep
-            activate_agents(model, agent_step!)
+        !agents_first && modelstep!(model)
+        if agentstep! ≠ dummystep
+            activate_agents(model, agentstep!)
         end
-        agents_first && model_step!(model)
+        agents_first && modelstep!(model)
         s += 1
     end
 end
 
-function activate_agents(model::ABM, agent_step!)
+function activate_agents(model::ABM, agentstep!)
     activation_order = schedule(model)
     for id in activation_order
         id in allids(model) || continue
-        agent_step!(model[id], model)
+        agentstep!(model[id], model)
     end
 end
 
-function activate_agents(model::UnremovableABM, agent_step!)
+function activate_agents(model::UnremovableABM, agentstep!)
     activation_order = schedule(model)
     for id in activation_order
-        agent_step!(model[id], model)
+        agentstep!(model[id], model)
     end
 end
-
 
 """
     dummystep(model)
@@ -72,4 +68,4 @@ Use instead of `agent_step!` in [`step!`](@ref) if no function is useful to be d
 dummystep(agent, model) = nothing
 
 until(s, n::Int, model) = s < n
-until(s, n, model) = !n(model, s)
+until(s, f, model) = !f(model, s)

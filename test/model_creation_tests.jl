@@ -107,7 +107,7 @@ end
     @test_logs (
         :warn,
         "Agent type is not mutable, and most library functions assume that it is.",
-    ) ABM(agent)
+    ) match_mode=:any ABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
@@ -160,7 +160,7 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(ParametricAgent, GridSpace((1, 1)))
+    ) match_mode=:any ABM(ParametricAgent, GridSpace((1, 1)))
     # Warning is suppressed if flag is set
     @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
           AbstractAgent
@@ -186,7 +186,7 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(Union{NoSpaceAgent,ValidAgent})
+    ) match_mode=:any ABM(Union{NoSpaceAgent,ValidAgent})
     @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
 
     # this should work for backward compatibility but throw warning (#855)
@@ -201,7 +201,7 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(ContinuousAgent{2}, ContinuousSpace((1,1)))
+    ) match_mode=:any ABM(ContinuousAgent{2}, ContinuousSpace((1,1)))
     # throws if the old ContinuousAgent{2} form is used with a non-Float64 space
     @test_throws ArgumentError ABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false)
 end

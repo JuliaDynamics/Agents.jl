@@ -3,9 +3,15 @@ using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
-# And the three implementations here are just variants with different `C` type.
-struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
+# And the two implementations here are just variants with different `C` type.
+struct SingleContainerABM{
+    S<:SpaceType,
+    A<:AbstractAgent,
+    C<:ContainerType{A},
+    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
     agents::C
+    agentstep!::G
+    modelstep!::K
     space::S
     scheduler::F
     properties::P
@@ -37,17 +43,20 @@ single container. Offers the variants:
 """
 function SingleContainerABM(
     ::Type{A},
+    agentstep!::G,
+    modelstep!::K,
     space::S = nothing;
     container::Type = Dict{Int},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true
-) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
+) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agentstep!, modelstep!, space, scheduler, 
+                                               properties, rng, Ref(0))
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}

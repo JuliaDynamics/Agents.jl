@@ -93,7 +93,7 @@ using LinearAlgebra: norm, dot
         @test_logs (
             :warn,
             "Using `NTuple` for the `pos` and `vel` fields of agent types in ContinuousSpace is deprecated. Use `SVector` instead."
-        ) ABM(TupleManualAgent, space)
+        ) match_mode=:any ABM(TupleManualAgent, space)
         model = ABM(TupleManualAgent, space; warn=false)
         x = (0.0, 0.0)
         v = (0.1, 0.0)

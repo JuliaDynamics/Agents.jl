@@ -97,8 +97,8 @@
     @testset "$(ModelType)" for ModelType in (StandardABM, UnremovableABM)
 
         @testset "ContinuousSpace" begin
-            model, astep, mstep = flocking_model(ModelType)
-            step!(model, astep, mstep, 100)
+            model = flocking_model(ModelType)
+            step!(model, 100)
             AgentsIO.save_checkpoint("test.jld2", model)
             other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
 
@@ -124,8 +124,8 @@
 
         @testset "$(SpaceType)" for SpaceType in (GridSpace, GridSpaceSingle)
         
-            model, astep, mstep = schelling_model(ModelType, SpaceType)
-            step!(model, astep, mstep, 5)
+            model = schelling_model(ModelType, SpaceType)
+            step!(model, 5)
             AgentsIO.save_checkpoint("test.jld2", model)
             other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
 
@@ -275,7 +275,7 @@
     @testset "Multi-agent" begin
         model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; warn = false)
+        other = AgentsIO.load_checkpoint("test.jld2"; warn = false)
 
         # agent data
         @test nagents(other) == nagents(model)

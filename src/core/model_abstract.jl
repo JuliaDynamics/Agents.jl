@@ -255,6 +255,9 @@ end
 # %% Non-public methods. Must be implemented but are not exported
 ###########################################################################################
 agent_container(model::ABM) = getfield(model, :agents)
+agent_step_field(model::ABM) = getfield(model, :agentstep!)
+model_step_field(model::ABM) = getfield(model, :modelstep!)
+
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
 
