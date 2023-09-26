@@ -27,30 +27,30 @@ See also [Advanced stepping](@ref) for stepping complex models where `agent_step
 not be convenient.
 """
 function CommonSolve.step!(model::ABM, n::Int = 1, agents_first::Bool = true)
-    agentstep!, modelstep! = agent_step_field(model), model_step_field(model)
+    agent_step!, model_step! = agent_step_field(model), model_step_field(model)
     s = 0
     while until(s, n, model)
-        !agents_first && modelstep!(model)
-        if agentstep! ≠ dummystep
-            activate_agents(model, agentstep!)
+        !agents_first && model_step!(model)
+        if agent_step! ≠ dummystep
+            activate_agents(model, agent_step!)
         end
-        agents_first && modelstep!(model)
+        agents_first && model_step!(model)
         s += 1
     end
 end
 
-function activate_agents(model::ABM, agentstep!)
+function activate_agents(model::ABM, agent_step!)
     activation_order = schedule(model)
     for id in activation_order
         id in allids(model) || continue
-        agentstep!(model[id], model)
+        agent_step!(model[id], model)
     end
 end
 
-function activate_agents(model::UnremovableABM, agentstep!)
+function activate_agents(model::UnremovableABM, agent_step!)
     activation_order = schedule(model)
     for id in activation_order
-        agentstep!(model[id], model)
+        agent_step!(model[id], model)
     end
 end
 

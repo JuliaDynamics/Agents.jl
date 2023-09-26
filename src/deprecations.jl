@@ -217,26 +217,6 @@ function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     add_agent_pos!(agent, model)
 end
 
-function SingleContainerABM(
-    ::Type{A},
-    space::S = nothing;
-    container::Type = Dict{Int},
-    scheduler::F = Schedulers.fastest,
-    properties::P = nothing,
-    rng::R = Random.default_rng(),
-    warn = true
-) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
-    @warn "From version 6.0 it is necessary to pass agent_step! and model_step! when defining 
-         the model. The old version is deprecated. The new signature is 
-         (agent_type, agent_step!, model_step!, ...)"
-    agent_validator(A, space, warn)
-    C = construct_agent_container(container, A)
-    agents = C()
-    # with placeholder dummystep due to the new definition
-    G = typeof(dummystep)
-    return SingleContainerABM{S,A,C,G,G,F,P,R}(agents, dummystep, dummystep, space, scheduler, properties, rng, Ref(0))
-end
-
 function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true)
     @warn "Passing agent_step! to step! is deprecated. Use the new version 
          step!(model, n = 1, agents_first = true)"

@@ -10,8 +10,8 @@ struct SingleContainerABM{
     C<:ContainerType{A},
     G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
     agents::C
-    agentstep!::G
-    modelstep!::K
+    agent_step::G
+    model_step::K
     space::S
     scheduler::F
     properties::P
@@ -43,19 +43,24 @@ single container. Offers the variants:
 """
 function SingleContainerABM(
     ::Type{A},
-    agentstep!::G,
-    modelstep!::K,
     space::S = nothing;
+    agent_step!::G = dummystep,
+    model_step!::K = dummystep,
     container::Type = Dict{Int},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+    if agent_step! == dummystep && model_step! == dummystep
+        @warn "From version 6.0 it is necessary to pass agent_step! and model_step! when defining 
+         the model. The old version is deprecated. The new signature is 
+         (agent_type, agent_step!, model_step!, ...)"
+    end
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agentstep!, modelstep!, space, scheduler, 
+    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler, 
                                                properties, rng, Ref(0))
 end
 
