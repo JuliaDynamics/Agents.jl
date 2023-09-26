@@ -53,9 +53,8 @@ function SingleContainerABM(
     warn = true
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if agent_step! == dummystep && model_step! == dummystep
-        @warn "From version 6.0 it is necessary to pass agent_step! and model_step! when defining 
-         the model. The old version is deprecated. The new signature is 
-         (agent_type, agent_step!, model_step!, ...)"
+        @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step! 
+         as keywords argument when defining the model. The old version is deprecated."
     end
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)

@@ -32,25 +32,12 @@ function CommonSolve.step!(model::ABM, n::Int = 1, agents_first::Bool = true)
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
-            activate_agents(model, agent_step!)
+            for id in schedule(model)
+                agent_step!(model[id], model)
+            end        
         end
         agents_first && model_step!(model)
         s += 1
-    end
-end
-
-function activate_agents(model::ABM, agent_step!)
-    activation_order = schedule(model)
-    for id in activation_order
-        id in allids(model) || continue
-        agent_step!(model[id], model)
-    end
-end
-
-function activate_agents(model::UnremovableABM, agent_step!)
-    activation_order = schedule(model)
-    for id in activation_order
-        agent_step!(model[id], model)
     end
 end
 

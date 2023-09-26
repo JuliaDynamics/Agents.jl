@@ -5,7 +5,12 @@ export schedule, Schedulers
 Return an iterator over the scheduled IDs using the model's scheduler.
 Literally equivalent with `abmscheduler(model)(model)`.
 """
-schedule(model::ABM) = abmscheduler(model)(model)
+function schedule(model::ABM)
+    scheduler = abmscheduler(model)(model)
+    return Iterators.filter(id -> id in allids(model), scheduler)
+end
+
+schedule(model::UnremovableABM) = abmscheduler(model)(model)
 
 # Notice how the above lines are *outside* the submodule
 
