@@ -28,8 +28,8 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
-    run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
+    run!(model, n::Integer; kwargs...) → agent_df, model_df
+    run!(model, f::Function; kwargs...) → agent_df, model_df
 
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
@@ -160,8 +160,8 @@ function run!(model, n;
 end
 
 """
-    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...)
-    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...)
+    offline_run!(model, n::Integer; kwargs...)
+    offline_run!(model, f::Function; kwargs...)
 
 Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory 
 dataframe, write the output to a file after collecting data `writing_interval` times and 

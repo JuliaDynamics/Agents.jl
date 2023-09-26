@@ -71,11 +71,9 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
 # Interactivity
 
 ## Evolution related
-* `agent_step!, model_step! = Agents.dummystep`: Stepping functions to pass to
-  [`ABMObservable`](@ref) which itself passes to `Agents.step!`.
 * `add_controls::Bool`: If `true`, `abmplot` switches to "interactive application" mode.
-  This is by default `true` if either `agent_step!` or `model_step!` keywords are provided.
-  These stepping functions are used to evolve the model interactively using `Agents.step!`.
+  This is by default `true` if the model contains either `agent_step!` or `model_step!`.
+  The model evolves interactively using `Agents.step!`.
   The application has the following interactive elements:
   1. "step": advances the simulation once for `spu` steps.
   1. "run": starts/stops the continuous evolution of the model.
@@ -111,13 +109,13 @@ export abmplot, abmplot!
 
 
 """
-    ABMObservable(model; agent_step!, model_step!, adata, mdata, when) → abmobs
+    ABMObservable(model; adata, mdata, when) → abmobs
 
 `abmobs` contains all information necessary to step an agent based model interactively.
 It is also returned by [`abmplot`](@ref).
 
 Calling `Agents.step!(abmobs, n)` will step the model for `n` using the provided
-`agent_step!, model_step!, n` as in [`Agents.step!`](@ref).
+`agent_step!, model_step!` cotained in the model as in [`Agents.step!`](@ref).
 
 The fields `abmobs.model, abmobs.adf, abmobs.mdf` are _observables_ that contain
 the [`AgentBasedModel`](@ref), and the agent and model dataframes with collected data.
@@ -174,7 +172,7 @@ function abmexploration end
 export abmexploration
 
 """
-    abmvideo(file, model, agent_step! [, model_step!]; kwargs...)
+    abmvideo(file, model; kwargs...)
 
 This function exports the animated time evolution of an agent based model into a video
 saved at given path `file`, by recording the behavior of the interactive version of
