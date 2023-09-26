@@ -251,6 +251,8 @@ function run!(model, agent_step!, model_step!, n;
         agents_first = true,
         showprogress = false,
     )
+    @warn "Passing agent_step! and model_step! to run! is deprecated. 
+      These functions should be already presented inside the model instance."
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -309,6 +311,8 @@ function offline_run!(model, agent_step!, model_step!, n;
         mdata_filename = "mdata.$backend",
         writing_interval = 1,
     )
+    @warn "Passing agent_step! and model_step! to offline_run! is deprecated. 
+      These functions should be already presented inside the model instance."
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -403,6 +407,8 @@ function ensemblerun!(
     parallel = false,
     kwargs...,
 )
+    @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated. 
+      These functions should be already presented inside the model instance."
     if parallel
         return parallel_ensemble(models, agent_step!, model_step!, n;
                                  showprogress, kwargs...)

@@ -9,7 +9,8 @@ function Agents.ABMObservable(model::AgentBasedModel;
         agent_step! = Agents.agent_step_field(model)
         model_step! = Agents.model_step_field(model)
     else
-        @warn "some warning"
+        @warn "Passing agent_step! and model_step! to ABMObservable is deprecated. 
+          These functions should be already presented inside the model instance."
     end
     adf = mdf = nothing
     if !isnothing(adata)

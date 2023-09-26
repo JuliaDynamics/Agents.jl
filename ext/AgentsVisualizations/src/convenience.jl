@@ -116,7 +116,8 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
         figure = (resolution = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
-    @warn "some deprecation warning"
+    @warn "Passing agent_step! and model_step! to abmvideo is deprecated.
+      These functions should be already presented inside the model instance."
     # add some title stuff
     s = Observable(0) # counter of current step
     if title ≠ "" && showstep
