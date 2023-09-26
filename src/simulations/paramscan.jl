@@ -88,7 +88,12 @@ function paramscan(
     showprogress::Bool = false,
     kwargs...,
 )
-
+    if agent_step! == dummystep && model_step! == dummystep
+        agent_step! = agent_step_field(model)
+        model_step! = model_step_field(model)
+    else
+        @warn "some warning"
+    end
     if include_constants
         output_params = collect(keys(parameters))
     else

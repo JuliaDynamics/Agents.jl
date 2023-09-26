@@ -238,3 +238,227 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
         s += 1
     end
 end
+
+run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
+    run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+
+function run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+    )
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    s = 0
+    p = if typeof(n) <: Int
+        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+    else
+        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    end
+    while until(s, n, model)
+        if should_we_collect(s, model, when)
+            collect_agent_data!(df_agent, model, adata, s; obtainer)
+        end
+        if should_we_collect(s, model, when_model)
+            collect_model_data!(df_model, model, mdata, s; obtainer)
+        end
+        step!(model, agent_step!, model_step!, 1, agents_first)
+        s += 1
+        ProgressMeter.next!(p)
+    end
+    if should_we_collect(s, model, when)
+        collect_agent_data!(df_agent, model, adata, s; obtainer)
+    end
+    if should_we_collect(s, model, when_model)
+        collect_model_data!(df_model, model, mdata, s; obtainer)
+    end
+    ProgressMeter.finish!(p)
+    return df_agent, df_model
+end
+
+offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
+    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+
+function offline_run!(model, agent_step!, model_step!, n;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        agents_first = true,
+        showprogress = false,
+        backend::Symbol = :csv,
+        adata_filename = "adata.$backend",
+        mdata_filename = "mdata.$backend",
+        writing_interval = 1,
+    )
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    writer = get_writer(backend)
+    run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+        when, when_model,
+        mdata, adata,
+        obtainer, agents_first,
+        showprogress,
+        writer, adata_filename, mdata_filename, writing_interval
+    )
+end
+
+function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+    when, when_model,
+    mdata, adata,
+    obtainer, agents_first,
+    showprogress,
+    writer, adata_filename, mdata_filename, writing_interval
+)
+    s = 0
+    p = if typeof(n) <: Int
+        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+    else
+        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    end
+
+    agent_count_collections = 0
+    model_count_collections = 0
+    while until(s, n, model)
+        if should_we_collect(s, model, when)
+            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            agent_count_collections += 1
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, isfile(adata_filename))
+                empty!(df_agent)
+            end
+        end
+        if should_we_collect(s, model, when_model)
+            collect_model_data!(df_model, model, mdata, s; obtainer)
+            model_count_collections += 1
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, isfile(mdata_filename))
+                empty!(df_model)
+            end
+        end
+        step!(model, agent_step!, model_step!, 1, agents_first)
+        s += 1
+        ProgressMeter.next!(p)
+    end
+
+    if should_we_collect(s, model, when)
+        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        agent_count_collections += 1
+    end
+    if should_we_collect(s, model, when_model)
+        collect_model_data!(df_model, model, mdata, s; obtainer)
+        model_count_collections += 1
+    end
+    # catch collected data that was not yet written to disk
+    if !isempty(df_agent)
+        writer(adata_filename, df_agent, isfile(adata_filename))
+        empty!(df_agent)
+    end
+    if !isempty(df_model)
+        writer(mdata_filename, df_model, isfile(mdata_filename))
+        empty!(df_model)
+    end
+
+    ProgressMeter.finish!(p)
+    return nothing
+end
+
+function ensemblerun!(
+    models::Vector_or_Tuple,
+    agent_step!,
+    model_step!,
+    n;
+    showprogress = false,
+    parallel = false,
+    kwargs...,
+)
+    if parallel
+        return parallel_ensemble(models, agent_step!, model_step!, n;
+                                 showprogress, kwargs...)
+    else
+        return series_ensemble(models, agent_step!, model_step!, n;
+                               showprogress, kwargs...)
+    end
+end
+
+function series_ensemble(models, agent_step!, model_step!, n;
+                         showprogress = false, kwargs...)
+
+    @assert models[1] isa ABM
+
+    nmodels = length(models)
+    progress = ProgressMeter.Progress(nmodels; enabled = showprogress)
+
+    df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
+
+    ProgressMeter.next!(progress)
+
+    add_ensemble_index!(df_agent, 1)
+    add_ensemble_index!(df_model, 1)
+
+    ProgressMeter.progress_map(2:nmodels; progress) do midx
+
+        df_agentTemp, df_modelTemp =
+            run!(models[midx], agent_step!, model_step!, n; kwargs...)
+
+        add_ensemble_index!(df_agentTemp, midx)
+        add_ensemble_index!(df_modelTemp, midx)
+
+        append!(df_agent, df_agentTemp)
+        append!(df_model, df_modelTemp)
+    end
+
+    return df_agent, df_model, models
+end
+
+function parallel_ensemble(models, agent_step!, model_step!, n;
+                           showprogress = false, kwargs...)
+
+    progress = ProgressMeter.Progress(length(models); enabled = showprogress)
+    all_data = ProgressMeter.progress_pmap(models; progress) do model
+        run!(model, agent_step!, model_step!, n; kwargs...)
+    end
+
+    df_agent = DataFrame()
+    df_model = DataFrame()
+
+    for (m, d) in enumerate(all_data)
+        add_ensemble_index!(d[1], m)
+        add_ensemble_index!(d[2], m)
+        append!(df_agent, d[1])
+        append!(df_model, d[2])
+    end
+
+    return df_agent, df_model, models
+end

@@ -5,6 +5,12 @@ function Agents.ABMObservable(model::AgentBasedModel;
         mdata = nothing,
         when = true,
     )
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    else
+        @warn "some warning"
+    end
     adf = mdf = nothing
     if !isnothing(adata)
         adf = Observable(Agents.init_agent_dataframe(model, adata))

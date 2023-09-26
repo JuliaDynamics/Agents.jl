@@ -14,12 +14,18 @@ end
 
 function Agents.abmplot!(ax, model::Agents.ABM;
     # These keywords are given to `ABMObservable`
-    (agent_step!)=Agents.dummystep,
-    (model_step!)=Agents.dummystep,
+    agent_step! = Agents.dummystep,
+    model_step! = Agents.dummystep,
     adata=nothing,
     mdata=nothing,
     when=true,
     kwargs...)
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    else
+        @warn "some warning"
+    end
     abmobs = ABMObservable(model; agent_step!, model_step!, adata, mdata, when)
     abmplot!(ax, abmobs; kwargs...)
 

@@ -29,18 +29,16 @@ All other keywords are propagated to [`run!`](@ref) as-is.
 """
 function ensemblerun!(
     models::Vector_or_Tuple,
-    agent_step!,
-    model_step!,
     n;
     showprogress = false,
     parallel = false,
     kwargs...,
 )
     if parallel
-        return parallel_ensemble(models, agent_step!, model_step!, n;
+        return parallel_ensemble(models, n;
                                  showprogress, kwargs...)
     else
-        return series_ensemble(models, agent_step!, model_step!, n;
+        return series_ensemble(models, n;
                                showprogress, kwargs...)
     end
 end
@@ -63,7 +61,7 @@ function ensemblerun!(
     ensemblerun!(models, args...; kwargs...)
 end
 
-function series_ensemble(models, agent_step!, model_step!, n;
+function series_ensemble(models, n;
                          showprogress = false, kwargs...)
 
     @assert models[1] isa ABM
@@ -71,7 +69,7 @@ function series_ensemble(models, agent_step!, model_step!, n;
     nmodels = length(models)
     progress = ProgressMeter.Progress(nmodels; enabled = showprogress)
 
-    df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
+    df_agent, df_model = run!(models[1], n; kwargs...)
 
     ProgressMeter.next!(progress)
 
@@ -81,7 +79,7 @@ function series_ensemble(models, agent_step!, model_step!, n;
     ProgressMeter.progress_map(2:nmodels; progress) do midx
 
         df_agentTemp, df_modelTemp =
-            run!(models[midx], agent_step!, model_step!, n; kwargs...)
+            run!(models[midx], n; kwargs...)
 
         add_ensemble_index!(df_agentTemp, midx)
         add_ensemble_index!(df_modelTemp, midx)
@@ -93,12 +91,12 @@ function series_ensemble(models, agent_step!, model_step!, n;
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, agent_step!, model_step!, n;
+function parallel_ensemble(models, n;
                            showprogress = false, kwargs...)
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
-        run!(model, agent_step!, model_step!, n; kwargs...)
+        run!(model, n; kwargs...)
     end
 
     df_agent = DataFrame()

@@ -108,10 +108,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 """
 function run! end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    run!(model::ABM, agent_step!, dummystep, n; kwargs...)
-
-function run!(model, agent_step!, model_step!, n;
+function run!(model, n;
         when = true,
         when_model = when,
         mdata = nothing,
@@ -148,7 +145,7 @@ function run!(model, agent_step!, model_step!, n;
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, 1, agents_first)
         s += 1
         ProgressMeter.next!(p)
     end
@@ -187,10 +184,7 @@ during execution.
 """
 function offline_run! end
 
-offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
-
-function offline_run!(model, agent_step!, model_step!, n;
+function offline_run!(model, n;
         when = true,
         when_model = when,
         mdata = nothing,
@@ -219,7 +213,7 @@ function offline_run!(model, agent_step!, model_step!, n;
     end
 
     writer = get_writer(backend)
-    run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+    run_and_write!(model, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
         obtainer, agents_first,
@@ -228,7 +222,7 @@ function offline_run!(model, agent_step!, model_step!, n;
     )
 end
 
-function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+function run_and_write!(model, df_agent, df_model, n;
     when, when_model,
     mdata, adata,
     obtainer, agents_first,
@@ -261,7 +255,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, 1, agents_first)
         s += 1
         ProgressMeter.next!(p)
     end
