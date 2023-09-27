@@ -75,12 +75,12 @@
     end
 
     @testset "No space" begin
-        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42))
+        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42), warn_deprecation = false)
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -100,7 +100,7 @@
             model = flocking_model(ModelType)
             step!(model, 100)
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly(), warn_deprecation = false)
 
             # agent data
             @test nagents(other) == nagents(model)
@@ -127,7 +127,7 @@
             model = schelling_model(ModelType, SpaceType)
             step!(model, 5)
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly(), warn_deprecation = false)
 
             # agent data
             @test nagents(other) == nagents(model)
@@ -157,7 +157,7 @@
             Agent7,
             GraphSpace(complete_graph(10));
             properties = ModelData(3, 4.2f32, Dict(1 => "foo", 2 => "bar")),
-            rng = MersenneTwister(42)
+            rng = MersenneTwister(42), warn_deprecation = false
         )
 
         for i in 1:30
@@ -165,7 +165,7 @@
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -205,15 +205,16 @@
             model = ABM(
                 Agent1,
                 space;
+                agent_step! = astep!,
                 properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
             plan_route!(model[1], (10, 10), model.pathfinder)
-            step!(model, astep!, dummystep)
+            step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2")
+            other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
             return model, other
         end
 
@@ -247,15 +248,16 @@
             model = ABM(
                 Agent6,
                 deepcopy(space);
+                agent_step! = astep!,
                 properties = (pathfinder = pathfinder,),
-                rng = MersenneTwister(42)
+                rng = MersenneTwister(42), warn_deprecation = false
             )
             add_agent!(SVector(1.3, 1.5), model, SVector(0.0, 0.0), 0.0)
             plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
-            step!(model, astep!, dummystep)
+            step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2")
+            other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
             return model, other
         end
 
@@ -273,9 +275,9 @@
     end
 
     @testset "Multi-agent" begin
-        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2"; warn = false)
+        other = AgentsIO.load_checkpoint("test.jld2"; warn = false, warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -294,7 +296,7 @@
         @agent struct Zombiee(OSMAgent)
             infected::Bool
         end
-        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
+        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42), warn_deprecation = false)
 
         for id in 1:100
             start = random_position(model)
@@ -309,8 +311,8 @@
         plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
-        @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
-        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map())
+        @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map(), warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)

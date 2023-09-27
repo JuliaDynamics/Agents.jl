@@ -7,7 +7,7 @@
     end
 
     function hk(; numagents = 100, ϵ = 0.2)
-        model = ABM(HKAgent, scheduler = Schedulers.fastest, properties = Dict(:ϵ => ϵ))
+        model = ABM(HKAgent, scheduler = Schedulers.fastest, properties = Dict(:ϵ => ϵ), warn_deprecation = false)
         for i in 1:numagents
             o = rand(abmrng(model))
             add_agent!(model, o, o, -1)
@@ -25,7 +25,7 @@
     @agent struct Bar(GridAgent{2})
     end
 
-    model = ABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false)
+    model = ABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false, warn_deprecation = false)
     
     @test_throws AssertionError AgentsIO.populate_from_csv!(model, "test.csv")
 
@@ -94,8 +94,8 @@
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
 
-    model, _ = Models.schelling(; numagents = 10)
-    empty_model, _ = Models.schelling(; numagents = 0)
+    model = Models.schelling(; numagents = 10)
+    empty_model = Models.schelling(; numagents = 0)
 
     AgentsIO.dump_to_csv("test.csv", allagents(model))
     AgentsIO.populate_from_csv!(empty_model, "test.csv")
