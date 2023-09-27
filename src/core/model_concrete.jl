@@ -50,9 +50,10 @@ function SingleContainerABM(
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
-    warn = true
+    warn = true,
+    warn_deprecation = true
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
-    if agent_step! == dummystep && model_step! == dummystep
+    if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step! 
          as keywords argument when defining the model. The old version is deprecated."
     end

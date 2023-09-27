@@ -86,10 +86,7 @@ function paramscan(
     showprogress::Bool = false,
     kwargs...,
 )
-    if agent_step! == dummystep && model_step! == dummystep
-        agent_step! = agent_step_field(model)
-        model_step! = model_step_field(model)
-    else
+    if agent_step! != dummystep || model_step! != dummystep
     @warn "Passing agent_step! and model_step! to paramscan is deprecated. 
           These functions should be already presented inside the model instance."
     end
@@ -104,8 +101,7 @@ function paramscan(
     progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
     mapfun = parallel ? pmap : map
     all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
-        run_single(comb, output_params, initialize;
-                   agent_step!, model_step!, n, kwargs...)
+        run_single(comb, output_params, initialize; n, kwargs...)
     end
 
     df_agent = DataFrame()
@@ -148,7 +144,7 @@ function run_single(
     kwargs...,
 )
     model = initialize(; param_dict...)
-    df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
+    df_agent_single, df_model_single = run!(model, n; kwargs...)
     output_params_dict = filter(j -> first(j) in output_params, param_dict)
     insertcols!(df_agent_single, output_params_dict...)
     insertcols!(df_model_single, output_params_dict...)

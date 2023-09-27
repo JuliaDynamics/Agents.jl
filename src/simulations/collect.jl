@@ -108,7 +108,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 """
 function run! end
 
-function run!(model, n;
+function run!(model::ABM, n::Union{Function, Int};
         when = true,
         when_model = when,
         mdata = nothing,
@@ -184,7 +184,7 @@ during execution.
 """
 function offline_run! end
 
-function offline_run!(model, n;
+function offline_run!(model::ABM, n::Union{Function, Int};
         when = true,
         when_model = when,
         mdata = nothing,

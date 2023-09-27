@@ -109,28 +109,28 @@ end
         "Agent type is not mutable, and most library functions assume that it is.",
     ) match_mode=:any ABM(agent)
     # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
+    @test Agents.agenttype(ABM(agent; warn = false, warn_deprecation = false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
-    @test_throws ArgumentError ABM(BadAgent)
+    @test_throws ArgumentError ABM(BadAgent, warn_deprecation = false)
     agent = BadAgent(1, 1)
-    @test_throws ArgumentError ABM(agent)
+    @test_throws ArgumentError ABM(agent, warn_deprecation = false)
     # Cannot use BadAgent in a grid space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(BadAgent, GridSpace((1, 1)))
-    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
+    @test_throws ArgumentError ABM(BadAgent, GridSpace((1, 1)), warn_deprecation = false)
+    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)), warn_deprecation = false)
     # Cannot use BadAgentId since `id` has an invalid type
-    @test_throws ArgumentError ABM(BadAgentId)
+    @test_throws ArgumentError ABM(BadAgentId, warn_deprecation = false)
     agent = BadAgentId(1.0)
-    @test_throws ArgumentError ABM(agent)
+    @test_throws ArgumentError ABM(agent, warn_deprecation = false)
     # Cannot use NoSpaceAgent in a grid space context since it has no `pos` field
-    @test_throws ArgumentError ABM(NoSpaceAgent, GridSpace((1, 1)))
+    @test_throws ArgumentError ABM(NoSpaceAgent, GridSpace((1, 1)), warn_deprecation = false)
     agent = NoSpaceAgent(1)
-    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
+    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)), warn_deprecation = false)
     # Cannot use Gridagent in a graph space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(GridAgent{2}, GraphSpace(Agents.Graph(1)))
+    @test_throws ArgumentError ABM(GridAgent{2}, GraphSpace(Agents.Graph(1)), warn_deprecation = false)
     agent = GridAgent{2}(1, (1, 1))
-    @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)))
+    @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)), warn_deprecation = false)
     # Cannot use GraphAgent in a continuous space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(GraphAgent, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError ABM(GraphAgent, ContinuousSpace((1, 1)), warn_deprecation = false)
 
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
     mutable struct DiscreteVelocity <: AbstractAgent
@@ -139,9 +139,9 @@ end
         vel::SVector{2,Int}
         diameter::Float64
     end
-    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace((1, 1)), warn_deprecation = false)
     agent = DiscreteVelocity(1, SVector(1, 1), SVector(2, 3), 2.4)
-    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)), warn_deprecation = false)
     # Shouldn't use ParametricAgent since it is not a concrete type
     mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
         id::T
@@ -160,21 +160,21 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any ABM(ParametricAgent, GridSpace((1, 1)))
+    ) match_mode=:any ABM(ParametricAgent, GridSpace((1, 1)); warn_deprecation = false)
     # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
+    @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false, warn_deprecation = false)) <:
           AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
-    @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1, 1)))) <: AbstractAgent
+    @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1, 1)), warn_deprecation = false)) <: AbstractAgent
     #Type inferance using an instance can help users here
     agent = ParametricAgent(1, (1, 1), 5, "Info")
-    @test Agents.agenttype(ABM(agent, GridSpace((1, 1)))) <: AbstractAgent
+    @test Agents.agenttype(ABM(agent, GridSpace((1, 1)); warn_deprecation = false)) <: AbstractAgent
     #Mixed agents
     @agent struct ValidAgent(NoSpaceAgent)
         dummy::Bool
     end
 
-    @test Agents.agenttype(ABM(Union{NoSpaceAgent,ValidAgent}; warn = false)) <: AbstractAgent
+    @test Agents.agenttype(ABM(Union{NoSpaceAgent,ValidAgent}; warn = false, warn_deprecation = false)) <: AbstractAgent
     @test_logs (
         :warn,
         """
@@ -186,8 +186,8 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any ABM(Union{NoSpaceAgent,ValidAgent})
-    @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
+    ) match_mode=:any ABM(Union{NoSpaceAgent,ValidAgent}, warn_deprecation = false)
+    @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false, warn_deprecation = false)
 
     # this should work for backward compatibility but throw warning (#855)
     @test_logs (
@@ -201,9 +201,9 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any ABM(ContinuousAgent{2}, ContinuousSpace((1,1)))
+    ) match_mode=:any ABM(ContinuousAgent{2}, ContinuousSpace((1,1)); warn_deprecation = false)
     # throws if the old ContinuousAgent{2} form is used with a non-Float64 space
-    @test_throws ArgumentError ABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false)
+    @test_throws ArgumentError ABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false, warn_deprecation = false)
 end
 
 

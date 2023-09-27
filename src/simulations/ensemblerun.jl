@@ -30,7 +30,7 @@ All other keywords are propagated to [`run!`](@ref) as-is.
 """
 function ensemblerun!(
     models::Vector_or_Tuple,
-    n;
+    n::Union{Function, Int};
     showprogress = false,
     parallel = false,
     kwargs...,
@@ -52,14 +52,13 @@ the provided `generator` which is a one-argument function whose input is a seed.
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
 function ensemblerun!(
-    generator,
-    args::Vararg{Any, N};
+    generator;
     ensemble = 5,
     seeds = rand(UInt32, ensemble),
     kwargs...,
-) where {N}
+)
     models = [generator(seed) for seed in seeds]
-    ensemblerun!(models, args...; kwargs...)
+    ensemblerun!(models; kwargs...)
 end
 
 function series_ensemble(models, n;

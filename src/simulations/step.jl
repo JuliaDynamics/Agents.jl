@@ -22,7 +22,7 @@ current amount of steps taken, starting from 0.
 See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
 not be convenient.
 """
-function CommonSolve.step!(model::ABM, n::Int = 1, agents_first::Bool = true)
+function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1, agents_first::Bool = true)
     agent_step!, model_step! = agent_step_field(model), model_step_field(model)
     s = 0
     while until(s, n, model)

@@ -4,7 +4,7 @@
     N = 1000
 
     # Schedulers.by_id
-    model = ABM(Agent0; scheduler = Schedulers.by_id)
+    model = ABM(Agent0; scheduler = Schedulers.by_id, warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -13,14 +13,14 @@
 
     # fastest
     Random.seed!(12)
-    model = ABM(Agent0; scheduler = Schedulers.fastest)
+    model = ABM(Agent0; scheduler = Schedulers.fastest, warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
     @test sort!(collect(abmscheduler(model)(model))) == 1:N
 
     # random
-    model = ABM(Agent0; scheduler = Schedulers.randomly, rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.randomly, rng = StableRNG(12), warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -28,7 +28,7 @@
     @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
-    model = ABM(Agent0; scheduler = Schedulers.partially(0.1), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.partially(0.1), rng = StableRNG(12), warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -37,7 +37,7 @@
     @test length(a) <= N/10
 
     # by property
-    model = ABM(Agent2; scheduler = Schedulers.by_property(:weight))
+    model = ABM(Agent2; scheduler = Schedulers.by_property(:weight), warn_deprecation = false)
     for i in 1:N
         add_agent!(model, rand(abmrng(model)) / rand(abmrng(model)))
     end
@@ -64,7 +64,7 @@ end
 
 # Mixed model
 function init_mixed_model(choices = [3, 3, 3, 3]; scheduler = Schedulers.fastest)
-    model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
+    model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false, warn_deprecation = false)
     atypes = (Agent0,Agent1,Agent2,Agent3)
     id = 1
     for i in 1:choices[1]
@@ -126,7 +126,7 @@ end
     # Explicit order of types scheduling
     Random.seed!(12)
     model =
-        ABM(Union{Agent1,Agent0}, scheduler = Schedulers.by_type((Agent1, Agent0), true), warn = false)
+        ABM(Union{Agent1,Agent0}, scheduler = Schedulers.by_type((Agent1, Agent0), true), warn = false, warn_deprecation = false)
     for id in 1:3
         add_agent!(Agent1, model, (0, 0))
     end
@@ -159,7 +159,8 @@ end
 
     model = ABM(Agent2;
         properties = Dict{Int, Bool}(),
-        scheduler = MyScheduler(0, 5.0)
+        scheduler = MyScheduler(0, 5.0),
+        warn_deprecation = false
     )
     for w in 1.0:10.0
         add_agent!(model, w)
@@ -178,7 +179,7 @@ end
     N = 1000
 
     # Schedulers.by_id
-    model = ABM(Agent0; scheduler = Schedulers.ByID())
+    model = ABM(Agent0; scheduler = Schedulers.ByID(), warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -186,7 +187,7 @@ end
     @test abmscheduler(model)(model) == 1:N
 
     # random
-    model = ABM(Agent0; scheduler = Schedulers.Randomly(), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.Randomly(), rng = StableRNG(12), warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -194,7 +195,7 @@ end
     @test abmscheduler(model)(model)[1:3] != fastest_order
 
     # partial
-    model = ABM(Agent0; scheduler = Schedulers.Partially(0.1), rng = StableRNG(12))
+    model = ABM(Agent0; scheduler = Schedulers.Partially(0.1), rng = StableRNG(12), warn_deprecation = false)
     for i in 1:N
         add_agent!(model)
     end
@@ -203,7 +204,7 @@ end
     @test length(a) <= N/10
 
     # by property
-    model = ABM(Agent2; scheduler = Schedulers.ByProperty(:weight))
+    model = ABM(Agent2; scheduler = Schedulers.ByProperty(:weight), warn_deprecation = false)
     for i in 1:N
         add_agent!(model, rand(abmrng(model)) / rand(abmrng(model)))
     end
@@ -218,7 +219,7 @@ end
 
     # Mixed model
     function init_mixed_model2(choices = [3, 3, 3, 3]; scheduler = Schedulers.fastest)
-        model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false)
+        model = ABM(Union{Agent0,Agent1,Agent2,Agent3}, scheduler = scheduler, warn = false, warn_deprecation = false)
         atypes = (Agent0,Agent1,Agent2,Agent3)
         id = 1
         for i in 1:choices[1]
@@ -281,7 +282,7 @@ end
     # Explicit order of types scheduling
     Random.seed!(12)
     model =
-        ABM(Union{Agent1,Agent0}, scheduler = Schedulers.ByType((Agent1, Agent0), true), warn = false)
+        ABM(Union{Agent1,Agent0}, scheduler = Schedulers.ByType((Agent1, Agent0), true), warn = false, warn_deprecation = false)
     for id in 1:3
         add_agent!(Agent1, model, (0, 0))
     end

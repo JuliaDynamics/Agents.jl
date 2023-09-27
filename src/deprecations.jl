@@ -468,3 +468,15 @@ function parallel_ensemble(models, agent_step!, model_step!, n;
 
     return df_agent, df_model, models
 end
+
+function ensemblerun!(
+    generator,
+    args::Vararg{Any, N};
+    ensemble = 5,
+    seeds = rand(UInt32, ensemble),
+    kwargs...,
+) where {N}
+    println(generator)
+    models = [generator(seed) for seed in seeds]
+    ensemblerun!(models, args...; kwargs...)
+end

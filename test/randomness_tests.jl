@@ -3,25 +3,25 @@ using Random
 using Agents, Test
 
 @testset "Random Number Generation" begin
-    model = ABM(Agent2)
+    model = ABM(Agent2, warn_deprecation = false)
     @test abmrng(model) == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = ABM(Agent1, GridSpace((3,3)); rng)
+    model = ABM(Agent1, GridSpace((3,3)); rng, warn_deprecation = false)
     add_agent!(Agent1, model)
     agent = add_agent_single!(Agent1, model)
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
     @test agent.pos == (3, 3)
 
-    model = ABM(Agent2; rng = RandomDevice())
+    model = ABM(Agent2; rng = RandomDevice(), warn_deprecation = false)
     @test_throws MethodError seed!(abmrng(model), 64)
 end
 
 @testset "sample!" begin
     rng = StableRNG(50)
-    model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng)
+    model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
     agents = model4.agents
     add_agent!((1,1), Agent1, model4)
     add_agent!((2,2), Agent1, model4)
@@ -40,7 +40,7 @@ end
     @test res_fields == agents_fields
 
     rng = StableRNG(42)
-    model = ABM(Agent2; rng = rng)
+    model = ABM(Agent2; rng = rng, warn_deprecation = false)
     for i in 1:20
         add_agent!(model, rand(abmrng(model)))
     end
@@ -52,7 +52,7 @@ end
     mean_weights_new = sum(allweights) / length(allweights)
     @test mean_weights_new > mean_weights
 
-    model2 = ABM(Agent2; rng = rng)
+    model2 = ABM(Agent2; rng = rng, warn_deprecation = false)
     while true
         for i in 1:20
             add_agent!(model2, rand(abmrng(model2)) / rand(abmrng(model2)))
@@ -66,7 +66,7 @@ end
     allweights = [i.weight for i in allagents(model2)]
     @test allunique(allweights)
 
-    model3 = ABM(Agent2; rng = rng)
+    model3 = ABM(Agent2; rng = rng, warn_deprecation = false)
     # Guarantee all starting weights are unique
     while true
         for i in 1:20
@@ -82,7 +82,7 @@ end
 
 @testset "random agent" begin
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = ABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
     add_agent!(Land, model, 999)
 

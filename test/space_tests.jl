@@ -2,13 +2,13 @@
 
 @testset "Space" begin
     @testset "Graphs" begin
-        model = ABM(Agent5, GraphSpace(path_graph(5)))
+        model = ABM(Agent5, GraphSpace(path_graph(5)), warn_deprecation = false)
         @test Agents.nv(model) == 5
         @test Agents.ne(model) == 4
     end
 
     @testset "Nearby Agents" begin
-        undirected = ABM(Agent5, GraphSpace(path_graph(5)))
+        undirected = ABM(Agent5, GraphSpace(path_graph(5)), warn_deprecation = false)
         @test nearby_positions(3, undirected) == [2, 4]
         @test nearby_positions(1, undirected) == [2]
         @test nearby_positions(5, undirected) == [4]
@@ -27,7 +27,7 @@
         # But to be excluded if we are looking around it.
         @test sort!(collect(nearby_ids(undirected[2], undirected))) == [1, 3]
 
-        directed = ABM(Agent5, GraphSpace(path_digraph(5)))
+        directed = ABM(Agent5, GraphSpace(path_digraph(5)), warn_deprecation = false)
         @test nearby_positions(3, directed) == [4]
         @test nearby_positions(1, directed) == [2]
         @test nearby_positions(5, directed) == []
