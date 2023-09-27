@@ -121,19 +121,18 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     agentstring *= "id: $(getproperty(agent, :id))\n"
 
     agent_pos = getproperty(agent, :pos)
-    if agent_pos isa NTuple{<:Any, <:AbstractFloat}
+    if agent_pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
         agent_pos = round.(agent_pos, sigdigits=2)
     end
     agentstring *= "pos: $(agent_pos)\n"
 
     for field in fieldnames(A)[3:end]
         val = getproperty(agent, field)
-        V = typeof(val)
-        if V <: AbstractFloat
+        if val isa AbstractFloat
             val = round(val, sigdigits=2)
-        elseif V <: AbstractArray{<:AbstractFloat}
+        elseif val isa AbstractArray{<:AbstractFloat}
             val = round.(val, sigdigits=2)
-        elseif V <: NTuple{<:Any, <:AbstractFloat}
+        elseif val isa NTuple{<:Any, <:AbstractFloat}
             val = round.(val, sigdigits=2)
         end
         agentstring *= "$(field): $val\n"
