@@ -44,6 +44,9 @@ dictionary that maps unique IDs (integers) to agents.
 See also [`UnremovableABM`](@ref) for better performance in case number of agents can
 only increase during the model evolution.
 
+The evolution rules are the functions `agent_step!`, `model_step!`, `schedule`. If 
+`agent_step!` is not passed, the evolution rules is just the function `model_step!`.
+
 Agents.jl supports multiple agent types by passing a `Union` of agent types
 as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
 drawbacks of this approach.
@@ -55,6 +58,10 @@ Create a fresh instance of a space with the same properties if you need to do th
 
 ## Keywords
 
+- `agent_step! = dummystep`: the optional stepping function for each agent contained in the
+  model. For complicated models, it could be more suitable to use only `model_step!` to evolve
+  the model.
+- `model_step! = dummystep`: the optional stepping function for the model.
 - `properties = nothing`: additional model-level properties that the user may decide upon
   and include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).

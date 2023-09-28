@@ -6,8 +6,7 @@ Vector_or_Tuple = Union{AbstractArray,Tuple}
 Perform an ensemble simulation of [`run!`](@ref) for all `model ∈ models`.
 Each `model` should be a (different) instance of an [`AgentBasedModel`](@ref) but probably
 initialized with a different random seed or different initial agent distribution.
-All models obey the same rules `agent_step!, model_step!` contained in the model
-and are evolved for `n`.
+All models obey the same evolution rules contained in  the model and are evolved for `n`.
 
 Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:ensemble`, which has an integer
