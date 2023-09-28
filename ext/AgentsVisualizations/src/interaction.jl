@@ -54,12 +54,16 @@ function add_controls!(fig, abmobs, spu)
         end
     end
     # Reset button
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    end
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
         model[] = deepcopy(model0)
         s = 0 # reset step counter
-        Agents.step!(model[], agent_step!, model_step!, s)
+        Agents.step!(model[], agent_step!, model_step!, s; warn_deprecation = false)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")

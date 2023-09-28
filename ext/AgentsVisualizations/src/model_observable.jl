@@ -8,9 +8,6 @@ function Agents.ABMObservable(model::AgentBasedModel;
     if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
         agent_step! = Agents.agent_step_field(model)
         model_step! = Agents.model_step_field(model)
-    else
-        @warn "Passing agent_step! and model_step! to ABMObservable is deprecated. 
-          These functions should be already presented inside the model instance."
     end
     adf = mdf = nothing
     if !isnothing(adata)
@@ -26,7 +23,7 @@ end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
-    Agents.step!(model[], abmobs.agent_step!, abmobs.model_step!, n; kwargs...)
+    Agents.step!(model[], abmobs.agent_step!, abmobs.model_step!, n; warn_deprecation = false, kwargs...)
     notify(model)
     abmobs.s[] = abmobs.s[] + n # increment step counter
     if Agents.should_we_collect(abmobs.s, model[], abmobs.when)

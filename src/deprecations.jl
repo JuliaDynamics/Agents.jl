@@ -217,13 +217,13 @@ function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
     add_agent_pos!(agent, model)
 end
 
-function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true)
+function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)
     @warn "Passing agent_step! to step! is deprecated. Use the new version 
          step!(model, n = 1, agents_first = true)"
-    step!(model, agent_step!, dummystep, n, agents_first)
+    step!(model, agent_step!, dummystep, n, agents_first; warn_deprecation = warn_deprecation)
 end
 
-function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
+function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
     @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version 
          step!(model, n = 1, agents_first = true)"
     s = 0
