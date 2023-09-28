@@ -127,7 +127,8 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
-        warn = get(kwargs, :warn, true)
+        warn = get(kwargs, :warn, true),
+        warn_deprecation = false
     )
     abm.maxid[] = t.maxid
 

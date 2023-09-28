@@ -218,14 +218,14 @@ function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
 end
 
 function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)
-    @warn "Passing agent_step! to step! is deprecated. Use the new version 
-         step!(model, n = 1, agents_first = true)"
     step!(model, agent_step!, dummystep, n, agents_first; warn_deprecation = warn_deprecation)
 end
 
 function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
-    @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version 
-         step!(model, n = 1, agents_first = true)"
+    if warn_deprecation
+        @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version 
+             step!(model, n = 1, agents_first = true)"
+    end    
     s = 0
     while until(s, n, model)
         !agents_first && model_step!(model)
@@ -239,8 +239,8 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
     end
 end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+run!(model::ABM, agent_step!, n::Int = 1; warn_deprecation = true, kwargs...) =
+    run!(model::ABM, agent_step!, dummystep, n; warn_deprecation = warn_deprecation, kwargs...)
 
 function run!(model, agent_step!, model_step!, n;
         when = true,
@@ -250,9 +250,12 @@ function run!(model, agent_step!, model_step!, n;
         obtainer = identity,
         agents_first = true,
         showprogress = false,
+        warn_deprecation = true
     )
-    @warn "Passing agent_step! and model_step! to run! is deprecated. 
-      These functions should be already presented inside the model instance."
+    if warn_deprecation
+        @warn "Passing agent_step! and model_step! to run! is deprecated. 
+          These functions should be already contained inside the model instance."
+    end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -295,8 +298,8 @@ function run!(model, agent_step!, model_step!, n;
     return df_agent, df_model
 end
 
-offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
+offline_run!(model::ABM, agent_step!, n::Int = 1; warn_deprecation = true, kwargs...) =
+    offline_run!(model::ABM, agent_step!, dummystep, n; warn_deprecation = warn_deprecation, kwargs...)
 
 function offline_run!(model, agent_step!, model_step!, n;
         when = true,
@@ -310,9 +313,12 @@ function offline_run!(model, agent_step!, model_step!, n;
         adata_filename = "adata.$backend",
         mdata_filename = "mdata.$backend",
         writing_interval = 1,
+        warn_deprecation = true
     )
-    @warn "Passing agent_step! and model_step! to offline_run! is deprecated. 
-      These functions should be already presented inside the model instance."
+    if warn_deprecation
+        @warn "Passing agent_step! and model_step! to offline_run! is deprecated. 
+          These functions should be already contained inside the model instance."
+    end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -405,10 +411,13 @@ function ensemblerun!(
     n;
     showprogress = false,
     parallel = false,
+    warn_deprecation = true,
     kwargs...,
-)
-    @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated. 
-      These functions should be already presented inside the model instance."
+)   
+    if warn_deprecation
+        @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated. 
+      These functions should be already contained inside the model instance."
+    end
     if parallel
         return parallel_ensemble(models, agent_step!, model_step!, n;
                                  showprogress, kwargs...)
@@ -474,9 +483,9 @@ function ensemblerun!(
     args::Vararg{Any, N};
     ensemble = 5,
     seeds = rand(UInt32, ensemble),
+    warn_deprecation = true,
     kwargs...,
 ) where {N}
-    println(generator)
     models = [generator(seed) for seed in seeds]
     ensemblerun!(models, args...; kwargs...)
 end

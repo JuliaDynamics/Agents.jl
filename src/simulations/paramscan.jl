@@ -84,6 +84,7 @@ function paramscan(
     model_step! = dummystep,
     n = 1,
     showprogress::Bool = false,
+    warn_deprecation = true,
     kwargs...,
 )
     if agent_step! != dummystep || model_step! != dummystep

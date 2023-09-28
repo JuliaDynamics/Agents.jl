@@ -700,7 +700,7 @@ end
     for i in 1:5
         add_agent!(model, i * 0.2)
     end
-    data, _ = run!(model, dummystep, 2; adata = [:weight])
+    data, _ = run!(model, 2; adata = [:weight])
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
