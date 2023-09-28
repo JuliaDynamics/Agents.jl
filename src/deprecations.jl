@@ -284,7 +284,7 @@ function run!(model, agent_step!, model_step!, n;
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, agent_step!, model_step!, 1, agents_first; warn_deprecation = false)
         s += 1
         ProgressMeter.next!(p)
     end
@@ -377,7 +377,7 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, agent_step!, model_step!, 1, agents_first; warn_deprecation = false)
         s += 1
         ProgressMeter.next!(p)
     end
@@ -445,7 +445,7 @@ function series_ensemble(models, agent_step!, model_step!, n;
     ProgressMeter.progress_map(2:nmodels; progress) do midx
 
         df_agentTemp, df_modelTemp =
-            run!(models[midx], agent_step!, model_step!, n; kwargs...)
+            run!(models[midx], agent_step!, model_step!, n; warn_deprecation = false, kwargs...)
 
         add_ensemble_index!(df_agentTemp, midx)
         add_ensemble_index!(df_modelTemp, midx)
@@ -462,7 +462,7 @@ function parallel_ensemble(models, agent_step!, model_step!, n;
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
-        run!(model, agent_step!, model_step!, n; kwargs...)
+        run!(model, agent_step!, model_step!, n; warn_deprecation = false, kwargs...)
     end
 
     df_agent = DataFrame()
