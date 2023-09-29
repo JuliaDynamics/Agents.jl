@@ -23,6 +23,7 @@ If you're planning of running massive simulations, it might be worth having a lo
 
 
 ## [1. The space](@id Space)
+
 Agents.jl offers several possibilities for the space the agents live in.
 In addition, it is straightforward to implement a fundamentally new type of space, see [Creating a new space type](@ref).
 
@@ -33,12 +34,14 @@ After deciding on the space, one simply initializes an instance of a space, e.g.
 
 
 ## 2. The agent type(s)
+
 ```@docs
 @agent
 AbstractAgent
 ```
 
 ## 3. The model
+
 Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
 Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`remove_agent!`](@ref).
 The "model" here stands for an instance of [`AgentBasedModel`](@ref).
@@ -145,7 +148,6 @@ For performance and reproducibility reasons, one should never use `rand()` witho
 Another benefit of this approach is deterministic models that can be run again and yield the same output.
 To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)`.
 
-Passing `RandomDevice()` will use the system's entropy source (coupled with hardware like [TrueRNG](https://ubld.it/truerng_v3) will invoke a true random source, rather than pseudo-random methods like `MersenneTwister`). Models using this method cannot be repeatable, but avoid potential biases of pseudo-randomness.
-
 ## An educative example
+
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref).
