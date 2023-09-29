@@ -90,12 +90,12 @@ The function does two things:
 """
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r)
 function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
-    r₀ = floor(Int, r)
-    i = r₀ + 1
+    i = floor(Int, r + 1)
     offsets = space.offsets_within_radius
     if i <= length(offsets) && !isempty(offsets[i])
         βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
         append_offsets!(offsets, i, βs, D)
     end
@@ -110,12 +110,12 @@ The function does two things:
 """
 offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r)
 function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
-    r₀ = floor(Int, r)
-    i = r₀ + 1
+    i = floor(Int, r + 1)
     offsets = space.offsets_at_radius
     if i <= length(offsets) && !isempty(offsets[i])
         βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
         if space.metric == :manhattan
             filter!(β -> sum(abs.(β)) == r₀, βs)
@@ -127,7 +127,6 @@ function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     return βs
 end
 
-# Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     hyperrect = calculate_hyperrectangle(space, r)
     if space.metric == :euclidean
@@ -139,16 +138,16 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     else
         error("Unknown metric type")
     end
-    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
-    return βs::Vector{NTuple{D, Int}}
+    length(βs) == 0 && push!(βs, ntuple(i -> 0, D)) # ensure 0 is there
+    return βs
 end
 
 function append_offsets!(offsets, i, βs, D)
     incr = i - length(offsets)
     if incr > 0
         resize!(offsets, i)
-        @inbounds for i in i-incr+1:i
-            offsets[i] = Vector{NTuple{D,Int}}()
+        @inbounds for j in i-incr+1:i
+            offsets[j] = Vector{NTuple{D,Int}}()
         end
     end
     append!(offsets[i], βs)
@@ -160,14 +159,14 @@ end
 
 offsets_within_radius_no_0(model::ABM, r::Real) = offsets_within_radius_no_0(abmspace(model), r)
 function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where {D}
-    r₀ = floor(Int, r)
-    i = r₀ + 1
+    i = floor(Int, r + 1)
     offsets = space.offsets_within_radius_no_0
     if i <= length(offsets) && !isempty(offsets[i])
         βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
-        z = ntuple(i -> 0, Val(D))
+        z = ntuple(i -> 0, D)
         filter!(x -> x ≠ z, βs)
         append_offsets!(offsets, i, βs, D)
     end
@@ -261,4 +260,3 @@ function Base.show(io::IO, space::AbstractGridSpace{D,P}) where {D,P}
     s = "$name with size $(size(space)), metric=$(space.metric), periodic=$(P)"
     print(io, s)
 end
-
