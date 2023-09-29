@@ -15,12 +15,12 @@ To set up an ABM simulation in Agents.jl, a user only needs to follow these step
 1. Choose what **kind of space** the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
 2. Define the **agent type** (or types, for mixed models) that will populate the ABM. Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
 3. Define the **evolution rule**, i.e., how the model evolves in time. The evolution rule needs to be provided as at least one, or at most two functions: an agent-stepping function, that acts on each agent one by one, and/or a model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
-4. The created agent type, the chosen space, the evolution rule, other optional additional model-level properties, and other simulation tuning properties like schedulers or random number generators, are **given to [`StandardABM`](@ref)**, which creates the most common type of `AgentBasedModel`. More specialized model types are also available, see [`AgentBasedModel`](@ref).
-5. _(Optional)_ **Visualize the model** and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
-6. **Collect data**. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, for example `[:mood, :wealth]`, and another one for the model. The agent data names are given as the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref). This function outputs collected data in the form of a `DataFrame`.
+4. Initialize an **agent based model instance** that contains the created agent type, the chosen space, the evolution rule, other optional additional model-level properties, and other simulation tuning properties like schedulers or random number generators. The most common model type is [`StandardABM`](@ref), but more specialized model types are also available, see [`AgentBasedModel`](@ref).
+5. _(Trivial)_ **evolve the model**.
+6. _(Optional)_ **Visualize the model** and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
+7. **Collect data**. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, for example `[:mood, :wealth]`, and another one for the model. The agent data names are given as the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref). This function outputs collected data in the form of a `DataFrame`.
 
 If you're planning of running massive simulations, it might be worth having a look at the [Performance Tips](@ref) after familiarizing yourself with Agents.jl.
-
 
 ## [1. The space](@id Space)
 
@@ -32,45 +32,77 @@ An example of a space is [`OpenStreetMapSpace`](@ref). It is based on Open Stree
 
 After deciding on the space, one simply initializes an instance of a space, e.g. with `grid = GridSpace((10, 10))` and passes that into [`AgentBasedModel`](@ref). See each individual space for all its possible arguments.
 
-
 ## 2. The agent type(s)
+
+Agents in Agents.jl are instances of user-defined types. While the majority of Agents.jl [API](@ref) is based on a functional design, accessing agent properties is done with the simple field-access Julia syntax. For example, the (named) property `weight` of an agent can be obtained as `agent.weight`.
+
+To create agent types, and define what properties they should have, the user needs to use the [`@agent`](@ref) macro, which ensures that agents have the minimum amount of required necessary properties to function within a given space and model by inheriting pre-defined agent types suited for each type of space.
+The macro usage may seem intimidating at first, but it is in truth very simple!
+For example,
+```julia
+@agent struct Person(GridAgent{2})
+    age::Int
+    money::Float64
+end
+```
+would make an agent type with named properties `age, money`, while also inheriting all named properties of the `GridAgent{2}` predefined type (which is necessary for simulating agents in a two-dimensional grid space).
 
 ```@docs
 @agent
 AbstractAgent
 ```
 
-## 3. The model
+## 3.1 The evolution rule - basics
 
-Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
-Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`remove_agent!`](@ref).
-The "model" here stands for an instance of [`AgentBasedModel`](@ref).
-
-```@docs
-AgentBasedModel
+The evolution rule may always be provided as one standard Julia function that inputs the model and modifies it _in-place_, according to the rules of the simulation. Such a **model stepping function** will itself likely call functions from the Agents.jl [API](@ref) and may look like
+```julia
+function model_step!(model)
+    exchange = model.exchange # obtain the `exchange` model property
+    agent = model[5] # obtain agent with ID = 5
+    # Iterate over neighboring agents (within distance 1)
+    for neighbor in nearby_agents(model, agent, 1)
+        transfer = minimum(neighbor.money, exchange)
+        agent.money += transfer
+        neighbor.money -= transfer
+    end
+    return # function end. As it is in-place it `return`s nothing.
+end
 ```
+This function will be called once per simulation step.
 
-## 4. Evolving the model
+As you can see, the above defined model stepping function did not operate on all agents of the model, only on agent with ID 5. Naturally, you would want to operate on more than one agents. There is a simple automated way to do this (section 3.2), and a non-automated, but fully-configurable way to do this (section 3.3).
 
-In Agents.jl, an agent based model should be accompanied with at least one and at most two stepping functions.
-An _agent step function_ is required by default.
-Such an agent step function defines what happens to an agent when it activates.
-Sometimes we also need a function that changes all agents at once, or changes a model property. In such cases, we can also provide a _model step function_.
+## 3.2 The evolution rule - agent stepping function
 
-An agent step function must accept two arguments: first, an agent instance, and second, a model instance.
+In Agents.jl it is also possible to provide an **agent stepping function**. This  powerful feature enables scheduling agents semi-automatically, skipping the agents that were scheduled to act but have been removed from the model (due to e.g., the actions of other agents), and also perform optimizations that are based on the specific type of `AgentBasedModel`.
 
-The model step function must accept one argument, that is the model.
-To use only a model step function, users can use the built-in [`dummystep`](@ref) as the agent step function. This is typically the case for [Advanced stepping](@ref).
+An agent stepping function defines what happens to an agent when it activates.
+It inputs two arguments `agent, model` and operates in place on the `agent` and the `model`. This function will be applied to every `agent` that has been scheduled by the model's scheduler. A scheduler simply creates an iterator of agent IDs at each simulation step, possibly taking into account the current model state. Several schedulers are provided out-of-the-box by Agents.jl, see [Schedulers](@ref).
 
-The stepping functions are created using the [API](@ref) functions, and the Examples hosted in this documentation showcase several different variants.
-
-After you have defined the stepping functions, you can evolve your model with `step!`:
-```@docs
-step!
-dummystep
+Given the example above, an agent stepping function that would perform a similar currency exchange between agents would look like
+```julia
+function agent_step!(agent, model)
+    exchange = model.exchange # obtain the `exchange` model property
+    # Iterate over neighboring agents (within distance 1)
+    for neighbor in nearby_agents(model, agent, 1)
+        transfer = minimum(neighbor.money, exchange)
+        agent.money += transfer
+        neighbor.money -= transfer
+    end
+    agent.age += 1
+    # if too old, pass fortune onto heir and remove from model
+    if agent.age > 75
+        heir = replicate!(agent, model)
+        heir.age = 1
+        remove_agent!(agent, modeL)
+    end
+    return # function end. As it is in-place it `return`s nothing.
+end
 ```
+we stress that in contrast to the above `model_step!`, this function will be applied once to all scheduled agents, while `model_step!` will only be called _once_ per simulation step. Naturally, you may define **both** an agent- and a model- stepping functions. In this case the model stepping function would perform model-wide actions that are not limited to a particular agent.
 
-### Advanced stepping
+## 3.3 The evolution rule - advanced (manual scheduling)
+
 !!! note "Current step number"
     Notice that the current step number is not explicitly given to the `model_step!`
     function, because this is useful only for a subset of ABMs. If you need the
@@ -108,10 +140,30 @@ step!(model, dummystep, complex_step!, n)
 
 For defining your own schedulers, see [Schedulers](@ref).
 
+## 4. The model
+
+Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
+Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`remove_agent!`](@ref).
+The "model" here stands for an instance of [`AgentBasedModel`](@ref).
+
+```@docs
+AgentBasedModel
+dummystep
+```
+
+## 5. Evolving the model
+
+After you have created an instance of an `AgentBasedModel`, you may evolve it with `step!`:
+```@docs
+step!
+```
+
 ## 5. Visualizations
+
 Once you have defined a model and the stepping functions, you can visualize the model statically, or animate its time evolution straightforwardly in ~5 lines of code. This is discussed in a different page: [Visualizations and Animations for Agent Based Models](@ref). Furthermore, all models in the Examples showcase plotting.
 
 ## 6. Collecting data
+
 Running the model and collecting data while the model runs is done with the [`run!`](@ref) function. Besides `run!`, there is also the [`paramscan`](@ref) function that performs data collection while scanning ranges of the parameters of the model, and the [`ensemblerun!`](@ref) that performs ensemble simulations and data collection.
 
 ```@docs
