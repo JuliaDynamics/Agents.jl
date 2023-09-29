@@ -89,16 +89,17 @@ The function does two things:
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
 offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r::Real)
-function offsets_within_radius(
-    space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
+function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
-    if haskey(space.offsets_within_radius, r₀)
-        βs = space.offsets_within_radius[r₀]
+    i = r₀ + 1
+    offsets = space.offsets_within_radius
+    if i <= length(offsets) && !isempty(offsets[i])
+        βs = offsets[i]
     else
         βs = calculate_offsets(space, r₀)
-        space.offsets_within_radius[r₀] = βs
+        append_offsets!(offsets, i, βs, D)
     end
-    return βs::Vector{NTuple{D, Int}}
+    return βs
 end
 
 """
@@ -108,23 +109,22 @@ The function does two things:
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
 offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r::Real)
-function offsets_at_radius(
-    space::AbstractGridSpace{D}, r::Real
-)::Vector{NTuple{D, Int}} where {D}
+function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
-    if haskey(space.offsets_at_radius, r₀)
-        βs = space.offsets_at_radius[r₀]
+    i = r₀ + 1
+    offsets = space.offsets_at_radius
+    if i <= length(offsets) && !isempty(offsets[i])
+        βs = offsets[i]
     else
         βs = calculate_offsets(space, r₀)
         if space.metric == :manhattan
             filter!(β -> sum(abs.(β)) == r₀, βs)
-            space.offsets_at_radius[r₀] = βs
         elseif space.metric == :chebyshev
             filter!(β -> maximum(abs.(β)) == r₀, βs)
-            space.offsets_at_radius[r₀] = βs
         end
+        append_offsets!(offsets, i, βs, D)
     end
-    return βs::Vector{NTuple{D,Int}}
+    return βs
 end
 
 # Make grid space Abstract if indeed faster
@@ -141,7 +141,19 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
         error("Unknown metric type")
     end
     length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
-    return βs::Vector{NTuple{D, Int}}
+    return βs
+end
+
+function append_offsets!(offsets, i, βs, D)
+    incr = i - length(offsets)
+    if incr > 0
+        resize!(offsets, i)
+        @inbounds for i in i-incr+1:i
+            offsets[i] = Vector{NTuple{D,Int}}()
+        end
+    end
+    append!(offsets[i], βs)
+    return
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
@@ -150,18 +162,19 @@ end
 
 offsets_within_radius_no_0(model::ABM, r::Real) =
     offsets_within_radius_no_0(abmspace(model), r::Real)
-function offsets_within_radius_no_0(
-    space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
+function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
-    if haskey(space.offsets_within_radius_no_0, r₀)
-        βs = space.offsets_within_radius_no_0[r₀]
+    i = r₀ + 1
+    offsets = space.offsets_within_radius_no_0
+    if i <= length(offsets) && !isempty(offsets[i])
+        βs = offsets[i]
     else
         βs = calculate_offsets(space, r₀)
         z = ntuple(i -> 0, Val(D))
         filter!(x -> x ≠ z, βs)
-        space.offsets_within_radius_no_0[r₀] = βs
+        append_offsets!(offsets, i, βs, D)
     end
-    return βs::Vector{NTuple{D, Int}}
+    return βs
 end
 
 # `nearby_positions` is easy, uses same code as `neaby_ids` of `GridSpaceSingle` but
