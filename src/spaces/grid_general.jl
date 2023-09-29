@@ -45,7 +45,7 @@ npositions(space::AbstractGridSpace) = length(space.stored_ids)
 function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
     space_size = spacesize(space)
     if r < minimum(space_size) ÷ 2
-        hyperrect = Iterators.product(repeat([-r:r], D)...)
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims = min.(r, half_s)
@@ -58,7 +58,7 @@ end
 function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
     space_size = spacesize(space)
     if r < minimum(space_size)
-        hyperrect = Iterators.product(repeat([-r:r], D)...) 
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
     else
         r_dims = min.(r, space_size)
         hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
@@ -69,7 +69,7 @@ function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
     space_size = spacesize(space)
     r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
     if all(r_notover)
-        hyperrect = Iterators.product(repeat([-r:r], D)...) 
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims_P = min.(r, half_s)
@@ -88,7 +88,7 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r::Real)
+offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r)
 function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
     i = r₀ + 1
@@ -108,7 +108,7 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r::Real)
+offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r)
 function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
     i = r₀ + 1
@@ -131,7 +131,6 @@ end
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     hyperrect = calculate_hyperrectangle(space, r)
     if space.metric == :euclidean
-        # select subset which is in Hypersphere
         βs = [β for β ∈ hyperrect if sum(β.^2) ≤ r^2]
     elseif space.metric == :manhattan
         βs = [β for β ∈ hyperrect if sum(abs.(β)) ≤ r]
@@ -141,7 +140,7 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
         error("Unknown metric type")
     end
     length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
-    return βs
+    return βs::Vector{NTuple{D, Int}}
 end
 
 function append_offsets!(offsets, i, βs, D)
@@ -153,15 +152,13 @@ function append_offsets!(offsets, i, βs, D)
         end
     end
     append!(offsets[i], βs)
-    return
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
     Tuple(rand(abmrng(model), CartesianIndices(abmspace(model).stored_ids)))
 end
 
-offsets_within_radius_no_0(model::ABM, r::Real) =
-    offsets_within_radius_no_0(abmspace(model), r::Real)
+offsets_within_radius_no_0(model::ABM, r::Real) = offsets_within_radius_no_0(abmspace(model), r)
 function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where {D}
     r₀ = floor(Int, r)
     i = r₀ + 1
@@ -264,3 +261,4 @@ function Base.show(io::IO, space::AbstractGridSpace{D,P}) where {D,P}
     s = "$name with size $(size(space)), metric=$(space.metric), periodic=$(P)"
     print(io, s)
 end
+
