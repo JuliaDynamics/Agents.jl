@@ -97,7 +97,8 @@ function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     else
         r₀ = i - 1
         βs = calculate_offsets(space, r₀)
-        append_offsets!(offsets, i, βs, D)
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
     return βs
 end
@@ -122,7 +123,8 @@ function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
         elseif space.metric == :chebyshev
             filter!(β -> maximum(abs.(β)) == r₀, βs)
         end
-        append_offsets!(offsets, i, βs, D)
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
     return βs
 end
@@ -142,12 +144,11 @@ function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     return βs
 end
 
-function append_offsets!(offsets, i, βs, D)
+function resize_offsets!(offsets, i)
     incr = i - length(offsets)
     if incr > 0
         resize!(offsets, i)
     end
-    offsets[i] = βs
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
@@ -165,7 +166,8 @@ function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where 
         βs = calculate_offsets(space, r₀)
         z = ntuple(i -> 0, D)
         filter!(x -> x ≠ z, βs)
-        append_offsets!(offsets, i, βs, D)
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
     return βs
 end
