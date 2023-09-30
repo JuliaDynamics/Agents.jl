@@ -201,14 +201,14 @@ function add_agent_pos!(agent::AbstractAgent, model::ABM)
 end
 
 """
-    add_agent!([pos,] A::Type, model::ABM, args...) → newagent
-    add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
+    add_agent!([pos,] model::ABM, args...) → newagent
+    add_agent!([pos,] model::ABM; kwargs...) → newagent
 
-Use one of these two versions to create and add a new agent to the model using the 
-constructor of the agent type of the model. Optionally provide a position to add 
+Use one of these two versions to create and add a new agent to the model using the
+constructor of the agent type of the model. Optionally provide a position to add
 the agent to as *first argument*, which must match the space position type.
 
-This function takes care of setting the agent's id *and* position.
+This function takes care of setting the agent id *and* position.
 The extra provided `args...` or `kwargs...` are propagated to other fields
 of the agent constructor (see example below). Mixing `args...` and `kwargs...`
 is not possible, only one of the two can be used to set the fields.
@@ -216,14 +216,15 @@ is not possible, only one of the two can be used to set the fields.
     add_agent!([pos,] A::Type, model::ABM, args...) → newagent
     add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
 
-Use one of these two versions for mixed agent models, with `A` the agent type you wish to create, 
+Use one of these two versions for mixed agent models, with `A` the agent type you wish to create,
 because it is otherwise not possible to deduce a constructor for `A`.
 
 ## Example
+
 ```julia
 using Agents
 @agent struct Agent(GraphAgent)
-    w::Float64
+    w::Float64 = 0.1
     k::Bool = false
 end
 model = ABM(Agent, GraphSpace(complete_digraph(5)))
@@ -232,7 +233,6 @@ add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
 add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
-add_agent!(model; w = 0.5, k = true) # use keywords: w becomes 0.5, k becomes true
 ```
 """
 function add_agent!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent}
@@ -316,8 +316,8 @@ Return `nothing` if no agents are nearby.
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
-the function returns `true`. The argument `alloc` can be used if the filtering condition 
-is expensive since in this case the allocating version can be more performant. 
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
 `nothing` is returned if no nearby id satisfies `f`.
 
 For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
@@ -345,11 +345,11 @@ is nearby.
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
 
 A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
-the function returns `true`. The argument `alloc` can be used if the filtering condition 
-is expensive since in this case the allocating version can be more performant. 
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
 `nothing` is returned if no nearby agent satisfies `f`.
 
-For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a random agent at a given 
+For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a random agent at a given
 position.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
@@ -378,8 +378,8 @@ Return `nothing` if the space doesn't allow for nearby positions.
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
 
 A filter function `f(pos)` can be passed so that to restrict the sampling on only those positions for which
-the function returns `true`. The argument `alloc` can be used if the filtering condition 
-is expensive since in this case the allocating version can be more performant. 
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
 `nothing` is returned if no nearby position satisfies `f`.
 """
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
@@ -392,7 +392,7 @@ function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwa
         else
             iter_filtered = Iterators.filter(pos -> f(pos), iter)
             return resorvoir_sampling_single(iter_filtered, model)
-        end    
+        end
     end
 end
 
