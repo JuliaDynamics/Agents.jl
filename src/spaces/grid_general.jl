@@ -92,7 +92,7 @@ offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(mode
 function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     i = floor(Int, r + 1)
     offsets = space.offsets_within_radius
-    if i <= length(offsets) && !isempty(offsets[i])
+    if isassigned(offsets, i)
         βs = offsets[i]
     else
         r₀ = i - 1
@@ -112,7 +112,7 @@ offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r)
 function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
     i = floor(Int, r + 1)
     offsets = space.offsets_at_radius
-    if i <= length(offsets) && !isempty(offsets[i])
+    if isassigned(offsets, i)
         βs = offsets[i]
     else
         r₀ = i - 1
@@ -146,11 +146,8 @@ function append_offsets!(offsets, i, βs, D)
     incr = i - length(offsets)
     if incr > 0
         resize!(offsets, i)
-        @inbounds for j in i-incr+1:i
-            offsets[j] = Vector{NTuple{D,Int}}()
-        end
     end
-    append!(offsets[i], βs)
+    offsets[i] = βs
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
@@ -161,7 +158,7 @@ offsets_within_radius_no_0(model::ABM, r::Real) = offsets_within_radius_no_0(abm
 function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where {D}
     i = floor(Int, r + 1)
     offsets = space.offsets_within_radius_no_0
-    if i <= length(offsets) && !isempty(offsets[i])
+    if isassigned(offsets, i)
         βs = offsets[i]
     else
         r₀ = i - 1
