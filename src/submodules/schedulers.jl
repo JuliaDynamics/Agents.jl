@@ -17,23 +17,24 @@ schedule(model::UnremovableABM) = abmscheduler(model)(model)
 """
     Schedulers
 
-Submodule containing all predefined schedulers of Agents.jl and the scheduling API.
+Submodule containing all predefined schedulers of Agents.jl that can be used with
+[`StandardABM`](@ref).
+
 Schedulers have a very simple interface. They are functions that take as an input the ABM and
-return an iterator over agent IDs. Notice that this iterator can be a "true" iterator
-(non-allocated) or can be just a standard vector of IDs. You can define your own scheduler
-according to this API and use it when making an [`AgentBasedModel`](@ref).
-You can also use the function `schedule(model)` to obtain the scheduled ID list,
-if you prefer to write your own `step!`-like loop.
+return an iterator over agent IDs. Notice that this iterator can be non-allocated specialized
+type or just a standard vector of IDs.
+
+Schedulers have two purposes:
+
+1. Can be given in [`StandardABM`](@ref) as a default scheduler.
+   This functionality is only meaningful when the `agent_step!` has been configured.
+2. Can be used by a user when performing [manual schedling](@ref manual_scheduling)
+   in case `agent_step!` has not been configured.
+
+You can also use the function `schedule(model)` to obtain the scheduled ID iterator
+by calling the `model`'s scheduler.
 
 See also [Advanced scheduling](@ref) for making more advanced schedulers.
-
-Notice that schedulers can be given directly to model creation, and thus become the
-"default" scheduler a model uses, but they can just as easily be incorporated in a
-`model_step!` function as shown in [Advanced stepping](@ref).
-The `scheduler` that is stored in the model is only meaningful if an agent-stepping function
-is defined for [`step!`](@ref) or [`run!`](@ref), otherwise a user decides a scheduler in
-the model-stepping function,
-as illustrated in the [Advanced stepping](@ref) part of the tutorial.
 """
 module Schedulers
 using Agents
@@ -180,7 +181,7 @@ ByProperty(p::P) where {P} = ByProperty{P}(p, Int[], Int[])
 
 function (sched::ByProperty)(model::ABM)
     get_ids!(sched.ids, model)
-    
+
     properties = [Agents.get_data(model[id], sched.p) for id in sched.ids]
 
     initialized = true

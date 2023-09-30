@@ -15,7 +15,7 @@ To set up an ABM simulation in Agents.jl, a user only needs to follow these step
 1. Choose what **kind of space** the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
 2. Define the **agent type** (or types, for mixed models) that will populate the ABM. Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
 3. Define the **evolution rule**, i.e., how the model evolves in time. The evolution rule needs to be provided as at least one, or at most two functions: an agent-stepping function, that acts on each agent one by one, and/or a model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
-4. Initialize an **agent based model instance** that contains the created agent type, the chosen space, the evolution rule, other optional additional model-level properties, and other simulation tuning properties like schedulers or random number generators. The most common model type is [`StandardABM`](@ref), but more specialized model types are also available, see [`AgentBasedModel`](@ref).
+4. Initialize an **agent based model instance** that contains created agent type, the chosen space, the evolution rule, other optional additional model-level properties, and other simulation tuning properties like schedulers or random number generators. The most common model type is [`StandardABM`](@ref), but more specialized model types are also available, see [`AgentBasedModel`](@ref).
 5. _(Trivial)_ **evolve the model**.
 6. _(Optional)_ **Visualize the model** and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
 7. **Collect data**. To do this, specify which data should be collected, by providing one standard Julia `Vector` of data-to-collect for agents, for example `[:mood, :wealth]`, and another one for the model. The agent data names are given as the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref). This function outputs collected data in the form of a `DataFrame`.
@@ -70,14 +70,18 @@ end
 ```
 This function will be called once per simulation step.
 
-As you can see, the above defined model stepping function did not operate on all agents of the model, only on agent with ID 5. Naturally, you would want to operate on more than one agents. There is a simple automated way to do this (section 3.2), and a non-automated, but fully-configurable way to do this (section 3.3).
+As you can see, the above defined model stepping function did not operate on all agents of the model, only on agent with ID 5 and its spatial neighbors. Typically you would want to operate on more agents. There is a simple automated way to do this (section 3.2), and a non-automated, but fully-configurable way to do this (section 3.3).
 
 ## 3.2 The evolution rule - agent stepping function
 
-In Agents.jl it is also possible to provide an **agent stepping function**. This  powerful feature enables scheduling agents semi-automatically, skipping the agents that were scheduled to act but have been removed from the model (due to e.g., the actions of other agents), and also perform optimizations that are based on the specific type of `AgentBasedModel`.
+In Agents.jl it is also possible to provide an **agent stepping function**.
+This  feature enables scheduling agents automatically given some scheduling rule, skipping the agents that were scheduled to act but have been removed from the model (due to e.g., the actions of other agents), and also allows optimizations that are based on the specific type of `AgentBasedModel`.
 
 An agent stepping function defines what happens to an agent when it activates.
-It inputs two arguments `agent, model` and operates in place on the `agent` and the `model`. This function will be applied to every `agent` that has been scheduled by the model's scheduler. A scheduler simply creates an iterator of agent IDs at each simulation step, possibly taking into account the current model state. Several schedulers are provided out-of-the-box by Agents.jl, see [Schedulers](@ref).
+It inputs two arguments `agent, model` and operates in place on the `agent` and the `model`.
+This function will be applied to every `agent` that has been scheduled by the model's scheduler.
+A scheduler simply creates an iterator of agent IDs at each simulation step, possibly taking into account the current model state.
+Several schedulers are provided out-of-the-box by Agents.jl, see [Schedulers](@ref).
 
 Given the example above, an agent stepping function that would perform a similar currency exchange between agents would look like
 ```julia
@@ -99,29 +103,22 @@ function agent_step!(agent, model)
     return # function end. As it is in-place it `return`s nothing.
 end
 ```
-we stress that in contrast to the above `model_step!`, this function will be applied once to all scheduled agents, while `model_step!` will only be called _once_ per simulation step. Naturally, you may define **both** an agent- and a model- stepping functions. In this case the model stepping function would perform model-wide actions that are not limited to a particular agent.
+and to activate all agents randomly once per simulation step, one would use `Schedulers.Randomly()` as the model scheduler.
 
-## 3.3 The evolution rule - advanced (manual scheduling)
+we stress that in contrast to the above `model_step!`, this function will be called for _every_ scheduled agent, while `model_step!` will only be called _once_ per simulation step.
+Naturally, you may define **both** an agent- and a model- stepping functions. In this case the model stepping function would perform model-wide actions that are not limited to a particular agent.
 
-!!! note "Current step number"
-    Notice that the current step number is not explicitly given to the `model_step!`
-    function, because this is useful only for a subset of ABMs. If you need the
-    step information, implement this by adding a counting parameter into the model
-    `properties`, and incrementing it by 1 each time `model_step!` is called.
-    An example can be seen in the `model_step!` function of [Daisyworld](@ref),
-    where a `tick` is increased at each step.
+## [3.3 The evolution rule - advanced (manual scheduling)](@id manual_scheduling)
 
-The interface of [`step!`](@ref), which allows the option of both `agent_step!` and `model_step!` is driven mostly by convenience. In principle, the `model_step!` function by itself can perform all operations related with stepping the ABM.
-However, for many models, this simplified approach offers the benefit of not having to write an explicit loop over existing agents inside the `model_step!`.
-Most of the examples in our documentation can be expressed using an independent `agent_step!` and `model_step!` function.
-
-On the other hand, more advanced models require special handling for scheduling, or may need to schedule several times and act on different subsets of agents with different functions.
-In such a scenario, it is more sensible to provide only a `model_step!` function (and use `dummystep` as `agent_step!`), where all configuration is contained within.
-Notice that if you follow this road, the argument `scheduler` given to [`AgentBasedModel`](@ref) somewhat loses its meaning.
+Some advanced models may require special handling for scheduling, or may need to schedule agents several times and act on different subsets of agents with different functions during a single simulation step.
+In such a scenario, it is more sensible to provide only a model stepping function,  where all configuration is contained within.
 
 Here is an example:
+
 ```julia
 function complex_step!(model)
+    scheduler1 = Schedulers.Randomly()
+    scheduler2 = user_defined_function
     for id in scheduler1(model)
         agent_step1!(model[id], model)
     end
@@ -133,12 +130,15 @@ function complex_step!(model)
         model_action_every_100_steps!(model)
     end
     final_model_action!(model)
+    return
 end
-
-step!(model, dummystep, complex_step!, n)
 ```
 
 For defining your own schedulers, see [Schedulers](@ref).
+
+!!! note "Current step number"
+    Notice that the current step number is not explicitly given to the model stepping function, nor is contained in the model type, because this is useful only for a subset of ABMs.
+    If you need the step information, implement this by adding a counting parameter into the model `properties`, and incrementing it by 1 each time the model stepping function is called.
 
 ## 4. The model
 
