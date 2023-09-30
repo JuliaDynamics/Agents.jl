@@ -35,7 +35,7 @@ An `AgentBasedModel` is the abstract supertype encompassing models in Agents.jl.
 All models are some concrete implementation of `AgentBasedModel` and follow its
 interface (see below). `ABM` is an alias to `AgentBasedModel`.
 
-For back-wards compatibility, the following function is valid:
+For backwards compatibility, the following function is valid:
 ```julia
 AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
 ```
@@ -58,7 +58,6 @@ Here we the most important information on how to query an instance of `AgentBase
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to use `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
-- `abmscheduler(model)` will return the default scheduler of the model.
 
 Many more functions exist in the API page, such as [`allagents`](@ref).
 """

@@ -142,18 +142,20 @@ For defining your own schedulers, see [Schedulers](@ref).
 
 ## 4. The model
 
-Once an agent is created (typically by instantiating a struct generated with [`@agent`](@ref)), it can be added to a model using [`add_agent!`](@ref).
-Then, the agent can interact with the model and the space further by using e.g. [`move_agent!`](@ref) or [`remove_agent!`](@ref).
-The "model" here stands for an instance of [`AgentBasedModel`](@ref).
+The ABM is an instance of a subtype of [`AgentBasedModel`](@ref), most typically simply a [`StandardABM`](@ref).
+A model is created by passing all inputs of steps 1-3 into the model constructor.
+Once the model is constructed, it can be populated by agents using the [`add_agent!`](@ref) function, which we highlight in the educative example below.
 
 ```@docs
 AgentBasedModel
+StadardABM
 dummystep
 ```
 
 ## 5. Evolving the model
 
-After you have created an instance of an `AgentBasedModel`, you may evolve it with `step!`:
+After you have created an instance of an `AgentBasedModel`, it is rather trivial to evolve it by simply calling `step!` on it
+
 ```@docs
 step!
 ```
@@ -194,11 +196,11 @@ run!(model, agent_step!, model_step!, 10; mdata = assets)
 
 ## Seeding and Random numbers
 
-Each model created by [`AgentBasedModel`](@ref) provides a random number generator pool `abmrng(model)` which by default coincides with the global RNG.
-For performance and reproducibility reasons, one should never use `rand()` without using a pool, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
+Each ABM in Agents.jl contains a random number generator (RNG) instance that can be obtained with `abmrng(model)`.
+For performance and reproducibility reasons, one should never use `rand()` without using the RNG, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
 
 Another benefit of this approach is deterministic models that can be run again and yield the same output.
-To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)`.
+To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)` and then give this `rng` to the model creation.
 
 ## An educative example
 
