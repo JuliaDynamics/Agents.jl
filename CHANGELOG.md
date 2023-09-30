@@ -1,21 +1,24 @@
 # v6
+
 - The `@agent` macro has been rewritten to support fields with default and const values. The old version still works but it's deprecated. Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
 - Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. As a consequence, `add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)`  and `add_agent!(agent::AbstractAgent, model::ABM)`  have been deprecated. See issue #861 for more.
-- Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. 
-- Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering). 
+- Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`.
+- Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
 - A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
 - The `sample!` function is up to 2x faster than before.
 - All spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
 
 ## BREAKING
+
 - `NTuple` in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples, e.g., doing `agent.pos == (0.5, 0.5)`. This will always be `false` in v6 as `agent.pos` is an `SVector`. The rest of the functionality should all work without problems, such as moving agents to tuple-based positions etc.
+- Argument `agents_first` can no longer be given to `step!`. It is now a keyword for `StandardABM`.
 
 # v5.17
 
 - New function `replicate!` allows to create a new instance of a given agent at the same position with the possibility to specify some
   fields with new values.
 - The `sample!` function is 3x faster than before.
-  
+
 # v5.16
 
 - New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports [CSV](https://csv.juliadata.org/stable/) and [Arrow](https://apache.github.io/arrow-julia/stable/) files.

@@ -17,11 +17,12 @@ struct SingleContainerABM{
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    agents_first::Bool
 end
 
 const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A,C}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A,C}
+const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
+const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
@@ -50,6 +51,7 @@ function SingleContainerABM(
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
+    agents_first::Bool = true,
     warn = true,
     warn_deprecation = true
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
@@ -65,7 +67,7 @@ function SingleContainerABM(
     C = construct_agent_container(container, A)
     agents = C()
     return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                               properties, rng, Ref(0))
+                                               properties, rng, Ref(0), agents_first)
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -121,6 +123,8 @@ to all scheduled agents. Then, the `model_step!` function is called
   activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
 - `rng = Random.default_rng()`: the random number generation stored and used by the model
   in all calls to random functions. Accepts any subtype of `AbstractRNG`.
+- `agents_first::Bool = true`: whether to schedule and activate agents first and then
+  call the `model_step!` function, or vice versa.
 - `warn=true`: some type tests for `AgentType` are done, and by default
   warnings are thrown when appropriate.
 """
