@@ -9,8 +9,8 @@ function schedule(model::ABM)
     scheduler = abmscheduler(model)(model)
     return Iterators.filter(id -> id in allids(model), scheduler)
 end
-
 schedule(model::UnremovableABM) = abmscheduler(model)(model)
+schedule(scheduler) = Iterators.filter(id -> id in allids(model), scheduler)
 
 # Notice how the above lines are *outside* the submodule
 
