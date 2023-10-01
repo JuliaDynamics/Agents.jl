@@ -15,14 +15,16 @@ current amount of steps taken, starting from 0.
 See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
 not be convenient.
 """
-function CommonSolve.step!(model::SingleContainerABM, n::Union{Function, Int} = 1)
+function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
     agent_step!, model_step! = agent_step_field(model), model_step_field(model)
     agents_first = model.agents_first
     s = 0
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
-            activate_agents(model, agent_step!)
+            for id in schedule(model)
+                agent_step!(model[id], model)
+            end
         end
         agents_first && model_step!(model)
         s += 1
@@ -45,13 +47,3 @@ dummystep(agent, model) = nothing
 
 until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)
-
-function activate_agents(model::SingleContainerABM, agent_step!)
-    activation_order = schedule(model)
-    for id in activation_order
-        if model isa StandardABM # this if gets compiled out
-            id in allids(model) || continue
-        end
-        agent_step!(model[id], model)
-    end
-end
