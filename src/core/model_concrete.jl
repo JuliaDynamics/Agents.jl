@@ -267,18 +267,18 @@ modelname(::Vector) = "UnremovableABM"
 function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
-    if abm.space === nothing
+    if abmspace(abm) === nothing
         s *= "\n space: nothing (no spatial structure)"
     else
         s *= "\n space: $(sprint(show, abmspace(abm)))"
     end
     s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
     print(io, s)
-    if abm.properties ≠ nothing
-        if typeof(abm.properties) <: Dict
-            props = collect(keys(abm.properties))
+    if abmproperties(abm) ≠ nothing
+        if typeof(abmproperties(abm)) <: Dict
+            props = collect(keys(abmproperties(abm)))
         else
-            props = collect(propertynames(abm.properties))
+            props = collect(propertynames(abmproperties(abm)))
         end
         print(io, "\n properties: ", join(props, ", "))
     end

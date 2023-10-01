@@ -596,7 +596,7 @@ end
         forest = ABM(Automata, space; model_step! = forest_model_step!,
                      properties = (trees = zeros(Int, griddims),), warn_deprecation = false)
         for I in CartesianIndices(forest.trees)
-            if rand(forest.rng) < density
+            if rand(abmrng(forest)) < density
                 forest.trees[I] = I[1] == 1 ? 2 : 1
             end
         end
@@ -710,7 +710,7 @@ end
     function fake_model(seed)
         abm = ABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
                   rng = MersenneTwister(seed), warn_deprecation = false)
-        fill_space!(abm, _ -> rand(abm.rng, 1:1000))
+        fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm
     end
     seeds = [1234, 563, 211]

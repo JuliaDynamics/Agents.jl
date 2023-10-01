@@ -152,7 +152,7 @@ function remove_all!(model::ABM)
     for a in allagents(model)
         remove_agent!(a, model)
     end
-    model.maxid[] = 0
+    getfield(model, :maxid)[] = 0
 end
 
 """
@@ -163,7 +163,7 @@ function remove_all!(model::ABM, n::Integer)
     for id in allids(model)
         id > n && remove_agent!(id, model)
     end
-    model.maxid[] = n
+    getfield(model, :maxid)[] = n
 end
 
 

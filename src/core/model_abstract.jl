@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmspace, abmproperties
+export abmrng, abmscheduler, abmspace, abmproperties, agent_container
 export random_agent, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
@@ -180,9 +180,6 @@ function fallback_random_agent(model, condition, alloc)
     end
 end
 
-# TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
-# Instead, use the API functions such as `abmrng, abmspace`, etc.
-# We just need to re-write the codebase to not use .field access.
 """
     model.prop
     getproperty(model::ABM, :prop)
@@ -191,24 +188,8 @@ Return a property with name `:prop` from the current `model`, assuming the model
 are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
-
-The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
-and **should not be accessed by the user**. In the next release, getting those will error.
 """
 function Base.getproperty(m::ABM, s::Symbol)
-    if s === :agents
-        return getfield(m, :agents)
-    elseif s === :space
-        return getfield(m, :space)
-    elseif s === :scheduler
-        return getfield(m, :scheduler)
-    elseif s === :properties
-        return getfield(m, :properties)
-    elseif s === :rng
-        return getfield(m, :rng)
-    elseif s === :maxid
-        return getfield(m, :maxid)
-    end
     p = abmproperties(m)
     if p isa Dict
         return getindex(p, s)

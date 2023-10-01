@@ -110,8 +110,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     slidervals = Dict{Symbol, Observable}()
     tuples_for_slidergrid = []
     for (i, (k, vals)) in enumerate(params)
-        startvalue = has_key(model[].properties, k) ?
-            get_value(model[].properties, k) : vals[1]
+        startvalue = has_key(abmproperties(model[]), k) ?
+            get_value(abmproperties(model[]), k) : vals[1]
         label = string(k)
         push!(tuples_for_slidergrid, (;label, range = vals, startvalue))
     end
@@ -124,8 +124,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     update = Button(datalayout[end+1, :], label = "update", tellwidth = false)
     on(update.clicks) do c
         for (k, v) in pairs(slidervals)
-            if has_key(model[].properties, k)
-                set_value!(model[].properties, k, v[])
+            if has_key(abmproperties(model[]), k)
+                set_value!(abmproperties(model[]), k, v[])
             else
                 throw(KeyError("$k"))
             end

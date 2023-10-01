@@ -18,9 +18,9 @@
               nearby_positions(3, undirected; neighbor_type = :in) ==
               nearby_positions(3, undirected; neighbor_type = :all) ==
               nearby_positions(3, undirected; neighbor_type = :default)
-        add_agent!(1, undirected, rand(undirected.rng))
-        agent = add_agent!(2, undirected, rand(undirected.rng))
-        add_agent!(3, undirected, rand(undirected.rng))
+        add_agent!(1, undirected, rand(abmrng(undirected)))
+        agent = add_agent!(2, undirected, rand(abmrng(undirected)))
+        add_agent!(3, undirected, rand(abmrng(undirected)))
         @test sort!(nearby_positions(agent, undirected)) == [1, 3]
         # We expect id 2 to be included for a grid based search
         @test sort!(collect(nearby_ids(2, undirected))) == [1, 2, 3]
@@ -36,9 +36,9 @@
         @test nearby_positions(3, directed; neighbor_type = :in) == [2]
         @test nearby_positions(3, directed; neighbor_type = :out) == [4]
         @test sort!(nearby_positions(3, directed; neighbor_type = :all)) == [2, 4]
-        add_agent!(1, directed, rand(directed.rng))
-        add_agent!(2, directed, rand(directed.rng))
-        add_agent!(3, directed, rand(directed.rng))
+        add_agent!(1, directed, rand(abmrng(directed)))
+        add_agent!(2, directed, rand(abmrng(directed)))
+        add_agent!(3, directed, rand(abmrng(directed)))
         @test sort!(nearby_ids(2, directed)) == [2, 3]
         @test sort!(nearby_ids(2, directed; neighbor_type = :in)) == [1, 2]
         @test sort!(nearby_ids(2, directed; neighbor_type = :all)) == [1, 2, 3]

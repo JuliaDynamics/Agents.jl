@@ -88,11 +88,11 @@ JLD2.writeas(::Type{Pathfinding.AStar{D,P,M,T,C}}) where {D,P,M,T,C} = Serializa
 function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
         collect(allagents(t)),
-        to_serializable(t.space),
-        typeof(t.agents),
-        to_serializable(t.properties),
-        t.rng,
-        t.maxid.x,
+        to_serializable(abmspace(t)),
+        typeof(agent_container(t)),
+        to_serializable(abmproperties(t)),
+        abmrng(t),
+        getfield(t, :maxid).x,
     )
     return sabm
 end
@@ -130,7 +130,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         warn = get(kwargs, :warn, true),
         warn_deprecation = false
     )
-    abm.maxid[] = t.maxid
+    getfield(abm, :maxid)[] = t.maxid
 
     for a in t.agents
         add_agent_pos!(a, abm)
