@@ -8,10 +8,7 @@ scheduler, otherwise it uses the given custom scheduler, which can be either a f
 accepts `model` as argument or one of the already defined schedulers inside Agents.jl. See
 the [manual scheduling](@ref manual_scheduling) section for usage examples.
 """
-function schedule(model::ABM)
-    scheduler = abmscheduler(model)(model)
-    return Iterators.filter(id -> id in allids(model), scheduler)
-end
+schedule(model::ABM) = schedule(model, abmscheduler(model))
 schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
 schedule(model::UnremovableABM) = abmscheduler(model)(model)
 schedule(model::UnremovableABM, scheduler) = scheduler(model)
