@@ -1,16 +1,20 @@
 export schedule, Schedulers
 
 """
-    schedule(model) → ids
-Return an iterator over the scheduled IDs using the model's scheduler.
-Literally equivalent with `abmscheduler(model)(model)`.
+    schedule(model [, scheduler]) → ids
+
+If no `scheduler` is given, it returns an iterator over the scheduled IDs using the model's 
+scheduler, otherwise it uses the given custom scheduler, which can be either a function which
+accepts `model` as argument or one of the already defined schedulers inside Agents.jl. See
+the [manual scheduling](@ref manual_scheduling) section for usage examples.
 """
 function schedule(model::ABM)
     scheduler = abmscheduler(model)(model)
     return Iterators.filter(id -> id in allids(model), scheduler)
 end
-schedule(model::UnremovableABM) = abmscheduler(model)(model)
 schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
+schedule(model::UnremovableABM) = abmscheduler(model)(model)
+schedule(model::UnremovableABM, scheduler) = scheduler(model)
 
 # Notice how the above lines are *outside* the submodule
 
@@ -29,11 +33,8 @@ Schedulers have two purposes:
 1. Can be given in [`StandardABM`](@ref) as a default scheduler.
    This functionality is only meaningful when the `agent_step!` has been configured.
    The function `abmscheduler(model)` will return the default scheduler of the model.
-2. Can be used by a user when performing [manual schedling](@ref manual_scheduling)
+2. Can be used by a user when performing [manual scheduling](@ref manual_scheduling)
    in case `agent_step!` has not been configured.
-
-You can also use the function `schedule(model)` to obtain the scheduled ID iterator
-by calling the `model`'s scheduler.
 
 See also [Advanced scheduling](@ref) for making more advanced schedulers.
 """
