@@ -12,9 +12,9 @@ struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
     stored_ids::Array{Int,D}
     extent::NTuple{D,Int}
     metric::Symbol
-    offsets_at_radius::Dict{Int,Vector{NTuple{D,Int}}}
-    offsets_within_radius::Dict{Int,Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Dict{Int,Vector{NTuple{D,Int}}}
+    offsets_at_radius::Vector{Vector{NTuple{D,Int}}}
+    offsets_within_radius::Vector{Vector{NTuple{D,Int}}}
+    offsets_within_radius_no_0::Vector{Vector{NTuple{D,Int}}}
 end
 spacesize(space::GridSpaceSingle) = space.extent
 
@@ -35,9 +35,9 @@ function GridSpaceSingle(d::NTuple{D,Int};
     ) where {D}
     s = zeros(Int, d)
     return GridSpaceSingle{D,periodic}(s, d, metric,
-        Dict{Int,Vector{NTuple{D,Int}}}(),
-        Dict{Int,Vector{NTuple{D,Int}}}(),
-        Dict{Int,Vector{NTuple{D,Int}}}(),
+        Vector{Vector{NTuple{D,Int}}}(),
+        Vector{Vector{NTuple{D,Int}}}(),
+        Vector{Vector{NTuple{D,Int}}}(),
     )
 end
 # Implementation of space API

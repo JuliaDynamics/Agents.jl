@@ -142,11 +142,11 @@ function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P}(s, t.dims, t.metric, Dict(), Dict(), Dict(), Dict())
+    return GridSpace{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector(), Dict())
 end
 function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
     s = zeros(Int, t.dims)
-    return GridSpaceSingle{D,P}(s, t.dims, t.metric, Dict(), Dict(), Dict())
+    return GridSpaceSingle{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector())
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
