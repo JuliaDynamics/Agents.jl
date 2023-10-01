@@ -14,7 +14,7 @@ To set up an ABM simulation in Agents.jl, a user only needs to follow these step
 
 1. Choose what **kind of space** the agents will live in, for example a graph, a grid, etc. Several spaces are provided by Agents.jl and can be initialized immediately.
 2. Define the **agent type** (or types, for mixed models) that will populate the ABM. Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref). The types must contain some mandatory fields, which is ensured by using [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
-3. Define the **evolution rule**, i.e., how the model evolves in time. The evolution rule needs to be provided as at least one, or at most two functions: an agent-stepping function, that acts on each agent one by one, and/or a model-stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
+3. Define the **evolution rule**, i.e., how the model evolves in time. The evolution rule needs to be provided as at least one, or at most two functions: an agent stepping function, that acts on each agent one by one, and/or a model stepping function, that steps the entire model as a whole. These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
 4. Initialize an **agent based model instance** that contains created agent type, the chosen space, the evolution rule, other optional additional model-level properties, and other simulation tuning properties like schedulers or random number generators. The most common model type is [`StandardABM`](@ref), but more specialized model types are also available, see [`AgentBasedModel`](@ref).
 5. _(Trivial)_ **evolve the model**.
 6. _(Optional)_ **Visualize the model** and animate its time evolution. This can help checking that the model behaves as expected and there aren't any mistakes, or can be used in making figures for a paper/presentation.
@@ -75,7 +75,7 @@ As you can see, the above defined model stepping function did not operate on all
 ## 3.2 The evolution rule - agent stepping function
 
 In Agents.jl it is also possible to provide an **agent stepping function**.
-This  feature enables scheduling agents automatically given some scheduling rule, skipping the agents that were scheduled to act but have been removed from the model (due to e.g., the actions of other agents), and also allows optimizations that are based on the specific type of `AgentBasedModel`.
+This feature enables scheduling agents automatically given some scheduling rule, skipping the agents that were scheduled to act but have been removed from the model (due to e.g., the actions of other agents), and also allows optimizations that are based on the specific type of `AgentBasedModel`.
 
 An agent stepping function defines what happens to an agent when it activates.
 It inputs two arguments `agent, model` and operates in place on the `agent` and the `model`.
@@ -105,25 +105,25 @@ end
 ```
 and to activate all agents randomly once per simulation step, one would use `Schedulers.Randomly()` as the model scheduler.
 
-we stress that in contrast to the above `model_step!`, this function will be called for _every_ scheduled agent, while `model_step!` will only be called _once_ per simulation step.
-Naturally, you may define **both** an agent- and a model- stepping functions. In this case the model stepping function would perform model-wide actions that are not limited to a particular agent.
+We stress that in contrast to the above `model_step!`, this function will be called for _every_ scheduled agent, while `model_step!` will only be called _once_ per simulation step.
+Naturally, you may define **both** an agent and a model stepping functions. In this case the model stepping function would perform model-wide actions that are not limited to a particular agent.
 
 ## [3.3 The evolution rule - advanced (manual scheduling)](@id manual_scheduling)
 
 Some advanced models may require special handling for scheduling, or may need to schedule agents several times and act on different subsets of agents with different functions during a single simulation step.
-In such a scenario, it is more sensible to provide only a model stepping function,  where all the dynamics is contained within.
+In such a scenario, it is more sensible to provide only a model stepping function, where all the dynamics is contained within.
 
 Here is an example:
 
 ```julia
 function complex_step!(model)
     scheduler1 = Schedulers.Randomly()
-    scheduler2 = user_defined_function
-    for id in scheduler1(model)
+    scheduler2 = user_defined_function_with_model_as_arg
+    for id in schedule(model, scheduler1)
         agent_step1!(model[id], model)
     end
     intermediate_model_action!(model)
-    for id in scheduler2(model)
+    for id in schedule(model, scheduler2)
         agent_step2!(model[id], model)
     end
     if model.step_counter % 100 == 0
@@ -148,8 +148,7 @@ Once the model is constructed, it can be populated by agents using the [`add_age
 
 ```@docs
 AgentBasedModel
-StadardABM
-dummystep
+StandardABM
 ```
 
 ## 5. Evolving the model
