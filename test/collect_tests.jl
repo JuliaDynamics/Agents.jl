@@ -312,7 +312,6 @@ end
         stop(m, s) = m.year == 6
         step!(model, stop)
         @test model.tick == 365 * 6
-        step!(model, 1, false)
     end
 
     @testset "Mixed-ABM collections" begin

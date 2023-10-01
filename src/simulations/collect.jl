@@ -103,7 +103,6 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
-* `agents_first=true` : Whether to update agents first and then the model, or vice versa.
 * `showprogress=false` : Whether to show progress
 """
 function run! end
@@ -114,7 +113,6 @@ function run!(model::ABM, n::Union{Function, Int};
         mdata = nothing,
         adata = nothing,
         obtainer = identity,
-        agents_first = true,
         showprogress = false,
     )
     df_agent = init_agent_dataframe(model, adata)
@@ -145,7 +143,7 @@ function run!(model::ABM, n::Union{Function, Int};
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
         end
-        step!(model, 1, agents_first)
+        step!(model, 1)
         s += 1
         ProgressMeter.next!(p)
     end
@@ -190,7 +188,6 @@ function offline_run!(model::ABM, n::Union{Function, Int};
         mdata = nothing,
         adata = nothing,
         obtainer = identity,
-        agents_first = true,
         showprogress = false,
         backend::Symbol = :csv,
         adata_filename = "adata.$backend",
@@ -216,7 +213,7 @@ function offline_run!(model::ABM, n::Union{Function, Int};
     run_and_write!(model, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
-        obtainer, agents_first,
+        obtainer,
         showprogress,
         writer, adata_filename, mdata_filename, writing_interval
     )
@@ -225,7 +222,7 @@ end
 function run_and_write!(model, df_agent, df_model, n;
     when, when_model,
     mdata, adata,
-    obtainer, agents_first,
+    obtainer,
     showprogress,
     writer, adata_filename, mdata_filename, writing_interval
 )
@@ -255,7 +252,7 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, 1, agents_first)
+        step!(model, 1)
         s += 1
         ProgressMeter.next!(p)
     end

@@ -210,13 +210,14 @@ end
         a.weight += 1
     end
 
-    for bool in (true, false)
-        model = ABM(Agent2; agent_step!, model_step!, properties = Dict(:count => 0))
+    for agents_first in (true, false)
+        model = ABM(Agent2; agent_step!, model_step!, 
+                    properties = Dict(:count => 0), agents_first = agents_first)
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
-        step!(model, 1, bool)
-        if bool
+        step!(model, 1)
+        if agents_first
             @test model.count == 100
         else
             @test model.count == 0

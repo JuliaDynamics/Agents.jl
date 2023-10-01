@@ -26,7 +26,7 @@ function add_controls!(fig, abmobs, spu)
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
 
     # Sliders
-    if model[].space isa Agents.ContinuousSpace
+    if abmspace(model[]) isa Agents.ContinuousSpace
         _sleepr, _sleep0 = 0:0.01:1, 0
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
