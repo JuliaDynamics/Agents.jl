@@ -111,7 +111,7 @@ Naturally, you may define **both** an agent- and a model- stepping functions. In
 ## [3.3 The evolution rule - advanced (manual scheduling)](@id manual_scheduling)
 
 Some advanced models may require special handling for scheduling, or may need to schedule agents several times and act on different subsets of agents with different functions during a single simulation step.
-In such a scenario, it is more sensible to provide only a model stepping function,  where all configuration is contained within.
+In such a scenario, it is more sensible to provide only a model stepping function,  where all the dynamics is contained within.
 
 Here is an example:
 
