@@ -4,7 +4,7 @@
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
 export abmrng, abmscheduler, abmspace, abmproperties, agent_container
-export random_agent, nagents, allagents, allids, nextid, seed!
+export random_agent, random_id, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
 # %% Fundamental type definitions
@@ -129,10 +129,16 @@ Return a valid `id` for creating a new agent with it.
 nextid(model::ABM) = notimplemented(model)
 
 """
+    random_id(model) → id
+Return a random id from the model.
+"""
+random_id(model) = rand(abmrng(model), allids(model))
+
+"""
     random_agent(model) → agent
 Return a random agent from the model.
 """
-random_agent(model) = model[rand(abmrng(model), allids(model))]
+random_agent(model) = model[random_id(model)]
 
 """
     random_agent(model, condition; optimistic=true, alloc = false) → agent
@@ -159,10 +165,8 @@ function random_agent(model, condition; optimistic = true, alloc = false)
 end
 
 function optimistic_random_agent(model, condition, alloc; n_attempts = nagents(model))
-    rng = abmrng(model)
-    ids = allids(model)
     @inbounds while n_attempts != 0
-        idx = rand(rng, ids)
+        idx = random_id(model)
         condition(model[idx]) && return model[idx]
         n_attempts -= 1
     end

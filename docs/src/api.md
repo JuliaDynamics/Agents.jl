@@ -15,6 +15,7 @@ UnremovableABM
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+random_id
 random_agent
 nagents
 allagents
