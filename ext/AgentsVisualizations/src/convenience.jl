@@ -8,7 +8,7 @@ function Agents.abmexploration(model;
         plotkwargs = NamedTuple(),
         kwargs...
     )
-    fig, ax, abmobs = abmplot(model; figure, axis, kwargs...)
+    fig, ax, abmobs = abmplot(model; figure, axis, warn_deprecation = false, kwargs...)
     abmplot_object = ax.scene.plots[1]
 
     adata, mdata = abmobs.adata, abmobs.mdata
@@ -76,7 +76,8 @@ end
 
 
 ##########################################################################################
-function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummystep;
+
+function Agents.abmvideo(file, model;
         spf = 1, framerate = 30, frames = 300,  title = "", showstep = true,
         figure = (resolution = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
@@ -92,8 +93,10 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
     end
     axis = (title = t, titlealign = :left, axis...)
 
+    agent_step! = Agents.agent_step_field(model)
+    model_step! = Agents.model_step_field(model)
     fig, ax, abmobs = abmplot(model;
-    add_controls = false, agent_step!, model_step!, figure, axis, kwargs...)
+    add_controls = false, warn_deprecation = false, agent_step!, model_step!, figure, axis, kwargs...)
 
     resize_to_layout!(fig)
 

@@ -44,6 +44,7 @@ function initialise_zombies(; seed = 1234)
     model = ABM(
         Zombie,
         OpenStreetMapSpace(map_path);
+        agent_step! = zombie_step!,
         properties = properties,
         rng = Random.MersenneTwister(seed)
     )
@@ -98,7 +99,7 @@ zombie_color(agent) = agent.infected ? :green : :black
 zombie_size(agent) = agent.infected ? 10 : 8
 zombies = initialise_zombies()
 
-abmvideo("outbreak.mp4", zombies, zombie_step!;
+abmvideo("outbreak.mp4", zombies;
     title = "Zombie outbreak", framerate = 15, frames = 200,
     ac = zombie_color, as = zombie_size
 )

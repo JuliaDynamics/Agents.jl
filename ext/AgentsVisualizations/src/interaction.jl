@@ -26,7 +26,7 @@ function add_controls!(fig, abmobs, spu)
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
 
     # Sliders
-    if model[].space isa Agents.ContinuousSpace
+    if abmspace(model[]) isa Agents.ContinuousSpace
         _sleepr, _sleep0 = 0:0.01:1, 0
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
@@ -54,12 +54,16 @@ function add_controls!(fig, abmobs, spu)
         end
     end
     # Reset button
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    end
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
         model[] = deepcopy(model0)
         s = 0 # reset step counter
-        Agents.step!(model[], agent_step!, model_step!, s)
+        Agents.step!(model[], agent_step!, model_step!, s; warn_deprecation = false)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")
@@ -106,8 +110,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     slidervals = Dict{Symbol, Observable}()
     tuples_for_slidergrid = []
     for (i, (k, vals)) in enumerate(params)
-        startvalue = has_key(model[].properties, k) ?
-            get_value(model[].properties, k) : vals[1]
+        startvalue = has_key(abmproperties(model[]), k) ?
+            get_value(abmproperties(model[]), k) : vals[1]
         label = string(k)
         push!(tuples_for_slidergrid, (;label, range = vals, startvalue))
     end
@@ -120,8 +124,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     update = Button(datalayout[end+1, :], label = "update", tellwidth = false)
     on(update.clicks) do c
         for (k, v) in pairs(slidervals)
-            if has_key(model[].properties, k)
-                set_value!(model[].properties, k, v[])
+            if has_key(abmproperties(model[]), k)
+                set_value!(abmproperties(model[]), k, v[])
             else
                 throw(KeyError("$k"))
             end

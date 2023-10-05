@@ -3,19 +3,26 @@ using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
-# And the three implementations here are just variants with different `C` type.
-struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
+# And the two implementations here are just variants with different `C` type.
+struct SingleContainerABM{
+    S<:SpaceType,
+    A<:AbstractAgent,
+    C<:ContainerType{A},
+    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
     agents::C
+    agent_step::G
+    model_step::K
     space::S
     scheduler::F
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    agents_first::Bool
 end
 
 const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A,C}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A,C}
+const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
+const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
@@ -38,16 +45,29 @@ single container. Offers the variants:
 function SingleContainerABM(
     ::Type{A},
     space::S = nothing;
+    agent_step!::G = dummystep,
+    model_step!::K = dummystep,
     container::Type = Dict{Int},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
-    warn = true
-) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG}
+    agents_first::Bool = true,
+    warn = true,
+    warn_deprecation = true
+) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+    if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
+        @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
+         as keywords argument when defining the model. The old version is deprecated. Passing these
+         functions to methods of the library which required them before version 6.0 is also deprecated
+         since they can be retrieved from the model instance, in particular this means it is not needed to
+         pass the stepping functions in step!, run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration
+         abmvideo and ABMObservable"
+    end
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+                                               properties, rng, Ref(0), agents_first)
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -61,25 +81,61 @@ construct_agent_container(container, A) = throw(
 )
 
 """
-    StandardABM(AgentType [, space]; properties, kwargs...) → model
+    StandardABM <: AgentBasedModel
 
 The most standard concrete implementation of an [`AgentBasedModel`](@ref),
 as well as the default version of the generic [`AgentBasedModel`](@ref) constructor.
 `StandardABM` stores agents in a dictionary mapping unique `Int` IDs to agents.
-See also [`UnremovableABM`](@ref).
+See also [`UnremovableABM`](@ref) for better performance in case number of agents can
+only increase during the model evolution.
+
+    StandardABM(AgentType [, space]; properties, kwargs...) → model
+
+Creates a model expecting agents of type `AgentType` living in the given `space`.
+It can support supports multiple agent types by passing a `Union` of agent types
+as `AgentType`. Have a look at [Performance Tips](@ref) for potential
+drawbacks of this approach.
+
+`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
+If it is omitted then all agents are virtually in one position and there is no spatial structure.
+Spaces are mutable objects and are not designed to be shared between models.
+Create a fresh instance of a space with the same properties if you need to do this.
+
+The evolution rules are functions given to the keywords `agent_step!`, `model_step!`, `schedule`. If
+`agent_step!` is not provided, the evolution rules is just the function given to `model_step!`.
+Each step of a simulation with `StandardABM` proceeds as follows:
+If `agent_step!` is not provided, then a simulation step is equivalent with
+calling `model_step!`. If `agent_step!` is provided, then a simulation step
+first schedules agents by calling the scheduler. Then, it applies the `agent_step!` function
+to all scheduled agents. Then, the `model_step!` function is called
+(optionally, the `model_step!` function may be called before activating the agents).
+
+## Keywords
+
+- `agent_step! = dummystep`: the optional stepping function for each agent contained in the
+  model. For complicated models, it could be more suitable to use only `model_step!` to evolve
+  the model.
+- `model_step! = dummystep`: the optional stepping function for the model.
+- `properties = nothing`: additional model-level properties that the user may decide upon
+  and include in the model. `properties` can be an arbitrary container of data,
+  however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
+- `scheduler = Schedulers.fastest`: is the scheduler that decides the (default)
+  activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
+- `rng = Random.default_rng()`: the random number generation stored and used by the model
+  in all calls to random functions. Accepts any subtype of `AbstractRNG`.
+- `agents_first::Bool = true`: whether to schedule and activate agents first and then
+  call the `model_step!` function, or vice versa.
+- `warn=true`: some type tests for `AgentType` are done, and by default
+  warnings are thrown when appropriate.
 """
-StandardABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Dict{Int})
+StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
 
 """
     UnremovableABM(AgentType [, space]; properties, kwargs...) → model
 
 Similar to [`StandardABM`](@ref), but agents cannot be removed, only added.
 This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
-the `Dict` used by [`StandardABM`](@ref), yielding faster retrieval and iteration over agents.
-
-It is mandatory that the agent ID is exactly the same as the agent insertion
-order (i.e., the 5th agent added to the model must have ID 5). If not,
-an error will be thrown by [`add_agent!`](@ref).
+the `Dict` used by [`StandardABM`](@ref)), yielding faster retrieval and iteration over agents.
 """
 UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Vector)
 
@@ -213,18 +269,18 @@ modelname(::Vector) = "UnremovableABM"
 function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}
     n = isconcretetype(A) ? nameof(A) : string(A)
     s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
-    if abm.space === nothing
+    if abmspace(abm) === nothing
         s *= "\n space: nothing (no spatial structure)"
     else
         s *= "\n space: $(sprint(show, abmspace(abm)))"
     end
     s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
     print(io, s)
-    if abm.properties ≠ nothing
-        if typeof(abm.properties) <: Dict
-            props = collect(keys(abm.properties))
+    if abmproperties(abm) ≠ nothing
+        if typeof(abmproperties(abm)) <: Dict
+            props = collect(keys(abmproperties(abm)))
         else
-            props = collect(propertynames(abm.properties))
+            props = collect(propertynames(abmproperties(abm)))
         end
         print(io, "\n properties: ", join(props, ", "))
     end

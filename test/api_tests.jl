@@ -7,7 +7,7 @@ using StableRNGs
 @testset "add_agent! (discrete)" begin
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
-    model = ABM(Agent7, space; properties)
+    model = ABM(Agent7, space; properties, warn_deprecation = false)
     attributes = (f1 = true, f2 = 1)
     add_agent!(1, model, attributes...)
     attributes = (f2 = 1, f1 = true)
@@ -26,13 +26,13 @@ using StableRNGs
 
     @test add_agent!(3, Agent7, model, attributes...).pos == 3
 
-    model = ABM(Agent1, GridSpace((10, 10)))
+    model = ABM(Agent1, GridSpace((10, 10)), warn_deprecation = false)
     @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
 end
 
 @testset "move_agent!" begin
     # GraphSpace
-    model = ABM(Agent5, GraphSpace(path_graph(6)))
+    model = ABM(Agent5, GraphSpace(path_graph(6)), warn_deprecation = false)
     agent = add_agent!(model, 5.3)
     init_pos = agent.pos
     # Checking specific indexing
@@ -48,7 +48,7 @@ end
     @test ni < Inf
 
     # GridSpace
-    model = ABM(Agent1, GridSpace((5, 5)))
+    model = ABM(Agent1, GridSpace((5, 5)), warn_deprecation = false)
     agent = add_agent!((2, 4), model)
     move_agent!(agent, (1, 3), model)
     @test agent.pos == (1, 3)
@@ -59,7 +59,7 @@ end
     end
     @test ni < Inf
 
-    model = ABM(Agent1, GridSpace((2, 1)))
+    model = ABM(Agent1, GridSpace((2, 1)), warn_deprecation = false)
     agent = add_agent!((1, 1), model)
     move_agent_single!(agent, model)
     @test agent.pos == (2, 1)
@@ -71,7 +71,7 @@ end
 
 @testset "remove_agent!" begin
     # No Space
-    model = ABM(NoSpaceAgent)
+    model = ABM(NoSpaceAgent, warn_deprecation = false)
     add_agent!(model)
     agent = add_agent!(model)
     @test nagents(model) == 2
@@ -81,7 +81,7 @@ end
     remove_all!(model, [1, 3])
     @test nagents(model) == 0
     # GraphSpace
-    model = ABM(Agent5, GraphSpace(path_graph(6)))
+    model = ABM(Agent5, GraphSpace(path_graph(6)), warn_deprecation = false)
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
@@ -90,7 +90,7 @@ end
     remove_agent!(2, model)
     @test nagents(model) == 0
     # GridSpace
-    model = ABM(Agent1, GridSpace((5, 5)))
+    model = ABM(Agent1, GridSpace((5, 5)), warn_deprecation = false)
     add_agent!((1, 3), model)
     add_agent!((1, 3), model)
     add_agent!((5, 2), model)
@@ -103,7 +103,7 @@ end
 
 @testset "remove_agent! (vector container)" begin
     # No Space
-    model = UnremovableABM(NoSpaceAgent)
+    model = UnremovableABM(NoSpaceAgent, warn_deprecation = false)
     add_agent!(model)
     agent = add_agent!(model)
     @test agent.id == 2
@@ -111,7 +111,7 @@ end
     @test_throws ErrorException remove_agent!(agent, model)
     @test_throws ErrorException remove_all!(model, [1, 3])
     # GraphSpace
-    model = UnremovableABM(Agent5, GraphSpace(path_graph(6)))
+    model = UnremovableABM(Agent5, GraphSpace(path_graph(6)), warn_deprecation = false)
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2
@@ -120,7 +120,7 @@ end
 
 @testset "remove_all!" begin
     # Testing no space
-    model = ABM(NoSpaceAgent)
+    model = ABM(NoSpaceAgent, warn_deprecation = false)
     for i in 1:10
         add_agent!(NoSpaceAgent, model)
     end
@@ -134,7 +134,7 @@ end
     remove_all!(model, a -> a.id < 3)
     @test nagents(model) == 3
 
-    model = ABM(GridAgent{2}, GridSpace((10, 10)))
+    model = ABM(GridAgent{2}, GridSpace((10, 10)), warn_deprecation = false)
 
     # Testing remove_all!(model::ABM)
     for i in 1:20
@@ -170,7 +170,7 @@ end
 end
 @testset "fill space" begin
     space = GridSpace((10, 10))
-    model = ABM(Land, space)
+    model = ABM(Land, space, warn_deprecation = false)
     fill_space!(model, 15)
     @test nagents(model) == 100
     for a in allagents(model)
@@ -179,7 +179,7 @@ end
     end
 
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = ABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
     @test nagents(model) == 100
     for a in allagents(model)
@@ -188,7 +188,7 @@ end
     end
 
     space = GridSpace((10, 10), periodic = true)
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = ABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
     temperature(pos) = (pos[1] / 10,) # make it Tuple!
     fill_space!(Land, model, temperature)
     @test nagents(model) == 100
@@ -210,13 +210,14 @@ end
         a.weight += 1
     end
 
-    for bool in (true, false)
-        model = ABM(Agent2; properties = Dict(:count => 0))
+    for agents_first in (true, false)
+        model = ABM(Agent2; agent_step!, model_step!, 
+                    properties = Dict(:count => 0), agents_first = agents_first)
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
-        step!(model, agent_step!, model_step!, 1, bool)
-        if bool
+        step!(model, 1)
+        if agents_first
             @test model.count == 100
         else
             @test model.count == 0
@@ -229,7 +230,7 @@ end
         weight::Float64
     end
 
-    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler = Schedulers.ByID())
+    model = ABM(AgentWithWeight, GridSpace((10, 10)); scheduler = Schedulers.ByID(), warn_deprecation = false)
     for i in 1:10
         add_agent!(model, i)
     end
@@ -268,7 +269,7 @@ end
 end
 
 @testset "replicate!" begin
-    model = ABM(Agent8, ContinuousSpace((5, 5)))
+    model = ABM(Agent8, ContinuousSpace((5, 5)), warn_deprecation = false)
     a = Agent8(1, (2.0, 2.0), (1.0, 1.0), true, 1)
     b = replicate!(a, model)
     @test b.pos == a.pos && b.f1 == a.f1 && b.f2 == a.f2
@@ -280,7 +281,7 @@ end
 
 @testset "swap_agents!" begin
     # GraphSpace
-    model = ABM(Agent5, GraphSpace(path_graph(6)))
+    model = ABM(Agent5, GraphSpace(path_graph(6)), warn_deprecation = false)
     agent1 = add_agent!(model, 5.3)
     agent2 = add_agent!(model, 9.9)
     pos_a, pos_b = agent1.pos, agent2.pos
@@ -291,7 +292,7 @@ end
     @test agent1.weight == 5.3
     
     # GridSpace
-    model = ABM(Agent1, GridSpace((5, 5)))
+    model = ABM(Agent1, GridSpace((5, 5)), warn_deprecation = false)
     agent1 = add_agent!((2, 4), model)
     agent2 = add_agent!((1, 3), model)
     swap_agents!(agent1, agent2, model)
