@@ -118,6 +118,8 @@ function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:Abs
     error("Cannot remove agents in a `UnremovableABM`")
 end
 
+random_agent(model::StandardABM) = rand(abmrng(model), agent_container(model)).first
+random_agent(model::StandardABM) = rand(abmrng(model), agent_container(model)).second
 
 #######################################################################################
 # %% Model construction validation
