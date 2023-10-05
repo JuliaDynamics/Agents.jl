@@ -36,7 +36,7 @@ After deciding on the space, one simply initializes an instance of a space, e.g.
 
 Agents in Agents.jl are instances of user-defined types. While the majority of Agents.jl [API](@ref) is based on a functional design, accessing agent properties is done with the simple field-access Julia syntax. For example, the (named) property `weight` of an agent can be obtained as `agent.weight`.
 
-To create agent types, and define what properties they should have, the user needs to use the [`@agent`](@ref) macro, which ensures that agents have the minimum amount of required necessary properties to function within a given space and model by inheriting pre-defined agent types suited for each type of space.
+To create agent types, and define what properties they should have, the user needs to use the [`@agent`](@ref) macro, which ensures that agents have the minimum amount of required necessary properties to function within a given space and model by inheriting pre-defined agent properties suited for each type of space.
 The macro usage may seem intimidating at first, but it is in truth very simple!
 For example,
 ```julia
@@ -117,6 +117,7 @@ Here is an example:
 
 ```julia
 function complex_step!(model)
+    # tip: these schedulers should be defined as properties of the model
     scheduler1 = Schedulers.Randomly()
     scheduler2 = user_defined_function_with_model_as_arg
     for id in schedule(model, scheduler1)
@@ -195,11 +196,9 @@ run!(model, agent_step!, model_step!, 10; mdata = assets)
 
 ## Seeding and Random numbers
 
-Each ABM in Agents.jl contains a random number generator (RNG) instance that can be obtained with `abmrng(model)`.
-For performance and reproducibility reasons, one should never use `rand()` without using the RNG, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
+Each ABM in Agents.jl contains a random number generator (RNG) instance that can be obtained with `abmrng(model)`. A benefit of this approach is making models deterministic so that they can be run again and yield the same output. To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)` and then give this `rng` to the model creation.
 
-Another benefit of this approach is deterministic models that can be run again and yield the same output.
-To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)` and then give this `rng` to the model creation.
+For reproducibility and performance reasons, one should never use `rand()` without using the RNG, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
 
 ## An educative example
 
