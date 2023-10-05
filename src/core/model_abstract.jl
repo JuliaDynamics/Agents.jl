@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmspace, abmproperties
+export abmrng, abmscheduler, abmspace, abmproperties, agent_container
 export random_agent, nagents, allagents, allids, nextid, seed!
 
 ###########################################################################################
@@ -11,6 +11,7 @@ export random_agent, nagents, allagents, allids, nextid, seed!
 ###########################################################################################
 """
     AbstractSpace
+
 Supertype of all concrete space implementations for Agents.jl.
 """
 abstract type AbstractSpace end
@@ -30,40 +31,20 @@ ValidPos = Union{
 """
     AgentBasedModel
 
-An `AgentBasedModel` is the supertype encompassing models in Agents.jl.
+An `AgentBasedModel` is the abstract supertype encompassing models in Agents.jl.
 All models are some concrete implementation of `AgentBasedModel` and follow its
 interface (see below). `ABM` is an alias to `AgentBasedModel`.
 
-A model is typically constructed with:
+For backwards compatibility, the following function is valid:
+```julia
+AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
+```
+which dispatches to [`StandardABM`](@ref).
 
-    AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
+## Available concrete implementations
 
-which creates a model expecting agents of type `AgentType` living in the given `space`.
-`AgentBasedModel(...)` defaults to [`StandardABM`](@ref), which stores agents in a
-dictionary that maps unique IDs (integers) to agents.
-See also [`UnremovableABM`](@ref) for better performance in case number of agents can
-only increase during the model evolution.
-
-Agents.jl supports multiple agent types by passing a `Union` of agent types
-as `AgentType`. However, please have a look at [Performance Tips](@ref) for potential
-drawbacks of this approach.
-
-`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is omitted then all agents are virtually in one position and there is no spatial structure.
-Spaces are mutable objects and are not designed to be shared between models.
-Create a fresh instance of a space with the same properties if you need to do this.
-
-## Keywords
-
-- `properties = nothing`: additional model-level properties that the user may decide upon
-  and include in the model. `properties` can be an arbitrary container of data,
-  however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
-- `scheduler = Schedulers.fastest`: is the scheduler that decides the (default)
-  activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
-- `rng = Random.default_rng()`: the random number generation stored and used by the model
-  in all calls to random functions. Accepts any subtype of `AbstractRNG`.
-- `warn=true`: some type tests for `AgentType` are done, and by default
-  warnings are thrown when appropriate.
+- [`StandardABM`](@ref)
+- [`UnkillableABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 
@@ -77,7 +58,6 @@ Here we the most important information on how to query an instance of `AgentBase
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to use `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
-- `abmscheduler(model)` will return the default scheduler of the model.
 
 Many more functions exist in the API page, such as [`allagents`](@ref).
 """
@@ -164,11 +144,11 @@ them. If no agent satisfies the condition, `nothing` is returned instead.
 `optimistic = true` changes the algorithm used to be non-allocating but
 potentially more variable in performance. This should be faster if the condition
 is `true` for a large proportion of the population (for example if the agents
-are split into groups). 
+are split into groups).
 
-`alloc` can be used to employ a different fallback strategy in case the 
-optimistic version doesn't find any agent satisfying the condition: if the filtering 
-condition is expensive an allocating fallback can be more performant. 
+`alloc` can be used to employ a different fallback strategy in case the
+optimistic version doesn't find any agent satisfying the condition: if the filtering
+condition is expensive an allocating fallback can be more performant.
 """
 function random_agent(model, condition; optimistic = true, alloc = false)
     if optimistic
@@ -198,11 +178,8 @@ function fallback_random_agent(model, condition, alloc)
         iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
         return resorvoir_sampling_single(iter_filtered, model)
     end
-end  
+end
 
-# TODO: In the future, it is INVALID to access space, agents, etc., with the .field syntax.
-# Instead, use the API functions such as `abmrng, abmspace`, etc.
-# We just need to re-write the codebase to not use .field access.
 """
     model.prop
     getproperty(model::ABM, :prop)
@@ -211,24 +188,8 @@ Return a property with name `:prop` from the current `model`, assuming the model
 are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
 retrieving these values can be obtained via `model.weight`.
-
-The property names `:agents, :space, :scheduler, :properties, :maxid` are internals
-and **should not be accessed by the user**. In the next release, getting those will error.
 """
 function Base.getproperty(m::ABM, s::Symbol)
-    if s === :agents
-        return getfield(m, :agents)
-    elseif s === :space
-        return getfield(m, :space)
-    elseif s === :scheduler
-        return getfield(m, :scheduler)
-    elseif s === :properties
-        return getfield(m, :properties)
-    elseif s === :rng
-        return getfield(m, :rng)
-    elseif s === :maxid
-        return getfield(m, :maxid)
-    end
     p = abmproperties(m)
     if p isa Dict
         return getindex(p, s)
@@ -255,6 +216,9 @@ end
 # %% Non-public methods. Must be implemented but are not exported
 ###########################################################################################
 agent_container(model::ABM) = getfield(model, :agents)
+agent_step_field(model::ABM) = getfield(model, :agent_step)
+model_step_field(model::ABM) = getfield(model, :model_step)
+
 agenttype(::ABM{S,A}) where {S,A} = A
 spacetype(::ABM{S}) where {S} = S
 

@@ -70,11 +70,12 @@ function schelling_model(ModelType, SpaceType; numagents = 30, griddims = (8, 8)
     @assert numagents < prod(griddims)
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ModelType(SchellingAgent, space; properties, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
+    model = ModelType(SchellingAgent, space, agent_step! = schelling_model_agent_step!, 
+                      properties = properties, scheduler = Schedulers.Randomly(), rng = StableRNG(10))
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
     end
-    return model, schelling_model_agent_step!, dummystep
+    return model
 end
 
 function schelling_model_agent_step!(agent, model)
@@ -105,10 +106,10 @@ function flocking_model(
     spacing = visual_distance,
 )
     space2d = ContinuousSpace(extent; spacing)
-    model = ModelType(Bird, space2d, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
+    model = ModelType(Bird, space2d, agent_step! = flocking_model_agent_step!,
+                      scheduler = Schedulers.Randomly(), rng = StableRNG(10))
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) .* 2 .- 1
-
         add_agent!(
             model,
             vel,
@@ -120,7 +121,7 @@ function flocking_model(
             visual_distance,
         )
     end
-    return model, flocking_model_agent_step!, dummystep
+    return model
 end
 
 function flocking_model_agent_step!(bird, model)

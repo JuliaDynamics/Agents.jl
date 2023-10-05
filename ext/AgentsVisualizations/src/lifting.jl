@@ -46,7 +46,7 @@ end
 
 abmplot_pos(model::ABM{<:GraphSpace}, offset, ids) = nothing
 
-agents_space_dimensionality(abm::ABM) = agents_space_dimensionality(abm.space)
+agents_space_dimensionality(abm::ABM) = agents_space_dimensionality(abmspace(abm))
 agents_space_dimensionality(::AbstractGridSpace{D}) where {D} = D
 agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
 agents_space_dimensionality(::OpenStreetMapSpace) = 2

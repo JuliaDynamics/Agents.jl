@@ -93,7 +93,7 @@ function daisyworld(;
     )
     properties = Dict(k=>v for (k,v) in pairs(properties))
 
-    model = ABM(Daisy, space; properties, rng)
+    model = ABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
 
     grid = collect(positions(model))
     num_positions = prod(griddims)
@@ -113,5 +113,5 @@ function daisyworld(;
         update_surface_temperature!(p, model)
     end
 
-    return model, daisy_step!, daisyworld_step!
+    return model
 end

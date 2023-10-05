@@ -1,27 +1,9 @@
 @everywhere begin
-    using Agents.Models: schelling, schelling_agent_step!
+    using Agents.Models: schelling
 end
 @testset "DataCollection" begin
     mutable struct Nested
         data::Vector{Float64}
-    end
-
-    function initialize()
-        model = ABM(
-            Agent3,
-            GridSpace((10, 10));
-            properties = Dict(
-                :year => 0,
-                :tick => 0,
-                :flag => false,
-                :container => Float64[],
-                :deep => Nested([20.0, 52.1]),
-            ),
-        )
-        add_agent!((4, 3), model, 0.1)
-        add_agent!((7, 5), model, 0.35)
-        add_agent!((2, 9), model, 0.67)
-        return model
     end
 
     function agent_step!(agent, model)
@@ -37,6 +19,26 @@ end
             model.year += 1
             model.deep.data[1] += 0.5
         end
+    end
+
+    function initialize()
+        model = ABM(
+            Agent3,
+            GridSpace((10, 10));
+            agent_step! = agent_step!,
+            model_step! = model_step!,
+            properties = Dict(
+                :year => 0,
+                :tick => 0,
+                :flag => false,
+                :container => Float64[],
+                :deep => Nested([20.0, 52.1])
+            ),
+        )
+        add_agent!((4, 3), model, 0.1)
+        add_agent!((7, 5), model, 0.35)
+        add_agent!((2, 9), model, 0.67)
+        return model
     end
 
     x_position(agent) = first(agent.pos)
@@ -150,8 +152,6 @@ end
         six_months(model, step) = step % 182 == 0
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = each_year,
             when = six_months,
@@ -169,8 +169,6 @@ end
 
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -182,8 +180,6 @@ end
 
         _, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -194,8 +190,6 @@ end
 
         _, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [365 * 5],
             when = false,
@@ -206,7 +200,7 @@ end
         @testset "Writing to file while running" begin
 
             # CSV
-            offline_run!(model, agent_step!, model_step!, 365 * 5;
+            offline_run!(model, 365 * 5;
                 when_model = each_year,
                 when = six_months,
                 mdata = [:flag, :year],
@@ -229,7 +223,7 @@ end
 
             # Arrow, fails on Windows (see issue #826 (https://github.com/JuliaDynamics/Agents.jl/issues/826))
             if !(Sys.iswindows())
-                offline_run!(model, agent_step!, model_step!, 365 * 5;
+                offline_run!(model, 365 * 5;
                     when_model = each_year,
                     when = six_months,
                     backend = :arrow,
@@ -257,10 +251,10 @@ end
 
             # Backends
             @test_throws TypeError begin
-                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = "hdf5")
+                offline_run!(model, 365 * 5; backend = "hdf5")
             end
             @test_throws AssertionError begin
-                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = :hdf5)
+                offline_run!(model, 365 * 5; backend = :hdf5)
             end
         end
     end
@@ -286,7 +280,7 @@ end
 
         for year in 1:5
             for day in 1:365
-                step!(model, agent_step!, model_step!, 1)
+                step!(model, 1)
                 collect_model_data!(daily_model_data, model, model_props, day * year)
                 collect_model_data!(daily_model_data_fn, model, model_props_fn, day * year)
                 collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
@@ -313,16 +307,15 @@ end
         @test dummystep(model) === nothing
         @test dummystep(model[1], model) === nothing
         tick = model.tick
-        step!(model, agent_step!, 1)
-        @test tick == model.tick
+        step!(model, 1)
+        @test tick + 1 == model.tick
         stop(m, s) = m.year == 6
-        step!(model, agent_step!, model_step!, stop)
+        step!(model, stop)
         @test model.tick == 365 * 6
-        step!(model, agent_step!, model_step!, 1, false)
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent4, model, 5)
 
@@ -414,7 +407,7 @@ end
         @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
         add_agent!((2, 4), Agent3, model, 19.81)
@@ -439,7 +432,7 @@ end
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
 
         # get fieldtype from Agent4 struct definition when agent is absent 
@@ -487,8 +480,6 @@ end
         model = initialize()
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -511,6 +502,7 @@ end
             Agent3,
             GridSpace((10, 10));
             properties=Props(1, false),
+            warn_deprecation = false
         )
         mdata = [:a, :b]
 
@@ -529,7 +521,7 @@ end
 
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
-        basemodels = [Models.schelling(; numagents)[1]
+        basemodels = [Models.schelling(; numagents)
                       for numagents in numagents_low:numagents_high]
 
         return repeat(basemodels, nreplicates)
@@ -540,7 +532,7 @@ end
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+        adf, mdf, _ = ensemblerun!(models, nsteps;
                                    parallel = false, adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy])
 
@@ -554,7 +546,7 @@ end
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+        adf, mdf, _ = ensemblerun!(models, nsteps;
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
@@ -572,7 +564,7 @@ end
 
         stopfn(model, step) = all(map(agent -> agent.mood, allagents(model)))
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, stopfn;
+        adf, mdf, _ = ensemblerun!(models, stopfn;
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
@@ -587,16 +579,6 @@ end
 @testset "Parameter scan" begin
     @everywhere @agent struct Automata(GridAgent{2})
     end
-    function forest_fire(; density = 0.7, griddims = (100, 100))
-        space = GridSpace(griddims; periodic = false, metric = :euclidean)
-        forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
-        for I in CartesianIndices(forest.trees)
-            if rand(forest.rng) < density
-                forest.trees[I] = I[1] == 1 ? 2 : 1
-            end
-        end
-        return forest
-    end
 
     function forest_model_step!(forest)
         for I in findall(isequal(2), forest.trees)
@@ -607,6 +589,18 @@ end
             end
             forest.trees[I] = 3
         end
+    end
+
+    function forest_fire(; density = 0.7, griddims = (100, 100))
+        space = GridSpace(griddims; periodic = false, metric = :euclidean)
+        forest = ABM(Automata, space; model_step! = forest_model_step!,
+                     properties = (trees = zeros(Int, griddims),), warn_deprecation = false)
+        for I in CartesianIndices(forest.trees)
+            if rand(abmrng(forest)) < density
+                forest.trees[I] = I[1] == 1 ? 2 : 1
+            end
+        end
+        return forest
     end
 
     n = 10
@@ -621,7 +615,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
@@ -630,7 +623,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             include_constants = true,
             mdata,
         )
@@ -642,7 +634,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         @test unique(mdf.step) == 0:10
@@ -654,7 +645,6 @@ end
             parameters,
             forest_fire;
             n = terminate,
-            model_step! = forest_model_step!,
             mdata)
         @test unique(mdf.step) == 0:3
     end
@@ -665,7 +655,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
@@ -674,7 +663,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             include_constants = true,
             mdata,
             parallel = true
@@ -687,7 +675,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
             parallel = true
         )
@@ -700,7 +687,6 @@ end
             parameters,
             forest_fire;
             n = terminate,
-            model_step! = forest_model_step!,
             mdata,
             parallel = true)
         @test unique(mdf.step) == 0:3
@@ -709,26 +695,27 @@ end
 
 @testset "Issue #179 fix" begin
     # only ids sorted, not properties
-    model = ABM(Agent2)
+    model = ABM(Agent2, warn_deprecation = false)
     for i in 1:5
         add_agent!(model, i * 0.2)
     end
-    data, _ = run!(model, dummystep, 2; adata = [:weight])
+    data, _ = run!(model, 2; adata = [:weight])
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
 
 @testset "ensemblerun! and different seeds" begin
+    as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = ABM(Agent4, GridSpace((4, 4)); rng = MersenneTwister(seed))
-        fill_space!(abm, _ -> rand(abm.rng, 1:1000))
+        abm = ABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
+                  rng = MersenneTwister(seed), warn_deprecation = false)
+        fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm
     end
-    as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     seeds = [1234, 563, 211]
     adata = [(:p, sum)]
-    adf, _ = ensemblerun!(fake_model, as!, dummystep, 2; adata, seeds)
+    adf, _ = ensemblerun!(fake_model, 2; adata, seeds)
     @test adf[!, :sum_p] == unique(adf[!, :sum_p])
     @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end

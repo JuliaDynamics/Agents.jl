@@ -385,7 +385,7 @@ function forest_fire(; density = 0.7, griddims = (100, 100), seed = 2)
     ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
     forest = ABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
-        if rand(forest.rng) < density
+        if rand(abmrng(forest)) < density
             ## Set the trees at the left edge on fire
             forest.trees[I] = I[1] == 1 ? 2 : 1
         end

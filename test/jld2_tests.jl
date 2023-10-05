@@ -4,9 +4,9 @@
 @testset "JLD2" begin
 
     function test_model_data(model, other)
-        @test (abmscheduler(model) isa Function && abmscheduler(model) == other.scheduler) || (!isa(abmscheduler(model), Function) && typeof(abmscheduler(model)) == typeof(other.scheduler))
-        @test abmrng(model) == other.rng
-        @test model.maxid.x == other.maxid.x
+        @test (abmscheduler(model) isa Function && abmscheduler(model) == abmscheduler(other)) || (!isa(abmscheduler(model), Function) && typeof(abmscheduler(model)) == typeof(abmscheduler(other)))
+        @test abmrng(model) == abmrng(other)
+        @test getfield(model, :maxid).x == getfield(other, :maxid).x
     end
 
     function test_space(space::GridSpace, other)
@@ -63,24 +63,24 @@
     function test_pathfinding_model(model, other)
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(haskey(agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         # model data
         test_model_data(model, other)
         # space data
-        @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
-        test_space(abmspace(model), other.space)
+        @test typeof(abmspace(model)) == typeof(abmspace(other))    # to check periodicity
+        test_space(abmspace(model), abmspace(other))
         # pathfinder data
         test_astar(model.pathfinder, other.pathfinder)
     end
 
     @testset "No space" begin
-        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42))
+        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42), warn_deprecation = false)
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
@@ -97,10 +97,10 @@
     @testset "$(ModelType)" for ModelType in (StandardABM, UnremovableABM)
 
         @testset "ContinuousSpace" begin
-            model, astep, mstep = flocking_model(ModelType)
-            step!(model, astep, mstep, 100)
+            model = flocking_model(ModelType)
+            step!(model, 100)
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly(), warn_deprecation = false)
 
             # agent data
             @test nagents(other) == nagents(model)
@@ -116,18 +116,18 @@
             # model data
             test_model_data(model, other)
             # space data
-            @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
-            test_space(abmspace(model), other.space)
+            @test typeof(abmspace(model)) == typeof(abmspace(other))    # to check periodicity
+            test_space(abmspace(model), abmspace(other))
 
             rm("test.jld2")
         end
 
         @testset "$(SpaceType)" for SpaceType in (GridSpace, GridSpaceSingle)
         
-            model, astep, mstep = schelling_model(ModelType, SpaceType)
-            step!(model, astep, mstep, 5)
+            model = schelling_model(ModelType, SpaceType)
+            step!(model, 5)
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly())
+            other = AgentsIO.load_checkpoint("test.jld2"; scheduler = Schedulers.Randomly(), warn_deprecation = false)
 
             # agent data
             @test nagents(other) == nagents(model)
@@ -139,8 +139,8 @@
             # model data
             test_model_data(model, other)
             # space data
-            @test typeof(abmspace(model)) == typeof(other.space)    # to check periodicity
-            test_space(abmspace(model), other.space)
+            @test typeof(abmspace(model)) == typeof(abmspace(other))    # to check periodicity
+            test_space(abmspace(model), abmspace(other))
 
             rm("test.jld2")
         end
@@ -157,7 +157,7 @@
             Agent7,
             GraphSpace(complete_graph(10));
             properties = ModelData(3, 4.2f32, Dict(1 => "foo", 2 => "bar")),
-            rng = MersenneTwister(42)
+            rng = MersenneTwister(42), warn_deprecation = false
         )
 
         for i in 1:30
@@ -165,11 +165,11 @@
         end
 
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = AgentsIO.load_checkpoint("test.jld2")
+        other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(haskey(agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].f1 == other[i].f1 for i in allids(model))
         @test all(model[i].f2 == other[i].f2 for i in allids(model))
@@ -181,10 +181,10 @@
         # model data
         test_model_data(model, other)
         # space data
-        @test abmspace(model).graph == other.space.graph
-        @test length(abmspace(model).stored_ids) == length(other.space.stored_ids)
-        @test all(length(abmspace(model).stored_ids[pos]) == length(other.space.stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
-        @test all(all(x in other.space.stored_ids[pos] for x in abmspace(model).stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
+        @test abmspace(model).graph == abmspace(other).graph
+        @test length(abmspace(model).stored_ids) == length(abmspace(other).stored_ids)
+        @test all(length(abmspace(model).stored_ids[pos]) == length(abmspace(other).stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
+        @test all(all(x in abmspace(other).stored_ids[pos] for x in abmspace(model).stored_ids[pos]) for pos in eachindex(abmspace(model).stored_ids))
 
         rm("test.jld2")
     end
@@ -205,15 +205,16 @@
             model = ABM(
                 Agent1,
                 space;
+                agent_step! = astep!,
                 properties = (pathfinder = pathfinder,),
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
             plan_route!(model[1], (10, 10), model.pathfinder)
-            step!(model, astep!, dummystep)
+            step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2")
+            other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
             return model, other
         end
 
@@ -247,15 +248,16 @@
             model = ABM(
                 Agent6,
                 deepcopy(space);
+                agent_step! = astep!,
                 properties = (pathfinder = pathfinder,),
-                rng = MersenneTwister(42)
+                rng = MersenneTwister(42), warn_deprecation = false
             )
             add_agent!(SVector(1.3, 1.5), model, SVector(0.0, 0.0), 0.0)
             plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
-            step!(model, astep!, dummystep)
+            step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
-            other = AgentsIO.load_checkpoint("test.jld2")
+            other = AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
             return model, other
         end
 
@@ -273,19 +275,19 @@
     end
 
     @testset "Multi-agent" begin
-        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false)
+        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         AgentsIO.save_checkpoint("test.jld2", model)
-        other = @test_nowarn AgentsIO.load_checkpoint("test.jld2"; warn = false)
+        other = AgentsIO.load_checkpoint("test.jld2"; warn = false, warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(haskey(agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].weight == other[i].weight for i in allids(model) if model[i] isa Agent3)
         # model data
         test_model_data(model, other)
         # space data
-        test_space(abmspace(model), other.space)
+        test_space(abmspace(model), abmspace(other))
 
         rm("test.jld2")
     end
@@ -294,7 +296,7 @@
         @agent struct Zombiee(OSMAgent)
             infected::Bool
         end
-        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42))
+        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42), warn_deprecation = false)
 
         for id in 1:100
             start = random_position(model)
@@ -309,22 +311,22 @@
         plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
-        @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2")
-        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map())
+        @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
+        other = AgentsIO.load_checkpoint("test.jld2"; map = OSM.test_map(), warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(other.agents, i) for i in allids(model))
+        @test all(haskey(agent_container(other), i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)
-        @test sort(collect(keys(abmspace(model).routes))) == sort(collect(keys(other.space.routes)))
-        @test all(abmspace(model).routes[i].route == other.space.routes[i].route for i in keys(abmspace(model).routes))
-        @test all(abmspace(model).routes[i].start == other.space.routes[i].start for i in keys(abmspace(model).routes))
-        @test all(abmspace(model).routes[i].dest == other.space.routes[i].dest for i in keys(abmspace(model).routes))
-        @test all(abmspace(model).routes[i].return_route == other.space.routes[i].return_route for i in keys(abmspace(model).routes))
-        @test all(abmspace(model).routes[i].has_to_return == other.space.routes[i].has_to_return for i in keys(abmspace(model).routes))
+        @test sort(collect(keys(abmspace(model).routes))) == sort(collect(keys(abmspace(other).routes)))
+        @test all(abmspace(model).routes[i].route == abmspace(other).routes[i].route for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].start == abmspace(other).routes[i].start for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].dest == abmspace(other).routes[i].dest for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].return_route == abmspace(other).routes[i].return_route for i in keys(abmspace(model).routes))
+        @test all(abmspace(model).routes[i].has_to_return == abmspace(other).routes[i].has_to_return for i in keys(abmspace(model).routes))
 
         rm("test.jld2")
     end

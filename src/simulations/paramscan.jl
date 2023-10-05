@@ -41,10 +41,8 @@ The following keywords modify the `paramscan` function:
 - `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated into [`run!`](@ref).
-Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
-to [`run!`](@ref) as arguments. Naturally, stepping functions and the
-number of time steps (`agent_step!`, `model_step!`, and `n`) and at least one
-of `adata, mdata` are mandatory.
+Furthermore, `n` is also a keyword here, that is given to [`run!`](@ref) as argument. 
+Naturally, the number of time steps `n` and at least one of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
 
@@ -74,7 +72,7 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf, _ = paramscan(parameters, initialize; adata, n = 3)
 ```
 """
 function paramscan(
@@ -86,9 +84,13 @@ function paramscan(
     model_step! = dummystep,
     n = 1,
     showprogress::Bool = false,
+    warn_deprecation = true,
     kwargs...,
 )
-
+    if agent_step! != dummystep || model_step! != dummystep
+    @warn "Passing agent_step! and model_step! to paramscan is deprecated. 
+          These functions should be already presented inside the model instance."
+    end
     if include_constants
         output_params = collect(keys(parameters))
     else
@@ -100,8 +102,7 @@ function paramscan(
     progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
     mapfun = parallel ? pmap : map
     all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
-        run_single(comb, output_params, initialize;
-                   agent_step!, model_step!, n, kwargs...)
+        run_single(comb, output_params, initialize; n, kwargs...)
     end
 
     df_agent = DataFrame()
@@ -144,7 +145,7 @@ function run_single(
     kwargs...,
 )
     model = initialize(; param_dict...)
-    df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
+    df_agent_single, df_model_single = run!(model, n; kwargs...)
     output_params_dict = filter(j -> first(j) in output_params, param_dict)
     insertcols!(df_agent_single, output_params_dict...)
     insertcols!(df_model_single, output_params_dict...)

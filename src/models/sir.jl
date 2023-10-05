@@ -77,7 +77,7 @@ function sir(;
     )
 
     space = GraphSpace(Agents.Graphs.complete_graph(C))
-    model = ABM(PoorSoul, space; properties, rng)
+    model = ABM(PoorSoul, space; properties, rng, agent_step! = sir_agent_step!)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -92,7 +92,7 @@ function sir(;
             agent.days_infected = 1
         end
     end
-    return model, sir_agent_step!, dummystep
+    return model
 end
 
 function sir_agent_step!(agent, model)

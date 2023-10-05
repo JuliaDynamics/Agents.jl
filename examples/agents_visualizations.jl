@@ -29,9 +29,8 @@ Pkg.status(["Agents", "CairoMakie"];
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
 
-model, daisy_step!, daisyworld_step! = Models.daisyworld(;
-    solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
-)
+model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+    scenario = :change)
 model
 
 # Now, to plot daisyworld we provide a function for the color
@@ -71,9 +70,7 @@ fig
 # Note that [`GLMakie`](https://makie.juliaplots.org/v0.15/documentation/backends_and_output/)
 # should be used instead of `CairoMakie` when wanting to use the interactive
 # aspects of the plots.
-fig, ax, abmobs = abmplot(model;
-    agent_step! = daisy_step!, model_step! = daisyworld_step!,
-    plotkwargs...)
+fig, ax, abmobs = abmplot(model; plotkwargs...)
 fig
 
 # One could click the run button and see the model evolve.
@@ -82,9 +79,7 @@ params = Dict(
     :surface_albedo => 0:0.01:1,
     :solar_change => -0.1:0.01:0.1,
 )
-fig, ax, abmobs = abmplot(model;
-    agent_step! = daisy_step!, model_step! = daisyworld_step!,
-    params, plotkwargs...)
+fig, ax, abmobs = abmplot(model; params, plotkwargs...)
 fig
 
 # One can furthermore collect data while the model evolves and visualize them using the
@@ -96,8 +91,8 @@ adata = [(black, count), (white, count)]
 temperature(model) = mean(model.temperature)
 mdata = [temperature, :solar_luminosity]
 fig, abmobs = abmexploration(model;
-    agent_step! = daisy_step!, model_step! = daisyworld_step!, params, plotkwargs...,
-    adata, alabels = ["Black daisys", "White daisys"], mdata, mlabels = ["T", "L"]
+    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"], 
+    mdata, mlabels = ["T", "L"]
 )
 nothing # hide
 
@@ -116,13 +111,8 @@ nothing # hide
 # abmvideo
 # ```
 # E.g., continuing from above,
-model, daisy_step!, daisyworld_step! = Models.daisyworld()
-abmvideo(
-    "daisyworld.mp4",
-    model,  daisy_step!, daisyworld_step!;
-    title = "Daisy World", frames = 150,
-    plotkwargs...
-)
+model = Models.daisyworld()
+abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -165,9 +155,8 @@ abmvideo(
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model, = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
-fig, ax, abmobs = abmplot(model;
-    agent_step! = daisy_step!, model_step! = daisyworld_step!, params, plotkwargs...,
+model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+fig, ax, abmobs = abmplot(model; params, plotkwargs...,
     adata, mdata, figure = (; resolution = (1600,800))
 )
 fig
@@ -239,7 +228,7 @@ fig
 # and plot it with [`abmplot`](@ref).
 using Graphs
 using ColorTypes
-sir_model, sir_agent_step!, sir_model_step! = Models.sir()
+sir_model = Models.sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
     l_agents_here = length(agents_here)
@@ -276,7 +265,5 @@ graphplotkwargs = (
     edge_plottype = :linesegments # needed for tapered edge widths
 )
 
-fig, ax, abmobs = abmplot(sir_model;
-    agent_step! = sir_agent_step!, model_step! = sir_model_step!,
-    as = city_size, ac = city_color, graphplotkwargs)
+fig, ax, abmobs = abmplot(sir_model; as = city_size, ac = city_color, graphplotkwargs)
 fig

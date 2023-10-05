@@ -171,13 +171,13 @@ _get_graph(space::OpenStreetMapSpace) = space.map.graph
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-Graphs.nv(abm::ABM{<:GraphBasedSpace}) = Graphs.nv(_get_graph(abm.space))
+Graphs.nv(model::ABM{<:GraphBasedSpace}) = Graphs.nv(_get_graph(abmspace(model)))
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-Graphs.ne(abm::ABM{<:GraphBasedSpace}) = Graphs.ne(_get_graph(abm.space))
+Graphs.ne(model::ABM{<:GraphBasedSpace}) = Graphs.ne(_get_graph(abmspace(model)))
 
 positions(model::ABM{<:GraphBasedSpace}) = 1:nv(model)
 
