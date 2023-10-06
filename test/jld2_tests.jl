@@ -63,7 +63,7 @@
     function test_pathfinding_model(model, other)
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         # model data
         test_model_data(model, other)
@@ -169,7 +169,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].f1 == other[i].f1 for i in allids(model))
         @test all(model[i].f2 == other[i].f2 for i in allids(model))
@@ -281,7 +281,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].weight == other[i].weight for i in allids(model) if model[i] isa Agent3)
         # model data
@@ -316,7 +316,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data

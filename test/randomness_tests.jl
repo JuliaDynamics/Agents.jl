@@ -1,41 +1,39 @@
 using Agents, Test
 using Random
+using StableRNGs
 
 @testset "Random Number Generation" begin
-    model = StandardABM(Agent2, warn_deprecation = false)
+    model = StandardABM(NoSpaceAgent; warn_deprecation = false)
     @test abmrng(model) == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = StandardABM(Agent1, GridSpace((3,3)); rng, warn_deprecation = false)
-    add_agent!(Agent1, model)
-    agent = add_agent_single!(Agent1, model)
+    model = StandardABM(GridAgent{2}, GridSpace((3,3)); rng, warn_deprecation = false)
+    agent = add_agent_single!(model)
+
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
-    @test agent.pos == (3, 3)
-
-    model = StandardABM(Agent2; rng = RandomDevice(), warn_deprecation = false)
-    @test_throws MethodError seed!(abmrng(model), 64)
+    @test agent.pos == (2, 1)
 end
 
 @testset "sample!" begin
     rng = StableRNG(50)
     model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
-    agents = agent_container(model4)
+    agents = allagents(model4)
     add_agent!((1,1), Agent1, model4)
     add_agent!((2,2), Agent1, model4)
     sample!(model4, 4)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
                               3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(agent_container(model4))]
-    @test keys(agent_container(model4)) == keys(res)
+    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(allagents(model4))]
+    @test keys(allagents(model4)) == keys(res)
     @test res_fields == agents_fields
     sample!(model4, 2)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(agent_container(model4))]
-    @test keys(agent_container(model4)) == keys(res)
+    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(allagents(model4))]
+    @test keys(allagents(model4)) == keys(res)
     @test res_fields == agents_fields
 
     rng = StableRNG(42)

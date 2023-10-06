@@ -204,7 +204,7 @@ the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
     function by_union(model::ABM)
-        A = agenttype(model)
+        A = Agents.agenttype(model)
         types = Agents.union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
@@ -229,7 +229,7 @@ preserving). `shuffle_agents = true` randomizes the order of agents within each 
 """
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
     function by_ordered_union(model::ABM)
-        A = agenttype(model)
+        A = Agents.agenttype(model)
         types = Agents.union_types(A)
         if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"

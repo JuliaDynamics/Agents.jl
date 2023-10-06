@@ -284,12 +284,12 @@ nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, mo
 # Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
 """
-    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}) → nearest
+    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
 
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace})
+function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
     n = nearby_ids(agent, model, r)
     d, j = Inf, 0
     for id in n

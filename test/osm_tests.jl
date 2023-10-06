@@ -101,8 +101,8 @@ end
             route = plan_route!(model[2+i], finish_road, model)
         end
 
-        @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
-        @test sort!(nearby_ids(model[6].pos, model, 2.0)) == [1, 2, 3, 4, 5, 6, 7]
+        @test sort!(collect(nearby_ids(model[6], model, 0.01))) == [2, 3, 4, 5, 7]
+        @test sort!(collect(nearby_ids(model[6].pos, model, 2.0))) == [1, 2, 3, 4, 5, 6, 7]
     end
 
     @testset "Long moves" begin
