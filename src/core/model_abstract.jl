@@ -34,12 +34,6 @@ ValidPos = Union{
 All models are some concrete implementation of `AgentBasedModel` and follow its
 interface (see below). `ABM` is an alias to `AgentBasedModel`.
 
-For backwards compatibility, the following function is valid:
-```julia
-AgentBasedModel(AgentType [, space]; properties, kwargs...) → model
-```
-which dispatches to [`StandardABM`](@ref).
-
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
@@ -137,6 +131,8 @@ end
 ###########################################################################################
 # The first type parameter of any `ABM` subtype must be the space type.
 spacetype(::ABM{S}) where {S} = S
+
+agenttype(model::ABM) = notimplemented(model)
 
 """
     agent_container(model::ABM)

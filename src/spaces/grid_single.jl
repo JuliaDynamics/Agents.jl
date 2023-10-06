@@ -41,17 +41,18 @@ function GridSpaceSingle(d::NTuple{D,Int};
     )
 end
 # Implementation of space API
-function add_agent_to_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::AbstractAgent, model::ABM{<:GridSpaceSingle})
     pos = a.pos
     !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
     abmspace(model).stored_ids[pos...] = a.id
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{<:GridSpaceSingle,A}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpaceSingle})
     abmspace(model).stored_ids[a.pos...] = 0
     return a
 end
+
 # `random_position` comes from `AbstractGridSpace` in spaces/grid_general.jl
 # move_agent! does not need be implemented.
 # The generic version at core/space_interaction_API.jl covers it.
@@ -64,6 +65,7 @@ end
 
 """
     id_in_position(pos, model::ABM{<:GridSpaceSingle}) → id
+
 Return the agent ID in the given position.
 This will be `0` if there is no agent in this position.
 
@@ -94,10 +96,10 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-        ids_iterator = (stored_ids[p...] for p in position_iterator 
+        ids_iterator = (stored_ids[p...] for p in position_iterator
                         if stored_ids[p...] != 0)
     else
-        ids_iterator = (checkbounds(Bool, stored_ids, p...) ? 
+        ids_iterator = (checkbounds(Bool, stored_ids, p...) ?
                         stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
                         for p in position_iterator if stored_ids[mod1.(p, space_size)...] != 0)
     end
@@ -113,10 +115,10 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-        ids_iterator = (stored_ids[p...] for p in position_iterator 
+        ids_iterator = (stored_ids[p...] for p in position_iterator
                         if stored_ids[p...] != 0)
     else
-        ids_iterator = (stored_ids[p...] for p in position_iterator 
+        ids_iterator = (stored_ids[p...] for p in position_iterator
                         if checkbounds(Bool, stored_ids, p...) && stored_ids[p...] != 0)
     end
     return ids_iterator
@@ -151,6 +153,6 @@ end
 # Here we implement a new version for neighborhoods, similar to abusive_unremovable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
-    a::A, model::ABM{<:GridSpaceSingle{D},A}, r = 1) where {D,A<:AbstractAgent}
+    a::AbstractAgent, model::ABM{<:GridSpaceSingle}, r = 1)
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end

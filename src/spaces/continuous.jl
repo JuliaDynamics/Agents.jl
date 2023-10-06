@@ -125,16 +125,16 @@ function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{
 end
 
 function add_agent_to_space!(
-    a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
+    a::AbstractAgent, model::ABM{<:ContinuousSpace}, cell_index = pos2cell(a, model))
     push!(abmspace(model).grid.stored_ids[cell_index...], a.id)
     return a
 end
 
 function remove_agent_from_space!(
-    a::A,
-    model::ABM{<:ContinuousSpace,A},
+    a::AbstractAgent,
+    model::ABM{<:ContinuousSpace},
     cell_index = pos2cell(a, model),
-) where {A<:AbstractAgent}
+)
     prev = abmspace(model).grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
@@ -143,9 +143,9 @@ end
 
 # We re-write this for performance, because if cell doesn't change, we don't have to
 # move the agent in the GridSpace; only change its position field
-function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
-    ) where {D, A<:AbstractAgent}
+function move_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM{<:ContinuousSpace})
     space_size = spacesize(model)
+    D = length(space_size)
     all(i -> 0 <= pos[i] <= space_size[i], 1:D) || error("position is outside space extent!")
     oldcell = pos2cell(agent, model)
     newcell = pos2cell(pos, model)
@@ -160,7 +160,8 @@ end
 
 
 """
-    move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
+    move_agent!(agent, model::ABM{<:ContinuousSpace}, dt::Real)
+
 Propagate the agent forwards one step according to its velocity, _after_ updating the
 agent's velocity (if configured using `update_vel!`, see [`ContinuousSpace`](@ref)).
 
@@ -173,10 +174,10 @@ For non-periodic spaces, agents will walk up to, but not reach, the space extent
 For periodic spaces movement properly wraps around the extent.
 """
 function move_agent!(
-    agent::A,
-    model::ABM{<:ContinuousSpace,A},
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace},
     dt::Real,
-) where {A<:AbstractAgent}
+)
     abmspace(model).update_vel!(agent, model)
     direction = dt .* agent.vel
     walk!(agent, direction, model)
@@ -283,11 +284,12 @@ nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, mo
 # Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
 """
-    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
+    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}) → nearest
+
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent::A, model::ABM{<:ContinuousSpace,A}, r) where {A}
+function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace})
     n = nearby_ids(agent, model, r)
     d, j = Inf, 0
     for id in n
@@ -307,6 +309,7 @@ using LinearAlgebra
 
 """
     elastic_collision!(a, b, f = nothing) → happened
+
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
 They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.

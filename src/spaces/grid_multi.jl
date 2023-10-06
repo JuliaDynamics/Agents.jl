@@ -88,12 +88,12 @@ end
 #######################################################################################
 # %% Implementation of space API
 #######################################################################################
-function add_agent_to_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
+function add_agent_to_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     push!(abmspace(model).stored_ids[a.pos...], a.id)
     return a
 end
 
-function remove_agent_from_space!(a::A, model::ABM{<:GridSpace,A}) where {A<:AbstractAgent}
+function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     prev = abmspace(model).stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
