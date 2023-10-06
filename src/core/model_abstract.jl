@@ -15,7 +15,7 @@ Supertype of all concrete space implementations for Agents.jl.
 """
 abstract type AbstractSpace end
 abstract type DiscreteSpace <: AbstractSpace end
-SpaceType = Union{Nothing,AbstractSpace}
+SpaceType = Union{Nothing, AbstractSpace}
 
 # This is a collection of valid position types, sometimes used for ambiguity resolution
 ValidPos = Union{
@@ -43,7 +43,7 @@ which dispatches to [`StandardABM`](@ref).
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
-- [`Unremovable`](@ref)
+- [`UnremovableABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 
