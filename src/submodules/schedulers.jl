@@ -3,7 +3,7 @@ export schedule, Schedulers
 """
     schedule(model [, scheduler]) → ids
 
-If no `scheduler` is given, it returns an iterator over the scheduled IDs using the model's 
+If no `scheduler` is given, it returns an iterator over the scheduled IDs using the model's
 scheduler, otherwise it uses the given custom scheduler, which can be either a function which
 accepts `model` as argument or one of the already defined schedulers inside Agents.jl. See
 the [manual scheduling](@ref manual_scheduling) section for usage examples.
@@ -195,6 +195,7 @@ end
 
 """
     Schedulers.by_type(shuffle_types::Bool, shuffle_agents::Bool)
+
 A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
@@ -202,7 +203,8 @@ Otherwise returns agents grouped in order of appearance in the `Union`.
 the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 """
 function by_type(shuffle_types::Bool, shuffle_agents::Bool)
-    function by_union(model::ABM{S,A}) where {S,A}
+    function by_union(model::ABM)
+        A = agenttype(model)
         types = Agents.union_types(A)
         sets = [Integer[] for _ in types]
         for agent in allagents(model)
@@ -221,11 +223,13 @@ end
 
 """
     Schedulers.by_type((C, B, A), shuffle_agents::Bool)
+
 A scheduler that activates agents by type in specified order (since `Union`s are not order
 preserving). `shuffle_agents = true` randomizes the order of agents within each group.
 """
 function by_type(order::Tuple{Type,Vararg{Type}}, shuffle_agents::Bool)
-    function by_ordered_union(model::ABM{S,A}) where {S,A}
+    function by_ordered_union(model::ABM)
+        A = agenttype(model)
         types = Agents.union_types(A)
         if order !== nothing
             @assert length(types) == length(order) "Invalid dimension for `order`"
@@ -254,6 +258,7 @@ end
 
 """
     Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
+
 A non-allocating scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
@@ -273,6 +278,7 @@ end
 
 """
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)
+
 A non-allocating scheduler that activates agents by type in specified order (since
 `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
 agents within each group.
