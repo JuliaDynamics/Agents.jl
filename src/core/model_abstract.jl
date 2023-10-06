@@ -56,6 +56,7 @@ which dispatches to [`StandardABM`](@ref).
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
+- `allids(model)/allagents(model)` returns an iterator over all IDs/agents in the model.
 
 This interface, along with the internal interface described in the Developer's Docs,
 allows instances of `AgentBasedModel` to be used with any of the [API](@ref) functions
@@ -75,7 +76,7 @@ function notimplemented(model)
 end
 
 ###########################################################################################
-# %% Public methods. Must be implemented and are exported.
+# %% Mandatory methods - public
 ###########################################################################################
 """
     model[id]
@@ -220,6 +221,9 @@ function Base.setproperty!(m::ABM, s::Symbol, x)
     end
 end
 
+###########################################################################################
+# %% Mandatory methods - internal
+###########################################################################################
 
 ###########################################################################################
 # %% Non-public methods. Must be implemented but are not exported
@@ -245,6 +249,5 @@ Remove the agent from the model's internal container.
 remove_agent_from_model!(agent, model) = notimplemented(model)
 
 function Base.setindex!(m::ABM, args...; kwargs...)
-    error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!(model, agent)` "*
-    "or other variants of an `add_agent_...` function to add agents to an ABM.")
+    error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
 end
