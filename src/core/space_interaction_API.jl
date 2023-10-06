@@ -195,9 +195,6 @@ end
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_pos!(agent::A, model::ABM) where {A<:AbstractAgent}
-    if !(A <: agenttype(model))
-        error("Agent type $(A) is not a subtype of the model specified agent type!")
-    end
     add_agent_to_model!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
