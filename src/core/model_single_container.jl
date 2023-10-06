@@ -187,7 +187,7 @@ function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:Abstra
 end
 
 function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
-    error("Cannot remove agents in a `UnremovableABM`")
+    error("Cannot remove agents in `UnremovableABM`.")
 end
 
 random_id(model::StandardABM) = rand(abmrng(model), agent_container(model)).first

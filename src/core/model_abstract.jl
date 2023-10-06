@@ -135,6 +135,9 @@ end
 ###########################################################################################
 # %% Mandatory methods - internal
 ###########################################################################################
+# The first type parameter of any `ABM` subtype must be the space type.
+spacetype(::ABM{S}) where {S} = S
+
 """
     agent_container(model::ABM)
 
@@ -149,7 +152,6 @@ Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = notimplemented(model)
 
-spacetype(::ABM{S}) where {S} = S
 
 """
     add_agent_to_model!(agent, model)
