@@ -59,12 +59,11 @@ For pathfinding in models with [`GridSpace`](@ref).
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
 function Agents.move_along_route!(
-    agent::A,
-    model::ABM{<:GridSpace{D},A},
+    agent::AbstractAgent,
+    model::ABM{<:GridSpace{D}},
     pathfinder::AStar{D}
-) where {D,A<:AbstractAgent}
+) where {D}
     isempty(agent.id, pathfinder) && return
-
     move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
     popfirst!(pathfinder.agent_paths[agent.id])
 end
