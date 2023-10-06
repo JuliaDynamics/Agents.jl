@@ -209,8 +209,11 @@ function Base.getproperty(m::ABM, s::Symbol)
 end
 
 function Base.setproperty!(m::ABM, s::Symbol, x)
-    exception = ErrorException("Cannot set $(s) in this manner. Please use the `AgentBasedModel` constructor.")
-    properties = getfield(m, :properties)
+    properties = abmproperties(m)
+    exception = ErrorException(
+        "Cannot set property $(s) for model $(nameof(typeof(m))) with "*
+        "properties container type $(typeof(properties))."
+    )
     properties === nothing && throw(exception)
     if properties isa Dict && haskey(properties, s)
         properties[s] = x
