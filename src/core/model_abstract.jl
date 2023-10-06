@@ -4,7 +4,7 @@
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
 export abmrng, abmscheduler, abmspace, abmproperties, agent_container
-export random_agent, random_id, nagents, allagents, allids, nextid, seed!
+export random_agent, random_id, nagents, allagents, allids, seed!
 
 ###########################################################################################
 # %% Fundamental type definitions
@@ -44,25 +44,30 @@ which dispatches to [`StandardABM`](@ref).
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
-- [`UnkillableABM`](@ref)
+- [`Unremovable`](@ref)
 
 ## Interface of `AgentBasedModel`
 
-Here we the most important information on how to query an instance of `AgentBasedModel`:
-
-- `model[id]` gives the agent with given `id`.
-- `abmproperties(model)` gives the `properties` container stored in the model.
-- `model.property`:  If the model properties is a dictionary with
+- `model[id]` returns the agent with given `id`.
+- `abmproperties(model)` returns the `properties` container storing model-level properties.
+- `model.property`:  If the model `properties` is a dictionary with
   key type `Symbol`, or if it is a composite type (`struct`), then the syntax
   `model.property` will return the model property with key `:property`.
 - `abmrng(model)` will return the random number generator of the model.
-  It is strongly recommended to use `abmrng(model)` to all calls to `rand` and similar
+  It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
+
+This interface, along with the internal interface described in the Developer's Docs,
+allows instances of `AgentBasedModel` to be used with any of the [API](@ref) functions
+such as `move_agent!`, etc.
 
 Many more functions exist in the API page, such as [`allagents`](@ref).
 """
 abstract type AgentBasedModel{S<:SpaceType, A<:AbstractAgent} end
 const ABM = AgentBasedModel
+
+# To see the internal interface for `AgentBasedModel`, see below the
+# internal methods or the dev docs.
 
 function notimplemented(model)
     error("Function not implemented for model of type $(nameof(typeof(model))) "*
