@@ -19,21 +19,20 @@ end
 @testset "sample!" begin
     rng = StableRNG(50)
     model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
-    agents = allagents(model4)
     add_agent!((1,1), Agent1, model4)
     add_agent!((2,2), Agent1, model4)
     sample!(model4, 4)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
                               3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(allagents(model4))]
-    @test keys(allagents(model4)) == keys(res)
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
     @test res_fields == agents_fields
     sample!(model4, 2)
     res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(allagents(model4))]
-    @test keys(allagents(model4)) == keys(res)
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
     @test res_fields == agents_fields
 
     rng = StableRNG(42)
