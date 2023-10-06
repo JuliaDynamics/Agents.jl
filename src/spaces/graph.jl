@@ -65,20 +65,14 @@ end
 #######################################################################################
 random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 
-function remove_agent_from_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
+function remove_agent_from_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
     agentpos = agent.pos
     ids = ids_in_position(agentpos, model)
     deleteat!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
-function add_agent_to_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
+function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
@@ -98,7 +92,7 @@ function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
 end
 
 # This function is here purely because of performance reasons
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A <: AbstractAgent}
+function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -191,7 +185,7 @@ end
 """
     add_edge!(model::ABM{<:GraphSpace},  args...; kwargs...)
 Add a new edge (relationship between two positions) to the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 
 `args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
@@ -200,6 +194,6 @@ Graphs.add_edge!(model::ABM{<:GraphSpace}, args::Vararg{Any, N}; kwargs...) wher
 """
     rem_edge!(model::ABM{<:GraphSpace}, n, m)
 Remove an edge (relationship between two positions) from the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 """
 Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(abmspace(model).graph, n, m)

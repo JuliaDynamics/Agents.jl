@@ -22,7 +22,7 @@ end
     end
 
     function initialize()
-        model = ABM(
+        model = StandardABM(
             Agent3,
             GridSpace((10, 10));
             agent_step! = agent_step!,
@@ -211,7 +211,7 @@ end
             adata_saved = CSV.read("adata.csv", DataFrame)
             @test size(adata_saved) == (11, 2)
             @test propertynames(adata_saved) == [:step, :mean_weight]
-            
+
             mdata_saved = CSV.read("mdata.csv", DataFrame)
             @test size(mdata_saved) == (6, 3)
             @test propertynames(mdata_saved) == [:step, :flag, :year]
@@ -235,7 +235,7 @@ end
                 adata_saved = DataFrame(Arrow.Table("adata.arrow"))
                 @test size(adata_saved) == (11, 2)
                 @test propertynames(adata_saved) == [:step, :mean_weight]
-                
+
                 mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
                 @test size(mdata_saved) == (6, 3)
                 @test propertynames(mdata_saved) == [:step, :flag, :year]
@@ -315,7 +315,7 @@ end
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent4, model, 5)
 
@@ -407,7 +407,7 @@ end
         @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
         add_agent!((2, 4), Agent3, model, 19.81)
@@ -432,14 +432,14 @@ end
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
 
-        # get fieldtype from Agent4 struct definition when agent is absent 
+        # get fieldtype from Agent4 struct definition when agent is absent
         props = [:weight, :p]
         df = init_agent_dataframe(model, props)
         @test eltype(df[!, :p]) == Union{Int, Missing}
-        
+
         # Add Agent4 and check data collection
         add_agent!((4, 1), Agent4, model, 3)
         collect_agent_data!(df, model, props)
@@ -498,7 +498,7 @@ end
             b::Bool
         end
 
-        model = ABM(
+        model = StandardABM(
             Agent3,
             GridSpace((10, 10));
             properties=Props(1, false),
@@ -593,7 +593,7 @@ end
 
     function forest_fire(; density = 0.7, griddims = (100, 100))
         space = GridSpace(griddims; periodic = false, metric = :euclidean)
-        forest = ABM(Automata, space; model_step! = forest_model_step!,
+        forest = StandardABM(Automata, space; model_step! = forest_model_step!,
                      properties = (trees = zeros(Int, griddims),), warn_deprecation = false)
         for I in CartesianIndices(forest.trees)
             if rand(abmrng(forest)) < density
@@ -695,7 +695,7 @@ end
 
 @testset "Issue #179 fix" begin
     # only ids sorted, not properties
-    model = ABM(Agent2, warn_deprecation = false)
+    model = StandardABM(Agent2, warn_deprecation = false)
     for i in 1:5
         add_agent!(model, i * 0.2)
     end
@@ -708,7 +708,7 @@ end
 @testset "ensemblerun! and different seeds" begin
     as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = ABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
+        abm = StandardABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
                   rng = MersenneTwister(seed), warn_deprecation = false)
         fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm

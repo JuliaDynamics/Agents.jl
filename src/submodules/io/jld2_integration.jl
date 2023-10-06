@@ -89,7 +89,7 @@ function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
         collect(allagents(t)),
         to_serializable(abmspace(t)),
-        typeof(agent_container(t)),
+        typeof(Agents.agent_container(t)),
         to_serializable(abmproperties(t)),
         abmrng(t),
         getfield(t, :maxid).x,
@@ -120,7 +120,7 @@ JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T
     )
 
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
-    abm = ABM(
+    abm = SingleContainerABM(
         A,
         from_serializable(t.space; kwargs...),
         container = t.agents_container,
@@ -133,7 +133,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     getfield(abm, :maxid)[] = t.maxid
 
     for a in t.agents
-        add_agent_pos!(a, abm)
+        Agents.add_agent_pos!(a, abm)
     end
     return abm
 end

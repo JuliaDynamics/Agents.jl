@@ -8,9 +8,7 @@ using Random
     albedo::Float64 # 0-1 fraction
 end
 
-DaisyWorld = ABM{<:GridSpaceSingle, Daisy}
-
-function update_surface_temperature!(pos, model::DaisyWorld)
+function update_surface_temperature!(pos, model)
     absorbed_luminosity = if isempty(pos, model) # no daisy
         (1 - model.surface_albedo) * model.solar_luminosity
     else
@@ -21,7 +19,7 @@ function update_surface_temperature!(pos, model::DaisyWorld)
     model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
 end
 
-function diffuse_temperature!(pos, model::DaisyWorld)
+function diffuse_temperature!(pos, model)
     ratio = model.ratio # diffusion ratio
     npos = nearby_positions(pos, model)
     model.temperature[pos...] =
@@ -29,7 +27,7 @@ function diffuse_temperature!(pos, model::DaisyWorld)
         sum(model.temperature[p...] for p in npos) * 0.125 * ratio
 end
 
-function propagate!(pos, model::DaisyWorld)
+function propagate!(pos, model)
     isempty(pos, model) && return
     daisy = model[id_in_position(pos, model)]
     temperature = model.temperature[pos...]
@@ -42,7 +40,7 @@ function propagate!(pos, model::DaisyWorld)
     end
 end
 
-function daisy_step!(agent::Daisy, model::DaisyWorld)
+function daisy_step!(agent::Daisy, model)
     agent.age += 1
     agent.age ≥ model.max_age && remove_agent!(agent, model)
 end
@@ -57,7 +55,7 @@ function daisyworld_step!(model)
     solar_activity!(model)
 end
 
-function solar_activity!(model::DaisyWorld)
+function solar_activity!(model)
     if model.scenario == :ramp
         if model.tick > 200 && model.tick ≤ 400
             model.solar_luminosity += model.solar_change
@@ -93,7 +91,7 @@ function daisyworld(;
     )
     properties = Dict(k=>v for (k,v) in pairs(properties))
 
-    model = ABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
+    model = StandardABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
 
     grid = collect(positions(model))
     num_positions = prod(griddims)

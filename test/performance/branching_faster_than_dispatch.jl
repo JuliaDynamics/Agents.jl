@@ -36,7 +36,7 @@ end
     two::Bool
 end
 
-model1 = ABM(
+model1 = StandardABM(
     Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
     GridSpace((15, 15));
     warn = false,
@@ -81,7 +81,7 @@ end
     type::Symbol
 end
 
-model2 = ABM(
+model2 = StandardABM(
     GridAgentAll,
     GridSpace((15, 15));
     rng = MersenneTwister(42),

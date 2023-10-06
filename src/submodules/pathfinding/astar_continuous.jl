@@ -107,7 +107,7 @@ If the agent does not have a precalculated path or the path is empty, it remains
 """
 function Agents.move_along_route!(
     agent::A,
-    model::ABM{<:ContinuousSpace{D},A},
+    model::ABM{<:ContinuousSpace{D}},
     pathfinder::AStar{D},
     speed::Float64,
     dt::Real = 1.0,

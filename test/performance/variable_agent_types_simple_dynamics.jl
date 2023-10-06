@@ -69,7 +69,7 @@ end
 
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
-    model = ABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
     id = 0
     for id in 1:n_agents
         add_agent!(Agent1, model, 10)
@@ -82,7 +82,7 @@ function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
     agents_used = agent_types[1:n_types]
     space = GridSpace(dims)
-    model = ABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
     id = 0
     agents_per_type = div(n_agents, n_types)
     for A in agents_used

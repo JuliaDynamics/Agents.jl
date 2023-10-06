@@ -27,7 +27,7 @@ struct Foo <: AbstractAgent
     foo::Tuple{Int,String}
 end
 
-model = ABM(Foo, ...)
+model = StandardABM(Foo, ...)
 AgentsIO.populate_from_csv!(model, "test.csv")
 ```
 Here, `types` will be inferred to be
@@ -48,13 +48,13 @@ If `"test.csv"` contains the following columns: `pos_1, pos_2, foo_1, foo_2`, th
 can be populated as `AgentsIO.populate_from_csv!(model, "test.csv"; row_number_is_id = true)`.
 """
 function populate_from_csv!(
-    model::ABM{S,A},
+    model::ABM{S},
     filename,
-    agent_type::B = A,
+    agent_type::B = Agents.agenttype(model),
     col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
     row_number_is_id = false,
     kwargs...,
-) where {A,B <: Union{Type{<:A},Function},S}
+) where {B <: Union{Type{<:AbstractAgent},Function},S}
     @assert(
         agent_type isa Function || !(agent_type isa Union),
         "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent"
@@ -79,21 +79,21 @@ function populate_from_csv!(
     if isempty(col_map)
         if row_number_is_id
             for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
-                add_agent_pos!(agent_type(id, row...), model)
+                Agents.add_agent_pos!(agent_type(id, row...), model)
             end
         else
             for row in CSV.Rows(read(filename); kwargs..., validate = false)
-                add_agent_pos!(agent_type(row...), model)
+                Agents.add_agent_pos!(agent_type(row...), model)
             end
         end
     else
         if row_number_is_id
             for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
-                add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
+                Agents.add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
             end
         else
             for row in CSV.Rows(read(filename); kwargs..., validate = false)
-                add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
+                Agents.add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
             end
         end
     end
@@ -119,7 +119,7 @@ struct Foo <: AbstractAgent
     foo::Tuple{Int,String}
 end
 
-model = ABM(Foo, ...)
+model = StandardABM(Foo, ...)
 ...
 AgentsIO.dump_to_csv("test.csv", allagents(model))
 ```

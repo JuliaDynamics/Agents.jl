@@ -104,7 +104,7 @@ function initialize_bouncing(;
         number_of_particles=number_of_particles,
         system=system,
     )
-    model = ABM(Particle,
+    model = StandardABM(Particle,
         space2d,
         properties=properties
     )

@@ -7,7 +7,7 @@ function initialize_gridspace()
     space = GridSpace(grid_size; periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(rand(UInt))
-    model = ABM(GridSpaceAgent, space; properties, rng)
+    model = StandardABM(GridSpaceAgent, space; properties, rng)
     N = grid_size[1]*grid_size[2]*grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2

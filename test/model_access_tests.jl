@@ -54,8 +54,8 @@ end
 @testset "model access typestability" begin
     prop1 = Dict(:a => 0.5)
     prop2 = Agent2(1, 0.5)
-    model1 = ABM(NoSpaceAgent; properties = prop1, warn_deprecation = false)
-    model2 = ABM(NoSpaceAgent; properties = prop2, warn_deprecation = false)
+    model1 = StandardABM(NoSpaceAgent; properties = prop1, warn_deprecation = false)
+    model2 = StandardABM(NoSpaceAgent; properties = prop2, warn_deprecation = false)
 
     test1(model) = model.a
     test2(model) = model.weight
@@ -64,7 +64,7 @@ end
 end
 
 @testset "Core methods" begin
-    model = ABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
+    model = StandardABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
     @test Agents.agenttype(model) == Agent3
     @test Agents.spacetype(model) <: GridSpace
     @test size(abmspace(model)) == (5,5)
@@ -72,14 +72,14 @@ end
 end
 
 @testset "Display" begin
-    model = ABM(NoSpaceAgent, warn_deprecation = false)
+    model = StandardABM(NoSpaceAgent, warn_deprecation = false)
     @test occursin("no spatial structure", sprint(show, model))
-    model = ABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
+    model = StandardABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
     @test sprint(show, model)[1:25] == "StandardABM with 0 agents"
     @test sprint(show, Agents.abmspace(model)) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
-    model = ABM(Agent6, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
+    model = StandardABM(Agent6, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
     @test sprint(show, Agents.abmspace(model)) == "periodic continuous space with [1.0, 1.0] extent and spacing=0.05"
-    model = ABM(Agent5, GraphSpace(path_graph(5)), warn_deprecation = false)
+    model = StandardABM(Agent5, GraphSpace(path_graph(5)), warn_deprecation = false)
     @test sprint(show, Agents.abmspace(model)) == "GraphSpace with 5 positions and 4 edges"
 end
 

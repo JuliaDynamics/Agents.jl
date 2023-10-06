@@ -63,7 +63,7 @@
     function test_pathfinding_model(model, other)
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         # model data
         test_model_data(model, other)
@@ -75,7 +75,7 @@
     end
 
     @testset "No space" begin
-        model = ABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42), warn_deprecation = false)
+        model = StandardABM(Agent2, nothing; properties = Dict(:abc => 123), rng = MersenneTwister(42), warn_deprecation = false)
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
@@ -93,7 +93,7 @@
 
         rm("test.jld2")
     end
-    
+
     @testset "$(ModelType)" for ModelType in (StandardABM, UnremovableABM)
 
         @testset "ContinuousSpace" begin
@@ -123,7 +123,7 @@
         end
 
         @testset "$(SpaceType)" for SpaceType in (GridSpace, GridSpaceSingle)
-        
+
             model = schelling_model(ModelType, SpaceType)
             step!(model, 5)
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -153,7 +153,7 @@
             d::Dict{Int,String}
         end
 
-        model = ABM(
+        model = StandardABM(
             Agent7,
             GraphSpace(complete_graph(10));
             properties = ModelData(3, 4.2f32, Dict(1 => "foo", 2 => "bar")),
@@ -169,7 +169,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].f1 == other[i].f1 for i in allids(model))
         @test all(model[i].f2 == other[i].f2 for i in allids(model))
@@ -202,7 +202,7 @@
         function setup_model(; kwargs...)
             space = GridSpace((10, 10); periodic = false)
             pathfinder = Pathfinding.AStar(space; kwargs...)
-            model = ABM(
+            model = StandardABM(
                 Agent1,
                 space;
                 agent_step! = astep!,
@@ -245,7 +245,7 @@
         function setup_model(; kwargs...)
             space = ContinuousSpace((10.0, 10.0); periodic = false)
             pathfinder = Pathfinding.AStar(space; kwargs...)
-            model = ABM(
+            model = StandardABM(
                 Agent6,
                 deepcopy(space);
                 agent_step! = astep!,
@@ -275,13 +275,13 @@
     end
 
     @testset "Multi-agent" begin
-        model = ABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2"; warn = false, warn_deprecation = false)
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(model[i].pos == other[i].pos for i in allids(model))
         @test all(model[i].weight == other[i].weight for i in allids(model) if model[i] isa Agent3)
         # model data
@@ -296,7 +296,7 @@
         @agent struct Zombiee(OSMAgent)
             infected::Bool
         end
-        model = ABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42), warn_deprecation = false)
+        model = StandardABM(Zombiee, OpenStreetMapSpace(OSM.test_map()); rng = MersenneTwister(42), warn_deprecation = false)
 
         for id in 1:100
             start = random_position(model)
@@ -316,7 +316,7 @@
 
         # agent data
         @test nagents(other) == nagents(model)
-        @test all(haskey(agent_container(other), i) for i in allids(model))
+        @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
         @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data

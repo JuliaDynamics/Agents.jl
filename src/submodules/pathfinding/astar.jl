@@ -240,14 +240,11 @@ end
 
 """
     Pathfinding.remove_agent!(agent, model, pathfinder)
+
 The same as `remove_agent!(agent, model)`, but also removes the agent's path data
 from `pathfinder`.
 """
-function Agents.remove_agent!(
-    agent::A,
-    model::ABM{S,A},
-    pathfinder::AStar,
-) where {S,A<:AbstractAgent}
+function Agents.remove_agent!(agent::AbstractAgent, model::ABM, pathfinder::AStar)
     delete!(pathfinder.agent_paths, agent.id)
     Agents.remove_agent_from_model!(agent, model)
     Agents.remove_agent_from_space!(agent, model)

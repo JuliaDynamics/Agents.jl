@@ -133,7 +133,7 @@ function daisyworld(;
     properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
     properties[:tick] = 0
     daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
-    model = ABM(
+    model = StandardABM(
         Union{Daisy,Land},
         space;
         scheduler = daisysched,

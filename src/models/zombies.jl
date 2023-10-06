@@ -12,7 +12,7 @@ Same as in the [Zombie Outbreak](@ref) example.
 function zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
         properties = properties,

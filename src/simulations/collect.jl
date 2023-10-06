@@ -161,8 +161,8 @@ end
     offline_run!(model, n::Integer; kwargs...)
     offline_run!(model, f::Function; kwargs...)
 
-Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory 
-dataframe, write the output to a file after collecting data `writing_interval` times and 
+Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory
+dataframe, write the output to a file after collecting data `writing_interval` times and
 empty the dataframe after each write.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
@@ -321,13 +321,9 @@ is not known.
 """
 collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
 
-function init_agent_dataframe(
-    model::ABM{S,A},
-    properties::AbstractArray,
-) where {S,A<:AbstractAgent}
-    nagents(model) < 1 &&
-        throw(ArgumentError("Model must have at least one agent to initialize data collection",))
-
+function init_agent_dataframe(model::ABM, properties::AbstractArray)
+    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
+    A = agenttype(model)
     utypes = union_types(A)
     std_headers = length(utypes) > 1 ? 3 : 2
 
@@ -353,11 +349,7 @@ function init_agent_dataframe(
     DataFrame(types, headers)
 end
 
-function single_agent_types!(
-    types::Vector{Vector{T} where T},
-    model::ABM,
-    properties::AbstractArray,
-)
+function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::AbstractArray)
     a = first(allagents(model))
     for (i, k) in enumerate(properties)
         current_type = typeof(get_data(a, k, identity))
@@ -380,16 +372,16 @@ function multi_agent_types!(
     for (i, k) in enumerate(properties)
         current_types = DataType[]
         for atype in utypes
-            a = try 
+            a = try
                 first(Iterators.filter(a -> a isa atype, allagents(model)))
             catch
                 nothing
-            end 
-            
+            end
+
             if k isa Symbol
-                current_type = if hasproperty(a, k) 
+                current_type = if hasproperty(a, k)
                     typeof(get_data(a, k, identity))
-                else 
+                else
                     hasfield(atype, k) ? fieldtype(atype, k) : Missing
                 end
             else
@@ -454,16 +446,13 @@ function _add_col_data!(
 end
 
 # Aggregating version
-function init_agent_dataframe(
-    model::ABM{S,A},
-    properties::Vector{<:Tuple},
-) where {S,A<:AbstractAgent}
+function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     nagents(model) < 1 && throw(ArgumentError(
-        "Model must have at least one agent to " * "initialize data collection",
+        "Model must have at least one agent to initialize data collection",
     ))
     headers = Vector{String}(undef, 1 + length(properties))
     types = Vector{Vector}(undef, 1 + length(properties))
-
+    A = agenttype(model)
     utypes = union_types(A)
 
     headers[1] = "step"
@@ -510,11 +499,11 @@ function multi_agent_agg_types!(
         headers[i+1] = dataname(property)
         current_types = DataType[]
         for atype in utypes
-            a = try 
+            a = try
                 first(Iterators.filter(a -> a isa atype, allagents(model)))
             catch
                 nothing
-            end 
+            end
 
             if k isa Symbol
                 current_type =

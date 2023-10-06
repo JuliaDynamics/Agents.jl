@@ -1,6 +1,6 @@
 #=
 This file establishes the agent-space interaction API.
-All space types should implement this API (and obviously be subtypes of `AbstractSpace`)
+All space types should implement this API (and be subtypes of `AbstractSpace`)
 Some functions DO NOT need to be implemented for every space, they are space agnostic.
 These functions have complete source code here, while the functions that DO need to
 be implemented for every space have only documentation strings here and an
@@ -13,7 +13,6 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 =#
 export move_agent!,
     add_agent!,
-    add_agent_pos!,
     remove_agent!,
     remove_all!,
     random_position,
@@ -122,7 +121,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
+function move_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -192,9 +191,13 @@ end
 #######################################################################################
 """
     add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
+
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::AbstractAgent, model::ABM)
+function add_agent_pos!(agent::A, model::ABM) where {A<:AbstractAgent}
+    if !(A <: agenttype(model))
+        error("Agent type $(A) is not a subtype of the model specified agent type!")
+    end
     add_agent_to_model!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
@@ -227,7 +230,7 @@ using Agents
     w::Float64 = 0.1
     k::Bool = false
 end
-model = ABM(Agent, GraphSpace(complete_digraph(5)))
+model = StandardABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
@@ -235,7 +238,8 @@ add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent}
+function add_agent!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
+    A = agenttype(model)
     add_agent!(A, model, args...; kwargs...)
 end
 
@@ -245,14 +249,15 @@ end
 
 function add_agent!(
     pos::ValidPos,
-    model::ABM{S,A},
+    model::ABM,
     args::Vararg{Any, N};
     kwargs...,
-) where {N,S,A<:AbstractAgent}
+) where {N}
+    A = agenttype(model)
     add_agent!(pos, A, model, args...; kwargs...)
 end
 
-# lowest level:
+# lowest level - actually constructs the agent
 function add_agent!(
     pos::ValidPos,
     A::Type{<:AbstractAgent},
@@ -288,12 +293,7 @@ end
 
 Same as `nearby_positions(agent.pos, model, r)`.
 """
-function nearby_positions(
-    agent::A,
-    model::ABM{S,A},
-    r = 1;
-    kwargs...,
-) where {S,A<:AbstractAgent}
+function nearby_positions(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     nearby_positions(agent.pos, model, r; kwargs...)
 end
 

@@ -5,9 +5,7 @@ the `remove_agent!` and `add_agent!` functions directly,
 otherwise they will try to add `nothing` to the agent position.
 =#
 
-function add_agent_to_space!(::A, ::ABM{Nothing,A}) where {A<:AbstractAgent}
-    nothing
-end
+add_agent_to_space!(::AbstractAgent, ::ABM{Nothing}) = nothing
 
 # We need to extend this one, because otherwise there is a `pos` that
 # is attempted to be given to the agent creation...

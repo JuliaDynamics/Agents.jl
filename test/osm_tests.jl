@@ -12,7 +12,7 @@ end
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 3353 ways and 9753 nodes"
 
-    model = ABM(AgentOSM, space; rng = StableRNG(42), warn_deprecation = false)
+    model = StandardABM(AgentOSM, space; rng = StableRNG(42), warn_deprecation = false)
 
     start_lonlat = (9.9351811, 51.5328328)
     start_intersection = OSM.nearest_node(start_lonlat, model)
@@ -101,8 +101,8 @@ end
             route = plan_route!(model[2+i], finish_road, model)
         end
 
-        @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
-        @test sort!(nearby_ids(model[6].pos, model, 2.0)) == [1, 2, 3, 4, 5, 6, 7]
+        @test sort!(collect(nearby_ids(model[6], model, 0.01))) == [2, 3, 4, 5, 7]
+        @test sort!(collect(nearby_ids(model[6].pos, model, 2.0))) == [1, 2, 3, 4, 5, 6, 7]
     end
 
     @testset "Long moves" begin

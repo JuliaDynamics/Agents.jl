@@ -76,7 +76,7 @@ function initialise(;
     min_threshold = 60.0, # Regulate fishing if population drops below this value
     nagents = 50,
 )
-    model = ABM(
+    model = StandardABM(
         Fisher;
         properties = Dict(
             :stock => stock,
@@ -153,7 +153,7 @@ function initialise(;
     min_threshold = 60.0, # Regulate fishing if population drops below this value
     nagents = 50,
 )
-    model = ABM(
+    model = StandardABM(
         Fisher;
         properties = Dict(
             :stock => stock,
@@ -253,7 +253,7 @@ function initialise_diffeq(;
         OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
     integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
 
-    model = ABM(
+    model = StandardABM(
         Fisher;
         properties = Dict(
             :stock => stock,
@@ -361,7 +361,7 @@ function agent_cb_step!(agent, model)
 end
 
 function initialise_cb(; min_threshold = 60.0, nagents = 50)
-    model = ABM(Fisher; properties = Dict(:min_threshold => min_threshold))
+    model = StandardABM(Fisher; properties = Dict(:min_threshold => min_threshold))
 
     for _ in 1:nagents
         add_agent!(model, floor(rand(abmrng(model), truncated(LogNormal(), 1, 6))), 0.0)
