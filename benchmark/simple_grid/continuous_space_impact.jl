@@ -8,7 +8,7 @@ r = 0.1
 space = ContinuousSpace(extent, spacing)
 @agent struct Agent(ContinuousAgent{2,Float64})
 end
-model = ABM(Agent, space; rng = StableRNG(42))
+model = StandardABM(Agent, space; rng = StableRNG(42))
 
 # fill with random agents
 N = 1000

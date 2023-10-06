@@ -58,7 +58,7 @@ function initialize_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(

@@ -115,7 +115,7 @@ end
 # We also want to include a property `min_to_be_happy` in our model, and so we have:
 
 properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; properties, agent_step!)
+schelling = StandardABM(SchellingAgent, space; properties, agent_step!)
 
 # Since we opted to use an `agent_step!` function, the scheduler of the model matters.
 # Here we used the default scheduler (which is also the fastest one) to create
@@ -123,7 +123,7 @@ schelling = ABM(SchellingAgent, space; properties, agent_step!)
 # property `:group`, so that all agents of group 1 act first.
 # We would then use the scheduler [`Schedulers.ByProperty`](@ref) like so:
 
-schelling2 = ABM(
+schelling2 = StandardABM(
     SchellingAgent,
     space;
     properties,

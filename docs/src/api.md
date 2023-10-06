@@ -163,7 +163,7 @@ Specifically, imagine the scenario
 using Agents
 # We don't need to make a new agent type here,
 # we use the minimal agent for 4-dimensional grid spaces
-model = ABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
+model = StandardABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
 add_agent!((1, 1, 1, 1), model)
 add_agent!((1, 1, 1, 1), model)
 add_agent!((2, 1, 1, 1), model)

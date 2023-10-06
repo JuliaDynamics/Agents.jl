@@ -138,7 +138,7 @@ function initialize_model(
         dt = dt,
     )
 
-    model = ABM(Animal, space; rng, properties)
+    model = StandardABM(Animal, space; rng, properties)
 
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits

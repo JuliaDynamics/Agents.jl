@@ -38,7 +38,7 @@ function ensemble_benchmark(f, parallel, nreplicates)
             space = GridSpace(griddims, periodic = false)
             properties = Dict(:min_to_be_happy => min_to_be_happy)
 
-            model = ABM(SchellingAgent, space;
+            model = StandardABM(SchellingAgent, space;
                         properties = properties, scheduler = Schedulers.randomly)
 
             for n in 1:numagents

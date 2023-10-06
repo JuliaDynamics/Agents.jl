@@ -55,7 +55,7 @@ function schoolyard(;
     seed = 6998,
     velocity = (0, 0),
 )
-    model = ABM(
+    model = StandardABM(
         Student,
         ContinuousSpace((100, 100); spacing=spacing, periodic=false);
         properties = Dict(

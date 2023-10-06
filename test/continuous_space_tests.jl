@@ -16,13 +16,13 @@ using LinearAlgebra: norm, dot
         @test spacesize(space2) == SVector(1.0, 1.0, 1.0)
         @test_throws ArgumentError ContinuousSpace((-1,1)) # Cannot have negative extent
         @test_throws MethodError ContinuousSpace([1,1]) # Must be a tuple or svector
-        model = ABM(SpeedyContinuousAgent, space1, warn_deprecation = false)
-        model2 = ABM(SpeedyContinuousAgent, space2, warn_deprecation = false)
+        model = StandardABM(SpeedyContinuousAgent, space1, warn_deprecation = false)
+        model2 = StandardABM(SpeedyContinuousAgent, space2, warn_deprecation = false)
     end
 
     @testset "add/remove/move agent" begin
         space1 = ContinuousSpace((1, 1))
-        model = ABM(SpeedyContinuousAgent, space1; rng = StableRNG(42), warn_deprecation = false)
+        model = StandardABM(SpeedyContinuousAgent, space1; rng = StableRNG(42), warn_deprecation = false)
         @test nagents(model) == 0
         # add_agent! with no existing agent (the agent is created)
         pos0 = SVector(0.51, 0.51)
@@ -50,7 +50,7 @@ using LinearAlgebra: norm, dot
         @test nagents(model) == 0
         # test edge case described in #853
         space = ContinuousSpace(SVector(1,1); periodic=true)
-        model = ABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
+        model = StandardABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
         pos = SVector(0.4936805014512577, 0.007750092779602313)
         vel = SVector(0.6319498548742291, -0.7750092779602327)
         add_agent!(pos, model, vel)
@@ -63,7 +63,7 @@ using LinearAlgebra: norm, dot
         @agent struct SVecAgent(ContinuousAgent{2,Float64})
         end
         space = ContinuousSpace((1,1))
-        model = ABM(SVecAgent, space, warn_deprecation = false)
+        model = StandardABM(SVecAgent, space, warn_deprecation = false)
         x = (0.0, 0.0)
         v = (0.1, 0.0)
         dt = 1.0
@@ -82,7 +82,7 @@ using LinearAlgebra: norm, dot
         add_agent!(model, .-v)
         @test model[2].pos isa SVector{2,Float64}
         @test model[2].vel == SVector(.-v)
-        
+
         # agents with hard-coded tuple types should work but throw warnings on creation
         mutable struct TupleManualAgent <: AbstractAgent
             id::Int
@@ -93,8 +93,8 @@ using LinearAlgebra: norm, dot
         @test_logs (
             :warn,
             "Using `NTuple` for the `pos` and `vel` fields of agent types in ContinuousSpace is deprecated. Use `SVector` instead."
-        ) match_mode=:any ABM(TupleManualAgent, space, warn_deprecation = false)
-        model = ABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
+        ) match_mode=:any StandardABM(TupleManualAgent, space, warn_deprecation = false)
+        model = StandardABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
         x = (0.0, 0.0)
         v = (0.1, 0.0)
         dt = 1.0
@@ -103,7 +103,7 @@ using LinearAlgebra: norm, dot
         @test model[1].vel == v
         move_agent!(model[1], model, dt)
         @test model[1].pos == x .+ v.*dt
-        model = ABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
+        model = StandardABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
         add_agent!(model, v)
         @test model[1].pos isa NTuple{2,Float64}
         y = (0.5, 0.2)
@@ -114,7 +114,7 @@ using LinearAlgebra: norm, dot
         ## random walks
         ≃(x,y) = isapprox(x, y; atol = 1e-12) # \simeq
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
+        model = StandardABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
@@ -127,7 +127,7 @@ using LinearAlgebra: norm, dot
         @test norm(model[1].vel) ≃ r
         # verify that reorientations obey the specified angles
         space = ContinuousSpace((10,10), periodic=true)
-        model = ABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
+        model = StandardABM(TupleManualAgent, space; warn=false, warn_deprecation = false)
         x₀ = (5.0, 5.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model, v₀)
@@ -141,8 +141,8 @@ using LinearAlgebra: norm, dot
         # verify boundary conditions are respected
         space1 = ContinuousSpace((2,2), periodic=true)
         space2 = ContinuousSpace((2,2), periodic=false)
-        model1 = ABM(TupleManualAgent, space1; warn=false, warn_deprecation = false)
-        model2 = ABM(TupleManualAgent, space2; warn=false, warn_deprecation = false)
+        model1 = StandardABM(TupleManualAgent, space1; warn=false, warn_deprecation = false)
+        model2 = StandardABM(TupleManualAgent, space2; warn=false, warn_deprecation = false)
         x₀ = (1.0, 1.0)
         v₀ = (1.0, 0.0)
         add_agent!(x₀, model1, v₀)
@@ -158,9 +158,9 @@ using LinearAlgebra: norm, dot
         using Agents.Pathfinding
         gspace = GridSpace((5, 5))
         cspace = ContinuousSpace((5., 5.))
-        atol = 0.0001 
+        atol = 0.0001
         pathfinder = AStar(cspace; walkmap = trues(10, 10))
-        model = ABM(TupleManualAgent, cspace; properties = (pf = pathfinder,), warn = false, warn_deprecation = false)
+        model = StandardABM(TupleManualAgent, cspace; properties = (pf = pathfinder,), warn = false, warn_deprecation = false)
         a = add_agent!((0., 0.), model, (0., 0.))
         @test is_stationary(a, model.pf)
         plan_route!(a, (4., 4.), model.pf)
@@ -183,7 +183,7 @@ using LinearAlgebra: norm, dot
         # I am sure we can improve it further, but that's for another time...
         extent = (1.0, 1.0)
         spacing = 0.1
-        model = ABM(SpeedyContinuousAgent, ContinuousSpace(extent; spacing), warn_deprecation = false)
+        model = StandardABM(SpeedyContinuousAgent, ContinuousSpace(extent; spacing), warn_deprecation = false)
         # With this space size, the internal grid space which has size (10,10)
         # Hence, the "cell centers" from which search starts have positions:
         @testset "all cell centers" begin
@@ -240,7 +240,7 @@ using LinearAlgebra: norm, dot
     @testset "Interacting pairs" begin
         @testset "standard" begin
             space = ContinuousSpace((10, 10); spacing = 0.2, periodic = false)
-            model = ABM(SpeedyContinuousAgent, space; scheduler = Schedulers.ByID(), warn_deprecation = false)
+            model = StandardABM(SpeedyContinuousAgent, space; scheduler = Schedulers.ByID(), warn_deprecation = false)
             pos = SVector.([
                 (7.074386436066224, 4.963014649338054)
                 (5.831962448496828, 4.926297135685473)
@@ -255,7 +255,7 @@ using LinearAlgebra: norm, dot
             @test (3, 6) ∉ pairs
 
             space2 = ContinuousSpace((10, 10); spacing = 0.1, periodic = false)
-            model2 = ABM(SpeedyContinuousAgent, space2; scheduler = Schedulers.ByID(), warn_deprecation = false)
+            model2 = StandardABM(SpeedyContinuousAgent, space2; scheduler = Schedulers.ByID(), warn_deprecation = false)
             for i in 1:4
                 add_agent!(pos[i], SpeedyContinuousAgent, model2, SVector(0.0, 0.0), 0)
             end
@@ -274,7 +274,7 @@ using LinearAlgebra: norm, dot
                 [a.id for a in allagents(model) if !(typeof(a) <: SpeedyContinuousAgent)]
             end
             space3 = ContinuousSpace((10,10); spacing = 1.0, periodic = false)
-            model3 = ABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3; warn = false, warn_deprecation = false)
+            model3 = StandardABM(Union{SpeedyContinuousAgent, AgentU1, AgentU2}, space3; warn = false, warn_deprecation = false)
             for i in 1:10
                 add_agent!(SVector(i/10, i/10), SpeedyContinuousAgent, model3, SVector(0.0, 0.0), 0)
             end
@@ -300,7 +300,7 @@ using LinearAlgebra: norm, dot
         end
         @testset "fix #288" begin
             space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
-            model = ABM(SpeedyContinuousAgent, space, warn_deprecation = false)
+            model = StandardABM(SpeedyContinuousAgent, space, warn_deprecation = false)
             pos = SVector.([(0.01, 0.01),(0.2,0.2),(0.5,0.5)])
             for i in pos
             add_agent!(i,model,SVector(0.0,0.0),1.0)
@@ -323,7 +323,7 @@ using LinearAlgebra: norm, dot
             f1::Union{Int,Nothing}
         end
         space = ContinuousSpace((1,1); spacing = 0.1, periodic = true)
-        model = ABM(AgentNNContinuous, space, warn_deprecation = false)
+        model = StandardABM(AgentNNContinuous, space, warn_deprecation = false)
         pos = SVector.([(0.01, 0.01),(0.2, 0.01),(0.2, 0.2),(0.5, 0.5)])
         for i in pos
             add_agent!(i,model,SVector(0.0,0.0),nothing)
@@ -341,7 +341,7 @@ using LinearAlgebra: norm, dot
 
     @testset "walk" begin
         # ContinuousSpace
-        model = ABM(SpeedyContinuousAgent, ContinuousSpace((12, 10); periodic = false), warn_deprecation = false)
+        model = StandardABM(SpeedyContinuousAgent, ContinuousSpace((12, 10); periodic = false), warn_deprecation = false)
         a = add_agent!(SVector(0.0, 0.0), model, (0.0, 0.0), rand(abmrng(model)))
         walk!(a, SVector(1.0, 1.0), model)
         @test a.pos == SVector(1.0, 1.0)
@@ -350,7 +350,7 @@ using LinearAlgebra: norm, dot
 
         @agent struct ContinuousAgent3D(ContinuousAgent{3,Float64})
         end
-        model = ABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2), warn_deprecation = false)
+        model = StandardABM(ContinuousAgent3D, ContinuousSpace((12, 10, 5); spacing = 0.2), warn_deprecation = false)
         a = add_agent!(SVector(0.0, 0.0, 0.0), model, SVector(0.0, 0.0, 0.0))
         walk!(a, SVector(1.0, 1.0, 1.0), model)
         @test a.pos == SVector(1.0, 1.0, 1.0)
@@ -362,7 +362,7 @@ using LinearAlgebra: norm, dot
 
 
         @testset "periodic" begin
-            model = ABM(ContinuousAgent{2,Float64}, ContinuousSpace((12, 10); periodic = true), warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{2,Float64}, ContinuousSpace((12, 10); periodic = true), warn_deprecation = false)
             a = add_agent!(SVector(11.0, 9.0), model, SVector(3.0, 1.0))
             move_agent!(a, model, 1.0)
             @test a.pos[1] == 2
@@ -381,7 +381,7 @@ using LinearAlgebra: norm, dot
 
         function model_initiation()
             space = ContinuousSpace((10,10); periodic=true)
-            model = ABM(MassContinuousAgent, space; agent_step! = agent_step!, model_step! = model_step!,
+            model = StandardABM(MassContinuousAgent, space; agent_step! = agent_step!, model_step! = model_step!,
                         rng=StableRNG(42), properties= Dict(:c => 0), warn_deprecation = false);
             # Add initial individuals
             for i in 1:10, j in 1:10
@@ -453,7 +453,7 @@ using LinearAlgebra: norm, dot
         ≃(x,y) = isapprox(x,y,atol=1e-12) # \simeq
         @testset "2D" begin
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
             x₀ = SVector(5.0, 5.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -472,7 +472,7 @@ using LinearAlgebra: norm, dot
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10), periodic=true)
-            model = ABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
             x₀ = SVector(5.0, 5.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -501,8 +501,8 @@ using LinearAlgebra: norm, dot
             # verify boundary conditions are respected
             space1 = ContinuousSpace((2,2), periodic=true)
             space2 = ContinuousSpace((2,2), periodic=false)
-            model1 = ABM(ContinuousAgent{2,Float64}, space1, warn_deprecation = false)
-            model2 = ABM(ContinuousAgent{2,Float64}, space2, warn_deprecation = false)
+            model1 = StandardABM(ContinuousAgent{2,Float64}, space1, warn_deprecation = false)
+            model2 = StandardABM(ContinuousAgent{2,Float64}, space2, warn_deprecation = false)
             x₀ = SVector(1.0, 1.0)
             v₀ = SVector(1.0, 0.0)
             add_agent!(x₀, model1, v₀)
@@ -518,7 +518,7 @@ using LinearAlgebra: norm, dot
 
         @testset "3D" begin
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
             x₀ = SVector(5.0, 5.0, 5.0)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -537,7 +537,7 @@ using LinearAlgebra: norm, dot
 
             # verify that reorientations obey the specified angles
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0
@@ -550,7 +550,7 @@ using LinearAlgebra: norm, dot
             @test dot(v₁, v₀) ≃ cos(θ)
 
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             r = 1.0
@@ -567,7 +567,7 @@ using LinearAlgebra: norm, dot
 
             # test that velocity measure changes
             space = ContinuousSpace((10,10,10), periodic=true)
-            model = ABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{3,Float64}, space, warn_deprecation = false)
             v₀ = SVector(1.0, 0.0, 0.0)
             add_agent!(model, v₀)
             randomwalk!(model[1], model, 2)
@@ -576,7 +576,7 @@ using LinearAlgebra: norm, dot
 
         @testset "4D" begin
             space = ContinuousSpace((3,3,3,3), periodic=true)
-            model = ABM(ContinuousAgent{4,Float64}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{4,Float64}, space, warn_deprecation = false)
             x₀ = SVector(2.0, 2.0, 2.0, 2.0)
             v₀ = SVector(0.2, 0.0, 0.0, 0.0)
             add_agent!(x₀, model, v₀)
@@ -596,9 +596,9 @@ using LinearAlgebra: norm, dot
     @testset "different continuous agent types" begin
         for T in [Float16, Float32]
             space = ContinuousSpace((1,1)) # converted to SVector{2¸Float64}
-            @test_throws ArgumentError model = ABM(ContinuousAgent{2,T}, space, warn_deprecation = false)
+            @test_throws ArgumentError model = StandardABM(ContinuousAgent{2,T}, space, warn_deprecation = false)
             space = ContinuousSpace(SVector{2,T}(1,1))
-            model = ABM(ContinuousAgent{2,T}, space, warn_deprecation = false)
+            model = StandardABM(ContinuousAgent{2,T}, space, warn_deprecation = false)
             x = spacesize(model) ./ 2
             # vel is converted automatically
             vel = randn(SVector{2}) ./ 20
@@ -618,7 +618,7 @@ using LinearAlgebra: norm, dot
             @test model[1].pos == y2
             walk!(model[1], model[1].vel, model)
             @test model[1].pos == y2 .+ model[1].vel
-            
+
             r = 0.1
             x = model[1].pos
             randomwalk!(model[1], model, r)
@@ -637,7 +637,7 @@ function test_neighbors_continuous(;
 )
 sizes = @. Int(extent/spacing)
 c = spacing/2
-model = ABM(SpeedyContinuousAgent, ContinuousSpace(extent; spacing))
+model = StandardABM(SpeedyContinuousAgent, ContinuousSpace(extent; spacing))
 cell_centers = [(c + spacing*i, 0.05 + spacing*j) for i in 0:sizes[1]-1, j in 0:sizes[2]-1]
 
 # fill with random agents

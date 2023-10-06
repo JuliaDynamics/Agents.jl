@@ -69,7 +69,7 @@ using Agents
 @agent struct MyAgent(NoSpaceAgent) <: AbstractAgent
 end
 properties = Dict(:par1 => 1, :par2 => 1.0, :par3 => "Test")
-model = ABM(MyAgent; properties = properties)
+model = StandardABM(MyAgent; properties = properties)
 model_step!(model) = begin
 	a = model.par1 * model.par2
 end
@@ -103,7 +103,7 @@ The solution is to use a Dictionary for model properties only when all values ar
 end
 
 properties = Parameters()
-model = ABM(MyAgent; properties = properties)
+model = StandardABM(MyAgent; properties = properties)
 ```
 
 ## Don't use agents to represent a spatial property

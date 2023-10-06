@@ -15,7 +15,6 @@ using Random
 using StaticArrays: SVector
 export SVector
 import ProgressMeter
-import Base.length # TODO: This should not be imported!!!
 import LinearAlgebra
 
 # Core structures of Agents.jl

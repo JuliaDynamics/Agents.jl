@@ -230,7 +230,7 @@ using Agents
     w::Float64 = 0.1
     k::Bool = false
 end
-model = ABM(Agent, GraphSpace(complete_digraph(5)))
+model = StandardABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5

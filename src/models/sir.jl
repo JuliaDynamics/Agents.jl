@@ -77,7 +77,7 @@ function sir(;
     )
 
     space = GraphSpace(Agents.Graphs.complete_graph(C))
-    model = ABM(PoorSoul, space; properties, rng, agent_step! = sir_agent_step!)
+    model = StandardABM(PoorSoul, space; properties, rng, agent_step! = sir_agent_step!)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]

@@ -41,7 +41,7 @@ end
 function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
         agent_step! = zombie_step!,

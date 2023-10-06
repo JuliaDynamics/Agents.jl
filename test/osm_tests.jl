@@ -12,7 +12,7 @@ end
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 3353 ways and 9753 nodes"
 
-    model = ABM(AgentOSM, space; rng = StableRNG(42), warn_deprecation = false)
+    model = StandardABM(AgentOSM, space; rng = StableRNG(42), warn_deprecation = false)
 
     start_lonlat = (9.9351811, 51.5328328)
     start_intersection = OSM.nearest_node(start_lonlat, model)

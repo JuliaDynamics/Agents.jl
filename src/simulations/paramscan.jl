@@ -41,7 +41,7 @@ The following keywords modify the `paramscan` function:
 - `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated into [`run!`](@ref).
-Furthermore, `n` is also a keyword here, that is given to [`run!`](@ref) as argument. 
+Furthermore, `n` is also a keyword here, that is given to [`run!`](@ref) as argument.
 Naturally, the number of time steps `n` and at least one of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
@@ -53,7 +53,7 @@ There, we define
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ABM(SchellingAgent, space;
+    model = StandardABM(SchellingAgent, space;
                 properties = properties, scheduler = Schedulers.randomly)
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, n < numagents / 2 ? 1 : 2)
@@ -88,7 +88,7 @@ function paramscan(
     kwargs...,
 )
     if agent_step! != dummystep || model_step! != dummystep
-    @warn "Passing agent_step! and model_step! to paramscan is deprecated. 
+    @warn "Passing agent_step! and model_step! to paramscan is deprecated.
           These functions should be already presented inside the model instance."
     end
     if include_constants

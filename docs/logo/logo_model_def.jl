@@ -91,7 +91,7 @@ function sir_logo_initiation(;
     )
     rng = Random.Xoshiro(seed)
     space = ContinuousSpace(logo_dims ./ 100)
-    model = ABM(PoorSoul, space; rng, properties)
+    model = StandardABM(PoorSoul, space; rng, properties)
 
     ## Add pre-defined static individuals
     #--------------------------------------

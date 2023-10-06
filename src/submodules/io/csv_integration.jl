@@ -27,7 +27,7 @@ struct Foo <: AbstractAgent
     foo::Tuple{Int,String}
 end
 
-model = ABM(Foo, ...)
+model = StandardABM(Foo, ...)
 AgentsIO.populate_from_csv!(model, "test.csv")
 ```
 Here, `types` will be inferred to be
@@ -119,7 +119,7 @@ struct Foo <: AbstractAgent
     foo::Tuple{Int,String}
 end
 
-model = ABM(Foo, ...)
+model = StandardABM(Foo, ...)
 ...
 AgentsIO.dump_to_csv("test.csv", allagents(model))
 ```

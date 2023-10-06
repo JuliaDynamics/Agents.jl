@@ -59,11 +59,11 @@ function add_newids!(model, org_ids, new_ids)
 end
 
 """
-    replicate!(agent, model; kwargs...) 
+    replicate!(agent, model; kwargs...)
 
-Add a new agent to the `model` copying the values of the fields of the given agent. 
-With the `kwargs` it is possible to override the values by specifying new ones for 
-some fields (except for the `id` field which is set to a new one automatically). 
+Add a new agent to the `model` copying the values of the fields of the given agent.
+With the `kwargs` it is possible to override the values by specifying new ones for
+some fields (except for the `id` field which is set to a new one automatically).
 Return the new agent instance.
 
 ## Example
@@ -74,13 +74,13 @@ using Agents
     w::Float64
 end
 
-model = ABM(A, GridSpace((5, 5)))
+model = StandardABM(A, GridSpace((5, 5)))
 a = A(1, (2, 2), 0.5, 0.5)
 b = replicate!(a, model; w = 0.8)
 ```
 """
 function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    args = new_args(agent, model; kwargs...) 
+    args = new_args(agent, model; kwargs...)
     newagent = A(nextid(model), args...)
     add_agent_pos!(newagent, model)
     return newagent

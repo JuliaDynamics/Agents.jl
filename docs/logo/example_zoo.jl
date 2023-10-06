@@ -89,7 +89,7 @@ function flocking_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
@@ -156,7 +156,7 @@ end
 function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
         properties = properties,
@@ -293,7 +293,7 @@ function transform_forces(agent::SimpleCell)
     return fsym, compression, torque
 end
 
-bacteria_model = ABM(
+bacteria_model = StandardABM(
     SimpleCell,
     ContinuousSpace((14, 9); spacing = 1.0, periodic = false);
     properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
@@ -339,7 +339,7 @@ function initialize_runners(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     space = GridSpace(size(heightmap); periodic = false)
     pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
-    model = ABM(
+    model = StandardABM(
         Runner,
         space;
         rng = MersenneTwister(seed),
@@ -383,7 +383,7 @@ function forest_fire(; density = 0.7, griddims = (100, 100), seed = 2)
     rng = Random.MersenneTwister(seed)
     ## The `trees` field is coded such that
     ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
-    forest = ABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
+    forest = StandardABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
         if rand(abmrng(forest)) < density
             ## Set the trees at the left edge on fire
@@ -689,7 +689,7 @@ function initialize_fractal(;
     )
     ## space is periodic to allow particles going off one edge to wrap around to the opposite
     space = ContinuousSpace(space_extents; spacing = 1.0, periodic = true)
-    model = ABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
+    model = StandardABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
     center = space_extents ./ 2.0
     for i in 1:initial_particles
         p_r = particle_radius(min_radius, max_radius, abmrng(model))
@@ -788,7 +788,7 @@ function socialdistancing_init(;
         dt,
     )
     space = ContinuousSpace((1,1); spacing = 0.02)
-    model = ABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
+    model = StandardABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
     for ind in 1:N

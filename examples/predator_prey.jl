@@ -88,7 +88,7 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(Union{Sheep, Wolf}, space;
+    model = StandardABM(Union{Sheep, Wolf}, space;
         properties, rng, scheduler = Schedulers.randomly, warn = false
     )
     ## Add agents
