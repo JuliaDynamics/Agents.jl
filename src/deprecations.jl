@@ -94,10 +94,10 @@ macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
     # metaprogramming-obtain-actual-type-from-symbol-for-field-inheritance/84912
-    @warn "this version of the agent macro is deprecated. Use the new version of 
-         the agent macro introduced in the 6.0 release. 
+    @warn "this version of the agent macro is deprecated. Use the new version of
+         the agent macro introduced in the 6.0 release.
          The new structure is the following:
-    
+
               @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
                   extra_property::X
                   other_extra_property_with_default::Bool = true
@@ -159,10 +159,10 @@ macro agent(new_name, base_type, super_type, extra_fields)
 end
 
 macro agent(new_name, base_type, extra_fields)
-    # Here we nest one macro call into another because there is no way to provide 
+    # Here we nest one macro call into another because there is no way to provide
     # defaults for macro arguments. We proceed to call the actual macro with the default
     # `super_type = AbstractAgent`. This requires us to disable 'macro hygiene', see here
-    # for a brief explanation of the potential issues with this: 
+    # for a brief explanation of the potential issues with this:
     # https://discourse.julialang.org/t/calling-a-macro-from-within-a-macro-revisited/19680/16?u=fbanning
     esc(quote
         Agents.@agent($new_name, $base_type, Agents.AbstractAgent, $extra_fields)
@@ -178,7 +178,7 @@ per position, updating the agent's position to the new one.
 This function does nothing if there aren't any empty positions.
 """
 function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
-    @warn "Adding agent with add_agent_single!(agent::AbstractAgent, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent_single!(agent::AbstractAgent, model::ABM) is deprecated.
            Use add_agent_single!([pos,] A::Type, model::ABM; kwargs...) or add_agent_single!([pos,] A::Type, model::ABM, args...)."
     position = random_empty(model)
     isnothing(position) && return nothing
@@ -198,21 +198,21 @@ the `agent`'s position.
 The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     agent.pos = random_position(model)
     add_agent_pos!(agent, model)
 end
 
 function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated.
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     agent.pos = pos
     add_agent_pos!(agent, model)
 end
 
 function add_agent!(agent::A, model::ABM{Nothing,A}) where {A<:AbstractAgent}
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated. 
+    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     add_agent_pos!(agent, model)
 end
@@ -223,16 +223,16 @@ end
 
 function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
     if warn_deprecation
-        @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version 
+        @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version
              step!(model, n = 1, agents_first = true)"
-    end    
+    end
     s = 0
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
             for id in schedule(model)
                 agent_step!(model[id], model)
-            end     
+            end
         end
         agents_first && model_step!(model)
         s += 1
@@ -253,7 +253,7 @@ function run!(model, agent_step!, model_step!, n;
         warn_deprecation = true
     )
     if warn_deprecation
-        @warn "Passing agent_step! and model_step! to run! is deprecated. 
+        @warn "Passing agent_step! and model_step! to run! is deprecated.
           These functions should be already contained inside the model instance."
     end
     df_agent = init_agent_dataframe(model, adata)
@@ -316,7 +316,7 @@ function offline_run!(model, agent_step!, model_step!, n;
         warn_deprecation = true
     )
     if warn_deprecation
-        @warn "Passing agent_step! and model_step! to offline_run! is deprecated. 
+        @warn "Passing agent_step! and model_step! to offline_run! is deprecated.
           These functions should be already contained inside the model instance."
     end
     df_agent = init_agent_dataframe(model, adata)
@@ -413,9 +413,9 @@ function ensemblerun!(
     parallel = false,
     warn_deprecation = true,
     kwargs...,
-)   
+)
     if warn_deprecation
-        @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated. 
+        @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated.
       These functions should be already contained inside the model instance."
     end
     if parallel
@@ -489,3 +489,8 @@ function ensemblerun!(
     models = [generator(seed) for seed in seeds]
     ensemblerun!(models, args...; kwargs...)
 end
+
+# We use these two functions in deprecation warnings.
+# In version 6.2 they have no reason to exist (when we remove deprecations)
+agent_step_field(model::ABM) = getfield(model, :agent_step)
+model_step_field(model::ABM) = getfield(model, :model_step)

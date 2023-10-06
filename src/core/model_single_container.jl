@@ -1,4 +1,5 @@
-export ABM, StandardABM, UnremovableABM
+export SingleContainerABM, StandardABM, UnremovableABM
+export abmscheduler
 using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
@@ -8,7 +9,7 @@ struct SingleContainerABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
+    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -24,10 +25,14 @@ const SCABM = SingleContainerABM
 const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
 const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
 
+# Extend mandatory internal API for `AgentBasedModel`
+agent_container(model::SingleContainerABM) = getfield(model, :agents)
+
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
 """
     union_types(U::Type)
+
 Return a tuple of types within a `Union`.
 """
 union_types(T::Type) = (T,)
@@ -79,6 +84,9 @@ construct_agent_container(::Type{<:Vector}, A) = Vector{A}
 construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either Dict or Vector."
 )
+
+agenttype(::SingleContainerABM{S,A}) where {S,A} = A
+
 
 """
     StandardABM <: AgentBasedModel
@@ -143,6 +151,14 @@ UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(a
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
+
+"""
+    abmscheduler(model::SingleContainerABM)
+
+Return the default scheduler stored in `model`.
+"""
+abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
+
 nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
