@@ -20,7 +20,7 @@ import LinearAlgebra
 # Core structures of Agents.jl
 include("core/agents.jl")
 include("core/model_abstract.jl")
-include("core/for_free_extensions.jl")
+include("core/model_free_extensions.jl")
 include("core/model_single_container.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
