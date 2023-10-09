@@ -190,8 +190,7 @@ macro agent(struct_repr)
         BaseAgent = expr_replace(BaseAgent, old, new)
     end
     base_fields = BaseAgent.args[2:end][2].args
-    new_type_with_super = :($new_type <: $abstract_type)
-    expr_new_type = :(mutable struct $new_type_with_super
+    expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
                       end)
