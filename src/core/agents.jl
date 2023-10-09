@@ -29,7 +29,7 @@ end
 
 __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
-__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent
+__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAgent
                                            const id::Int
                                        end)
 
@@ -181,40 +181,26 @@ f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
 macro agent(struct_repr)
-    struct_parts = struct_repr.args[2:end]
-    struct_def = struct_parts[1]
-    if struct_def.head == :call
-        new_type, base_type = struct_def.args
-        abstract_type = :(Agents.AbstractAgent)
-    else
-        new_base_types, abstract_type =  struct_def.args
-        new_type, base_type = new_base_types.args
+    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
     end
-    new_type_with_super = :($new_type <: $abstract_type)
-    new_fields = struct_parts[2].args
-    base_type_no_args = base_type isa Symbol ? base_type : base_type.args[1]
-    new_type_no_args = new_type isa Symbol ? new_type : new_type.args[1]
-    BaseAgent = __AGENT_GENERATOR__[base_type_no_args]
-    old_args = BaseAgent.args[2:end][1] isa Symbol ? [] : BaseAgent.args[2:end][1].args[2:end]
-    new_args = base_type isa Symbol ? [] : base_type.args[2:end]
+    abstract_type == nothing && (abstract_type = :(Agents.AbstractAgent))
+    BaseAgent = __AGENT_GENERATOR__[namify(base_type_spec)]
+    @capture(BaseAgent, mutable struct base_type_general_ <: _ __ end)
+    old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
+    new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
     for (old, new) in zip(old_args, new_args)
         BaseAgent = expr_replace(BaseAgent, old, new)
     end
     base_fields = BaseAgent.args[2:end][2].args
-    expr_new_type = :(mutable struct $new_type
+    new_type_with_super = :($new_type <: $abstract_type)
+    expr_new_type = :(mutable struct $new_type_with_super
                         $(base_fields...)
                         $(new_fields...)
                       end)
-    __AGENT_GENERATOR__[new_type_no_args] = expr_new_type
-    expr = quote
-            @kwdef mutable struct $new_type_with_super
-                $(base_fields...)
-                $(new_fields...)
-           end
-       end
-    quote
-        Base.@__doc__($(esc(expr)))
-    end
+    __AGENT_GENERATOR__[namify(new_type)] = expr_new_type
+    expr = quote @kwdef $expr_new_type end
+    quote Base.@__doc__($(esc(expr))) end
 end
 
 function expr_replace(expr, old, new)
