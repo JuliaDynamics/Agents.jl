@@ -1,5 +1,4 @@
-export AbstractAgent, @agent, @oldagent, NoSpaceAgent
-export __AGENT_GENERATOR__
+export AbstractAgent, @agent, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
@@ -18,7 +17,7 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
-__AGENT_GENERATOR__ = Dict{Symbol, Any}()
+__AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
 """
     @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
@@ -167,130 +166,65 @@ f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
-macro oldagent(struct_repr)
-    struct_parts = struct_repr.args[2:end]
-    struct_def = struct_parts[1]
-    if struct_def.head == :call
-        new_type, base_type = struct_def.args
-        abstract_type = :(Agents.AbstractAgent)
-        new_type_with_super = :($new_type <: $abstract_type)
-    else
-        new_base_types, abstract_type =  struct_def.args
-        new_type, base_type = new_base_types.args
-        new_type_with_super = :($new_type <: $abstract_type)
-    end
-    new_fields = struct_parts[2].args
-    quote
-        let
-            # Here we collect the field names and types from the base type
-            # Because the base type already exists, we escape the symbols to 
-            # obtain its fields
-            base_T = $(esc(base_type))
-            base_fieldnames = fieldnames(base_T)
-            base_fieldtypes = fieldtypes(base_T)
-            base_fieldconsts = Tuple(isconst(base_T, f) for f in base_fieldnames)
-            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts)
-            base_fields = [c ? Expr(:const, :($f::$T)) : (:($f::$T))
-                           for (f, T, c) in iter_fields]
-            # Then, we prime the additional name and fields into QuoteNodes
-            # We have to do this to be able to interpolate them into an inner quote.
-            name = $(QuoteNode(new_type_with_super))
-            additional_fields = $(QuoteNode(new_fields))
-            # Now we start an inner quote. This is because our macro needs to call `eval`
-            # However, this should never happen inside the main body of a macro
-            # There are several reasons for that, see the cited discussion at the top
-            expr = quote
-                @kwdef mutable struct $name
-                    $(base_fields...)
-                    $(additional_fields...)
-                end
-            end
-            # @show expr # uncomment this to see that the final expression looks as desired
-            # It is important to evaluate the macro in the module that it was called at
-            Core.eval($(__module__), expr)
-        end
-        # allow attaching docstrings to the new struct, issue #715
-        Core.@__doc__($(esc(Docs.namify(new_type))))
-        nothing
-    end
-end
-
-
 macro agent(struct_repr)
     struct_parts = struct_repr.args[2:end]
     struct_def = struct_parts[1]
     if struct_def.head == :call
         new_type, base_type = struct_def.args
         abstract_type = :(Agents.AbstractAgent)
-        new_type_with_super = :($new_type <: $abstract_type)
     else
         new_base_types, abstract_type =  struct_def.args
         new_type, base_type = new_base_types.args
-        new_type_with_super = :($new_type <: $abstract_type)
     end
+    new_type_args = vcat([t isa Symbol ? [] : t.args[2:end] for t in (new_type, base_type)]...)
+
+    new_type_with_super = :($new_type <: $abstract_type)
     new_fields = struct_parts[2].args
+    base_type_no_args = base_type isa Symbol ? base_type : base_type.args[1]
+    new_type_no_args = new_type isa Symbol ? new_type : new_type.args[1]
+
+    BaseAgent = __AGENT_GENERATOR__[base_type_no_args]
+
+    old_args = BaseAgent.args[2:end][1] isa Symbol ? [] : BaseAgent.args[2:end][1].args[2:end]
+    new_args = base_type isa Symbol ? [] : base_type.args[2:end]
+
+    for (old, new) in zip(old_args, new_args)
+        BaseAgent = expr_replace(BaseAgent, old, new)
+    end
+
+    #println(BaseAgent)
+    #println(new_type_no_args)
+
+    base_fields = BaseAgent.args[2:end][2].args
+
+    expr = quote
+            @kwdef mutable struct $new_type_with_super
+                $(base_fields...)
+                $(new_fields...)
+           end
+       end
+    __AGENT_GENERATOR__[new_type_no_args] = :(mutable struct $new_type
+                                                $(base_fields...)
+                                                $(new_fields...)
+                                              end)
     quote
-        let
-            # Here we collect the field names and types from the base type
-            # Because the base type already exists, we escape the symbols to 
-            # obtain its fields
-            base_type_esc = $(esc(base_type))
-            if base_type_esc isa UnionAll
-                base_type_name = base_type_esc
-            elseif base_type_esc isa DataType
-                base_type_name = $(QuoteNode(base_type))
-                if base_type_name isa Expr # this occurs if parameters are specified
-                    parameters = base_type_name.args[2:end]
-                    base_type_name = base_type_name.args[1]
-                end
-            end
-            BaseAgent = __AGENT_GENERATOR__[Symbol(base_type_name)].args[end] # constructor
-            if BaseAgent.args[1] isa Expr # true for non parametric types
-                base_fieldexpr = BaseAgent.args[1].args[2].args # args from constructor
-            else # for parametric types
-                base_fieldexpr = BaseAgent.args[2].args[1].args[2].args # args from constructor
-            end
-            base_T = $(esc(base_type))
-            base_fieldnames = fieldnames(base_T)
-            base_fieldtypes = fieldtypes(base_T)
-            base_fieldconsts = Tuple(isconst(base_T, f) for f in base_fieldnames)
-            base_fieldhasdefault = Tuple(isa(f,Expr) for f in base_fieldexpr)
-            base_fielddefaults = Tuple(isa(f,Expr) ? f.args[2] : nothing for f in base_fieldexpr)
-            iter_fields = zip(base_fieldnames, base_fieldtypes, base_fieldconsts,
-                base_fieldhasdefault, base_fielddefaults)
-            base_fields = [
-                hasdef ? (c ? Expr(:const, :($f::$T=$d)) : (:($f::$T=$d))) :
-                (c ? Expr(:const, :($f::$T)) : (:($f::$T)))
-                for (f, T, c, hasdef, d) in iter_fields
-            ]
-            # Then, we prime the additional name and fields into QuoteNodes
-            # We have to do this to be able to interpolate them into an inner quote.
-            name = $(QuoteNode(new_type_with_super))
-            name_clean = match(r"\.{0,1}([a-zA-Z0-9_]*)\{{0,1}", string(name)).captures[end]
-            additional_fields = $(QuoteNode(new_fields))
-            # Now we start an inner quote. This is because our macro needs to call `eval`
-            # However, this should never happen inside the main body of a macro
-            # There are several reasons for that, see the cited discussion at the top
-            expr = quote
-                # get expression for new agent type
-                G = @macroexpand @kwdef mutable struct $name
-                    $(base_fields...)
-                    $(additional_fields...)
-                end
-                # evaluate in current scope
-                Core.eval($$(__module__), G)
-                # add expression to generator
-                __AGENT_GENERATOR__[Symbol($name_clean)] = G
-            end
-            # @show expr # uncomment this to see that the final expression looks as desired
-            # It is important to evaluate the macro in the module that it was called at
-            Core.eval($(__module__), expr)
-        end
-        # allow attaching docstrings to the new struct, issue #715
-        Core.@__doc__($(esc(Docs.namify(new_type))))
-        nothing
+        Base.@__doc__($(esc(expr)))
     end
 end
+
+function expr_replace(expr, old, new)
+    function f(expr)
+        expr == old && return deepcopy(new)
+        if expr isa Expr
+            for i in eachindex(expr.args)
+                expr.args[i] = f(expr.args[i])
+            end
+        end
+        expr
+    end
+    f(deepcopy(expr))
+end
+
 
 """
     NoSpaceAgent <: AbstractAgent
@@ -298,11 +232,10 @@ The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
-mutable struct NoSpaceAgent <: AbstractAgent
+mutable struct NoSpaceAgent
     const id::Int
 end
-__AGENT_GENERATOR__[:NoSpaceAgent] = @macroexpand(
-    @kwdef mutable struct NoSpaceAgent <: AbstractAgent
-        const id::Int
-    end
-)
+
+__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent
+                                           const id::Int
+                                       end)
