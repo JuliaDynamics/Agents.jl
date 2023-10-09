@@ -17,21 +17,18 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
+__AGENT_GENERATOR__ = Dict{Symbol, Expr}()
+
 """
     NoSpaceAgent <: AbstractAgent
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
-mutable struct NoSpaceAgent <: AbstractAgent
-    const id::Int
-end
-
-__AGENT_GENERATOR__ = Dict{Symbol, Expr}()
-
 __AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAgent
                                            const id::Int
                                        end)
+eval(__AGENT_GENERATOR__[:NoSpaceAgent])
 
 """
     @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
