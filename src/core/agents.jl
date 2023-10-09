@@ -177,26 +177,17 @@ macro agent(struct_repr)
         new_type, base_type = new_base_types.args
     end
     new_type_args = vcat([t isa Symbol ? [] : t.args[2:end] for t in (new_type, base_type)]...)
-
     new_type_with_super = :($new_type <: $abstract_type)
     new_fields = struct_parts[2].args
     base_type_no_args = base_type isa Symbol ? base_type : base_type.args[1]
     new_type_no_args = new_type isa Symbol ? new_type : new_type.args[1]
-
     BaseAgent = __AGENT_GENERATOR__[base_type_no_args]
-
     old_args = BaseAgent.args[2:end][1] isa Symbol ? [] : BaseAgent.args[2:end][1].args[2:end]
     new_args = base_type isa Symbol ? [] : base_type.args[2:end]
-
     for (old, new) in zip(old_args, new_args)
         BaseAgent = expr_replace(BaseAgent, old, new)
     end
-
-    #println(BaseAgent)
-    #println(new_type_no_args)
-
     base_fields = BaseAgent.args[2:end][2].args
-
     expr = quote
             @kwdef mutable struct $new_type_with_super
                 $(base_fields...)
@@ -224,7 +215,6 @@ function expr_replace(expr, old, new)
     end
     f(deepcopy(expr))
 end
-
 
 """
     NoSpaceAgent <: AbstractAgent
