@@ -187,27 +187,14 @@ macro agent(struct_repr)
     old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
     new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
     for (old, new) in zip(old_args, new_args)
-        BaseAgent = expr_replace(BaseAgent, old, new)
+        BaseAgent = MacroTools.postwalk(ex -> ex == old ? new : ex, BaseAgent)
     end
-    base_fields = BaseAgent.args[2:end][2].args
+    @capture(BaseAgent, mutable struct _ <: _ base_fields__ end)
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
                       end)
-    __AGENT_GENERATOR__[namify(new_type)] = expr_new_type
+    __AGENT_GENERATOR__[namify(new_type)] = MacroTools.prewalk(rmlines, expr_new_type)
     expr = quote @kwdef $expr_new_type end
     quote Base.@__doc__($(esc(expr))) end
-end
-
-function expr_replace(expr, old, new)
-    function f(expr)
-        expr == old && return deepcopy(new)
-        if expr isa Expr
-            for i in eachindex(expr.args)
-                expr.args[i] = f(expr.args[i])
-            end
-        end
-        expr
-    end
-    f(deepcopy(expr))
 end
