@@ -17,7 +17,21 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
+"""
+    NoSpaceAgent <: AbstractAgent
+The minimal agent struct for usage with `nothing` as space (i.e., no space).
+It has the field `id::Int`, and potentially other internal fields that
+are not documented as part of the public API. See also [`@agent`](@ref).
+"""
+mutable struct NoSpaceAgent <: AbstractAgent
+    const id::Int
+end
+
 __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
+
+__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent
+                                           const id::Int
+                                       end)
 
 """
     @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
@@ -176,7 +190,6 @@ macro agent(struct_repr)
         new_base_types, abstract_type =  struct_def.args
         new_type, base_type = new_base_types.args
     end
-    new_type_args = vcat([t isa Symbol ? [] : t.args[2:end] for t in (new_type, base_type)]...)
     new_type_with_super = :($new_type <: $abstract_type)
     new_fields = struct_parts[2].args
     base_type_no_args = base_type isa Symbol ? base_type : base_type.args[1]
@@ -188,16 +201,17 @@ macro agent(struct_repr)
         BaseAgent = expr_replace(BaseAgent, old, new)
     end
     base_fields = BaseAgent.args[2:end][2].args
+    expr_new_type = :(mutable struct $new_type
+                        $(base_fields...)
+                        $(new_fields...)
+                      end)
+    __AGENT_GENERATOR__[new_type_no_args] = expr_new_type
     expr = quote
             @kwdef mutable struct $new_type_with_super
                 $(base_fields...)
                 $(new_fields...)
            end
        end
-    __AGENT_GENERATOR__[new_type_no_args] = :(mutable struct $new_type
-                                                $(base_fields...)
-                                                $(new_fields...)
-                                              end)
     quote
         Base.@__doc__($(esc(expr)))
     end
@@ -215,17 +229,3 @@ function expr_replace(expr, old, new)
     end
     f(deepcopy(expr))
 end
-
-"""
-    NoSpaceAgent <: AbstractAgent
-The minimal agent struct for usage with `nothing` as space (i.e., no space).
-It has the field `id::Int`, and potentially other internal fields that
-are not documented as part of the public API. See also [`@agent`](@ref).
-"""
-mutable struct NoSpaceAgent <: AbstractAgent
-    const id::Int
-end
-
-__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent
-                                           const id::Int
-                                       end)
