@@ -182,14 +182,14 @@ macro agent(struct_repr)
         @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
     end
     abstract_type == nothing && (abstract_type = :(Agents.AbstractAgent))
-    BaseAgent = __AGENT_GENERATOR__[namify(base_type_spec)]
-    @capture(BaseAgent, mutable struct base_type_general_ <: _ __ end)
+    base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
+    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
     old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
     new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
     for (old, new) in zip(old_args, new_args)
-        BaseAgent = MacroTools.postwalk(ex -> ex == old ? new : ex, BaseAgent)
+        base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
     end
-    @capture(BaseAgent, mutable struct _ <: _ base_fields__ end)
+    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
