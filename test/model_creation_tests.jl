@@ -3,7 +3,7 @@ using Test, Agents, Random
 @testset "@agent macro" begin
     @test ContinuousAgent <: AbstractAgent
     @agent struct A3(GridAgent{2})
-        weight::Float64
+        weight::Float64 = 3.0
     end
     @test A3 <: AbstractAgent
     @test fieldnames(A3) == (:id, :pos, :weight)
@@ -19,6 +19,7 @@ using Test, Agents, Random
     @test fieldnames(A4) == (:id, :pos, :weight, :z)
     @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
     @test contains(string(@doc(A4)), "This is a test docstring for agent A4")
+    @test A4(id=1, pos=(1,1), z=true).weight == 3.0
 
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end
@@ -87,8 +88,13 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
     @test_throws ErrorException agent_consts.f4 = false
-end
 
+    abstract type AbstractFoo{D} <: AbstractAgent where D end
+    @agent struct MyFoo{D}(ContinuousAgent{D, Float64}) <: AbstractFoo{D} end
+    @test MyFoo{2} <: AbstractFoo{2}
+    @test !(MyFoo{2} <: AbstractFoo{3})
+    @test fieldtypes(MyFoo{2}) == (Int64, SVector{2, Float64}, SVector{2, Float64})
+end
 
 @testset "Model construction" begin
     mutable struct BadAgent <: AbstractAgent
