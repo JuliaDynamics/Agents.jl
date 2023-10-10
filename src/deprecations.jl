@@ -1,5 +1,9 @@
 
 # v6 deprecations
+
+# From before the move to an interface for ABMs and making `ABM` abstract.
+AgentBasedModel(args...; kwargs...) = SingleContainerABM(args...; kwargs...)
+
 macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
     # https://discourse.julialang.org/t/
