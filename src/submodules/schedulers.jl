@@ -69,7 +69,7 @@ fastest(model::ABM) = allids(model)
 
 """
     Schedulers.ByID()
-A non-allocating scheduler that activates all agents at each step according to their id.
+A scheduler that activates all agents at each step according to their id.
 """
 struct ByID
     ids::Vector{Int}
@@ -86,7 +86,7 @@ end
 
 """
     Schedulers.Randomly()
-A non-allocating scheduler that activates all agents once per step in a random order.
+A scheduler that activates all agents once per step in a random order.
 Different random ordering is used at each different step.
 """
 struct Randomly
@@ -101,7 +101,7 @@ end
 
 """
     Schedulers.Partially(p)
-A non-allocating scheduler that at each step activates only `p` percentage of randomly
+A scheduler that at each step activates only `p` percentage of randomly
 chosen agents.
 """
 struct Partially{R<:Real}
@@ -119,7 +119,7 @@ end
 
 """
     Schedulers.ByProperty(property)
-A non-allocating scheduler that at each step activates the agents in an order dictated by
+A scheduler that at each step activates the agents in an order dictated by
 their `property`, with agents with greater `property` acting first. `property` can be a
 `Symbol`, which just dictates which field of the agents to compare, or a function which
 inputs an agent and outputs a real number.
@@ -150,7 +150,7 @@ end
 """
     Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
 
-A non-allocating scheduler useful only for mixed agent models using `Union` types.
+A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
 Otherwise returns agents grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
@@ -161,7 +161,7 @@ the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)
 
-A non-allocating scheduler that activates agents by type in specified order (since
+A scheduler that activates agents by type in specified order (since
 `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
 agents within each group.
 """
