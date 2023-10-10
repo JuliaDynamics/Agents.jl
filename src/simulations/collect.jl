@@ -549,9 +549,6 @@ dataname(x::Function) = join(
     vcat([string(x)], ["$(prop)=$(getproperty(x, prop))" for prop in propertynames(x)]),
     "_",
 )
-@deprecate aggname dataname
-@deprecate aggname(k, agg) dataname((k, agg))
-@deprecate aggname(k, agg, condition) dataname((k, agg, condition))
 
 function collect_agent_data!(
     df,

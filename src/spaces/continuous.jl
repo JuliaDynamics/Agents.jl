@@ -199,13 +199,7 @@ function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
     return offsets_within_radius(abmspace(model).grid, r)
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
-        exact = false,
-    ) where {D,A,T}
-    if exact
-        @warn("Keyword `exact` in `nearby_ids` is deprecated. Use `nearby_ids_exact`.")
-        nearby_ids_exact(pos, model, r)
-    end
+function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
