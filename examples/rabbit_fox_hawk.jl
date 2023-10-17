@@ -157,10 +157,6 @@ function initialize_model(
     return model
 end
 
-# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
-# model.
-model = initialize_model()
-
 # ## Stepping functions
 
 # The `animal_step!` function dispatches to the proper function depending on the type of agent.
@@ -354,6 +350,10 @@ function model_step!(model)
     ## each step of the model
     growable .= rand(abmrng(model), length(growable)) .< model.regrowth_chance * model.dt
 end
+
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
+model = initialize_model()
 
 # ## Visualization
 # Now we use `Makie` to create a visualization of the model running in 3D space

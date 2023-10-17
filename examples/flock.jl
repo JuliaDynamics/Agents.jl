@@ -75,8 +75,6 @@ function initialize_model(;
     return model
 end
 
-model = initialize_model()
-
 # ## Defining the agent_step!
 # `agent_step!` is the primary function called for each step and computes velocity
 # according to the three rules defined above.
@@ -111,6 +109,8 @@ function agent_step!(bird, model)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
+
+model = initialize_model()
 
 # ## Plotting the flock
 

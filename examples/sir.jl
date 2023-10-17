@@ -167,9 +167,6 @@ function create_params(;
     return params
 end
 
-params = create_params(C = 8, max_travel_rate = 0.01)
-model = model_initiation(; params...)
-
 # ## SIR Stepping functions
 
 # Now we define the functions for modelling the virus spread in time
@@ -223,6 +220,9 @@ function recover_or_die!(agent, model)
         end
     end
 end
+
+params = create_params(C = 8, max_travel_rate = 0.01)
+model = model_initiation(; params...)
 
 # ## Example animation
 # At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
