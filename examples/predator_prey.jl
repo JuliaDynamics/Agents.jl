@@ -61,57 +61,6 @@ end
     Δenergy::Float64
 end
 
-# The function `initialize_model` returns a new model containing sheep, wolves, and grass
-# using a set of pre-defined values (which can be overwritten). The environment is a two
-# dimensional grid space, which enables animals to walk in all
-# directions.
-
-function initialize_model(;
-        n_sheep = 100,
-        n_wolves = 50,
-        dims = (20, 20),
-        regrowth_time = 30,
-        Δenergy_sheep = 4,
-        Δenergy_wolf = 20,
-        sheep_reproduce = 0.04,
-        wolf_reproduce = 0.05,
-        seed = 23182,
-    )
-
-    rng = MersenneTwister(seed)
-    space = GridSpace(dims, periodic = true)
-    ## Model properties contain the grass as two arrays: whether it is fully grown
-    ## and the time to regrow. Also have static parameter `regrowth_time`.
-    ## Notice how the properties are a `NamedTuple` to ensure type stability.
-    properties = (
-        fully_grown = falses(dims),
-        countdown = zeros(Int, dims),
-        regrowth_time = regrowth_time,
-    )
-    model = StandardABM(Union{Sheep, Wolf}, space;
-        properties, rng, scheduler = Schedulers.randomly, warn = false
-    )
-    ## Add agents
-    for _ in 1:n_sheep
-        energy = rand(abmrng(model), 1:(Δenergy_sheep*2)) - 1
-        add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
-    end
-    for _ in 1:n_wolves
-        energy = rand(abmrng(model), 1:(Δenergy_wolf*2)) - 1
-        add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
-    end
-    ## Add grass with random initial growth
-    for p in positions(model)
-        fully_grown = rand(abmrng(model), Bool)
-        countdown = fully_grown ? regrowth_time : rand(abmrng(model), 1:regrowth_time) - 1
-        model.countdown[p...] = countdown
-        model.fully_grown[p...] = fully_grown
-    end
-    return model
-end
-
-sheepwolfgrass = initialize_model()
-
 # ## Defining the stepping functions
 # Sheep and wolves behave similarly:
 # both lose 1 energy unit by moving to an adjacent position and both consume
@@ -190,6 +139,58 @@ function grass_step!(model)
     end
 end
 
+# The function `initialize_model` returns a new model containing sheep, wolves, and grass
+# using a set of pre-defined values (which can be overwritten). The environment is a two
+# dimensional grid space, which enables animals to walk in all
+# directions.
+
+function initialize_model(;
+        n_sheep = 100,
+        n_wolves = 50,
+        dims = (20, 20),
+        regrowth_time = 30,
+        Δenergy_sheep = 4,
+        Δenergy_wolf = 20,
+        sheep_reproduce = 0.04,
+        wolf_reproduce = 0.05,
+        seed = 23182,
+    )
+
+    rng = MersenneTwister(seed)
+    space = GridSpace(dims, periodic = true)
+    ## Model properties contain the grass as two arrays: whether it is fully grown
+    ## and the time to regrow. Also have static parameter `regrowth_time`.
+    ## Notice how the properties are a `NamedTuple` to ensure type stability.
+    properties = (
+        fully_grown = falses(dims),
+        countdown = zeros(Int, dims),
+        regrowth_time = regrowth_time,
+    )
+    model = StandardABM(Union{Sheep, Wolf}, space; 
+        agent_step! = sheepwolf_step!, model_step! = grass_step!,
+        properties, rng, scheduler = Schedulers.Randomly(), warn = false
+    )
+    ## Add agents
+    for _ in 1:n_sheep
+        energy = rand(abmrng(model), 1:(Δenergy_sheep*2)) - 1
+        add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
+    end
+    for _ in 1:n_wolves
+        energy = rand(abmrng(model), 1:(Δenergy_wolf*2)) - 1
+        add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
+    end
+    ## Add grass with random initial growth
+    for p in positions(model)
+        fully_grown = rand(abmrng(model), Bool)
+        countdown = fully_grown ? regrowth_time : rand(abmrng(model), 1:regrowth_time) - 1
+        model.countdown[p...] = countdown
+        model.fully_grown[p...] = fully_grown
+    end
+    return model
+end
+
+sheepwolfgrass = initialize_model()
+
 # ## Running the model
 # %% #src
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
@@ -222,10 +223,7 @@ plotkwargs = (;
 
 sheepwolfgrass = initialize_model()
 
-fig, ax, abmobs = abmplot(sheepwolfgrass;
-    agent_step! = sheepwolf_step!,
-    model_step! = grass_step!,
-plotkwargs...)
+fig, ax, abmobs = abmplot(sheepwolfgrass; plotkwargs...)
 fig
 
 # Now, lets run the simulation and collect some data. Define datacollection:
@@ -237,7 +235,7 @@ sheepwolfgrass = initialize_model()
 steps = 1000
 adata = [(sheep, count), (wolf, count)]
 mdata = [count_grass]
-adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, steps; adata, mdata)
+adf, mdf = run!(sheepwolfgrass, steps; adata, mdata)
 
 # The following plot shows the population dynamics over time.
 # Initially, wolves become extinct because they consume the sheep too quickly.
@@ -270,7 +268,7 @@ stable_params = (;
 )
 
 sheepwolfgrass = initialize_model(;stable_params...)
-adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, 2000; adata, mdata)
+adf, mdf = run!(sheepwolfgrass, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
 # Finding a parameter combination that leads to long-term coexistence was
@@ -284,9 +282,7 @@ sheepwolfgrass = initialize_model(;stable_params...)
 
 abmvideo(
     "sheepwolf.mp4",
-    sheepwolfgrass,
-    sheepwolf_step!,
-    grass_step!;
+    sheepwolfgrass;
     frames = 100,
     framerate = 8,
     title = "Sheep Wolf Grass",

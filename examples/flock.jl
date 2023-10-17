@@ -58,7 +58,7 @@ function initialize_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, agent_step!, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
@@ -139,7 +139,7 @@ figure
 
 # And let's also do a nice little video for it:
 abmvideo(
-    "flocking.mp4", model, agent_step!;
+    "flocking.mp4", model;
     am = bird_marker,
     framerate = 20, frames = 150,
     title = "Flocking"

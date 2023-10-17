@@ -58,6 +58,7 @@ function schoolyard(;
     model = StandardABM(
         Student,
         ContinuousSpace((100, 100); spacing=spacing, periodic=false);
+        agent_step!,
         properties = Dict(
             :teacher_attractor => teacher_attractor,
             :noise => noise,
@@ -151,7 +152,7 @@ function static_preplot!(ax, model)
 end
 
 abmvideo(
-    "schoolyard.mp4", model, agent_step!, dummystep;
+    "schoolyard.mp4", model;
     framerate = 15, frames = 40,
     title = "Playgound dynamics",
     static_preplot!,

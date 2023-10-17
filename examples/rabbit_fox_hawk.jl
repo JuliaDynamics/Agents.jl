@@ -138,7 +138,8 @@ function initialize_model(
         dt = dt,
     )
 
-    model = StandardABM(Animal, space; rng, properties)
+    model = StandardABM(Animal, space; agent_step! = animal_step!, 
+                        model_step! = model_step!, rng, properties)
 
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
@@ -391,7 +392,7 @@ end
 # ```juia
 # abmvideo(
 #     "rabbit_fox_hawk.mp4",
-#     model, animal_step!, model_step!;
+#     model;
 #     figure = (resolution = (800, 700),),
 #     frames = 300,
 #     framerate = 15,
