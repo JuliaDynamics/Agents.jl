@@ -15,6 +15,7 @@ function zombies(; seed = 1234)
     model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
+        agent_step! = zombie_agent_step!,
         properties = properties,
         rng = Random.MersenneTwister(seed)
     )

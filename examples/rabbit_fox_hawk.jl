@@ -138,7 +138,8 @@ function initialize_model(
         dt = dt,
     )
 
-    model = StandardABM(Animal, space; rng, properties)
+    model = StandardABM(Animal, space; agent_step! = animal_step!, 
+                        model_step! = model_step!, rng, properties)
 
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
@@ -155,10 +156,6 @@ function initialize_model(
     end
     return model
 end
-
-# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
-# model.
-model = initialize_model()
 
 # ## Stepping functions
 
@@ -354,6 +351,10 @@ function model_step!(model)
     growable .= rand(abmrng(model), length(growable)) .< model.regrowth_chance * model.dt
 end
 
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
+model = initialize_model()
+
 # ## Visualization
 # Now we use `Makie` to create a visualization of the model running in 3D space
 #
@@ -391,7 +392,7 @@ end
 # ```juia
 # abmvideo(
 #     "rabbit_fox_hawk.mp4",
-#     model, animal_step!, model_step!;
+#     model;
 #     figure = (resolution = (800, 700),),
 #     frames = 300,
 #     framerate = 15,

@@ -37,7 +37,8 @@ function flocking(;
     spacing = visual_distance / 1.5,
 )
     space2d = ContinuousSpace(extent; spacing)
-    model = UnremovableABM(Bird, space2d, scheduler = Schedulers.Randomly())
+    model = UnremovableABM(Bird, space2d; agent_step! = flocking_agent_step!,
+                           scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = Tuple(rand(abmrng(model), 2) * 2 .- 1)
         add_agent!(

@@ -41,7 +41,7 @@ import StatsBase
 CairoMakie.activate!() # hide
 using Random # hide
 
-const DaisyWorld = ABM{<:GridSpace,Union{Daisy,Land}}
+const DaisyWorld = ABM{<:GridSpace}
 
 function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
@@ -136,6 +136,8 @@ function daisyworld(;
     model = StandardABM(
         Union{Daisy,Land},
         space;
+        agent_step!, 
+        model_step!,
         scheduler = daisysched,
         properties = properties,
         warn = false,
@@ -184,15 +186,13 @@ mdata = [:solar_luminosity]
 
 Random.seed!(19) # hide
 model = daisyworld(scenario = :ramp)
-agent_df, model_df =
-    run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+agent_df, model_df = run!(model, 1000; adata = adata, mdata = mdata)
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
 lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
 lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
-leg =
-    f[1, 1] = Legend(
+leg = f[1, 1] = Legend(
         f,
         [lb, lw],
         ["black", "white"],
