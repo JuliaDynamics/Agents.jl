@@ -3,15 +3,12 @@ module AgentsArrow
 using Agents, Arrow
 
 function Agents.writer_arrow(filename, data, append)
-    open(filename, "a+") do io
-        if append
-            Arrow.append(io, data)
-        else
-            Arrow.write(io, data; file = false)
-        end
+    if append
+        Arrow.append(io, data)
+    else
+        Arrow.write(io, data; file = false)
     end
 end
-
 
 # TODO: Implement populate_from and dump_to functions for Arrow.jl
 
