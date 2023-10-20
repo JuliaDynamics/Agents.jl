@@ -230,7 +230,8 @@ end
                 writing_interval = 3
             )
 
-            # IO should be released manually for Windows due to some underlying problems in Arrow.jl
+            # IO should be released manually to be able to remove the .arrow files for Windows 
+            # due to some underlying problems in Arrow.jl
             if !(Sys.iswindows())
                 adata_saved = DataFrame(Arrow.Table("adata.arrow"))
                 @test size(adata_saved) == (11, 2)
