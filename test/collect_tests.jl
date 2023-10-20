@@ -230,17 +230,35 @@ end
                 writing_interval = 3
             )
 
-            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
-            @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:step, :mean_weight]
-
-            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
-            @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:step, :flag, :year]
-
-            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
-            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
-
+            # IO should be released manually for Windows due to some underlying problems in Arrow.jl
+            if !(Sys.iswindows())
+                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:step, :mean_weight]
+    
+                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:step, :flag, :year]
+    
+                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+            else
+                open("adata.arrow") do io
+                    adata_saved = DataFrame(Arrow.Table(io))
+                    close(io)
+                end
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:step, :mean_weight]
+                open("mdata.arrow") do io
+                    mdata_saved = DataFrame(Arrow.Table(io))
+                    close(io)
+                end
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:step, :flag, :year]
+                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+                GC.gc(true)
+            end
             rm("adata.arrow")
             rm("mdata.arrow")
             @test !isfile("adata.arrow")
