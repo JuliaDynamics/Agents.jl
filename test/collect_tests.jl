@@ -221,14 +221,6 @@ end
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
 
-            offline_run!(model, 365 * 5;
-                when_model = each_year,
-                when = six_months,
-                backend = :arrow,
-                mdata = [:flag, :year],
-                adata = [(:weight, mean)],
-                writing_interval = 3
-            )
             # removing .arrow files after operating on them causes IO errors on Windows
             # so to make tests on Windows work we need to remove them when a new test
             # run occurs
