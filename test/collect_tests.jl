@@ -221,33 +221,30 @@ end
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
 
-            # Arrow, fails on Windows (see issue #826 (https://github.com/JuliaDynamics/Agents.jl/issues/826))
-            if !(Sys.iswindows())
-                offline_run!(model, 365 * 5;
-                    when_model = each_year,
-                    when = six_months,
-                    backend = :arrow,
-                    mdata = [:flag, :year],
-                    adata = [(:weight, mean)],
-                    writing_interval = 3
-                )
+            offline_run!(model, 365 * 5;
+                when_model = each_year,
+                when = six_months,
+                backend = :arrow,
+                mdata = [:flag, :year],
+                adata = [(:weight, mean)],
+                writing_interval = 3
+            )
 
-                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
-                @test size(adata_saved) == (11, 2)
-                @test propertynames(adata_saved) == [:step, :mean_weight]
+            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+            @test size(adata_saved) == (11, 2)
+            @test propertynames(adata_saved) == [:step, :mean_weight]
 
-                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
-                @test size(mdata_saved) == (6, 3)
-                @test propertynames(mdata_saved) == [:step, :flag, :year]
+            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+            @test size(mdata_saved) == (6, 3)
+            @test propertynames(mdata_saved) == [:step, :flag, :year]
 
-                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
-                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
 
-                rm("adata.arrow")
-                rm("mdata.arrow")
-                @test !isfile("adata.arrow")
-                @test !isfile("mdata.arrow")
-            end
+            rm("adata.arrow")
+            rm("mdata.arrow")
+            @test !isfile("adata.arrow")
+            @test !isfile("mdata.arrow")
 
             # Backends
             @test_throws TypeError begin
