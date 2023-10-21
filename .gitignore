@@ -12,5 +12,3 @@ src/update_*
 agents_visualizations.md
 .vscode
 celllistmap.mp4
-test/adata.arrow
-test/mdata.arrow
