@@ -221,14 +221,6 @@ end
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
 
-            # removing .arrow files after operating on them causes IO errors on Windows
-            # so to make tests on Windows work we need to remove them when a new test
-            # run occurs
-            if Sys.iswindows()
-                isfile("adata.arrow") && rm("adata.arrow")
-                isfile("mdata.arrow") && rm("mdata.arrow")
-            end
-
             offline_run!(model, 365 * 5;
                 when_model = each_year,
                 when = six_months,
@@ -238,23 +230,22 @@ end
                 writing_interval = 3
             )
 
-            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+            adata_saved = DataFrame(Arrow.Table("adata.arrow"), copycols=true)
             @test size(adata_saved) == (11, 2)
             @test propertynames(adata_saved) == [:step, :mean_weight]
 
-            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"), copycols=true)
             @test size(mdata_saved) == (6, 3)
             @test propertynames(mdata_saved) == [:step, :flag, :year]
 
             @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
             @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
-
-            if !(Sys.iswindows())
-                rm("adata.arrow")
-                rm("mdata.arrow")
-                @test !isfile("adata.arrow")
-                @test !isfile("mdata.arrow")
-            end
+            
+            Sys.iswindows() && GC.gc() 
+            rm("adata.arrow")
+            rm("mdata.arrow")
+            @test !isfile("adata.arrow")
+            @test !isfile("mdata.arrow")
 
             # Backends
             @test_throws TypeError begin
