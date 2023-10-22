@@ -290,11 +290,6 @@ function get_writer(backend)
     if backend == :csv
         return writer_csv
     elseif backend == :arrow
-        if Sys.iswindows()
-            error("""Arrow.jl integration currently does not work on Windows.
-            Please use another backend like `:csv` until the issue has been resolved.
-            Further info: https://github.com/JuliaDynamics/Agents.jl/issues/826""")
-        end
         return writer_arrow
     end
 end
