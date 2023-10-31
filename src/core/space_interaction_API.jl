@@ -401,9 +401,8 @@ function sampling_with_condition_single(iter, condition, model)
     population = collect(iter)
     n = length(population)
     rng = abmrng(model)
-    indices = 1:n
     @inbounds while n != 0
-        index_id = rand(rng, indices)
+        index_id = rand(rng, 1:n)
         el = population[index_id]
         condition(el) && return el
         population[index_id], population[n] = population[n], population[index_id]
@@ -418,9 +417,8 @@ function sampling_with_condition_agents_single(iter, condition, model)
     population = collect(iter)
     n = length(population)
     rng = abmrng(model)
-    indices = 1:n
     @inbounds while n != 0
-        index_id = rand(rng, indices)
+        index_id = rand(rng, 1:n)
         el = population[index_id]
         condition(model[el]) && return model[el]
         population[index_id], population[n] = population[n], population[index_id]
