@@ -19,7 +19,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
 - A new function `swap_agents` can be used to swap an agents couple in a discrete space.
 - A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
-- The `random_agent` function is now much faster than before.
+- The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
 - The `sample!` function is up to 2x faster than before.
 - Grid and continuous spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
 
