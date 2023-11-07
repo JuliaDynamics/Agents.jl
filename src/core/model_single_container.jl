@@ -302,6 +302,3 @@ end
 
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
-schedulername(x::Union{Function,DataType}) = nameof(x)
-schedulername(x) = Symbol(typeof(x))
-
