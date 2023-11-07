@@ -72,7 +72,7 @@ function SingleContainerABM(
     C = construct_agent_container(container, A)
     agents = C()
     return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                                   properties, rng, Ref(0), agents_first)
+                                               properties, rng, Ref(0), agents_first)
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
