@@ -156,12 +156,12 @@ UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(a
 
 Return the default scheduler stored in `model`.
 """
-abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
+abmscheduler(model::ABM) = getfield(model, :scheduler)
 
-nextid(model::Union{StandardABM, EventQueueABM}) = getfield(model, :maxid)[] + 1
+nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::Union{StandardABM, EventQueueABM}) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -179,7 +179,7 @@ function add_agent_to_model!(agent::A, model::UnremovableABM) where {A<:Abstract
     return
 end
 
-function remove_agent_from_model!(agent::A, model::Union{StandardABM, EventQueueABM}) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
     delete!(agent_container(model), agent.id)
     return
 end
@@ -304,5 +304,4 @@ schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
-
 
