@@ -175,18 +175,18 @@ function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAge
     return
 end
 
-function add_agent_to_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::AbstractAgent, model::UnremovableABM)
     agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::AbstractAgent, model::StandardABM)
     delete!(agent_container(model), agent.id)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::AbstractAgent, model::UnremovableABM)
     error("Cannot remove agents in `UnremovableABM`.")
 end
 
