@@ -8,7 +8,8 @@ ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 struct SingleContainerABM{
     S<:SpaceType,
     A<:AbstractAgent,
-    C<:ContainerType{A},G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+    C<:ContainerType{A},
+    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -57,8 +58,8 @@ function SingleContainerABM(
     rng::R = Random.default_rng(),
     agents_first::Bool = true,
     warn = true,
-    warn_deprecation = true,
-) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG,W,L}
+    warn_deprecation = true
+) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
          as keywords argument when defining the model. The old version is deprecated. Passing these
