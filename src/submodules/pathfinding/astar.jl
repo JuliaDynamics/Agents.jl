@@ -216,9 +216,9 @@ Base.isempty(id::Int, pathfinder::AStar) =
 Same, but for pathfinding with A*.
 """
 Agents.is_stationary(
-    agent::A,
+    agent::AbstractAgent,
     pathfinder::AStar,
-) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
+) = isempty(agent.id, pathfinder)
 
 """
     Pathfinding.penaltymap(pathfinder)
