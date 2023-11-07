@@ -54,8 +54,7 @@ npositions(model::ABM) = npositions(abmspace(model))
 Return the ids of agents in the position corresponding to `position` or position
 of `agent`.
 """
-ids_in_position(agent::A, model) where {A<:AbstractAgent} =
-    ids_in_position(agent.pos, model)
+ids_in_position(agent::AbstractAgent, model) = ids_in_position(agent.pos, model)
 
 """
     agents_in_position(position, model::ABM{<:DiscreteSpace})
@@ -63,8 +62,7 @@ ids_in_position(agent::A, model) where {A<:AbstractAgent} =
 
 Return an iterable of the agents in `position``, or in the position of `agent`.
 """
-agents_in_position(agent::A, model) where {A<:AbstractAgent} =
-    agents_in_position(agent.pos, model)
+agents_in_position(agent::AbstractAgent, model) = agents_in_position(agent.pos, model)
 agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
 
 """
