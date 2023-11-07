@@ -21,8 +21,8 @@ struct SingleContainerABM{
 end
 
 const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A},nothing} where {S,A}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A},nothing} where {S,A}
+const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
+const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
 
 # Extend mandatory internal API for `AgentBasedModel`
 agent_container(model::SingleContainerABM) = getfield(model, :agents)
@@ -58,8 +58,6 @@ function SingleContainerABM(
     agents_first::Bool = true,
     warn = true,
     warn_deprecation = true,
-    all_events::W = nothing,
-    all_rates::L = nothing
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG,W,L}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
@@ -72,7 +70,7 @@ function SingleContainerABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,W,L,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
                                                    properties, rng, Ref(0), agents_first)
 end
 
@@ -301,6 +299,8 @@ function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}
     end
 end
 
+schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x) = Symbol(typeof(x))
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
 
