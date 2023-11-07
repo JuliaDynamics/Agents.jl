@@ -1,15 +1,21 @@
-export SingleContainerABM, StandardABM, UnremovableABM
+export SingleContainerABM, StandardABM, UnremovableABM, EventQueueABM
 export abmscheduler
 using StaticArrays: SizedVector
+using DataStructures: PriorityQueue
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
+
+struct Event
+    id::Int
+    event_index::Int
+end
 
 # And the two implementations here are just variants with different `C` type.
 struct SingleContainerABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+    W,L,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -19,11 +25,16 @@ struct SingleContainerABM{
     rng::R
     maxid::Base.RefValue{Int64}
     agents_first::Bool
+    all_events::W
+    all_rates::L
+    queue::PriorityQueue{Event, Float64}
 end
 
 const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
+const StandardABM = SingleContainerABM{S,A,Dict{Int,A},nothing} where {S,A}
+const UnremovableABM = SingleContainerABM{S,A,Vector{A},nothing} where {S,A}
+const EventQueueABM = SingleContainerABM{S,A,Dict{Int,A},W} where {S,A,W}
+
 
 # Extend mandatory internal API for `AgentBasedModel`
 agent_container(model::SingleContainerABM) = getfield(model, :agents)
@@ -58,8 +69,10 @@ function SingleContainerABM(
     rng::R = Random.default_rng(),
     agents_first::Bool = true,
     warn = true,
-    warn_deprecation = true
-) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+    warn_deprecation = true,
+    all_events::W = nothing,
+    all_rates::L = nothing
+) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG,W,L}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
          as keywords argument when defining the model. The old version is deprecated. Passing these
@@ -71,8 +84,9 @@ function SingleContainerABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                               properties, rng, Ref(0), agents_first)
+    return SingleContainerABM{S,A,C,W,L,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+                                                   properties, rng, Ref(0), agents_first, all_events, 
+                                                   all_rates, PriorityQueue{Event, Float64}())
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -147,6 +161,11 @@ the `Dict` used by [`StandardABM`](@ref)), yielding faster retrieval and iterati
 """
 UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Vector)
 
+"""
+    EventQueueABM(AgentType [, space]; properties, kwargs...) → model
+"""
+EventQueueABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs...)
+
 
 #######################################################################################
 # %% Model accessing api
@@ -159,10 +178,11 @@ Return the default scheduler stored in `model`.
 """
 abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
 
+nextid(model::EventQueueABM) = getfield(model, :maxid)[] + 1
 nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::Union{StandardABM, EventQueueABM}) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -181,7 +201,7 @@ function add_agent_to_model!(agent::A, model::UnremovableABM) where {A<:Abstract
     return
 end
 
-function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::A, model::Union{StandardABM, EventQueueABM}) where {A<:AbstractAgent}
     delete!(agent_container(model), agent.id)
     return
 end
