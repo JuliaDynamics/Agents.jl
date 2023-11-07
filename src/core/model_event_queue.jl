@@ -1,5 +1,6 @@
 
 export EventQueueABM
+export abmqueue, abmrates, abmevents
 
 using DataStructures: PriorityQueue
 
@@ -45,7 +46,7 @@ function EventQueueABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return EventQueueABM{S,A,C,W,L,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+    return EventQueueABM{S,A,C,G,K,F,P,W,L,R}(agents, agent_step!, model_step!, space, scheduler,
                                               properties, rng, Ref(0), agents_first, all_events, 
                                               all_rates, PriorityQueue{Event, Float64}())
 end
@@ -68,15 +69,12 @@ function add_agent_to_model!(agent::A, model::EventQueueABM) where {A<:AbstractA
     return
 end
 
-function add_agent_to_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
-    agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
-    push!(agent_container(model), agent)
-    return
-end
-
 function remove_agent_from_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
     delete!(agent_container(model), agent.id)
     return
 end
+
+agent_container(model::EventQueueABM) = getfield(model, :agents)
+agenttype(::EventQueueABM{S,A}) where {S,A} = A
 
 
