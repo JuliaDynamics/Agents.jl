@@ -53,3 +53,30 @@ end
 abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
 abmevents(model::EventQueueABM) = getfield(model, :all_events)
 abmrates(model::EventQueueABM) = getfield(model, :all_rates)
+
+nextid(model::EventQueueABM) = getfield(model, :maxid)[] + 1
+
+function add_agent_to_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
+    if haskey(agent_container(model), agent.id)
+        error("Can't add agent to model. There is already an agent with id=$(agent.id)")
+    else
+        agent_container(model)[agent.id] = agent
+    end
+    maxid = getfield(model, :maxid)
+    new_id = agent.id
+    if maxid[] < new_id; maxid[] = new_id; end
+    return
+end
+
+function add_agent_to_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
+    agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    push!(agent_container(model), agent)
+    return
+end
+
+function remove_agent_from_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
+    delete!(agent_container(model), agent.id)
+    return
+end
+
+
