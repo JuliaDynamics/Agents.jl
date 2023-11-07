@@ -71,14 +71,8 @@ for p in positions(model)
 	add_agent!(p, rand(rng, agent_types), model)
 end
 
-for a in values(Agents.agent_container(model))
-	DataStructures.enqueue!(abmqueue(model), Agents.Event(a.id, 1) => rand(abmrng(model)))
-end
-
-step!(model, 1.32)
-
-for a in values(Agents.agent_container(model))
-	DataStructures.enqueue!(getfield(model, :queue), Agents.Event(a.id, 1) => rand(abmrng(model)))
+for a in allagents(model)
+    DataStructures.enqueue!(abmqueue(model), Agents.Event(a.id, 1) => rand(abmrng(model)))
 end
 
 step!(model, 1.32)
