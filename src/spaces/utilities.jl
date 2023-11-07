@@ -21,9 +21,8 @@ sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 
 Example usage in the [Flocking model](@ref).
 """
-euclidean_distance(a::A, b::B, model::ABM,
-) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, abmspace(model))
-
+euclidean_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) = 
+    euclidean_distance(a.pos, b.pos, abmspace(model))
 euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, abmspace(model))
 
 function euclidean_distance(
@@ -75,9 +74,8 @@ Return the manhattan distance between `a` and `b` (either agents or agent positi
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 """
-manhattan_distance(a::A, b::B, model::ABM
-) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, abmspace(model))
-
+manhattan_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) = 
+    manhattan_distance(a.pos, b.pos, abmspace(model))
 manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, abmspace(model))
 
 function manhattan_distance(
