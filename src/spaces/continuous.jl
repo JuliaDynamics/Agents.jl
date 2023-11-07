@@ -267,7 +267,7 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
 end
 
 # Do the standard extensions for `_exact` as in space API
-function nearby_ids_exact(agent::A, model::ABM, r = 1) where {A<:AbstractAgent}
+function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
     all = nearby_ids_exact(agent.pos, model, r)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
