@@ -1,21 +1,14 @@
-export SingleContainerABM, StandardABM, UnremovableABM, EventQueueABM
+export SingleContainerABM, StandardABM, UnremovableABM
 export abmscheduler
 using StaticArrays: SizedVector
-using DataStructures: PriorityQueue
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
-
-struct Event
-    id::Int
-    event_index::Int
-end
 
 # And the two implementations here are just variants with different `C` type.
 struct SingleContainerABM{
     S<:SpaceType,
     A<:AbstractAgent,
-    C<:ContainerType{A},
-    W,L,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+    C<:ContainerType{A},G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -25,16 +18,11 @@ struct SingleContainerABM{
     rng::R
     maxid::Base.RefValue{Int64}
     agents_first::Bool
-    all_events::W
-    all_rates::L
-    queue::PriorityQueue{Event, Float64}
 end
 
 const SCABM = SingleContainerABM
 const StandardABM = SingleContainerABM{S,A,Dict{Int,A},nothing} where {S,A}
 const UnremovableABM = SingleContainerABM{S,A,Vector{A},nothing} where {S,A}
-const EventQueueABM = SingleContainerABM{S,A,Dict{Int,A},W} where {S,A,W}
-
 
 # Extend mandatory internal API for `AgentBasedModel`
 agent_container(model::SingleContainerABM) = getfield(model, :agents)
@@ -85,8 +73,7 @@ function SingleContainerABM(
     C = construct_agent_container(container, A)
     agents = C()
     return SingleContainerABM{S,A,C,W,L,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                                   properties, rng, Ref(0), agents_first, all_events, 
-                                                   all_rates, PriorityQueue{Event, Float64}())
+                                                   properties, rng, Ref(0), agents_first)
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -161,12 +148,6 @@ the `Dict` used by [`StandardABM`](@ref)), yielding faster retrieval and iterati
 """
 UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Vector)
 
-"""
-    EventQueueABM(AgentType [, space]; properties, kwargs...) → model
-"""
-EventQueueABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs...)
-
-
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
@@ -178,8 +159,7 @@ Return the default scheduler stored in `model`.
 """
 abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
 
-nextid(model::EventQueueABM) = getfield(model, :maxid)[] + 1
-nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
+nextid(model::Union{StandardABM, EventQueueABM}) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
 function add_agent_to_model!(agent::A, model::Union{StandardABM, EventQueueABM}) where {A<:AbstractAgent}
@@ -188,7 +168,6 @@ function add_agent_to_model!(agent::A, model::Union{StandardABM, EventQueueABM})
     else
         agent_container(model)[agent.id] = agent
     end
-    # Only the `StandardABM` implementation actually uses the `maxid` field.
     maxid = getfield(model, :maxid)
     new_id = agent.id
     if maxid[] < new_id; maxid[] = new_id; end
@@ -324,4 +303,5 @@ end
 
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
+
 
