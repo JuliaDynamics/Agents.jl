@@ -41,7 +41,7 @@ end
 function CommonSolve.step!(model::EventQueueABM, t::Real)
     t0 = zero(t)
     while t0 < t
-        event, dt = dequeue_pair!(getfield(model, :queue))
+        event, dt = dequeue_pair!(abmqueue(model))
         process_event!(event, model)
         t0 += dt
     end
@@ -52,16 +52,15 @@ function process_event!(event, model)
     !haskey(agent_container(model), id) && return
     agent = model[id]
     agent_type = findfirst(isequal(typeof(agent)), union_types(agenttype(model)))
-    event_function! = getfield(model, :all_events)[agent_type][event_index]
+    event_function! = abmevents(model)[agent_type][event_index]
     event_function!(agent, model)
     !haskey(agent_container(model), id) && return
-    # evaluate propensities:
-    propensities = getfield(model, :all_rates)[agent_type] .* nagents(model)
+    propensities = abmrates(model)[agent_type] .* nagents(model)
     total_propensity = sum(propensities)
     τ = randexp(abmrng(model)) * total_propensity
     new_event = select_event_based_on_propensities(propensities, model)
     #println(Event(agent_type, new_event) => τ)
-    enqueue!(getfield(model, :queue), Event(id, new_event) => τ)
+    enqueue!(abmqueue(model), Event(id, new_event) => τ)
     return
 end
 
