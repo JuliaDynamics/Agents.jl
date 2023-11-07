@@ -81,6 +81,13 @@ Return the random number generator stored in the `model`.
 abmrng(model::ABM) = getfield(model, :rng)
 
 """
+    abmscheduler(model::SingleContainerABM)
+
+Return the default scheduler stored in `model`.
+"""
+abmscheduler(model::ABM) = getfield(model, :scheduler)
+
+"""
     abmproperties(model::ABM)
 Return the properties container stored in the `model`.
 """
@@ -139,7 +146,7 @@ agenttype(model::ABM) = notimplemented(model)
 
 Return the "container" of agents in the model.
 """
-agent_container(model::ABM) = notimplemented(model)
+agent_container(model::ABM) = getfield(model, :agents)
 
 """
     nextid(model::ABM) → id
@@ -147,7 +154,6 @@ agent_container(model::ABM) = notimplemented(model)
 Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = notimplemented(model)
-
 
 """
     add_agent_to_model!(agent, model)

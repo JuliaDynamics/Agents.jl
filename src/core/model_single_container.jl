@@ -26,7 +26,6 @@ const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
 const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
 
 # Extend mandatory internal API for `AgentBasedModel`
-agent_container(model::SingleContainerABM) = getfield(model, :agents)
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
@@ -150,13 +149,6 @@ UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(a
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
-
-"""
-    abmscheduler(model::SingleContainerABM)
-
-Return the default scheduler stored in `model`.
-"""
-abmscheduler(model::ABM) = getfield(model, :scheduler)
 
 nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1

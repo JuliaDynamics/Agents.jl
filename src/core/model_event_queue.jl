@@ -1,6 +1,6 @@
 
 export EventQueueABM
-export abmqueue, abmrates, abmevents
+export abmqueue, abmrates, abmevents, add_event!
 
 using DataStructures: PriorityQueue
 
@@ -52,8 +52,25 @@ function EventQueueABM(
 end
 
 abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
+
 abmevents(model::EventQueueABM) = getfield(model, :all_events)
+function abmevents(agent, model::EventQueueABM)
+    agent_type = findfirst(isequal(typeof(agent)), union_types(agenttype(model)))
+    return abmevents(model)[agent_type]
+end
+
 abmrates(model::EventQueueABM) = getfield(model, :all_rates)
+function abmrates(agent, model::EventQueueABM)
+    agent_type = findfirst(isequal(typeof(agent)), union_types(agenttype(model)))
+    return abmrates(model)[agent_type]
+end
+
+add_event!(agent::AbstractAgent, event, t, model) = add_event!(agent.id, event, t, model)
+function add_event!(id, event, t, model)
+    queue = abmqueue(model)
+    event_type = findfirst(isequal(event), abmevents(model[id], model))
+    enqueue!(queue, Event(id, event_type) => t)
+end
 
 nextid(model::EventQueueABM) = getfield(model, :maxid)[] + 1
 
@@ -74,7 +91,8 @@ function remove_agent_from_model!(agent::A, model::EventQueueABM) where {A<:Abst
     return
 end
 
-agent_container(model::EventQueueABM) = getfield(model, :agents)
 agenttype(::EventQueueABM{S,A}) where {S,A} = A
+containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
+
 
 

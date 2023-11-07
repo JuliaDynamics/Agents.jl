@@ -2,12 +2,9 @@
 using Agents, Random, DataStructures
 
 # define the three agent types
-@agent struct Rock(GridAgent{2})
-end
-@agent struct Paper(GridAgent{2})
-end
-@agent struct Scissors(GridAgent{2})
-end
+@agent struct Rock(GridAgent{2}) end
+@agent struct Paper(GridAgent{2}) end
+@agent struct Scissors(GridAgent{2}) end
 
 # Define the possible events
 function selection!(agent, model)
@@ -37,7 +34,7 @@ function swap!(agent, model)
     if isempty(rand_pos, model)
         move_agent!(agent, rand_pos, model)
     else
-        near = model[id_in_position[rand_pos]]
+        near = model[id_in_position(rand_pos, model)]
         swap_agents!(agent, near, model)
     end
     return
@@ -62,17 +59,18 @@ scissor_rates = (0.5, 0.1)
 all_rates = (rock_rates, paper_rates, scissor_rates)
 
 # Create model
-space = GridSpaceSingle((100, 100))
+space = GridSpaceSingle((10, 10))
 
 rng = Xoshiro(42)
 model = EventQueueABM(Union{Rock, Paper, Scissors}, space; all_events, all_rates, rng)
 
 for p in positions(model)
-	add_agent!(p, rand(rng, agent_types), model)
+    add_agent!(p, rand(rng, agent_types), model)
 end
 
 for a in allagents(model)
-    DataStructures.enqueue!(abmqueue(model), Agents.Event(a.id, 1) => rand(abmrng(model)))
+    event = rand(abmrng(model), abmevents(a, model))
+    add_event!(a, event, rand(abmrng(model)), model)
 end
 
 step!(model, 1.32)
