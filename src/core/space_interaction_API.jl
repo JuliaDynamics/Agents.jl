@@ -194,7 +194,7 @@ end
 
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::A, model::ABM) where {A<:AbstractAgent}
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
     add_agent_to_model!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
@@ -280,7 +280,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(agent::A, model::ABM, r = 1; kwargs...) where {A<:AbstractAgent}
+function nearby_ids(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
