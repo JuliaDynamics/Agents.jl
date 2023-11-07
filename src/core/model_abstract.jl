@@ -146,7 +146,7 @@ agent_container(model::ABM) = notimplemented(model)
 
 Return a valid `id` for creating a new agent with it.
 """
-#nextid(model::ABM) = notimplemented(model)
+nextid(model::ABM) = notimplemented(model)
 
 
 """
