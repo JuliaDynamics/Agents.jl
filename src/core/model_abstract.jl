@@ -87,6 +87,13 @@ Return the properties container stored in the `model`.
 abmproperties(model::ABM) = getfield(model, :properties)
 
 """
+    abmscheduler(model::ABM)
+
+Return the default scheduler stored in `model`.
+"""
+abmscheduler(model::ABM) = getfield(model, :scheduler)
+
+"""
     abmspace(model::ABM)
 Return the space instance stored in the `model`.
 """
@@ -139,7 +146,7 @@ agenttype(model::ABM) = notimplemented(model)
 
 Return the "container" of agents in the model.
 """
-agent_container(model::ABM) = notimplemented(model)
+agent_container(model::ABM) = getfield(model, :agents)
 
 """
     nextid(model::ABM) → id
