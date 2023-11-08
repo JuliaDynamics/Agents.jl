@@ -37,7 +37,6 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
-- [`UnremovableABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 

@@ -512,11 +512,12 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
         pheremone_ceiling
         )
 
-    model = UnremovableABM(
+    model = StandardABM(
         Ant,
         GridSpace(dimensions, periodic = false);
         properties,
         rng,
+        container = Vector,
         scheduler = Schedulers.Randomly()
     )
 
