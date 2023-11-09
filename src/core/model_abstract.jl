@@ -80,13 +80,6 @@ Return the random number generator stored in the `model`.
 abmrng(model::ABM) = getfield(model, :rng)
 
 """
-    abmscheduler(model::SingleContainerABM)
-
-Return the default scheduler stored in `model`.
-"""
-abmscheduler(model::ABM) = getfield(model, :scheduler)
-
-"""
     abmproperties(model::ABM)
 Return the properties container stored in the `model`.
 """

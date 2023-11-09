@@ -41,8 +41,8 @@ function EventQueueABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return EventQueueABM{S,A,C,G,K,F,P,W,L,R}(agents, space, scheduler, properties, rng, Ref(0),
-                                              all_events, all_rates, PriorityQueue{Event, Float64}())
+    return EventQueueABM{S,A,C,F,P,W,L,R}(agents, space, scheduler, properties, rng, Ref(0),
+                                          all_events, all_rates, PriorityQueue{Event, Float64}())
 end
 
 abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
@@ -64,25 +64,6 @@ function add_event!(id, event, t, model)
     queue = abmqueue(model)
     event_type = findfirst(isequal(event), abmevents(model[id], model))
     enqueue!(queue, Event(id, event_type) => t)
-end
-
-nextid(model::EventQueueABM) = getfield(model, :maxid)[] + 1
-
-function add_agent_to_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
-    if haskey(agent_container(model), agent.id)
-        error("Can't add agent to model. There is already an agent with id=$(agent.id)")
-    else
-        agent_container(model)[agent.id] = agent
-    end
-    maxid = getfield(model, :maxid)
-    new_id = agent.id
-    if maxid[] < new_id; maxid[] = new_id; end
-    return
-end
-
-function remove_agent_from_model!(agent::A, model::EventQueueABM) where {A<:AbstractAgent}
-    delete!(agent_container(model), agent.id)
-    return
 end
 
 agenttype(::EventQueueABM{S,A}) where {S,A} = A

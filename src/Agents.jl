@@ -24,6 +24,8 @@ include("core/model_abstract.jl")
 include("core/model_free_extensions.jl")
 include("core/model_standard.jl")
 include("core/model_event_queue.jl")
+include("core/model_validation.jl")
+include("core/model_accessing_API.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
 
