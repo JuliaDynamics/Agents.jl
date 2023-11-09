@@ -103,7 +103,7 @@ end
 
 @testset "remove_agent! (vector container)" begin
     # No Space
-    model = UnremovableABM(NoSpaceAgent, warn_deprecation = false)
+    model = StandardABM(NoSpaceAgent, container = Vector, warn_deprecation = false)
     add_agent!(model)
     agent = add_agent!(model)
     @test agent.id == 2
@@ -111,7 +111,7 @@ end
     @test_throws ErrorException remove_agent!(agent, model)
     @test_throws ErrorException remove_all!(model, [1, 3])
     # GraphSpace
-    model = UnremovableABM(Agent5, GraphSpace(path_graph(6)), warn_deprecation = false)
+    model = StandardABM(Agent5, GraphSpace(path_graph(6)), container = Vector, warn_deprecation = false)
     add_agent!(model, 5.3)
     add_agent!(model, 2.7)
     @test nagents(model) == 2

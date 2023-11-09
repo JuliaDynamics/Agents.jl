@@ -158,17 +158,15 @@ nagents(schelling)
 # We can obtain the created and added agent, that got assigned the ID 2, like so
 agent = schelling[2]
 
-# ## Using an `UnremovableABM`
+# ## Using a `StandardABM` with `container = Vector`
 
 # We know that the number of agents in the model never changes.
 # This means that we shouldn't use the default version of ABM that is initialized
 # by `ABM` because it allows deletion of agents (at a performance deficit) and we
-# don't need that feature here.
-# Instead, we should use [`UnremovableABM`](@ref).
-# The only change necessary for this to work is to simply change the call to
-# `ABM` to a call to `UnremovableABM`.
+# don't need that feature here.The only change necessary for this to work is to 
+# simply add `container = Vector` when building the model.
 
-schelling = UnremovableABM(SchellingAgent, space; agent_step!, properties)
+schelling = StandardABM(SchellingAgent, space; agent_step!, properties, container = Vector)
 
 # ## Creating the ABM through a function
 
@@ -185,10 +183,10 @@ function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy =
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(seed)
-    model = UnremovableABM(
+    model = StandardABM(
         SchellingAgent, space;
-        agent_step!,
-        properties, rng, scheduler = Schedulers.Randomly()
+        agent_step!, properties, rng, 
+        container = Vector, scheduler = Schedulers.Randomly()
     )
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model

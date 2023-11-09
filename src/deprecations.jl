@@ -2,7 +2,7 @@
 # v6 deprecations
 
 # From before the move to an interface for ABMs and making `ABM` abstract.
-AgentBasedModel(args...; kwargs...) = SingleContainerABM(args...; kwargs...)
+AgentBasedModel(args...; kwargs...) = StandardABM(args...; kwargs...)
 
 macro agent(new_name, base_type, super_type, extra_fields)
     # This macro was generated with the guidance of @rdeits on Discourse:
@@ -408,3 +408,10 @@ end
 # In version 6.2 they have no reason to exist (when we remove deprecations)
 agent_step_field(model::ABM) = getfield(model, :agent_step)
 model_step_field(model::ABM) = getfield(model, :model_step)
+
+function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} 
+    @warn "UnremovableABM is deprecated. Use StandardABM(...; container = Vector, ...) instead."
+    StandardABM(args...; kwargs..., container=Vector)
+end
+
+

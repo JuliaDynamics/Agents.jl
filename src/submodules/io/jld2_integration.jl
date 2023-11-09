@@ -120,7 +120,7 @@ JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T
     )
 
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
-    abm = SingleContainerABM(
+    abm = StandardABM(
         A,
         from_serializable(t.space; kwargs...),
         container = t.agents_container,
