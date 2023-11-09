@@ -73,8 +73,9 @@ evolution, a vector can be used instead.
   model. For complicated models, it could be more suitable to use only `model_step!` to evolve
   the model.
 - `model_step! = dummystep`: the optional stepping function for the model.
-- `container = Dict`: if agents cannot be removed, only added using instead `container = Vector`
-  allows storing agents more efficiently, yielding faster retrieval and iteration over agents.
+- `container = Dict`: the type of container the agents are stored at. Use `Vector` if no agents are removed
+  during the simulation. This allows storing agents more efficiently, yielding faster retrieval and 
+  iteration over agents.
 - `properties = nothing`: additional model-level properties that the user may decide upon
   and include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
