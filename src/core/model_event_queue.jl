@@ -35,8 +35,8 @@ function EventQueueABM(
     rng::R = Random.default_rng(),
     warn = true,
     warn_deprecation = true,
-    all_events::W,
-    all_rates::L
+    all_events::W = nothing,
+    all_rates::L = nothing
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG,W,L}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
