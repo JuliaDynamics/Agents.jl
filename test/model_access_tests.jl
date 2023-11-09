@@ -2,7 +2,7 @@ using Agents, Test
 
 @testset "Model Access" begin
 @testset "Accessing model" begin
-    @testset "ModelType=$(ModelType)" for ModelType in (ABM, StandardABM)
+    @testset "ModelType=$(ModelType)" for ModelType in (ABM, StandardABM, EventQueueABM)
         @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector)
         model = ModelType(NoSpaceAgent; properties = Dict(:a => 2, :b => "test"), 
                           container = ContainerType, warn_deprecation = false)
