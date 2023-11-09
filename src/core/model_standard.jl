@@ -65,7 +65,7 @@ to all scheduled agents. Then, the `model_step!` function is called
 
 `StandardABM` stores by default agents in a dictionary mapping unique `Int` IDs to agents.
 For better performance, in case the number of agents can only increase during the model 
-evolution, a vector can be used instead.
+evolution, a vector can be used instead, see keyword `container`.
 
 ## Keywords
 
