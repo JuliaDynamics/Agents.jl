@@ -135,7 +135,7 @@ agenttype(::StandardABM{S,A}) where {S,A} = A
 nextid(model::DictStandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::VecStandardABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::AbstractAgent, model::DictStandardABM)
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -148,19 +148,19 @@ function add_agent_to_model!(agent::A, model::DictStandardABM) where {A<:Abstrac
     return
 end
 
-function add_agent_to_model!(agent::A, model::VecStandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::AbstractAgent, model::VecStandardABM)
     agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::AbstractAgent, model::DictStandardABM)
     delete!(agent_container(model), agent.id)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::VecStandardABM) where {A<:AbstractAgent}
-    error("Cannot remove agents in a `StandardABM` with a vector container.")
+function remove_agent_from_model!(agent::AbstractAgent, model::VecStandardABM)
+    error("Cannot remove agents in `UnremovableABM`.")
 end
 
 random_id(model::StandardABM) = rand(abmrng(model), agent_container(model)).first
