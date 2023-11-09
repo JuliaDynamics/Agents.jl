@@ -37,7 +37,6 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
-- [`UnremovableABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 
@@ -92,6 +91,13 @@ abmscheduler(model::ABM) = getfield(model, :scheduler)
 Return the properties container stored in the `model`.
 """
 abmproperties(model::ABM) = getfield(model, :properties)
+
+"""
+    abmscheduler(model::ABM)
+
+Return the default scheduler stored in `model`.
+"""
+abmscheduler(model::ABM) = getfield(model, :scheduler)
 
 """
     abmspace(model::ABM)

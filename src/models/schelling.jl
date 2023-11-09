@@ -17,8 +17,8 @@ function schelling(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     @assert numagents < prod(griddims)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = UnremovableABM(SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
-                           scheduler = Schedulers.Randomly())
+    model = StandardABM(SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
+                        container = Vector, scheduler = Schedulers.Randomly())
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
     end

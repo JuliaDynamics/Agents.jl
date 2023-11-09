@@ -1,11 +1,11 @@
-export SingleContainerABM, StandardABM, UnremovableABM
+export StandardABM, UnremovableABM
 export abmscheduler
 using StaticArrays: SizedVector
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
 # And the two implementations here are just variants with different `C` type.
-struct SingleContainerABM{
+struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
@@ -21,13 +21,12 @@ struct SingleContainerABM{
     agents_first::Bool
 end
 
-const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A}
+const DictStandardABM = StandardABM{S,A,Dict{Int,A}} where {S,A} 
+const VecStandardABM = StandardABM{S,A,Vector{A}} where {S,A}
 
 # Extend mandatory internal API for `AgentBasedModel`
 
-containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
+containertype(::StandardABM{S,A,C}) where {S,A,C} = C
 
 """
     union_types(U::Type)
@@ -38,15 +37,58 @@ union_types(T::Type) = (T,)
 union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 """
-    SingleContainerABM(AgentType [, space]; properties, kwargs...) → model
+    StandardABM <: AgentBasedModel
 
-A concrete version of [`AgentBasedModel`](@ref) that stores all agents in a
-single container. Offers the variants:
+The most standard concrete implementation of an [`AgentBasedModel`](@ref),
+as well as the default version of the generic [`AgentBasedModel`](@ref) constructor.
 
-- [`StandardABM`](@ref)
-- [`UnremovableABM`](@ref)
+    StandardABM(AgentType [, space]; properties, kwargs...) → model
+
+Creates a model expecting agents of type `AgentType` living in the given `space`.
+It can support supports multiple agent types by passing a `Union` of agent types
+as `AgentType`. Have a look at [Performance Tips](@ref) for potential
+drawbacks of this approach.
+
+`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
+If it is omitted then all agents are virtually in one position and there is no spatial structure.
+Spaces are mutable objects and are not designed to be shared between models.
+Create a fresh instance of a space with the same properties if you need to do this.
+
+The evolution rules are functions given to the keywords `agent_step!`, `model_step!`, `schedule`. If
+`agent_step!` is not provided, the evolution rules is just the function given to `model_step!`.
+Each step of a simulation with `StandardABM` proceeds as follows:
+If `agent_step!` is not provided, then a simulation step is equivalent with
+calling `model_step!`. If `agent_step!` is provided, then a simulation step
+first schedules agents by calling the scheduler. Then, it applies the `agent_step!` function
+to all scheduled agents. Then, the `model_step!` function is called
+(optionally, the `model_step!` function may be called before activating the agents).
+
+`StandardABM` stores by default agents in a dictionary mapping unique `Int` IDs to agents.
+For better performance, in case the number of agents can only increase during the model 
+evolution, a vector can be used instead, see keyword `container`.
+
+## Keywords
+
+- `agent_step! = dummystep`: the optional stepping function for each agent contained in the
+  model. For complicated models, it could be more suitable to use only `model_step!` to evolve
+  the model.
+- `model_step! = dummystep`: the optional stepping function for the model.
+- `container = Dict`: the type of container the agents are stored at. Use `Vector` if no agents are removed
+  during the simulation. This allows storing agents more efficiently, yielding faster retrieval and 
+  iteration over agents.
+- `properties = nothing`: additional model-level properties that the user may decide upon
+  and include in the model. `properties` can be an arbitrary container of data,
+  however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
+- `scheduler = Schedulers.fastest`: is the scheduler that decides the (default)
+  activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
+- `rng = Random.default_rng()`: the random number generation stored and used by the model
+  in all calls to random functions. Accepts any subtype of `AbstractRNG`.
+- `agents_first::Bool = true`: whether to schedule and activate agents first and then
+  call the `model_step!` function, or vice versa.
+- `warn=true`: some type tests for `AgentType` are done, and by default
+  warnings are thrown when appropriate.
 """
-function SingleContainerABM(
+function StandardABM(
     ::Type{A},
     space::S = nothing;
     agent_step!::G = dummystep,
@@ -70,12 +112,12 @@ function SingleContainerABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                               properties, rng, Ref(0), agents_first)
+    return StandardABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+                                        properties, rng, Ref(0), agents_first)
 end
 
-function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
-    return SingleContainerABM(typeof(agent), args...; kwargs...)
+function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
+    return StandardABM(typeof(agent), args...; kwargs...)
 end
 
 construct_agent_container(::Type{<:Dict}, A) = Dict{Int,A}
@@ -83,9 +125,6 @@ construct_agent_container(::Type{<:Vector}, A) = Vector{A}
 construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either Dict or Vector."
 )
-
-agenttype(::SingleContainerABM{S,A}) where {S,A} = A
-
 
 """
     StandardABM <: AgentBasedModel
@@ -137,23 +176,16 @@ to all scheduled agents. Then, the `model_step!` function is called
 """
 StandardABM(args...; kwargs...) = SingleContainerABM(args...; kwargs..., container=Dict{Int})
 
-"""
-    UnremovableABM(AgentType [, space]; properties, kwargs...) → model
-
-Similar to [`StandardABM`](@ref), but agents cannot be removed, only added.
-This allows storing agents more efficiently in a standard Julia `Vector` (as opposed to
-the `Dict` used by [`StandardABM`](@ref)), yielding faster retrieval and iteration over agents.
-"""
-UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} = SingleContainerABM(args...; kwargs..., container=Vector)
+agenttype(::StandardABM{S,A}) where {S,A} = A
 
 #######################################################################################
 # %% Model accessing api
 #######################################################################################
 
-nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
-nextid(model::UnremovableABM) = nagents(model) + 1
+nextid(model::DictStandardABM) = getfield(model, :maxid)[] + 1
+nextid(model::VecStandardABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -165,19 +197,19 @@ function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAge
     return
 end
 
-function add_agent_to_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::VecStandardABM) where {A<:AbstractAgent}
     agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function remove_agent_from_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
     delete!(agent_container(model), agent.id)
     return
 end
 
-function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:AbstractAgent}
-    error("Cannot remove agents in `UnremovableABM`.")
+function remove_agent_from_model!(agent::A, model::VecStandardABM) where {A<:AbstractAgent}
+    error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
 random_id(model::StandardABM) = rand(abmrng(model), agent_container(model)).first
@@ -268,13 +300,11 @@ end
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-modelname(abm::ABM) = modelname(agent_container(abm))
-modelname(::Dict) = "StandardABM"
-modelname(::Vector) = "UnremovableABM"
-
-function Base.show(io::IO, abm::SingleContainerABM{S,A}) where {S,A}
+function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
     n = isconcretetype(A) ? nameof(A) : string(A)
-    s = "$(modelname(abm)) with $(nagents(abm)) agents of type $(n)"
+    typecontainer = C isa Dict ? Dict : Vector
+    s = "StandardABM with $(nagents(abm)) agents of type $(n)"
+    s *= "\n agents container: $(typecontainer)"
     if abmspace(abm) === nothing
         s *= "\n space: nothing (no spatial structure)"
     else

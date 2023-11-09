@@ -9,7 +9,7 @@ export random_agent, random_id, nagents, allagents, allids
 
 Return an agent given its ID.
 """
-Base.getindex(m::ABM, id::Int) = agent_container(m)[id]
+Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
 
 
 """
