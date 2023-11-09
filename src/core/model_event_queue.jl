@@ -20,7 +20,6 @@ struct EventQueueABM{
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
-    agents_first::Bool
     all_events::W
     all_rates::L
     event_queue::PriorityQueue{Event, Float64}
@@ -68,6 +67,3 @@ end
 
 agenttype(::EventQueueABM{S,A}) where {S,A} = A
 containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
-
-
-
