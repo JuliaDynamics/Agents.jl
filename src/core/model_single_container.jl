@@ -162,7 +162,7 @@ abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
 nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -175,18 +175,18 @@ function add_agent_to_model!(agent::A, model::StandardABM) where {A<:AbstractAge
     return
 end
 
-function add_agent_to_model!(agent::AbstractAgent, model::UnremovableABM)
+function add_agent_to_model!(agent::AbstractAgent, model::VecStandardABM)
     agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     return
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::StandardABM)
+function remove_agent_from_model!(agent::AbstractAgent, model::DictStandardABM)
     delete!(agent_container(model), agent.id)
     return
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::UnremovableABM)
+function remove_agent_from_model!(agent::AbstractAgent, model::VecStandardABM)
     error("Cannot remove agents in `UnremovableABM`.")
 end
 
