@@ -158,7 +158,7 @@ nagents(schelling)
 # We can obtain the created and added agent, that got assigned the ID 2, like so
 agent = schelling[2]
 
-# ## Using an `StandardABM` with `container = Vector`
+# ## Using a `StandardABM` with `container = Vector`
 
 # We know that the number of agents in the model never changes.
 # This means that we shouldn't use the default version of ABM that is initialized
