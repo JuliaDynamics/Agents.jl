@@ -48,13 +48,13 @@ If `"test.csv"` contains the following columns: `pos_1, pos_2, foo_1, foo_2`, th
 can be populated as `AgentsIO.populate_from_csv!(model, "test.csv"; row_number_is_id = true)`.
 """
 function populate_from_csv!(
-    model::ABM{S},
+    model::ABM,
     filename,
-    agent_type::B = Agents.agenttype(model),
+    agent_type::Union{Type{<:AbstractAgent},Function} = Agents.agenttype(model),
     col_map::Dict{Symbol,Int} = Dict{Symbol,Int}();
     row_number_is_id = false,
     kwargs...,
-) where {B <: Union{Type{<:AbstractAgent},Function},S}
+)
     @assert(
         agent_type isa Function || !(agent_type isa Union),
         "agent_type cannot be a Union. It must be a Function or concrete subtype of AbstractAgent"
