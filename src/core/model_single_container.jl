@@ -162,7 +162,7 @@ abmscheduler(model::SingleContainerABM) = getfield(model, :scheduler)
 nextid(model::StandardABM) = getfield(model, :maxid)[] + 1
 nextid(model::UnremovableABM) = nagents(model) + 1
 
-function add_agent_to_model!(agent::A, model::DictStandardABM) where {A<:AbstractAgent}
+function add_agent_to_model!(agent::AbstractAgent, model::DictStandardABM)
     if haskey(agent_container(model), agent.id)
         error("Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
