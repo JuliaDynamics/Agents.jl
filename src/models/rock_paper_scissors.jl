@@ -1,5 +1,5 @@
 
-using Agents, Random, DataStructures
+using Agents, Random
 
 # define the three agent types
 @agent struct Rock(GridAgent{2}) end
@@ -54,7 +54,7 @@ all_events = (rock_events, scissor_events, paper_events)
 # the length of each of these needs to be the same as the length of event tuples
 rock_rates = (0.5, 0.5, 0.2) # relative proportionality matters only
 paper_rates = (0.5, 0.2, 0.1)
-scissor_rates = (0.5, 0.1)
+scissor_rates = (0.5, model -> count(a -> a isa Rock, allagents(model)))
 # same layout as agent types
 all_rates = (rock_rates, paper_rates, scissor_rates)
 
@@ -62,7 +62,8 @@ all_rates = (rock_rates, paper_rates, scissor_rates)
 space = GridSpaceSingle((10, 10))
 
 rng = Xoshiro(42)
-model = EventQueueABM(Union{Rock, Paper, Scissors}, space; all_events, all_rates, rng)
+model = EventQueueABM(Union{Rock, Paper, Scissors}, space; all_events, all_rates, 
+                      warn = false, rng)
 
 for p in positions(model)
     add_agent!(p, rand(rng, agent_types), model)

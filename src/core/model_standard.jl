@@ -9,7 +9,7 @@ struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+    T,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -18,12 +18,14 @@ struct StandardABM{
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    agents_types::T
     agents_first::Bool
 end
 
 # Extend mandatory internal API for `AgentBasedModel`
 
 containertype(::StandardABM{S,A,C}) where {S,A,C} = C
+union_agenttype(::StandardABM{S,A}) where {S,A} = A
 
 """
     union_types(U::Type)
@@ -109,8 +111,10 @@ function StandardABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return StandardABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                        properties, rng, Ref(0), agents_first)
+    agents_types = union_types(A)
+    T = typeof(agents_types)
+    return StandardABM{S,A,C,T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+                                          properties, rng, Ref(0), agents_types, agents_first)
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -123,4 +127,3 @@ construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either Dict or Vector."
 )
 
-agenttype(::StandardABM{S,A}) where {S,A} = A

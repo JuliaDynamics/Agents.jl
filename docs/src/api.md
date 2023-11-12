@@ -8,10 +8,11 @@ In this page we list the remaining API functions, which constitute the bulk of A
 Besides the generic interface of [`AgentBasedModel`](@ref), and the [`StandardABM`](@ref), highlighted in the tutorial, there is also:
 
 ```@docs
-UnremovableABM
+EventQueueABM
 ```
 
 ## Agent/model retrieval and access
+
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
@@ -24,6 +25,9 @@ abmproperties
 abmrng
 abmscheduler
 abmspace
+abmevents
+abmrates
+abmtime
 ```
 
 ## Available spaces

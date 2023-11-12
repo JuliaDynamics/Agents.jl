@@ -38,37 +38,43 @@ function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
     end
 end
 
+"""
+    step!(model::EventQueueABM, t::Real)
+
+Evolve the model executing the scheduled events until the time 
+reaches the current time + `t`.
+"""
 function CommonSolve.step!(model::EventQueueABM, t::Real)
-    t0 = zero(t)
-    while t0 < t
-        event, dt = dequeue_pair!(abmqueue(model))
+    model_t = getfield(model, :time)
+    t0 = model_t[]
+    while model_t[] < t0 + t
+        event, t_event = dequeue_pair!(abmqueue(model))
         process_event!(event, model)
-        t0 += dt
+        model_t[] = t_event
     end
 end
 
 function process_event!(event, model)
-    id, event_index = event.id, event.event_index
+    id, event_idx = event.id, event.event_index
     !haskey(agent_container(model), id) && return
     agent = model[id]
-    agent_type = findfirst(isequal(typeof(agent)), union_types(agenttype(model)))
-    event_function! = abmevents(model)[agent_type][event_index]
+    agent_type = findfirst(isequal(typeof(agent)), tuple_agenttype(model))
+    event_function! = abmevents(model)[agent_type][event_idx]
     event_function!(agent, model)
     !haskey(agent_container(model), id) && return
-    propensities = abmrates(model)[agent_type] .* nagents(model)
-    total_propensity = sum(propensities)
-    τ = randexp(abmrng(model)) * total_propensity
-    new_event = select_event_based_on_propensities(propensities, model)
-    #println(Event(agent_type, new_event) => τ)
-    enqueue!(abmqueue(model), Event(id, new_event) => τ)
+    propensities = abmrates(agent, model) .* nagents(model)
+    total_propensities = sum(propensities)
+    t = abmtime(model) + randexp(abmrng(model)) * total_propensities
+    new_event_idx = select_event(propensities, total_propensities, model)
+    enqueue!(abmqueue(model), Event(id, new_event_idx) => t)
     return
 end
 
-function select_event_based_on_propensities(propensities, model)
+function select_event(propensities, total_propensities, model)
+    cum_p = accumulate(+, propensities ./ total_propensities)
     p = rand(abmrng(model))
-    return findfirst(s -> p <= s, accumulate(+, propensities ./ sum(propensities)))
+    return findfirst(c -> p <= c, cum_p)
 end
-
 
 """
     dummystep(model)
