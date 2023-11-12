@@ -25,7 +25,7 @@ end
 # Extend mandatory internal API for `AgentBasedModel`
 
 containertype(::StandardABM{S,A,C}) where {S,A,C} = C
-union_agenttype(::StandardABM{S,A}) where {S,A} = A
+agenttype(::StandardABM{S,A}) where {S,A} = A
 
 """
     union_types(U::Type)
