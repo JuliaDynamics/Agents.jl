@@ -64,8 +64,8 @@ function.
 function EventQueueABM(
     ::Type{A},
     space::S = nothing;
-    all_events::W,
-    all_rates::L,
+    all_events::W = nothing,
+    all_rates::L = nothing,
     container::Type = Dict{Int},
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
