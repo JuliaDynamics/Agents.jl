@@ -1,3 +1,11 @@
+const DEFAULT_SPACES = Union{
+    Agents.GridSpace,
+    Agents.GridSpaceSingle,
+    Agents.ContinuousSpace,
+    Agents.OpenStreetMapSpace,
+    Agents.GraphSpace,
+}
+
 "Plot space and/or set axis limits."
 function set_axis_limits!(ax::Axis, model::ABM{<:DEFAULT_SPACES})
     o, e = get_axis_limits!(model)
