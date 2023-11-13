@@ -963,8 +963,13 @@ ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
         reverse_ids_on_road(pos_1, pos_2, model),
     ))
 
-Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}, args::Vararg{Any, N}; kwargs...) where {N} =
+function Agents.nearby_positions(
+        pos::Tuple{Int,Int,Float64}, 
+        model::ABM{<:OpenStreetMapSpace}, 
+        args::Vararg{Any, N}; kwargs...
+    ) where {N}
     nearby_positions(pos[1], model, args...; kwargs...)
+end
 
 function Agents.nearby_positions(
         position::Int,
