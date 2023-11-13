@@ -1,3 +1,13 @@
+## Preplotting
+
+"""
+`OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 
+with them in the given Makie axis.
+"""
+function preplot!(ax, model<:ABM{S::OpenStreetMapSpace}; preplotkwargs...)
+    return Agents.osmplot!(ax, model; preplotkwargs...)
+end
+
 ## API functions for lifting
 
 function abmplot_pos(model::ABM{<:OpenStreetMapSpace}, offset, ids)

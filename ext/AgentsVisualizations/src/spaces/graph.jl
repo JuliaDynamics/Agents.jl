@@ -1,3 +1,17 @@
+"Plot agents' positions."
+function plot_agents!(ax, model<:ABM{S::GraphSpace}; abmplot = first_abmplot_in(ax))
+    hidedecorations!(ax)
+    ec = get(abmplot.graphplotkwargs, :edge_color, Observable(:black))
+    edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
+    ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
+    edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
+    Agents.graphplot!(abmplot, abmspace(model).graph;
+        node_color=color, node_marker=marker, node_size=markersize,
+        abmplot.graphplotkwargs, # must come first to not overwrite lifted kwargs
+        edge_color, edge_width)
+    return abmplot
+end
+
 ## API functions for lifting
 
 # for GraphSpace the collected ids are the indices of the graph nodes (= agent positions)

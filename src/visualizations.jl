@@ -238,6 +238,6 @@ export translate_polygon, scale_polygon, rotate_polygon
 
 # Some cheat functions that only exist so that we can have
 # a conditional dependency on OSMMakie and GraphMakie
-function agents_osmplot! end
-function agents_graphplot! end
+function osmplot! end
+function graphplot! end
 
