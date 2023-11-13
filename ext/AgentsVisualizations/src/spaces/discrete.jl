@@ -29,12 +29,12 @@ end
 preplot!(ax, model; preplotkwargs...) = nothing
 
 "Plot heatmap according to given `heatarray`."
-function heatmap!(ax, abmplot::_ABMPlot)
-    heatobs = @lift(abmplot_heatobs($(abmplot.abmobs[].model), abmplot.heatarray))
+function heatmap!(ax, p::_ABMPlot)
+    heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
-    hmap = Makie.heatmap!(abmplot, heatobs; 
-        colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...)
-    abmplot.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+    hmap = Makie.heatmap!(p, heatobs; 
+        colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
+    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
     # TODO: Set colorbar to be "glued" to axis
     # Problem with the following code, which comes from the tutorial
     # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
@@ -67,32 +67,32 @@ function static_preplot!(ax, model, p::_ABMPlot)
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
-        static_preplot!(ax, model) instead."""
+        static_preplot!(ax, model, p) instead."""
         return p.static_preplot![](ax, model)
     end
     return nothing
 end
 
-"Plot agents' positions."
-plot_agents!(ax, model::ABM) =
-    @warn("Unknown axis type: $(typeof(ax)). Skipping plotting agents.")
+"Catch unknown Axis types (i.e. other than `Axis` and `Axis3`.)"
+plot_agents!(ax, model::ABM, p::_ABMPlot) =
+    @error("Unknown axis type: $(typeof(ax)).")
 
-"2D space --- typeof(pos[]) <: Vector{Point2f}"
-function plot_agents!(ax::Axis, model::ABM{S}) where {S}
-    p = first_abmplot_in(ax)
+"Plot agents into a 2D space."
+function plot_agents!(ax::Axis, model::ABM, p::_ABMPlot)
     if p._used_poly[]
-        poly_plot = poly!(p, marker; color, p.scatterkwargs...)
+        poly_plot = poly!(p, p.marker; p.color, p.scatterkwargs...)
         poly_plot.inspectable[] = false # disable inspection for poly until fixed
     else
-        scatter!(p, pos; color, marker, markersize, p.scatterkwargs...)
+        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
     end
+    return p
 end
 
-"3D space --- typeof(pos[]) <: Vector{Point3f}"
-function plot_agents!(ax::Axis3, model::ABM{S}) where {S}
-    p = first_abmplot_in(ax)
-    marker[] == :circle && (marker = Sphere(Point3f(0), 1))
-    meshscatter!(p, pos; color, marker, markersize, p.scatterkwargs...)
+"Plot agents into a 3D space."
+function plot_agents!(ax::Axis3, model::ABM, p::_ABMPlot)
+    p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
+    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+    return p
 end
 
 first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
