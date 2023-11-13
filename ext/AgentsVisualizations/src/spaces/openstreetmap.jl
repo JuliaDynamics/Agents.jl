@@ -1,3 +1,17 @@
+"Get correct axis limits for `OpenStreetMapSpace` models."
+function get_axis_limits!(model<:ABM{S::Agents.OpenStreetMapSpace})
+    o = [Inf, Inf]
+    e = [-Inf, -Inf]
+    for i ∈ Agents.positions(model)
+        x, y = Agents.OSM.lonlat(i, model)
+        o[1] = min(x, o[1])
+        o[2] = min(y, o[2])
+        e[1] = max(x, e[1])
+        e[2] = max(y, e[2])
+    end
+    return o, e
+end
+
 ## Preplotting
 
 """

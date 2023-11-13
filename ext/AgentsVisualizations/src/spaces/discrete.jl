@@ -1,3 +1,23 @@
+"Plot space and/or set axis limits."
+function set_axis_limits!(ax::Axis, model<:ABM{S<:DEFAULT_SPACES})
+    o, e = get_axis_limits!(model)
+    any(isnothing, (o, e)) && return nothing
+    xlims!(ax, o[1], e[1])
+    ylims!(ax, o[2], e[2])
+    length(o) == 3 && zlims!(ax, o[3], e[3])
+    return o, e
+end
+
+function set_axis_limits!(ax::Axis3, model<:ABM{S<:DEFAULT_SPACES})
+    o, e = get_axis_limits!(model)
+    any(isnothing, (o, e)) && return nothing
+    xlims!(ax, o[1], e[1])
+    ylims!(ax, o[2], e[2])
+    zlims!(ax, o[3], e[3])
+    return o, e
+end
+
+
 ## API functions for lifting
 
 abmplot_ids(model::ABM{<:DEFAULT_SPACES}) = allids(model)
