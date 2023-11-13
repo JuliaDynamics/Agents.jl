@@ -55,6 +55,17 @@ function abmplot_heatobs(model, heatarray)
     return heatobs
 end
 
+function static_preplot!(ax, model)
+    p = first_abmplot_in(ax)
+    if hasproperty(p, :static_preplot!)
+        @warn """Usage of the static_preplot! kwarg is deprecated.
+        Please remove it from the call to abmplot and define a custom method for 
+        static_preplot!(ax, model) instead."""
+        return p.static_preplot![](ax, model)
+    end
+    return nothing
+end
+
 "Plot agents' positions."
 plot_agents!(ax, model<:ABM) =
     @warn("Unknown axis type: $(typeof(ax)). Skipping plotting agents.")

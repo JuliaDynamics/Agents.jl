@@ -98,7 +98,6 @@ This is the internal recipe for creating an `_ABMPlot`.
         heatarray=nothing,
         heatkwargs=NamedTuple(),
         add_colorbar=true,
-        (static_preplot!)=nothing,
         adjust_aspect=true,
 
         # Interactive application
