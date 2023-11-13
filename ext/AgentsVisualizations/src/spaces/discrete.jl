@@ -55,6 +55,29 @@ function abmplot_heatobs(model, heatarray)
     return heatobs
 end
 
+"Plot agents' positions."
+plot_agents!(ax, model<:ABM) =
+    @warn("Unknown axis type: $(typeof(ax)). Skipping plotting agents.")
+
+"2D space --- typeof(pos[]) <: Vector{Point2f}"
+function plot_agents!(ax::Axis, model<:ABM{S}) where {S}
+    p = first_abmplot_in(ax)
+    if p._used_poly[]
+        poly_plot = poly!(p, marker; color, p.scatterkwargs...)
+        poly_plot.inspectable[] = false # disable inspection for poly until fixed
+    else
+        scatter!(p, pos; color, marker, markersize, p.scatterkwargs...)
+    end
+end
+
+"3D space --- typeof(pos[]) <: Vector{Point3f}"
+function plot_agents!(ax::Axis3, model<:ABM{S}) where {S}
+    p = first_abmplot_in(ax)
+    marker[] == :circle && (marker = Sphere(Point3f(0), 1))
+    meshscatter!(p, pos; color, marker, markersize, p.scatterkwargs...)
+end
+
+first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
 
 ## API functions for lifting
 
