@@ -117,15 +117,13 @@ function _default_add_controls(agent_step!, model_step!)
     (agent_step! != Agents.dummystep) || (model_step! != Agents.dummystep)
 end
 
-const SUPPORTED_SPACES = Union{
+const DEFAULT_SPACES = Union{
     Agents.GridSpace,
     Agents.GridSpaceSingle,
     Agents.ContinuousSpace,
     Agents.OpenStreetMapSpace,
     Agents.GraphSpace,
 }
-
-
 
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
