@@ -91,7 +91,7 @@ This is the internal recipe for creating an `_ABMPlot`.
         am=:circle,
         offset=nothing,
         scatterkwargs=NamedTuple(),
-        osmkwargs=NamedTuple(),
+        preplotkwargs=NamedTuple(),
         graphplotkwargs=NamedTuple(),
 
         # Preplot
@@ -134,107 +134,29 @@ function Makie.plot!(abmplot::_ABMPlot)
     end
     ax = abmplot.ax[]
     abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
-    if !(abmspace(model) isa Agents.GraphSpace)
-        set_axis_limits!(ax, model)
-    end
-    fig = ax.parent
+    set_axis_limits!(ax, model)
 
-    # Following attributes are all lifted from the recipe observables (specifically,
-    # the model), see lifting.jl for source code.
-    pos, color, marker, markersize, heatobs =
+    abmplot.pos, abmplot.color, abmplot.marker, abmplot.markersize =
         lift_attributes(abmplot.abmobs[].model, abmplot.ac, abmplot.as, abmplot.am,
-            abmplot.offset, abmplot.heatarray, abmplot._used_poly)
+            abmplot.offset, abmplot._used_poly)
 
-    # OpenStreetMapSpace preplot
-    if abmspace(model) isa Agents.OpenStreetMapSpace
-        Agents.agents_osmplot!(abmplot.ax[], model; abmplot.osmkwargs...)
-    end
-
-    # Heatmap
-    if !isnothing(heatobs[])
-        if !(Agents.abmspace(model) isa Agents.ContinuousSpace)
-            hmap = heatmap!(abmplot, heatobs;
-                colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...
-            )
-        else # need special version for continuous space
-            nbinx, nbiny = size(heatobs[])
-            extx, exty = Agents.abmspace(model).extent
-            coordx = range(0, extx; length=nbinx)
-            coordy = range(0, exty; length=nbiny)
-            hmap = heatmap!(abmplot, coordx, coordy, heatobs;
-                colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...
-            )
-        end
-
-        if abmplot.add_colorbar[]
-            Colorbar(fig[1, 1][1, 2], hmap, width=20)
-            # TODO: Set colorbar to be "glued" to axis
-            # Problem with the following code, which comes from the tutorial
-            # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
-            # is that it only works for axis that have 1:1 aspect ratio...
-            # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
-            # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
-        end
-    end
-
-    # Static preplot
-    if !isnothing(abmplot.static_preplot![])
-        abmplot.static_preplot![](ax, model)
-    end
-
-    # Dispatch on type of agent positions
-    T = typeof(pos[])
-    if T <: Nothing # GraphSpace
-        hidedecorations!(ax)
-        ec = get(abmplot.graphplotkwargs, :edge_color, Observable(:black))
-        edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
-        ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
-        edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
-        Agents.agents_graphplot!(abmplot, abmspace(model).graph;
-            node_color=color, node_marker=marker, node_size=markersize,
-            abmplot.graphplotkwargs, # must come first to not overwrite lifted kwargs
-            edge_color, edge_width)
-    elseif T <: Vector{Point2f} # 2d space
-        if typeof(marker[]) <: Vector{<:Makie.Polygon{2}}
-            poly_plot = poly!(abmplot, marker; color, abmplot.scatterkwargs...)
-            poly_plot.inspectable[] = false # disable inspection for poly until fixed
-        else
-            scatter!(abmplot, pos; color, marker, markersize, abmplot.scatterkwargs...)
-        end
-    elseif T <: Vector{Point3f} # 3d space
-        marker[] == :circle && (marker = Sphere(Point3f(0), 1))
-        meshscatter!(abmplot, pos; color, marker, markersize, abmplot.scatterkwargs...)
-    else
-        @warn("Unknown agent position type: $(T). Skipping plotting agents.")
-    end
+    preplot!(ax, model; abmplot.preplotkwargs...)
+    heatmap!(ax, abmplot)
+    static_preplot!(ax, model)
+    plot_agents!(abmplot, model)
 
     # Model controls, parameter sliders
-    abmplot.stepclick, abmplot.resetclick = add_interaction!(fig, ax, abmplot)
+    abmplot.stepclick, abmplot.resetclick = add_interaction!(ax.parent, ax, abmplot)
 
     return abmplot
 end
 
-"Plot space and/or set axis limits."
-function set_axis_limits!(ax, model)
-    if abmspace(model) isa Agents.OpenStreetMapSpace
-        o = [Inf, Inf]
-        e = [-Inf, -Inf]
-        for i ∈ Agents.positions(model)
-            x, y = Agents.OSM.lonlat(i, model)
-            o[1] = min(x, o[1])
-            o[2] = min(y, o[2])
-            e[1] = max(x, e[1])
-            e[2] = max(y, e[2])
-        end
-    elseif abmspace(model) isa Agents.ContinuousSpace
-        e = abmspace(model).extent
-        o = zero.(e)
-    elseif abmspace(model) isa Agents.AbstractGridSpace
-        e = size(abmspace(model)) .+ 0.5
-        o = zero.(e) .+ 0.5
-    end
-    xlims!(ax, o[1], e[1])
-    ylims!(ax, o[2], e[2])
-    length(o) == 3 && zlims!(ax, o[3], e[3])
-    return o, e
+function lift_attributes(model, ac, as, am, offset, used_poly)
+    ids = @lift(abmplot_ids($model))
+    pos = @lift(abmplot_pos($model, $offset, $ids))
+    color = @lift(abmplot_colors($model, $ac, $ids))
+    marker = @lift(abmplot_marker($model, used_poly, $am, $pos, $ids))
+    markersize = @lift(abmplot_markersizes($model, $as, $ids))
+
+    return pos, color, marker, markersize
 end
