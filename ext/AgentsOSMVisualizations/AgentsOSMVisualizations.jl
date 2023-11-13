@@ -9,7 +9,7 @@ default_colors["primary"] = colorant"#a1777f"
 default_colors["secondary"] = colorant"#a18f78"
 default_colors["tertiary"] = colorant"#b3b381"
 
-function Agents.agents_osmplot!(ax::Axis, model::ABM; kwargs...)
+function Agents.osmplot!(ax::Axis, model::ABM; kwargs...)
     osm_plot = OSMMakie.osmplot!(ax, abmspace(model).map;
         graphplotkwargs = (; arrow_show = false), kwargs...
     )
@@ -17,6 +17,5 @@ function Agents.agents_osmplot!(ax::Axis, model::ABM; kwargs...)
     osm_plot.plots[1].plots[3].inspectable[] = false
     return
 end
-
 
 end
