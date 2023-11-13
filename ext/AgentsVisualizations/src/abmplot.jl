@@ -119,7 +119,7 @@ end
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
     ax = abmplot.ax[]
-    !(abmspace(model) isa DEFAULT_SPACES) && custom_space_checker(ax, model, abmplot)
+    custom_space_checker(ax, model, abmplot)
     abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
     set_axis_limits!(ax, model)
 

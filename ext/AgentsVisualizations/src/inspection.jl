@@ -7,7 +7,7 @@
 # 2D space
 function Makie.show_data(inspector::DataInspector,
             plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, source::Scatter) where {S<:DEFAULT_SPACES}
+            idx, source::Scatter) where {S}
     if plot._used_poly[]
         return show_data_poly(inspector, plot, idx, source)
     else
@@ -17,7 +17,7 @@ end
 
 function show_data_2D(inspector::DataInspector,
             plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, source::Scatter) where {S<:DEFAULT_SPACES}
+            idx, source::Scatter) where {S}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
 
@@ -37,7 +37,7 @@ end
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
             plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, ::Makie.Poly) where {S<:DEFAULT_SPACES}
+            idx, ::Makie.Poly) where {S}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
 
@@ -85,7 +85,7 @@ end
 # Agent to string conversion
 ##########################################################################################
 
-function Agents.agent2string(model::ABM{<:DEFAULT_SPACES}, agent_pos)
+function Agents.agent2string(model::ABM, agent_pos)
     ids = ids_to_inspect(model, agent_pos)
     s = ""
 

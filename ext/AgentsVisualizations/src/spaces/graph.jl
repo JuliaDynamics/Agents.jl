@@ -1,18 +1,30 @@
 "Get correct axis limits for `GraphSpace` models."
 get_axis_limits!(model::ABM{<:GraphSpace}) = nothing, nothing
 
-"Plot agents' positions."
-function plot_agents!(ax, model::ABM{<:GraphSpace}; abmplot = first_abmplot_in(ax))
+function plot_agents!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
-    ec = get(abmplot.graphplotkwargs, :edge_color, Observable(:black))
-    edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))
-    ew = get(abmplot.graphplotkwargs, :edge_width, Observable(1))
-    edge_width = @lift(abmplot_edge_width($(abmplot.abmobs[].model), $ew))
-    Agents.graphplot!(abmplot, abmspace(model).graph;
-        node_color=color, node_marker=marker, node_size=markersize,
-        abmplot.graphplotkwargs, # must come first to not overwrite lifted kwargs
+    ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
+    edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
+    ew = get(p.graphplotkwargs, :edge_width, Observable(1))
+    edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
+    Agents.graphplot!(p, abmspace(model).graph;
+        node_color=p.color, node_marker=p.marker, node_size=p.markersize,
+        p.graphplotkwargs, # must come first to not overwrite lifted kwargs
         edge_color, edge_width)
-    return abmplot
+    return p
+end
+
+function plot_agents!(ax::Axis3, model::ABM{<:GraphSpace}, p::_ABMPlot)
+    hidedecorations!(ax)
+    ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
+    edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
+    ew = get(p.graphplotkwargs, :edge_width, Observable(1))
+    edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
+    Agents.graphplot!(p, abmspace(model).graph;
+        node_color=p.color, node_marker=p.marker, node_size=p.markersize,
+        p.graphplotkwargs, # must come first to not overwrite lifted kwargs
+        edge_color, edge_width)
+    return p
 end
 
 ## API functions for lifting

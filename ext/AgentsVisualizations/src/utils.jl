@@ -3,6 +3,9 @@ export record_interaction
 export custom_space_checker
 
 function custom_space_checker(ax::A, model::ABM{S}, p::_ABMPlot) where {A,S}
+    if S <: Union{Agents.DiscreteSpace, Agents.ContinuousSpace}
+        return fill(true, 4)
+    end
     checks = [
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits!, (ABM{S}, )),
@@ -15,7 +18,11 @@ function custom_space_checker(ax::A, model::ABM{S}, p::_ABMPlot) where {A,S}
     $(checks[2] ? "✔" : "❌")  get_axis_limits!\n
     $(checks[3] ? "✔" : "❌")  plot_agents!\n
     $(checks[4] ? "✔" : "❌")  preplot! (optional)\n
-    Please reference the Agents.jl documentation (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
+    """
+    if all(checks[1:3])
+        @error """Requirements for plotting of custom space not met.
+        Please reference the Agents.jl documentation (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
+    end
     return checks
 end
 
