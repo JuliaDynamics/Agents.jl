@@ -18,7 +18,7 @@ include("src/model_observable.jl")
 include("src/abmplot.jl")
 
 # Spaces
-include("src/spaces/discrete.jl")
+include("src/spaces/abstract.jl")
 include("src/spaces/continuous.jl")
 include("src/spaces/grid.jl")
 include("src/spaces/graph.jl")
