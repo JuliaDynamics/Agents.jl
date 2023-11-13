@@ -1,5 +1,5 @@
 "Get correct axis limits for `ContinuousSpace` models."
-function get_axis_limits!(model<:ABM{S::Agents.ContinuousSpace})
+function get_axis_limits!(model::ABM{<:ContinuousSpace})
     e = abmspace(model).extent
     o = zero.(e)
     return o, e

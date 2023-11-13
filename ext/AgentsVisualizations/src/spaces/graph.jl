@@ -1,8 +1,8 @@
 "Get correct axis limits for `GraphSpace` models."
-get_axis_limits!(model<:ABM{S::Agents.GraphSpace}) = nothing, nothing
+get_axis_limits!(model::ABM{<:GraphSpace}) = nothing, nothing
 
 "Plot agents' positions."
-function plot_agents!(ax, model<:ABM{S::GraphSpace}; abmplot = first_abmplot_in(ax))
+function plot_agents!(ax, model::ABM{<:GraphSpace}; abmplot = first_abmplot_in(ax))
     hidedecorations!(ax)
     ec = get(abmplot.graphplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(abmplot.abmobs[].model), $ec))

@@ -1,5 +1,5 @@
 "Get correct axis limits for `OpenStreetMapSpace` models."
-function get_axis_limits!(model<:ABM{S::Agents.OpenStreetMapSpace})
+function get_axis_limits!(model::ABM{<:Agents.OpenStreetMapSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
     for i ∈ Agents.positions(model)
@@ -18,7 +18,7 @@ end
 `OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function preplot!(ax, model<:ABM{S::OpenStreetMapSpace}; preplotkwargs...)
+function preplot!(ax, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
     return Agents.osmplot!(ax, model; preplotkwargs...)
 end
 

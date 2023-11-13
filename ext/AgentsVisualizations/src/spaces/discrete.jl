@@ -1,5 +1,5 @@
 "Plot space and/or set axis limits."
-function set_axis_limits!(ax::Axis, model<:ABM{S<:DEFAULT_SPACES})
+function set_axis_limits!(ax::Axis, model::ABM{<:DEFAULT_SPACES})
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -8,7 +8,7 @@ function set_axis_limits!(ax::Axis, model<:ABM{S<:DEFAULT_SPACES})
     return o, e
 end
 
-function set_axis_limits!(ax::Axis3, model<:ABM{S<:DEFAULT_SPACES})
+function set_axis_limits!(ax::Axis3, model::ABM{<:DEFAULT_SPACES})
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -67,11 +67,11 @@ function static_preplot!(ax, model)
 end
 
 "Plot agents' positions."
-plot_agents!(ax, model<:ABM) =
+plot_agents!(ax, model::ABM) =
     @warn("Unknown axis type: $(typeof(ax)). Skipping plotting agents.")
 
 "2D space --- typeof(pos[]) <: Vector{Point2f}"
-function plot_agents!(ax::Axis, model<:ABM{S}) where {S}
+function plot_agents!(ax::Axis, model::ABM{S}) where {S}
     p = first_abmplot_in(ax)
     if p._used_poly[]
         poly_plot = poly!(p, marker; color, p.scatterkwargs...)
@@ -82,7 +82,7 @@ function plot_agents!(ax::Axis, model<:ABM{S}) where {S}
 end
 
 "3D space --- typeof(pos[]) <: Vector{Point3f}"
-function plot_agents!(ax::Axis3, model<:ABM{S}) where {S}
+function plot_agents!(ax::Axis3, model::ABM{S}) where {S}
     p = first_abmplot_in(ax)
     marker[] == :circle && (marker = Sphere(Point3f(0), 1))
     meshscatter!(p, pos; color, marker, markersize, p.scatterkwargs...)

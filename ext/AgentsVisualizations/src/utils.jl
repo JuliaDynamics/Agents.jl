@@ -2,7 +2,7 @@ export subscript, superscript
 export record_interaction
 export custom_space_checker
 
-function custom_space_checker(ax::A, model<:ABM{S}, p) where {A,S}
+function custom_space_checker(ax::A, model::ABM{S}, p) where {A,S}
     checks = [
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits!, (ABM{S}, )),
