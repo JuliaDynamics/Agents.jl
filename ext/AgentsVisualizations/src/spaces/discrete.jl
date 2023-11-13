@@ -17,6 +17,9 @@ function set_axis_limits!(ax::Axis3, model<:ABM{S<:DEFAULT_SPACES})
     return o, e
 end
 
+"No preplot by default."
+preplot!(ax, model; preplotkwargs...) = nothing
+
 "Plot heatmap according to given `heatarray`."
 function heatmap!(ax, abmplot::_ABMPlot)
     heatobs = @lift(abmplot_heatobs($(abmplot.abmobs[].model), abmplot.heatarray))
