@@ -129,7 +129,7 @@ function Makie.plot!(abmplot::_ABMPlot)
 
     preplot!(ax, model; abmplot.preplotkwargs...)
     heatmap!(ax, abmplot)
-    static_preplot!(ax, model)
+    static_preplot!(ax, model, abmplot)
     plot_agents!(abmplot, model)
 
     # Model controls, parameter sliders

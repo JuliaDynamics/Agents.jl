@@ -63,8 +63,7 @@ function abmplot_heatobs(model, heatarray)
     return heatobs
 end
 
-function static_preplot!(ax, model)
-    p = first_abmplot_in(ax)
+function static_preplot!(ax, model, p::_ABMPlot)
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
