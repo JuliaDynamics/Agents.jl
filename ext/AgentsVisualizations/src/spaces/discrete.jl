@@ -45,22 +45,16 @@ function heatmap!(ax, p::_ABMPlot)
 end
 
 function abmplot_heatobs(model, heatarray)
-    heatobs = begin
-        if !isnothing(heatarray)
-            # TODO: use surface!(heatobs) here?
-            matrix = Agents.get_data(model, heatarray, identity)
-            # Check for correct size for discrete space
-            if abmspace(model) isa AbstractGridSpace
-                if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
-                    error("The heat array property must yield a matrix of same size as the grid!")
-                end
-            end
-            matrix
-        else
-            nothing
+    isnothing(heatarray) && return nothing
+    # TODO: use surface!(heatobs) here?
+    matrix = Agents.get_data(model, heatarray, identity)
+    # Check for correct size for discrete space
+    if abmspace(model) isa AbstractGridSpace
+        if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
+            error("The heat array property must yield a matrix of same size as the grid!")
         end
     end
-    return heatobs
+    return matrix
 end
 
 function static_preplot!(ax, model, p::_ABMPlot)
