@@ -17,6 +17,41 @@ function set_axis_limits!(ax::Axis3, model<:ABM{S<:DEFAULT_SPACES})
     return o, e
 end
 
+"Plot heatmap according to given `heatarray`."
+function heatmap!(ax, abmplot::_ABMPlot)
+    heatobs = @lift(abmplot_heatobs($(abmplot.abmobs[].model), abmplot.heatarray))
+    isnothing(heatobs[]) && return nothing
+    hmap = Makie.heatmap!(abmplot, heatobs; 
+        colormap=JULIADYNAMICS_CMAP, abmplot.heatkwargs...)
+    abmplot.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+    # TODO: Set colorbar to be "glued" to axis
+    # Problem with the following code, which comes from the tutorial
+    # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
+    # is that it only works for axis that have 1:1 aspect ratio...
+    # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
+    # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
+    return hmap
+end
+
+function abmplot_heatobs(model, heatarray)
+    heatobs = begin
+        if !isnothing(heatarray)
+            # TODO: use surface!(heatobs) here?
+            matrix = Agents.get_data(model, heatarray, identity)
+            # Check for correct size for discrete space
+            if abmspace(model) isa AbstractGridSpace
+                if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
+                    error("The heat array property must yield a matrix of same size as the grid!")
+                end
+            end
+            matrix
+        else
+            nothing
+        end
+    end
+    return heatobs
+end
+
 
 ## API functions for lifting
 
