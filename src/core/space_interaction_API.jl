@@ -56,7 +56,7 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_ids(position, model::ABM, r = 1; kwargs...) → ids
+    nearby_ids(pos, model::ABM, r = 1; kwargs...) → ids
 
 Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
 `position`. The `position` must match type with the spatial structure of the `model`.
@@ -66,7 +66,7 @@ described in each space's documentation string.
 
 `nearby_ids` always includes IDs with 0 distance to `position`.
 """
-nearby_ids(position, model, r = 1) = notimplemented(model)
+nearby_ids(pos, model, r = 1) = notimplemented(model)
 
 """
     nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)

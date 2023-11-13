@@ -57,7 +57,7 @@ end
 # move_agent! does not need be implemented.
 # The generic version at core/space_interaction_API.jl covers it.
 # `random_empty` comes from spaces/discrete.jl as long as we extend:
-Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = abmspace(model).stored_ids[pos...] == 0
+Base.isempty(pos::ValidPos, model::ABM{<:GridSpaceSingle}) = abmspace(model).stored_ids[pos...] == 0
 # And we also need to extend the iterator of empty positions
 function empty_positions(model::ABM{<:GridSpaceSingle})
     Iterators.filter(i -> abmspace(model).stored_ids[i...] == 0, positions(model))
