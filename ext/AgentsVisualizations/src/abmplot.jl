@@ -1,5 +1,3 @@
-include("model_observable.jl")
-
 function Agents.abmplot(model::Agents.ABM;
     figure=NamedTuple(),
     axis=NamedTuple(),

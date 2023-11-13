@@ -14,8 +14,16 @@ JULIADYNAMICS_COLORS = [
 JULIADYNAMICS_CMAP = reverse(cgrad(:dense)[20:end])
 
 include("src/utils.jl")
+include("src/model_observable.jl")
+
+# Spaces
+include("src/spaces/discrete.jl")
+include("src/spaces/continuous.jl")
+include("src/spaces/grid.jl")
+include("src/spaces/graph.jl")
+include("src/spaces/openstreetmap.jl")
+
 include("src/abmplot.jl")
-include("src/lifting.jl")
 include("src/interaction.jl")
 include("src/inspection.jl")
 include("src/convenience.jl")
