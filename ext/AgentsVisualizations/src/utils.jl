@@ -1,5 +1,23 @@
 export subscript, superscript
 export record_interaction
+export custom_space_checker
+
+function custom_space_checker(ax::A, model<:ABM{S}, p) where {A,S}
+    checks = [
+        hasmethod(agents_space_dimensionality, (S, )),
+        hasmethod(get_axis_limits!, (ABM{S}, )),
+        applicable(plot_agents!, ax, model),
+        hasmethod(preplot!, (typeof(ax), ABM{S}), keys(p.preplotkwargs)),
+    ]
+    @warn """Attempting to plot a model with custom space type $S into axis type $A.
+    Checking for necessary and optional methods to be defined:\n
+    $(checks[1] ? "✔" : "❌")  agents_space_dimensionality\n
+    $(checks[2] ? "✔" : "❌")  get_axis_limits!\n
+    $(checks[3] ? "✔" : "❌")  plot_agents!\n
+    $(checks[4] ? "✔" : "❌")  preplot! (optional)\n
+    Please reference the Agents.jl documentation (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
+    return checks
+end
 
 ##########################################################################################
 # Check/get/set

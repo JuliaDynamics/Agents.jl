@@ -127,10 +127,8 @@ const DEFAULT_SPACES = Union{
 
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
-    if !(abmspace(model) isa SUPPORTED_SPACES)
-        error("Space type $(typeof(abmspace(model))) is not supported for plotting.")
-    end
     ax = abmplot.ax[]
+    !(abmspace(model) isa DEFAULT_SPACES) && custom_space_checker(ax, model, abmplot)
     abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
     set_axis_limits!(ax, model)
 
