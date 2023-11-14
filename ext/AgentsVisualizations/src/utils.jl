@@ -3,7 +3,7 @@ export record_interaction
 export custom_space_checker
 
 function custom_space_checker(ax::A, model::ABM{S}, p::_ABMPlot) where {A,S}
-    if S <: Union{Agents.DiscreteSpace, Agents.ContinuousSpace}
+    if S <: Union{Agents.DiscreteSpace, Agents.OpenStreetMapSpace, Agents.ContinuousSpace}
         return fill(true, 4)
     end
     checks = [
