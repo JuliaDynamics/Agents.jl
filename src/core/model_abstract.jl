@@ -61,10 +61,11 @@ const ABM = AgentBasedModel
 # To see the internal interface for `AgentBasedModel`, see below the
 # internal methods or the dev docs.
 
-function notimplemented(model)
-    error("Function not implemented for model of type $(nameof(typeof(model))) "*
-    "with space type $(nameof(typeof(abmspace(model))))")
-end
+notimplemented(::A) where {A<:ABM{S}} where {S} =
+    error("Function not implemented for model of type $(nameof(A)) with space type $S.")
+
+notimplemented(::S) where {S<:SpaceType} =
+    @error """Function not implemented for space type $S."""
 
 ###########################################################################################
 # %% Mandatory methods - public
