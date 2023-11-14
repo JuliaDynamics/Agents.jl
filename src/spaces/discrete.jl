@@ -75,10 +75,10 @@ function empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    isempty(position, model::ABM{<:DiscreteSpace})
+    isempty(pos, model::ABM{<:DiscreteSpace})
 Return `true` if there are no agents in `position`.
 """
-Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
+Base.isempty(pos::ValidPos, model::ABM{<:DiscreteSpace}) = isempty(ids_in_position(pos, model))
 
 """
     has_empty_positions(model::ABM{<:DiscreteSpace})

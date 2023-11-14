@@ -19,6 +19,6 @@ function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, args::Vararg{
     add_agent_pos!(newagent, model)
 end
 
-nearby_ids(position, model::ABM{Nothing}, r = 1) = allids(model)
+nearby_ids(agent::AbstractAgent, model::ABM{Nothing}, r = 1) = allids(model)
 remove_agent_from_space!(agent, model::ABM{Nothing}) = nothing
 add_agent_to_space!(agent, model::ABM{Nothing}) = nothing
