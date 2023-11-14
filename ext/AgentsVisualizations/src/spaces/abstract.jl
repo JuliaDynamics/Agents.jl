@@ -81,8 +81,6 @@ function plot_agents!(ax::Axis3, model::ABM, p::_ABMPlot)
     return p
 end
 
-first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
-
 ## API functions for lifting
 
 abmplot_ids(model::ABM) = allids(model)

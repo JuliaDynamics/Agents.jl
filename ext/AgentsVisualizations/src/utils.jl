@@ -26,6 +26,8 @@ function custom_space_checker(ax::A, model::ABM{S}, p::_ABMPlot) where {A,S}
     return checks
 end
 
+first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
+
 ##########################################################################################
 # Check/get/set
 ##########################################################################################
