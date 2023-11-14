@@ -9,13 +9,13 @@ function Agents.abmexploration(model;
         kwargs...
     )
     fig, ax, abmobs = abmplot(model; figure, axis, warn_deprecation = false, kwargs...)
-    abmplot_object = ax.scene.plots[1]
+    p = first_abmplot_in(ax)
 
     adata, mdata = abmobs.adata, abmobs.mdata
     !isnothing(adata) && @assert eltype(adata)<:Tuple "Only aggregated agent data are allowed."
     !isnothing(alabels) && @assert length(alabels) == length(adata)
     !isnothing(mlabels) && @assert length(mlabels) == length(mdata)
-    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, abmplot_object.stepclick, abmplot_object.resetclick)
+    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, p.stepclick, p.resetclick)
     return fig, abmobs
 end
 
