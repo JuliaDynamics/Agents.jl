@@ -1,8 +1,9 @@
 function Agents.abmplot(model::Agents.ABM;
-    figure=NamedTuple(),
-    axis=NamedTuple(),
-    warn_deprecation = true,
-    kwargs...)
+        figure=NamedTuple(),
+        axis=NamedTuple(),
+        warn_deprecation = true,
+        kwargs...
+    )
     fig = Figure(; figure...)
     ax = fig[1, 1][1, 1] = agents_space_dimensionality(model) == 3 ?
                            Axis3(fig; axis...) : Axis(fig; axis...)
@@ -12,14 +13,15 @@ function Agents.abmplot(model::Agents.ABM;
 end
 
 function Agents.abmplot!(ax, model::Agents.ABM;
-    # These keywords are given to `ABMObservable`
-    agent_step! = Agents.dummystep,
-    model_step! = Agents.dummystep,
-    adata=nothing,
-    mdata=nothing,
-    when=true,
-    warn_deprecation = true,
-    kwargs...)
+        # These keywords are given to `ABMObservable`
+        agent_step! = Agents.dummystep,
+        model_step! = Agents.dummystep,
+        adata=nothing,
+        mdata=nothing,
+        when=true,
+        warn_deprecation = true,
+        kwargs...
+    )
     if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
         agent_step! = Agents.agent_step_field(model)
         model_step! = Agents.model_step_field(model)
@@ -41,10 +43,11 @@ Same functionality as `abmplot(model; kwargs...)`/`abmplot!(ax, model; kwargs...
 but allows to link an already existing `ABMObservable` to the created plots.
 """
 function Agents.abmplot(abmobs::ABMObservable;
-    axis=NamedTuple(),
-    add_controls=false,
-    figure=add_controls ? (resolution=(800, 600),) : (resolution=(800, 800),),
-    kwargs...)
+        axis=NamedTuple(),
+        add_controls=false,
+        figure=add_controls ? (resolution=(800, 600),) : (resolution=(800, 800),),
+        kwargs...
+    )
     fig = Figure(; figure...)
     ax = fig[1, 1][1, 1] = agents_space_dimensionality(abmobs.model[]) == 3 ?
                            Axis3(fig; axis...) : Axis(fig; axis...)
@@ -54,10 +57,11 @@ function Agents.abmplot(abmobs::ABMObservable;
 end
 
 function Agents.abmplot!(ax, abmobs::ABMObservable;
-    # These keywords are propagated to the _ABMPlot recipe
-    add_controls=_default_add_controls(abmobs.agent_step!, abmobs.model_step!),
-    enable_inspection=add_controls,
-    kwargs...)
+        # These keywords are propagated to the _ABMPlot recipe
+        add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
+        enable_inspection = add_controls,
+        kwargs...
+    )
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover
@@ -65,6 +69,8 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
 
     return abmobs
 end
+
+_default_add_controls(as, ms) = (as != Agents.dummystep) || (ms != Agents.dummystep)
 
 """
     _abmplot(model::ABM; kwargs...) → fig, ax, abmplot_object
