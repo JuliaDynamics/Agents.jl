@@ -13,6 +13,8 @@ function add_interaction!(ax, abmplot)
     return stepclick, resetclick
 end
 
+add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
+
 "Initialize standard model control buttons."
 function add_controls!(fig, abmobs, spu)
 
