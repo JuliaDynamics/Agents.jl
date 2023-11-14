@@ -1,10 +1,10 @@
-function add_interaction!(fig, ax, abmplot)
+function add_interaction!(ax, abmplot)
     if abmplot.add_controls[]
         @assert !isnothing(ax) "Need `ax` to add model controls."
-        stepclick, resetclick = add_controls!(fig, abmplot.abmobs[], abmplot.spu)
+        stepclick, resetclick = add_controls!(ax.parent, abmplot.abmobs[], abmplot.spu)
         if !isempty(abmplot.params[])
             @assert !isnothing(ax) "Need `ax` to add plots and parameter sliders."
-            add_param_sliders!(fig, abmplot.abmobs[].model, abmplot.params[], resetclick)
+            add_param_sliders!(ax.parent, abmplot.abmobs[].model, abmplot.params[], resetclick)
         end
     else
         stepclick = resetclick = nothing

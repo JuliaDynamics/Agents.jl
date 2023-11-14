@@ -133,7 +133,7 @@ function Makie.plot!(abmplot::_ABMPlot)
     plot_agents!(ax, model, abmplot)
 
     # Model controls, parameter sliders
-    abmplot.stepclick, abmplot.resetclick = add_interaction!(ax.parent, ax, abmplot)
+    abmplot.stepclick, abmplot.resetclick = add_interaction!(ax, abmplot)
 
     return abmplot
 end
