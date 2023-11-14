@@ -1,29 +1,35 @@
 export subscript, superscript
 export record_interaction
-export custom_space_checker
 
-function custom_space_checker(ax::A, model::ABM{S}, p::_ABMPlot) where {A,S}
-    if S <: Union{Agents.DiscreteSpace, Agents.OpenStreetMapSpace, Agents.ContinuousSpace}
-        return fill(true, 4)
-    end
+function Agents.check_space_visualization_API(::ABM{S}) where {S}
     checks = [
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits!, (ABM{S}, )),
-        applicable(plot_agents!, ax, model, p),
-        hasmethod(preplot!, (typeof(ax), ABM{S}), keys(p.preplotkwargs)),
+        hasmethod(plot_agents!, (Axis, ABM{S}, _ABMPlot)) ||
+            hasmethod(plot_agents!, (Axis3, ABM{S}, _ABMPlot)),
+        hasmethod(preplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
+            hasmethod(preplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
     ]
-    @warn """Attempting to plot a model with custom space type $S into axis type $A.
-    Checking for necessary and optional methods to be defined:\n
-    $(checks[1] ? "✔" : "❌")  agents_space_dimensionality\n
-    $(checks[2] ? "✔" : "❌")  get_axis_limits!\n
-    $(checks[3] ? "✔" : "❌")  plot_agents!\n
-    $(checks[4] ? "✔" : "❌")  preplot! (optional)\n
+    @info """Checking for necessary and optional methods that have to be defined for \b
+    plotting a model with space type $S.
+    $(checks[1] ? "✔" : "❌")\t(required)\tagents_space_dimensionality(::S)
+    $(checks[2] ? "✔" : "❌")\t(required)\tget_axis_limits!(model::ABM{S})
+    $(checks[3] ? "✔" : "❌")\t(required)\tplot_agents!(ax, model::ABM{S})
+    $(checks[4] ? "✔" : "❌")\t(optional)\tpreplot!(ax, model; preplotkwargs...)
+    $(count(checks))/$(length(checks)) checks were successful.
     """
-    if all(checks[1:3])
-        @error """Requirements for plotting of custom space not met.
+    if !all(checks[1:3])
+        @error """Requirements for plotting of space not met.
         Please reference the Agents.jl documentation (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
     end
     return checks
+end
+
+function has_custom_space(::ABM{S}) where {S}
+    if !(S<:Union{Agents.DiscreteSpace, Agents.OpenStreetMapSpace, Agents.ContinuousSpace})
+        return true
+    end
+    return false
 end
 
 first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]

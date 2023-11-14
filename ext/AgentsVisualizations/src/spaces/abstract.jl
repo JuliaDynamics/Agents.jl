@@ -59,10 +59,6 @@ function static_preplot!(ax, model, p::_ABMPlot)
     return nothing
 end
 
-"Catch unknown Axis types (i.e. other than `Axis` and `Axis3`.)"
-plot_agents!(ax, model::ABM, p::_ABMPlot) =
-    @error("Unknown axis type: $(typeof(ax)).")
-
 "Plot agents into a 2D space."
 function plot_agents!(ax::Axis, model::ABM, p::_ABMPlot)
     if p._used_poly[]

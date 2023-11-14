@@ -241,3 +241,13 @@ export translate_polygon, scale_polygon, rotate_polygon
 function osmplot! end
 function graphplot! end
 
+"""
+    check_space_visualization_API(model::ABM)
+
+Checks whether all the necessary method extensions indicated in 
+[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl) 
+have been defined.
+"""
+function check_space_visualization_API end
+export check_space_visualization_API
+
