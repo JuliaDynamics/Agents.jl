@@ -64,7 +64,7 @@ const ABM = AgentBasedModel
 notimplemented(::A) where {A<:ABM{S}} where {S} =
     error("Function not implemented for model of type $(nameof(A)) with space type $S.")
 
-notimplemented(::S) where {S<:SpaceType} =
+notimplemented(::S) where {S<:AbstractSpace} =
     @error """Function not implemented for space type $S."""
 
 ###########################################################################################
