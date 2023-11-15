@@ -1,5 +1,5 @@
 "Plot space and/or set axis limits."
-function set_axis_limits!(ax::Axis, model::ABM)
+function set_axis_limits!(ax::Axis, model::ABM{<:Agents.AbstractSpace})
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -8,7 +8,7 @@ function set_axis_limits!(ax::Axis, model::ABM)
     return o, e
 end
 
-function set_axis_limits!(ax::Axis3, model::ABM)
+function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.AbstractSpace})
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -17,8 +17,28 @@ function set_axis_limits!(ax::Axis3, model::ABM)
     return o, e
 end
 
-"No preplot by default."
-preplot!(ax, model; preplotkwargs...) = nothing
+Agents.agents_space_dimensionality(model::ABM{<:Agents.AbstractSpace}) = 
+    Agents.agents_space_dimensionality(abmspace(model))
+
+"Plot agents into a 2D space."
+function Agents.plot_agents!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
+    if p._used_poly[]
+        poly_plot = poly!(p, p.marker; p.color, p.scatterkwargs...)
+        poly_plot.inspectable[] = false # disable inspection for poly until fixed
+    else
+        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+    end
+    return p
+end
+
+"Plot agents into a 3D space."
+function Agents.plot_agents!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
+    p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
+    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+    return p
+end
+
+## Optional
 
 "Plot heatmap according to given `heatarray`."
 function heatmap!(ax, p::_ABMPlot)
@@ -36,20 +56,7 @@ function heatmap!(ax, p::_ABMPlot)
     return hmap
 end
 
-function abmplot_heatobs(model, heatarray)
-    isnothing(heatarray) && return nothing
-    # TODO: use surface!(heatobs) here?
-    matrix = Agents.get_data(model, heatarray, identity)
-    # Check for correct size for discrete space
-    if abmspace(model) isa AbstractGridSpace
-        if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
-            error("The heat array property must yield a matrix of same size as the grid!")
-        end
-    end
-    return matrix
-end
-
-function static_preplot!(ax, model, p::_ABMPlot)
+function Agents.static_preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
@@ -59,29 +66,37 @@ function static_preplot!(ax, model, p::_ABMPlot)
     return nothing
 end
 
-"Plot agents into a 2D space."
-function plot_agents!(ax::Axis, model::ABM, p::_ABMPlot)
-    if p._used_poly[]
-        poly_plot = poly!(p, p.marker; p.color, p.scatterkwargs...)
-        poly_plot.inspectable[] = false # disable inspection for poly until fixed
-    else
-        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+function Agents.static_preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
+    if hasproperty(p, :static_preplot!)
+        @warn """Usage of the static_preplot! kwarg is deprecated.
+        Please remove it from the call to abmplot and define a custom method for 
+        static_preplot!(ax, model, p) instead."""
+        return p.static_preplot![](ax, model)
     end
-    return p
+    return nothing
 end
 
-"Plot agents into a 3D space."
-function plot_agents!(ax::Axis3, model::ABM, p::_ABMPlot)
-    p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
-    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
-    return p
+Agents.preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
+Agents.preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
+
+## Lifting
+
+function abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
+    isnothing(heatarray) && return nothing
+    # TODO: use surface!(heatobs) here?
+    matrix = Agents.get_data(model, heatarray, identity)
+    # Check for correct size for discrete space
+    if abmspace(model) isa Agents.AbstractGridSpace
+        if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
+            error("The heat array property must yield a matrix of same size as the grid!")
+        end
+    end
+    return matrix
 end
 
-## API functions for lifting
+Agents.abmplot_ids(model::ABM{<:Agents.AbstractSpace}) = allids(model)
 
-abmplot_ids(model::ABM) = allids(model)
-
-function abmplot_pos(model::ABM, offset, ids)
+function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset, ids)
     postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
         return [postype(model[i].pos) for i in ids]
@@ -90,13 +105,11 @@ function abmplot_pos(model::ABM, offset, ids)
     end
 end
 
-agents_space_dimensionality(abm::ABM) = agents_space_dimensionality(abmspace(abm))
-
-abmplot_colors(model::ABM, ac, ids) = to_color(ac)
-abmplot_colors(model::ABM, ac::Function, ids) =
+Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac, ids) = to_color(ac)
+Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function, ids) =
     to_color.([ac(model[i]) for i in ids])
 
-function abmplot_marker(model::ABM, used_poly, am, pos, ids)
+function Agents.abmplot_marker(model::ABM{<:Agents.AbstractSpace}, used_poly, am, pos, ids)
     marker = am
     # need to update used_poly Observable here for inspection
     used_poly[] = user_used_polygons(am, marker)
@@ -106,7 +119,7 @@ function abmplot_marker(model::ABM, used_poly, am, pos, ids)
     return marker
 end
 
-function abmplot_marker(model::ABM, used_poly, am::Function, pos, ids)
+function Agents.abmplot_marker(model::ABM{<:Agents.AbstractSpace}, used_poly, am::Function, pos, ids)
     marker = [am(model[i]) for i in ids]
     # need to update used_poly Observable here for use with inspection
     used_poly[] = user_used_polygons(am, marker)
@@ -120,6 +133,6 @@ user_used_polygons(am, marker) = false
 user_used_polygons(am::Makie.Polygon, marker) = true
 user_used_polygons(am::Function, marker::Vector{<:Makie.Polygon}) = true
 
-abmplot_markersizes(model::ABM, as, ids) = as
-abmplot_markersizes(model::ABM, as::Function, ids) =
+Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as, ids) = as
+Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function, ids) =
     [as(model[i]) for i in ids]
