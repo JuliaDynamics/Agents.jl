@@ -43,6 +43,11 @@ scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
 fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, scatterkwargs)
 fig
 
+# !!! note "Supported keyword arguments"
+#     We do not check internally, if the keyword arguments passed to `abmplot` are 
+#     supported. Please make sure that there are no typos and that the used kwargs are 
+#     supported by the [`abmplot`](@ref) function. Otherwise they will be ignored.
+
 # Besides agents, we can also plot spatial properties as a heatmap.
 # Here we plot the temperature of the planet by providing the name
 # of the property as the "heat array":
