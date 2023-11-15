@@ -16,7 +16,7 @@ Plot heatmap according to given `heatarray`.
 Special method for models with `ContinuousSpace`.
 """
 function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}
-    ) where {S<:Agents.ContinuousSpace}
+    ) where {S<:ContinuousSpace}
     heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
 
