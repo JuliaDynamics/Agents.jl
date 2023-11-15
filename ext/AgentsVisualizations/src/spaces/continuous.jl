@@ -1,15 +1,22 @@
+## Required
+
+Agents.agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
+
 "Get correct axis limits for `ContinuousSpace` models."
-function get_axis_limits!(model::ABM{<:ContinuousSpace})
+function Agents.get_axis_limits!(model::ABM{<:ContinuousSpace})
     e = abmspace(model).extent
     o = zero.(e)
     return o, e
 end
 
+## Optional
+
 """
 Plot heatmap according to given `heatarray`.
 Special method for models with `ContinuousSpace`.
 """
-function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}) where {S<:Agents.ContinuousSpace}
+function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}
+    ) where {S<:Agents.ContinuousSpace}
     heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
 
@@ -31,6 +38,9 @@ function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S
     return hmap
 end
 
-## API functions for lifting
+## Lifting
 
-agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
+## Inspection
+
+Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, agent_pos) =
+    nearby_ids(agent_pos, model, 0.0)
