@@ -3,19 +3,34 @@ export record_interaction
 
 function Agents.check_space_visualization_API(::ABM{S}) where {S}
     checks = [
+        # Required
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits!, (ABM{S}, )),
         hasmethod(plot_agents!, (Axis, ABM{S}, _ABMPlot)) ||
             hasmethod(plot_agents!, (Axis3, ABM{S}, _ABMPlot)),
+        # Preplots (Optional)
         hasmethod(preplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
             hasmethod(preplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
+        hasmethod(static_preplot!, (Axis, ABM{S}, _ABMPlot)) ||
+            hasmethod(static_preplot!, (Axis3, ABM{S}, _ABMPlot)),
+        # Lifting (optional)
+        # Inspection (optional)
+        hasmethod(ids_to_inspect, (ABM{S}, Any)),
     ]
-    @info """Checking for necessary and optional methods that have to be defined for \b
-    plotting a model with space type $S.
-    $(checks[1] ? "✔" : "❌")\t(required)\tagents_space_dimensionality(::S)
-    $(checks[2] ? "✔" : "❌")\t(required)\tget_axis_limits!(model::ABM{S})
-    $(checks[3] ? "✔" : "❌")\t(required)\tplot_agents!(ax, model::ABM{S})
-    $(checks[4] ? "✔" : "❌")\t(optional)\tpreplot!(ax, model; preplotkwargs...)
+    @info """
+    Checking for methods that have to be defined to plot an ABM with custom space type
+    \t$S
+    === Required
+    $(checks[1] ? "✔" : "❌")\tagents_space_dimensionality(space::$S)
+    $(checks[2] ? "✔" : "❌")\tget_axis_limits!(model::ABM{$S})
+    $(checks[3] ? "✔" : "❌")\tplot_agents!(ax, model::ABM{$S})
+    === Preplots (optional)
+    $(checks[4] ? "✔" : "❌")\tpreplot!(ax, model::ABM{$S}; preplotkwargs...)
+    $(checks[5] ? "✔" : "❌")\tstatic_preplot!(ax, model::ABM{$S}, p::ABMPlot)
+    === Lifting (optional)
+    placeholder
+    === Inspection (optional)
+    $(checks[end] ? "✔" : "❌")\tids_to_inspect(model::ABM{$S}, agent_pos)
     $(count(checks))/$(length(checks)) checks were successful.
     """
     if !all(checks[1:3])
