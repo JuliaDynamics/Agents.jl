@@ -96,24 +96,7 @@ function Agents.agent2string(model::ABM, agent_pos)
     return s
 end
 
-ids_to_inspect(model::ABM{<:AbstractGridSpace}, agent_pos) =
-    ids_in_position(agent_pos, model)
-function ids_to_inspect(model::ABM{<:GridSpaceSingle}, agent_pos)
-    id = id_in_position(agent_pos, model)
-    if id == 0
-        return ()
-    else
-        return (id,)
-    end
-end
-
-ids_to_inspect(model::ABM{<:ContinuousSpace}, agent_pos) =
-    nearby_ids(agent_pos, model, 0.0)
-ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, agent_pos) =
-    nearby_ids(agent_pos, model, 0.0)
-ids_to_inspect(model::ABM{<:GraphSpace}, agent_pos) =
-    abmspace(model).stored_ids[agent_pos]
-ids_to_inspect(model::ABM, agent_pos) = []
+Agents.ids_to_inspect(model::ABM, agent_pos) = []
 
 function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     agentstring = "▶ $(nameof(A))\n"
