@@ -41,7 +41,8 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
 end
 
 function has_custom_space(::ABM{S}) where {S}
-    S <: Nothing && @info "No plots will be drawn for agents in a model with Nothing space."
+    S <: Nothing &&
+        @info "An empty plot will be drawn for agents in a model with Nothing space."
     if S <: Union{GridSpace, GridSpaceSingle, OpenStreetMapSpace, ContinuousSpace, 
         GraphSpace, Nothing}
         return false
