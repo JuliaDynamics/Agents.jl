@@ -1,7 +1,6 @@
 module AgentsVisualizations
 
 using Agents, Makie
-using Agents: AbstractGridSpace
 
 JULIADYNAMICS_COLORS = [
     "#7143E0",
@@ -19,6 +18,7 @@ include("src/utils.jl")
 
 # Spaces
 include("src/spaces/abstract.jl")
+include("src/spaces/nothing.jl")
 include("src/spaces/continuous.jl")
 include("src/spaces/grid.jl")
 
