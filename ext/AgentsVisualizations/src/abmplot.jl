@@ -118,10 +118,6 @@ This is the internal recipe for creating an `_ABMPlot`.
     )
 end
 
-function _default_add_controls(agent_step!, model_step!)
-    (agent_step! != Agents.dummystep) || (model_step! != Agents.dummystep)
-end
-
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
     ax = abmplot.ax[]
