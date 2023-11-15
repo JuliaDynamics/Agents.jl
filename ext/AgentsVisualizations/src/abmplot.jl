@@ -161,7 +161,7 @@ function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.SpaceType})
 end
 
 function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:Agents.SpaceType}}}}})
-    heatobs = @lift(Agents.abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
+    heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(p, heatobs; 
         colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)

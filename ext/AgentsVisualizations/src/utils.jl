@@ -25,7 +25,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     $(checks[2] ? "✔" : "❌")\tget_axis_limits!(model::ABM{$S})
     $(checks[3] ? "✔" : "❌")\tagentsplot!(ax, model::ABM{$S})
     === Preplots (optional)
-    $(checks[4] ? "✔" : "❌")\tpreplot!(ax, model::ABM{$S}; preplotkwargs...)
+    $(checks[4] ? "✔" : "❌")\tspaceplot!(ax, model::ABM{$S}; preplotkwargs...)
     $(checks[5] ? "✔" : "❌")\tstatic_preplot!(ax, model::ABM{$S}, p::ABMPlot)
     === Lifting (optional)
     placeholder
