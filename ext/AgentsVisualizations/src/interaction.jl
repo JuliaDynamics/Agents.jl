@@ -1,4 +1,4 @@
-function add_interaction!(ax, p)
+function Agents.add_interaction!(ax, p)
     if p.add_controls[]
         @assert !isnothing(ax) "Need `ax` to add model controls."
         stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.spu)
@@ -13,7 +13,7 @@ function add_interaction!(ax, p)
     return stepclick, resetclick
 end
 
-add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
+Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
 
 "Initialize standard model control buttons."
 function add_controls!(fig, abmobs, spu)
