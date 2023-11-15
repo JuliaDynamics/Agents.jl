@@ -24,11 +24,11 @@ end
 
 ## Inspection
 
-Agents.ids_to_inspect(model::ABM{<:Agents.AbstractGridSpace}, agent_pos) =
-    ids_in_position(agent_pos, model)
+Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractGridSpace} = 
+    Tuple(Int.(pos))
 
-function Agents.ids_to_inspect(model::ABM{<:GridSpaceSingle}, agent_pos)
-    id = id_in_position(agent_pos, model)
+function Agents.ids_to_inspect(model::ABM{<:GridSpaceSingle}, pos)
+    id = id_in_position(pos, model)
     if id == 0
         return ()
     else

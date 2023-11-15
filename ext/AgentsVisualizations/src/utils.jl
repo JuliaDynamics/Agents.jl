@@ -30,7 +30,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     === Lifting (optional)
     placeholder
     === Inspection (optional)
-    $(checks[end] ? "✔" : "❌")\tids_to_inspect(model::ABM{$S}, agent_pos)
+    $(checks[end] ? "✔" : "❌")\tids_to_inspect(model::ABM{$S}, pos)
     $(count(checks))/$(length(checks)) checks were successful.
     """
     if !all(checks[1:3])

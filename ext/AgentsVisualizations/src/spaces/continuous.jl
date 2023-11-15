@@ -2,7 +2,6 @@
 
 Agents.agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
 
-"Get correct axis limits for `ContinuousSpace` models."
 function Agents.get_axis_limits!(model::ABM{<:ContinuousSpace})
     e = abmspace(model).extent
     o = zero.(e)
@@ -42,5 +41,5 @@ end
 
 ## Inspection
 
-Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, agent_pos) =
-    nearby_ids(agent_pos, model, 0.0)
+Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos) =
+    nearby_ids(pos, model, 0.0)

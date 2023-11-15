@@ -60,5 +60,5 @@ Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function, ids) =
 
 ## Inspection
 
-Agents.ids_to_inspect(model::ABM{<:GraphSpace}, agent_pos) =
-    abmspace(model).stored_ids[agent_pos]
+Agents.ids_to_inspect(model::ABM{<:GraphSpace}, pos) =
+    abmspace(model).stored_ids[pos]

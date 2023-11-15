@@ -2,7 +2,6 @@
 
 Agents.agents_space_dimensionality(::OpenStreetMapSpace) = 2
 
-"Get correct axis limits for `OpenStreetMapSpace` models."
 function Agents.get_axis_limits!(model::ABM{<:OpenStreetMapSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
@@ -38,5 +37,5 @@ end
 
 ## Inspection
 
-Agents.ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, agent_pos) =
-    nearby_ids(agent_pos, model, 0.0)
+Agents.ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, pos) =
+    nearby_ids(pos, model, 0.0)

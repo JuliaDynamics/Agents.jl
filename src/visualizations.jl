@@ -339,7 +339,7 @@ function abmplot_markersizes end
 ## Inspection
 
 """
-    ids_to_inspect(model::ABM{S}, agent_pos)
+    ids_to_inspect(model::ABM{S}, pos)
 """
 function ids_to_inspect end
 
