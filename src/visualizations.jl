@@ -107,6 +107,17 @@ See `abmplot`.
 function abmplot! end
 export abmplot, abmplot!
 
+"""
+Helper function to retrieve the automatically generated `ABMPlot` type from the
+`AgentsVisualizations` extension.
+Returns `nothing` if `AgentsVisualizations` was not loaded.
+"""
+function get_ABMPlot_type()
+  AgentsVisualizations = Base.get_extension(Agents, :AgentsVisualizations)
+  isnothing(AgentsVisualizations) && return nothing
+  return AgentsVisualizations._ABMPlot
+end
+
 
 """
     ABMObservable(model; adata, mdata, when) → abmobs
