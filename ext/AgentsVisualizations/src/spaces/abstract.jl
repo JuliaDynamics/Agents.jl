@@ -21,6 +21,9 @@ end
 
 ## Preplots
 
+Agents.preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
+Agents.preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
+
 function Agents.static_preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
     hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
     return nothing
@@ -37,9 +40,6 @@ function old_static_preplot!(ax, model, p)
         Agents.static_preplot!(ax, model, p) instead."""
     return p.static_preplot![](ax, model)
 end
-
-Agents.preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
-Agents.preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
 
 ## Lifting
 
