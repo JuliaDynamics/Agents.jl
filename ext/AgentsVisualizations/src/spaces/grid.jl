@@ -12,6 +12,16 @@ end
 
 ## Lifting
 
+function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
+    isnothing(heatarray) && return nothing
+    # TODO: use surface!(heatobs) here?
+    matrix = Agents.get_data(model, heatarray, identity)
+    if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
+        error("The heat array property must yield a matrix of same size as the grid!")
+    end
+    return matrix
+end
+
 ## Inspection
 
 Agents.ids_to_inspect(model::ABM{<:Agents.AbstractGridSpace}, agent_pos) =

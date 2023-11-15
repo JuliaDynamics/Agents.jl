@@ -47,12 +47,6 @@ function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
     isnothing(heatarray) && return nothing
     # TODO: use surface!(heatobs) here?
     matrix = Agents.get_data(model, heatarray, identity)
-    # Check for correct size for discrete space
-    if abmspace(model) isa Agents.AbstractGridSpace
-        if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
-            error("The heat array property must yield a matrix of same size as the grid!")
-        end
-    end
     return matrix
 end
 
