@@ -138,10 +138,26 @@ function Makie.plot!(abmplot::_ABMPlot)
     static_preplot!(ax, model, abmplot)
     plot_agents!(ax, model, abmplot)
 
-    # Model controls, parameter sliders
     abmplot.stepclick, abmplot.resetclick = add_interaction!(ax, abmplot)
 
     return abmplot
+end
+
+function set_axis_limits!(ax::Axis, model::ABM{<:Agents.SpaceType})
+    o, e = get_axis_limits!(model)
+    any(isnothing, (o, e)) && return nothing
+    xlims!(ax, o[1], e[1])
+    ylims!(ax, o[2], e[2])
+    return o, e
+end
+
+function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.SpaceType})
+    o, e = get_axis_limits!(model)
+    any(isnothing, (o, e)) && return nothing
+    xlims!(ax, o[1], e[1])
+    ylims!(ax, o[2], e[2])
+    zlims!(ax, o[3], e[3])
+    return o, e
 end
 
 function lift_attributes(model, ac, as, am, offset, used_poly)

@@ -1,22 +1,3 @@
-"Plot space and/or set axis limits."
-function set_axis_limits!(ax::Axis, model::ABM{<:Agents.AbstractSpace})
-    o, e = get_axis_limits!(model)
-    any(isnothing, (o, e)) && return nothing
-    xlims!(ax, o[1], e[1])
-    ylims!(ax, o[2], e[2])
-    length(o) == 3 && zlims!(ax, o[3], e[3])
-    return o, e
-end
-
-function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.AbstractSpace})
-    o, e = get_axis_limits!(model)
-    any(isnothing, (o, e)) && return nothing
-    xlims!(ax, o[1], e[1])
-    ylims!(ax, o[2], e[2])
-    zlims!(ax, o[3], e[3])
-    return o, e
-end
-
 Agents.agents_space_dimensionality(model::ABM{<:Agents.AbstractSpace}) = 
     Agents.agents_space_dimensionality(abmspace(model))
 
@@ -60,7 +41,7 @@ function Agents.static_preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p:
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
-        static_preplot!(ax, model, p) instead."""
+        Agents.static_preplot!(ax, model, p) instead."""
         return p.static_preplot![](ax, model)
     end
     return nothing
@@ -70,7 +51,7 @@ function Agents.static_preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
-        static_preplot!(ax, model, p) instead."""
+        Agents.static_preplot!(ax, model, p) instead."""
         return p.static_preplot![](ax, model)
     end
     return nothing
