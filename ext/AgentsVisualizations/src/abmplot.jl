@@ -15,6 +15,8 @@ function axistype(model::ABM)
     D = agents_space_dimensionality(model)
     D == 3 && return Axis3
     D == 2 && return Axis
+    @error """Cannot determine axis type for space dimensionality $D.
+    Please report this as an issue at the Agents.jl repository."""
 end
 
 function Agents.abmplot!(ax, model::ABM;
