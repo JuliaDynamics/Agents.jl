@@ -258,10 +258,9 @@ Scale given polygon by `s`, assuming polygon's center of reference is the origin
 function scale_polygon end
 export translate_polygon, scale_polygon, rotate_polygon
 
-# Some cheat functions that only exist so that we can have
-# a conditional dependency on OSMMakie and GraphMakie
-function osmplot! end
-function graphplot! end
+############################################################################################
+## Visualization API
+############################################################################################
 
 """
     check_space_visualization_API(model::ABM)
@@ -271,16 +270,80 @@ Checks whether all the necessary method extensions indicated in
 have been defined.
 """
 function check_space_visualization_API end
-export check_space_visualization_API
+
+## Required
 
 """
-    add_interaction!(ax)
-    add_interaction!(ax, p::_ABMPlot)
+    agents_space_dimensionality(space::S) where {S<:Agents.AbstractSpace}
 
-Adds model control buttons and parameter sliders according to the plotting parameters 
-`add_controls` (if true) and `params` (if not empty).
-Buttons and sliders are placed next to each other in a new layout position below the 
-position of `ax`.
+Return dimensionality of given model space.
 """
-function add_interaction! end
-export add_interaction!
+function agents_space_dimensionality end
+
+"""
+    get_axis_limits!(model::ABM{S}) where {S<:Agents.AbstractSpace}
+
+Return appropriate axis limits for given model.
+Return `nothing, nothing` if you want to disable this.
+"""
+function get_axis_limits! end
+
+"""
+    plot_agents!(ax, model::ABM{S}, p::_ABMPlot) where {S<:Agents.AbstractSpace}
+
+Plot agents at their positions.
+"""
+function plot_agents! end
+
+## Optional
+
+"""
+    preplot!(ax, model::ABM{S}; preplotkwargs...) where {S<:Agents.AbstractSpace}
+
+Create a space-dependent preplot.
+"""
+function preplot! end
+
+function static_preplot! end
+
+## Lifting
+
+"""
+    abmplot_heatobs(model::ABM{S}, heatarray)
+"""
+function abmplot_heatobs end
+"""
+    abmplot_ids(model::ABM{S})
+"""
+function abmplot_ids end
+"""
+    abmplot_pos(model::ABM{S}, offset, ids)
+"""
+function abmplot_pos end
+"""
+  abmplot_colors(model::ABM{S}, ac, ids)
+  abmplot_colors(model::ABM{S}, ac::Function, ids)
+"""
+function abmplot_colors end
+"""
+    abmplot_marker(model::ABM{S}, used_poly, am, pos, ids)
+    abmplot_marker(model::ABM{S}, used_poly, am::Function, pos, ids)
+"""
+function abmplot_marker end
+"""
+    abmplot_markersizes(model::ABM{S}, as, ids)
+    abmplot_markersizes(model::ABM{S}, as::Function, ids)
+"""
+function abmplot_markersizes end
+
+## Inspection
+
+"""
+    ids_to_inspect(model::ABM{S}, agent_pos)
+"""
+function ids_to_inspect end
+
+# Some cheat functions that only exist so that we can have
+# a conditional dependency on OSMMakie and GraphMakie
+function osmplot! end
+function graphplot! end
