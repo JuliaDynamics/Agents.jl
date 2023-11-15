@@ -6,8 +6,8 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
         # Required
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits!, (ABM{S}, )),
-        hasmethod(plot_agents!, (Axis, ABM{S}, _ABMPlot)) ||
-            hasmethod(plot_agents!, (Axis3, ABM{S}, _ABMPlot)),
+        hasmethod(agentsplot!, (Axis, ABM{S}, _ABMPlot)) ||
+            hasmethod(agentsplot!, (Axis3, ABM{S}, _ABMPlot)),
         # Preplots (Optional)
         hasmethod(preplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
             hasmethod(preplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
@@ -23,7 +23,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     === Required
     $(checks[1] ? "✔" : "❌")\tagents_space_dimensionality(space::$S)
     $(checks[2] ? "✔" : "❌")\tget_axis_limits!(model::ABM{$S})
-    $(checks[3] ? "✔" : "❌")\tplot_agents!(ax, model::ABM{$S})
+    $(checks[3] ? "✔" : "❌")\tagentsplot!(ax, model::ABM{$S})
     === Preplots (optional)
     $(checks[4] ? "✔" : "❌")\tpreplot!(ax, model::ABM{$S}; preplotkwargs...)
     $(checks[5] ? "✔" : "❌")\tstatic_preplot!(ax, model::ABM{$S}, p::ABMPlot)

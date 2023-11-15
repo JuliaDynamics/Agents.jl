@@ -4,7 +4,7 @@ Agents.agents_space_dimensionality(::GraphSpace) = 2
 
 Agents.get_axis_limits!(model::ABM{<:GraphSpace}) = nothing, nothing
 
-function Agents.plot_agents!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
     ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
@@ -17,7 +17,7 @@ function Agents.plot_agents!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
     return p
 end
 
-function Agents.plot_agents!(ax::Axis3, model::ABM{<:GraphSpace}, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis3, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
     ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))

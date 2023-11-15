@@ -2,7 +2,7 @@ Agents.agents_space_dimensionality(model::ABM{<:Agents.AbstractSpace}) =
     Agents.agents_space_dimensionality(abmspace(model))
 
 "Plot agents into a 2D space."
-function Agents.plot_agents!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
     if p._used_poly[]
         poly_plot = poly!(p, p.marker; p.color, p.scatterkwargs...)
         poly_plot.inspectable[] = false # disable inspection for poly until fixed
@@ -13,7 +13,7 @@ function Agents.plot_agents!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_A
 end
 
 "Plot agents into a 3D space."
-function Agents.plot_agents!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
     p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
     meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
     return p
