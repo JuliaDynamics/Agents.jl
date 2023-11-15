@@ -1,5 +1,9 @@
+## Required
+
+Agents.agents_space_dimensionality(::OpenStreetMapSpace) = 2
+
 "Get correct axis limits for `OpenStreetMapSpace` models."
-function get_axis_limits!(model::ABM{<:Agents.OpenStreetMapSpace})
+function Agents.get_axis_limits!(model::ABM{<:OpenStreetMapSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
     for i ∈ Agents.positions(model)
@@ -12,19 +16,19 @@ function get_axis_limits!(model::ABM{<:Agents.OpenStreetMapSpace})
     return o, e
 end
 
-## Preplotting
+## Optional
 
 """
 `OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function preplot!(ax, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
+function Agents.preplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
     return Agents.osmplot!(ax, model; preplotkwargs...)
 end
 
-## API functions for lifting
+## Lifting
 
-function abmplot_pos(model::ABM{<:OpenStreetMapSpace}, offset, ids)
+function Agents.abmplot_pos(model::ABM{<:OpenStreetMapSpace}, offset, ids)
     if isnothing(offset)
         return [Point2f(OSM.lonlat(model[i].pos, model)) for i in ids]
     else
@@ -32,4 +36,7 @@ function abmplot_pos(model::ABM{<:OpenStreetMapSpace}, offset, ids)
     end
 end
 
-agents_space_dimensionality(::OpenStreetMapSpace) = 2
+## Inspection
+
+Agents.ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, agent_pos) =
+    nearby_ids(agent_pos, model, 0.0)

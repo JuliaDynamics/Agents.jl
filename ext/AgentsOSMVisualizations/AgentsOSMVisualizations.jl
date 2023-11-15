@@ -1,7 +1,9 @@
 module AgentsOSMVisualizations
 
-using Agents, OSMMakie
-using OSMMakie.Makie: Axis, @colorant_str
+using Agents, Makie, OSMMakie
+const _ABMPlot = Agents.get_ABMPlot_type()
+
+include("src/spaces/openstreetmap.jl")
 
 # Change defaults
 default_colors = OSMMakie.WAYTYPECOLORS
