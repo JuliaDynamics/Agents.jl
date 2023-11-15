@@ -9,8 +9,8 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
         hasmethod(agentsplot!, (Axis, ABM{S}, _ABMPlot)) ||
             hasmethod(agentsplot!, (Axis3, ABM{S}, _ABMPlot)),
         # Preplots (Optional)
-        hasmethod(preplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
-            hasmethod(preplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
+        hasmethod(spaceplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
+            hasmethod(spaceplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
         hasmethod(static_preplot!, (Axis, ABM{S}, _ABMPlot)) ||
             hasmethod(static_preplot!, (Axis3, ABM{S}, _ABMPlot)),
         # Lifting (optional)

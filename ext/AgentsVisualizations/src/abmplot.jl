@@ -133,7 +133,7 @@ function Makie.plot!(abmplot::_ABMPlot)
         lift_attributes(abmplot.abmobs[].model, abmplot.ac, abmplot.as, abmplot.am,
             abmplot.offset, abmplot._used_poly)
 
-    preplot!(ax, model; abmplot.preplotkwargs...)
+    spaceplot!(ax, model; abmplot.preplotkwargs...)
     heatmap!(ax, abmplot)
     static_preplot!(ax, model, abmplot)
     agentsplot!(ax, model, abmplot)

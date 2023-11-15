@@ -298,11 +298,11 @@ function agentsplot! end
 ## Preplots
 
 """
-    preplot!(ax, model::ABM{S}; preplotkwargs...) where {S<:Agents.AbstractSpace}
+    spaceplot!(ax, model::ABM{S}; preplotkwargs...) where {S<:Agents.AbstractSpace}
 
 Create a space-dependent preplot.
 """
-function preplot! end
+function spaceplot! end
 
 function static_preplot! end
 

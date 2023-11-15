@@ -22,7 +22,7 @@ end
 `OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function Agents.preplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
+function Agents.spaceplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
     return Agents.osmplot!(ax, model; preplotkwargs...)
 end
 

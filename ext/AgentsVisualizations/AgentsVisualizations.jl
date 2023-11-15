@@ -4,7 +4,7 @@ using Agents, Makie
 using Agents: add_interaction!
 # Pull API functions into extension module
 using Agents: agents_space_dimensionality, get_axis_limits!, agentsplot!
-using Agents: preplot!, static_preplot!
+using Agents: spaceplot!, static_preplot!
 using Agents: abmplot_heatobs, abmplot_ids, abmplot_pos, abmplot_colors, abmplot_marker, 
     abmplot_markersizes
 using Agents: ids_to_inspect
