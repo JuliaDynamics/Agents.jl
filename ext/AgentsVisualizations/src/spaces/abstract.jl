@@ -42,7 +42,7 @@ end
 
 "Plot heatmap according to given `heatarray`."
 function heatmap!(ax, p::_ABMPlot)
-    heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
+    heatobs = @lift(Agents.abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(p, heatobs; 
         colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
@@ -81,7 +81,7 @@ Agents.preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...)
 
 ## Lifting
 
-function abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
+function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
     isnothing(heatarray) && return nothing
     # TODO: use surface!(heatobs) here?
     matrix = Agents.get_data(model, heatarray, identity)
