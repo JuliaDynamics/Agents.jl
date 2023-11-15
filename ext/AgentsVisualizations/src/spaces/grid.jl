@@ -8,7 +8,7 @@ function Agents.get_axis_limits!(model::ABM{<:Agents.AbstractGridSpace})
     return o, e
 end
 
-## Optional
+## Preplots
 
 ## Lifting
 

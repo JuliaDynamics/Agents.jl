@@ -295,7 +295,7 @@ Plot agents at their positions.
 """
 function plot_agents! end
 
-## Optional
+## Preplots
 
 """
     preplot!(ax, model::ABM{S}; preplotkwargs...) where {S<:Agents.AbstractSpace}

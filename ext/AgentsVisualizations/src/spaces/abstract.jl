@@ -38,7 +38,7 @@ function Agents.plot_agents!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_
     return p
 end
 
-## Optional
+## Preplots
 
 "Plot heatmap according to given `heatarray`."
 function heatmap!(ax, p::_ABMPlot)

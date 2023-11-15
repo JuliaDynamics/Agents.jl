@@ -16,7 +16,7 @@ function Agents.get_axis_limits!(model::ABM{<:OpenStreetMapSpace})
     return o, e
 end
 
-## Optional
+## Preplots
 
 """
 `OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 

@@ -9,7 +9,7 @@ function Agents.get_axis_limits!(model::ABM{<:ContinuousSpace})
     return o, e
 end
 
-## Optional
+## Preplots
 
 """
 Plot heatmap according to given `heatarray`.
