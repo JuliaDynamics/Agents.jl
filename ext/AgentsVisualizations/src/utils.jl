@@ -41,10 +41,12 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
 end
 
 function has_custom_space(::ABM{S}) where {S}
-    if !(S<:Union{Agents.DiscreteSpace, Agents.OpenStreetMapSpace, Agents.ContinuousSpace})
-        return true
+    S <: Nothing && @info "No plots will be drawn for agents in a model with Nothing space."
+    if S <: Union{GridSpace, GridSpaceSingle, OpenStreetMapSpace, ContinuousSpace, 
+        GraphSpace, Nothing}
+        return false
     end
-    return false
+    return true
 end
 
 first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
