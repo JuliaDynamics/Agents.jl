@@ -85,31 +85,34 @@ end
 # Agent to string conversion
 ##########################################################################################
 
-function Agents.agent2string(model::ABM, agent_pos)
-    ids = ids_to_inspect(model, agent_pos)
+function Agents.agent2string(model::ABM, pos::Agents.ValidPos)
+    ids = ids_to_inspect(model, pos)
     s = ""
 
-    for id in ids
-        s *= Agents.agent2string(model[id]) * "\n"
+    for (i, id) in enumerate(ids)
+        if i > 1
+            s *= "\n"
+        end
+        s *= Agents.agent2string(model[id])
     end
 
     return s
 end
-
-Agents.ids_to_inspect(model::ABM, agent_pos) = []
 
 function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     agentstring = "▶ $(nameof(A))\n"
 
     agentstring *= "id: $(getproperty(agent, :id))\n"
 
-    agent_pos = getproperty(agent, :pos)
-    if agent_pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
-        agent_pos = round.(agent_pos, sigdigits=2)
-    elseif agent_pos isa Tuple{<:Int, <:Int, <:AbstractFloat}
-        agent_pos = (agent_pos[1], agent_pos[2], round(agent_pos[3], sigdigits=2))
+    if hasproperty(agent, :pos)
+        pos = getproperty(agent, :pos)
+        if pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
+            pos = round.(pos, sigdigits=2)
+        elseif pos isa Tuple{<:Int, <:Int, <:AbstractFloat}
+            pos = (pos[1], pos[2], round(pos[3], sigdigits=2))
+        end
+        agentstring *= "pos: $(pos)\n"
     end
-    agentstring *= "pos: $(agent_pos)\n"
 
     for field in fieldnames(A)[3:end]
         val = getproperty(agent, field)
