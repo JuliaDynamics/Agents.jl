@@ -21,8 +21,6 @@ include("src/utils.jl")
 include("src/spaces/abstract.jl")
 include("src/spaces/continuous.jl")
 include("src/spaces/grid.jl")
-include("src/spaces/graph.jl")
-include("src/spaces/openstreetmap.jl")
 
 include("src/interaction.jl")
 include("src/inspection.jl")
