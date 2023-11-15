@@ -95,6 +95,6 @@ Agents.abmplot_markersizes(model::ABM{<:Agents.SpaceType}, as::Function, ids) =
 
 ## Inspection
 
-convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
+Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
 
 Agents.ids_to_inspect(model::ABM{<:Agents.SpaceType}, pos) = ids_in_position(pos, model)

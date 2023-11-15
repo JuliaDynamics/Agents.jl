@@ -7,7 +7,7 @@ using Agents: agents_space_dimensionality, get_axis_limits!, agentsplot!
 using Agents: spaceplot!, static_preplot!
 using Agents: abmplot_heatobs, abmplot_ids, abmplot_pos, abmplot_colors, abmplot_marker, 
     abmplot_markersizes
-using Agents: ids_to_inspect
+using Agents: convert_mouse_position, ids_to_inspect
 
 JULIADYNAMICS_COLORS = [
     "#7143E0",
