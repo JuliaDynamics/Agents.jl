@@ -6,29 +6,42 @@
 
 # 2D space
 function Makie.show_data(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, source::Scatter) where {S}
-    if plot._used_poly[]
-        return show_data_poly(inspector, plot, idx, source)
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, source::Scatter) where {S<:Agents.SpaceType}
+    if p._used_poly[]
+        return show_data_poly(inspector, p, idx, source)
     else
-        return show_data_2D(inspector, plot, idx, source)
+        return show_data_2D(inspector, p, idx, source)
     end
 end
 
 function show_data_2D(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, source::Scatter) where {S}
-    a = inspector.plot.attributes
-    scene = Makie.parent_scene(plot)
-
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, source::Scatter) where {S<:Agents.AbstractSpace}
+    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, plot, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
-    size = source.markersize[] isa Vector ? source.markersize[][idx] : source.markersize[]
 
-    model = plot.abmobs[].model[]
-    id = collect(allids(model))[idx]
-    a.text[] = Agents.agent2string(model, model[id].pos)
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
+    a.visible[] = true
+
+    return true
+end
+
+function show_data_2D(inspector::DataInspector,
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, source::Scatter) where {S<:Nothing}
+    scene = Makie.parent_scene(p)
+    pos = source.converted[1][][idx]
+    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
+    Makie.update_tooltip_alignment!(inspector, proj_pos)
+
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, p.pos[][idx]) # weird af special case
     a.visible[] = true
 
     return true
@@ -36,46 +49,40 @@ end
 
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-            idx, ::Makie.Poly) where {S}
-    a = inspector.plot.attributes
-    scene = Makie.parent_scene(plot)
-
-    proj_pos = Makie.shift_project(scene, plot, to_ndim(Point3f, plot[:pos][][idx], 0))
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, ::Makie.Poly) where {S<:Agents.AbstractSpace}
+    scene = Makie.parent_scene(p)
+    pos = source.converted[1][][idx]
+    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
-    sizes = plot.sizes[]
 
-    if S <: ContinuousSpace
-        agent_pos = Tuple(plot[:pos][][idx])
-    elseif S <: GridSpace
-        agent_pos = Tuple(Int.(plot[:pos][][idx]))
-    end
-    a.text[] = Agents.agent2string(plot.abmobs[].model[], agent_pos)
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
     a.visible[] = true
 
     return true
 end
 
 # 3D space
-function Makie.show_data(inspector::DataInspector, plot::_ABMPlot{<:Tuple{<:ABMObservable}},
-            idx, source::MeshScatter)
+function Makie.show_data(inspector::DataInspector,
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, source::MeshScatter) where {S<:Agents.SpaceType}
     # need to dispatch here should we for example have 3D polys at some point
-    return show_data_3D(inspector, plot, idx, source)
+    return show_data_3D(inspector, p, idx, source)
 end
 
-function show_data_3D(inspector::DataInspector, plot::_ABMPlot{<:Tuple{<:ABMObservable}},
-            idx, source::MeshScatter)
-    a = inspector.plot.attributes
-    scene = Makie.parent_scene(plot)
-
+function show_data_3D(inspector::DataInspector,
+        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
+        idx, source::MeshScatter) where {S<:Agents.AbstractSpace}
+    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, plot, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
-    size = source.markersize[] isa Vector ? source.markersize[][idx] : source.markersize[]
 
-    model = plot.abmobs[].model[]
-    id = collect(allids(model))[idx]
-    a.text[] = Agents.agent2string(model, model[id].pos)
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
     a.visible[] = true
 
     return true
