@@ -339,6 +339,14 @@ function abmplot_markersizes end
 ## Inspection
 
 """
+    convert_mouse_position(::S, pos)
+
+Convert a `Point2f`/`Point3f` position in the Makie figure to its corresponding position in 
+the given space `S`.
+"""
+function convert_mouse_position end
+
+"""
     ids_to_inspect(model::ABM{S}, pos)
 """
 function ids_to_inspect end
