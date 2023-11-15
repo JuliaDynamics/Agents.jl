@@ -22,23 +22,20 @@ end
 ## Preplots
 
 function Agents.static_preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
-    if hasproperty(p, :static_preplot!)
-        @warn """Usage of the static_preplot! kwarg is deprecated.
-        Please remove it from the call to abmplot and define a custom method for 
-        Agents.static_preplot!(ax, model, p) instead."""
-        return p.static_preplot![](ax, model)
-    end
+    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
     return nothing
 end
 
 function Agents.static_preplot!(ax::Axis3, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
-    if hasproperty(p, :static_preplot!)
-        @warn """Usage of the static_preplot! kwarg is deprecated.
+    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
+    return nothing
+end
+
+function old_static_preplot!(ax, model, p)
+    @warn """Usage of the static_preplot! kwarg is deprecated.
         Please remove it from the call to abmplot and define a custom method for 
         Agents.static_preplot!(ax, model, p) instead."""
-        return p.static_preplot![](ax, model)
-    end
-    return nothing
+    return p.static_preplot![](ax, model)
 end
 
 Agents.preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = nothing
