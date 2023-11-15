@@ -21,22 +21,6 @@ end
 
 ## Preplots
 
-"Plot heatmap according to given `heatarray`."
-function heatmap!(ax, p::_ABMPlot)
-    heatobs = @lift(Agents.abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
-    isnothing(heatobs[]) && return nothing
-    hmap = Makie.heatmap!(p, heatobs; 
-        colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
-    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
-    # TODO: Set colorbar to be "glued" to axis
-    # Problem with the following code, which comes from the tutorial
-    # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
-    # is that it only works for axis that have 1:1 aspect ratio...
-    # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
-    # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
-    return hmap
-end
-
 function Agents.static_preplot!(ax::Axis, model::ABM{<:Agents.AbstractSpace}, p::_ABMPlot)
     if hasproperty(p, :static_preplot!)
         @warn """Usage of the static_preplot! kwarg is deprecated.
