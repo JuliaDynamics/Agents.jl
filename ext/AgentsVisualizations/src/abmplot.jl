@@ -62,6 +62,7 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         enable_inspection = add_controls,
         kwargs...
     )
+    has_custom_space(abmobs.model[]) && check_space_visualization_API(abmobs.model[])
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover
@@ -121,7 +122,6 @@ end
 function Makie.plot!(abmplot::_ABMPlot)
     model = abmplot.abmobs[].model[]
     ax = abmplot.ax[]
-    has_custom_space(model) && Agents.check_space_visualization_API(model)
     abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
     set_axis_limits!(ax, model)
 
