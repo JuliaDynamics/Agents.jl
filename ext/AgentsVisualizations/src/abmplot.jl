@@ -1,18 +1,23 @@
-function Agents.abmplot(model::Agents.ABM;
+function Agents.abmplot(model::ABM;
         figure=NamedTuple(),
         axis=NamedTuple(),
         warn_deprecation = true,
         kwargs...
     )
     fig = Figure(; figure...)
-    ax = fig[1, 1][1, 1] = agents_space_dimensionality(model) == 3 ?
-                           Axis3(fig; axis...) : Axis(fig; axis...)
+    ax = fig[1, 1][1, 1] = axistype(model)(fig; axis...)
     abmobs = abmplot!(ax, model; warn_deprecation = warn_deprecation, kwargs...)
 
     return fig, ax, abmobs
 end
 
-function Agents.abmplot!(ax, model::Agents.ABM;
+function axistype(model::ABM)
+    D = agents_space_dimensionality(model)
+    D == 3 && return Axis3
+    D == 2 && return Axis
+end
+
+function Agents.abmplot!(ax, model::ABM;
         # These keywords are given to `ABMObservable`
         agent_step! = Agents.dummystep,
         model_step! = Agents.dummystep,
@@ -49,8 +54,7 @@ function Agents.abmplot(abmobs::ABMObservable;
         kwargs...
     )
     fig = Figure(; figure...)
-    ax = fig[1, 1][1, 1] = agents_space_dimensionality(abmobs.model[]) == 3 ?
-                           Axis3(fig; axis...) : Axis(fig; axis...)
+    ax = fig[1, 1][1, 1] = axistype(abmobs.model[])(fig; axis...)
     abmplot!(ax, abmobs; kwargs...)
 
     return fig, ax, abmobs
@@ -62,7 +66,7 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         enable_inspection = add_controls,
         kwargs...
     )
-    has_custom_space(abmobs.model[]) && check_space_visualization_API(abmobs.model[])
+    has_custom_space(abmobs.model[]) && Agents.check_space_visualization_API(abmobs.model[])
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover
