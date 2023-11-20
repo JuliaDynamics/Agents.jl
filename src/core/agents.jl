@@ -181,7 +181,7 @@ macro agent(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
         @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
     end
-    abstract_type == nothing && (abstract_type = :(Agents.AbstractAgent))
+    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
     base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
     @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
     old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
