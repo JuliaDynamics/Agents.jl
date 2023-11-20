@@ -734,7 +734,7 @@ function fractal_step!(model)
     while model.spawn_count > 0
         p_r = particle_radius(model.min_radius, model.max_radius, abmrng(model))
         pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49
-        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction))
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction)
         add_agent!(pos, FractalParticle, model, prop_particle...)
         model.spawn_count -= 1
     end
