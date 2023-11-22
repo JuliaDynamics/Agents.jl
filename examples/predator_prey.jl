@@ -216,7 +216,7 @@ plotkwargs = (;
     as = 25,
     am = ashape,
     offset,
-    scatterkwargs = (strokewidth = 1.0, strokecolor = :black),
+    agentsplotkwargs = (strokewidth = 1.0, strokecolor = :black),
     heatarray = grasscolor,
     heatkwargs = heatkwargs,
 )

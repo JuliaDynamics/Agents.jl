@@ -108,9 +108,8 @@ This is the internal recipe for creating an `_ABMPlot`.
         as=15,
         am=:circle,
         offset=nothing,
-        scatterkwargs=NamedTuple(),
-        preplotkwargs=NamedTuple(),
-        graphplotkwargs=NamedTuple(),
+        spaceplotkwargs = NamedTuple(),
+        agentsplotkwargs = NamedTuple(),
 
         # Preplot
         heatarray=nothing,
@@ -140,7 +139,11 @@ function Makie.plot!(abmplot::_ABMPlot)
         lift_attributes(abmplot.abmobs[].model, abmplot.ac, abmplot.as, abmplot.am,
             abmplot.offset, abmplot._used_poly)
 
-    spaceplot!(ax, model; abmplot.preplotkwargs...)
+    # gracefully handle deprecations of old plot kwargs
+    merge_spaceplotkwargs!(abmplot)
+    merge_agentsplotkwargs!(abmplot)
+
+    spaceplot!(ax, model; abmplot.spaceplotkwargs...)
     heatmap!(ax, abmplot)
     static_preplot!(ax, model, abmplot)
     agentsplot!(ax, model, abmplot)

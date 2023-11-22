@@ -43,7 +43,7 @@ Agents.agentsplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot) =
 
 ## Preplots
 
-Agents.spaceplot!(ax, model::ABM{<:Agents.AbstractSpace}; preplotkwargs...) = 
+Agents.spaceplot!(ax, model::ABM{<:Agents.AbstractSpace}; spaceplotkwargs...) = 
     notimplemented(abmspace(model))
 
 Agents.static_preplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot) = 

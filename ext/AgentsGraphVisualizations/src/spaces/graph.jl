@@ -6,26 +6,26 @@ Agents.get_axis_limits!(model::ABM{<:GraphSpace}) = nothing, nothing
 
 function Agents.agentsplot!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
-    ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
+    ec = get(p.agentsplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
-    ew = get(p.graphplotkwargs, :edge_width, Observable(1))
+    ew = get(p.agentsplotkwargs, :edge_width, Observable(1))
     edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
     Agents.graphplot!(p, abmspace(model).graph;
         node_color=p.color, node_marker=p.marker, node_size=p.markersize,
-        p.graphplotkwargs, # must come first to not overwrite lifted kwargs
+        p.agentsplotkwargs, # must come first to not overwrite lifted kwargs
         edge_color, edge_width)
     return p
 end
 
 function Agents.agentsplot!(ax::Axis3, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
-    ec = get(p.graphplotkwargs, :edge_color, Observable(:black))
+    ec = get(p.agentsplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
-    ew = get(p.graphplotkwargs, :edge_width, Observable(1))
+    ew = get(p.agentsplotkwargs, :edge_width, Observable(1))
     edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
     Agents.graphplot!(p, abmspace(model).graph;
         node_color=p.color, node_marker=p.marker, node_size=p.markersize,
-        p.graphplotkwargs, # must come first to not overwrite lifted kwargs
+        p.agentsplotkwargs, # must come first to not overwrite lifted kwargs
         edge_color, edge_width)
     return p
 end

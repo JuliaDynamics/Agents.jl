@@ -18,11 +18,11 @@ end
 ## Preplots
 
 """
-`OpenStreetMapSpace` preplot that takes `preplotkwargs` and creates an `OSMMakie.osmplot` 
+`OpenStreetMapSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function Agents.spaceplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; preplotkwargs...)
-    return Agents.osmplot!(ax, model; preplotkwargs...)
+function Agents.spaceplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; spaceplotkwargs...)
+    return Agents.osmplot!(ax, model; spaceplotkwargs...)
 end
 
 ## Lifting

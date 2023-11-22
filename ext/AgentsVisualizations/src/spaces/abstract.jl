@@ -4,10 +4,10 @@ Agents.agents_space_dimensionality(model::ABM) =
 "Plot agents into a 2D space."
 function Agents.agentsplot!(ax::Axis, model::ABM, p::_ABMPlot)
     if p._used_poly[]
-        poly_plot = poly!(p, p.marker; p.color, p.scatterkwargs...)
+        poly_plot = poly!(p, p.marker; p.color, p.agentsplotkwargs...)
         poly_plot.inspectable[] = false # disable inspection for poly until fixed
     else
-        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     end
     return p
 end
@@ -15,14 +15,14 @@ end
 "Plot agents into a 3D space."
 function Agents.agentsplot!(ax::Axis3, model::ABM, p::_ABMPlot)
     p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
-    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.scatterkwargs...)
+    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     return p
 end
 
 ## Preplots
 
-Agents.spaceplot!(ax::Axis, model::ABM; preplotkwargs...) = nothing
-Agents.spaceplot!(ax::Axis3, model::ABM; preplotkwargs...) = nothing
+Agents.spaceplot!(ax::Axis, model::ABM; spaceplotkwargs...) = nothing
+Agents.spaceplot!(ax::Axis3, model::ABM; spaceplotkwargs...) = nothing
 
 function Agents.static_preplot!(ax::Axis, model::ABM, p::_ABMPlot)
     hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
@@ -35,9 +35,9 @@ function Agents.static_preplot!(ax::Axis3, model::ABM, p::_ABMPlot)
 end
 
 function old_static_preplot!(ax, model, p)
-    @warn """Usage of the static_preplot! kwarg is deprecated.
-        Please remove it from the call to abmplot and define a custom method for 
-        Agents.static_preplot!(ax, model, p) instead."""
+    @warn "Usage of the static_preplot! kwarg is deprecated. " *
+        "Please remove it from the call to abmplot and define a custom method for " *
+        "Agents.static_preplot!(ax, model, p) instead."
     return p.static_preplot![](ax, model)
 end
 

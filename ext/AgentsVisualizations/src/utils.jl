@@ -25,7 +25,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     $(checks[2] ? "✔" : "❌")\tget_axis_limits!(model::ABM{$S})
     $(checks[3] ? "✔" : "❌")\tagentsplot!(ax, model::ABM{$S})
     === Preplots (optional)
-    $(checks[4] ? "✔" : "❌")\tspaceplot!(ax, model::ABM{$S}; preplotkwargs...)
+    $(checks[4] ? "✔" : "❌")\tspaceplot!(ax, model::ABM{$S}; spaceplotkwargs...)
     $(checks[5] ? "✔" : "❌")\tstatic_preplot!(ax, model::ABM{$S}, p::ABMPlot)
     === Lifting (optional)
     placeholder
@@ -51,6 +51,38 @@ function has_custom_space(::ABM{S}) where {S}
 end
 
 first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
+
+function merge_spaceplotkwargs!(p)
+    if hasproperty(p, :osmplotkwargs)
+        @warn "Usage of osmplotkwargs is deprecated. " *
+            "Please remove it from the call to abmplot and " * 
+            "use only spaceplotkwargs instead."
+        for (k,v) in p.osmplotkwargs
+            p.spaceplotkwargs[k] = v
+        end
+    end
+    return p.spaceplotkwargs
+end
+
+function merge_agentsplotkwargs!(p)
+    if hasproperty(p, :scatterkwargs)
+        @warn "Usage of the scatterkwargs keyword argument is deprecated. " *
+            "Please remove it from the call to abmplot and " *
+            "use only agentsplotkwargs instead."
+        for (k,v) in p.scatterkwargs
+            p.agentsplotkwargs[k] = v
+        end
+    end
+    if hasproperty(p, :graphplotkwargs)
+        @warn "Usage of the graphplotkwargs keyword argument is deprecated. " *
+            "Please remove it from the call to abmplot and " *
+            "use only agentsplotkwargs instead."
+        for (k,v) in p.graphplotkwargs
+            p.agentsplotkwargs[k] = v
+        end
+    end
+    return p.agentsplotkwargs
+end
 
 ##########################################################################################
 # Check/get/set

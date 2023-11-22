@@ -37,7 +37,8 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `scatterkwargs = ()` : Additional keyword arguments propagated to the `scatter!` call.
+* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the `agentsplot!` 
+  call.
 
 ### Preplot related
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
@@ -58,10 +59,9 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   placed naturally.
 * `static_preplot!` : A function `f(ax, model)` that plots something after the heatmap
   but before the agents.
-* `osmkwargs = NamedTuple()` : keywords directly passed to `OSMMakie.osmplot!`
-  if model space is `OpenStreetMapSpace`.
-* `graphplotkwargs = NamedTuple()` : keywords directly passed to
-  [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
+* `spaceplotkwargs = NamedTuple()` : keywords used in `spaceplot!`. Directly passed to
+  * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
+  * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
   if model space is `GraphSpace`.
 * `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space aspect ratio.
 * `enable_space_checks = true`: Set to `false` to disable checks related to the model
@@ -300,7 +300,7 @@ function agentsplot! end
 ## Preplots
 
 """
-    spaceplot!(ax, model::ABM{S}; preplotkwargs...) where {S<:Agents.AbstractSpace}
+    spaceplot!(ax, model::ABM{S}; spaceplotkwargs...) where {S<:Agents.AbstractSpace}
 
 Create a space-dependent preplot.
 """
