@@ -186,3 +186,5 @@ function lift_attributes(model, ac, as, am, offset, used_poly)
 
     return pos, color, marker, markersize
 end
+
+const ABMP{S} = _ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}

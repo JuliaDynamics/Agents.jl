@@ -6,8 +6,7 @@
 
 # 2D space
 function Makie.show_data(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, source::Scatter) where {S<:Agents.SpaceType}
+        p::ABMP{S}, idx, source::Scatter) where {S<:Agents.SpaceType}
     if p._used_poly[]
         return show_data_poly(inspector, p, idx, source)
     else
@@ -16,8 +15,7 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 function show_data_2D(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, source::Scatter) where {S<:Agents.AbstractSpace}
+        p::ABMP{S}, idx, source::Scatter) where {S<:Agents.AbstractSpace}
     scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
@@ -32,8 +30,7 @@ function show_data_2D(inspector::DataInspector,
 end
 
 function show_data_2D(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, source::Scatter) where {S<:Nothing}
+        p::ABMP{S}, idx, source::Scatter) where {S<:Nothing}
     scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
@@ -49,8 +46,7 @@ end
 
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, ::Makie.Poly) where {S<:Agents.AbstractSpace}
+        p::ABMP{S}, idx, ::Makie.Poly) where {S<:Agents.AbstractSpace}
     scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
@@ -66,15 +62,13 @@ end
 
 # 3D space
 function Makie.show_data(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, source::MeshScatter) where {S<:Agents.SpaceType}
+        p::ABMP{S}, idx, source::MeshScatter) where {S<:Agents.SpaceType}
     # need to dispatch here should we for example have 3D polys at some point
     return show_data_3D(inspector, p, idx, source)
 end
 
 function show_data_3D(inspector::DataInspector,
-        p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
-        idx, source::MeshScatter) where {S<:Agents.AbstractSpace}
+        p::ABMP{S}, idx, source::MeshScatter) where {S<:Agents.AbstractSpace}
     scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
