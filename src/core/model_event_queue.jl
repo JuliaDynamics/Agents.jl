@@ -51,7 +51,7 @@ proportional to the propensity. During the model time evolution, two things occu
 - the scheduler generates a new event utilizing the rates corresponding to the agent type,
   and schedules it together with the same paired agent;
 
-Even if the scheduler generate automatically new events based on the rates, it should be
+Even if the scheduler automatically generates new events based on the rates, it should be
 initialized by adding some events at the start of the simulation through the [`add_event!`](@ref) 
 function.
 
