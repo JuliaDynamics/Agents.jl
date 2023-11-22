@@ -145,7 +145,7 @@ function Makie.plot!(abmplot::_ABMPlot)
     return abmplot
 end
 
-function set_axis_limits!(ax::Axis, model::ABM{<:Agents.SpaceType})
+function set_axis_limits!(ax::Axis, model::ABM)
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -153,7 +153,7 @@ function set_axis_limits!(ax::Axis, model::ABM{<:Agents.SpaceType})
     return o, e
 end
 
-function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.SpaceType})
+function set_axis_limits!(ax::Axis3, model::ABM)
     o, e = get_axis_limits!(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
@@ -162,7 +162,7 @@ function set_axis_limits!(ax::Axis3, model::ABM{<:Agents.SpaceType})
     return o, e
 end
 
-function heatmap!(ax, p::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:Agents.SpaceType}}}}})
+function heatmap!(ax, p::_ABMPlot)
     heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(p, heatobs; 
