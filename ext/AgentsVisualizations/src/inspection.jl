@@ -86,7 +86,7 @@ end
 # Agent to string conversion
 ##########################################################################################
 
-function Agents.agent2string(model::ABM, pos::Agents.ValidPos)
+function Agents.agent2string(model::ABM, pos)
     ids = ids_to_inspect(model, pos)
     s = ""
 
