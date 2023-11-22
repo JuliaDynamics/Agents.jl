@@ -66,9 +66,14 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         # These keywords are propagated to the _ABMPlot recipe
         add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
         enable_inspection = add_controls,
+        enable_space_checks = true,
         kwargs...
     )
-    has_custom_space(abmobs.model[]) && Agents.check_space_visualization_API(abmobs.model[])
+    if enable_space_checks
+        if has_custom_space(abmobs.model[])
+            Agents.check_space_visualization_API(abmobs.model[])
+        end
+    end
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover

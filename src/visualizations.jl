@@ -64,6 +64,8 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
   if model space is `GraphSpace`.
 * `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space aspect ratio.
+* `enable_space_checks = true`: Set to `false` to disable checks related to the model
+  space.
 
 The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
 `axis` which can be used to change the automatically created `Figure` and `Axis` objects.
