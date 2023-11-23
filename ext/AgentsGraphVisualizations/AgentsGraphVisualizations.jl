@@ -3,6 +3,7 @@ module AgentsGraphVisualizations
 
 using Agents, Makie, GraphMakie
 const _ABMPlot = Agents.get_ABMPlot_type()
+const ABMP{S} = _ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}
 
 include("src/spaces/graph.jl")
 

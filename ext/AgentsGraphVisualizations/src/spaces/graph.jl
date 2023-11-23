@@ -60,5 +60,32 @@ Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function, ids) =
 
 ## Inspection
 
+function Makie.show_data(inspector::DataInspector,
+        p::ABMP{S}, idx, source::Scatter) where {S<:GraphSpace}
+    pos = source.converted[1][][idx]
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
+    Makie.update_tooltip_alignment!(inspector, proj_pos)
+
+    # get GraphPlot
+    gp = p.plots[findfirst(x -> isa(x, GraphMakie.GraphPlot), p.plots)]
+    # get position (Int) matching currently hovered node position (Point2f/Point3f)
+    node_pos = findfirst(==(pos), gp.node_pos[])
+
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, node_pos)
+    a.visible[] = true
+
+    return true
+end
+
 Agents.ids_to_inspect(model::ABM{<:GraphSpace}, pos) =
     abmspace(model).stored_ids[pos]
+
+function Agents.agent2string(model::ABM{<:GraphSpace}, pos)
+    ids = Agents.ids_to_inspect(model, pos)
+
+    return """▶ Node $pos
+    # of agents: $(length(ids))
+    """
+end
