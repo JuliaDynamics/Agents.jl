@@ -43,7 +43,7 @@ end
 function has_custom_space(::ABM{S}) where {S}
     S <: Nothing &&
         @info "An empty plot will be drawn for agents in a model with Nothing space."
-    if S <: Union{GridSpace, GridSpaceSingle, OpenStreetMapSpace, ContinuousSpace, 
+    if S <: Union{GridSpace, GridSpaceSingle, OSMSpace, ContinuousSpace, 
         GraphSpace, Nothing}
         return false
     end

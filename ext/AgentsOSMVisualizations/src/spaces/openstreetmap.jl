@@ -1,8 +1,8 @@
 ## Required
 
-Agents.agents_space_dimensionality(::OpenStreetMapSpace) = 2
+Agents.agents_space_dimensionality(::OSMSpace) = 2
 
-function Agents.get_axis_limits!(model::ABM{<:OpenStreetMapSpace})
+function Agents.get_axis_limits!(model::ABM{<:OSMSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
     for i ∈ Agents.positions(model)
@@ -18,16 +18,16 @@ end
 ## Preplots
 
 """
-`OpenStreetMapSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot` 
+`OSMSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function Agents.spaceplot!(ax::Axis, model::ABM{<:OpenStreetMapSpace}; spaceplotkwargs...)
+function Agents.spaceplot!(ax::Axis, model::ABM{<:OSMSpace}; spaceplotkwargs...)
     return Agents.osmplot!(ax, model; spaceplotkwargs...)
 end
 
 ## Lifting
 
-function Agents.abmplot_pos(model::ABM{<:OpenStreetMapSpace}, offset, ids)
+function Agents.abmplot_pos(model::ABM{<:OSMSpace}, offset, ids)
     if isnothing(offset)
         return [Point2f(OSM.lonlat(model[i].pos, model)) for i in ids]
     else
@@ -37,5 +37,4 @@ end
 
 ## Inspection
 
-Agents.ids_to_inspect(model::ABM{<:OpenStreetMapSpace}, pos) =
-    nearby_ids(pos, model, 0.0)
+Agents.ids_to_inspect(model::ABM{<:OSMSpace}, pos) = nearby_ids(pos, model, 0.0)

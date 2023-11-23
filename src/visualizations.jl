@@ -343,8 +343,8 @@ function abmplot_markersizes end
 """
     convert_mouse_position(::S, pos)
 
-Convert a `Point2f`/`Point3f` position in the Makie figure to its corresponding position in 
-the given space `S`.
+Convert a `Point{2, Float32}`/`Point{3, Float32}` position in the Makie figure to its 
+corresponding position in the given space `S`.
 """
 function convert_mouse_position end
 
