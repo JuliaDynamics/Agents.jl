@@ -16,9 +16,8 @@ end
 
 function show_data_2D(inspector::DataInspector,
         p::ABMP{S}, idx, source::Scatter) where {S<:Agents.AbstractSpace}
-    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
@@ -31,9 +30,8 @@ end
 
 function show_data_2D(inspector::DataInspector,
         p::ABMP{S}, idx, source::Scatter) where {S<:Nothing}
-    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
@@ -47,9 +45,8 @@ end
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
         p::ABMP{S}, idx, ::Makie.Poly) where {S<:Agents.AbstractSpace}
-    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
@@ -69,9 +66,8 @@ end
 
 function show_data_3D(inspector::DataInspector,
         p::ABMP{S}, idx, source::MeshScatter) where {S<:Agents.AbstractSpace}
-    scene = Makie.parent_scene(p)
     pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(scene, p, to_ndim(Point3f, pos, 0))
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
