@@ -106,105 +106,75 @@ function EventQueueABM(
     )
 end
 
-
 # This function ensures that once an agent is added into the model,
 # an event is created and added for it. It is called internally
 # by `add_agent_to_model!`.
 function extra_actions_after_add!(agent, model::EventQueueABM)
     generate_event_in_queue!(agent, model)
-
 end
+
+# This is the main function that is called in `step!`:
 function generate_event_in_queue!(agent, model)
-    event = select_random_event(agent, model)
-    t = generate_time_of_event
-    enque here!
-end
-
-# one of the two crucial functions for this model!
-# It is called in `step!` once an event has finished!
-function select_random_event(agent::AbstractAgent, model::EventQueueABM)
-    applicable = applicable_events(agent, model)
-    propvec = propensities_vector(agent, model)
-    # First, update propensities:
-    for (k, i) in enumerate(applicable)
-        event_idx = applicable[i]
-        event = abmevents(model)[event_idx]
-        propvec[k] = estimate_propensity(event, model)
+    # First, update propensities vector
+    propensities = getfield(model, :propensities)
+    for (i, event) in enumerate(getfield(model, :events))
+        if agent isa event.Types
+            p = obtain_propensity(event, agent, model)
+        else
+            p = 0.0
+        end
+        propensities[i] = p
     end
-    # then, select a random event based on propensities:
-    selected_idx = select_event(propvec, model)
-    selected_event = applicable[selected_idx]
-    return selected_event
+    # Then, select an event based on propensities
+    event_idx, totalprop = sample_propensity(abmrng(model), propensities)
+    # The time to the event is generated from the selected event
+    t = generate_time_of_event(event, totalprop, agent, model)
+    # add the event in the queue!
+    enqueue!(abmqueue(model), Event(id, event_idx) => t + abmtime(model))
 end
 
-
-function applicable_events(agent, model::EventQueueABM)
-    appl = getfield(model, :applicable_events)
-    return appl[nameof(typeof(agent))]
-end
-function propensities_vector(agent, model::EventQueueABM)
-    appl = getfield(model, :propensities_vectors)
-    return appl[nameof(typeof(agent))]
-end
-
-function select_event(propensities, model)
-    total = sum(propensities)
-    # accumulate propensities in-place
-    for i in 2:length(propensities)
-        propensities[i] += propensities[i-1]
+function obtain_propensity(event::AgentEvent, agent, model)
+    if event.propensity isa Real
+        return event.propensity
+    else
+        p = event.propensity(agent, model)
+        return p
     end
-    propensities ./= total
-    p = rand(abmrng(model))
-    idx = findfirst(c -> p ≤ c, propensities)
-    propensities .= 0.0
-    return idx
 end
 
-
-function update_propensities!(agent, model)
-    # TODO
+# from StatsBase.jl
+function sample_propensity(rng, wv)
+    totalprop = sum(wv)
+    t = rand(rng) * totalprop
+    i = 1
+    cw = wv[1]
+    while cw < t && i < length(wv)
+        i += 1
+        @inbounds cw += wv[i]
+    end
+    return i, totalprop
 end
 
+function generate_time_of_event(event, totalprop, agent, model)
+    if isnothing(event.propensity)
+        t = randexp(abmrng(model)) * totalprop
+    else
+        t = event.propensity(agent, model)
+    end
+    return t
+end
 
 """
     abmqueue(model::EventQueueABM)
+
+Return the queue of scheduled events in the `model`.
 """
 abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
 
 """
-    abmevents(model::EventQueueABM)
-"""
-abmevents(model::EventQueueABM) = getfield(model, :all_events)
-function abmevents(agent, model::EventQueueABM)
-    agent_type = findfirst(isequal(typeof(agent)), tuple_agenttype(model))
-    return abmevents(model)[agent_type]
-end
+    abmtime(model::AgentBasedModel)
 
-"""
-    abmrates(model::EventQueueABM)
-"""
-abmrates(model::EventQueueABM) = getfield(model, :all_rates)
-function abmrates(agent, model::EventQueueABM)
-    agent_type = findfirst(isequal(typeof(agent)), tuple_agenttype(model))
-    rates = abmrates(model)[agent_type]
-    return map(r -> r isa Function ? r(model) : r, rates)
-end
-
-"""
-    add_event!(agent, event, t, model::EventQueueABM)
-"""
-function add_event!(agent::AbstractAgent, event, t, model)
-    id = agent.id
-    event_idx = findfirst(isequal(event), abmevents(model[id], model))
-    return add_event!(id, event_idx, t, model)
-end
-function add_event!(id, event_idx, t, model)
-    queue = abmqueue(model)
-    enqueue!(queue, Event(id, event_idx) => t)
-end
-
-"""
-    abmtime(model::EventQueueABM)
+Return the current time of the model.
 """
 abmtime(model::EventQueueABM) = getfield(model, :time)[]
 
