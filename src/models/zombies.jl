@@ -34,7 +34,7 @@ function zombies(; seed = 1234)
     zombie = add_agent!(start, model, true, speed)
     plan_route!(zombie, finish, model)
     ## This function call creates & adds an agent, see `add_agent!`
-    return model, zombie_agent_step!, dummystep
+    return model
 end
 
 function zombie_agent_step!(agent, model)
