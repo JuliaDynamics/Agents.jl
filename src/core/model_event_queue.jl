@@ -108,20 +108,62 @@ end
 
 
 # This function ensures that once an agent is added into the model,
-# an event is created and added for it.
+# an event is created and added for it. It is called internally
+# by `add_agent_to_model!`.
 function extra_actions_after_add!(agent, model::EventQueueABM)
-    generate_new_event!(agent, model)
+    generate_event_in_queue!(agent, model)
+
+end
+function generate_event_in_queue!(agent, model)
+    event = select_random_event(agent, model)
+    t = generate_time_of_event
+    enque here!
 end
 
 # one of the two crucial functions for this model!
-function generate_new_event!(agent, model::EventQueueABM)
-    props = update_propensities!(agent, model)
-    # next...
+# It is called in `step!` once an event has finished!
+function select_random_event(agent::AbstractAgent, model::EventQueueABM)
+    applicable = applicable_events(agent, model)
+    propvec = propensities_vector(agent, model)
+    # First, update propensities:
+    for (k, i) in enumerate(applicable)
+        event_idx = applicable[i]
+        event = abmevents(model)[event_idx]
+        propvec[k] = estimate_propensity(event, model)
+    end
+    # then, select a random event based on propensities:
+    selected_idx = select_event(propvec, model)
+    selected_event = applicable[selected_idx]
+    return selected_event
 end
+
+
+function applicable_events(agent, model::EventQueueABM)
+    appl = getfield(model, :applicable_events)
+    return appl[nameof(typeof(agent))]
+end
+function propensities_vector(agent, model::EventQueueABM)
+    appl = getfield(model, :propensities_vectors)
+    return appl[nameof(typeof(agent))]
+end
+
+function select_event(propensities, model)
+    total = sum(propensities)
+    # accumulate propensities in-place
+    for i in 2:length(propensities)
+        propensities[i] += propensities[i-1]
+    end
+    propensities ./= total
+    p = rand(abmrng(model))
+    idx = findfirst(c -> p ≤ c, propensities)
+    propensities .= 0.0
+    return idx
+end
+
+
 function update_propensities!(agent, model)
     # TODO
 end
-
 
 
 """
