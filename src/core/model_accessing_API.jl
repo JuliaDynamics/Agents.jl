@@ -1,5 +1,5 @@
 
-const DictABM = Union{StandardABM{S,A,Dict{Int,A}} where {S,A}, 
+const DictABM = Union{StandardABM{S,A,Dict{Int,A}} where {S,A},
                       EventQueueABM{S,A,Dict{Int,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,Vector{A}} where {S,A},
                      EventQueueABM{S,A,Vector{A}} where {S,A}}
@@ -16,14 +16,19 @@ function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     maxid = getfield(model, :maxid)
     new_id = agent.id
     if maxid[] < new_id; maxid[] = new_id; end
+    extra_actions_after_add!(agent, model)
     return
 end
 
 function add_agent_to_model!(agent::AbstractAgent, model::VecABM)
     agent.id != nagents(model) + 1 && error("Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
+    extra_actions_after_add!(agent, model)
     return
 end
+
+# This is extended for event based models (in their file)
+extra_actions_after_add!(agent, model::StandardABM) = nothing
 
 function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
     delete!(agent_container(model), agent.id)

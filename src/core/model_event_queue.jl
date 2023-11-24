@@ -35,6 +35,11 @@ struct EventQueueABM{
     agents_types::T
     # TODO: Test whether making the `events` a `Vector` has any difference in performance
     events::E
+    # maps an agent type to its applicable events
+    # The "type" is the symbol `nameof(typeof(agent))`
+    applicable_events::Dict{Symbol, Vector{Int}}
+    # TODO: The value type of the vector shouldn't be limited
+    propensities_vectors::Dict{Symbol, Vector{Float64}}
     event_queue::PriorityQueue{Event, Float64}
 end
 
@@ -73,23 +78,51 @@ function.
 - `container, properties, scheduler, rng, warn` work the same way as in a [`StandardABM`](@ref).
 """
 function EventQueueABM(
-    ::Type{A}, events,
+    ::Type{A}, events::E,
     space::S = nothing;
     container::Type = Dict{Int},
-    scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
     warn = true,
-) where {A<:AbstractAgent,S<:SpaceType,F,P,R<:AbstractRNG,W,L}
+) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
     agents_types = union_types(A)
     T = typeof(agents_types)
     queue = PriorityQueue{Event, Float64}()
-    return EventQueueABM{S,A,C,T,F,P,W,L,R}(Ref(0.0), agents, space, scheduler, properties, rng,
-                                            Ref(0), agents_types, events, queue)
+    # Create the applicable events
+    applicable_events = Dict{Symbol, Vector{Int}}()
+    propensities_vectors = Dict{Symbol, Vector{Float64}}()
+    for at in agents_types
+        applicable = [i for i in eachindex(events) if at <: (events[i].types)]
+        applicable_events[nameof(at)] = applicable
+        propensities_vectors[nameof(at)] = zeros(length(applicable))
+    end
+
+    return EventQueueABM{S,A,C,T,F,P,W,L,R}(
+        Ref(0.0), agents, space, scheduler, properties, rng,
+        Ref(0), agents_types, events, applicable_events, propensities_vectors, queue
+    )
 end
+
+
+# This function ensures that once an agent is added into the model,
+# an event is created and added for it.
+function extra_actions_after_add!(agent, model::EventQueueABM)
+    generate_new_event!(agent, model)
+end
+
+# one of the two crucial functions for this model!
+function generate_new_event!(agent, model::EventQueueABM)
+    props = update_propensities!(agent, model)
+    # next...
+end
+function update_propensities!(agent, model)
+    # TODO
+end
+
+
 
 """
     abmqueue(model::EventQueueABM)
