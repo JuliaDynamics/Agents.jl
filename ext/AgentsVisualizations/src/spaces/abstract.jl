@@ -4,8 +4,7 @@ Agents.agents_space_dimensionality(model::ABM) =
 "Plot agents into a 2D space."
 function Agents.agentsplot!(ax::Axis, model::ABM, p::_ABMPlot)
     if p._used_poly[]
-        poly_plot = poly!(p, p.marker; p.color, p.agentsplotkwargs...)
-        poly_plot.inspectable[] = false # disable inspection for poly until fixed
+        poly!(p, p.marker; p.color, p.agentsplotkwargs...)
     else
         scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     end

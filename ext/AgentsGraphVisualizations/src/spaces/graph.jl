@@ -60,8 +60,8 @@ Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function, ids) =
 
 ## Inspection
 
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{S}, idx, source::Scatter) where {S<:GraphSpace}
+function Makie.show_data(inspector::DataInspector, 
+        p::ABMP{<:GraphSpace}, idx, source::Scatter)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)

@@ -5,17 +5,8 @@
 ##########################################################################################
 
 # 2D space
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{S}, idx, source::Scatter) where {S<:Agents.SpaceType}
-    if p._used_poly[]
-        return show_data_poly(inspector, p, idx, source)
-    else
-        return show_data_2D(inspector, p, idx, source)
-    end
-end
-
-function show_data_2D(inspector::DataInspector,
-        p::ABMP{S}, idx, source::Scatter) where {S<:Agents.AbstractSpace}
+function Makie.show_data(inspector::DataInspector, 
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::Scatter)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
@@ -28,8 +19,29 @@ function show_data_2D(inspector::DataInspector,
     return true
 end
 
-function show_data_2D(inspector::DataInspector,
-        p::ABMP{S}, idx, source::Scatter) where {S<:Nothing}
+# Polygon plots
+function Makie.show_data(inspector::DataInspector,
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::Makie.Mesh)
+    # poly plots with multiple elements don't seem to allow inspection per element but only
+    # for the whole block of poly elements which is really not what we want
+    # using the current mouseposition on the scene when hovering a Mesh (i.e. an agent)
+    # allows us to search for nearby_ids to that position and use them for the tooltip
+    # FIXME this still pulls in too many agents sometimes...
+    pos = mouseposition(p)
+    proj_pos = Point2f0(mouseposition_px(inspector.root))
+    Makie.update_tooltip_alignment!(inspector, proj_pos)
+
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
+    a.visible[] = true
+
+    return true
+end
+
+# Nothing space
+function Makie.show_data(inspector::DataInspector, 
+        p::ABMP{<:Nothing}, idx, source::Scatter)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
@@ -42,30 +54,9 @@ function show_data_2D(inspector::DataInspector,
     return true
 end
 
-# TODO: Fix this tooltip
-function show_data_poly(inspector::DataInspector,
-        p::ABMP{S}, idx, ::Makie.Poly) where {S<:Agents.AbstractSpace}
-    pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
-    Makie.update_tooltip_alignment!(inspector, proj_pos)
-
-    model = p.abmobs[].model[]
-    a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
-    a.visible[] = true
-
-    return true
-end
-
 # 3D space
 function Makie.show_data(inspector::DataInspector,
-        p::ABMP{S}, idx, source::MeshScatter) where {S<:Agents.SpaceType}
-    # need to dispatch here should we for example have 3D polys at some point
-    return show_data_3D(inspector, p, idx, source)
-end
-
-function show_data_3D(inspector::DataInspector,
-        p::ABMP{S}, idx, source::MeshScatter) where {S<:Agents.AbstractSpace}
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
     pos = source.converted[1][][idx]
     proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
     Makie.update_tooltip_alignment!(inspector, proj_pos)
