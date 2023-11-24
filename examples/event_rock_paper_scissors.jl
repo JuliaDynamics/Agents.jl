@@ -109,9 +109,9 @@ end
 # And with this we can now create
 movement_event = AgentEvent(move!, movement_propensity, Union{Scissors, Paper}, movement_time)
 
-# we wrap all events in a vector and we are done with the setting up part!
+# we wrap all events in a tuple and we are done with the setting up part!
 
-events = [attack_event, reprodction_event, movement_event]
+events = (attack_event, reprodction_event, movement_event)
 
 # ## Creating and populating the `EventQueueABM`
 
