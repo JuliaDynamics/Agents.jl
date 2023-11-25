@@ -3,19 +3,27 @@ using CommonSolve: step!
 export step!, dummystep
 
 """
-    step!(model::ABM [, n::Int = 1])
+    step!(model::AgentBasedModel)
 
-Evolve the model for `n` steps according to the evolution rule.
+Perform one simulation step for the `model`.
+For continuous time models, this means to run to the model
+up to the next event and perform that.
 
-    step!(model, f::Function)
+    step!(model::ABM, t::Real)
 
-In this version, `step!` runs the model until `f(model, s)` returns `true`, where `s` is the
-current amount of steps taken, starting from 0.
+Step the model forwards for total time `t`.
+For discrete time models such as [`StandardABM`](@ref),
+`t` must be an integer.
 
-See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
-not be convenient.
+    step!(model::ABM, f::Function)
+
+Step the model forwards until `f(model, t)` returns `true`,
+where `t` is the current amount of time the model has been evolved
+for, starting from 0.
+
+See also [Advanced stepping](@ref).
 """
-function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
+function CommonSolve.step!(model::StandardABM, n::Union{Function, Int} = 1)
     agent_step! = agent_step_field(model)
     model_step! = model_step_field(model)
     if agent_step! == dummystep
@@ -38,55 +46,31 @@ function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
     end
 end
 
-"""
-    step!(model::EventQueueABM, t::Real)
-
-Evolve the model executing the scheduled events until the time 
-reaches the current time + `t`.
-"""
+# TODO: Unify this function with the `f::Function` step.
 function CommonSolve.step!(model::EventQueueABM, t::Real)
     model_t = getfield(model, :time)
     t0 = model_t[]
     while model_t[] < t0 + t
         event, t_event = dequeue_pair!(abmqueue(model))
-        process_event!(event, model)
         model_t[] = t_event
+        process_event!(event, model)
     end
 end
 
 function process_event!(event, model)
     id, event_idx = event.id, event.event_index
+    # if agent has been removed by other actions, return
     !haskey(agent_container(model), id) && return
+    # Else, perform event action
     agent = model[id]
-    agent_type = findfirst(isequal(typeof(agent)), tuple_agenttype(model))
-    event_function! = abmevents(model)[agent_type][event_idx]
-    event_function!(agent, model)
+    agentevent = abmevents(model)[event_idx]
+    agentevent.action!(agent, model)
+    # if agent got deleted after the action, return again
     !haskey(agent_container(model), id) && return
-    propensities = abmrates(agent, model) .* nagents(model)
-    total_propensities = sum(propensities)
-    t = abmtime(model) + randexp(abmrng(model)) * total_propensities
-    new_event_idx = select_event(propensities, total_propensities, model)
-    enqueue!(abmqueue(model), Event(id, new_event_idx) => t)
+    # else, generate a new event
+    generate_event_in_queue!(agent, model)
     return
 end
-
-function select_event(propensities, total_propensities, model)
-    cum_p = accumulate(+, propensities ./ total_propensities)
-    p = rand(abmrng(model))
-    return findfirst(c -> p <= c, cum_p)
-end
-
-"""
-    dummystep(model)
-
-Used instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
-
-    dummystep(agent, model)
-
-Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(model) = nothing
-dummystep(agent, model) = nothing
 
 until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)

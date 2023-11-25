@@ -1,6 +1,6 @@
 export StandardABM, UnremovableABM
 export abmscheduler
-using StaticArrays: SizedVector
+export dummystep
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
@@ -63,7 +63,7 @@ to all scheduled agents. Then, the `model_step!` function is called
 (optionally, the `model_step!` function may be called before activating the agents).
 
 `StandardABM` stores by default agents in a dictionary mapping unique `Int` IDs to agents.
-For better performance, in case the number of agents can only increase during the model 
+For better performance, in case the number of agents can only increase during the model
 evolution, a vector can be used instead, see keyword `container`.
 
 ## Keywords
@@ -73,7 +73,7 @@ evolution, a vector can be used instead, see keyword `container`.
   the model.
 - `model_step! = dummystep`: the optional stepping function for the model.
 - `container = Dict`: the type of container the agents are stored at. Use `Vector` if no agents are removed
-  during the simulation. This allows storing agents more efficiently, yielding faster retrieval and 
+  during the simulation. This allows storing agents more efficiently, yielding faster retrieval and
   iteration over agents.
 - `properties = nothing`: additional model-level properties that the user may decide upon
   and include in the model. `properties` can be an arbitrary container of data,
@@ -127,3 +127,15 @@ construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either Dict or Vector."
 )
 
+
+"""
+    dummystep(model)
+
+Used instead of `model_step!` in [`StandardABM`](@ref) if no function is useful to be defined.
+
+    dummystep(agent, model)
+
+Used instead of `agent_step!` in [`StandardABM`](@ref) if no function is useful to be defined.
+"""
+dummystep(model) = nothing
+dummystep(agent, model) = nothing

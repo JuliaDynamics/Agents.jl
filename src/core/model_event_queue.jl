@@ -35,11 +35,9 @@ struct EventQueueABM{
     agents_types::T
     # TODO: Test whether making the `events` a `Vector` has any difference in performance
     events::E
+    # Dummy vector that is used to calculate next event
+    propensities::Vector{Float64}
     # maps an agent type to its applicable events
-    # The "type" is the symbol `nameof(typeof(agent))`
-    applicable_events::Dict{Symbol, Vector{Int}}
-    # TODO: The value type of the vector shouldn't be limited
-    propensities_vectors::Dict{Symbol, Vector{Float64}}
     event_queue::PriorityQueue{Event, Float64}
 end
 
@@ -91,21 +89,36 @@ function EventQueueABM(
     agents_types = union_types(A)
     T = typeof(agents_types)
     queue = PriorityQueue{Event, Float64}()
-    # Create the applicable events
-    applicable_events = Dict{Symbol, Vector{Int}}()
-    propensities_vectors = Dict{Symbol, Vector{Float64}}()
-    for at in agents_types
-        applicable = [i for i in eachindex(events) if at <: (events[i].types)]
-        applicable_events[nameof(at)] = applicable
-        propensities_vectors[nameof(at)] = zeros(length(applicable))
-    end
-
+    propensities = zeros(length(events))
     return EventQueueABM{S,A,C,T,F,P,W,L,R}(
         Ref(0.0), agents, space, scheduler, properties, rng,
-        Ref(0), agents_types, events, applicable_events, propensities_vectors, queue
+        Ref(0), agents_types, events, propensities, queue
     )
 end
 
+# standard accessors
+"""
+    abmqueue(model::EventQueueABM)
+
+Return the queue of scheduled events in the `model`.
+"""
+abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
+
+"""
+    abmtime(model::AgentBasedModel)
+
+Return the current time of the model.
+All models are initialized at time 0.
+"""
+abmtime(model::EventQueueABM) = getfield(model, :time)[]
+abmevents(model::EventQueueABM) = getfield(model, :events)
+
+containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
+agenttype(::EventQueueABM{S,A}) where {S,A} = A
+
+###########################################################################################
+# %% Adding events to the queue
+###########################################################################################
 # This function ensures that once an agent is added into the model,
 # an event is created and added for it. It is called internally
 # by `add_agent_to_model!`.
@@ -113,12 +126,18 @@ function extra_actions_after_add!(agent, model::EventQueueABM)
     generate_event_in_queue!(agent, model)
 end
 
-# This is the main function that is called in `step!`:
+# This is the main function that is called in `step!`
+# after the other main function `process_event!` is
+# done
 function generate_event_in_queue!(agent, model)
     # First, update propensities vector
     propensities = getfield(model, :propensities)
     for (i, event) in enumerate(getfield(model, :events))
-        if agent isa event.Types
+        # TODO: This check can be optimized;
+        # instead of checking every time if an agent is a subtype,
+        # we can check this once in the model generation
+        # and store a vector with indices of valid events and use that.
+        if agent isa event.types
             p = obtain_propensity(event, agent, model)
         else
             p = 0.0
@@ -156,27 +175,10 @@ function sample_propensity(rng, wv)
 end
 
 function generate_time_of_event(event, totalprop, agent, model)
-    if isnothing(event.propensity)
+    if isnothing(event.timing)
         t = randexp(abmrng(model)) * totalprop
     else
-        t = event.propensity(agent, model)
+        t = event.timing(agent, model)
     end
     return t
 end
-
-"""
-    abmqueue(model::EventQueueABM)
-
-Return the queue of scheduled events in the `model`.
-"""
-abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
-
-"""
-    abmtime(model::AgentBasedModel)
-
-Return the current time of the model.
-"""
-abmtime(model::EventQueueABM) = getfield(model, :time)[]
-
-containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
-agenttype(::EventQueueABM{S,A}) where {S,A} = A
