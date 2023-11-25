@@ -61,34 +61,64 @@ end
 
 A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
 continuous time, in contrast with the discrete nature of [`StandardABM`](@ref).
+Here is a summary of how the time evolution of this model works:
 
-Pairs composed of an event and an agent are scheduled at some particular time,
-and once the model time reaches that time, the event is executed on the agent.
+A list of possible events that can be created is provided to the model.
+The events have four pieces of information:
 
-Events must be passed during initialization of the model with the `all_events` keywords;
-they are arbitrary agent stepping functions analogous to the `agent_step!` function used
-currently in the [`StandardABM`](@ref) implementation. Hence, events have access to the
-full API of `Agents.jl`.
+1. The action that they perform once triggered. The action is a generic Julia function
+   `action!(agent, model)` that will act on the agent correspond to the event.
+   Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
+   and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
+   The `action!` function may spawn new events by using the [`add_event!`](@ref) function,
+   although there is also a default behavior that spawns new events automatically.
+2. The propensity of the event. A propensity is a concept similar to a probability mass.
+   When generating a new event for an agent, first all applicable events for that agent
+   are collected. Then, their propensities are calculated. The event generated then
+   is selected randomly weighted by the propensity of each event.
+3. The agent type(s) the event applies to. By default it applies to all types.
+4. The timing of the event, i.e., when should it be triggered once it is generated.
+   By default this is an exponentially distributed random variable multiplied by the
+   sum of calculated propensities.
 
-Events that are occurring are chosen randomly during scheduling, based on the Direct Method
-of the [Gillespie Algorithm](https://en.wikipedia.org/wiki/Gillespie_algorithm). Each event
-has a possible propensity value and the probability for choosing a particular event is
-proportional to the propensity. During the model time evolution, two things occur:
+Events are scheduled in a temporally ordered queue, and once
+the model evolution time reaches the event time, the event is "triggered".
+This means that first the event action is performed on its corresponding agent.
+By default, once an event has finished its action,
+a new event is generated for the same agent (if the agent still exists), chosen randomly
+based on the propensities as discussed above. Then a time for the new event
+is generated and the new event is added back to the queue.
+In this way, an event always generates a new event after it has finished its action
+(by default; can be overwritten).
 
-- the model time reaches the time of the next scheduled event and the event action
-  is performed on the paired agent;
-- the scheduler generates a new event utilizing the rates corresponding to the agent type,
-  and schedules it together with the same paired agent;
+`EventQueueABM` is a generalization of "Gillespie"-like simulations, offering
+more power and flexibility than a standard Gillespie simulation,
+while also allowing "Gillespie"-like configuration with the default settings.
 
-Even if the scheduler automatically generates new events based on the rates, it should be
-initialized by adding some events at the start of the simulation through the [`add_event!`](@ref)
-function.
+Here is how to construct an `EventQueueABM`:
+
+    EventQueueABM(AgentTypes, events [, space]; kwargs...)
+
+Create an instance of an [`EventQueueABM`](@ref).
+`AgentTypes, space` are exactly as in [`StandardABM`](@ref).
+`events` is a tuple of instances of [`AgentEvent`](@ref), which contain the four
+pieces of information referenced above.
+
+By default, each time a new agent is added to the model via [`add_agent!`](@ref), a new
+event is generated based on the pool of possible events that can affect the agent.
+In this way the simulation can immediatelly start once agents have been added to the model.
+
+You can disable this behavior with a keyword. In this case, you need to manually use
+the function [`add_event!`](@ref) within the event `action!` functions
+to add new events to the queue.
+(you can always use this function regardless of the default event scheduling behavior)
 
 ## Keywords
-
-- `all_events`:
-- `all_rates`:
-- `container, properties, scheduler, rng, warn` work the same way as in a [`StandardABM`](@ref).
+- `container, properties, rng, warn`: same as in [`StandardABM`](@ref).
+- `autogenerate_on_add::Bool = true`: whether to automatically generate a new event for
+  an agent when the agent is added to the model.
+- `autogenerate_after_action::Bool = true`: whether to automatically generate a new
+  event for an agent after an event affected said agent has been triggered.
 """
 function EventQueueABM(
     ::Type{A}, events::E,
@@ -176,8 +206,7 @@ function generate_event_in_queue!(agent, model)
     # The time to the event is generated from the selected event
     selected_event = abmevents(model)[event_idx]
     t = generate_time_of_event(selected_event, totalprop, agent, model)
-    # add the event in the queue!
-    enqueue!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
+    add_event!(agent, event_idx, t, model)
 end
 
 function obtain_propensity(event::AgentEvent, agent, model)
@@ -209,4 +238,16 @@ function generate_time_of_event(event, totalprop, agent, model)
         t = event.timing(agent, model)
     end
     return t
+end
+
+"""
+    add_event!(agent, event_idx::Int, t::Real, model::EventQueueABM)
+
+Add a new event to the queue to be triggered for `agent`, based on the index of the
+event (from the list of events). The event will trigger in `t` time _from_ the
+current time of the `model`.
+"""
+function add_event!(agent::AbstractAgent, event_idx::Int, t::Real, model::EventQueueABM)
+    enqueue!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
+    return
 end

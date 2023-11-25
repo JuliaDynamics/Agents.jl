@@ -38,10 +38,25 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 """
     StandardABM <: AgentBasedModel
 
-The most standard concrete implementation of an [`AgentBasedModel`](@ref),
-as well as the default version of the generic [`AgentBasedModel`](@ref) constructor.
+A concrete implementation of an [`AgentBasedModel`](@ref), which is also the most
+commonly used in agent based modelling studies. It operates in discrete time.
+Here is a summary of how the time evolution of this model works:
 
-    StandardABM(AgentType [, space]; properties, kwargs...) → model
+In each simulation step agents are scheduled to act based on a user-provided scheduler.
+Then, the scheduler goes through every agent that has been scheduled.
+For each, it performs an action on the agent. The action
+(which is called an "agent stepping function") is a generic Julia function
+`agent_step!(agent, model)` that may do anything and utilize any function
+from the Agents.jl [API](@ref) or the entire Julia ecosystem.
+Either before any agent activates, or after all scheduled agents have activated,
+a model-wide stepping function `model_step!(model)` can be called
+whose purpose is to perform model-wide operations.
+
+See also [`EventQueueABM`](@ref) for a continuous time variant.
+
+Here is how to construct a `StandardABM`:
+
+    StandardABM(AgentTypes [, space]; properties, agent_step!, model_step!, kwargs...)
 
 Creates a model expecting agents of type `AgentType` living in the given `space`.
 It can support supports multiple agent types by passing a `Union` of agent types
