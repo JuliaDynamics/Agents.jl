@@ -51,11 +51,13 @@ function CommonSolve.step!(model::EventQueueABM, t::Real)
     model_t = getfield(model, :time)
     t0 = model_t[]
     while model_t[] < t0 + t
+        # TODO: what to do when the queue is empty? Error? Warn?
         event_tuple, t_event = dequeue_pair!(abmqueue(model))
         model_t[] = t_event
         process_event!(event_tuple, model)
     end
 end
+CommonSolve.step!(model::EventQueueABM) = step!(model, nextfloat(abmtime(model)))
 
 function process_event!(event_tuple, model)
     id, event_idx = event_tuple
@@ -67,8 +69,10 @@ function process_event!(event_tuple, model)
     agentevent.action!(agent, model)
     # if agent got deleted after the action, return again
     !haskey(agent_container(model), id) && return
-    # else, generate a new event
-    generate_event_in_queue!(agent, model)
+    # else, generate a new event, if specified by user
+    if getfield(model, autogenerate_after_action)
+        generate_event_in_queue!(agent, model)
+    end
     return
 end
 

@@ -2,38 +2,35 @@ export EventQueueABM, AgentEvent
 export abmqueue, abmevents, abmtime, add_event!
 
 """
-    AgentEvent(action!, propensity [, Types] [, timing])
+    AgentEvent(; action!, propensity, types, timing])
 
-An event type that will be given to [`EventQeueABM`](@ref).
-`action!` is the function `action!(agent, model)` that will
-act on the agent the event corresponds to.
-`propensity` is either a constant real number,
-or a function `propensity(model, agent)` that returns
-the propensity of the event. A different way to think
-of the propensity is a "probability mass".
+An event instance that can be given to [`EventQeueABM`](@ref).
 
-Two optional arguments are possible:
-
-- `Types` is the supertype of agents that this event is applicable to.
-  It defaults to `AbstractAgent`.
-- `timing` can be a function `timing(agent, model)`, which will return
-  the time will event trigger (the time relative to its creation time).
-  By default it is `nothing`, which means that the time is a randomly
+- `action! = dummystep`: is the function `action!(agent, model)` that will
+  act on the agent the event corresponds to. By default it is an action that does nothing.
+  The `action!` function may call [`add_event!`](@ref) to generate new events, regardless
+  of the automatic generation of events by Agents.jl.
+- `propensity = nothing`: it can be either a constant real number,
+  or a function `propensity(model, agent)` that returns
+  the propensity of the event. If `nothing`, automatic event generation cannot
+  be done by Agents.jl and the function [`add_event!`](@ref) must be used.
+- `types = AbstractAgent`: the supertype of agents the `action!` function can be applied to.
+- `timing = nothing`: decides how long after its generation the event should trigger.
+  By default (`nothing`). the time is a randomly
   sampled time from an exponential distribution with parameter the
   total propensity of all applicable events to the agent.
   I.e., by default the "Gillespie" algorithm is used to time the events.
+  Alternatively, it can be a function `timing(agent, model)` which will return the time.
+
+Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored.
+But when using [`generate_event_in_queue!`](@ref), they are utilized.
 """
-struct AgentEvent{F<:Function, P, A<:Type, T}
-    action!::F
-    propensity::P
-    types::A
-    timing::T
+Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T}
+    action!::F = dummystep!
+    propensity::P = nothing
+    types::A = AbstractAgent
+    timing::T = nothing
 end
-# Convenience:
-AgentEvent(action!, propensity) = AgentEvent(action!, propensity, AbstractAgent, nothing)
-AgentEvent(action!, propensity, A::Type) = AgentEvent(action!, propensity, A, nothing)
-AgentEvent(action!, propensity, timing::Union{Nothing, Function}) =
-AgentEvent(action!, propensity, AbstractAgent, timing)
 
 using DataStructures: PriorityQueue
 
@@ -41,7 +38,7 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,I} <: AgentBasedModel{S}
     time::Base.RefValue{Float64}
     agents::C
     space::S
@@ -53,7 +50,9 @@ struct EventQueueABM{
     # Dummy vector that is used to calculate next event
     propensities::Vector{Float64}
     # maps an agent type to its applicable events
-    event_queue::PriorityQueue{Tuple{Int, Int}, Float64}
+    event_queue::PriorityQueue{Tuple{I, Int}, Float64}
+    autogenerate_on_add::Bool
+    autogenerate_after_action::Bool
 end
 
 """
@@ -70,12 +69,14 @@ The events have four pieces of information:
    `action!(agent, model)` that will act on the agent correspond to the event.
    Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
    and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
-   The `action!` function may spawn new events by using the [`add_event!`](@ref) function,
-   although there is also a default behavior that spawns new events automatically.
+   The `action!` function may spawn new events by using the automatic
+   [`generate_event_in_queue`](@ref) or the manual [`add_event!`](@ref) functions,
+   although, the default behavior is to generate new events automatically.
 2. The propensity of the event. A propensity is a concept similar to a probability mass.
-   When generating a new event for an agent, first all applicable events for that agent
+   When automatically generating a new event for an agent,
+   first all applicable events for that agent
    are collected. Then, their propensities are calculated. The event generated then
-   is selected randomly weighted by the propensity of each event.
+   is selected randomly by weoighting each possible event by its propensity.
 3. The agent type(s) the event applies to. By default it applies to all types.
 4. The timing of the event, i.e., when should it be triggered once it is generated.
    By default this is an exponentially distributed random variable multiplied by the
@@ -90,6 +91,7 @@ based on the propensities as discussed above. Then a time for the new event
 is generated and the new event is added back to the queue.
 In this way, an event always generates a new event after it has finished its action
 (by default; can be overwritten).
+This automatic event generation is done by [`generate_event_in_queue!`](@ref).
 
 `EventQueueABM` is a generalization of "Gillespie"-like simulations, offering
 more power and flexibility than a standard Gillespie simulation,
@@ -101,16 +103,18 @@ Here is how to construct an `EventQueueABM`:
 
 Create an instance of an [`EventQueueABM`](@ref).
 `AgentTypes, space` are exactly as in [`StandardABM`](@ref).
-`events` is a tuple of instances of [`AgentEvent`](@ref), which contain the four
-pieces of information referenced above.
+`events` is a container (typically a tuple) of instances of [`AgentEvent`](@ref),
+which are the events that are scheduled and then affect agents.
+The key type of `events` is also what is given to [`add_event!`](@ref),
+hence, `events` can be e.g., a dictionary with string keys so that it is
+easier to reference events in [`add_event!`](@ref).
 
 By default, each time a new agent is added to the model via [`add_agent!`](@ref), a new
 event is generated based on the pool of possible events that can affect the agent.
 In this way the simulation can immediatelly start once agents have been added to the model.
-
 You can disable this behavior with a keyword. In this case, you need to manually use
-the function [`add_event!`](@ref) within the event `action!` functions
-to add new events to the queue.
+the function [`add_event!`](@ref) to add events to the queue so that the model
+can be evolved in time.
 (you can always use this function regardless of the default event scheduling behavior)
 
 ## Keywords
@@ -121,24 +125,29 @@ to add new events to the queue.
   event for an agent after an event affected said agent has been triggered.
 """
 function EventQueueABM(
-    ::Type{A}, events::E,
-    space::S = nothing;
-    container::Type = Dict{Int},
-    properties::P = nothing,
-    rng::R = Random.default_rng(),
-    warn = true,
-) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
+        ::Type{A}, events::E,
+        space::S = nothing;
+        container::Type = Dict{Int},
+        properties::P = nothing,
+        rng::R = Random.default_rng(),
+        warn = true,
+        autogenerate_on_add = true,
+        autogenerate_after_action = true,
+    ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
+    I = keytype(events)
     # The queue stores references to events;
     # the reference is two integers; one is the agent ID
     # and the other is the index of the event in `events`
-    queue = PriorityQueue{Tuple{Int, Int}, Float64}()
+    queue = PriorityQueue{Tuple{I, Int}, Float64}()
     propensities = zeros(length(events))
-    return EventQueueABM{S,A,C,P,E,R}(
+    return EventQueueABM{S,A,C,P,E,R,I}(
         Ref(0.0), agents, space, properties, rng,
-        Ref(0), events, propensities, queue
+        Ref(0), events, propensities, queue,
+        autogenerate_on_add,
+        autogenerate_after_action,
     )
 end
 
@@ -177,12 +186,22 @@ agenttype(::EventQueueABM{S,A}) where {S,A} = A
 # an event is created and added for it. It is called internally
 # by `add_agent_to_model!`.
 function extra_actions_after_add!(agent, model::EventQueueABM)
-    generate_event_in_queue!(agent, model)
+    if getfield(model, :generate_on_add)
+        generate_event_in_queue!(agent, model)
+    end
 end
 
 # This is the main function that is called in `step!`
 # after the other main function `process_event!` is
 # done
+"""
+    generate_event_in_queue!(agent, model)
+
+Generate a randomly chosen event for the `agent` and add it to the queue,
+based on the propensities and as described in [`EventQueueABM`](@ref).
+
+Alternatively, use [`add_event!`](@ref) to add a manually chosen event in the queue.
+"""
 function generate_event_in_queue!(agent, model)
     # First, update propensities vector
     events = abmevents(model)
@@ -246,6 +265,9 @@ end
 Add a new event to the queue to be triggered for `agent`, based on the index of the
 event (from the list of events). The event will trigger in `t` time _from_ the
 current time of the `model`.
+
+Alternatively, use [`generate_event_in_queue!`](@ref) to generate
+a randomly sampled event.
 """
 function add_event!(agent::AbstractAgent, event_idx::Int, t::Real, model::EventQueueABM)
     enqueue!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
