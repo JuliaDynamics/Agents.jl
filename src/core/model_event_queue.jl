@@ -59,14 +59,14 @@ end
     EventQueueABM <: AgentBasedModel
 
 A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
-continuous time, in contrast with the discrete nature of [`StandardABM`](@ref).
+continuous time, in contrast with the discrete time nature of [`StandardABM`](@ref).
 Here is a summary of how the time evolution of this model works:
 
 A list of possible events that can be created is provided to the model.
 The events have four pieces of information:
 
 1. The action that they perform once triggered. The action is a generic Julia function
-   `action!(agent, model)` that will act on the agent correspond to the event.
+   `action!(agent, model)` that will act on the agent corresponding to the event.
    Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
    and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
    The `action!` function may spawn new events by using the automatic
@@ -76,11 +76,13 @@ The events have four pieces of information:
    When automatically generating a new event for an agent,
    first all applicable events for that agent
    are collected. Then, their propensities are calculated. The event generated then
-   is selected randomly by weoighting each possible event by its propensity.
+   is selected randomly by weighting each possible event by its propensity.
 3. The agent type(s) the event applies to. By default it applies to all types.
 4. The timing of the event, i.e., when should it be triggered once it is generated.
-   By default this is an exponentially distributed random variable multiplied by the
-   sum of calculated propensities.
+   By default this is an exponentially distributed random variable divided by the
+   propensity of the event. I.e., it follows a Poisson process with the propensity
+   as the "rate". The timings of the events therefore establish the natural
+   timescales of the system.
 
 Events are scheduled in a temporally ordered queue, and once
 the model evolution time reaches the event time, the event is "triggered".
@@ -221,10 +223,11 @@ function generate_event_in_queue!(agent, model)
         propensities[i] = p
     end
     # Then, select an event based on propensities
-    event_idx, totalprop = sample_propensity(abmrng(model), propensities)
+    event_idx = sample_propensity(abmrng(model), propensities)
     # The time to the event is generated from the selected event
     selected_event = abmevents(model)[event_idx]
-    t = generate_time_of_event(selected_event, totalprop, agent, model)
+    selected_prop = propensities[event_idx]
+    t = generate_time_of_event(selected_event, selected_prop, agent, model)
     add_event!(agent, event_idx, t, model)
 end
 
@@ -247,12 +250,12 @@ function sample_propensity(rng, wv)
         i += 1
         @inbounds cw += wv[i]
     end
-    return i, totalprop
+    return i
 end
 
-function generate_time_of_event(event, totalprop, agent, model)
+function generate_time_of_event(event, propensity, agent, model)
     if isnothing(event.timing)
-        t = randexp(abmrng(model)) * totalprop
+        t = randexp(abmrng(model))/propensity
     else
         t = event.timing(agent, model)
     end

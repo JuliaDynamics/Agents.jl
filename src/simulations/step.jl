@@ -44,6 +44,7 @@ function CommonSolve.step!(model::StandardABM, n::Union{Function, Int} = 1)
             s += 1
         end
     end
+    return model
 end
 
 # TODO: Unify this function with the `f::Function` step.
@@ -56,8 +57,13 @@ function CommonSolve.step!(model::EventQueueABM, t::Real)
         model_t[] = t_event
         process_event!(event_tuple, model)
     end
+    return model
 end
-CommonSolve.step!(model::EventQueueABM) = step!(model, nextfloat(abmtime(model)))
+function CommonSolve.step!(model::EventQueueABM)
+    next_event_t = first(abmqueue(model))[2] # second entry of pair is the time
+    dt = next_event_t - abmtime(model)
+    step!(model, dt)
+end
 
 function process_event!(event_tuple, model)
     id, event_idx = event_tuple
