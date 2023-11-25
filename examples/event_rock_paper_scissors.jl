@@ -17,14 +17,15 @@ using Agents, Random
 
 function attack!(agent, model)
     contender = random_nearby_agent(agent, model)
-    if !isnothing(contender)
-        if agent isa Rock && contender isa Scissors
-            remove_agent!(contender, model)
-        elseif agent isa Scissors && contender isa Paper
-            remove_agent!(contender, model)
-        elseif agent isa Paper && contender isa Rock
-            remove_agent!(contender, model)
-        end
+    # do nothing if there isn't anyone nearby
+    isnothing(contender) && return
+    # else perform standard rock paper scissors logic
+    if agent isa Rock && contender isa Scissors
+        remove_agent!(contender, model)
+    elseif agent isa Scissors && contender isa Paper
+        remove_agent!(contender, model)
+    elseif agent isa Paper && contender isa Rock
+        remove_agent!(contender, model)
     end
     return
 end
@@ -111,7 +112,7 @@ movement_event = AgentEvent(move!, movement_propensity, Union{Scissors, Paper}, 
 
 # we wrap all events in a tuple and we are done with the setting up part!
 
-events = (attack_event, reprodction_event, movement_event)
+events = (attack_event, reproduction_event, movement_event)
 
 # ## Creating and populating the `EventQueueABM`
 
@@ -131,10 +132,26 @@ model = EventQueueABM(Union{Rock, Paper, Scissors}, events, space; rng)
 # an event is generated for it and added to the queue.
 
 for p in positions(model)
-    add_agent!(p, rand(rng, agent_types), model)
+    type = rand(abmrng(model), (Rock, Paper, Scissors))
+    add_agent!(p, type, model)
 end
 
+using CairoMakie
+function dummyplot(model)
+    fig = Figure()
+    ax = Axis(fig[1,1])
+    alla = allagents(model)
+    colormap = Dict(Rock => "black", Scissors => "gray", paper => "orange")
+    pos = [a.pos for a in alla]
+    color = [colormap[typeof(a)] for a in alla]
+    scatter!(ax, pos; color)
+    return fig
+end
+
+dummyplot(model)
 
 # TODO: Stepping;
+
+# %% #src
 
 step!(model, 1.32)
