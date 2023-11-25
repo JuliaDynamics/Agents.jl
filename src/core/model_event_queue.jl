@@ -26,7 +26,7 @@ Notice that when using the [`add_event!`](@ref) function, `propensity, timing` a
 But when using [`generate_event_in_queue!`](@ref), they are utilized.
 """
 Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T}
-    action!::F = dummystep!
+    action!::F = dummystep
     propensity::P = nothing
     types::A = AbstractAgent
     timing::T = nothing
@@ -137,7 +137,7 @@ function EventQueueABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    I = keytype(events)
+    I = events isa Tuple ? Int : keytype(events)
     # The queue stores references to events;
     # the reference is two integers; one is the agent ID
     # and the other is the index of the event in `events`
@@ -186,7 +186,7 @@ agenttype(::EventQueueABM{S,A}) where {S,A} = A
 # an event is created and added for it. It is called internally
 # by `add_agent_to_model!`.
 function extra_actions_after_add!(agent, model::EventQueueABM)
-    if getfield(model, :generate_on_add)
+    if getfield(model, :autogenerate_on_add)
         generate_event_in_queue!(agent, model)
     end
 end

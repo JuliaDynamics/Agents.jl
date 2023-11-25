@@ -90,9 +90,9 @@ end
 # and hence we don't need to specify an agent type that this event
 # applies to, leaving the `AbstractAgent` as the default.
 
-attack_event = AgentEvent(attack!, attack_propensity)
+attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 
-reproduction_event = AgentEvent(reproduce!, reproduction_propensity)
+reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_propensity)
 
 # The movement event does not apply to rocks however,
 # so we need to specify the agent super type that it applies to,
@@ -108,7 +108,10 @@ function movement_time(agent, model) # `agent` is the agent the event will be ap
 end
 
 # And with this we can now create
-movement_event = AgentEvent(move!, movement_propensity, Union{Scissors, Paper}, movement_time)
+movement_event = AgentEvent(
+    action! = move!, propensity = movement_propensity,
+    types = Union{Scissors, Paper}, timing = movement_time
+)
 
 # we wrap all events in a tuple and we are done with the setting up part!
 
@@ -141,7 +144,7 @@ function dummyplot(model)
     fig = Figure()
     ax = Axis(fig[1,1])
     alla = allagents(model)
-    colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
+    colormap = Dict(Rock => "black", Scissors => "blue", Paper => "orange")
     pos = [a.pos for a in alla]
     color = [colormap[typeof(a)] for a in alla]
     scatter!(ax, pos; color, markersize = 20)
@@ -153,6 +156,6 @@ dummyplot(model)
 # ## Time stepping
 # %% #src
 
-step!(model, 1.32)
+step!(model, 5.32)
 
 dummyplot(model)

@@ -70,7 +70,7 @@ function process_event!(event_tuple, model)
     # if agent got deleted after the action, return again
     !haskey(agent_container(model), id) && return
     # else, generate a new event, if specified by user
-    if getfield(model, autogenerate_after_action)
+    if getfield(model, :autogenerate_after_action)
         generate_event_in_queue!(agent, model)
     end
     return
