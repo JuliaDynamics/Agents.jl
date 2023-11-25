@@ -51,14 +51,14 @@ function CommonSolve.step!(model::EventQueueABM, t::Real)
     model_t = getfield(model, :time)
     t0 = model_t[]
     while model_t[] < t0 + t
-        event, t_event = dequeue_pair!(abmqueue(model))
+        event_tuple, t_event = dequeue_pair!(abmqueue(model))
         model_t[] = t_event
-        process_event!(event, model)
+        process_event!(event_tuple, model)
     end
 end
 
-function process_event!(event, model)
-    id, event_idx = event.id, event.event_index
+function process_event!(event_tuple, model)
+    id, event_idx = event_tuple
     # if agent has been removed by other actions, return
     !haskey(agent_container(model), id) && return
     # Else, perform event action

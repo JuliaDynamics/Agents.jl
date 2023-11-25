@@ -141,17 +141,18 @@ function dummyplot(model)
     fig = Figure()
     ax = Axis(fig[1,1])
     alla = allagents(model)
-    colormap = Dict(Rock => "black", Scissors => "gray", paper => "orange")
+    colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
     pos = [a.pos for a in alla]
     color = [colormap[typeof(a)] for a in alla]
-    scatter!(ax, pos; color)
+    scatter!(ax, pos; color, markersize = 20)
     return fig
 end
 
 dummyplot(model)
 
-# TODO: Stepping;
-
+# ## Time stepping
 # %% #src
 
 step!(model, 1.32)
+
+dummyplot(model)
