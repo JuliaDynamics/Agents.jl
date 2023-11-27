@@ -958,7 +958,7 @@ function Agents.nearby_ids(
         args...;
         kwargs...
     )
-    nearby = []
+    nearby = Int[]
     # need to create an iterator for all agents' lonlat positions as Float32
     # the Float32 conversion is needed for inspection in visualization extension
     # TODO maybe track agents' lonlat positions as Float32 inside the space itself?
