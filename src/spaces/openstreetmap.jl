@@ -958,16 +958,11 @@ function Agents.nearby_ids(
         args...;
         kwargs...
     )
-    nearby = Int[]
     # need to create an iterator for all agents' lonlat positions as Float32
     # the Float32 conversion is needed for inspection in visualization extension
     # TODO maybe track agents' lonlat positions as Float32 inside the space itself?
-    ids_lonlat32 = (Pair(id, Float32.(lonlat(model[id], model))) for id in allids(model))
-    for (id, apos) in ids_lonlat32
-        if sqrt(sum(abs2.(pos .- apos))) <= distance # simple euclidean distance
-            push!(nearby, id)
-        end
-    end
+    ids_lonlat32 = ((id, Float32.(lonlat(model[id], model))) for id in allids(model))
+    nearby = (id for (id, apos) in ids_lonlat32 if sqrt(sum(abs2.(pos .- apos))) <= distance)
     return nearby
 end
 
