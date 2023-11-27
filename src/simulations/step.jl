@@ -23,7 +23,7 @@ for, starting from 0.
 
 See also [Advanced stepping](@ref).
 """
-function CommonSolve.step!(model::StandardABM, n::Union{Function, Int} = 1)
+function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
     agent_step! = agent_step_field(model)
     model_step! = model_step_field(model)
     if agent_step! == dummystep
@@ -47,22 +47,36 @@ function CommonSolve.step!(model::StandardABM, n::Union{Function, Int} = 1)
     return model
 end
 
-# TODO: Unify this function with the `f::Function` step.
 function CommonSolve.step!(model::EventQueueABM, t::Real)
+    queue = abmqueue(model)
     model_t = getfield(model, :time)
     t0 = model_t[]
-    while model_t[] < t0 + t
-        # TODO: what to do when the queue is empty? Error? Warn?
-        event_tuple, t_event = dequeue_pair!(abmqueue(model))
-        model_t[] = t_event
-        process_event!(event_tuple, model)
+    while until(model_t[], t0 + t, model)
+        one_step!(queue, model_t, model)
+    end
+    return model
+end
+function CommonSolve.step!(model::EventQueueABM, t::Function)
+    queue = abmqueue(model)
+    model_t = getfield(model, :time)
+    while until(model_t[], t, model)
+        one_step!(queue, model_t, model)
     end
     return model
 end
 function CommonSolve.step!(model::EventQueueABM)
-    next_event_t = first(abmqueue(model))[2] # second entry of pair is the time
-    dt = next_event_t - abmtime(model)
-    step!(model, dt)
+    queue = abmqueue(model)
+    model_t = getfield(model, :time)
+    one_step!(queue, model_t, model)
+    return model
+end
+
+function one_step!(queue, model_t, model)
+    isempty(queue) && return model
+    event_tuple, t_event = dequeue_pair!(queue)
+    model_t[] = t_event
+    process_event!(event_tuple, model)
+    return
 end
 
 function process_event!(event_tuple, model)
@@ -82,5 +96,5 @@ function process_event!(event_tuple, model)
     return
 end
 
-until(s, n::Int, model) = s < n
-until(s, f, model) = !f(model, s)
+until(s, t::Real, ::ABM) = s < t
+until(s, f, model::ABM) = !f(model, s)
