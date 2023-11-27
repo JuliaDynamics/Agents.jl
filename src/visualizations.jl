@@ -37,8 +37,8 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the `agentsplot!` 
-  call.
+* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that 
+  plots the agents (typically `scatter!`).
 
 ### Preplot related
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
@@ -59,7 +59,8 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   placed naturally.
 * `static_preplot!` : A function `f(ax, model)` that plots something after the heatmap
   but before the agents.
-* `spaceplotkwargs = NamedTuple()` : keywords used in `spaceplot!`. Directly passed to
+* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space. 
+  Directly passed to
   * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
   * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
   if model space is `GraphSpace`.
