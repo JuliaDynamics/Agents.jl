@@ -3,7 +3,7 @@ using CommonSolve: step!
 export step!, dummystep
 
 """
-    step!(model::AgentBasedModel)
+    step!(model::ABM)
 
 Perform one simulation step for the `model`.
 For continuous time models, this means to run to the model
