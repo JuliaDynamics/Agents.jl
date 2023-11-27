@@ -2,7 +2,7 @@
 
 Agents.agents_space_dimensionality(::Agents.AbstractGridSpace{D}) where {D} = D
 
-function Agents.get_axis_limits!(model::ABM{<:Agents.AbstractGridSpace})
+function Agents.get_axis_limits(model::ABM{<:Agents.AbstractGridSpace})
     e = size(abmspace(model)) .+ 0.5
     o = zero.(e) .+ 0.5
     return o, e

@@ -2,7 +2,7 @@
 
 Agents.agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
 
-function Agents.get_axis_limits!(model::ABM{<:ContinuousSpace})
+function Agents.get_axis_limits(model::ABM{<:ContinuousSpace})
     e = abmspace(model).extent
     o = zero.(e)
     return o, e

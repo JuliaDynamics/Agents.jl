@@ -283,12 +283,12 @@ Return dimensionality of given model space.
 function agents_space_dimensionality end
 
 """
-    get_axis_limits!(model::ABM{S}) where {S<:Agents.AbstractSpace}
+    get_axis_limits(model::ABM{S}) where {S<:Agents.AbstractSpace}
 
 Return appropriate axis limits for given model.
 Return `nothing, nothing` if you want to disable this.
 """
-function get_axis_limits! end
+function get_axis_limits end
 
 """
     agentsplot!(ax, model::ABM{S}, p::_ABMPlot) where {S<:Agents.AbstractSpace}

@@ -4,7 +4,7 @@ Agents.agents_space_dimensionality(model::ABM{Nothing}) =
     Agents.agents_space_dimensionality(abmspace(model))
 Agents.agents_space_dimensionality(space::Nothing) = 2
 
-Agents.get_axis_limits!(model::ABM{Nothing}) = nothing, nothing
+Agents.get_axis_limits(model::ABM{Nothing}) = nothing, nothing
 
 function Agents.agentsplot!(ax::Axis, model::ABM{Nothing}, p::_ABMPlot)
     s = scatter!(p, p.pos)

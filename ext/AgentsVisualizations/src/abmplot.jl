@@ -154,7 +154,7 @@ function Makie.plot!(abmplot::_ABMPlot)
 end
 
 function set_axis_limits!(ax::Axis, model::ABM)
-    o, e = get_axis_limits!(model)
+    o, e = get_axis_limits(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])
@@ -162,7 +162,7 @@ function set_axis_limits!(ax::Axis, model::ABM)
 end
 
 function set_axis_limits!(ax::Axis3, model::ABM)
-    o, e = get_axis_limits!(model)
+    o, e = get_axis_limits(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])

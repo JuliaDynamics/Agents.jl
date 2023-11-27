@@ -35,7 +35,7 @@ const ABMPlot = Agents.get_ABMPlot_type()
 Agents.agents_space_dimensionality(space::Agents.AbstractSpace) =
     notimplemented(space)
 
-Agents.get_axis_limits!(model::ABM{<:Agents.AbstractSpace}) =
+Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace}) =
     notimplemented(abmspace(model))
 
 Agents.agentsplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot) =

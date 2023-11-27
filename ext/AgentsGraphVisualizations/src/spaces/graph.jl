@@ -2,7 +2,7 @@
 
 Agents.agents_space_dimensionality(::GraphSpace) = 2
 
-Agents.get_axis_limits!(model::ABM{<:GraphSpace}) = nothing, nothing
+Agents.get_axis_limits(model::ABM{<:GraphSpace}) = nothing, nothing
 
 function Agents.agentsplot!(ax::Axis, model::ABM{<:GraphSpace}, p::_ABMPlot)
     hidedecorations!(ax)
