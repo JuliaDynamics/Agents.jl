@@ -47,21 +47,10 @@ function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
     return model
 end
 
-function CommonSolve.step!(model::EventQueueABM, t::Real)
+function CommonSolve.step!(model::EventQueueABM, t::Union{Real, Function})
     queue = abmqueue(model)
     model_t = getfield(model, :time)
-    t0 = model_t[]
-    while until(model_t[], t0 + t, model)
-        one_step!(queue, model_t, model)
-    end
-    return model
-end
-function CommonSolve.step!(model::EventQueueABM, t::Function)
-    queue = abmqueue(model)
-    model_t = getfield(model, :time)
-    while until(model_t[], t, model)
-        one_step!(queue, model_t, model)
-    end
+    step_ahead!(queue, model_t, t, model)
     return model
 end
 function CommonSolve.step!(model::EventQueueABM)
@@ -71,11 +60,40 @@ function CommonSolve.step!(model::EventQueueABM)
     return model
 end
 
-function one_step!(queue, model_t, model)
-    isempty(queue) && return model
+function step_ahead!(queue, model_t, t::Real, model::EventQueueABM)
+    stop_time = model_t[] + t
+    while until(model_t[], stop_time, model)
+        one_step!(queue, model_t, stop_time, model)
+    end
+    return 
+end
+function step_ahead!(queue, model_t, t::Function, model::EventQueueABM)
+    while until(model_t[], t, model)
+        one_step!(queue, model_t, model)
+    end
+    return 
+end
+
+function one_step!(queue, model_t, stop_time, model)
+    if isempty(queue)
+        model_t[] = stop_time
+        return
+    end
     event_tuple, t_event = dequeue_pair!(queue)
-    model_t[] = t_event
+    if t_event > stop_time
+        enqueue!(queue, event_tuple => t_event)
+        model_t[] = stop_time
+    else
+        process_event!(event_tuple, model)
+        model_t[] = t_event
+    end
+    return
+end
+function one_step!(queue, model_t, model)
+    isempty(queue) && return
+    event_tuple, t_event = dequeue_pair!(queue)
     process_event!(event_tuple, model)
+    model_t[] = t_event
     return
 end
 
