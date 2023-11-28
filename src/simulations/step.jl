@@ -81,20 +81,19 @@ end
 
 function process_event!(event_tuple, model)
     id, event_idx = event_tuple
-    # if agent has been removed by other actions, return
-    !haskey(agent_container(model), id) && return
-    # Else, perform event action
+    agent_was_removed(id, model) && return
     agent = model[id]
     agentevent = abmevents(model)[event_idx]
     agentevent.action!(agent, model)
-    # if agent got deleted after the action, return again
-    !haskey(agent_container(model), id) && return
-    # else, generate a new event, if specified by user
+    agent_was_removed(id, model) && return
     if getfield(model, :autogenerate_after_action)
         generate_event_in_queue!(agent, model)
     end
     return
 end
+
+agent_was_removed(id, model::DictABM) = !haskey(agent_container(model), id)
+agent_was_removed(::Int, ::VecABM) = false
 
 until(s, t::Real, ::ABM) = s < t
 until(s, f, model::ABM) = !f(model, s)
