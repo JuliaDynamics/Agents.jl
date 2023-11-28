@@ -2,28 +2,30 @@ export EventQueueABM, AgentEvent
 export abmqueue, abmevents, abmtime, add_event!
 
 """
-    AgentEvent(; action!, propensity, types, timing])
+    AgentEvent(; action!, propensity, types, [timing])
 
 An event instance that can be given to [`EventQeueABM`](@ref).
 
-- `action! = dummystep`: is the function `action!(agent, model)` that will
-  act on the agent the event corresponds to. By default it is an action that does nothing.
-  The `action!` function may call [`add_event!`](@ref) to generate new events, regardless
-  of the automatic generation of events by Agents.jl.
-- `propensity = nothing`: it can be either a constant real number,
-  or a function `propensity(model, agent)` that returns
-  the propensity of the event. If `nothing`, automatic event generation cannot
-  be done by Agents.jl and the function [`add_event!`](@ref) must be used.
-- `types = AbstractAgent`: the supertype of agents the `action!` function can be applied to.
-- `timing = nothing`: decides how long after its generation the event should trigger.
-  By default (`nothing`). the time is a randomly
-  sampled time from an exponential distribution with parameter the
-  total propensity of all applicable events to the agent.
-  I.e., by default the "Gillespie" algorithm is used to time the events.
-  Alternatively, it can be a function `timing(agent, model)` which will return the time.
+- `action! = dummystep`: is the function `action!(agent, model)` that will act
+  on the agent to which the event corresponds. By default it is an action that
+  does nothing. The `action!` function may call [`add_event!`](@ref) to generate
+  new events, regardless of the automatic generation of events by Agents.jl.
+- `propensity = nothing`: can be either a real number constant, or a function
+  `propensity(model, agent)` that returns the propensity of the event to occur.
+  If `nothing`, automatic event generation cannot be done by Agents.jl and the
+  function [`add_event!`](@ref) must be used.
+- `types = AbstractAgent`: the supertype of agents the `action!` function can be
+  applied to.
+- `timing = nothing`: decides how long after its generation the event should
+  trigger. By default (`nothing`). The time is a randomly sampled time from an
+  exponential distribution with parameter the total propensity of all applicable
+  events to the agent i.e. by default the "Gillespie" algorithm is used to
+  time the events. Alternatively, it can be a function `timing(agent, model)`
+  which will return the time.
 
-Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored.
-But when using [`generate_event_in_queue!`](@ref), they are utilized.
+Notice that when using the [`add_event!`](@ref) function, `propensity, timing`
+are ignored. But when using [`generate_event_in_queue!`](@ref), they are
+utilized.
 """
 Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T}
     action!::F = dummystep
