@@ -42,9 +42,9 @@ A concrete implementation of an [`AgentBasedModel`](@ref), which is also the mos
 commonly used in agent based modelling studies. It operates in discrete time.
 Here is a summary of how the time evolution of this model works:
 
-In each simulation step agents are scheduled to act based on a user-provided scheduler.
-Then, the scheduler goes through every agent that has been scheduled.
-For each, it performs an action on the agent. The action
+In each simulation step, agents are scheduled to act based on a user-provided scheduler.
+The scheduler goes through every agent that has been scheduled and
+for each, it performs an action on the agent. The action
 (which is called an "agent stepping function") is a generic Julia function
 `agent_step!(agent, model)` that may do anything and utilize any function
 from the Agents.jl [API](@ref) or the entire Julia ecosystem.
