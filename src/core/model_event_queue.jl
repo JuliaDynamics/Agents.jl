@@ -2,7 +2,7 @@ export EventQueueABM, AgentEvent
 export abmqueue, abmevents, abmtime, add_event!
 
 """
-    AgentEvent(; action!, propensity, types, timing])
+    AgentEvent(; action!, propensity, types, [timing])
 
 An event instance that can be given to [`EventQeueABM`](@ref).
 
@@ -192,7 +192,6 @@ function extra_actions_after_add!(agent, model::EventQueueABM)
     end
 end
 
-
 """
     add_event!(agent, model)
 
@@ -238,11 +237,9 @@ end
 
 function obtain_propensity(event::AgentEvent, agent, model)
     if event.propensity isa Real
-        #println(typeof(event.propensity))
         return event.propensity
     else
         p = event.propensity(agent, model)
-        #println(typeof(p))
         return p
     end
 end
