@@ -142,7 +142,7 @@ reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_
 function movement_time(agent, model)
     # `agent` is the agent the event will be applied to,
     # which we do not use in this function!
-    t = 0.1randn(abmrng(model)) + 1
+    t = 0.1 * randn(abmrng(model)) + 1
     return clamp(t, 0, Inf)
 end
 
