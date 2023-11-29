@@ -116,8 +116,7 @@ movement_propensity = 0.5
 # to the population size of the agent
 
 function reproduction_propensity(agent, model)
-    same = count(a -> a isa typeof(agent), allagents(model))
-    return 2*same/nagents(model)
+    return 1/2 * nagents(model)
 end
 
 ## Creating the `AgentEvent` structures
@@ -180,6 +179,10 @@ for p in positions(model)
     type = rand(abmrng(model), (Rock, Paper, Scissors))
     add_agent!(p, type, model)
 end
+
+# remove this lines before merging
+using BenchmarkTools
+@benchmark step!($model) seconds=1 evals=1 samples=10^6
 
 using CairoMakie
 function dummyplot(model)

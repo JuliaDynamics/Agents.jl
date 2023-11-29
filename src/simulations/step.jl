@@ -105,7 +105,7 @@ function process_event!(event_tuple, model)
     agentevent.action!(agent, model)
     agent_was_removed(id, model) && return
     if getfield(model, :autogenerate_after_action)
-        generate_event_in_queue!(agent, model)
+        add_event!(agent, model)
     end
     return
 end
