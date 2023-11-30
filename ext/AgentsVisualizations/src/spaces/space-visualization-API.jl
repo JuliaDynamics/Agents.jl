@@ -32,53 +32,53 @@ In short: At least implement all functions in section "Required" with the same a
 ## Required
 const ABMPlot = Agents.get_ABMPlot_type()
 
-Agents.agents_space_dimensionality(space::Agents.AbstractSpace) =
-    notimplemented(space)
+function Agents.agents_space_dimensionality(space::Agents.AbstractSpace) 
+end
 
-Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace}) =
-    notimplemented(abmspace(model))
+function Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace})
+end
 
-Agents.agentsplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot) =
-    notimplemented(abmspace(model))
+function Agents.agentsplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot)
+end
 
 ## Preplots
 
-Agents.spaceplot!(ax, model::ABM{<:Agents.AbstractSpace}; spaceplotkwargs...) = 
-    notimplemented(abmspace(model))
+function Agents.spaceplot!(ax, model::ABM{<:Agents.AbstractSpace}; spaceplotkwargs...)
+end
 
-Agents.static_preplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot) = 
-    notimplemented(abmspace(model))
+function Agents.static_preplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot)
+end
 
 ## Lifting
 
-Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray) =
-    notimplemented(abmspace(model))
+function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
+end
 
-Agents.abmplot_ids(model::ABM{<:Agents.AbstractSpace}) =
-    notimplemented(abmspace(model))
+function Agents.abmplot_ids(model::ABM{<:Agents.AbstractSpace})
+end
 
-Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset, ids) =
-    notimplemented(abmspace(model))
+function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset, ids)
+end
 
-Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac, ids) = 
-    notimplemented(abmspace(model))
-Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function, ids) = 
-    notimplemented(abmspace(model))
+function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac, ids)
+end
+function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function, ids)
+end
 
-Agents.abmplot_marker(model::ABM{<:Agents.AbstractSpace}, used_poly, am, pos, ids) = 
-    notimplemented(abmspace(model))
-Agents.abmplot_marker(model::ABM{<:Agents.AbstractSpace}, used_poly, am::Function, pos, ids) = 
-    notimplemented(abmspace(model))
+function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, used_poly, am, pos, ids)
+end
+function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, used_poly, am::Function, pos, ids)
+end
 
-Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as, ids) = 
-    notimplemented(abmspace(model))
-Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function, ids) = 
-    notimplemented(abmspace(model))
+function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as, ids)
+end
+function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function, ids)
+end
 
 ## Inspection
 
-Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace} =
-    notimplemented(abmspace(model))
+function Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace}
+end
 
-Agents.ids_to_inspect(model::ABM{<:Agents.AbstractSpace}, pos) = 
-    notimplemented(abmspace(model))
+function Agents.ids_to_inspect(model::ABM{<:Agents.AbstractSpace}, pos)
+end
