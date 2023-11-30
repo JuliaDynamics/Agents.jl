@@ -74,29 +74,23 @@ function merge_spaceplotkwargs!(p)
         @warn "Usage of osmplotkwargs is deprecated. " *
             "Please remove it from the call to abmplot and " * 
             "use only spaceplotkwargs instead."
-        for (k,v) in p.osmplotkwargs
-            p.spaceplotkwargs[k] = v
-        end
+        merge!(p.spaceplotkwargs, p.osmplotkwargs)
     end
     return p.spaceplotkwargs
 end
 
 function merge_agentsplotkwargs!(p)
     if hasproperty(p, :scatterkwargs)
-        @warn "Usage of the scatterkwargs keyword argument is deprecated. " *
-            "Please remove it from the call to abmplot and " *
-            "use only agentsplotkwargs instead."
-        for (k,v) in p.scatterkwargs
-            p.agentsplotkwargs[k] = v
-        end
+        @warn """Usage of the scatterkwargs keyword argument is deprecated.
+            Please remove it from the call to abmplot and \
+            use only agentsplotkwargs instead."""
+        merge!(p.agentsplotkwargs, p.scatterkwargs)
     end
     if hasproperty(p, :graphplotkwargs)
-        @warn "Usage of the graphplotkwargs keyword argument is deprecated. " *
-            "Please remove it from the call to abmplot and " *
-            "use only agentsplotkwargs instead."
-        for (k,v) in p.graphplotkwargs
-            p.agentsplotkwargs[k] = v
-        end
+        @warn """Usage of the graphplotkwargs keyword argument is deprecated.
+            Please remove it from the call to abmplot and \
+            use only agentsplotkwargs instead."""
+        merge!(p.agentsplotkwargs, p.graphplotkwargs)
     end
     return p.agentsplotkwargs
 end
