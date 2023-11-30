@@ -38,7 +38,7 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,I} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,I,Q} <: AgentBasedModel{S}
     time::Base.RefValue{Float64}
     agents::C
     space::S
@@ -50,7 +50,7 @@ struct EventQueueABM{
     # Dummy vector that is used to calculate next event
     propensities::Vector{Float64}
     # maps an agent type to its applicable events
-    event_queue::PriorityQueue{Tuple{I, Int}, Float64}
+    event_queue::Q
     autogenerate_on_add::Bool
     autogenerate_after_action::Bool
 end
@@ -144,7 +144,7 @@ function EventQueueABM(
     # and the other is the index of the event in `events`
     queue = PriorityQueue{Tuple{I, Int}, Float64}()
     propensities = zeros(length(events))
-    return EventQueueABM{S,A,C,P,E,R,I}(
+    return EventQueueABM{S,A,C,P,E,R,typeof(queue)}(
         Ref(0.0), agents, space, properties, rng,
         Ref(0), events, propensities, queue,
         autogenerate_on_add,
