@@ -50,8 +50,8 @@ Agents.abmplot_colors(model::ABM{<:GraphSpace}, ac::Function, ids) =
     to_color.(ac(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids)
 
 # TODO: Add support for polygon markers for GraphSpace if possible with GraphMakie
-Agents.abmplot_marker(model::ABM{<:GraphSpace}, used_poly, am, pos, ids) = am
-Agents.abmplot_marker(model::ABM{<:GraphSpace}, used_poly, am::Function, pos, ids) =
+Agents.abmplot_markers(model::ABM{<:GraphSpace}, used_poly, am, pos, ids) = am
+Agents.abmplot_markers(model::ABM{<:GraphSpace}, used_poly, am::Function, pos, ids) =
     [am(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids]
 
 Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as, ids) = as

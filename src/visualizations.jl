@@ -329,10 +329,10 @@ function abmplot_pos end
 """
 function abmplot_colors end
 """
-    abmplot_marker(model::ABM{S}, used_poly, am, pos, ids)
-    abmplot_marker(model::ABM{S}, used_poly, am::Function, pos, ids)
+    abmplot_markers(model::ABM{S}, used_poly, am, pos, ids)
+    abmplot_markers(model::ABM{S}, used_poly, am::Function, pos, ids)
 """
-function abmplot_marker end
+function abmplot_markers end
 """
     abmplot_markersizes(model::ABM{S}, as, ids)
     abmplot_markersizes(model::ABM{S}, as::Function, ids)

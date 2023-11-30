@@ -64,7 +64,7 @@ Agents.abmplot_colors(model::ABM, ac, ids) = to_color(ac)
 Agents.abmplot_colors(model::ABM, ac::Function, ids) =
     to_color.([ac(model[i]) for i in ids])
 
-function Agents.abmplot_marker(model::ABM, used_poly, am, pos, ids)
+function Agents.abmplot_markers(model::ABM, used_poly, am, pos, ids)
     marker = am
     # need to update used_poly Observable here for inspection
     used_poly[] = user_used_polygons(am, marker)
@@ -74,7 +74,7 @@ function Agents.abmplot_marker(model::ABM, used_poly, am, pos, ids)
     return marker
 end
 
-function Agents.abmplot_marker(model::ABM, used_poly, am::Function, pos, ids)
+function Agents.abmplot_markers(model::ABM, used_poly, am::Function, pos, ids)
     marker = [am(model[i]) for i in ids]
     # need to update used_poly Observable here for use with inspection
     used_poly[] = user_used_polygons(am, marker)

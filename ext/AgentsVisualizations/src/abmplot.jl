@@ -189,7 +189,7 @@ function lift_attributes(model, ac, as, am, offset, used_poly)
     ids = @lift(abmplot_ids($model))
     pos = @lift(abmplot_pos($model, $offset, $ids))
     color = @lift(abmplot_colors($model, $ac, $ids))
-    marker = @lift(abmplot_marker($model, used_poly, $am, $pos, $ids))
+    marker = @lift(abmplot_markers($model, used_poly, $am, $pos, $ids))
     markersize = @lift(abmplot_markersizes($model, $as, $ids))
 
     return pos, color, marker, markersize

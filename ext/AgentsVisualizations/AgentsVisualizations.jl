@@ -5,7 +5,7 @@ using Agents: add_interaction!
 # Pull API functions into extension module
 using Agents: agents_space_dimensionality, get_axis_limits, agentsplot!
 using Agents: spaceplot!, static_preplot!
-using Agents: abmplot_heatobs, abmplot_ids, abmplot_pos, abmplot_colors, abmplot_marker, 
+using Agents: abmplot_heatobs, abmplot_ids, abmplot_pos, abmplot_colors, abmplot_markers, 
     abmplot_markersizes
 using Agents: convert_mouse_position, ids_to_inspect
 
