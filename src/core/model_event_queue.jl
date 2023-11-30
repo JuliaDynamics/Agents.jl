@@ -38,7 +38,7 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,I,Q} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,Q} <: AgentBasedModel{S}
     time::Base.RefValue{Float64}
     agents::C
     space::S
