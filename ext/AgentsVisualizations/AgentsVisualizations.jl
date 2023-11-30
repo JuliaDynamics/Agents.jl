@@ -30,7 +30,6 @@ include("src/spaces/continuous.jl")
 include("src/spaces/grid.jl")
 
 include("src/interaction.jl")
-include("src/inspection.jl")
 include("src/convenience.jl")
 include("src/deprecations.jl")
 
