@@ -25,7 +25,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
         hasmethod(abmplot_markersizes, (ABM{S}, Function, Any)) ||
             hasmethod(abmplot_markersizes, (ABM{S}, Any, Any)),
         # Inspection (optional)
-        hasmethod(convert_mouse_position, (ABM{S}, Any)),
+        hasmethod(convert_mouse_position, (S, Any)),
         hasmethod(ids_to_inspect, (ABM{S}, Any)),
     ]
     @info """Checking for methods that have to be defined to plot an ABM with custom space \
