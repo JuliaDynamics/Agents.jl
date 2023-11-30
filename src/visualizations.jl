@@ -292,7 +292,7 @@ Return `nothing, nothing` if you want to disable this.
 function get_axis_limits end
 
 """
-    agentsplot!(ax, model::ABM{S}, p::_ABMPlot) where {S<:Agents.AbstractSpace}
+    agentsplot!(ax, model::ABM{S}, p::ABMPlot) where {S<:Agents.AbstractSpace}
 
 Plot agents at their positions.
 """
