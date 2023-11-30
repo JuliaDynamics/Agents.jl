@@ -2,6 +2,7 @@ export subscript, superscript
 export record_interaction
 
 function Agents.check_space_visualization_API(::ABM{S}) where {S}
+    checkmark(i) = checks[i] ? "✔" : "❌"
     checks = [
         # Required
         hasmethod(agents_space_dimensionality, (S, )),
@@ -14,28 +15,44 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
         hasmethod(static_preplot!, (Axis, ABM{S}, _ABMPlot)) ||
             hasmethod(static_preplot!, (Axis3, ABM{S}, _ABMPlot)),
         # Lifting (optional)
+        hasmethod(abmplot_heatobs, (ABM{S}, Any)),
+        hasmethod(abmplot_ids, (ABM{S}, )),
+        hasmethod(abmplot_pos, (ABM{S}, Any, Any)),
+        hasmethod(abmplot_colors, (ABM{S}, Function, Any)) ||
+            hasmethod(abmplot_colors, (ABM{S}, Any, Any)),
+        hasmethod(abmplot_markers, (ABM{S}, Function, Any, Any, Any)) ||
+            hasmethod(abmplot_markers, (ABM{S}, Any, Any, Any, Any)),
+        hasmethod(abmplot_markersizes, (ABM{S}, Function, Any)) ||
+            hasmethod(abmplot_markersizes, (ABM{S}, Any, Any)),
         # Inspection (optional)
+        hasmethod(convert_mouse_position, (ABM{S}, Any)),
         hasmethod(ids_to_inspect, (ABM{S}, Any)),
     ]
-    @info """
-    Checking for methods that have to be defined to plot an ABM with custom space type
-    \t$S
+    @info """Checking for methods that have to be defined to plot an ABM with custom space \
+    type S <: $S.
     === Required
-    $(checks[1] ? "✔" : "❌")\tagents_space_dimensionality(space::$S)
-    $(checks[2] ? "✔" : "❌")\tget_axis_limits(model::ABM{$S})
-    $(checks[3] ? "✔" : "❌")\tagentsplot!(ax, model::ABM{$S})
+    $(checkmark(1))\tagents_space_dimensionality(space::$S)
+    $(checkmark(2))\tget_axis_limits(model::ABM{S})
+    $(checkmark(3))\tagentsplot!(ax, model::ABM{S})
     === Preplots (optional)
-    $(checks[4] ? "✔" : "❌")\tspaceplot!(ax, model::ABM{$S}; spaceplotkwargs...)
-    $(checks[5] ? "✔" : "❌")\tstatic_preplot!(ax, model::ABM{$S}, p::ABMPlot)
+    $(checkmark(4))\tspaceplot!(ax, model::ABM{S}; spaceplotkwargs...)
+    $(checkmark(5))\tstatic_preplot!(ax, model::ABM{S}, p::ABMPlot)
     === Lifting (optional)
-    placeholder
+    $(checkmark(6))\tabmplot_heatobs(model::ABM{S}, heatarray)
+    $(checkmark(7))\tabmplot_ids(model::ABM{S})
+    $(checkmark(8))\tabmplot_pos(model::ABM{S}, offset, ids)
+    $(checkmark(9))\tabmplot_colors(model::ABM{S}, ac, ids)
+    $(checkmark(10))\tabmplot_marker(model::ABM{S}, used_poly, am, pos, ids)
+    $(checkmark(11))\tabmplot_markersizes(model::ABM{$S}, as, ids)
     === Inspection (optional)
-    $(checks[end] ? "✔" : "❌")\tids_to_inspect(model::ABM{$S}, pos)
+    $(checkmark(12))\tconvert_mouse_position(::S, pos)
+    $(checkmark(13))\tids_to_inspect(model::ABM{S}, pos)
     $(count(checks))/$(length(checks)) checks were successful.
     """
     if !all(checks[1:3])
         @error """Requirements for plotting of space not met.
-        Please reference the Agents.jl documentation (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
+        Please reference the Agents.jl documentation \
+        (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
     end
     return checks
 end
