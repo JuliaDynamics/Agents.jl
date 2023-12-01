@@ -66,8 +66,8 @@ end
 
 function Makie.show_data(inspector::DataInspector, 
         p::ABMP{<:GraphSpace}, idx, source::Scatter)
-    pos = source.converted[1][][idx]
-    proj_pos = Makie.shift_project(Makie.parent_scene(p), p, to_ndim(Point3f, pos, 0))
+    pos = Makie.position_on_plot(source, idx)
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     # get GraphPlot
