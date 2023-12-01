@@ -41,4 +41,4 @@ end
 ## Inspection
 
 Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos) =
-    nearby_ids(pos, model, 0.0)
+    nearby_ids_exact(pos, model, 0.00001)
