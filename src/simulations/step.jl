@@ -23,7 +23,7 @@ for, starting from 0.
 
 See also [Advanced stepping](@ref).
 """
-function CommonSolve.step!(model::ABM, n::Union{Function, Int} = 1)
+function CommonSolve.step!(model::ABM, n::Union{Real, Function} = 1)
     agent_step! = agent_step_field(model)
     model_step! = model_step_field(model)
     if agent_step! == dummystep

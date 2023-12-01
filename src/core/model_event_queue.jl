@@ -133,6 +133,7 @@ function EventQueueABM(
         properties::P = nothing,
         rng::R = Random.default_rng(),
         warn = true,
+        warn_deprecation = false, 
         autogenerate_on_add = true,
         autogenerate_after_action = true,
     ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}

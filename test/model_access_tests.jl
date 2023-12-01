@@ -2,14 +2,19 @@ using Agents, Test
 
 @testset "Model Access" begin
 @testset "Accessing model" begin
-    @testset "ModelType=$(ModelType)" for ModelType in (ABM, StandardABM, EventQueueABM)
+    @testset "ModelType=$(ModelType)" for ModelType in (StandardABM, EventQueueABM)
         @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector)
-        model = ModelType(NoSpaceAgent; properties = Dict(:a => 2, :b => "test"), 
-                          container = ContainerType, warn_deprecation = false)
+
+        extra_args = ifelse(ModelType != EventQueueABM, (), ((),))
+        extra_kwargs = ifelse(ModelType != EventQueueABM, (), ((autogenerate_on_add=false),))
+        model = ModelType(NoSpaceAgent, extra_args...; properties = Dict(:a => 2, :b => "test"), 
+                          container = ContainerType, warn_deprecation = false, extra_kwargs...)
         for i in 1:5
             add_agent!(model)
         end
-        @test abmscheduler(model) == Schedulers.fastest
+        if ModelType == StandardABM
+            @test abmscheduler(model) == Schedulers.fastest
+        end
         @test abmproperties(model) == Dict(:a => 2, :b => "test")
         a = model[1]
         @test a isa NoSpaceAgent
@@ -34,7 +39,8 @@ using Agents, Test
             par3::String
         end
         properties = Properties(1,1.0,"Test")
-        model = ModelType(NoSpaceAgent; properties, container = ContainerType, warn_deprecation = false)
+        model = ModelType(NoSpaceAgent, extra_args...; properties, container = ContainerType, warn_deprecation = false,
+                          extra_kwargs...)
         @test abmproperties(model) isa Properties
         @test model.par1 == 1
         @test model.par2 == 1.0
@@ -48,7 +54,7 @@ using Agents, Test
         @test model.par3 == "Changed"
         @test_throws ErrorException model.par4 = 5
 
-        model = ModelType(NoSpaceAgent, container = ContainerType, warn_deprecation = false)
+        model = ModelType(NoSpaceAgent, extra_args...; container = ContainerType, warn_deprecation = false, extra_kwargs...)
         @test_throws ErrorException model.a = 5
         end
     end
