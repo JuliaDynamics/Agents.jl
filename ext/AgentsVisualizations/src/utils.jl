@@ -16,16 +16,15 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
             hasmethod(static_preplot!, (Axis3, ABM{S}, _ABMPlot)),
         # Lifting (optional)
         hasmethod(abmplot_heatobs, (ABM{S}, Any)),
-        hasmethod(abmplot_ids, (ABM{S}, )),
-        hasmethod(abmplot_pos, (ABM{S}, Any, Any)),
-        hasmethod(abmplot_colors, (ABM{S}, Function, Any)) ||
-            hasmethod(abmplot_colors, (ABM{S}, Any, Any)),
-        hasmethod(abmplot_markers, (ABM{S}, Function, Any, Any, Any)) ||
-            hasmethod(abmplot_markers, (ABM{S}, Any, Any, Any, Any)),
-        hasmethod(abmplot_markersizes, (ABM{S}, Function, Any)) ||
-            hasmethod(abmplot_markersizes, (ABM{S}, Any, Any)),
+        hasmethod(abmplot_pos, (ABM{S}, Any)),
+        hasmethod(abmplot_colors, (ABM{S}, Function)) ||
+            hasmethod(abmplot_colors, (ABM{S}, Any)),
+        hasmethod(abmplot_markers, (ABM{S}, Function, Any)) ||
+            hasmethod(abmplot_markers, (ABM{S}, Any, Any)),
+        hasmethod(abmplot_markersizes, (ABM{S}, Function)) ||
+            hasmethod(abmplot_markersizes, (ABM{S}, Any)),
         # Inspection (optional)
-        hasmethod(convert_mouse_position, (S, Any)),
+        hasmethod(convert_element_pos, (S, Any)),
         hasmethod(ids_to_inspect, (ABM{S}, Any)),
     ]
     @info """Checking for methods that have to be defined to plot an ABM with custom space \
@@ -39,14 +38,13 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     $(checkmark(5))\tstatic_preplot!(ax, model::ABM{S}, p::ABMPlot)
     === Lifting (optional)
     $(checkmark(6))\tabmplot_heatobs(model::ABM{S}, heatarray)
-    $(checkmark(7))\tabmplot_ids(model::ABM{S})
-    $(checkmark(8))\tabmplot_pos(model::ABM{S}, offset, ids)
-    $(checkmark(9))\tabmplot_colors(model::ABM{S}, ac, ids)
-    $(checkmark(10))\tabmplot_marker(model::ABM{S}, used_poly, am, pos, ids)
-    $(checkmark(11))\tabmplot_markersizes(model::ABM{$S}, as, ids)
+    $(checkmark(7))\tabmplot_pos(model::ABM{S}, offset)
+    $(checkmark(8))\tabmplot_colors(model::ABM{S}, ac)
+    $(checkmark(9))\tabmplot_marker(model::ABM{S}, am, pos)
+    $(checkmark(10))\tabmplot_markersizes(model::ABM{$S}, as)
     === Inspection (optional)
-    $(checkmark(12))\tconvert_mouse_position(::S, pos)
-    $(checkmark(13))\tids_to_inspect(model::ABM{S}, pos)
+    $(checkmark(11))\tconvert_element_pos(::S, pos)
+    $(checkmark(12))\tids_to_inspect(model::ABM{S}, pos)
     $(count(checks))/$(length(checks)) checks were successful.
     """
     if !all(checks[1:3])
