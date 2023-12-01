@@ -139,7 +139,7 @@ reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_
 # This "something else" is once again an arbitrary Julia function,
 # and for here we will make:
 
-function movement_time(agent, model)
+function movement_time(agent, model, propensity)
     # `agent` is the agent the event will be applied to,
     # which we do not use in this function!
     t = 0.1 * randn(abmrng(model)) + 1
