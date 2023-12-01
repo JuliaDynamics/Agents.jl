@@ -129,28 +129,27 @@ This is the internal recipe for creating an `_ABMPlot`.
     )
 end
 
-function Makie.plot!(abmplot::_ABMPlot)
-    model = abmplot.abmobs[].model[]
-    ax = abmplot.ax[]
-    abmplot.adjust_aspect[] && (ax.aspect = DataAspect())
+function Makie.plot!(p::_ABMPlot)
+    model = p.abmobs[].model[]
+    ax = p.ax[]
+    p.adjust_aspect[] && (ax.aspect = DataAspect())
     set_axis_limits!(ax, model)
 
-    abmplot.pos, abmplot.color, abmplot.marker, abmplot.markersize =
-        lift_attributes(abmplot.abmobs[].model, abmplot.ac, abmplot.as, abmplot.am,
-            abmplot.offset, abmplot._used_poly)
+    p.pos, p.color, p.marker, p.markersize = 
+        lift_attributes(p.abmobs[].model, p.ac, p.as, p.am, p.offset)
 
     # gracefully handle deprecations of old plot kwargs
-    merge_spaceplotkwargs!(abmplot)
-    merge_agentsplotkwargs!(abmplot)
+    merge_spaceplotkwargs!(p)
+    merge_agentsplotkwargs!(p)
 
-    spaceplot!(ax, model; abmplot.spaceplotkwargs...)
-    heatmap!(ax, abmplot)
-    static_preplot!(ax, model, abmplot)
-    agentsplot!(ax, model, abmplot)
+    spaceplot!(ax, model; p.spaceplotkwargs...)
+    heatmap!(ax, p)
+    static_preplot!(ax, model, p)
+    agentsplot!(ax, model, p)
 
-    abmplot.stepclick, abmplot.resetclick = add_interaction!(ax, abmplot)
+    p.stepclick, p.resetclick = add_interaction!(ax, p)
 
-    return abmplot
+    return p
 end
 
 function set_axis_limits!(ax::Axis, model::ABM)
