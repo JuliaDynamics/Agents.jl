@@ -244,7 +244,7 @@ title = lift(
 )
 
 # And lastly we use them to plot things in a figure
-fig = Figure(resolution = (600, 400))
+fig = Figure(size = (600, 400))
 ax = Axis(fig[1, 1]; title, xlabel = "City", ylabel = "Population")
 barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
 fig
@@ -286,7 +286,7 @@ data[1:10, :]
 # the exponential growth of the virus
 
 N = sum(model.Ns) # Total initial population
-fig = Figure(resolution = (600, 400))
+fig = Figure(size = (600, 400))
 ax = fig[1, 1] = Axis(fig, xlabel = "steps", ylabel = "log10(count)")
 li = lines!(ax, data.step, log10.(data[:, dataname((:status, infected))]), color = :blue)
 lr = lines!(ax, data.step, log10.(data[:, dataname((:status, recovered))]), color = :red)

@@ -1,7 +1,7 @@
 export abmexploration, abmvideo
 
 function Agents.abmexploration(model;
-        figure = (resolution = (1200, 800),),
+        figure = (size = (1200, 800),),
         axis = NamedTuple(),
         alabels = nothing,
         mlabels = nothing,
@@ -79,7 +79,7 @@ end
 
 function Agents.abmvideo(file, model;
         spf = 1, framerate = 30, frames = 300,  title = "", showstep = true,
-        figure = (resolution = (600, 600),), axis = NamedTuple(),
+        figure = (size = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
     # add some title stuff

@@ -393,7 +393,7 @@ end
 # abmvideo(
 #     "rabbit_fox_hawk.mp4",
 #     model;
-#     figure = (resolution = (800, 700),),
+#     figure = (size = (800, 700),),
 #     frames = 300,
 #     framerate = 15,
 #     ac = animalcolor,

@@ -242,7 +242,7 @@ adf, mdf = run!(sheepwolfgrass, steps; adata, mdata)
 # The few remaining sheep reproduce and gradually reach an
 # equilibrium that can be supported by the amount of available grass.
 function plot_population_timeseries(adf, mdf)
-    figure = Figure(resolution = (600, 400))
+    figure = Figure(size = (600, 400))
     ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
     sheepl = lines!(ax, adf.step, adf.count_sheep, color = :cornsilk4)
     wolfl = lines!(ax, adf.step, adf.count_wolf, color = RGBAf(0.2, 0.2, 0.3))
