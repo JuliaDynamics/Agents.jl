@@ -11,7 +11,7 @@ An event instance that can be given to [`EventQeueABM`](@ref).
   The `action!` function may call [`add_event!`](@ref) to generate new events, regardless
   of the automatic generation of events by Agents.jl.
 - `propensity = 1.0`: it can be either a constant real number,
-  or a function `propensity(model, agent)` that returns the propensity of the event.
+  or a function `propensity(agent, model)` that returns the propensity of the event.
 - `types = AbstractAgent`: the supertype of agents the `action!` function can be applied to.
 - `timing = Agents.exp_propensity`: decides how long after its generation the event should 
   trigger. By default the time is a randomly sampled time from an exponential distribution 
