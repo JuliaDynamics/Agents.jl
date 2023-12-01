@@ -149,8 +149,8 @@ function EventQueueABM(
     # and the other is the index of the event in `events`
     queue = PriorityQueue{Tuple{I, Int}, Float64}()
     agent_types = union_types(A)
-    events_each = [[i for (i, t) in enumerate(agent_types) if t <: e.types] 
-                   for e in events]
+    events_each = [[i for (i, e) in enumerate(events) if t <: e.types] 
+                   for t in agent_types]
     propensities_each = [zeros(length(e)) for e in events_each]
     idx_variable_propensities_each = [Int[] for _ in events_each]
     for i in 1:length(agent_types)
@@ -244,7 +244,7 @@ function add_event!(agent, model)
         propensities_each[i] = p
     end
     # Then, select an event based on propensities
-    event_idx = sample_propensity(abmrng(model), propensities_each)
+    event_idx = events_each[sample_propensity(abmrng(model), propensities_each)]
     # The time to the event is generated from the selected event
     selected_event = abmevents(model)[event_idx]
     selected_prop = propensities_each[event_idx]
