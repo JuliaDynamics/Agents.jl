@@ -107,13 +107,12 @@ end
 # for an event to happen.
 # The propensities may be constants or functions of the
 # currently actived agent and the model.
-# Here, the propensities for moving and attacking will be constants,
 
+# Here, the propensities for moving and attacking will be constants,
 attack_propensity = 1.0
 movement_propensity = 0.5
 
 # while the propensity for reproduction will be a function
-
 function reproduction_propensity(agent, model)
     return (1/2) ^ ceil(Int, abmtime(model))
 end
@@ -137,7 +136,6 @@ reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_
 # We want to change it from an exponential distribution sample to something else.
 # This "something else" is once again an arbitrary Julia function,
 # and for here we will make:
-
 function movement_time(agent, model, propensity)
     # `agent` is the agent the event will be applied to,
     # which we do not use in this function!
