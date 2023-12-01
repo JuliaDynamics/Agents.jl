@@ -29,9 +29,5 @@ Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractGridSpace} =
 
 function Agents.ids_to_inspect(model::ABM{<:GridSpaceSingle}, pos)
     id = id_in_position(pos, model)
-    if id == 0
-        return ()
-    else
-        return (id,)
-    end
+    return id == 0 ? () : (id,)
 end
