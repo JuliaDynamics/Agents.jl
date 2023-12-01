@@ -83,11 +83,8 @@ function Makie.show_data(inspector::DataInspector,
     return true
 end
 
-Agents.ids_to_inspect(model::ABM{<:GraphSpace}, pos) =
-    abmspace(model).stored_ids[pos]
-
 function Agents.agent2string(model::ABM{<:GraphSpace}, pos)
-    ids = Agents.ids_to_inspect(model, pos)
+    ids = Agents.ids_in_position(pos, model)
 
     return """▶ Node $pos
     # of agents: $(length(ids))
