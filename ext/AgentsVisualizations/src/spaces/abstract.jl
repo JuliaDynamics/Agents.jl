@@ -97,7 +97,7 @@ function Makie.show_data(inspector::DataInspector,
 
     model = p.abmobs[].model[]
     a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
+    a.text[] = Agents.agent2string(model, convert_element_pos(abmspace(model), pos))
     a.visible[] = true
 
     return true
@@ -117,7 +117,7 @@ function Makie.show_data(inspector::DataInspector,
 
     model = p.abmobs[].model[]
     a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
+    a.text[] = Agents.agent2string(model, convert_element_pos(abmspace(model), pos))
     a.visible[] = true
 
     return true
@@ -132,14 +132,14 @@ function Makie.show_data(inspector::DataInspector,
 
     model = p.abmobs[].model[]
     a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_mouse_position(abmspace(model), pos))
+    a.text[] = Agents.agent2string(model, convert_element_pos(abmspace(model), pos))
     a.visible[] = true
 
     return true
 end
 
 function Agents.agent2string(model::ABM, pos)
-    ids = ids_to_inspect(model, pos)
+    ids = Agents.ids_to_inspect(model, pos)
     s = ""
 
     for (i, id) in enumerate(ids)
@@ -182,6 +182,6 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     return agentstring
 end
 
-Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
+Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
 
 Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)

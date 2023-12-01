@@ -24,8 +24,8 @@ end
 
 ## Inspection
 
-Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractGridSpace} = 
-    Tuple(Int.(pos))
+Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractGridSpace} = 
+    Tuple(round.(Int, pos)) # using round to handle positions with offset
 
 function Agents.ids_to_inspect(model::ABM{<:GridSpaceSingle}, pos)
     id = id_in_position(pos, model)

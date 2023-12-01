@@ -107,7 +107,7 @@ end
 
 #### Inspection (optional)
 
-function Agents.convert_mouse_position(::S, pos) where {S<:Agents.AbstractSpace}
+function Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace}
 end
 
 function Agents.ids_to_inspect(model::ABM{<:Agents.AbstractSpace}, pos)

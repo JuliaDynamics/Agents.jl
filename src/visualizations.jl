@@ -338,12 +338,13 @@ function abmplot_markersizes end
 ## Inspection
 
 """
-    convert_mouse_position(::S, pos)
+    convert_element_pos(::S, pos)
 
-Convert a `Point{2, Float32}`/`Point{3, Float32}` position in the Makie figure to its 
-corresponding position in the given space `S`.
+Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie 
+figure (e.g. a single scatter point representing an agent) to its corresponding position in 
+the given space `S`.
 """
-function convert_mouse_position end
+function convert_element_pos end
 
 """
     ids_to_inspect(model::ABM{S}, pos)
