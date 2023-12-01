@@ -87,25 +87,22 @@ end
 function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
 end
 
-function Agents.abmplot_ids(model::ABM{<:Agents.AbstractSpace})
+function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset)
 end
 
-function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset, ids)
+function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac)
+end
+function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function)
 end
 
-function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac, ids)
+function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, am, pos)
 end
-function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function, ids)
-end
-
-function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, used_poly, am, pos, ids)
-end
-function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, used_poly, am::Function, pos, ids)
+function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, am::Function, pos)
 end
 
-function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as, ids)
+function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as)
 end
-function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function, ids)
+function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function)
 end
 
 #### Inspection (optional)

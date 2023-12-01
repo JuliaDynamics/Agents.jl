@@ -185,12 +185,11 @@ function heatmap!(ax, p::_ABMPlot)
     return hmap
 end
 
-function lift_attributes(model, ac, as, am, offset, used_poly)
-    ids = @lift(abmplot_ids($model))
-    pos = @lift(abmplot_pos($model, $offset, $ids))
-    color = @lift(abmplot_colors($model, $ac, $ids))
-    marker = @lift(abmplot_markers($model, used_poly, $am, $pos, $ids))
-    markersize = @lift(abmplot_markersizes($model, $as, $ids))
+function lift_attributes(model, ac, as, am, offset)
+    pos = @lift(abmplot_pos($model, $offset))
+    color = @lift(abmplot_colors($model, $ac))
+    marker = @lift(abmplot_markers($model, $am, $pos))
+    markersize = @lift(abmplot_markersizes($model, $as))
 
     return pos, color, marker, markersize
 end

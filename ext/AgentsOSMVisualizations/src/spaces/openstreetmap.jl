@@ -27,7 +27,8 @@ end
 
 ## Lifting
 
-function Agents.abmplot_pos(model::ABM{<:OSMSpace}, offset, ids)
+function Agents.abmplot_pos(model::ABM{<:OSMSpace}, offset)
+    ids = allids(model)
     if isnothing(offset)
         return [Point2f(OSM.lonlat(model[i].pos, model)) for i in ids]
     else

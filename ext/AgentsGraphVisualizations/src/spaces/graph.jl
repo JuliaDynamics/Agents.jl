@@ -40,23 +40,27 @@ abmplot_edge_width(model, ew::Function) = ew(model)
 
 ## Lifting
 
-# for GraphSpace the collected ids are the indices of the graph nodes (= agent positions)
-Agents.abmplot_ids(model::ABM{<:GraphSpace}) = eachindex(abmspace(model).stored_ids)
-
-Agents.abmplot_pos(model::ABM{<:GraphSpace}, offset, ids) = nothing
+# GraphSpace positions are automatically assigned by GraphMakie.graphplot and chosen layout
+Agents.abmplot_pos(model::ABM{<:GraphSpace}, offset) = nothing
 
 # in GraphSpace we iterate over a list of agents (not agent ids) at a graph node position
-Agents.abmplot_colors(model::ABM{<:GraphSpace}, ac::Function, ids) =
-    to_color.(ac(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids)
+function Agents.abmplot_colors(model::ABM{<:GraphSpace}, ac::Function)
+    nodes = eachindex(abmspace(model).stored_ids)
+    return to_color.(ac(model[id] for id in abmspace(model).stored_ids[n]) for n in nodes)
+end
 
 # TODO: Add support for polygon markers for GraphSpace if possible with GraphMakie
-Agents.abmplot_markers(model::ABM{<:GraphSpace}, used_poly, am, pos, ids) = am
-Agents.abmplot_markers(model::ABM{<:GraphSpace}, used_poly, am::Function, pos, ids) =
-    [am(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids]
+Agents.abmplot_markers(model::ABM{<:GraphSpace}, am, pos) = am
+function Agents.abmplot_markers(model::ABM{<:GraphSpace}, am::Function, pos)
+    nodes = eachindex(abmspace(model).stored_ids)
+    return [am(model[id] for id in abmspace(model).stored_ids[n]) for n in nodes]
+end
 
-Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as, ids) = as
-Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function, ids) =
-    [as(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids]
+Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as) = as
+function Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function)
+    nodes = eachindex(abmspace(model).stored_ids)
+    return [as(model[id] for id in abmspace(model).stored_ids[n]) for n in nodes]
+end
 
 ## Inspection
 

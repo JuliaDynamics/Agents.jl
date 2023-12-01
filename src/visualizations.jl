@@ -316,26 +316,22 @@ function static_preplot! end
 """
 function abmplot_heatobs end
 """
-    abmplot_ids(model::ABM{S})
-"""
-function abmplot_ids end
-"""
-    abmplot_pos(model::ABM{S}, offset, ids)
+    abmplot_pos(model::ABM{S}, offset)
 """
 function abmplot_pos end
 """
-  abmplot_colors(model::ABM{S}, ac, ids)
-  abmplot_colors(model::ABM{S}, ac::Function, ids)
+  abmplot_colors(model::ABM{S}, ac)
+  abmplot_colors(model::ABM{S}, ac::Function)
 """
 function abmplot_colors end
 """
-    abmplot_markers(model::ABM{S}, used_poly, am, pos, ids)
-    abmplot_markers(model::ABM{S}, used_poly, am::Function, pos, ids)
+    abmplot_markers(model::ABM{S}, am, pos)
+    abmplot_markers(model::ABM{S}, am::Function, pos)
 """
 function abmplot_markers end
 """
-    abmplot_markersizes(model::ABM{S}, as, ids)
-    abmplot_markersizes(model::ABM{S}, as::Function, ids)
+    abmplot_markersizes(model::ABM{S}, as)
+    abmplot_markersizes(model::ABM{S}, as::Function)
 """
 function abmplot_markersizes end
 

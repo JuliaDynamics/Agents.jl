@@ -49,36 +49,31 @@ function Agents.abmplot_heatobs(model::ABM, heatarray)
     return matrix
 end
 
-Agents.abmplot_ids(model::ABM) = allids(model)
-
-function Agents.abmplot_pos(model::ABM, offset, ids)
+function Agents.abmplot_pos(model::ABM, offset)
     postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
-        return [postype(model[i].pos) for i in ids]
+        return [postype(model[i].pos) for i in allids(model)]
     else
-        return [postype(model[i].pos .+ offset(model[i])) for i in ids]
+        return [postype(model[i].pos .+ offset(model[i])) for i in allids(model)]
     end
 end
 
-Agents.abmplot_colors(model::ABM, ac, ids) = to_color(ac)
-Agents.abmplot_colors(model::ABM, ac::Function, ids) =
-    to_color.([ac(model[i]) for i in ids])
+Agents.abmplot_colors(model::ABM, ac) = to_color(ac)
+Agents.abmplot_colors(model::ABM, ac::Function) = 
+    to_color.([ac(model[i]) for i in allids(model)])
 
-function Agents.abmplot_markers(model::ABM, used_poly, am, pos, ids)
+function Agents.abmplot_markers(model::ABM, am, pos)
     marker = am
-    # need to update used_poly Observable here for inspection
-    used_poly[] = user_used_polygons(am, marker)
-    if used_poly[] # for polygons we always need vector, even if all agents are same polygon
+    if user_used_polygons(am, marker)
+        # for polygons we always need vector, even if all agents are same polygon
         marker = [translate(am, p) for p in pos]
     end
     return marker
 end
 
-function Agents.abmplot_markers(model::ABM, used_poly, am::Function, pos, ids)
-    marker = [am(model[i]) for i in ids]
-    # need to update used_poly Observable here for use with inspection
-    used_poly[] = user_used_polygons(am, marker)
-    if used_poly[]
+function Agents.abmplot_markers(model::ABM, am::Function, pos)
+    marker = [am(model[i]) for i in allids(model)]
+    if user_used_polygons(am, marker)
         marker = [translate_polygon(m, p) for (m, p) in zip(marker, pos)]
     end
     return marker
@@ -88,9 +83,8 @@ user_used_polygons(am, marker) = false
 user_used_polygons(am::Makie.Polygon, marker) = true
 user_used_polygons(am::Function, marker::Vector{<:Makie.Polygon}) = true
 
-Agents.abmplot_markersizes(model::ABM, as, ids) = as
-Agents.abmplot_markersizes(model::ABM, as::Function, ids) =
-    [as(model[i]) for i in ids]
+Agents.abmplot_markersizes(model::ABM, as) = as
+Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]
 
 ## Inspection
 

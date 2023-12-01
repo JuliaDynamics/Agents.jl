@@ -16,7 +16,7 @@ end
 
 ## Lifting
 
-Agents.abmplot_pos(model::ABM{Nothing}, offset, ids) = Point2f[(0.5, 0.5)]
+Agents.abmplot_pos(model::ABM{Nothing}, offset) = Point2f[(0.5, 0.5)]
 
 ## Inspection
 
