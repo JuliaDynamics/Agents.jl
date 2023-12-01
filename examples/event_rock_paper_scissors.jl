@@ -112,11 +112,10 @@ end
 attack_propensity = 1.0
 movement_propensity = 0.5
 
-# while the propensity for reproduction will be proportional
-# to the population size of the agent
+# while the propensity for reproduction will be a function
 
 function reproduction_propensity(agent, model)
-    return 1/2 * nagents(model)
+    return (1/2) ^ ceil(Int, abmtime(model))
 end
 
 ## Creating the `AgentEvent` structures
