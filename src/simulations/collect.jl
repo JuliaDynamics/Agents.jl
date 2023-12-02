@@ -134,9 +134,12 @@ function run!(model::ABM, n::Union{Function, Real};
 
     if model isa EventQueueABM
         dt = min(when, when_model)
+        transform_when = Rational
     else
+        transform_when = identity
         dt = 1
     end
+    transform_dt = model isa EventQueueABM ? Float64 : Int
 
     s = 0
     p = if typeof(n) <: Int
@@ -145,21 +148,21 @@ function run!(model::ABM, n::Union{Function, Real};
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
     while until(s, n, model)
-        if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+        if should_we_collect(s, model, transform_when(when))
+            collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
         end
-        if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+        if should_we_collect(s, model, transform_when(when_model))
+            collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
         end
         step!(model, dt)
-        s += dt
+        s += Rational(dt)
         ProgressMeter.next!(p)
     end
-    if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+    if should_we_collect(s, model, transform_when(when))
+        collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
     end
-    if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+    if should_we_collect(s, model, transform_when(when_model))
+        collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
@@ -243,23 +246,26 @@ function run_and_write!(model, df_agent, df_model, n;
 
     if model isa EventQueueABM
         dt = min(when, when_model)
+        transform_when = Rational
     else
+        transform_when = identity
         dt = 1
     end
+    transform_dt = model isa EventQueueABM ? Float64 : Int
 
     agent_count_collections = 0
     model_count_collections = 0
     while until(s, n, model)
-        if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+        if should_we_collect(s, model, transform_when(when))
+            collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
                 writer(adata_filename, df_agent, isfile(adata_filename))
                 empty!(df_agent)
             end
         end
-        if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+        if should_we_collect(s, model, transform_when(when_model))
+            collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
                 writer(mdata_filename, df_model, isfile(mdata_filename))
@@ -267,16 +273,16 @@ function run_and_write!(model, df_agent, df_model, n;
             end
         end
         step!(model, dt)
-        s += dt
+        s += Rational(dt)
         ProgressMeter.next!(p)
     end
 
-    if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+    if should_we_collect(s, model, transform_when(when))
+        collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
         agent_count_collections += 1
     end
-    if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+    if should_we_collect(s, model, transform_when(when_model))
+        collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
         model_count_collections += 1
     end
     # catch collected data that was not yet written to disk
