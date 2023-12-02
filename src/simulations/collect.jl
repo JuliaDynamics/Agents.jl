@@ -133,7 +133,7 @@ function run!(model::ABM, n::Union{Function, Real};
     end
 
     if model isa EventQueueABM
-        dt = min(when, when_model)
+        dt = when
         transform_when = Rational
     else
         transform_when = identity
@@ -245,7 +245,7 @@ function run_and_write!(model, df_agent, df_model, n;
     end
 
     if model isa EventQueueABM
-        dt = min(when, when_model)
+        dt = when
         transform_when = Rational
     else
         transform_when = identity
