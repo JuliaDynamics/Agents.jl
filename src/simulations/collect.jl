@@ -26,6 +26,8 @@ end
 should_we_collect(s, model, when::AbstractVector) = s ∈ when
 should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
+should_we_collect(s, model, when::Real) = isinteger(s/when)
+
 
 """
     run!(model, n::Integer; kwargs...) → agent_df, model_df
@@ -107,7 +109,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 """
 function run! end
 
-function run!(model::ABM, n::Union{Function, Int};
+function run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
         mdata = nothing,
@@ -130,6 +132,12 @@ function run!(model::ABM, n::Union{Function, Int};
         end
     end
 
+    if model isa EventQueueABM
+        dt = min(when, when_model)
+    else
+        dt = 1
+    end
+
     s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
@@ -143,8 +151,8 @@ function run!(model::ABM, n::Union{Function, Int};
         if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata, s; obtainer)
         end
-        step!(model, 1)
-        s += 1
+        step!(model, dt)
+        s += dt
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
@@ -182,7 +190,7 @@ during execution.
 """
 function offline_run! end
 
-function offline_run!(model::ABM, n::Union{Function, Int};
+function offline_run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
         mdata = nothing,
@@ -233,6 +241,12 @@ function run_and_write!(model, df_agent, df_model, n;
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
+    if model isa EventQueueABM
+        dt = min(when, when_model)
+    else
+        dt = 1
+    end
+
     agent_count_collections = 0
     model_count_collections = 0
     while until(s, n, model)
@@ -252,8 +266,8 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, 1)
-        s += 1
+        step!(model, dt)
+        s += dt
         ProgressMeter.next!(p)
     end
 
@@ -314,7 +328,7 @@ Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
 of `properties` and `obtainer`). `step` is given because the step number information
 is not known.
 """
-collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+collect_agent_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df
 
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
@@ -331,7 +345,11 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     end
 
     types = Vector{Vector}(undef, std_headers + length(properties))
-    types[1] = Int[]
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
     types[2] = Int[]
 
     if std_headers == 3
@@ -403,7 +421,7 @@ function multi_agent_types!(
     end
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+function collect_agent_data!(df, model, properties::Vector, step::Real = 0; kwargs...)
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
     dd[!, :step] = fill(step, length(alla))
@@ -451,7 +469,11 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     utypes = union_types(A)
 
     headers[1] = "step"
-    types[1] = Int[]
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
 
     if length(utypes) > 1
         multi_agent_agg_types!(types, utypes, headers, model, properties)
@@ -549,7 +571,7 @@ function collect_agent_data!(
     df,
     model::ABM,
     properties::Vector{<:Tuple},
-    step::Int = 0;
+    step::Real = 0;
     kwargs...,
 )
     alla = allagents(model)
@@ -598,7 +620,11 @@ function init_model_dataframe(model::ABM, properties::Vector)
     end
 
     types = Vector{Vector}(undef, 1 + length(properties))
-    types[1] = Int[]
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
     for (i, k) in enumerate(properties)
         types[i+1] = if typeof(k) <: Symbol
             current_props = abmproperties(model)
@@ -634,7 +660,7 @@ function collect_model_data!(
     df,
     model,
     properties::Vector,
-    step::Int = 0;
+    step::Real = 0;
     obtainer = identity,
 )
     push!(df[!, :step], step)
@@ -644,11 +670,7 @@ function collect_model_data!(
     return df
 end
 
-collect_model_data!(df, model, properties::Function, step::Int = 0; kwargs...) =
+collect_model_data!(df, model, properties::Function, step::Real = 0; kwargs...) =
     collect_model_data!(df, model, properties(model), step; kwargs...)
 
-collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-
-###################################################
-# Parallel / replicates
-###################################################
+collect_model_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df

@@ -177,10 +177,6 @@ for p in positions(model)
     add_agent!(p, type, model)
 end
 
-# remove these lines before merging
-using BenchmarkTools
-@benchmark step!($model) seconds=1 evals=1 samples=10^6
-
 using CairoMakie
 function dummyplot(model)
     fig = Figure()
@@ -217,5 +213,4 @@ step!(model, 1.0)
 # Here we will simply collect the number of each agent type.
 adata = [(a -> a isa X, count) for X in (Rock, Paper, Scissors)]
 
-run!(model, 10.0; adata, dt = 0.2)
-# (doesn't work yet!)
+run!(model, 10.0; adata, when = 0.2)
