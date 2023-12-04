@@ -67,8 +67,9 @@ function step_ahead!(queue, model_t, t::Real, model::EventQueueABM)
     end
     return 
 end
-function step_ahead!(queue, model_t, t::Function, model::EventQueueABM)
-    while until(model_t[], t, model)
+function step_ahead!(queue, model_t, f::Function, model::EventQueueABM)
+    t0 = model_t[]
+    while until(model_t[]-t0, f, model)
         one_step!(queue, model_t, model)
     end
     return 
