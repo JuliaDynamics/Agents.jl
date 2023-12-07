@@ -20,7 +20,7 @@ function add_controls!(fig, abmobs, spu)
     getfield.(Ref(abmobs), (:model, :agent_step!, :model_step!, :adata, :mdata, :adf, :mdf, :when))
 
     init_dataframes!(model[], adata, mdata, adf, mdf)
-    collect_data!(model[], when, adata, mdata, adf, mdf, abmobs.s[])
+    collect_data!(model[], when, adata, mdata, adf, mdf)
 
     # Create new layout for control buttons
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
@@ -40,7 +40,7 @@ function add_controls!(fig, abmobs, spu)
     step = Button(fig, label = "step\nmodel")
     on(step.clicks) do c
         Agents.step!(abmobs, speed[])
-        collect_data!(model[], when[], adata, mdata, adf, mdf, abmobs.s[])
+        collect_data!(model[], when[], adata, mdata, adf, mdf)
     end
     # Run button
     run = Button(fig, label = "run\nmodel")
@@ -68,9 +68,8 @@ function add_controls!(fig, abmobs, spu)
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
-        abmobs.s[] = 0
         init_dataframes!(model[], adata, mdata, adf, mdf)
-        collect_data!(model[], when, adata, mdata, adf, mdf, abmobs.s[])
+        collect_data!(model[], when, adata, mdata, adf, mdf)
     end
     # Layout buttons
     controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
@@ -89,14 +88,14 @@ function init_dataframes!(model, adata, mdata, adf, mdf)
     return nothing
 end
 
-function collect_data!(model, when, adata, mdata, adf, mdf, s)
-    if Agents.should_we_collect(s, model, when)
+function collect_data!(model, when, adata, mdata, adf, mdf)
+    if Agents.should_we_collect(abmtime(model), model, when)
         if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata, s)
+            Agents.collect_agent_data!(adf[], model, adata)
             adf[] = adf[] # trigger Observable
         end
         if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata, s)
+            Agents.collect_model_data!(mdf[], model, mdata)
             mdf[] = mdf[] # trigger Observable
         end
     end

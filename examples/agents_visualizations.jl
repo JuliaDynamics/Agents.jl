@@ -27,7 +27,7 @@ Pkg.status(["Agents", "CairoMakie"];
 # as an example throughout this docpage.
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
-using Agents, CairoMakie
+using Agents, GLMakie
 
 model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
     scenario = :change)

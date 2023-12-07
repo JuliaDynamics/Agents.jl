@@ -130,28 +130,30 @@ function run!(model::ABM, n::Union{Function, Int};
         end
     end
 
-    s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
         end
         step!(model, 1)
         s += 1
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
@@ -235,9 +237,12 @@ function run_and_write!(model, df_agent, df_model, n;
 
     agent_count_collections = 0
     model_count_collections = 0
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
                 writer(adata_filename, df_agent, isfile(adata_filename))
@@ -245,7 +250,7 @@ function run_and_write!(model, df_agent, df_model, n;
             end
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
                 writer(mdata_filename, df_model, isfile(mdata_filename))
@@ -258,11 +263,11 @@ function run_and_write!(model, df_agent, df_model, n;
     end
 
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
         agent_count_collections += 1
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
         model_count_collections += 1
     end
     # catch collected data that was not yet written to disk
@@ -309,12 +314,11 @@ Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
 
 """
-    collect_agent_data!(df, model, properties, step = 0; obtainer = identity)
+    collect_agent_data!(df, model, properties; obtainer = identity)
 Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties` and `obtainer`). `step` is given because the step number information
-is not known.
+of `properties` and `obtainer`).
 """
-collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+collect_agent_data!(df, model, properties::Nothing; kwargs...) = df
 
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
@@ -403,10 +407,10 @@ function multi_agent_types!(
     end
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+function collect_agent_data!(df, model, properties::Vector; kwargs...)
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :step] = fill(step, length(alla))
+    dd[!, :step] = fill(abmtime(model), length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -548,12 +552,11 @@ dataname(x::Function) = join(
 function collect_agent_data!(
     df,
     model::ABM,
-    properties::Vector{<:Tuple},
-    step::Int = 0;
+    properties::Vector{<:Tuple};
     kwargs...,
 )
     alla = allagents(model)
-    push!(df[!, 1], step)
+    push!(df[!, 1], abmtime(model))
     for (i, prop) in enumerate(properties)
         _add_col_data!(df[!, i+1], prop, alla; kwargs...)
     end
@@ -626,29 +629,24 @@ init_model_dataframe(model::ABM, properties::Function) =
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
 """
-    collect_model_data!(df, model, properties, step = 0, obtainer = identity)
+    collect_model_data!(df, model, properties, obtainer = identity)
 Same as [`collect_agent_data!`](@ref) but for model data instead.
 `properties` can be a `Vector` or generator `Function`.
 """
 function collect_model_data!(
     df,
     model,
-    properties::Vector,
-    step::Int = 0;
+    properties::Vector;
     obtainer = identity,
 )
-    push!(df[!, :step], step)
+    push!(df[!, :step], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end
     return df
 end
 
-collect_model_data!(df, model, properties::Function, step::Int = 0; kwargs...) =
-    collect_model_data!(df, model, properties(model), step; kwargs...)
+collect_model_data!(df, model, properties::Function; kwargs...) =
+    collect_model_data!(df, model, properties(model); kwargs...)
 
-collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-
-###################################################
-# Parallel / replicates
-###################################################
+collect_model_data!(df, model, properties::Nothing; kwargs...) = df
