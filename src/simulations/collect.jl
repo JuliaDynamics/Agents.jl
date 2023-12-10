@@ -312,14 +312,6 @@ function writer_arrow end
 Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 """
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
-
-"""
-    collect_agent_data!(df, model, properties; obtainer = identity)
-Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties` and `obtainer`).
-"""
-collect_agent_data!(df, model, properties::Nothing; kwargs...) = df
-
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
     A = agenttype(model)
@@ -345,6 +337,26 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
         single_agent_types!(types, model, properties)
     end
 
+    DataFrame(types, headers)
+end
+# Aggregating version
+function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
+    nagents(model) < 1 && throw(ArgumentError(
+        "Model must have at least one agent to initialize data collection",
+    ))
+    headers = Vector{String}(undef, 1 + length(properties))
+    types = Vector{Vector}(undef, 1 + length(properties))
+    A = agenttype(model)
+    utypes = union_types(A)
+
+    headers[1] = "step"
+    types[1] = Int[]
+
+    if length(utypes) > 1
+        multi_agent_agg_types!(types, utypes, headers, model, properties)
+    else
+        single_agent_agg_types!(types, headers, model, properties)
+    end
     DataFrame(types, headers)
 end
 
@@ -407,7 +419,17 @@ function multi_agent_types!(
     end
 end
 
-function collect_agent_data!(df, model, properties::Vector; kwargs...)
+"""
+    collect_agent_data!(df, model, properties; obtainer = identity)
+Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
+of `properties` and `obtainer`).
+"""
+collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
     dd[!, :step] = fill(abmtime(model), length(alla))
@@ -422,6 +444,24 @@ function collect_agent_data!(df, model, properties::Vector; kwargs...)
     append!(df, dd)
     return df
 end
+function collect_agent_data!(
+    df,
+    model::ABM,
+    properties::Vector{<:Tuple}, 
+    step::Int = 0;
+    kwargs...,
+)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = allagents(model)
+    push!(df[!, 1], abmtime(model))
+    for (i, prop) in enumerate(properties)
+        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
+    end
+    return df
+end
 
 function _add_col_data!(
     dd::DataFrame,
@@ -432,7 +472,6 @@ function _add_col_data!(
 ) where {T}
     dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
-
 function _add_col_data!(
     dd::DataFrame,
     col::Type{T},
@@ -442,27 +481,6 @@ function _add_col_data!(
 ) where {T>:Missing}
     dd[!, dataname(property)] =
         collect(get_data_missing(a, property, obtainer) for a in agent_iter)
-end
-
-# Aggregating version
-function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
-    nagents(model) < 1 && throw(ArgumentError(
-        "Model must have at least one agent to initialize data collection",
-    ))
-    headers = Vector{String}(undef, 1 + length(properties))
-    types = Vector{Vector}(undef, 1 + length(properties))
-    A = agenttype(model)
-    utypes = union_types(A)
-
-    headers[1] = "step"
-    types[1] = Int[]
-
-    if length(utypes) > 1
-        multi_agent_agg_types!(types, utypes, headers, model, properties)
-    else
-        single_agent_agg_types!(types, headers, model, properties)
-    end
-    DataFrame(types, headers)
 end
 
 function single_agent_agg_types!(
@@ -549,20 +567,6 @@ dataname(x::Function) = join(
     "_",
 )
 
-function collect_agent_data!(
-    df,
-    model::ABM,
-    properties::Vector{<:Tuple};
-    kwargs...,
-)
-    alla = allagents(model)
-    push!(df[!, 1], abmtime(model))
-    for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
-    end
-    return df
-end
-
 # Normal aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -574,7 +578,6 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
     push!(col, res)
 end
-
 # Conditional aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -636,9 +639,14 @@ Same as [`collect_agent_data!`](@ref) but for model data instead.
 function collect_model_data!(
     df,
     model,
-    properties::Vector;
+    properties::Vector,
+    step::Int = 0;
     obtainer = identity,
 )
+    if step != 0
+        @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
     push!(df[!, :step], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
@@ -646,7 +654,7 @@ function collect_model_data!(
     return df
 end
 
-collect_model_data!(df, model, properties::Function; kwargs...) =
-    collect_model_data!(df, model, properties(model); kwargs...)
+collect_model_data!(df, model, properties::Function, step::Int = 0; kwargs...) =
+    collect_model_data!(df, model, properties(model), step; kwargs...)
 
-collect_model_data!(df, model, properties::Nothing; kwargs...) = df
+collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
