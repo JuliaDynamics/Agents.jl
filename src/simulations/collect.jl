@@ -4,8 +4,7 @@ export run!,
     collect_model_data!,
     init_agent_dataframe,
     init_model_dataframe,
-    dataname,
-    should_we_collect
+    dataname
 
 ###################################################
 # Definition of the data collection API

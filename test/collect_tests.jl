@@ -309,7 +309,7 @@ end
 
         @test size(yearly_agent_data) == (15, 3)
         @test propertynames(yearly_agent_data) == [:step, :id, :weight]
-        @test maximum(yearly_agent_data[!, :step]) == 5
+        @test maximum(yearly_agent_data[!, :step]) == 1825
 
         @test dummystep(model) === nothing
         @test dummystep(model[1], model) === nothing
@@ -529,9 +529,9 @@ end
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
         basemodels = [Models.schelling(; numagents)
-                      for numagents in numagents_low:numagents_high]
-
-        return repeat(basemodels, nreplicates)
+                      for numagents in numagents_low:numagents_high 
+                      for _ in 1:nreplicates]
+        return basemodels
     end
 
     @testset begin "Serial ensemblerun!"
