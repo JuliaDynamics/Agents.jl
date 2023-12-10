@@ -62,8 +62,6 @@ function add_controls!(fig, abmobs, spu)
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
         model[] = deepcopy(model0)
-        s = 0 # reset step counter
-        Agents.step!(model[], agent_step!, model_step!, s; warn_deprecation = false)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")

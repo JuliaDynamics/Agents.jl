@@ -83,11 +83,11 @@ function Agents.abmvideo(file, model;
         recordkwargs = (compression = 20,), kwargs...
     )
     # add some title stuff
-    s = Observable(0) # counter of current step
+    abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), s)
+        t = lift(x -> title*", step = "*string(x), abmtime_obs)
     elseif showstep
-        t = lift(x -> "step = "*string(x), s)
+        t = lift(x -> "step = "*string(x), abmtime_obs)
     else
         t = title
     end
@@ -104,7 +104,7 @@ function Agents.abmvideo(file, model;
         for j in 1:frames-1
             recordframe!(io)
             Agents.step!(abmobs, spf)
-            s[] += spf; s[] = s[]
+            abmtime_obs[] = abmtime(model)
         end
         recordframe!(io)
     end
