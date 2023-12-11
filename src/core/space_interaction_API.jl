@@ -149,8 +149,9 @@ Remove all the agents of the model.
 """
 function remove_all!(model::ABM)
     for a in allagents(model)
-        remove_agent!(a, model)
+        remove_agent_from_space!(a, model)
     end
+    empty!(agent_container(model))
     getfield(model, :maxid)[] = 0
 end
 
@@ -448,3 +449,4 @@ function resorvoir_sampling_single(iter, model)
         w *= rand(rng)
     end
 end
+
