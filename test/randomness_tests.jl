@@ -17,7 +17,7 @@ using StableRNGs
 end
 
 @testset "sample!" begin
-    @testset "container=$(container)" for container in (Vector, Dict)
+    @testset "container=$(c)" for c in (Vector, Dict)
         rng = StableRNG(50)
         model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, container = c, warn_deprecation = false)
         add_agent!((1,1), Agent1, model4)
