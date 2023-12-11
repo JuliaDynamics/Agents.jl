@@ -25,7 +25,7 @@ function sample!(
     replace = true,
 )
     nagents(model) == 0 && return nothing
-    org_ids = collect(allids(model))
+    org_ids = compute_org_ids(model)
     if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in allagents(model)])
         new_ids = sample(abmrng(model), org_ids, weights, n, replace = replace)
@@ -35,8 +35,10 @@ function sample!(
     add_newids!(model, org_ids, new_ids)
 end
 
-#Used in sample!
-function add_newids!(model, org_ids, new_ids)
+compute_org_ids(model::ABM) = collect(allids(model))
+compute_org_ids(model::VecStandardABM) = allids(model)
+
+function add_newids!(model::ABM, org_ids, new_ids)
     sort!(org_ids)
     sort!(new_ids)
     i, L = 1, length(new_ids)
@@ -48,15 +50,26 @@ function add_newids!(model, org_ids, new_ids)
             remove_agent!(agent, model)
         else
             i += 1
-            while i <= L && new_ids[i] == id
+            while i <= L && (@inbounds new_ids[i] == id)
                 replicate!(agent, model)
                 i += 1
             end
-            i <= L && (id_new = new_ids[i])
+            i <= L && (@inbounds id_new = new_ids[i])
         end
     end
     return
 end
+function add_newids!(model::VecStandardABM, org_ids, new_ids)
+    new_agents = [copy_agent(model[id], model, i) for 
+                  (i, id) in enumerate(sort!(new_ids))]
+    remove_all!(model)
+    sizehint!(agent_container(model), length(new_ids))
+    for agent in new_agents
+        add_agent_pos!(agent, model)
+    end
+    return
+end
+
 
 """
     replicate!(agent, model; kwargs...)
@@ -79,10 +92,15 @@ a = A(1, (2, 2), 0.5, 0.5)
 b = replicate!(a, model; w = 0.8)
 ```
 """
-function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    args = new_args(agent, model; kwargs...)
-    newagent = A(nextid(model), args...)
+function replicate!(agent::AbstractAgent, model; kwargs...)
+    newagent = copy_agent(agent, model, nextid(model); kwargs...)
     add_agent_pos!(newagent, model)
+    return newagent
+end
+
+function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
+    args = new_args(agent, model; kwargs...)
+    newagent = A(id_new, args...)
     return newagent
 end
 
