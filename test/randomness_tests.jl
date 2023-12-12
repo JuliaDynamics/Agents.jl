@@ -23,18 +23,19 @@ end
         add_agent!((1,1), Agent1, model4)
         add_agent!((2,2), Agent1, model4)
         sample!(model4, 4)
-        res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
-                                  3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
+        agents = [Agent1(4, (2, 2)), Agent1(2, (2, 2)), Agent1(3, (2, 2)), Agent1(1, (1, 1))]
+        res = c isa Dict ? Dict(a.id => a for a in agents) : agents
         res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
         agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
-        @test allids(model4) == keys(res)
-        @test res_fields == agents_fields
+        @test sort(collect(allids(model4))) == sort(keys(res))
+        @test sort(res_fields) == sort(agents_fields)
         sample!(model4, 2)
-        res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
+        agents = [Agent1(4, (2, 2)), Agent1(1, (1, 1))]
+        res = c isa Dict ? Dict(a.id => a for a in agents) : agents
         res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
         agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
-        @test allids(model4) == keys(res)
-        @test res_fields == agents_fields
+        @test sort(collect(allids(model4))) == sort(keys(res))
+        @test sort(res_fields) == sort(agents_fields)
 
         rng = StableRNG(42)
         model = StandardABM(Agent2; rng = rng, container = c, warn_deprecation = false)
