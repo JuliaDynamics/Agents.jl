@@ -29,7 +29,7 @@ end
     @test allids(model4) == keys(res)
     @test res_fields == agents_fields
     sample!(model4, 2)
-    res = Dict{Int64, Agent1}(5 => Agent1(5, (2, 2)), 6 => Agent1(6, (1, 1)))
+    res = Dict{Int64, Agent1}(5 => Agent1(5, (1, 1)), 6 => Agent1(6, (2, 2)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
     agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
     @test allids(model4) == keys(res)
