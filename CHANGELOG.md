@@ -24,7 +24,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
 - The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
 - The `nearby_agents` function for `ContinuousSpace` and `GridSpace` is now 1.5x faster than before.
-- The `sample!` function is up to 2x faster than before.
+- The `sample!` function is much faster than before.
 
 
 # v5.17
