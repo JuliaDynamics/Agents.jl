@@ -22,23 +22,25 @@ function sample!(
     model::ABM,
     n::Int,
     weight = nothing;
-    replace = true,
+    replace = true
 )
     nagents(model) == 0 && return nothing
-    org_ids = compute_org_ids(model)
+    org_ids = collect(allids(model))
     if weight !== nothing
         weights = Weights([get_data(a, weight, identity) for a in allagents(model)])
         new_ids = sample(abmrng(model), org_ids, weights, n, replace = replace)
     else
         new_ids = sample(abmrng(model), org_ids, n, replace = replace)
     end
-    add_newids!(model, org_ids, new_ids)
+    if n <= length(org_ids) / 2
+        add_newids_bulk!(model, new_ids)
+    else
+        add_newids_each!(model, org_ids, new_ids)
+    end
+    return model
 end
 
-compute_org_ids(model::ABM) = collect(allids(model))
-compute_org_ids(model::VecStandardABM) = allids(model)
-
-function add_newids!(model::ABM, org_ids, new_ids)
+function add_newids_each!(model::ABM, org_ids, new_ids)
     sort!(org_ids)
     sort!(new_ids)
     i, L = 1, length(new_ids)
@@ -59,8 +61,10 @@ function add_newids!(model::ABM, org_ids, new_ids)
     end
     return
 end
-function add_newids!(model::VecStandardABM, org_ids, new_ids)
-    new_agents = [copy_agent(model[id], model, i) for 
+
+function add_newids_bulk!(model::ABM, new_ids)
+    maxid = getfield(model, :maxid)[]
+    new_agents = [copy_agent(model[id], model, maxid+i) for 
                   (i, id) in enumerate(sort!(new_ids))]
     remove_all!(model)
     sizehint!(agent_container(model), length(new_ids))
@@ -69,7 +73,6 @@ function add_newids!(model::VecStandardABM, org_ids, new_ids)
     end
     return
 end
-
 
 """
     replicate!(agent, model; kwargs...)
@@ -118,3 +121,4 @@ end
 function choose_arg(x, kwargs_nt, agent)
     return deepcopy(getfield(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
 end
+
