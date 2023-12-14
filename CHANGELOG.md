@@ -10,6 +10,9 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   - Allows us to develop new types of models that may have rules that are defined differently, without being based on e.g., two particular functions.
   - Allows us to develop (in the future) a new model type that is optimized for multi-agent simulations.
 - The `@agent` macro has been rewritten to support fields with default and const values. It has a new usage syntax now that parallelizes more Julia's native `struct` declaration. The old macro version still works but it's deprecated. Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
+- The `UnremovableABM` type is deprecated, instead `container = Vector` should be passed when creating the model.
+- The `step` argument is not needed anymore when using `collect_model_data!, collect_agent_data!` since the time of the
+model is used automatically.
 - Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. As a consequence, `add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)`  and `add_agent!(agent::AbstractAgent, model::ABM)` have been deprecated. See issue #861 for more. Due to this, the `nextid` function is no longer public API.
 - Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. `NTuple` usage in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples, e.g., doing `agent.pos == (0.5, 0.5)`. This will always be `false` in v6 as `agent.pos` is an `SVector`. The rest of the functionality should all work without problems, such as moving agents to tuple-based positions etc.
 
@@ -18,6 +21,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - Grid and continuous spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
 - A new function `swap_agents` can be used to swap an agents couple in a discrete space.
+- The model time/step is tracked automatically, accessible through `abmtime(model)`.
 
 ## Performance Improvements
 

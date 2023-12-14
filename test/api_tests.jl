@@ -225,6 +225,20 @@ end
     end
 end
 
+@testset "model time updates" begin
+    model_step!(model) = nothing
+    agent_step!(a, model) = nothing
+    f(model, t) = t > 100
+    model = StandardABM(Agent2; agent_step!, model_step!)
+    @test abmtime(model) == 0
+    step!(model, 1)
+    @test abmtime(model) == 1
+    step!(model, 10)
+    @test abmtime(model) == 11
+    step!(model, f)
+    @test abmtime(model) == 112
+end
+
 @testset "Higher order groups" begin
     @agent struct AgentWithWeight(GridAgent{2})
         weight::Float64

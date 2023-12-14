@@ -6,11 +6,10 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
     @warn "Passing agent_step! and model_step! to abmvideo is deprecated.
       These functions should be already contained inside the model instance."
     # add some title stuff
-    s = Observable(0) # counter of current step
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), s)
+        t = lift(x -> title*", step = "*string(x), abmtime(model))
     elseif showstep
-        t = lift(x -> "step = "*string(x), s)
+        t = lift(x -> "step = "*string(x), abmtime(model))
     else
         t = title
     end
@@ -25,7 +24,6 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
         for j in 1:frames-1
             recordframe!(io)
             Agents.step!(abmobs, spf)
-            s[] += spf; s[] = s[]
         end
         recordframe!(io)
     end
