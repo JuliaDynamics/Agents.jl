@@ -18,6 +18,7 @@ struct StandardABM{
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    time::Base.RefValue{Int64}
     agents_first::Bool
 end
 
@@ -113,7 +114,7 @@ function StandardABM(
     C = construct_agent_container(container, A)
     agents = C()
     return StandardABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                        properties, rng, Ref(0), agents_first)
+                                        properties, rng, Ref(0), Ref(0), agents_first)
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}

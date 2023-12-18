@@ -137,10 +137,6 @@ end
 
 For defining your own schedulers, see [Schedulers](@ref).
 
-!!! note "Current step number"
-    Notice that the current step number is not explicitly given to the model stepping function, nor is contained in the model type, because this is useful only for a subset of ABMs.
-    If you need the step information, implement this by adding a counting parameter into the model `properties`, and incrementing it by 1 each time the model stepping function is called.
-
 ## 4. The model
 
 The ABM is an instance of a subtype of [`AgentBasedModel`](@ref), most typically simply a [`StandardABM`](@ref).

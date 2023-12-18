@@ -9,6 +9,7 @@ using Agents, Test
         for i in 1:5
             add_agent!(model)
         end
+        @test abmtime(model) == 0
         @test abmscheduler(model) == Schedulers.fastest
         @test abmproperties(model) == Dict(:a => 2, :b => "test")
         a = model[1]

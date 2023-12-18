@@ -24,6 +24,7 @@ abmproperties
 abmrng
 abmscheduler
 abmspace
+abmtime
 ```
 
 ## Available spaces
@@ -227,15 +228,16 @@ For example, the core loop of `run!` is just
 df_agent = init_agent_dataframe(model, adata)
 df_model = init_model_dataframe(model, mdata)
 
-s = 0
-while until(s, n, model)
+t = getfield(model, :time)
+t0, s = t[], 0
+while until(t[], t0, n, model)
   if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, adata, s)
+      collect_agent_data!(df_agent, model, adata)
   end
   if should_we_collect(s, model, when_model)
-      collect_model_data!(df_model, model, mdata, s)
+      collect_model_data!(df_model, model, mdata)
   end
-  step!(model, agent_step!, model_step!, 1)
+  step!(model, 1)
   s += 1
 end
 return df_agent, df_model

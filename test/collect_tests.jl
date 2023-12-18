@@ -43,10 +43,10 @@
 
     @testset "DataFrame init" begin
         @test init_agent_dataframe(model, nothing) == DataFrame()
-        @test collect_agent_data!(DataFrame(), model, nothing, 1) == DataFrame()
+        @test collect_agent_data!(DataFrame(), model, nothing) == DataFrame()
 
         @test init_model_dataframe(model, nothing) == DataFrame()
-        @test collect_model_data!(DataFrame(), model, nothing, 1) == DataFrame()
+        @test collect_model_data!(DataFrame(), model, nothing) == DataFrame()
 
         props = [:weight]
         @test sprint(
@@ -85,7 +85,7 @@
     @testset "Aggregate Collections" begin
         props = [:weight]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         # Expecting weight values of all three agents. ID and step included.
         @test size(df) == (3, 3)
         @test propertynames(df) == [:step, :id, :weight]
@@ -93,7 +93,7 @@
 
         props = [(:weight, mean)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         # Activate aggregation. Weight column is expected to be one value for this step,
         # renamed mean(weight). ID is meaningless and will therefore be dropped.
         @test size(df) == (1, 2)
@@ -103,14 +103,14 @@
         # Add a function as a property
         props = [:weight, x_position]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (3, 4)
         @test propertynames(df) == [:step, :id, :weight, :x_position]
         @test mean(df[!, :x_position]) ≈ 4.3333333
 
         props = [(:weight, mean), (x_position, mean)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
         @test df[1, dataname(props[2])] ≈ 4.3333333
@@ -120,14 +120,14 @@
 
         props = [(:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight_ytest]
         @test df[1, dataname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.37333333333
@@ -135,7 +135,7 @@
 
         props = [(:weight, mean, xtest), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.35
@@ -285,11 +285,11 @@
         for year in 1:5
             for day in 1:365
                 step!(model, 1)
-                collect_model_data!(daily_model_data, model, model_props, day * year)
-                collect_model_data!(daily_model_data_fn, model, model_props_fn, day * year)
-                collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
+                collect_model_data!(daily_model_data, model, model_props)
+                collect_model_data!(daily_model_data_fn, model, model_props_fn)
+                collect_agent_data!(daily_agent_aggregate, model, agent_agg)
             end
-            collect_agent_data!(yearly_agent_data, model, agent_props, year)
+            collect_agent_data!(yearly_agent_data, model, agent_props)
         end
 
         @test size(daily_model_data) == (1825, 3)
@@ -306,7 +306,7 @@
 
         @test size(yearly_agent_data) == (15, 3)
         @test propertynames(yearly_agent_data) == [:step, :id, :weight]
-        @test maximum(yearly_agent_data[!, :step]) == 5
+        @test maximum(yearly_agent_data[!, :step]) == 1825
 
         @test dummystep(model) === nothing
         @test dummystep(model[1], model) === nothing
@@ -459,11 +459,11 @@
         model_props = [:container]
         model_data = init_model_dataframe(model, model_props)
         push!(model.container, 50.0)
-        collect_model_data!(model_data, model, model_props, 0; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         push!(model.container, 37.2)
-        collect_model_data!(model_data, model, model_props, 1; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         model.container[1] += 21.9
-        collect_model_data!(model_data, model, model_props, 2; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         @test model_data.container[1][1] ≈ 50.0
         @test model_data.container[3][1] ≈ 71.9
         @test length.(model_data.container) == [1, 2, 2]
@@ -472,11 +472,11 @@
         model_props = [:deep]
         model_data = init_model_dataframe(model, model_props)
         push!(model.deep.data, 17.5)
-        collect_model_data!(model_data, model, model_props, 0; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         push!(model.deep.data, 1.2)
-        collect_model_data!(model_data, model, model_props, 1; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         model.deep.data[1] += 0.9
-        collect_model_data!(model_data, model, model_props, 2; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         @test model_data[1, :deep].data[1] ≈ 20.0
         @test model_data[3, :deep].data[1] ≈ 20.9
         @test [length(d.data) for d in model_data[!, :deep]] == [3, 4, 4]
@@ -526,9 +526,9 @@ end
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
         basemodels = [AgentsTestModels.schelling(; numagents)
-                      for numagents in numagents_low:numagents_high]
-
-        return repeat(basemodels, nreplicates)
+                      for numagents in numagents_low:numagents_high 
+                      for _ in 1:nreplicates]
+        return basemodels
     end
 
     @testset begin "Serial ensemblerun!"
