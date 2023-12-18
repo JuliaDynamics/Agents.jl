@@ -29,16 +29,16 @@ Pkg.status(["Agents", "CairoMakie"];
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
 include("../test/AgentsTestModels/AgentsTestModels.jl") #hide
-using .AgentsTestModels: daisyworld, Daisy #hide
+using .AgentsTestModels: daisyworld #hide
 
-model = AgentsTestModels.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
     scenario = :change)
 model
 
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a::Daisy) = a.breed # agent color
+daisycolor(a) = a.breed # agent color
 as = 20    # agent size
 am = '✿'  # agent marker
 scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
