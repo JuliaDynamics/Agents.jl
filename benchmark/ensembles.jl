@@ -1,7 +1,8 @@
 @everywhere begin
     using Agents
-    using Agents.Models: schelling, schelling_agent_step!, SchellingAgent
     using BenchmarkTools
+    include("../test/AgentsTestModels/AgentsTestModels.jl")
+    using .AgentsTestModels: schelling, schelling_agent_step!, SchellingAgent
 end
 
 ENSEMBLES_SUITE = BenchmarkGroup(["Ensembles"])
@@ -15,7 +16,7 @@ function ensemble_benchmark(f, parallel, nreplicates)
     whensteps = 50
 
     function genmodels(nreplicates)
-        basemodels = [Models.schelling(; numagents)[1]
+        basemodels = [AgentsTestModels.schelling(; numagents)[1]
                       for numagents in collect(numagents_low:numagents_high)]
 
         return repeat(basemodels, nreplicates)
@@ -31,7 +32,7 @@ function ensemble_benchmark(f, parallel, nreplicates)
                                    mdata = [:min_to_be_happy])
     else
         # TODO: Why do we need `replicate_idx` here?
-        # Can't we just use the `Models.schelling`?
+        # Can't we just use the `AgentsTestModels.schelling`?
         function initialize(;
             replicate_idx = 1, numagents = 320, griddims = (20, 20), min_to_be_happy = 3
         )

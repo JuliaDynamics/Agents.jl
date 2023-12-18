@@ -39,8 +39,6 @@
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
 
-# It is also available from the `Models` module as [`Models.predator_prey`](@ref).
-
 # ## Making the model
 # First we define the agent types
 # (here you can see that it isn't really that much

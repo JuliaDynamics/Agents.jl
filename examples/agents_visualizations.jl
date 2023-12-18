@@ -28,15 +28,17 @@ Pkg.status(["Agents", "CairoMakie"];
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
+include("../test/AgentsTestModels/AgentsTestModels.jl") #hide
+using .AgentsTestModels: daisyworld, Daisy #hide
 
-model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+model = AgentsTestModels.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
     scenario = :change)
 model
 
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a::Models.Daisy) = a.breed # agent color
+daisycolor(a::Daisy) = a.breed # agent color
 as = 20    # agent size
 am = '✿'  # agent marker
 scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
@@ -94,7 +96,7 @@ fig, abmobs = abmexploration(model;
     params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"], 
     mdata, mlabels = ["T", "L"]
 )
-nothing # hide
+nothing #hide
 
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
@@ -111,7 +113,7 @@ nothing # hide
 # abmvideo
 # ```
 # E.g., continuing from above,
-model = Models.daisyworld()
+model = daisyworld()
 abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
 
 # ```@raw html
@@ -155,7 +157,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model; params, plotkwargs...,
     adata, mdata, figure = (; resolution = (1600,800))
 )
@@ -228,7 +230,8 @@ fig
 # and plot it with [`abmplot`](@ref).
 using Graphs
 using ColorTypes
-sir_model = Models.sir()
+using .AgentsTestModels: sir #hide
+sir_model = sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
     l_agents_here = length(agents_here)

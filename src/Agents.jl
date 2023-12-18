@@ -49,7 +49,6 @@ include("simulations/ensemblerun.jl")
 include("submodules/pathfinding/Pathfinding.jl")
 include("submodules/schedulers.jl")
 include("submodules/io/AgentsIO.jl")
-include("models/Models.jl")
 
 # Don't forget to update deprecations between versions!
 include("deprecations.jl")

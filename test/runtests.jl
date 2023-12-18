@@ -3,6 +3,7 @@ using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
+include("AgentsTestModels/AgentsTestModels.jl")
 
 using Distributed
 addprocs(2)
@@ -12,6 +13,7 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
+    include("AgentsTestModels/AgentsTestModels.jl")
 end
 
 @agent struct Agent0(NoSpaceAgent)
