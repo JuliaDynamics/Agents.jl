@@ -330,6 +330,10 @@
         @test all(abmspace(model).routes[i].return_route == abmspace(other).routes[i].return_route for i in keys(abmspace(model).routes))
         @test all(abmspace(model).routes[i].has_to_return == abmspace(other).routes[i].has_to_return for i in keys(abmspace(model).routes))
 
+        remove_all!(model)
+        @test nagents(model) == 0
+        @test all(c -> isempty(c), abmspace(model).s) == true
+
         rm("test.jld2")
     end
 end
