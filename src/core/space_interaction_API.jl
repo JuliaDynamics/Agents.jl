@@ -164,7 +164,6 @@ function remove_all!(model::ABM, n::Integer)
     getfield(model, :maxid)[] = n
 end
 
-
 """
     remove_all!(model::ABM, IDs)
 Remove the agents with the given IDs.

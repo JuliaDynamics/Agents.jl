@@ -754,7 +754,6 @@ function Agents.remove_all_from_space!(model::ABM{<:OpenStreetMapSpace})
     end
 end
 
-
 """
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 

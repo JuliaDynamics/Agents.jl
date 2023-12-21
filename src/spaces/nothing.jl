@@ -21,4 +21,3 @@ nearby_ids(agent::AbstractAgent, model::ABM{Nothing}, r = 1) = allids(model)
 remove_agent_from_space!(agent, model::ABM{Nothing}) = nothing
 add_agent_to_space!(agent, model::ABM{Nothing}) = nothing
 remove_all_from_space!(::ABM{Nothing}) = nothing
-

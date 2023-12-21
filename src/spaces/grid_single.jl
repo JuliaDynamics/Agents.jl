@@ -76,7 +76,6 @@ function id_in_position(pos, model::ABM{<:GridSpaceSingle})
     return abmspace(model).stored_ids[pos...]
 end
 
-
 #######################################################################################
 # Implementation of nearby_stuff
 #######################################################################################

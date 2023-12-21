@@ -255,7 +255,6 @@ function bound_range(unbound, d, space::GridSpace{D,false}) where {D}
     return range(max(unbound.start, 1), stop = min(unbound.stop, spacesize(space)[d]))
 end
 
-
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
