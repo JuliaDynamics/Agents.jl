@@ -262,4 +262,3 @@ ids_in_position(pos::ValidPos, model::ABM{<:GridSpace}) = ids_in_position(pos, a
 function ids_in_position(pos::ValidPos, space::GridSpace)
     return space.stored_ids[pos...]
 end
-
