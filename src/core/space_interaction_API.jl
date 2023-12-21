@@ -446,4 +446,3 @@ function resorvoir_sampling_single(iter, model)
         w *= rand(rng)
     end
 end
-
