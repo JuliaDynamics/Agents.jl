@@ -273,6 +273,12 @@ function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
 end
 nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
 
+function remove_all_from_space!(model::ABM{<:ContinuousSpace})
+    internal_grid = abmspace(model).grid
+    for p in positions(internal_grid)
+        empty!(ids_in_position(p, internal_grid))
+    end
+end
 
 #######################################################################################
 # Continuous space exclusives: collisions, nearest neighbors

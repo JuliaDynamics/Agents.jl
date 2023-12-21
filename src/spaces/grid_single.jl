@@ -156,3 +156,9 @@ function nearby_ids(
     a::AbstractAgent, model::ABM{<:GridSpaceSingle}, r = 1)
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end
+
+function remove_all_from_space!(model::ABM{<:GridSpaceSingle})
+    for p in positions(model)
+        abmspace(model).stored_ids[p...] = 0
+    end
+end

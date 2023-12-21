@@ -89,3 +89,9 @@ function fallback_random_agent(model, condition, alloc)
         return resorvoir_sampling_single(iter_filtered, model)
     end
 end
+
+function remove_all_from_model!(model::ABM)
+    for a in allagents(model)
+        remove_agent_from_model!(a, model)
+    end
+end

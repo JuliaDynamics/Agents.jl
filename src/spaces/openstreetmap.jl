@@ -748,6 +748,13 @@ function Agents.move_agent!(
     Agents.add_agent_to_space!(agent, model)
 end
 
+function Agents.remove_all_from_space!(model::ABM{<:OpenStreetMapSpace})
+    for c in abmspace(model).s
+        empty!(c)
+    end
+end
+
+
 """
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 
