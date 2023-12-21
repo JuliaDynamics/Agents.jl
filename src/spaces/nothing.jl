@@ -5,8 +5,6 @@ the `remove_agent!` and `add_agent!` functions directly,
 otherwise they will try to add `nothing` to the agent position.
 =#
 
-add_agent_to_space!(::AbstractAgent, ::ABM{Nothing}) = nothing
-
 # We need to extend this one, because otherwise there is a `pos` that
 # is attempted to be given to the agent creation...
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, args::Vararg{Any, N}; kwargs...) where {N}
@@ -22,3 +20,5 @@ end
 nearby_ids(agent::AbstractAgent, model::ABM{Nothing}, r = 1) = allids(model)
 remove_agent_from_space!(agent, model::ABM{Nothing}) = nothing
 add_agent_to_space!(agent, model::ABM{Nothing}) = nothing
+remove_all_from_space!(::ABM{Nothing}) = nothing
+

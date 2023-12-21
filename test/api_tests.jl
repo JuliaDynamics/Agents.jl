@@ -142,6 +142,7 @@ end
     end
     remove_all!(model)
     @test nagents(model) == 0
+    @test all(isempty(p) for p in positions(model))
 
     # Testing remove_all!(model::ABM, n::Int)
     for i in 1:20
@@ -159,6 +160,24 @@ end
     @test nagents(model) == 20
     remove_all!(model, a -> a.id > 5)
     @test nagents(model) == 5
+
+    model = StandardABM(GridAgent{2}, GridSpaceSingle((10, 10)), warn_deprecation = false)
+
+    for i in 1:20
+        add_agent_single!(GridAgent{2}, model)
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(isempty(p) for p in positions(model))
+
+    model = StandardABM(GridAgent{2}, GridSpaceSingle((10, 10)), warn_deprecation = false)
+
+    for i in 1:20
+        add_agent_single!(GridAgent{2}, model)
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(isempty(p) for p in positions(model))
 
 end
 
