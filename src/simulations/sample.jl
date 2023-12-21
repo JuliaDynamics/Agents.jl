@@ -121,4 +121,3 @@ end
 function choose_arg(x, kwargs_nt, agent)
     return deepcopy(getfield(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
 end
-
