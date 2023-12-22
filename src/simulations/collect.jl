@@ -22,7 +22,6 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 should_we_collect(s, model, when::Real) = isinteger(s/when)
 
-
 """
     run!(model, n::Integer; kwargs...) → agent_df, model_df
     run!(model, f::Function; kwargs...) → agent_df, model_df
@@ -328,15 +327,6 @@ function writer_arrow end
 Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 """
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
-
-"""
-    collect_agent_data!(df, model, properties, step = 0; obtainer = identity)
-Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties` and `obtainer`). `step` is given because the step number information
-is not known.
-"""
-collect_agent_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df
-
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
     nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
     A = agenttype(model)
@@ -368,7 +358,6 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
 
     DataFrame(types, headers)
 end
-# Aggregating version
 function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     nagents(model) < 1 && throw(ArgumentError(
         "Model must have at least one agent to initialize data collection",
@@ -389,6 +378,118 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     DataFrame(types, headers)
 end
 
+"""
+    init_model_dataframe(model, mdata) → model_df
+Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
+`mdata` can be a `Vector` or generator `Function`.
+"""
+function init_model_dataframe(model::ABM, properties::Vector)
+    headers = Vector{String}(undef, 1 + length(properties))
+    headers[1] = "step"
+    for i in 1:length(properties)
+        headers[i+1] = dataname(properties[i])
+    end
+
+    types = Vector{Vector}(undef, 1 + length(properties))
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
+    for (i, k) in enumerate(properties)
+        types[i+1] = if typeof(k) <: Symbol
+            current_props = abmproperties(model)
+            # How the properties are accessed depends on the type
+            if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
+                typeof(current_props[k])[]
+            else
+                typeof(getfield(current_props, k))[]
+            end
+        else
+            current_type = typeof(k(model))
+            isconcretetype(current_type) || @warn(
+                "Type is not concrete when using $(k)" *
+                "on the model. Considering narrowing the type signature of $(k).",
+            )
+            current_type[]
+        end
+    end
+    DataFrame(types, headers)
+end
+init_model_dataframe(model::ABM, properties::Function) =
+    init_model_dataframe(model, properties(model))
+init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
+
+"""
+    collect_agent_data!(df, model, properties; obtainer = identity)
+Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
+of `properties` and `obtainer`).
+"""
+collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = sort!(collect(allagents(model)), by = a -> a.id)
+    dd = DataFrame()
+    dd[!, :step] = fill(abmtime(model), length(alla))
+    dd[!, :id] = map(a -> a.id, alla)
+    if :agent_type ∈ propertynames(df)
+        dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
+    end
+
+    for fn in properties
+        _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
+    end
+    append!(df, dd)
+    return df
+end
+function collect_agent_data!(
+    df,
+    model::ABM,
+    properties::Vector{<:Tuple}, 
+    step::Int = 0;
+    kwargs...,
+)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = allagents(model)
+    push!(df[!, 1], abmtime(model))
+    for (i, prop) in enumerate(properties)
+        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
+    end
+    return df
+end
+
+"""
+    collect_model_data!(df, model, properties, obtainer = identity)
+Same as [`collect_agent_data!`](@ref) but for model data instead.
+`properties` can be a `Vector` or generator `Function`.
+"""
+function collect_model_data!(
+    df,
+    model,
+    properties::Vector,
+    step::Real = 0;
+    obtainer = identity,
+)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    push!(df[!, :step], abmtime(model))
+    for fn in properties
+        push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
+    end
+    return df
+end
+collect_model_data!(df, model, properties::Function, step::Real = 0; kwargs...) =
+    collect_model_data!(df, model, properties(model), step; kwargs...)
+collect_model_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df
+
 function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::AbstractArray)
     a = first(allagents(model))
     for (i, k) in enumerate(properties)
@@ -398,6 +499,27 @@ function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::Ab
             "on agents. Consider narrowing the type signature of $(k).",
         )
         types[i+2] = current_type[]
+    end
+end
+
+function single_agent_agg_types!(
+    types::Vector{Vector{T} where T},
+    headers::Vector{String},
+    model::ABM,
+    properties::AbstractArray,
+)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = dataname(property)
+        # This line assumes that `agg` can work with iterators directly
+        current_type = typeof(agg(
+            get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
+        ))
+        isconcretetype(current_type) || @warn(
+            "Type is not concrete when using function $(agg) " *
+            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+        )
+        types[i+1] = current_type[]
     end
 end
 
@@ -445,115 +567,6 @@ function multi_agent_types!(
         else
             types[i+3] = Union{current_types...}[]
         end
-    end
-end
-
-"""
-    collect_agent_data!(df, model, properties; obtainer = identity)
-Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties` and `obtainer`).
-"""
-collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
-    if step != 0
-        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
-    end
-    alla = sort!(collect(allagents(model)), by = a -> a.id)
-    dd = DataFrame()
-    dd[!, :step] = fill(abmtime(model), length(alla))
-    dd[!, :id] = map(a -> a.id, alla)
-    if :agent_type ∈ propertynames(df)
-        dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
-    end
-
-    for fn in properties
-        _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
-    end
-    append!(df, dd)
-    return df
-end
-function collect_agent_data!(
-    df,
-    model::ABM,
-    properties::Vector{<:Tuple}, 
-    step::Int = 0;
-    kwargs...,
-)
-    if step != 0
-        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
-    end
-    alla = allagents(model)
-    push!(df[!, 1], abmtime(model))
-    for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
-    end
-    return df
-end
-
-function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T}
-    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
-end
-function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T>:Missing}
-    dd[!, dataname(property)] =
-        collect(get_data_missing(a, property, obtainer) for a in agent_iter)
-end
-
-function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
-    nagents(model) < 1 && throw(ArgumentError(
-        "Model must have at least one agent to initialize data collection",
-    ))
-    headers = Vector{String}(undef, 1 + length(properties))
-    types = Vector{Vector}(undef, 1 + length(properties))
-    A = agenttype(model)
-    utypes = union_types(A)
-
-    headers[1] = "step"
-    if model isa EventQueueABM
-        types[1] = Float64[]
-    else
-        types[1] = Int[]
-    end
-
-    if length(utypes) > 1
-        multi_agent_agg_types!(types, utypes, headers, model, properties)
-    else
-        single_agent_agg_types!(types, headers, model, properties)
-    end
-    DataFrame(types, headers)
-end
-
-function single_agent_agg_types!(
-    types::Vector{Vector{T} where T},
-    headers::Vector{String},
-    model::ABM,
-    properties::AbstractArray,
-)
-    for (i, property) in enumerate(properties)
-        k, agg = property
-        headers[i+1] = dataname(property)
-        # This line assumes that `agg` can work with iterators directly
-        current_type = typeof(agg(
-            get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
-        ))
-        isconcretetype(current_type) || @warn(
-            "Type is not concrete when using function $(agg) " *
-            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
-        )
-        types[i+1] = current_type[]
     end
 end
 
@@ -620,21 +633,25 @@ dataname(x::Function) = join(
     "_",
 )
 
-function collect_agent_data!(
-    df,
-    model::ABM,
-    properties::Vector{<:Tuple},
-    step::Real = 0;
-    kwargs...,
-)
-    alla = allagents(model)
-    push!(df[!, 1], step)
-    for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
-    end
-    return df
+function _add_col_data!(
+    dd::DataFrame,
+    col::Type{T},
+    property,
+    agent_iter;
+    obtainer = identity,
+) where {T}
+    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
-
+function _add_col_data!(
+    dd::DataFrame,
+    col::Type{T},
+    property,
+    agent_iter;
+    obtainer = identity,
+) where {T>:Missing}
+    dd[!, dataname(property)] =
+        collect(get_data_missing(a, property, obtainer) for a in agent_iter)
+end
 # Normal aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -658,75 +675,3 @@ function _add_col_data!(
     push!(col, res)
 end
 
-# Model data
-"""
-    init_model_dataframe(model, mdata) → model_df
-Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
-`mdata` can be a `Vector` or generator `Function`.
-"""
-function init_model_dataframe(model::ABM, properties::Vector)
-    headers = Vector{String}(undef, 1 + length(properties))
-    headers[1] = "step"
-    for i in 1:length(properties)
-        headers[i+1] = dataname(properties[i])
-    end
-
-    types = Vector{Vector}(undef, 1 + length(properties))
-    if model isa EventQueueABM
-        types[1] = Float64[]
-    else
-        types[1] = Int[]
-    end
-    for (i, k) in enumerate(properties)
-        types[i+1] = if typeof(k) <: Symbol
-            current_props = abmproperties(model)
-            # How the properties are accessed depends on the type
-            if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
-                typeof(current_props[k])[]
-            else
-                typeof(getfield(current_props, k))[]
-            end
-        else
-            current_type = typeof(k(model))
-            isconcretetype(current_type) || @warn(
-                "Type is not concrete when using $(k)" *
-                "on the model. Considering narrowing the type signature of $(k).",
-            )
-            current_type[]
-        end
-    end
-    DataFrame(types, headers)
-end
-
-init_model_dataframe(model::ABM, properties::Function) =
-    init_model_dataframe(model, properties(model))
-
-init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
-
-"""
-    collect_model_data!(df, model, properties, obtainer = identity)
-Same as [`collect_agent_data!`](@ref) but for model data instead.
-`properties` can be a `Vector` or generator `Function`.
-"""
-function collect_model_data!(
-    df,
-    model,
-    properties::Vector,
-    step::Real = 0;
-    obtainer = identity,
-)
-    if step != 0
-        @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
-    end
-    push!(df[!, :step], abmtime(model))
-    for fn in properties
-        push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
-    end
-    return df
-end
-
-collect_model_data!(df, model, properties::Function, step::Real = 0; kwargs...) =
-    collect_model_data!(df, model, properties(model), step; kwargs...)
-
-collect_model_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df
