@@ -80,7 +80,9 @@ end
 # The following is for the discrete space API:
 npositions(space::GraphSpace) = nv(space.graph)
 positions(space::GraphSpace) = 1:npositions(space)
-ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = abmspace(model).stored_ids[n]
+ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = ids_in_position(n, abmspace(model))
+ids_in_position(n::Integer, space::GraphSpace) = space.stored_ids[n]
+
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################

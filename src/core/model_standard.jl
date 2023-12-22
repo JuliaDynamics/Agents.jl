@@ -277,3 +277,6 @@ end
 schedulername(x::Union{Function,DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))
 
+function remove_all_from_model!(model::StandardABM)
+    empty!(agent_container(model))
+end

@@ -148,9 +148,8 @@ remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 Remove all the agents of the model.
 """
 function remove_all!(model::ABM)
-    for a in allagents(model)
-        remove_agent!(a, model)
-    end
+    remove_all_from_space!(model)
+    remove_all_from_model!(model)
     getfield(model, :maxid)[] = 0
 end
 
@@ -164,7 +163,6 @@ function remove_all!(model::ABM, n::Integer)
     end
     getfield(model, :maxid)[] = n
 end
-
 
 """
     remove_all!(model::ABM, IDs)
