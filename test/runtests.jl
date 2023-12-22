@@ -150,6 +150,7 @@ function flocking_model_agent_step!(bird, model)
 end
 
 @testset "Agents.jl Tests" begin
+    include("package_sanity_tests.jl")
     include("model_creation_tests.jl")
     include("api_tests.jl")
     include("randomness_tests.jl")

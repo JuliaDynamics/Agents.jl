@@ -26,23 +26,28 @@ See also [Advanced stepping](@ref).
 function CommonSolve.step!(model::ABM, n::Union{Real, Function} = 1)
     agent_step! = agent_step_field(model)
     model_step! = model_step_field(model)
-    if agent_step! == dummystep
-        s = 0
-        while until(s, n, model)
-            model_step!(model)
-            s += 1
+    t = getfield(model, :time)
+    step_ahead!(model, agent_step!, model_step!, n, t)
+    return model
+end
+
+function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
+    agents_first = getfield(model, :agents_first)
+    t0 = t[]
+    while until(t[], t0, n, model)
+        !agents_first && model_step!(model)
+        for id in schedule(model)
+            agent_step!(model[id], model)
         end
-    else
-        agents_first = getfield(model, :agents_first)
-        s = 0
-        while until(s, n, model)
-            !agents_first && model_step!(model)
-            for id in schedule(model)
-                agent_step!(model[id], model)
-            end
-            agents_first && model_step!(model)
-            s += 1
-        end
+        agents_first && model_step!(model)
+        t[] += 1
+    end
+end
+function step_ahead!(model::ABM, agent_step!::typeof(dummystep), model_step!, n, t)
+    t0 = t[]
+    while until(t[], t0, n, model)
+        model_step!(model)
+        t[] += 1
     end
     return model
 end
@@ -114,5 +119,5 @@ end
 agent_was_removed(id, model::DictABM) = !haskey(agent_container(model), id)
 agent_was_removed(::Int, ::VecABM) = false
 
-until(s, t::Real, ::ABM) = s < t
-until(s, f, model::ABM) = !f(model, s)
+until(t1, t0, n::Int, ::ABM) = t1 < t0+n
+until(t1, t0, f, model::ABM) = !f(model, t1-t0)

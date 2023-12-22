@@ -15,6 +15,8 @@ using Agents, Test
         if ModelType == StandardABM
             @test abmscheduler(model) == Schedulers.fastest
         end
+        
+        @test abmtime(model) == 0
         @test abmproperties(model) == Dict(:a => 2, :b => "test")
         a = model[1]
         @test a isa NoSpaceAgent

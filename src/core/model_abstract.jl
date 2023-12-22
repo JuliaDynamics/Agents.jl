@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmspace, abmproperties
+export abmrng, abmscheduler, abmspace, abmtime, abmproperties
 
 ###########################################################################################
 # %% Fundamental type definitions
@@ -99,6 +99,13 @@ Return the space instance stored in the `model`.
 abmspace(model::ABM) = getfield(model, :space)
 
 """
+    abmtime(model::ABM)
+Return the current time of the `model`. 
+All models are initialized at time 0.
+"""
+abmtime(model::ABM) = getfield(model, :time)[]
+
+"""
     model.prop
     getproperty(model::ABM, :prop)
 
@@ -170,3 +177,16 @@ remove_agent_from_model!(agent, model) = notimplemented(model)
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
 end
+
+"""
+    dummystep(model)
+
+Used instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
+
+    dummystep(agent, model)
+
+Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
+"""
+dummystep(model) = nothing
+dummystep(agent, model) = nothing
+

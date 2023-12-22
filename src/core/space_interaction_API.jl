@@ -56,20 +56,20 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_ids(position, model::ABM, r = 1; kwargs...) → ids
+    nearby_ids(pos, model::ABM, r = 1; kwargs...) → ids
 
 Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
-`position`. The `position` must match type with the spatial structure of the `model`.
+position. The position must match type with the spatial structure of the `model`.
 The specification of what "distance" means depends on the space, hence it is explained
 in each space's documentation string. Keyword arguments are space-specific and also
 described in each space's documentation string.
 
-`nearby_ids` always includes IDs with 0 distance to `position`.
+`nearby_ids` always includes IDs with 0 distance to `pos`.
 """
-nearby_ids(position, model, r = 1) = notimplemented(model)
+nearby_ids(pos, model, r = 1) = notimplemented(model)
 
 """
-    nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
+    nearby_positions(pos, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
 
 Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
@@ -85,7 +85,7 @@ For [`OpenStreetMapSpace`](@ref) this means "nearby intersections" and operates 
 on the underlying graph of the OSM, providing the intersection nodes nearest to the
 given position.
 """
-nearby_positions(position, model, r = 1) = notimplemented(model)
+nearby_positions(pos, model, r = 1) = notimplemented(model)
 
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
@@ -148,9 +148,8 @@ remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 Remove all the agents of the model.
 """
 function remove_all!(model::ABM)
-    for a in allagents(model)
-        remove_agent!(a, model)
-    end
+    remove_all_from_space!(model)
+    remove_all_from_model!(model)
     getfield(model, :maxid)[] = 0
 end
 
@@ -164,7 +163,6 @@ function remove_all!(model::ABM, n::Integer)
     end
     getfield(model, :maxid)[] = n
 end
-
 
 """
     remove_all!(model::ABM, IDs)
@@ -368,8 +366,8 @@ function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs
 end
 
 """
-    random_nearby_position(position, model::ABM, r=1, f = nothing, alloc = false; kwargs...) → position
-Return a random position near the given `position`.
+    random_nearby_position(pos, model::ABM, r=1, f = nothing, alloc = false; kwargs...) → position
+Return a random position near the given position.
 Return `nothing` if the space doesn't allow for nearby positions.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).

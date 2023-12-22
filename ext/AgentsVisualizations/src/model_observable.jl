@@ -23,16 +23,19 @@ end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
-    Agents.step!(model[], abmobs.agent_step!, abmobs.model_step!, n; warn_deprecation = false, kwargs...)
+    if Agents.agent_step_field(model[]) != Agents.dummystep || Agents.model_step_field(model[]) != Agents.dummystep
+        Agents.step!(model[], n; kwargs...)
+    else
+        Agents.step!(model[], abmobs.agent_step!, abmobs.model_step!, n; warn_deprecation = false, kwargs...)
+    end
     notify(model)
-    abmobs.s[] = abmobs.s[] + n # increment step counter
-    if Agents.should_we_collect(abmobs.s, model[], abmobs.when)
+    if Agents.should_we_collect(abmtime(model[]), model[], abmobs.when)
         if !isnothing(abmobs.adata)
-            Agents.collect_agent_data!(adf[], model[], abmobs.adata, abmobs.s[])
+            Agents.collect_agent_data!(adf[], model[], abmobs.adata)
             notify(adf)
         end
         if !isnothing(abmobs.mdata)
-            Agents.collect_model_data!(mdf[], model[], abmobs.mdata, abmobs.s[])
+            Agents.collect_model_data!(mdf[], model[], abmobs.mdata)
             notify(mdf)
         end
     end

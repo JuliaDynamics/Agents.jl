@@ -1,11 +1,5 @@
-export run!,
-    offline_run!,
-    collect_agent_data!,
-    collect_model_data!,
-    init_agent_dataframe,
-    init_model_dataframe,
-    dataname,
-    should_we_collect
+export run!, offline_run!, collect_agent_data!, collect_model_data!,
+       init_agent_dataframe, init_model_dataframe, dataname
 
 ###################################################
 # Definition of the data collection API
@@ -142,27 +136,31 @@ function run!(model::ABM, n::Union{Function, Real};
     transform_dt = model isa EventQueueABM ? Float64 : Int
 
     s = 0
+
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, transform_when(when))
-            collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
         end
         if should_we_collect(s, model, transform_when(when_model))
-            collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
         end
         step!(model, dt)
         s += Rational(dt)
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, transform_when(when))
-        collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
     end
     if should_we_collect(s, model, transform_when(when_model))
-        collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
@@ -255,9 +253,12 @@ function run_and_write!(model, df_agent, df_model, n;
 
     agent_count_collections = 0
     model_count_collections = 0
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, transform_when(when))
-            collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
                 writer(adata_filename, df_agent, isfile(adata_filename))
@@ -265,7 +266,7 @@ function run_and_write!(model, df_agent, df_model, n;
             end
         end
         if should_we_collect(s, model, transform_when(when_model))
-            collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
                 writer(mdata_filename, df_model, isfile(mdata_filename))
@@ -278,11 +279,11 @@ function run_and_write!(model, df_agent, df_model, n;
     end
 
     if should_we_collect(s, model, transform_when(when))
-        collect_agent_data!(df_agent, model, adata, transform_dt(s); obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
         agent_count_collections += 1
     end
     if should_we_collect(s, model, transform_when(when_model))
-        collect_model_data!(df_model, model, mdata, transform_dt(s); obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
         model_count_collections += 1
     end
     # catch collected data that was not yet written to disk
@@ -367,6 +368,26 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
 
     DataFrame(types, headers)
 end
+# Aggregating version
+function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
+    nagents(model) < 1 && throw(ArgumentError(
+        "Model must have at least one agent to initialize data collection",
+    ))
+    headers = Vector{String}(undef, 1 + length(properties))
+    types = Vector{Vector}(undef, 1 + length(properties))
+    A = agenttype(model)
+    utypes = union_types(A)
+
+    headers[1] = "step"
+    types[1] = Int[]
+
+    if length(utypes) > 1
+        multi_agent_agg_types!(types, utypes, headers, model, properties)
+    else
+        single_agent_agg_types!(types, headers, model, properties)
+    end
+    DataFrame(types, headers)
+end
 
 function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::AbstractArray)
     a = first(allagents(model))
@@ -427,10 +448,20 @@ function multi_agent_types!(
     end
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Real = 0; kwargs...)
+"""
+    collect_agent_data!(df, model, properties; obtainer = identity)
+Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
+of `properties` and `obtainer`).
+"""
+collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :step] = fill(step, length(alla))
+    dd[!, :step] = fill(abmtime(model), length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -440,6 +471,24 @@ function collect_agent_data!(df, model, properties::Vector, step::Real = 0; kwar
         _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
     end
     append!(df, dd)
+    return df
+end
+function collect_agent_data!(
+    df,
+    model::ABM,
+    properties::Vector{<:Tuple}, 
+    step::Int = 0;
+    kwargs...,
+)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = allagents(model)
+    push!(df[!, 1], abmtime(model))
+    for (i, prop) in enumerate(properties)
+        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
+    end
     return df
 end
 
@@ -452,7 +501,6 @@ function _add_col_data!(
 ) where {T}
     dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
-
 function _add_col_data!(
     dd::DataFrame,
     col::Type{T},
@@ -464,7 +512,6 @@ function _add_col_data!(
         collect(get_data_missing(a, property, obtainer) for a in agent_iter)
 end
 
-# Aggregating version
 function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     nagents(model) < 1 && throw(ArgumentError(
         "Model must have at least one agent to initialize data collection",
@@ -599,7 +646,6 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
     push!(col, res)
 end
-
 # Conditional aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -658,7 +704,7 @@ init_model_dataframe(model::ABM, properties::Function) =
 init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
 
 """
-    collect_model_data!(df, model, properties, step = 0, obtainer = identity)
+    collect_model_data!(df, model, properties, obtainer = identity)
 Same as [`collect_agent_data!`](@ref) but for model data instead.
 `properties` can be a `Vector` or generator `Function`.
 """
@@ -669,7 +715,11 @@ function collect_model_data!(
     step::Real = 0;
     obtainer = identity,
 )
-    push!(df[!, :step], step)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    push!(df[!, :step], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end

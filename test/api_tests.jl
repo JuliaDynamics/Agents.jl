@@ -135,13 +135,13 @@ end
     @test nagents(model) == 3
 
     model = StandardABM(GridAgent{2}, GridSpace((10, 10)), warn_deprecation = false)
-
     # Testing remove_all!(model::ABM)
     for i in 1:20
         add_agent_single!(GridAgent{2}, model)
     end
     remove_all!(model)
     @test nagents(model) == 0
+    @test all(p -> isempty(p, model), positions(model)) == true
 
     # Testing remove_all!(model::ABM, n::Int)
     for i in 1:20
@@ -159,6 +159,22 @@ end
     @test nagents(model) == 20
     remove_all!(model, a -> a.id > 5)
     @test nagents(model) == 5
+
+    model = StandardABM(GridAgent{2}, GridSpaceSingle((10, 10)), warn_deprecation = false)
+    for i in 1:20
+        add_agent_single!(GridAgent{2}, model)
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(p -> isempty(p, model), positions(model)) == true
+
+    model = StandardABM(ContinuousAgent{2, Float64}, ContinuousSpace((10, 10)), warn_deprecation = false)
+    for i in 1:20
+        add_agent!(ContinuousAgent{2, Float64}, model, SVector(10*rand(), 10*rand()))
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(p -> isempty(p, abmspace(model).grid), positions(abmspace(model).grid)) == true
 
 end
 
@@ -223,6 +239,20 @@ end
             @test model.count == 0
         end
     end
+end
+
+@testset "model time updates" begin
+    model_step!(model) = nothing
+    agent_step!(a, model) = nothing
+    f(model, t) = t > 100
+    model = StandardABM(Agent2; agent_step!, model_step!)
+    @test abmtime(model) == 0
+    step!(model, 1)
+    @test abmtime(model) == 1
+    step!(model, 10)
+    @test abmtime(model) == 11
+    step!(model, f)
+    @test abmtime(model) == 112
 end
 
 @testset "Higher order groups" begin
