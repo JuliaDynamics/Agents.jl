@@ -143,6 +143,11 @@ function EventQueueABM(
         autogenerate_on_add = true,
         autogenerate_after_action = true,
     ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
+    @warn "This model type is still experimental which means that it is subject to breaking changes in the
+        future. Also, while all the core functionalities have been implemented, this model type 
+        has some more limited features than `StandardABM`: in particular, visualizations and 
+        IO functionalities are incomplete."
+    end
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
