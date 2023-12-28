@@ -66,15 +66,16 @@ function CommonSolve.step!(model::EventQueueABM)
 end
 
 function step_ahead!(queue, model_t, t::Real, model::EventQueueABM)
-    stop_time = model_t[] + t
-    while until(model_t[], stop_time, model)
+    t0 = model_t[]
+    stop_time = t0 + t
+    while until(model_t[], t0, t, model)
         one_step!(queue, model_t, stop_time, model)
     end
     return 
 end
 function step_ahead!(queue, model_t, f::Function, model::EventQueueABM)
     t0 = model_t[]
-    while until(model_t[]-t0, f, model)
+    while until(model_t[], t0, f, model)
         one_step!(queue, model_t, model)
     end
     return 
@@ -119,5 +120,5 @@ end
 agent_was_removed(id, model::DictABM) = !haskey(agent_container(model), id)
 agent_was_removed(::Int, ::VecABM) = false
 
-until(t1, t0, n::Int, ::ABM) = t1 < t0+n
+until(t1, t0, n::Real, ::ABM) = t1 < t0+n
 until(t1, t0, f, model::ABM) = !f(model, t1-t0)

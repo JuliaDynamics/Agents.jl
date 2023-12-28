@@ -165,7 +165,7 @@ space = GridSpaceSingle((100, 100))
 
 rng = Xoshiro(42)
 AgentTypes = Union{Rock, Paper, Scissors}
-model = EventQueueABM(AgentTypes, events, space; rng)
+model = EventQueueABM(AgentTypes, events, space; rng, warn = false)
 
 # populating the model with agents is as in the main [Tutorial](@ref),
 # using the [`add_agent!`](@ref) function. The only difference here
@@ -205,10 +205,6 @@ step!(model, 1.0)
 # ## Data collection
 
 # Data collection also works almost identically to [`StandardABM`](@ref).
-# The only difference is that we have to supply one additional keyword
-# in the [`run!`](@ref) function: `dt`. This is the time to evolve the model
-# between data collection steps. It is similar to the `when` keyword but for the
-# continuous time version.
 
 # Here we will simply collect the number of each agent type.
 adata = [(a -> a isa X, count) for X in (Rock, Paper, Scissors)]

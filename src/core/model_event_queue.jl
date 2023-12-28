@@ -61,6 +61,12 @@ end
 
 A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
 continuous time, in contrast with the discrete time nature of [`StandardABM`](@ref).
+
+This is still experimental which means that it is subject to breaking changes in the
+future. Also, while all the core functionalities have been implemented, this model type 
+has some more limited features than `StandardABM`: in particular, visualizations and 
+IO functionalities are incomplete.
+
 Here is a summary of how the time evolution of this model works:
 
 A list of possible events that can be created is provided to the model.

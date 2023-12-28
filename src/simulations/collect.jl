@@ -22,12 +22,13 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, n::Integer; kwargs...) → agent_df, model_df
-    run!(model, f::Function; kwargs...) → agent_df, model_df
+    run!(model::ABM, n::Integer; kwargs...) → agent_df, model_df
+    run!(model::ABM, f::Function; kwargs...) → agent_df, model_df
+    run!(model::EventQueueABM, n::Float64; kwargs...) → agent_df, model_df
 
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
-two `DataFrame`s, one for agent-level data and one for model-level data.
+two `DataFrame`s, one for agent-level data and one for model-level data. 
 
 See also [`offline_run!`](@ref) to write data to file while running the model.
 
@@ -92,7 +93,8 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
   returns `true`. By default data are collected in every step. If `model` is a `EventQueueABM`,
   passing `when` as a function is not supported.
-* `when_model = when` : same as `when` but for model data.
+* `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
+  only `when_model = when` is supported.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
@@ -125,17 +127,6 @@ function run!(model::ABM, n::Union{Function, Real};
         end
     end
 
-    if model isa EventQueueABM
-        dt = when
-        transform_when = Rational
-    else
-        transform_when = identity
-        dt = 1
-    end
-    transform_dt = model isa EventQueueABM ? Float64 : Int
-
-    s = 0
-
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
@@ -144,23 +135,78 @@ function run!(model::ABM, n::Union{Function, Real};
 
     t = getfield(model, :time)
     t0, s = t[], 0
-
     while until(t[], t0, n, model)
-        if should_we_collect(s, model, transform_when(when))
+        if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata; obtainer)
         end
-        if should_we_collect(s, model, transform_when(when_model))
+        if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata; obtainer)
         end
-        step!(model, dt)
-        s += Rational(dt)
+        step!(model, 1)
+        s += 1
         ProgressMeter.next!(p)
     end
-    if should_we_collect(s, model, transform_when(when))
+    if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata; obtainer)
     end
-    if should_we_collect(s, model, transform_when(when_model))
+    if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata; obtainer)
+    end
+    ProgressMeter.finish!(p)
+    return df_agent, df_model
+end
+
+function run!(model::EventQueueABM, n::Real;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        showprogress = false,
+    )
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+
+    t = getfield(model, :time)
+    t0 = t[]
+    dt = when == true ? dt = 1.0 : dt = when
+    if dt isa AbstractVector
+        range_vals = [dt[1], diff(dt)...]
+    else
+        k = Int(div(n, dt))
+        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
+    end
+    for s in range_vals
+        if until(t[], t0, n, model)
+            step!(model, s)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+            ProgressMeter.next!(p)
+        else
+            break
+        end
+    end
+    if t[] < t0 + n
+        step!(model, t0+n-t[])
+        if !(dt isa AbstractVector)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+        end
+        ProgressMeter.next!(p)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
@@ -242,22 +288,13 @@ function run_and_write!(model, df_agent, df_model, n;
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
-    if model isa EventQueueABM
-        dt = when
-        transform_when = Rational
-    else
-        transform_when = identity
-        dt = 1
-    end
-    transform_dt = model isa EventQueueABM ? Float64 : Int
-
     agent_count_collections = 0
     model_count_collections = 0
 
     t = getfield(model, :time)
     t0, s = t[], 0
     while until(t[], t0, n, model)
-        if should_we_collect(s, model, transform_when(when))
+        if should_we_collect(s, model, when)
             collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
@@ -265,7 +302,7 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_agent)
             end
         end
-        if should_we_collect(s, model, transform_when(when_model))
+        if should_we_collect(s, model, when_model)
             collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
@@ -273,16 +310,16 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, dt)
-        s += Rational(dt)
+        step!(model, 1)
+        s += 1
         ProgressMeter.next!(p)
     end
 
-    if should_we_collect(s, model, transform_when(when))
+    if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata; obtainer)
         agent_count_collections += 1
     end
-    if should_we_collect(s, model, transform_when(when_model))
+    if should_we_collect(s, model, when_model)
         collect_model_data!(df_model, model, mdata; obtainer)
         model_count_collections += 1
     end
@@ -298,6 +335,85 @@ function run_and_write!(model, df_agent, df_model, n;
 
     ProgressMeter.finish!(p)
     return nothing
+end
+
+function run_and_write!(model::EventQueueABM, df_agent, df_model, n;
+    when, when_model,
+    mdata, adata,
+    obtainer,
+    showprogress,
+    writer, adata_filename, mdata_filename, writing_interval
+)
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+
+    agent_count_collections = 0
+    model_count_collections = 0
+
+    t = getfield(model, :time)
+    t0 = t[]
+    dt = when == true ? dt = 1.0 : dt = when
+    if dt isa AbstractVector
+        range_vals = [dt[1], diff(dt)...]
+    else
+        k = Int(div(n, dt))
+        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
+    end
+    for s in range_vals
+        if until(t[], t0, n, model)
+            step!(model, s)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+            agent_count_collections += 1
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, isfile(adata_filename))
+                empty!(df_agent)
+            end
+            model_count_collections += 1
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, isfile(mdata_filename))
+                empty!(df_model)
+            end
+            ProgressMeter.next!(p)
+        else
+            break
+        end
+    end
+    if t[] < t0 + n
+        step!(model, t0+n-t[])
+        if !(dt isa AbstractVector)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+        end
+        ProgressMeter.next!(p)
+    end
+
+    # catch collected data that was not yet written to disk
+    if !isempty(df_agent)
+        writer(adata_filename, df_agent, isfile(adata_filename))
+        empty!(df_agent)
+    end
+    if !isempty(df_model)
+        writer(mdata_filename, df_model, isfile(mdata_filename))
+        empty!(df_model)
+    end
+
+    ProgressMeter.finish!(p)
+    return df_agent, df_model
 end
 
 """
@@ -369,7 +485,11 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     utypes = union_types(A)
 
     headers[1] = "step"
-    types[1] = Int[]
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
 
     if length(utypes) > 1
         multi_agent_agg_types!(types, utypes, headers, model, properties)
