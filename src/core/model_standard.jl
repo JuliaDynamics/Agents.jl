@@ -4,7 +4,6 @@ export dummystep
 
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
-# And the two implementations here are just variants with different `C` type.
 struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
@@ -129,8 +128,8 @@ function StandardABM(
     agents = C()
     agents_types = union_types(A)
     T = typeof(agents_types)
-    return StandardABM{S,A,C,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                        properties, rng, agents_first, Ref(0), Ref(0))
+    return StandardABM{S,A,C,T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+                                        properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}

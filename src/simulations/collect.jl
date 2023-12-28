@@ -20,7 +20,6 @@ end
 should_we_collect(s, model, when::AbstractVector) = s ∈ when
 should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
-should_we_collect(s, model, when::Real) = isinteger(s/when)
 
 """
     run!(model, n::Integer; kwargs...) → agent_df, model_df
@@ -88,10 +87,11 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
 ## Other keywords
-* `when=true` : at which steps `s` to perform the data collection and processing.
+* `when=true` : at which time `s` to perform the data collection and processing.
   A lot of flexibility is offered based on the type of `when`. If `when::AbstractVector`,
   then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
-  returns `true`. By default data are collected in every step.
+  returns `true`. By default data are collected in every step. If `model` is a `EventQueueABM`,
+  passing `when` as a function is not supported.
 * `when_model = when` : same as `when` but for model data.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
@@ -144,6 +144,7 @@ function run!(model::ABM, n::Union{Function, Real};
 
     t = getfield(model, :time)
     t0, s = t[], 0
+
     while until(t[], t0, n, model)
         if should_we_collect(s, model, transform_when(when))
             collect_agent_data!(df_agent, model, adata; obtainer)

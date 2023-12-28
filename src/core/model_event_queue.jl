@@ -39,12 +39,10 @@ struct EventQueueABM{
     A<:AbstractAgent,
     C<:ContainerType{A},
     P,E,R<:AbstractRNG,ET,PT,FPT,TI,Q} <: AgentBasedModel{S}
-    time::Base.RefValue{Float64}
     agents::C
     space::S
     properties::P
     rng::R
-    maxid::Base.RefValue{Int64}
     events::E
     idx_events_each_type::ET
     propensities_each_type::PT
@@ -54,6 +52,8 @@ struct EventQueueABM{
     event_queue::Q
     autogenerate_on_add::Bool
     autogenerate_after_action::Bool
+    maxid::Base.RefValue{Int64}
+    time::Base.RefValue{Float64}
 end
 
 """
@@ -161,10 +161,9 @@ function EventQueueABM(
     ET,PT,FPT,TI,Q = typeof.((idx_events_each_type, propensities_each_type, 
                               idx_func_propensities_each_type, type_to_idx, queue))
     return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
-        Ref(0.0), agents, space, properties, rng,
-        Ref(0), events, idx_events_each_type, 
-        propensities_each_type, idx_func_propensities_each_type, 
-        type_to_idx, queue, autogenerate_on_add, autogenerate_after_action,
+        agents, space, properties, rng, events, idx_events_each_type, 
+        propensities_each_type, idx_func_propensities_each_type, type_to_idx, 
+        queue, autogenerate_on_add, autogenerate_after_action, Ref(0), Ref(0.0)
     )
 end
 
