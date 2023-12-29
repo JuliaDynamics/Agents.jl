@@ -38,9 +38,9 @@ end
 
 @testset "add_agent! (nothing space)" begin
     model = StandardABM(Agent0, warn_deprecation = false)
-    @test add_agent!(model).id == 1
+    @test add_agent_pos!(model).id == 1
     a = Agent0(model)
-    @test add_agent!(a, model).id == 2
+    @test add_agent_pos!(a, model).id == 2
 end
 
 @testset "move_agent!" begin
