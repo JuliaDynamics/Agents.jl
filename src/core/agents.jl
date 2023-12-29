@@ -176,6 +176,14 @@ Person = Union{Fisher, Baker}
 f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
+Agents.jl has a convenience function [`add_agent!`](@ref) to create and add agents
+to the model automatically. In the case you want to create some agents by yourself
+you can use a constructor accepting the model as first argument so that internal fields,
+such as the `id`, are set automatically
+```julia
+model = StandardABM(GridAgent{2}, GridSpace((10,10)))
+a = GridAgent{2}(model, (3,4)) # the id is set automatically
+```
 """
 macro agent(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
