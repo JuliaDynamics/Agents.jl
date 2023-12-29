@@ -83,28 +83,6 @@ macro agent(new_name, base_type, extra_fields)
     end)
 end
 
-function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)
-    step!(model, agent_step!, dummystep, n, agents_first; warn_deprecation = warn_deprecation)
-end
-
-function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
-    if warn_deprecation
-        @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version
-             step!(model, n = 1, agents_first = true)"
-    end
-    s = 0
-    while until(s, n, model)
-        !agents_first && model_step!(model)
-        if agent_step! ≠ dummystep
-            for id in schedule(model)
-                agent_step!(model[id], model)
-            end
-        end
-        agents_first && model_step!(model)
-        s += 1
-    end
-end
-
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
 Add the `agent` to the model in the given position.
@@ -132,6 +110,28 @@ function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
     @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
            Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
     add_agent_pos!(agent, model)
+end
+
+function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)
+    step!(model, agent_step!, dummystep, n, agents_first; warn_deprecation = warn_deprecation)
+end
+
+function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
+    if warn_deprecation
+        @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version
+             step!(model, n = 1, agents_first = true)"
+    end
+    s = 0
+    while until(s, n, model)
+        !agents_first && model_step!(model)
+        if agent_step! ≠ dummystep
+            for id in schedule(model)
+                agent_step!(model[id], model)
+            end
+        end
+        agents_first && model_step!(model)
+        s += 1
+    end
 end
 
 run!(model::ABM, agent_step!, n::Int = 1; warn_deprecation = true, kwargs...) =
