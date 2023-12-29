@@ -17,8 +17,8 @@ using StableRNGs
     @test model[1].f1 == model[2].f1
     @test model[1].f2 == model[2].f2
     @test add_agent_single!(model, attributes...).pos ∈ 1:10
-    a = Agent7(model, random_empty(model), attributes...)
-    @test add_agent_pos!(a, model).pos ∈ 1:10
+    a = Agent7(model, 1, attributes...)
+    @test add_agent_single!(a, model).pos ∈ 1:10
     fill_space!(model, attributes...)
     @test !has_empty_positions(model)
     add_agent_single!(Agent7, model, attributes...)
