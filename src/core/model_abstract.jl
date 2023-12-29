@@ -145,7 +145,7 @@ end
 # The first type parameter of any `ABM` subtype must be the space type.
 spacetype(::ABM{S}) where {S} = S
 
-agenttype(model::ABM) = notimplemented(model)
+tuple_agenttype(model::ABM) = getfield(model, :agents_types)
 
 """
     agent_container(model::ABM)
@@ -160,7 +160,6 @@ agent_container(model::ABM) = getfield(model, :agents)
 Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = notimplemented(model)
-
 
 """
     add_agent_to_model!(agent, model)

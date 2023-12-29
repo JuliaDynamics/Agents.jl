@@ -10,8 +10,8 @@ the [manual scheduling](@ref manual_scheduling) section for usage examples.
 """
 schedule(model::ABM) = schedule(model, abmscheduler(model))
 schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
-schedule(model::Agents.VecStandardABM) = abmscheduler(model)(model)
-schedule(model::Agents.VecStandardABM, scheduler) = scheduler(model)
+schedule(model::Agents.VecABM) = abmscheduler(model)(model)
+schedule(model::Agents.VecABM, scheduler) = scheduler(model)
 
 # Notice how the above lines are *outside* the submodule
 
@@ -52,7 +52,7 @@ function get_ids!(ids::Vector{Int}, model::ABM)
     end
 end
 
-function get_ids!(ids::Vector{Int}, model::Agents.VecStandardABM)
+function get_ids!(ids::Vector{Int}, model::Agents.VecABM)
     n_sched = length(ids)
     nagents(model) == n_sched && return nothing
     resize!(ids, nagents(model))
@@ -82,7 +82,7 @@ function (sched::ByID)(model::ABM)
     sort!(sched.ids)
 end
 
-(sched::ByID)(model::Agents.VecStandardABM) = allids(model)
+(sched::ByID)(model::Agents.VecABM) = allids(model)
 
 """
     Schedulers.Randomly()
