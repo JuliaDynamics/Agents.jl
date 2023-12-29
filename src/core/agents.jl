@@ -199,17 +199,17 @@ macro agent(struct_repr)
     new_type_no_params = namify(new_type)
     __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
     expr = quote 
-    		@kwdef $expr_new_type 
-    		$(new_type_no_params)(m::ABM, args...) = 
-                $(new_type_no_params)(Agents.nextid(m), args...)
-           	$(new_type_no_params)(m::ABM; kwargs...) = 
-                $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
-            if $(new_params) != []
-                $(new_type)(m::ABM, args...) where {$(new_params...)} = 
-                    $(new_type)(Agents.nextid(m), args...)
-                $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
-                    $(new_type)(; id = Agents.nextid(m), kwargs...)
-            end
-    	   end
+    	   @kwdef $expr_new_type 
+    	   $(new_type_no_params)(m::ABM, args...) = 
+               $(new_type_no_params)(Agents.nextid(m), args...)
+           $(new_type_no_params)(m::ABM; kwargs...) = 
+               $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
+           if $(new_params) != []
+               $(new_type)(m::ABM, args...) where {$(new_params...)} = 
+                   $(new_type)(Agents.nextid(m), args...)
+               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
+                   $(new_type)(; id = Agents.nextid(m), kwargs...)
+           end
+        end
     quote Base.@__doc__($(esc(expr))) end
 end
