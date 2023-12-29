@@ -261,10 +261,11 @@ function add_agent!(
     args::Vararg{Any, N};
     kwargs...,
 ) where {N}
+    id = nextid(model)
     if isempty(kwargs)
-        newagent = A(nextid(model), pos, args...)
+        newagent = A(id, pos, args...)
     else
-        newagent = A(; id = nextid(model), pos = pos, kwargs...)
+        newagent = A(; id = id, pos = pos, kwargs...)
     end
     add_agent_pos!(newagent, model)
 end
