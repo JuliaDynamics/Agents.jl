@@ -190,11 +190,27 @@ macro agent(struct_repr)
         base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
     end
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
-                      end)
-    __AGENT_GENERATOR__[namify(new_type)] = MacroTools.prewalk(rmlines, expr_new_type)
-    expr = quote @kwdef $expr_new_type end
+                      end
+           			  )
+    new_type_no_params = namify(new_type)
+    __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
+    expr = quote 
+    		@kwdef $expr_new_type 
+    		$(new_type_no_params)(m::ABM, args...) = 
+                $(new_type_no_params)(Agents.nextid(m), args...)
+           	$(new_type_no_params)(m::ABM; kwargs...) = 
+                $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
+            if $(new_params) != []
+                $(new_type)(m::ABM, args...) where {$(new_params...)} = 
+                    $(new_type)(Agents.nextid(m), args...)
+                $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
+                    $(new_type)(; id = Agents.nextid(m), kwargs...)
+            end
+    	   end
     quote Base.@__doc__($(esc(expr))) end
 end

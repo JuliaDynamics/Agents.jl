@@ -13,6 +13,7 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 =#
 export move_agent!,
     add_agent!,
+    add_agent_pos!,
     remove_agent!,
     remove_all!,
     random_position,
@@ -199,6 +200,25 @@ function add_agent_pos!(agent::AbstractAgent, model::ABM)
 end
 
 """
+    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
+Add the `agent` to the model in the given position.
+If `pos` is not given, the `agent` is added to a random position.
+The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
+the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
+the `agent`'s position.
+The type of `pos` must match the underlying space position type.
+"""
+function add_agent!(agent::AbstractAgent, model::ABM)
+    agent.pos = random_position(model)
+    add_agent_pos!(agent, model)
+end
+
+function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+    agent.pos = pos
+    add_agent_pos!(agent, model)
+end
+
+"""
     add_agent!([pos,] model::ABM, args...) → newagent
     add_agent!([pos,] model::ABM; kwargs...) → newagent
 
@@ -260,11 +280,10 @@ function add_agent!(
     args::Vararg{Any, N};
     kwargs...,
 ) where {N}
-    id = nextid(model)
     if isempty(kwargs)
-        newagent = A(id, pos, args...)
+        newagent = A(nextid(model), pos, args...)
     else
-        newagent = A(; id = id, pos = pos, kwargs...)
+        newagent = A(; id = nextid(model), pos = pos, kwargs...)
     end
     add_agent_pos!(newagent, model)
 end
