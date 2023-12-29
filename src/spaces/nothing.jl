@@ -7,11 +7,6 @@ otherwise they will try to add `nothing` to the agent position.
 
 # We need to extend this one, because otherwise there is a `pos` that
 # is attempted to be given to the agent creation...
-
-function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
-    add_agent_pos!(agent, model)
-end
-
 function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, args::Vararg{Any, N}; kwargs...) where {N}
     id = nextid(model)
     if isempty(kwargs)
