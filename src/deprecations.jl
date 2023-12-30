@@ -414,4 +414,6 @@ function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N}
     StandardABM(args...; kwargs..., container=Vector)
 end
 
+until(s, n::Int, model) = s < n
+until(s, f, model) = !f(model, s)
 
