@@ -525,7 +525,7 @@ end
 
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
-        basemodels = [AgentsTestModels.schelling(; numagents)
+        basemodels = [AgentsExampleZoo.schelling(; numagents)
                       for numagents in numagents_low:numagents_high 
                       for _ in 1:nreplicates]
         return basemodels

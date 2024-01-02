@@ -1,8 +1,10 @@
 @everywhere begin
     using Agents
     using BenchmarkTools
-    include("../test/AgentsTestModels/AgentsTestModels.jl")
-    using .AgentsTestModels: schelling, schelling_agent_step!, SchellingAgent
+    # TODO: when AgentsExampleZoo is released, remove these Pkg commands
+    using Pkg
+    Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+    using AgentsExampleZoo: schelling, schelling_agent_step!, SchellingAgent
 end
 
 ENSEMBLES_SUITE = BenchmarkGroup(["Ensembles"])

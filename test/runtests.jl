@@ -3,7 +3,10 @@ using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
-include("AgentsTestModels/AgentsTestModels.jl")
+# TODO: when AgentsExampleZoo is released, remove these Pkg commands
+using Pkg
+Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+using AgentsExampleZoo
 
 using Distributed
 addprocs(2)
@@ -13,7 +16,7 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
-    include("AgentsTestModels/AgentsTestModels.jl")
+    using AgentsExampleZoo
 end
 
 @agent struct Agent0(NoSpaceAgent)

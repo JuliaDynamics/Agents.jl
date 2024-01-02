@@ -28,8 +28,11 @@ Pkg.status(["Agents", "CairoMakie"];
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
-include("../test/AgentsTestModels/AgentsTestModels.jl") #hide
-using .AgentsTestModels: daisyworld #hide
+
+# TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
+using Pkg
+Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+using AgentsExampleZoo: daisyworld
 
 model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
     scenario = :change)
@@ -230,7 +233,7 @@ fig
 # and plot it with [`abmplot`](@ref).
 using Graphs
 using ColorTypes
-using .AgentsTestModels: sir #hide
+using AgentsExampleZoo: sir
 sir_model = sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
