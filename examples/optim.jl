@@ -33,7 +33,7 @@
 # using Statistics: mean
 #
 # function cost(x)
-#     model, anget_step!,  = Models.sir(;
+#     model = sir(;
 #         Ns = [500, 500, 500],
 #         migration_rate = x[1],
 #         death_rate = x[2],
@@ -49,7 +49,6 @@
 #
 #     _, mdf = run!(
 #         model,
-#         agent_step!,
 #         50;
 #         mdata = [infected_fraction],
 #         when_model = [50],

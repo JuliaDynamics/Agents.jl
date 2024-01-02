@@ -18,7 +18,7 @@
     HKAgent(id, op) = HKAgent(id, op, op, -1)
     HKAgent(; id = -1, op1 = -1, op2 = -1, op3 = -1) = HKAgent(id, op1, op2, op3)
 
-    Models.SchellingAgent(id, p1, p2, mood, group) = Models.SchellingAgent(id, (p1, p2), mood, group)
+    AgentsExampleZoo.SchellingAgent(id, p1, p2, mood, group) = AgentsExampleZoo.SchellingAgent(id, (p1, p2), mood, group)
 
     @agent struct Foo(GridAgent{2})
     end
@@ -94,8 +94,8 @@
     @test all(model[i].new_opinion == empty_model[i].new_opinion for i in allids(model))
     @test all(model[i].previous_opinion == empty_model[i].previous_opinion for i in allids(model))
 
-    model = Models.schelling(; numagents = 10)
-    empty_model = Models.schelling(; numagents = 0)
+    model = AgentsExampleZoo.schelling(; numagents = 10)
+    empty_model = AgentsExampleZoo.schelling(; numagents = 0)
 
     AgentsIO.dump_to_csv("test.csv", allagents(model))
     AgentsIO.populate_from_csv!(empty_model, "test.csv")

@@ -15,7 +15,6 @@ pages = [
         "examples/zombies.md",
         "examples/predator_prey.md",
         "examples/rabbit_fox_hawk.md",
-        # "models.md", # I'm removing this from the docs; will be deprecated in the future
         "examples.md"
     ],
     "api.md",
