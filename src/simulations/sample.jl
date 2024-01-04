@@ -126,12 +126,6 @@ end
 # %% sampling API
 #######################################################################################
 
-function sampling_single(iter, rng)
-    pop = collect(iter)
-    isempty(pop) && return nothing
-    return rand(rng, pop)
-end
-
 function sampling_with_condition_single(iter, rng, condition)
     pop = collect(iter)
     n_p = length(pop)
@@ -143,12 +137,6 @@ function sampling_with_condition_single(iter, rng, condition)
         n_p -= 1
     end
     return nothing
-end
-
-function sampling_multi(iter, rng, n)
-    pop = collect(iter)
-    pop <= n && return pop
-    return sample(rng, pop, n; replace=false)  
 end
 
 function sampling_with_condition_multi(iter, rng, n, condition)
