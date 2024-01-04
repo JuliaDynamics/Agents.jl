@@ -3,16 +3,20 @@
 The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## [Concrete ABM implementations](@id ABM_Implementations)
+## [More ABM implementations](@id ABM_Implementations)
+
+Besides the generic interface of [`AgentBasedModel`](@ref), and the [`StandardABM`](@ref), highlighted in the tutorial, there is also:
+
 ```@docs
-StandardABM
-UnremovableABM
+EventQueueABM
 ```
 
 ## Agent/model retrieval and access
+
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+random_id
 random_agent
 nagents
 allagents
@@ -21,6 +25,9 @@ abmproperties
 abmrng
 abmscheduler
 abmspace
+abmtime
+abmevents
+abmrates
 ```
 
 ## Available spaces
@@ -100,6 +107,7 @@ empty_nearby_positions
 random_empty
 add_agent_single!
 move_agent_single!
+swap_agents!
 isempty(::Integer, ::ABM)
 ```
 
@@ -159,7 +167,7 @@ Specifically, imagine the scenario
 using Agents
 # We don't need to make a new agent type here,
 # we use the minimal agent for 4-dimensional grid spaces
-model = ABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
+model = StandardABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
 add_agent!((1, 1, 1, 1), model)
 add_agent!((1, 1, 1, 1), model)
 add_agent!((2, 1, 1, 1), model)
@@ -223,15 +231,16 @@ For example, the core loop of `run!` is just
 df_agent = init_agent_dataframe(model, adata)
 df_model = init_model_dataframe(model, mdata)
 
-s = 0
-while until(s, n, model)
+t = getfield(model, :time)
+t0, s = t[], 0
+while until(t[], t0, n, model)
   if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, adata, s)
+      collect_agent_data!(df_agent, model, adata)
   end
   if should_we_collect(s, model, when_model)
-      collect_model_data!(df_model, model, mdata, s)
+      collect_model_data!(df_model, model, mdata)
   end
-  step!(model, agent_step!, model_step!, 1)
+  step!(model, 1)
   s += 1
 end
 return df_agent, df_model

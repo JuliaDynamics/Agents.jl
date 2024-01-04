@@ -66,7 +66,7 @@ plotkwargs..., unikwargs...,)
 models[1] = daisy_obs
 
 # Flocking
-@agent Bird ContinuousAgent{2,Float64} begin
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -89,7 +89,7 @@ function flocking_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
@@ -149,14 +149,14 @@ default_colors["primary"] = colorant"#a1777f"
 default_colors["secondary"] = colorant"#a18f78"
 default_colors["tertiary"] = colorant"#b3b381"
 
-@agent Zombie OSMAgent begin
+@agent struct Zombie(OSMAgent)
     infected::Bool
     speed::Float64
 end
 function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
         properties = properties,
@@ -203,9 +203,7 @@ models[7] = zombies_obs
 # Growing bacteria
 using Agents, LinearAlgebra
 using Random # hide
-mutable struct SimpleCell <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
+@agent struct SimpleCell(ContinuousAgent{2,Float64})
     length::Float64
     orientation::Float64
     growthprog::Float64
@@ -295,7 +293,7 @@ function transform_forces(agent::SimpleCell)
     return fsym, compression, torque
 end
 
-bacteria_model = ABM(
+bacteria_model = StandardABM(
     SimpleCell,
     ContinuousSpace((14, 9); spacing = 1.0, periodic = false);
     properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
@@ -333,14 +331,15 @@ models[4] = bacteria_obs
 
 # Mountain runners
 using Agents.Pathfinding
-@agent Runner GridAgent{2} begin end
+@agent struct Runner(GridAgent{2})
+end
 using FileIO
 
 function initialize_runners(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     space = GridSpace(size(heightmap); periodic = false)
     pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
-    model = ABM(
+    model = StandardABM(
         Runner,
         space;
         rng = MersenneTwister(seed),
@@ -384,9 +383,9 @@ function forest_fire(; density = 0.7, griddims = (100, 100), seed = 2)
     rng = Random.MersenneTwister(seed)
     ## The `trees` field is coded such that
     ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
-    forest = ABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
+    forest = StandardABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
-        if rand(forest.rng) < density
+        if rand(abmrng(forest)) < density
             ## Set the trees at the left edge on fire
             forest.trees[I] = I[1] == 1 ? 2 : 1
         end
@@ -423,7 +422,7 @@ forest_obs = abmplot!(axs[5], forest_model;
 models[5] = forest_obs
 
 # Ants
-@agent Ant GridAgent{2} begin
+@agent struct Ant(GridAgent{2})
     has_food::Bool
     facing_direction::Int
     food_collected::Int
@@ -513,11 +512,12 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
         pheremone_ceiling
         )
 
-    model = UnremovableABM(
+    model = StandardABM(
         Ant,
         GridSpace(dimensions, periodic = false);
         properties,
         rng,
+        container = Vector,
         scheduler = Schedulers.Randomly()
     )
 
@@ -648,7 +648,7 @@ antworld_obs = abmplot!(axs[6], antworld;
 models[6] = antworld_obs
 
 # Fractal growth
-@agent FractalParticle ContinuousAgent{2,Float64} begin
+@agent struct FractalParticle(ContinuousAgent{2,Float64})
     radius::Float64
     is_stuck::Bool
     spin_axis::Array{Float64,1}
@@ -690,7 +690,7 @@ function initialize_fractal(;
     )
     ## space is periodic to allow particles going off one edge to wrap around to the opposite
     space = ContinuousSpace(space_extents; spacing = 1.0, periodic = true)
-    model = ABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
+    model = StandardABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
     center = space_extents ./ 2.0
     for i in 1:initial_particles
         p_r = particle_radius(min_radius, max_radius, abmrng(model))
@@ -734,7 +734,7 @@ function fractal_step!(model)
     while model.spawn_count > 0
         p_r = particle_radius(model.min_radius, model.max_radius, abmrng(model))
         pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49
-        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction))
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction)
         add_agent!(pos, FractalParticle, model, prop_particle...)
         model.spawn_count -= 1
     end
@@ -756,7 +756,7 @@ fractal_obs = abmplot!(axs[8], model;
 models[8] = fractal_obs
 
 # Social distancing
-@agent PoorSoul ContinuousAgent{2,Float64} begin
+@agent struct PoorSoul(ContinuousAgent{2,Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
@@ -789,7 +789,7 @@ function socialdistancing_init(;
         dt,
     )
     space = ContinuousSpace((1,1); spacing = 0.02)
-    model = ABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
+    model = StandardABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
     for ind in 1:N

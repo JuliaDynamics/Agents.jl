@@ -6,7 +6,7 @@
 
 # 2D space
 function Makie.show_data(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
             idx, source::Scatter) where {S<:SUPPORTED_SPACES}
     if plot._used_poly[]
         return show_data_poly(inspector, plot, idx, source)
@@ -16,7 +16,7 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 function show_data_2D(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
             idx, source::Scatter) where {S<:SUPPORTED_SPACES}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
@@ -28,7 +28,7 @@ function show_data_2D(inspector::DataInspector,
 
     model = plot.abmobs[].model[]
     id = collect(allids(model))[idx]
-    a.text[] = agent2string(model, model[id].pos)
+    a.text[] = Agents.agent2string(model, model[id].pos)
     a.visible[] = true
 
     return true
@@ -36,7 +36,7 @@ end
 
 # TODO: Fix this tooltip
 function show_data_poly(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:S}}}},
+            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}},
             idx, ::Makie.Poly) where {S<:SUPPORTED_SPACES}
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
@@ -50,23 +50,21 @@ function show_data_poly(inspector::DataInspector,
     elseif S <: GridSpace
         agent_pos = Tuple(Int.(plot[:pos][][idx]))
     end
-    a.text[] = agent2string(plot.abmobs[].model[], agent_pos)
+    a.text[] = Agents.agent2string(plot.abmobs[].model[], agent_pos)
     a.visible[] = true
 
     return true
 end
 
 # 3D space
-function Makie.show_data(inspector::DataInspector,
-            plot::_ABMPlot{<:Tuple{<:ABMObservable{<:ABM{<:SUPPORTED_SPACES}}}},
+function Makie.show_data(inspector::DataInspector, plot::_ABMPlot{<:Tuple{<:ABMObservable}},
             idx, source::MeshScatter)
     # need to dispatch here should we for example have 3D polys at some point
     return show_data_3D(inspector, plot, idx, source)
 end
 
-function show_data_3D(inspector::DataInspector,
-            plot::_ABMPlot{<:ABMObservable{<:Tuple{<:ABM{<:S}}}},
-            idx, source::MeshScatter) where {S<:SUPPORTED_SPACES}
+function show_data_3D(inspector::DataInspector, plot::_ABMPlot{<:Tuple{<:ABMObservable}},
+            idx, source::MeshScatter)
     a = inspector.plot.attributes
     scene = Makie.parent_scene(plot)
 
@@ -77,7 +75,7 @@ function show_data_3D(inspector::DataInspector,
 
     model = plot.abmobs[].model[]
     id = collect(allids(model))[idx]
-    a.text[] = agent2string(model, model[id].pos)
+    a.text[] = Agents.agent2string(model, model[id].pos)
     a.visible[] = true
 
     return true
@@ -87,12 +85,12 @@ end
 # Agent to string conversion
 ##########################################################################################
 
-function agent2string(model::ABM{<:S}, agent_pos) where {S<:SUPPORTED_SPACES}
+function Agents.agent2string(model::ABM{<:SUPPORTED_SPACES}, agent_pos)
     ids = ids_to_inspect(model, agent_pos)
     s = ""
 
     for id in ids
-        s *= agent2string(model[id]) * "\n"
+        s *= Agents.agent2string(model[id]) * "\n"
     end
 
     return s
@@ -123,19 +121,20 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     agentstring *= "id: $(getproperty(agent, :id))\n"
 
     agent_pos = getproperty(agent, :pos)
-    if agent_pos isa NTuple{<:Any, <:AbstractFloat}
+    if agent_pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
         agent_pos = round.(agent_pos, sigdigits=2)
+    elseif agent_pos isa Tuple{<:Int, <:Int, <:AbstractFloat}
+        agent_pos = (agent_pos[1], agent_pos[2], round(agent_pos[3], sigdigits=2))
     end
     agentstring *= "pos: $(agent_pos)\n"
 
     for field in fieldnames(A)[3:end]
         val = getproperty(agent, field)
-        V = typeof(val)
-        if V <: AbstractFloat
+        if val isa AbstractFloat
             val = round(val, sigdigits=2)
-        elseif V <: AbstractArray{<:AbstractFloat}
+        elseif val isa AbstractArray{<:AbstractFloat}
             val = round.(val, sigdigits=2)
-        elseif V <: NTuple{<:Any, <:AbstractFloat}
+        elseif val isa NTuple{<:Any, <:AbstractFloat}
             val = round.(val, sigdigits=2)
         end
         agentstring *= "$(field): $val\n"

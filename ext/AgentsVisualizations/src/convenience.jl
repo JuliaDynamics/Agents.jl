@@ -8,7 +8,7 @@ function Agents.abmexploration(model;
         plotkwargs = NamedTuple(),
         kwargs...
     )
-    fig, ax, abmobs = abmplot(model; figure, axis, kwargs...)
+    fig, ax, abmobs = abmplot(model; figure, axis, warn_deprecation = false, kwargs...)
     abmplot_object = ax.scene.plots[1]
 
     adata, mdata = abmobs.adata, abmobs.mdata
@@ -61,14 +61,14 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     # Trigger correct, and efficient, linking of x-axis
     linkxaxes!(axs[end], axs[1:end-1]...)
     on(stepclick) do clicks
-        xlims!(axs[1], Makie.MakieLayout.xautolimits(axs[1]))
+        xlims!(axs[1], Makie.xautolimits(axs[1]))
         for ax in axs
-            ylims!(ax, Makie.MakieLayout.yautolimits(ax))
+            ylims!(ax, Makie.yautolimits(ax))
         end
     end
     on(resetclick) do clicks
         for ax in axs
-            vlines!(ax, [abmobs.s.val], color = "#c41818")
+            vlines!(ax, [abmtime(abmobs.model[])], color = "#c41818")
         end
     end
     return nothing
@@ -76,24 +76,27 @@ end
 
 
 ##########################################################################################
-function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummystep;
+
+function Agents.abmvideo(file, model;
         spf = 1, framerate = 30, frames = 300,  title = "", showstep = true,
         figure = (resolution = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
     # add some title stuff
-    s = Observable(0) # counter of current step
+    abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), s)
+        t = lift(x -> title*", step = "*string(x), abmtime_obs)
     elseif showstep
-        t = lift(x -> "step = "*string(x), s)
+        t = lift(x -> "step = "*string(x), abmtime_obs)
     else
         t = title
     end
     axis = (title = t, titlealign = :left, axis...)
 
+    agent_step! = Agents.agent_step_field(model)
+    model_step! = Agents.model_step_field(model)
     fig, ax, abmobs = abmplot(model;
-    add_controls = false, agent_step!, model_step!, figure, axis, kwargs...)
+    add_controls = false, warn_deprecation = false, agent_step!, model_step!, figure, axis, kwargs...)
 
     resize_to_layout!(fig)
 
@@ -101,7 +104,7 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
         for j in 1:frames-1
             recordframe!(io)
             Agents.step!(abmobs, spf)
-            s[] += spf; s[] = s[]
+            abmtime_obs[] = abmtime(model)
         end
         recordframe!(io)
     end

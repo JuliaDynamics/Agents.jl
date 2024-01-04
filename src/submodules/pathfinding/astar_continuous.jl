@@ -7,6 +7,14 @@ sqr_distance(from, to, pathfinder::AStar{D,true}) where {D} =
     sum(min.(abs.(from .- to), pathfinder.dims .- abs.(from .- to)) .^ 2)
 sqr_distance(from, to, pathfinder::AStar{D,false}) where {D} =
     sum((from .- to) .^ 2)
+@inline function sqr_distance(from, to, pathfinder::AStar{D,P}) where {D,P}
+    s = pathfinder.dims
+    delta = abs.(from .- to)
+    sum(
+        P[i] ? (min(delta[i], s[i] - delta[i]))^2 : delta[i]^2
+        for i in 1:D
+    )
+end
 
 """
     find_continuous_path(pathfinder, from, to)
@@ -55,21 +63,21 @@ function find_continuous_path(
 end
 
 function Agents.plan_route!(
-    agent::A,
+    agent::AbstractAgent,
     dest::Agents.ValidPos,
     pathfinder::AStar{D,P,M,Float64},
-) where {A<:AbstractAgent,D,P,M}
+) where {D,P,M}
     path = find_continuous_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
     pathfinder.agent_paths[agent.id] = path
 end
 
 function Agents.plan_best_route!(
-    agent::A,
+    agent::AbstractAgent,
     dests,
     pathfinder::AStar{D,P,M,Float64};
     condition::Symbol = :shortest,
-) where {A<:AbstractAgent,D,P,M}
+) where {D,P,M}
     @assert condition ∈ (:shortest, :longest)
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
     best_path = Path{D,Float64}()
@@ -98,12 +106,12 @@ For pathfinding in models with [`ContinuousSpace`](@ref)
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
 function Agents.move_along_route!(
-    agent::A,
-    model::ABM{<:ContinuousSpace{D},A},
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace{D}},
     pathfinder::AStar{D},
     speed::Float64,
     dt::Real = 1.0,
-) where {D,A<:AbstractAgent}
+) where {D}
     isempty(agent.id, pathfinder) && return
     from = agent.pos
     next_pos = agent.pos

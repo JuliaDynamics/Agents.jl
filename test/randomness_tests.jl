@@ -1,46 +1,42 @@
 using Agents, Test
 using Random
-using Agents, Test
+using StableRNGs
 
 @testset "Random Number Generation" begin
-    model = ABM(Agent2)
+    model = StandardABM(NoSpaceAgent; warn_deprecation = false)
     @test abmrng(model) == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = ABM(Agent1, GridSpace((3,3)); rng)
-    add_agent!(Agent1, model)
-    agent = add_agent_single!(Agent1, model)
+    model = StandardABM(GridAgent{2}, GridSpace((3,3)); rng, warn_deprecation = false)
+    agent = add_agent_single!(model)
+
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
-    @test agent.pos == (3, 3)
-
-    model = ABM(Agent2; rng = RandomDevice())
-    @test_throws MethodError seed!(abmrng(model), 64)
+    @test agent.pos == (2, 1)
 end
 
 @testset "sample!" begin
     rng = StableRNG(50)
-    model4 = ABM(Agent1, GridSpace((2, 2)); rng = rng)
-    agents = model4.agents
+    model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
     add_agent!((1,1), Agent1, model4)
     add_agent!((2,2), Agent1, model4)
     sample!(model4, 4)
-    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)), 
+    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
                               3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
-    @test keys(model4.agents) == keys(res)
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
     @test res_fields == agents_fields
     sample!(model4, 2)
-    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res = Dict{Int64, Agent1}(5 => Agent1(5, (1, 1)), 6 => Agent1(6, (2, 2)))
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
-    agents_fields = [getfield(agents[k], f) for f in fieldnames(Agent1) for k in keys(model4.agents)]
-    @test keys(model4.agents) == keys(res)
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
     @test res_fields == agents_fields
 
     rng = StableRNG(42)
-    model = ABM(Agent2; rng = rng)
+    model = StandardABM(Agent2; rng = rng, warn_deprecation = false)
     for i in 1:20
         add_agent!(model, rand(abmrng(model)))
     end
@@ -52,7 +48,7 @@ end
     mean_weights_new = sum(allweights) / length(allweights)
     @test mean_weights_new > mean_weights
 
-    model2 = ABM(Agent2; rng = rng)
+    model2 = StandardABM(Agent2; rng = rng, warn_deprecation = false)
     while true
         for i in 1:20
             add_agent!(model2, rand(abmrng(model2)) / rand(abmrng(model2)))
@@ -66,7 +62,7 @@ end
     allweights = [i.weight for i in allagents(model2)]
     @test allunique(allweights)
 
-    model3 = ABM(Agent2; rng = rng)
+    model3 = StandardABM(Agent2; rng = rng, warn_deprecation = false)
     # Guarantee all starting weights are unique
     while true
         for i in 1:20
@@ -82,7 +78,7 @@ end
 
 @testset "random agent" begin
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = StandardABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
     add_agent!(Land, model, 999)
 

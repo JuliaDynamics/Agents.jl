@@ -22,7 +22,7 @@ abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
 The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
 It has an additional `pos::NTuple{D,Int}` field. See also [`@agent`](@ref).
 """
-@agent GridAgent{D} NoSpaceAgent begin
+@agent struct GridAgent{D}(NoSpaceAgent)
     pos::NTuple{D, Int}
 end
 
@@ -33,11 +33,54 @@ end
 
 npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
-# ALright, so here is the design for basic nearby_stuff looping.
+# ALright, so here is the design for basic nearby_stuff looping. 
 # We initialize a vector of tuples of indices within radius `r` from origin position.
 # We store this vector. When we have to loop over nearby_stuff, we call this vector
 # and add it to the given position. That is what the concrete implementations of
-# nearby_stuff do in the concrete spaces files.
+# nearby_stuff do in the concrete spaces files. 
+# !! Important !! Notice that all implementation of different position metrics 
+# should start by calling `calculate_hyperrectangle` since the calculated hyperrectagle 
+# respects the periodicity of the space.
+
+function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
+    space_size = spacesize(space)
+    if r < minimum(space_size) ÷ 2
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
+    else
+        odd_s, half_s = space_size .% 2, space_size .÷ 2
+        r_dims = min.(r, half_s)
+        from_to = (-rm:rm-(rm == hs && os == 0)
+                   for (rm, hs, os) in zip(r_dims, half_s, odd_s))
+        hyperrect = Iterators.product(from_to...)
+    end
+    return hyperrect
+end
+function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
+    space_size = spacesize(space)
+    if r < minimum(space_size)
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
+    else
+        r_dims = min.(r, space_size)
+        hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
+    end
+    return hyperrect
+end
+function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
+    space_size = spacesize(space)
+    r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
+    if all(r_notover)
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
+    else
+        odd_s, half_s = space_size .% 2, space_size .÷ 2
+        r_dims_P = min.(r, half_s)
+        r_dims_notP = min.(r, space_size)
+        from_to = (P[i] ? 
+                    (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 0)) : 
+                    (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
+        hyperrect = Iterators.product(from_to...)
+    end
+    return hyperrect
+end
 
 """
     offsets_within_radius(model::ABM{<:AbstractGridSpace}, r::Real)
@@ -45,17 +88,19 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r::Real)
-function offsets_within_radius(
-    space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r₀ = floor(Int, r)
-    if haskey(space.offsets_within_radius, r₀)
-        βs = space.offsets_within_radius[r₀]
+offsets_within_radius(model::ABM, r::Real) = offsets_within_radius(abmspace(model), r)
+function offsets_within_radius(space::AbstractGridSpace{D}, r::Real) where {D}
+    i = floor(Int, r + 1)
+    offsets = space.offsets_within_radius
+    if isassigned(offsets, i)
+        βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
-        space.offsets_within_radius[r₀] = βs
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
-    return βs::Vector{NTuple{D, Int}}
+    return βs
 end
 
 """
@@ -64,61 +109,67 @@ The function does two things:
 1. If a vector of indices exists in the model, it returns that.
 2. If not, it creates this vector, stores it in the model and then returns that.
 """
-offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r::Real)
-function offsets_at_radius(
-    space::AbstractGridSpace{D}, r::Real
-)::Vector{NTuple{D, Int}} where {D}
-    r₀ = floor(Int, r)
-    if haskey(space.offsets_at_radius, r₀)
-        βs = space.offsets_at_radius[r₀]
+offsets_at_radius(model::ABM, r::Real) = offsets_at_radius(abmspace(model), r)
+function offsets_at_radius(space::AbstractGridSpace{D}, r::Real) where {D}
+    i = floor(Int, r + 1)
+    offsets = space.offsets_at_radius
+    if isassigned(offsets, i)
+        βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
         if space.metric == :manhattan
             filter!(β -> sum(abs.(β)) == r₀, βs)
-            space.offsets_at_radius[r₀] = βs
         elseif space.metric == :chebyshev
             filter!(β -> maximum(abs.(β)) == r₀, βs)
-            space.offsets_at_radius[r₀] = βs
         end
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
-    return βs::Vector{NTuple{D,Int}}
+    return βs
 end
 
-# Make grid space Abstract if indeed faster
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
-    hypercube = Iterators.product(repeat([-r:r], D)...)
+    hyperrect = calculate_hyperrectangle(space, r)
     if space.metric == :euclidean
-        # select subset which is in Hypersphere
-        βs = [β for β ∈ hypercube if sum(β.^2) ≤ r^2]
+        βs = [β for β ∈ hyperrect if sum(β.^2) ≤ r^2]
     elseif space.metric == :manhattan
-        βs = [β for β ∈ hypercube if sum(abs.(β)) ≤ r]
+        βs = [β for β ∈ hyperrect if sum(abs.(β)) ≤ r]
     elseif space.metric == :chebyshev
-        βs = vec([β for β ∈ hypercube])
+        βs = vec([β for β ∈ hyperrect])
     else
         error("Unknown metric type")
     end
-    length(βs) == 0 && push!(βs, ntuple(i -> 0, Val(D))) # ensure 0 is there
-    return βs::Vector{NTuple{D, Int}}
+    length(βs) == 0 && push!(βs, ntuple(i -> 0, D)) # ensure 0 is there
+    return βs
+end
+
+function resize_offsets!(offsets, i)
+    incr = i - length(offsets)
+    if incr > 0
+        resize!(offsets, i)
+    end
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
     Tuple(rand(abmrng(model), CartesianIndices(abmspace(model).stored_ids)))
 end
 
-offsets_within_radius_no_0(model::ABM, r::Real) =
-    offsets_within_radius_no_0(abmspace(model), r::Real)
-function offsets_within_radius_no_0(
-    space::AbstractGridSpace{D}, r::Real)::Vector{NTuple{D, Int}} where {D}
-    r₀ = floor(Int, r)
-    if haskey(space.offsets_within_radius_no_0, r₀)
-        βs = space.offsets_within_radius_no_0[r₀]
+offsets_within_radius_no_0(model::ABM, r::Real) = offsets_within_radius_no_0(abmspace(model), r)
+function offsets_within_radius_no_0(space::AbstractGridSpace{D}, r::Real) where {D}
+    i = floor(Int, r + 1)
+    offsets = space.offsets_within_radius_no_0
+    if isassigned(offsets, i)
+        βs = offsets[i]
     else
+        r₀ = i - 1
         βs = calculate_offsets(space, r₀)
-        z = ntuple(i -> 0, Val(D))
+        z = ntuple(i -> 0, D)
         filter!(x -> x ≠ z, βs)
-        space.offsets_within_radius_no_0[r₀] = βs
+        resize_offsets!(offsets, i)
+        offsets[i] = βs
     end
-    return βs::Vector{NTuple{D, Int}}
+    return βs
 end
 
 # `nearby_positions` is easy, uses same code as `neaby_ids` of `GridSpaceSingle` but
@@ -132,13 +183,13 @@ function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,false}, r = 1,
         get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
-    stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
-    space_size = size(stored_ids)
+    space_size = spacesize(space)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         return (n .+ pos for n in nindices)
     else
+        stored_ids = space.stored_ids
         return (n .+ pos for n in nindices if checkbounds(Bool, stored_ids, (n .+ pos)...))
     end
 end
@@ -146,6 +197,21 @@ function nearby_positions(
         pos::ValidPos, space::AbstractGridSpace{D,true}, r = 1,
         get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
     ) where {D}
+    nindices = get_indices_f(space, r)
+    space_size = spacesize(space)
+    # check if we are far from the wall to skip bounds checks
+    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+        return (n .+ pos for n in nindices)
+    else
+        stored_ids = space.stored_ids
+        return (checkbounds(Bool, stored_ids, (n .+ pos)...) ? 
+                n .+ pos : mod1.(n .+ pos, space_size) for n in nindices)
+    end
+end
+function nearby_positions(
+    pos::ValidPos, space::AbstractGridSpace{D,P}, r = 1,
+    get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+) where {D,P}
     stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
     space_size = size(space)
@@ -153,8 +219,12 @@ function nearby_positions(
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
         return (n .+ pos for n in nindices)
     else
-        return (checkbounds(Bool, stored_ids, (n .+ pos)...) ? 
-                n .+ pos : mod1.(n .+ pos, space_size) for n in nindices)
+        return (
+            checkbounds(Bool, stored_ids, (n .+ pos)...) ?
+            n .+ pos : mod1.(n .+ pos, space_size)
+            for n in nindices
+            if all(P[i] || checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) for i in 1:D)
+        )
     end
 end
 

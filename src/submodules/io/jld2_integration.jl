@@ -88,19 +88,19 @@ JLD2.writeas(::Type{Pathfinding.AStar{D,P,M,T,C}}) where {D,P,M,T,C} = Serializa
 function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
         collect(allagents(t)),
-        to_serializable(t.space),
-        typeof(t.agents),
-        to_serializable(t.properties),
-        t.rng,
-        t.maxid.x,
+        to_serializable(abmspace(t)),
+        typeof(Agents.agent_container(t)),
+        to_serializable(abmproperties(t)),
+        abmrng(t),
+        getfield(t, :maxid).x,
     )
     return sabm
 end
 
 to_serializable(t::GridSpace{D,P}) where {D,P} =
-    SerializableGridSpace{D,P}(size(t), t.metric)
+    SerializableGridSpace{D,P}(spacesize(t), t.metric)
 to_serializable(t::GridSpaceSingle{D,P}) where {D,P} =
-    SerializableGridSpaceSingle{D,P}(size(t), t.metric)
+    SerializableGridSpaceSingle{D,P}(spacesize(t), t.metric)
 
 to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
     SerializableContinuousSpace{D,P,T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
@@ -120,19 +120,20 @@ JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T
     )
 
 function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
-    abm = ABM(
+    abm = StandardABM(
         A,
         from_serializable(t.space; kwargs...),
         container = t.agents_container,
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
-        warn = get(kwargs, :warn, true)
+        warn = get(kwargs, :warn, true),
+        warn_deprecation = false
     )
-    abm.maxid[] = t.maxid
+    getfield(abm, :maxid)[] = t.maxid
 
     for a in t.agents
-        add_agent_pos!(a, abm)
+        Agents.add_agent_pos!(a, abm)
     end
     return abm
 end
@@ -142,11 +143,11 @@ function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P}(s, t.metric, Dict(), Dict(), Dict(), Dict())
+    return GridSpace{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector(), Dict())
 end
 function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
     s = zeros(Int, t.dims)
-    return GridSpaceSingle{D,P}(s, t.metric, Dict(), Dict(), Dict())
+    return GridSpaceSingle{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector())
 end
 
 function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}

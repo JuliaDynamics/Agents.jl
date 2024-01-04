@@ -3,23 +3,32 @@ include("model_observable.jl")
 function Agents.abmplot(model::Agents.ABM;
     figure=NamedTuple(),
     axis=NamedTuple(),
+    warn_deprecation = true,
     kwargs...)
     fig = Figure(; figure...)
     ax = fig[1, 1][1, 1] = agents_space_dimensionality(model) == 3 ?
                            Axis3(fig; axis...) : Axis(fig; axis...)
-    abmobs = abmplot!(ax, model; kwargs...)
+    abmobs = abmplot!(ax, model; warn_deprecation = warn_deprecation, kwargs...)
 
     return fig, ax, abmobs
 end
 
 function Agents.abmplot!(ax, model::Agents.ABM;
     # These keywords are given to `ABMObservable`
-    (agent_step!)=Agents.dummystep,
-    (model_step!)=Agents.dummystep,
+    agent_step! = Agents.dummystep,
+    model_step! = Agents.dummystep,
     adata=nothing,
     mdata=nothing,
     when=true,
+    warn_deprecation = true,
     kwargs...)
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    elseif warn_deprecation
+        @warn "Passing agent_step! and model_step! to abmplot! is deprecated. 
+          These functions should be already contained inside the model instance."
+    end
     abmobs = ABMObservable(model; agent_step!, model_step!, adata, mdata, when)
     abmplot!(ax, abmobs; kwargs...)
 

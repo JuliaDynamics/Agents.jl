@@ -13,11 +13,16 @@ Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
-    s = "$(P ? "periodic" : "") continuous space with $(spacesize(space)) extent"*
+    periodic = get_periodic_type(space)
+    s = "$(periodic)continuous space with $(spacesize(space)) extent"*
     " and spacing=$(space.spacing)"
     space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
     print(io, s)
 end
+get_periodic_type(space::ContinuousSpace{D,true}) where {D} = "periodic "
+get_periodic_type(space::ContinuousSpace{D,false}) where {D} = ""
+get_periodic_type(space::ContinuousSpace{D,P}) where {D,P} = "mixed-periodicity "
+
 
 """
     ContinuousAgent{D,T} <: AbstractAgent
@@ -26,7 +31,7 @@ It has the additional fields `pos::SVector{D,T}, vel::SVector{D,T}` where `T`
 can be any `AbstractFloat` type.
 See also [`@agent`](@ref).
 """
-@agent ContinuousAgent{D,T} NoSpaceAgent begin
+@agent struct ContinuousAgent{D,T}(NoSpaceAgent)
     pos::SVector{D,T}
     vel::SVector{D,T}
 end
@@ -120,16 +125,16 @@ function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{
 end
 
 function add_agent_to_space!(
-    a::A, model::ABM{<:ContinuousSpace,A}, cell_index = pos2cell(a, model)) where {A<:AbstractAgent}
+    a::AbstractAgent, model::ABM{<:ContinuousSpace}, cell_index = pos2cell(a, model))
     push!(abmspace(model).grid.stored_ids[cell_index...], a.id)
     return a
 end
 
 function remove_agent_from_space!(
-    a::A,
-    model::ABM{<:ContinuousSpace,A},
+    a::AbstractAgent,
+    model::ABM{<:ContinuousSpace},
     cell_index = pos2cell(a, model),
-) where {A<:AbstractAgent}
+)
     prev = abmspace(model).grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
     deleteat!(prev, ai)
@@ -138,9 +143,9 @@ end
 
 # We re-write this for performance, because if cell doesn't change, we don't have to
 # move the agent in the GridSpace; only change its position field
-function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
-    ) where {D, A<:AbstractAgent}
+function move_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM{<:ContinuousSpace})
     space_size = spacesize(model)
+    D = length(space_size)
     all(i -> 0 <= pos[i] <= space_size[i], 1:D) || error("position is outside space extent!")
     oldcell = pos2cell(agent, model)
     newcell = pos2cell(pos, model)
@@ -155,7 +160,8 @@ end
 
 
 """
-    move_agent!(agent::A, model::ABM{<:ContinuousSpace,A}, dt::Real)
+    move_agent!(agent, model::ABM{<:ContinuousSpace}, dt::Real)
+
 Propagate the agent forwards one step according to its velocity, _after_ updating the
 agent's velocity (if configured using `update_vel!`, see [`ContinuousSpace`](@ref)).
 
@@ -168,10 +174,10 @@ For non-periodic spaces, agents will walk up to, but not reach, the space extent
 For periodic spaces movement properly wraps around the extent.
 """
 function move_agent!(
-    agent::A,
-    model::ABM{<:ContinuousSpace,A},
+    agent::AbstractAgent,
+    model::ABM{<:ContinuousSpace},
     dt::Real,
-) where {A<:AbstractAgent}
+)
     abmspace(model).update_vel!(agent, model)
     direction = dt .* agent.vel
     walk!(agent, direction, model)
@@ -193,13 +199,7 @@ function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
     return offsets_within_radius(abmspace(model).grid, r)
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1;
-        exact = false,
-    ) where {D,A,T}
-    if exact
-        @warn("Keyword `exact` in `nearby_ids` is deprecated. Use `nearby_ids_exact`.")
-        nearby_ids_exact(pos, model, r)
-    end
+function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
@@ -267,22 +267,29 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
 end
 
 # Do the standard extensions for `_exact` as in space API
-function nearby_ids_exact(agent::A, model::ABM, r = 1) where {A<:AbstractAgent}
+function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
     all = nearby_ids_exact(agent.pos, model, r)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
 nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
 
+function remove_all_from_space!(model::ABM{<:ContinuousSpace})
+    internal_grid = abmspace(model).grid
+    for p in positions(internal_grid)
+        empty!(ids_in_position(p, internal_grid))
+    end
+end
 
 #######################################################################################
 # Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
 """
     nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
+
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
-function nearest_neighbor(agent::A, model::ABM{<:ContinuousSpace,A}, r) where {A}
+function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
     n = nearby_ids(agent, model, r)
     d, j = Inf, 0
     for id in n
@@ -302,6 +309,7 @@ using LinearAlgebra
 
 """
     elastic_collision!(a, b, f = nothing) → happened
+
 Resolve a (hypothetical) elastic collision between the two agents `a, b`.
 They are assumed to be disks of equal size touching tangentially.
 Their velocities (field `vel`) are adjusted for an elastic collision happening between them.

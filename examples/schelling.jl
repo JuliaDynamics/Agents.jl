@@ -10,15 +10,16 @@
 # the following definition of Schelling's segregation model:
 
 # * A fixed pre-determined number of agents exist in the model.
-# * Agents belong to one of two groups (0 or 1).
-# * The agents live in a two-dimensional grid. Only one agent per position is allowed.
+# * Agents belong to one of two groups (1 or 2).
+# * The agents live in a two-dimensional non-periodic grid.
+# * Only one agent per position is allowed.
 # * For each agent we care about
 #   finding all of its 8 nearest neighbors (cardinal and diagonal directions).
 #   To do this, we will create a [`GridSpaceSingle`](@ref)
 #   with a Chebyshev metric, and when searching for nearby agents we will use a radius
 #   of 1 (which is also the default).
 #   This leads to 8 neighboring positions per position (except at the edges of the grid).
-# * If an agent has at least `k=3` neighbors belonging to the same group, then it is happy.
+# * If an agent has at least `min_to_be_happy` neighbors belonging to the same group, then it is happy.
 # * If an agent is unhappy, it keeps moving to new locations until it is happy,
 #   while respecting the 1-agent-per-position rule.
 
@@ -26,12 +27,12 @@
 # belonging to the same group (e.g. preferring that at least 3/8 of neighbors to
 # be in the same group) could still lead to total segregation of neighborhoods.
 
-# This model is also available as [`Models.schelling`](@ref).
-
 # ## Creating a space
+
 using Agents
 
 space = GridSpaceSingle((10, 10); periodic = false)
+
 # Notice that by default the `GridSpaceSingle` has `metric = Chebyshev()`,
 # which is what we want.
 # Agents existing in this type of space must have a position field that is a
@@ -40,7 +41,7 @@ space = GridSpaceSingle((10, 10); periodic = false)
 
 # ## Defining the agent type
 
-@agent SchellingAgent GridAgent{2} begin
+@agent struct SchellingAgent(GridAgent{2})
     mood::Bool # whether the agent is happy in its position. (true = happy)
     group::Int # The group of the agent, determines mood as it interacts with neighbors
 end
@@ -69,99 +70,15 @@ end
 # end
 # ```
 
-# ## Creating an ABM
-
-# To make our model we follow the instructions of [`AgentBasedModel`](@ref).
-# We also want to include a property `min_to_be_happy` in our model, and so we have:
-
-properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; properties)
-
-# Here we used the default scheduler (which is also the fastest one) to create
-# the model. We could instead try to activate the agents according to their
-# property `:group`, so that all agents of group 1 act first.
-# We would then use the scheduler [`Schedulers.ByProperty`](@ref) like so:
-
-schelling2 = ABM(
-    SchellingAgent,
-    space;
-    properties,
-    scheduler = Schedulers.ByProperty(:group),
-)
-
-# Notice that `Schedulers.ByProperty` accepts an argument and returns a struct,
-# which is why we didn't just give `Schedulers.ByProperty` to `scheduler`.
-
-# ## Adding agents
-# Currently the model is empty:
-nagents(schelling)
-
-# We can add agents to this model using [`add_agent!`](@ref).
-add_agent!(SchellingAgent, schelling, false, 1)
-nagents(schelling)
-
-# However, there is a much more convenient way to do this.
-# [`add_agent_single!`](@ref) offers an automated way to create and add agents
-# while ensuring that we have at most 1 agent per unique position,
-# which is exactly what we need for the rules of Schelling.
-
-add_agent_single!(schelling, false, 1)
-nagents(schelling)
-
-# We can obtain the created and added agent, that got assigned the ID 2, like so
-agent = schelling[2]
-
-
-# ## Using an `UnremovableABM`
-
-# We know that the number of agents in the model never changes.
-# This means that we shouldn't use the default version of ABM that is initialized
-# by `ABM` because it allows deletion of agents (at a performance deficit) and we
-# don't need that feature here.
-# Instead, we should use [`UnremovableABM`](@ref).
-# The only change necessary for this to work is to simply change the call to
-# `ABM` to a call to `UnremovableABM`.
-
-schelling = UnremovableABM(SchellingAgent, space; properties)
-
-# ## Creating the ABM through a function
-
-# Here we put the model instantiation in a function so that
-# it will be easy to recreate the model and change its parameters.
-# In addition, inside this function, we populate the model with some agents.
-# We also change the scheduler to [`Schedulers.Randomly`](@ref) , as
-# the rules of the model require the agents to activate in random order.
-# Because the function is defined based on keywords,
-# it will be of further use in [`paramscan`](@ref) below.
-
-using Random # for reproducibility
-function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
-    space = GridSpaceSingle(griddims, periodic = false)
-    properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.Xoshiro(seed)
-    model = UnremovableABM(
-        SchellingAgent, space;
-        properties, rng, scheduler = Schedulers.Randomly()
-    )
-    ## populate the model with agents, adding equal amount of the two types of agents
-    ## at random positions in the model
-    for n in 1:total_agents
-        add_agent_single!(SchellingAgent, model, false, n < total_agents / 2 ? 1 : 2)
-    end
-    return model
-end
-
-model = initialize()
-
 
 # ## Defining a step function
 
-# Finally, we define a _step_ function to determine what happens to an
-# agent when activated.
-# For the purpose of this implementation of Schelling's segregation model,
-# we only need an agent step function and not a model stepping function.
+# For the Schelling model we can use the agent-stepping function possibility that Agents.jl
+# allows for, and hence we only need to define what happens to an agent when activated.
 
 function agent_step!(agent, model)
+    ## Here we access a model-level property `min_to_be_happy`.
+    ## This will have an assigned value once we create the model.
     minhappy = model.min_to_be_happy
     count_neighbors_same_group = 0
     ## For each neighbor, get group and compare to current agent's group
@@ -188,10 +105,99 @@ end
 
 # When defining `agent_step!`, we used some of the built-in functions of Agents.jl,
 # such as [`nearby_positions`](@ref) that returns the neighboring position
-# on which the agent resides, [`ids_in_position`](@ref) that returns the
-# IDs of the agents on a given position, and [`move_agent_single!`](@ref) which moves
+# on which the agent resides, and [`move_agent_single!`](@ref) which moves
 # agents to random empty position on the grid. A full list of built-in functions
 # and their explanations are available in the [API](@ref) page.
+
+# ## Creating an ABM
+
+# To make our model we follow the instructions of [`StandardABM`](@ref).
+# We also want to include a property `min_to_be_happy` in our model, and so we have:
+
+properties = Dict(:min_to_be_happy => 3)
+schelling = StandardABM(SchellingAgent, space; properties, agent_step!)
+
+# Since we opted to use an `agent_step!` function, the scheduler of the model matters.
+# Here we used the default scheduler (which is also the fastest one) to create
+# the model. We could instead try to activate the agents according to their
+# property `:group`, so that all agents of group 1 act first.
+# We would then use the scheduler [`Schedulers.ByProperty`](@ref) like so:
+
+schelling2 = StandardABM(
+    SchellingAgent,
+    space;
+    properties,
+    agent_step!,
+    scheduler = Schedulers.ByProperty(:group),
+)
+
+# Notice that `Schedulers.ByProperty` accepts an argument and returns a scheduler,
+# which is why we didn't just give `Schedulers.ByProperty` to `scheduler`.
+
+# ## Adding agents
+
+# Currently the model is empty:
+nagents(schelling)
+
+# We can add agents to this model using [`add_agent!`](@ref).
+# This function generates a new agent instance and adds it to the model.
+# The function automatically configures the agent ID, and also assigns it to a random
+# position (if we do not explicitly provide one). The subsequent arguments
+# given to [`add_agent!`](@ref), i.e., beyond the optional position and the model instance,
+# are all extra properties the agent types may have.
+
+added_agent = add_agent!(schelling, false, 1)
+
+# However, for the Schelling specification, there is a more convenient way to do this.
+# [`add_agent_single!`](@ref) offers an automated way to create and add agents
+# while ensuring that we have at most 1 agent per unique position.
+
+add_agent_single!(schelling, false, 1)
+nagents(schelling)
+
+# We can obtain the created and added agent, that got assigned the ID 2, like so
+agent = schelling[2]
+
+# ## Using a `StandardABM` with `container = Vector`
+
+# We know that the number of agents in the model never changes.
+# This means that we shouldn't use the default version of ABM that is initialized
+# by `ABM` because it allows deletion of agents (at a performance deficit) and we
+# don't need that feature here.The only change necessary for this to work is to 
+# simply add `container = Vector` when building the model.
+
+schelling = StandardABM(SchellingAgent, space; agent_step!, properties, container = Vector)
+
+# ## Creating the ABM through a function
+
+# Here we put the model instantiation in a function so that
+# it will be easy to recreate the model and change its parameters.
+# In addition, inside this function, we populate the model with some agents.
+# We also change the scheduler to [`Schedulers.Randomly`](@ref) , as
+# the rules of the model require the agents to activate in random order.
+# Because the function is defined based on keywords,
+# it will be of further use in [`paramscan`](@ref) below.
+
+using Random # for reproducibility
+function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
+    space = GridSpaceSingle(griddims, periodic = false)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
+    rng = Random.Xoshiro(seed)
+    model = StandardABM(
+        SchellingAgent, space;
+        agent_step!, properties, rng, 
+        container = Vector, scheduler = Schedulers.Randomly()
+    )
+    ## populate the model with agents, adding equal amount of the two types of agents
+    ## at random positions in the model
+    for n in 1:total_agents
+        add_agent_single!(SchellingAgent, model, false, n < total_agents / 2 ? 1 : 2)
+    end
+    return model
+end
+
+model = initialize()
+
 
 # ## Stepping the model
 
@@ -200,10 +206,10 @@ end
 model = initialize()
 
 # We can advance the model one step
-step!(model, agent_step!)
+step!(model)
 
 # Or for three steps
-step!(model, agent_step!, 3)
+step!(model, 3)
 
 # ## Visualizing the data
 
@@ -231,7 +237,7 @@ figure # returning the figure displays it
 
 model = initialize();
 abmvideo(
-    "schelling.mp4", model, agent_step!;
+    "schelling.mp4", model;
     ac = groupcolor, am = groupmarker, as = 10,
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
@@ -253,14 +259,14 @@ abmvideo(
 adata = [:pos, :mood, :group]
 
 model = initialize()
-data, _ = run!(model, agent_step!, 5; adata)
+data, _ = run!(model, 5; adata)
 data[1:10, :] # print only a few rows
 
 # We could also use functions in `adata`, for example we can define
 x(agent) = agent.pos[1]
 model = initialize()
 adata = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata)
+data, _ = run!(model, 5; adata)
 data[1:10, :]
 
 # With the above `adata` vector, we collected all agent's data.
@@ -270,7 +276,7 @@ data[1:10, :]
 using Statistics: mean
 model = initialize();
 adata = [(:mood, sum), (x, mean)]
-data, _ = run!(model, agent_step!, 5; adata)
+data, _ = run!(model, 5; adata)
 data
 
 # Other examples in the documentation are more realistic, with more meaningful
@@ -298,7 +304,7 @@ model = initialize(; total_agents = 300) # fresh model, noone happy
 #
 # figure, abmobs = abmexploration(
 #     model;
-#     agent_step!, dummystep, parange,
+#     parange,
 #     ac = groupcolor, am = groupmarker, as = 10,
 #     adata, alabels
 # )
@@ -323,7 +329,7 @@ model = initialize(; total_agents = 300) # fresh model, noone happy
 @eval Main __atexample__named__schelling = $(@__MODULE__) # hide
 
 model = initialize(total_agents = 200, min_to_be_happy = 5, seed = 42)
-run!(model, agent_step!, 40)
+run!(model, 40)
 
 figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
@@ -350,7 +356,7 @@ figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # And then run it for 40 iterations.
-run!(model, agent_step!, 40)
+run!(model, 40)
 
 figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
@@ -373,7 +379,7 @@ figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
 
 # The new agents are scattered randomly, as expected. Now let's run the model.
-run!(model, agent_step!, 40)
+run!(model, 40)
 
 figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
 figure
@@ -393,7 +399,7 @@ rm("schelling.jld2") # hide
 models = [initialize(seed = x) for x in rand(UInt8, 3)];
 
 # and then
-adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata)
+adf, = ensemblerun!(models, 5; adata)
 adf[(end - 10):end, :]
 
 # It is possible to run the ensemble in parallel.
@@ -412,7 +418,7 @@ adf[(end - 10):end, :]
 # ```julia
 # using Distributed
 # @everywhere using Agents
-# @everywhere @agent SchellingAgent ...
+# @everywhere @agent struct SchellingAgent ...
 # @everywhere agent_step!(...) = ...
 # ```
 
@@ -420,7 +426,7 @@ adf[(end - 10):end, :]
 # using the keyword `parallel = true`:
 
 # ```julia
-# adf, = ensemblerun!(models, agent_step!, dummystep, 5; adata, parallel = true)
+# adf, = ensemblerun!(models, 5; adata, parallel = true)
 # ```
 
 # ## Scanning parameter ranges
@@ -442,7 +448,7 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf, _ = paramscan(parameters, initialize; adata, n = 3)
 adf
 
 # We nicely see that the larger `:min_to_be_happy` is, the slower the convergence to

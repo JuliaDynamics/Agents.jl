@@ -11,11 +11,22 @@ using StableRNGs
             @test size(poss) == dims
             @test size(space) == dims
         end
+        # mixed boundary conditions
+        if D > 1
+            periodic = ntuple(i -> i==1 ? true : false, D)
+            space = SpaceType(dims; periodic)
+            poss = positions(space)
+            @test spacesize(space) == dims
+            @test size(poss) == dims
+            @test size(space) == dims
+            get_P(::Union{GridSpace{D,P},GridSpaceSingle{D,P}}) where {D,P} = P
+            @test get_P(space) == periodic
+        end
     end
 
     @testset "add/move/remove" begin
         space = SpaceType((3, 3))
-        model = ABM(GridAgent{2}, space; rng = StableRNG(42))
+        model = StandardABM(GridAgent{2}, space; rng = StableRNG(42), warn_deprecation = false)
         pos0 = (2,2)
         agent = add_agent!(pos0, model)
         id0 = agent.id
@@ -44,7 +55,7 @@ using StableRNGs
 
     @testset "positions + empty" begin
         space = SpaceType((3, 3))
-        model = ABM(GridAgent{2}, space)
+        model = StandardABM(GridAgent{2}, space, warn_deprecation = false)
         empty = collect(empty_positions(model))
         @test length(empty) == 9
         locs_to_add = [1, 2, 3, 4, 5, 6, 9]
@@ -105,58 +116,74 @@ using StableRNGs
 
     @testset "Distances" begin
     @testset "Euclidean distance" begin
-        model = ABM(GridAgent{2}, SpaceType((12, 10); periodic = true))
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); periodic = true), warn_deprecation = false)
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test euclidean_distance(a, b, model) ≈ 2.82842712
 
-        model = ABM(GridAgent{2}, SpaceType((12, 10); periodic = false))
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); periodic = false), warn_deprecation = false)
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test euclidean_distance(a, b, model) ≈ 10.198039
+
+        model = StandardABM(GridAgent{2}, SpaceType((10, 10); periodic = (false, true)), warn_deprecation = false)
+        a = add_agent!((1, 1), model)
+        b = add_agent!((9, 9), model)
+        @test euclidean_distance(a, b, model) ≈ 8.24621125
     end
     @testset "Manhattan Distance" begin
-        model = ABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = true))
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = true), warn_deprecation = false)
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test manhattan_distance(a, b, model) ≈ 4
 
-        model = ABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = false))
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); metric = :manhattan, periodic = false), warn_deprecation = false)
         a = add_agent!((1, 6), model)
         b = add_agent!((11, 4), model)
         @test manhattan_distance(a, b, model) ≈ 12
+
+        model = StandardABM(GridAgent{2}, SpaceType((10, 10); periodic = (false, true)), warn_deprecation = false)
+        a = add_agent!((1, 1), model)
+        b = add_agent!((9, 9), model)
+        @test manhattan_distance(a, b, model) ≈ 10
     end
     end
 
     @testset "Nearby pos/ids/agents" begin
         metrics = [:euclidean, :manhattan, :chebyshev]
-        periodics = [false, true]
+        periodics = [false, true, (true,false)]
 
         # All following are with r=1
         @testset "periodic=$(periodic)" for periodic in periodics
             @testset "Metric=$(metric)" for metric in metrics
                 # To understand where the numbers here are coming from,
                 # check out the plot in the docs that shows the metrics
-                model = ABM(GridAgent{2}, SpaceType((5, 5); metric, periodic))
+                model = StandardABM(GridAgent{2}, SpaceType((5, 5); metric, periodic), warn_deprecation = false)
                 if metric ∈ (:euclidean, :mahnattan) # for r = 1 they give the same
                     @test sort!(collect(nearby_positions((2, 2), model))) ==
                         sort!([(2, 1), (1, 2), (3, 2), (2, 3)])
-                    if !periodic
+                    if periodic == false
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                         sort!([(1, 2), (2, 1)])
-                    else # in periodic case we still have all nearby 4 positions
+                    elseif periodic == true # in periodic case we still have all nearby 4 positions
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                         sort!([(1, 2), (2, 1), (1 ,5), (5, 1)])
+                    elseif periodic == (true,false)
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                        sort!([(1, 2), (2, 1), (5, 1)])
                     end
                 elseif metric == :chebyshev
                     @test sort!(collect(nearby_positions((2, 2), model))) ==
                         [(1,1), (1,2), (1,3), (2,1), (2,3), (3,1), (3,2), (3,3)]
-                    if !periodic
+                    if periodic == false
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                             [(1,2), (2,1), (2,2)]
-                    else
+                    elseif periodic == true
                         @test sort!(collect(nearby_positions((1, 1), model))) ==
                             [(1,2), (1,5), (2,1), (2,2), (2,5), (5,1), (5,2), (5,5)]
+                    elseif periodic == (true,false)
+                        @test sort!(collect(nearby_positions((1, 1), model))) ==
+                            [(1,2), (2,1), (2,2), (5,1), (5,2)]
                     end
                 end
 
@@ -164,7 +191,7 @@ using StableRNGs
                 add_agent!((1, 1), model)
                 a = add_agent!((2, 1), model)
                 add_agent!((3, 2), model) # this is neighbor only in chebyshev
-                add_agent!((5, 1), model)
+                add_agent!((2, 5), model) # this is neighbor in periodic but not in (true,false)
 
                 near_agent = sort!(collect(nearby_ids(a, model)))
                 near_pos = sort!(collect(nearby_ids(a.pos, model)))
@@ -172,19 +199,23 @@ using StableRNGs
                 @test 2 ∉ near_agent
                 @test near_pos == sort!(vcat(near_agent, 2))
 
-                if !periodic && metric ∈ (:euclidean, :mahnattan)
+                if periodic == false && metric ∈ (:euclidean, :mahnattan)
                     near_agent == [1]
-                elseif periodic && metric ∈ (:euclidean, :mahnattan)
+                elseif periodic == true && metric ∈ (:euclidean, :mahnattan)
                     near_agent == [1,4]
-                elseif !periodic && metric == :chebyshev
+                elseif periodic == (true,false) && metric ∈ (:euclidean, :manhattan)
+                    near_agent == [1]
+                elseif periodic == false && metric == :chebyshev
                     near_agent == [1,3]
-                elseif periodic && metric == :chebyshev
+                elseif periodic == true && metric == :chebyshev
                     near_agent == [1,3,4]
+                elseif periodic == (true,false) && metric == :chebyshev
+                    near_agent == [1,3]
                 end
 
             end
             # also test larger r. See figure at docs for metrics to get the numbers
-            models = [ABM(GridAgent{2}, SpaceType((9, 9); metric, periodic)) for metric in metrics]
+            models = [StandardABM(GridAgent{2}, SpaceType((9, 9); metric, periodic), warn_deprecation = false) for metric in metrics]
             for m in models; fill_space!(m); end
             near_pos = [collect(nearby_positions((5,5), m, 3.4)) for m in models]
             near_ids = [collect(nearby_ids((5,5), m, 3.4)) for m in models] # this is 1 more
@@ -194,11 +225,22 @@ using StableRNGs
             @test length(near_ids[1]) == length(near_pos[1]) + 1
             @test length(near_ids[3]) == 7^2
         end
+
+        @testset "radius > space extent" begin
+            periodics = [false, true, (true,false,true)]
+            @testset "$(periodic)" for periodic in periodics
+                model = StandardABM(GridAgent{2}, GridSpace((3, 4, 15); periodic), warn_deprecation = false)
+                all_positions = collect(nearby_positions((2, 2, 7), model, 5))
+                @test length(all_positions) == 131
+                @test length(unique(all_positions)) == 131
+                @test min.(all_positions...) == (1, 1, 2) && max.(all_positions...) == (3, 4, 12)
+            end
+        end
     end
 
-    @testset "$(periodic)" for periodic in (true, false)
+    @testset "$(periodic)" for periodic in (true, false, (true,false))
         @testset "Random nearby" begin
-            abm = ABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42))
+            abm = StandardABM(GridAgent{2}, SpaceType((10, 10), periodic=periodic); rng = StableRNG(42), warn_deprecation = false)
             fill_space!(abm)
             if SpaceType == GridSpace
                 fill_space!(abm)
@@ -213,7 +255,7 @@ using StableRNGs
                 for alloc in (true, false)
                     random_id = random_id_in_position(pos, abm, t_1, alloc)
                     @test !isnothing(random_id) && random_id != abm[1].pos
-                end 
+                end
             end
             # test random_agent_in_position
             if SpaceType == GridSpace
@@ -225,7 +267,7 @@ using StableRNGs
                 for alloc in (true, false)
                     random_a = random_agent_in_position(pos, abm, t_2, alloc)
                     @test !isnothing(random_a) && random_a != abm[1]
-                end 
+                end
             end
             # test random_nearby_id
             nearby_id = random_nearby_id(abm[1], abm, 5)
@@ -272,7 +314,7 @@ using StableRNGs
 
     @testset "walk!" begin
         # Periodic
-        model = ABM(GridAgent{2}, GridSpace((3, 3); periodic = true))
+        model = StandardABM(GridAgent{2}, GridSpace((3, 3); periodic = true), warn_deprecation = false)
         a = add_agent!((1, 1), model)
         walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
@@ -300,7 +342,7 @@ using StableRNGs
         walk!(a, (1, 0), model; ifempty = true)
         @test a.pos == (2, 1)
         # aperiodic
-        model = ABM(GridAgent{2}, GridSpace((3, 3); periodic = false))
+        model = StandardABM(GridAgent{2}, GridSpace((3, 3); periodic = false), warn_deprecation = false)
         a = add_agent!((1, 1), model)
         walk!(a, (0, 1), model) # North
         @test a.pos == (1, 2)
@@ -315,15 +357,30 @@ using StableRNGs
         walk!(a, (-1, -1), model) # Boundary in one direction, not in the other, attempt South west
         @test a.pos == (1, 2)
         @test_throws MethodError walk!(a, (1.0, 1.5), model) # Must use Int for gridspace
+        # mixed boundary
+        model = StandardABM(GridAgent{2}, GridSpace((3, 3); periodic = (true, false)), warn_deprecation = false)
+        a = add_agent!((1, 1), model)
+        walk!(a, (0, 1), model) # North
+        @test a.pos == (1, 2)
+        walk!(a, (1, 1), model) # North east
+        @test a.pos == (2, 3)
+        walk!(a, (1, 0), model) # East
+        @test a.pos == (3, 3)
+        walk!(a, (1, 0), model) # PBC, East
+        @test a.pos == (1, 3)
+        walk!(a, (0, 1), model) # Boundary, attempt North
+        @test a.pos == (1, 3)
+        walk!(a, (-1, -3), model) # PBC West, Boundary South
+        @test a.pos == (3, 1)
 
         # GridSpaceSingle
-        model = ABM(GridAgent{2}, GridSpaceSingle((5, 5)))
+        model = StandardABM(GridAgent{2}, GridSpaceSingle((5, 5)), warn_deprecation = false)
         a = add_agent!((3, 3), model)
         walk!(a, (1, 1), model)
         a.pos == (4, 4)
 
         # Just a single sanity test for higher dimensions, just in case
-        model = ABM(GridAgent{3}, GridSpace((3, 3, 2)))
+        model = StandardABM(GridAgent{3}, GridSpace((3, 3, 2)), warn_deprecation = false)
         a = add_agent!((1, 1, 1), model)
         walk!(a, (1, 1, 1), model)
         @test a.pos == (2, 2, 2)
@@ -332,14 +389,14 @@ using StableRNGs
     @testset "random walk" begin
         # random walks on grid spaces with euclidean metric are not defined
         space = SpaceType((10,10), metric=:euclidean)
-        model = ABM(GridAgent{2}, space)
+        model = StandardABM(GridAgent{2}, space, warn_deprecation = false)
         add_agent!(model)
         r = 1.0
         @test_throws ArgumentError randomwalk!(model[1], model, r)
 
         # chebyshev metric
         space = SpaceType((100,100), metric=:chebyshev)
-        model = ABM(GridAgent{2}, space)
+        model = StandardABM(GridAgent{2}, space, warn_deprecation = false)
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
@@ -354,7 +411,7 @@ using StableRNGs
 
         # manhattan metric
         space = SpaceType((100,100), metric=:manhattan)
-        model = ABM(GridAgent{2}, space)
+        model = StandardABM(GridAgent{2}, space, warn_deprecation = false)
         x₀ = (50,50)
         add_agent!(x₀, model)
         r = 1.5
@@ -368,7 +425,7 @@ using StableRNGs
         @test model[1].pos == x₁
 
         space = SpaceType((100,100), metric=:manhattan)
-        model = ABM(GridAgent{2}, space)
+        model = StandardABM(GridAgent{2}, space, warn_deprecation = false)
         pos = (50,50)
         add_agent!(pos, model) # agent id = 1
         # fill surrounding positions with other agents

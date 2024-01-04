@@ -1,27 +1,6 @@
-@everywhere begin
-    using Agents.Models: schelling, schelling_agent_step!
-end
 @testset "DataCollection" begin
     mutable struct Nested
         data::Vector{Float64}
-    end
-
-    function initialize()
-        model = ABM(
-            Agent3,
-            GridSpace((10, 10));
-            properties = Dict(
-                :year => 0,
-                :tick => 0,
-                :flag => false,
-                :container => Float64[],
-                :deep => Nested([20.0, 52.1]),
-            ),
-        )
-        add_agent!((4, 3), model, 0.1)
-        add_agent!((7, 5), model, 0.35)
-        add_agent!((2, 9), model, 0.67)
-        return model
     end
 
     function agent_step!(agent, model)
@@ -39,15 +18,35 @@ end
         end
     end
 
+    function initialize()
+        model = StandardABM(
+            Agent3,
+            GridSpace((10, 10));
+            agent_step! = agent_step!,
+            model_step! = model_step!,
+            properties = Dict(
+                :year => 0,
+                :tick => 0,
+                :flag => false,
+                :container => Float64[],
+                :deep => Nested([20.0, 52.1])
+            ),
+        )
+        add_agent!((4, 3), model, 0.1)
+        add_agent!((7, 5), model, 0.35)
+        add_agent!((2, 9), model, 0.67)
+        return model
+    end
+
     x_position(agent) = first(agent.pos)
     model = initialize()
 
     @testset "DataFrame init" begin
         @test init_agent_dataframe(model, nothing) == DataFrame()
-        @test collect_agent_data!(DataFrame(), model, nothing, 1) == DataFrame()
+        @test collect_agent_data!(DataFrame(), model, nothing) == DataFrame()
 
         @test init_model_dataframe(model, nothing) == DataFrame()
-        @test collect_model_data!(DataFrame(), model, nothing, 1) == DataFrame()
+        @test collect_model_data!(DataFrame(), model, nothing) == DataFrame()
 
         props = [:weight]
         @test sprint(
@@ -86,7 +85,7 @@ end
     @testset "Aggregate Collections" begin
         props = [:weight]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         # Expecting weight values of all three agents. ID and step included.
         @test size(df) == (3, 3)
         @test propertynames(df) == [:step, :id, :weight]
@@ -94,7 +93,7 @@ end
 
         props = [(:weight, mean)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         # Activate aggregation. Weight column is expected to be one value for this step,
         # renamed mean(weight). ID is meaningless and will therefore be dropped.
         @test size(df) == (1, 2)
@@ -104,14 +103,14 @@ end
         # Add a function as a property
         props = [:weight, x_position]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (3, 4)
         @test propertynames(df) == [:step, :id, :weight, :x_position]
         @test mean(df[!, :x_position]) ≈ 4.3333333
 
         props = [(:weight, mean), (x_position, mean)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
         @test df[1, dataname(props[2])] ≈ 4.3333333
@@ -121,14 +120,14 @@ end
 
         props = [(:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 2)
         @test propertynames(df) == [:step, :mean_weight_ytest]
         @test df[1, dataname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.37333333333
@@ -136,7 +135,7 @@ end
 
         props = [(:weight, mean, xtest), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
-        collect_agent_data!(df, model, props, 1)
+        collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
         @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.35
@@ -150,8 +149,6 @@ end
         six_months(model, step) = step % 182 == 0
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = each_year,
             when = six_months,
@@ -169,8 +166,6 @@ end
 
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -182,8 +177,6 @@ end
 
         _, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -194,8 +187,6 @@ end
 
         _, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [365 * 5],
             when = false,
@@ -206,7 +197,7 @@ end
         @testset "Writing to file while running" begin
 
             # CSV
-            offline_run!(model, agent_step!, model_step!, 365 * 5;
+            offline_run!(model, 365 * 5;
                 when_model = each_year,
                 when = six_months,
                 mdata = [:flag, :year],
@@ -217,7 +208,7 @@ end
             adata_saved = CSV.read("adata.csv", DataFrame)
             @test size(adata_saved) == (11, 2)
             @test propertynames(adata_saved) == [:step, :mean_weight]
-            
+
             mdata_saved = CSV.read("mdata.csv", DataFrame)
             @test size(mdata_saved) == (6, 3)
             @test propertynames(mdata_saved) == [:step, :flag, :year]
@@ -227,28 +218,35 @@ end
             @test !isfile("adata.csv")
             @test !isfile("mdata.csv")
 
-            # Arrow, fails on Windows (see issue #826 (https://github.com/JuliaDynamics/Agents.jl/issues/826))
+            # removing .arrow files after operating on them causes IO errors on Windows
+            # so to make tests on Windows work we need to remove them when a new test
+            # run occurs
+            if Sys.iswindows()
+                isfile("adata.arrow") && rm("adata.arrow")
+                isfile("mdata.arrow") && rm("mdata.arrow")
+            end
+
+            offline_run!(model, 365 * 5;
+                when_model = each_year,
+                when = six_months,
+                backend = :arrow,
+                mdata = [:flag, :year],
+                adata = [(:weight, mean)],
+                writing_interval = 3
+            )
+
+            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+            @test size(adata_saved) == (11, 2)
+            @test propertynames(adata_saved) == [:step, :mean_weight]
+
+            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+            @test size(mdata_saved) == (6, 3)
+            @test propertynames(mdata_saved) == [:step, :flag, :year]
+
+            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+
             if !(Sys.iswindows())
-                offline_run!(model, agent_step!, model_step!, 365 * 5;
-                    when_model = each_year,
-                    when = six_months,
-                    backend = :arrow,
-                    mdata = [:flag, :year],
-                    adata = [(:weight, mean)],
-                    writing_interval = 3
-                )
-
-                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
-                @test size(adata_saved) == (11, 2)
-                @test propertynames(adata_saved) == [:step, :mean_weight]
-                
-                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
-                @test size(mdata_saved) == (6, 3)
-                @test propertynames(mdata_saved) == [:step, :flag, :year]
-
-                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
-                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
-
                 rm("adata.arrow")
                 rm("mdata.arrow")
                 @test !isfile("adata.arrow")
@@ -257,10 +255,10 @@ end
 
             # Backends
             @test_throws TypeError begin
-                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = "hdf5")
+                offline_run!(model, 365 * 5; backend = "hdf5")
             end
             @test_throws AssertionError begin
-                offline_run!(model, agent_step!, model_step!, 365 * 5; backend = :hdf5)
+                offline_run!(model, 365 * 5; backend = :hdf5)
             end
         end
     end
@@ -286,12 +284,12 @@ end
 
         for year in 1:5
             for day in 1:365
-                step!(model, agent_step!, model_step!, 1)
-                collect_model_data!(daily_model_data, model, model_props, day * year)
-                collect_model_data!(daily_model_data_fn, model, model_props_fn, day * year)
-                collect_agent_data!(daily_agent_aggregate, model, agent_agg, day * year)
+                step!(model, 1)
+                collect_model_data!(daily_model_data, model, model_props)
+                collect_model_data!(daily_model_data_fn, model, model_props_fn)
+                collect_agent_data!(daily_agent_aggregate, model, agent_agg)
             end
-            collect_agent_data!(yearly_agent_data, model, agent_props, year)
+            collect_agent_data!(yearly_agent_data, model, agent_props)
         end
 
         @test size(daily_model_data) == (1825, 3)
@@ -308,21 +306,20 @@ end
 
         @test size(yearly_agent_data) == (15, 3)
         @test propertynames(yearly_agent_data) == [:step, :id, :weight]
-        @test maximum(yearly_agent_data[!, :step]) == 5
+        @test maximum(yearly_agent_data[!, :step]) == 1825
 
         @test dummystep(model) === nothing
         @test dummystep(model[1], model) === nothing
         tick = model.tick
-        step!(model, agent_step!, 1)
-        @test tick == model.tick
+        step!(model, 1)
+        @test tick + 1 == model.tick
         stop(m, s) = m.year == 6
-        step!(model, agent_step!, model_step!, stop)
+        step!(model, stop)
         @test model.tick == 365 * 6
-        step!(model, agent_step!, model_step!, 1, false)
     end
 
     @testset "Mixed-ABM collections" begin
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent4, model, 5)
 
@@ -411,12 +408,10 @@ end
 
         # Handle mismatches
         # In this example, weight exists in both agents, but they have different types
-        mutable struct Agent3Int <: AbstractAgent
-            id::Int
-            pos::Dims{2}
+        @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = ABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false)
+        model = StandardABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
         add_agent!((2, 4), Agent3, model, 19.81)
@@ -441,14 +436,14 @@ end
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = ABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false)
+        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), Agent3, model, 54.65)
 
-        # get fieldtype from Agent4 struct definition when agent is absent 
+        # get fieldtype from Agent4 struct definition when agent is absent
         props = [:weight, :p]
         df = init_agent_dataframe(model, props)
         @test eltype(df[!, :p]) == Union{Int, Missing}
-        
+
         # Add Agent4 and check data collection
         add_agent!((4, 1), Agent4, model, 3)
         collect_agent_data!(df, model, props)
@@ -464,11 +459,11 @@ end
         model_props = [:container]
         model_data = init_model_dataframe(model, model_props)
         push!(model.container, 50.0)
-        collect_model_data!(model_data, model, model_props, 0; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         push!(model.container, 37.2)
-        collect_model_data!(model_data, model, model_props, 1; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         model.container[1] += 21.9
-        collect_model_data!(model_data, model, model_props, 2; obtainer = copy)
+        collect_model_data!(model_data, model, model_props; obtainer = copy)
         @test model_data.container[1][1] ≈ 50.0
         @test model_data.container[3][1] ≈ 71.9
         @test length.(model_data.container) == [1, 2, 2]
@@ -477,11 +472,11 @@ end
         model_props = [:deep]
         model_data = init_model_dataframe(model, model_props)
         push!(model.deep.data, 17.5)
-        collect_model_data!(model_data, model, model_props, 0; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         push!(model.deep.data, 1.2)
-        collect_model_data!(model_data, model, model_props, 1; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         model.deep.data[1] += 0.9
-        collect_model_data!(model_data, model, model_props, 2; obtainer = deepcopy)
+        collect_model_data!(model_data, model, model_props; obtainer = deepcopy)
         @test model_data[1, :deep].data[1] ≈ 20.0
         @test model_data[3, :deep].data[1] ≈ 20.9
         @test [length(d.data) for d in model_data[!, :deep]] == [3, 4, 4]
@@ -489,8 +484,6 @@ end
         model = initialize()
         agent_data, model_data = run!(
             model,
-            agent_step!,
-            model_step!,
             365 * 5;
             when_model = [1, 365 * 5],
             when = false,
@@ -509,10 +502,11 @@ end
             b::Bool
         end
 
-        model = ABM(
+        model = StandardABM(
             Agent3,
             GridSpace((10, 10));
             properties=Props(1, false),
+            warn_deprecation = false
         )
         mdata = [:a, :b]
 
@@ -531,10 +525,10 @@ end
 
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
-        basemodels = [Models.schelling(; numagents)[1]
-                      for numagents in numagents_low:numagents_high]
-
-        return repeat(basemodels, nreplicates)
+        basemodels = [AgentsExampleZoo.schelling(; numagents)
+                      for numagents in numagents_low:numagents_high 
+                      for _ in 1:nreplicates]
+        return basemodels
     end
 
     @testset begin "Serial ensemblerun!"
@@ -542,7 +536,7 @@ end
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+        adf, mdf, _ = ensemblerun!(models, nsteps;
                                    parallel = false, adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy])
 
@@ -556,7 +550,7 @@ end
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, nsteps;
+        adf, mdf, _ = ensemblerun!(models, nsteps;
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
@@ -574,7 +568,7 @@ end
 
         stopfn(model, step) = all(map(agent -> agent.mood, allagents(model)))
 
-        adf, mdf, _ = ensemblerun!(models, schelling_agent_step!, dummystep, stopfn;
+        adf, mdf, _ = ensemblerun!(models, stopfn;
                                    parallel = true,
                                    adata = [:pos, :mood, :group],
                                    mdata = [numagents, :min_to_be_happy],
@@ -587,16 +581,7 @@ end
 end
 
 @testset "Parameter scan" begin
-    @everywhere @agent Automata GridAgent{2} begin end
-    function forest_fire(; density = 0.7, griddims = (100, 100))
-        space = GridSpace(griddims; periodic = false, metric = :euclidean)
-        forest = ABM(Automata, space; properties = (trees = zeros(Int, griddims),))
-        for I in CartesianIndices(forest.trees)
-            if rand(forest.rng) < density
-                forest.trees[I] = I[1] == 1 ? 2 : 1
-            end
-        end
-        return forest
+    @everywhere @agent struct Automata(GridAgent{2})
     end
 
     function forest_model_step!(forest)
@@ -608,6 +593,18 @@ end
             end
             forest.trees[I] = 3
         end
+    end
+
+    function forest_fire(; density = 0.7, griddims = (100, 100))
+        space = GridSpace(griddims; periodic = false, metric = :euclidean)
+        forest = StandardABM(Automata, space; model_step! = forest_model_step!,
+                     properties = (trees = zeros(Int, griddims),), warn_deprecation = false)
+        for I in CartesianIndices(forest.trees)
+            if rand(abmrng(forest)) < density
+                forest.trees[I] = I[1] == 1 ? 2 : 1
+            end
+        end
+        return forest
     end
 
     n = 10
@@ -622,7 +619,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
@@ -631,7 +627,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             include_constants = true,
             mdata,
         )
@@ -643,7 +638,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         @test unique(mdf.step) == 0:10
@@ -655,7 +649,6 @@ end
             parameters,
             forest_fire;
             n = terminate,
-            model_step! = forest_model_step!,
             mdata)
         @test unique(mdf.step) == 0:3
     end
@@ -666,7 +659,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
         )
         # 3 is the number of combinations of changing params
@@ -675,7 +667,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             include_constants = true,
             mdata,
             parallel = true
@@ -688,7 +679,6 @@ end
             parameters,
             forest_fire;
             n,
-            model_step! = forest_model_step!,
             mdata,
             parallel = true
         )
@@ -701,7 +691,6 @@ end
             parameters,
             forest_fire;
             n = terminate,
-            model_step! = forest_model_step!,
             mdata,
             parallel = true)
         @test unique(mdf.step) == 0:3
@@ -710,26 +699,27 @@ end
 
 @testset "Issue #179 fix" begin
     # only ids sorted, not properties
-    model = ABM(Agent2)
+    model = StandardABM(Agent2, warn_deprecation = false)
     for i in 1:5
         add_agent!(model, i * 0.2)
     end
-    data, _ = run!(model, dummystep, 2; adata = [:weight])
+    data, _ = run!(model, 2; adata = [:weight])
     @test data[1, :id] == 1 && data[1, :weight] ≈ 0.2
     @test data[3, :id] == 3 && data[3, :weight] ≈ 0.6
     @test data[6, :id] == 1 && data[6, :weight] ≈ 0.2
 end
 
 @testset "ensemblerun! and different seeds" begin
+    as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = ABM(Agent4, GridSpace((4, 4)); rng = MersenneTwister(seed))
-        fill_space!(abm, _ -> rand(abm.rng, 1:1000))
+        abm = StandardABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
+                  rng = MersenneTwister(seed), warn_deprecation = false)
+        fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm
     end
-    as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     seeds = [1234, 563, 211]
     adata = [(:p, sum)]
-    adf, _ = ensemblerun!(fake_model, as!, dummystep, 2; adata, seeds)
+    adf, _ = ensemblerun!(fake_model, 2; adata, seeds)
     @test adf[!, :sum_p] == unique(adf[!, :sum_p])
     @test sort!(adf[:, :ensemble]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
 end

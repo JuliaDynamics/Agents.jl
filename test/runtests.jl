@@ -3,6 +3,10 @@ using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
+# TODO: when AgentsExampleZoo is released, remove these Pkg commands
+using Pkg
+Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+using AgentsExampleZoo
 
 using Distributed
 addprocs(2)
@@ -12,50 +16,53 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
+    using AgentsExampleZoo
 end
 
-@agent Agent0 NoSpaceAgent begin end
+@agent struct Agent0(NoSpaceAgent)
+end
 
-@agent Agent1 GridAgent{2} begin end
+@agent struct Agent1(GridAgent{2})
+end
 
-@agent Agent2 NoSpaceAgent begin 
+@agent struct Agent2(NoSpaceAgent) 
     weight::Float64
 end
 
-@agent Agent3 GridAgent{2} begin 
+@agent struct Agent3(GridAgent{2}) 
     weight::Float64
 end
 
-@agent Agent4 GridAgent{2} begin 
+@agent struct Agent4(GridAgent{2}) 
     p::Int
 end
 
-@agent Agent5 GraphAgent begin 
+@agent struct Agent5(GraphAgent) 
     weight::Float64
 end
 
-@agent Agent6 ContinuousAgent{2,Float64} begin 
+@agent struct Agent6(ContinuousAgent{2,Float64}) 
     weight::Float64
 end
 
-@agent Agent7 GraphAgent begin 
+@agent struct Agent7(GraphAgent) 
     f1::Bool
     f2::Int
 end
 
-@agent Agent8 ContinuousAgent{2,Float64} begin 
+@agent struct Agent8(ContinuousAgent{2,Float64}) 
     f1::Bool
     f2::Int
 end
 
 Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
-@agent SchellingAgent GridAgent{2} begin
+@agent struct SchellingAgent(GridAgent{2})
     mood::Bool
     group::Int
 end
 
-@agent Bird ContinuousAgent{2,Float64} begin
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -64,15 +71,17 @@ end
     visual_distance::Float64
 end
 
-function schelling_model(ModelType, SpaceType; numagents = 30, griddims = (8, 8), min_to_be_happy = 3)
+function schelling_model(ModelType, SpaceType, ContainerType; numagents = 30, griddims = (8, 8), min_to_be_happy = 3)
     @assert numagents < prod(griddims)
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ModelType(SchellingAgent, space; properties, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
+    model = ModelType(SchellingAgent, space, agent_step! = schelling_model_agent_step!, 
+                      properties = properties, scheduler = Schedulers.Randomly(), 
+                      container = ContainerType, rng = StableRNG(10))
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
     end
-    return model, schelling_model_agent_step!, dummystep
+    return model
 end
 
 function schelling_model_agent_step!(agent, model)
@@ -91,7 +100,7 @@ function schelling_model_agent_step!(agent, model)
 end
 
 function flocking_model(
-    ModelType;
+    ModelType, ContainerType;
     n_birds = 10,
     speed = 1.0,
     cohere_factor = 0.25,
@@ -103,10 +112,11 @@ function flocking_model(
     spacing = visual_distance,
 )
     space2d = ContinuousSpace(extent; spacing)
-    model = ModelType(Bird, space2d, scheduler = Schedulers.Randomly(), rng=StableRNG(10))
+    model = ModelType(Bird, space2d, agent_step! = flocking_model_agent_step!,
+                      scheduler = Schedulers.Randomly(), rng = StableRNG(10),
+                      container = ContainerType)
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) .* 2 .- 1
-
         add_agent!(
             model,
             vel,
@@ -118,7 +128,7 @@ function flocking_model(
             visual_distance,
         )
     end
-    return model, flocking_model_agent_step!, dummystep
+    return model
 end
 
 function flocking_model_agent_step!(bird, model)
@@ -145,12 +155,13 @@ function flocking_model_agent_step!(bird, model)
 end
 
 @testset "Agents.jl Tests" begin
+    include("package_sanity_tests.jl")
     include("model_creation_tests.jl")
     include("api_tests.jl")
     include("randomness_tests.jl")
     include("scheduler_tests.jl")
-    include("model_access.jl")
-    include("space_test.jl")
+    include("model_access_tests.jl")
+    include("space_tests.jl")
     include("grid_space_tests.jl")
     include("collect_tests.jl")
     include("continuous_space_tests.jl")
@@ -159,4 +170,5 @@ end
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")
+    include("visualization_tests.jl")
 end

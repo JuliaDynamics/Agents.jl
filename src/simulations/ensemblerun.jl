@@ -2,11 +2,11 @@ export ensemblerun!
 Vector_or_Tuple = Union{AbstractArray,Tuple}
 
 """
-    ensemblerun!(models::Vector, agent_step!, model_step!, n; kwargs...)
+    ensemblerun!(models::Vector, n; kwargs...)
 Perform an ensemble simulation of [`run!`](@ref) for all `model ∈ models`.
 Each `model` should be a (different) instance of an [`AgentBasedModel`](@ref) but probably
 initialized with a different random seed or different initial agent distribution.
-All models obey the same rules `agent_step!, model_step!` and are evolved for `n`.
+All models obey the same evolution rules contained in  the model and are evolved for `n`.
 
 Similarly to [`run!`](@ref) this function will collect data. It will furthermore
 add one additional column to the dataframe called `:ensemble`, which has an integer
@@ -29,41 +29,38 @@ All other keywords are propagated to [`run!`](@ref) as-is.
 """
 function ensemblerun!(
     models::Vector_or_Tuple,
-    agent_step!,
-    model_step!,
-    n;
+    n::Union{Function, Int};
     showprogress = false,
     parallel = false,
     kwargs...,
 )
     if parallel
-        return parallel_ensemble(models, agent_step!, model_step!, n;
+        return parallel_ensemble(models, n;
                                  showprogress, kwargs...)
     else
-        return series_ensemble(models, agent_step!, model_step!, n;
+        return series_ensemble(models, n;
                                showprogress, kwargs...)
     end
 end
 
 """
-    ensemblerun!(generator, agent_step!, model_step!, n; kwargs...)
+    ensemblerun!(generator, n; kwargs...)
 Generate many `ABM`s and propagate them into `ensemblerun!(models, ...)` using
 the provided `generator` which is a one-argument function whose input is a seed.
 
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
 function ensemblerun!(
-    generator,
-    args::Vararg{Any, N};
+    generator;
     ensemble = 5,
     seeds = rand(UInt32, ensemble),
     kwargs...,
-) where {N}
+)
     models = [generator(seed) for seed in seeds]
-    ensemblerun!(models, args...; kwargs...)
+    ensemblerun!(models; kwargs...)
 end
 
-function series_ensemble(models, agent_step!, model_step!, n;
+function series_ensemble(models, n;
                          showprogress = false, kwargs...)
 
     @assert models[1] isa ABM
@@ -71,7 +68,7 @@ function series_ensemble(models, agent_step!, model_step!, n;
     nmodels = length(models)
     progress = ProgressMeter.Progress(nmodels; enabled = showprogress)
 
-    df_agent, df_model = run!(models[1], agent_step!, model_step!, n; kwargs...)
+    df_agent, df_model = run!(models[1], n; kwargs...)
 
     ProgressMeter.next!(progress)
 
@@ -81,7 +78,7 @@ function series_ensemble(models, agent_step!, model_step!, n;
     ProgressMeter.progress_map(2:nmodels; progress) do midx
 
         df_agentTemp, df_modelTemp =
-            run!(models[midx], agent_step!, model_step!, n; kwargs...)
+            run!(models[midx], n; kwargs...)
 
         add_ensemble_index!(df_agentTemp, midx)
         add_ensemble_index!(df_modelTemp, midx)
@@ -93,12 +90,12 @@ function series_ensemble(models, agent_step!, model_step!, n;
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, agent_step!, model_step!, n;
+function parallel_ensemble(models, n;
                            showprogress = false, kwargs...)
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
-        run!(model, agent_step!, model_step!, n; kwargs...)
+        run!(model, n; kwargs...)
     end
 
     df_agent = DataFrame()

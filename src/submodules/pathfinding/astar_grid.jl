@@ -6,10 +6,10 @@ Calculate and store the shortest path to move the agent from its current positio
 Use this method in conjunction with [`move_along_route!`](@ref).
 """
 function Agents.plan_route!(
-    agent::A,
+    agent::AbstractAgent,
     dest::Dims{D},
     pathfinder::AStar{D},
-) where {D,A<:AbstractAgent}
+) where {D}
     path = find_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
     pathfinder.agent_paths[agent.id] = path
@@ -27,11 +27,11 @@ Return the position of the chosen destination. Return `nothing` if none of the s
 destinations are reachable.
 """
 function Agents.plan_best_route!(
-    agent::A,
+    agent::AbstractAgent,
     dests,
     pathfinder::AStar{D,P,M,Int64};
     condition::Symbol = :shortest,
-) where {A<:AbstractAgent,D,P,M}
+) where {D,P,M}
     @assert condition ∈ (:shortest, :longest)
     compare = condition == :shortest ? (a, b) -> a < b : (a, b) -> a > b
     best_path = Path{D,Int64}()
@@ -59,12 +59,11 @@ For pathfinding in models with [`GridSpace`](@ref).
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
 function Agents.move_along_route!(
-    agent::A,
-    model::ABM{<:GridSpace{D},A},
+    agent::AbstractAgent,
+    model::ABM{<:GridSpace{D}},
     pathfinder::AStar{D}
-) where {D,A<:AbstractAgent}
+) where {D}
     isempty(agent.id, pathfinder) && return
-
     move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
     popfirst!(pathfinder.agent_paths[agent.id])
 end

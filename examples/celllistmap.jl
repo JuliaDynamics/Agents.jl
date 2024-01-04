@@ -36,7 +36,7 @@ using Agents
 # simulation. The `Particle` type, for the `ContinuousAgent{2,Float64}` space, will have additionally
 # an `id` and `pos` (position) and `vel` (velocity) fields, which are automatically added
 # by the `@agent` macro.
-@agent Particle ContinuousAgent{2,Float64} begin
+@agent struct Particle(ContinuousAgent{2,Float64})
     r::Float64 # radius
     k::Float64 # repulsion force constant
     mass::Float64
@@ -104,8 +104,11 @@ function initialize_bouncing(;
         number_of_particles=number_of_particles,
         system=system,
     )
-    model = ABM(Particle,
-        space2d,
+    model = StandardABM(Particle,
+        space2d;
+        agent_step!,
+        model_step!,
+        agents_first = false,
         properties=properties
     )
 
@@ -193,9 +196,7 @@ function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
     if isnothing(model)
         model = initialize_bouncing(number_of_particles=number_of_particles)
     end
-    Agents.step!(
-        model, agent_step!, model_step!, nsteps, false,
-    )
+    Agents.step!(model, nsteps)
 end
 # Which should be quite fast
 model = initialize_bouncing()
@@ -210,7 +211,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 model = initialize_bouncing(number_of_particles=1000)
 abmvideo(
-    "celllistmap.mp4", model, agent_step!, model_step!;
+    "celllistmap.mp4", model;
     framerate=20, frames=200, spf=5,
     title="Softly bouncing particles with CellListMap.jl",
     as=p -> p.r, # marker size

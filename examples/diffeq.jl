@@ -36,7 +36,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 using Random # hide
 
-@agent Fisher NoSpaceAgent begin
+@agent struct Fisher(NoSpaceAgent)
     competence::Int
     yearly_catch::Float64
 end
@@ -76,8 +76,10 @@ function initialise(;
     min_threshold = 60.0, # Regulate fishing if population drops below this value
     nagents = 50,
 )
-    model = ABM(
+    model = StandardABM(
         Fisher;
+        agent_step!, 
+        model_step!,
         properties = Dict(
             :stock => stock,
             :max_population => max_population,
@@ -102,11 +104,10 @@ nothing #hide
 Random.seed!(6549) #hide
 
 model = initialise()
-_, results = run!(model, agent_step!, model_step!, 20; mdata = [:stock])
+_, results = run!(model, 20; mdata = [:stock])
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
+ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
         ylabel = "Stock",
@@ -153,8 +154,10 @@ function initialise(;
     min_threshold = 60.0, # Regulate fishing if population drops below this value
     nagents = 50,
 )
-    model = ABM(
+    model = StandardABM(
         Fisher;
+        agent_step!,
+        model_step!,
         properties = Dict(
             :stock => stock,
             :max_population => max_population,
@@ -175,8 +178,7 @@ nothing #hide
 Random.seed!(6549) #hide
 model = initialise()
 yearly(model, s) = s % 365 == 0
-_, results =
-    run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
+_, results = run!(model, 20 * 365; mdata = [:stock], when = yearly)
 
 f = Figure(resolution = (600, 400))
 ax =
@@ -196,8 +198,7 @@ f
 using BenchmarkTools
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_step!, model_step!, 20 * 365) setup =
-    (model = initialise())
+@btime Agents.step!(model, 20 * 365) setup = (model = initialise())
 
 # So this is fairly quick since the model is a simple one, but it's certainly not as efficient
 # as it could be.
@@ -253,8 +254,10 @@ function initialise_diffeq(;
         OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
     integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
 
-    model = ABM(
+    model = StandardABM(
         Fisher;
+        agent_step! = agent_diffeq_step!,
+        model_step! = model_diffeq_step!,
         properties = Dict(
             :stock => stock,
             :max_population => max_population,
@@ -289,11 +292,10 @@ nothing #hide
 
 Random.seed!(6549) #hide
 modeldeq = initialise_diffeq()
-_, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
+_, resultsdeq = run!(modeldeq, 20; mdata = [:stock])
 
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
+ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
         ylabel = "Stock",
@@ -305,8 +307,7 @@ f
 # The small complexity addition yields us a generous speed up of around 4.5x.
 
 Random.seed!(6549) #hide
-@btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup =
-    (model = initialise_diffeq())
+@btime Agents.step!(model, 20) setup = (model = initialise_diffeq())
 
 # Digging into the results a little more, we can see that the `DifferentialEquations`
 # solver did not need to solve the logistic equation at every agent step to achieve
@@ -361,8 +362,8 @@ function agent_cb_step!(agent, model)
 end
 
 function initialise_cb(; min_threshold = 60.0, nagents = 50)
-    model = ABM(Fisher; properties = Dict(:min_threshold => min_threshold))
-
+    model = StandardABM(Fisher; agent_step! = agent_cb_step!, 
+                        properties = Dict(:min_threshold => min_threshold))
     for _ in 1:nagents
         add_agent!(model, floor(rand(abmrng(model), truncated(LogNormal(), 1, 6))), 0.0)
     end
@@ -379,7 +380,7 @@ import DiffEqCallbacks
 function fish!(integrator, model)
     integrator.p[2] = integrator.u[1] > model.min_threshold ?
         sum(a.yearly_catch for a in allagents(model)) : 0.0
-    Agents.step!(model, agent_cb_step!, 1)
+    Agents.step!(model, 1)
 end
 
 function fish_stock!(ds, s, p, t)
@@ -405,8 +406,7 @@ sol = OrdinaryDiffEq.solve(
 )
 discrete = vcat(sol(0:365:(365 * 20))[:,:]...)
 f = Figure(resolution = (600, 400))
-ax =
-    f[1, 1] = Axis(
+ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
         ylabel = "Stock",

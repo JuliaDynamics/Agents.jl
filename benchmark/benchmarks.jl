@@ -60,9 +60,9 @@ end
 
 #### API -> GRAPH ####
 
-graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(200)))
-graph_union_model = ABM(
-    Union{GraphAgent,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
+graph_model = StandardABM(GraphAgent, GraphSpace(complete_digraph(200)))
+graph_union_model = StandardABM(
+    Union{GraphAgentOne,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
     GraphSpace(complete_digraph(200)),
     warn = false,
 )
@@ -88,7 +88,7 @@ SUITE["graph"]["add_union"]["agent_pos"] =
 SUITE["graph"]["add_union"]["agent_single"] =
     @benchmarkable add_agent_single!($GraphAgent, $graph_union_model, 6.5, false) samples = 100
 
-graph_model = ABM(GraphAgent, GraphSpace(complete_digraph(100)))
+graph_model = StandardABM(GraphAgent, GraphSpace(complete_digraph(100)))
 for position in 1:100
     for _ in 1:4
         add_agent!(position, graph_model, 6.5, false)
@@ -121,9 +121,9 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 ##### API -> GRID ####
 
-grid_model = ABM(GridAgent, GridSpace((15, 15)))
-grid_union_model = ABM(
-    Union{GridAgent,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
+grid_model = StandardABM(GridAgent, GridSpace((15, 15)))
+grid_union_model = StandardABM(
+    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
     GridSpace((15, 15));
     warn = false,
 )
@@ -138,7 +138,7 @@ SUITE["grid"]["add_union"]["agent_pos"] =
 SUITE["grid"]["add_union"]["agent_fill"] =
     @benchmarkable fill_space!(GridAgent, $grid_union_model, 6.5, false) samples = 100
 
-grid_model = ABM(GridAgent, GridSpace((50, 50)))
+grid_model = StandardABM(GridAgent, GridSpace((50, 50)))
 for x in 1:50
     for y in 1:50
         for _ in 1:4
@@ -176,20 +176,20 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
 
-continuous_model = ABM(ContinuousAgent{3,Float64}, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
+continuous_model = StandardABM(ContinuousAgent{3,Float64}, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 # For tuning, this is actually impossible. So until ContinuousSpace is implemented, we drop these tests.
 SUITE["continuous"]["add"]["agent_pos"] =
     @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup =
-        (cmodel = ABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))) samples =
+        (cmodel = StandardABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))) samples =
         100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
     @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup = (
-        cmodel = ABM(
+        cmodel = StandardABM(
             Union{
-                ContinuousAgent,
+                ContinuousAgentOne,
                 ContinuousAgentTwo,
                 ContinuousAgentThree,
                 ContinuousAgentFour,

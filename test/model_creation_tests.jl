@@ -2,8 +2,8 @@ using Test, Agents, Random
 
 @testset "@agent macro" begin
     @test ContinuousAgent <: AbstractAgent
-    @agent A3 GridAgent{2} begin
-        weight::Float64
+    @agent struct A3(GridAgent{2})
+        weight::Float64 = 3.0
     end
     @test A3 <: AbstractAgent
     @test fieldnames(A3) == (:id, :pos, :weight)
@@ -12,31 +12,32 @@ using Test, Agents, Random
     """
     This is a test docstring for agent A4
     """
-    @agent A4 A3 begin
+    @agent struct A4(A3)
         z::Bool
     end
     @test A4 <: AbstractAgent
     @test fieldnames(A4) == (:id, :pos, :weight, :z)
     @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
     @test contains(string(@doc(A4)), "This is a test docstring for agent A4")
+    @test A4(id=1, pos=(1,1), z=true).weight == 3.0
 
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end
 
-    @agent Worker GridAgent{2} AbstractHuman begin
+    @agent struct Worker(GridAgent{2}) <: AbstractHuman
         age::Int
         moneyz::Float64
     end
     @test Worker <: AbstractHuman
     @test :age ∈ fieldnames(Worker)
 
-    @agent Fisher Worker AbstractHuman begin
+    @agent struct Fisher(Worker) <: AbstractHuman
         fish_per_day::Float64
     end
     @test Fisher <: AbstractHuman
     @test :fish_per_day ∈ fieldnames(Fisher)
 
-    @agent Agent9 NoSpaceAgent begin
+    @agent struct Agent9(NoSpaceAgent)
         f1::Int = 40
         f2::Int
         f3::Float64 = 3.0
@@ -48,11 +49,10 @@ using Test, Agents, Random
     values = (1, 20, 10, 4.0)
     @test all(getfield(agent_kwdef, n) == v for (n, v) in zip(fieldnames(Agent9), values))
 
-    @agent Agent10 NoSpaceAgent begin
+    @agent struct Agent10(NoSpaceAgent)
         f1::Int
-        f2::Int
+        const f2::Int
         f3::Float64
-        constants = (:f2, )
     end
     agent_consts = Agent10(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
@@ -61,11 +61,10 @@ using Test, Agents, Random
     @test agent_consts.f1 == 5
     @test_throws ErrorException agent_consts.f2 = 5
 
-    @agent Agent11 NoSpaceAgent begin
-        f1::Int
-        f2
+    @agent struct Agent11(NoSpaceAgent)
+        const f1::Int
+        const f2
         f3::Float64
-        constants = (:f1, :f2)
     end
     agent_consts = Agent11(1, 2, 10, 5.0)
     values = (1, 2, 10, 5.0)
@@ -75,10 +74,9 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
 
-    @agent Agent12 Agent11 begin
-        f4
+    @agent struct Agent12(Agent11)
+        const f4
         f5::Float64
-        constants = (:f4, )
     end
     agent_consts = Agent12(1, 2, 10, 5.0, true, 3.0)
     values = (1, 2, 10, 5.0, true, 3.0)
@@ -90,8 +88,13 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f1 = 5
     @test_throws ErrorException agent_consts.f2 = 5
     @test_throws ErrorException agent_consts.f4 = false
-end
 
+    abstract type AbstractFoo{D} <: AbstractAgent where D end
+    @agent struct MyFoo{D}(ContinuousAgent{D, Float64}) <: AbstractFoo{D} end
+    @test MyFoo{2} <: AbstractFoo{2}
+    @test !(MyFoo{2} <: AbstractFoo{3})
+    @test fieldtypes(MyFoo{2}) == (Int64, SVector{2, Float64}, SVector{2, Float64})
+end
 
 @testset "Model construction" begin
     mutable struct BadAgent <: AbstractAgent
@@ -110,30 +113,30 @@ end
     @test_logs (
         :warn,
         "Agent type is not mutable, and most library functions assume that it is.",
-    ) ABM(agent)
+    ) match_mode=:any StandardABM(agent)
     # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(agent; warn = false)) <: AbstractAgent
+    @test Agents.agenttype(StandardABM(agent; warn = false, warn_deprecation = false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
-    @test_throws ArgumentError ABM(BadAgent)
+    @test_throws ArgumentError StandardABM(BadAgent, warn_deprecation = false)
     agent = BadAgent(1, 1)
-    @test_throws ArgumentError ABM(agent)
+    @test_throws ArgumentError StandardABM(agent, warn_deprecation = false)
     # Cannot use BadAgent in a grid space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(BadAgent, GridSpace((1, 1)))
-    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(BadAgent, GridSpace((1, 1)), warn_deprecation = false)
+    @test_throws ArgumentError StandardABM(agent, GridSpace((1, 1)), warn_deprecation = false)
     # Cannot use BadAgentId since `id` has an invalid type
-    @test_throws ArgumentError ABM(BadAgentId)
+    @test_throws ArgumentError StandardABM(BadAgentId, warn_deprecation = false)
     agent = BadAgentId(1.0)
-    @test_throws ArgumentError ABM(agent)
+    @test_throws ArgumentError StandardABM(agent, warn_deprecation = false)
     # Cannot use NoSpaceAgent in a grid space context since it has no `pos` field
-    @test_throws ArgumentError ABM(NoSpaceAgent, GridSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(NoSpaceAgent, GridSpace((1, 1)), warn_deprecation = false)
     agent = NoSpaceAgent(1)
-    @test_throws ArgumentError ABM(agent, GridSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(agent, GridSpace((1, 1)), warn_deprecation = false)
     # Cannot use Gridagent in a graph space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(GridAgent{2}, GraphSpace(Agents.Graph(1)))
+    @test_throws ArgumentError StandardABM(GridAgent{2}, GraphSpace(Agents.Graph(1)), warn_deprecation = false)
     agent = GridAgent{2}(1, (1, 1))
-    @test_throws ArgumentError ABM(agent, GraphSpace(Agents.Graph(1)))
+    @test_throws ArgumentError StandardABM(agent, GraphSpace(Agents.Graph(1)), warn_deprecation = false)
     # Cannot use GraphAgent in a continuous space context since `pos` has an invalid type
-    @test_throws ArgumentError ABM(GraphAgent, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(GraphAgent, ContinuousSpace((1, 1)), warn_deprecation = false)
 
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
     mutable struct DiscreteVelocity <: AbstractAgent
@@ -142,9 +145,9 @@ end
         vel::SVector{2,Int}
         diameter::Float64
     end
-    @test_throws ArgumentError ABM(DiscreteVelocity, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(DiscreteVelocity, ContinuousSpace((1, 1)), warn_deprecation = false)
     agent = DiscreteVelocity(1, SVector(1, 1), SVector(2, 3), 2.4)
-    @test_throws ArgumentError ABM(agent, ContinuousSpace((1, 1)))
+    @test_throws ArgumentError StandardABM(agent, ContinuousSpace((1, 1)), warn_deprecation = false)
     # Shouldn't use ParametricAgent since it is not a concrete type
     mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
         id::T
@@ -163,21 +166,21 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(ParametricAgent, GridSpace((1, 1)))
+    ) match_mode=:any StandardABM(ParametricAgent, GridSpace((1, 1)); warn_deprecation = false)
     # Warning is suppressed if flag is set
-    @test Agents.agenttype(ABM(ParametricAgent, GridSpace((1, 1)); warn = false)) <:
+    @test Agents.agenttype(StandardABM(ParametricAgent, GridSpace((1, 1)); warn = false, warn_deprecation = false)) <:
           AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
-    @test Agents.agenttype(ABM(ParametricAgent{Int}, GridSpace((1, 1)))) <: AbstractAgent
+    @test Agents.agenttype(StandardABM(ParametricAgent{Int}, GridSpace((1, 1)), warn_deprecation = false)) <: AbstractAgent
     #Type inferance using an instance can help users here
     agent = ParametricAgent(1, (1, 1), 5, "Info")
-    @test Agents.agenttype(ABM(agent, GridSpace((1, 1)))) <: AbstractAgent
+    @test Agents.agenttype(StandardABM(agent, GridSpace((1, 1)); warn_deprecation = false)) <: AbstractAgent
     #Mixed agents
-    @agent ValidAgent NoSpaceAgent begin
+    @agent struct ValidAgent(NoSpaceAgent)
         dummy::Bool
     end
 
-    @test Agents.agenttype(ABM(Union{NoSpaceAgent,ValidAgent}; warn = false)) <: AbstractAgent
+    @test Agents.agenttype(StandardABM(Union{NoSpaceAgent,ValidAgent}; warn = false, warn_deprecation = false)) <: AbstractAgent
     @test_logs (
         :warn,
         """
@@ -189,8 +192,8 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(Union{NoSpaceAgent,ValidAgent})
-    @test_throws ArgumentError ABM(Union{NoSpaceAgent,BadAgent}; warn = false)
+    ) match_mode=:any StandardABM(Union{NoSpaceAgent,ValidAgent}, warn_deprecation = false)
+    @test_throws ArgumentError StandardABM(Union{NoSpaceAgent,BadAgent}; warn = false, warn_deprecation = false)
 
     # this should work for backward compatibility but throw warning (#855)
     @test_logs (
@@ -204,9 +207,9 @@ end
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.\n"""
-    ) ABM(ContinuousAgent{2}, ContinuousSpace((1,1)))
+    ) match_mode=:any StandardABM(ContinuousAgent{2}, ContinuousSpace((1,1)); warn_deprecation = false)
     # throws if the old ContinuousAgent{2} form is used with a non-Float64 space
-    @test_throws ArgumentError ABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false)
+    @test_throws ArgumentError StandardABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false, warn_deprecation = false)
 end
 
 

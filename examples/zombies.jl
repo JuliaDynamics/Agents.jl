@@ -16,7 +16,7 @@ using Random
 # `Tuple{Int,Int,Float64}`. For simplicity though we shall build this with the [`@agent`](@ref)
 # macro.
 
-@agent Zombie OSMAgent begin
+@agent struct Zombie(OSMAgent)
     infected::Bool
     speed::Float64
 end
@@ -41,9 +41,10 @@ end
 function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
+        agent_step! = zombie_step!,
         properties = properties,
         rng = Random.MersenneTwister(seed)
     )
@@ -94,12 +95,11 @@ end
 # Notice that to visualize Open Street Maps, the package OSMMakie.jl must be loaded
 # as well, besides any Makie plotting backend such as CairoMakie.jl.
 using CairoMakie, OSMMakie
-CairoMakie.activate!() # hide
 zombie_color(agent) = agent.infected ? :green : :black
 zombie_size(agent) = agent.infected ? 10 : 8
 zombies = initialise_zombies()
 
-abmvideo("outbreak.mp4", zombies, zombie_step!;
+abmvideo("outbreak.mp4", zombies;
     title = "Zombie outbreak", framerate = 15, frames = 200,
     ac = zombie_color, as = zombie_size
 )

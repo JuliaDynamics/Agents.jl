@@ -39,8 +39,6 @@
 # after a delay specified by the property `regrowth_time`. The property `countdown` tracks
 # the delay between being consumed and the regrowth time.
 
-# It is also available from the `Models` module as [`Models.predator_prey`](@ref).
-
 # ## Making the model
 # First we define the agent types
 # (here you can see that it isn't really that much
@@ -49,13 +47,13 @@
 # Nevertheless, for the sake of example, we will use two different types.)
 using Agents, Random
 
-@agent Sheep GridAgent{2} begin
+@agent struct Sheep(GridAgent{2})
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
 end
 
-@agent Wolf GridAgent{2} begin
+@agent struct Wolf(GridAgent{2})
     energy::Float64
     reproduction_prob::Float64
     Δenergy::Float64
@@ -88,8 +86,9 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = ABM(Union{Sheep, Wolf}, space;
-        properties, rng, scheduler = Schedulers.randomly, warn = false
+    model = StandardABM(Union{Sheep, Wolf}, space; 
+        agent_step! = sheepwolf_step!, model_step! = grass_step!,
+        properties, rng, scheduler = Schedulers.Randomly(), warn = false
     )
     ## Add agents
     for _ in 1:n_sheep
@@ -109,8 +108,6 @@ function initialize_model(;
     end
     return model
 end
-
-sheepwolfgrass = initialize_model()
 
 # ## Defining the stepping functions
 # Sheep and wolves behave similarly:
@@ -190,6 +187,8 @@ function grass_step!(model)
     end
 end
 
+sheepwolfgrass = initialize_model()
+
 # ## Running the model
 # %% #src
 # We will run the model for 500 steps and record the number of sheep, wolves and consumable
@@ -222,10 +221,7 @@ plotkwargs = (;
 
 sheepwolfgrass = initialize_model()
 
-fig, ax, abmobs = abmplot(sheepwolfgrass;
-    agent_step! = sheepwolf_step!,
-    model_step! = grass_step!,
-plotkwargs...)
+fig, ax, abmobs = abmplot(sheepwolfgrass; plotkwargs...)
 fig
 
 # Now, lets run the simulation and collect some data. Define datacollection:
@@ -237,7 +233,7 @@ sheepwolfgrass = initialize_model()
 steps = 1000
 adata = [(sheep, count), (wolf, count)]
 mdata = [count_grass]
-adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, steps; adata, mdata)
+adf, mdf = run!(sheepwolfgrass, steps; adata, mdata)
 
 # The following plot shows the population dynamics over time.
 # Initially, wolves become extinct because they consume the sheep too quickly.
@@ -270,7 +266,7 @@ stable_params = (;
 )
 
 sheepwolfgrass = initialize_model(;stable_params...)
-adf, mdf = run!(sheepwolfgrass, sheepwolf_step!, grass_step!, 2000; adata, mdata)
+adf, mdf = run!(sheepwolfgrass, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
 # Finding a parameter combination that leads to long-term coexistence was
@@ -284,9 +280,7 @@ sheepwolfgrass = initialize_model(;stable_params...)
 
 abmvideo(
     "sheepwolf.mp4",
-    sheepwolfgrass,
-    sheepwolf_step!,
-    grass_step!;
+    sheepwolfgrass;
     frames = 100,
     framerate = 8,
     title = "Sheep Wolf Grass",
