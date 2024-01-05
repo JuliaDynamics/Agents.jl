@@ -303,13 +303,6 @@ ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
-## Random sampling
-Even if we provide some functions to do the sampling of iterators used in the library (e.g. [`random_nearby_agent`](@ref)), the methods don't cover all possible use cases. However using the [`itsample`](@ref) function it is possible to use
-the same methodology used in those methods, but with any iterator:
-```@docs
-itsample
-```
-
 ## Ensemble runs and Parallelization
 ```@docs
 ensemblerun!

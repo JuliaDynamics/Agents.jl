@@ -1,4 +1,4 @@
-export itsample, sample!, replicate!
+export sample!, replicate!
 using StatsBase: sample, Weights
 
 """
