@@ -304,8 +304,7 @@ nearby_agents(a, model, r = 1; kwargs...) =
 
 """
     random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
-Return the `id` of a random agent near the position of the given `agent` using an optimized
-algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
+Return the `id` of a random agent near the position of the given `agent`. 
 Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
