@@ -387,21 +387,3 @@ function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwa
         end
     end
 end
-
-#######################################################################################
-# %% sampling functions
-#######################################################################################
-
-function sampling_with_condition_single(iter, condition, model, transform=identity)
-    population = collect(iter)
-    n = length(population)
-    rng = abmrng(model)
-    @inbounds while n != 0
-        index_id = rand(rng, 1:n)
-        el = population[index_id]
-        condition(transform(el)) && return transform(el)
-        population[index_id], population[n] = population[n], population[index_id]
-        n -= 1
-    end
-    return nothing
-end

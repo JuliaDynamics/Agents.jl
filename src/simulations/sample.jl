@@ -123,38 +123,19 @@ function choose_arg(x, kwargs_nt, agent)
 end
 
 #######################################################################################
-# %% sampling API
+# %% sampling functions
 #######################################################################################
 
-function sampling_with_condition_single(iter, rng, condition)
-    pop = collect(iter)
-    n_p = length(pop)
-    while n_p != 0
-        idx = rand(rng, 1:n_p)
-        el = pop[idx]
-        condition(el) && return el
-        pop[idx], pop[n_p] = pop[n_p], pop[idx]
-        n_p -= 1
+function sampling_with_condition_single(iter, condition, model, transform=identity)
+    population = collect(iter)
+    n = length(population)
+    rng = abmrng(model)
+    @inbounds while n != 0
+        index_id = rand(rng, 1:n)
+        el = population[index_id]
+        condition(transform(el)) && return transform(el)
+        population[index_id], population[n] = population[n], population[index_id]
+        n -= 1
     end
     return nothing
-end
-
-function sampling_with_condition_multi(iter, rng, n, condition)
-    pop = collect(iter)
-    n_p = length(pop)
-    n_p <= n && return filter(el -> condition(el), pop)
-    res = Vector{eltype(pop)}(undef, n)
-    i = 0
-    while n_p != 0
-        idx = rand(rng, 1:n_p)
-        el = pop[idx]
-        if condition(el)
-            i += 1
-            res[i] = el
-            i == n && return res       
-        end
-        pop[idx], pop[n_p] = pop[n_p], pop[idx]
-        n_p -= 1
-    end
-    return res[1:i] 
 end
