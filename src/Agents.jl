@@ -7,15 +7,16 @@ module Agents
     read(path, String)
 end Agents
 
-using Distributed
-using DataStructures
-using Graphs
 using DataFrames
+using DataStructures
+using Distributed
+using Graphs
+using IteratorSampling
 using MacroTools
+import ProgressMeter
 using Random
 using StaticArrays: SVector
 export SVector
-import ProgressMeter
 import LinearAlgebra
 
 # Core structures of Agents.jl
