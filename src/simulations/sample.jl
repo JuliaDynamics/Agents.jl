@@ -22,68 +22,94 @@ function sample!(
     model::ABM,
     n::Int,
     weight = nothing;
-    replace = true,
+    replace = true
 )
     nagents(model) == 0 && return nothing
     org_ids = collect(allids(model))
     if weight !== nothing
-        weights = Weights([get_data(a, weight, identity) for a in values(model.agents)])
-        newids = sample(model.rng, org_ids, weights, n, replace = replace)
+        weights = Weights([get_data(a, weight, identity) for a in allagents(model)])
+        new_ids = sample(abmrng(model), org_ids, weights, n, replace = replace)
     else
-        newids = sample(model.rng, org_ids, n, replace = replace)
+        new_ids = sample(abmrng(model), org_ids, n, replace = replace)
     end
-    add_newids!(model, org_ids, newids)
+    if n <= length(org_ids) / 2
+        add_newids_bulk!(model, new_ids)
+    else
+        add_newids_each!(model, org_ids, new_ids)
+    end
+    return model
 end
 
-#Used in sample!
-function add_newids!(model, org_ids, newids)
-    # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
-    count_newids = counter(newids)
+function add_newids_each!(model::ABM, org_ids, new_ids)
+    sort!(org_ids)
+    sort!(new_ids)
+    i, L = 1, length(new_ids)
+    sizehint!(agent_container(model), L)
+    id_new = new_ids[1]
     for id in org_ids
-        noccurances = count_newids[id]
         agent = model[id]
-        if noccurances == 0
+        if id_new != id
             remove_agent!(agent, model)
         else
-            for _ in 2:noccurances
+            i += 1
+            while i <= L && (@inbounds new_ids[i] == id)
                 replicate!(agent, model)
+                i += 1
             end
+            i <= L && (@inbounds id_new = new_ids[i])
         end
     end
+    return
+end
+
+function add_newids_bulk!(model::ABM, new_ids)
+    maxid = getfield(model, :maxid)[]
+    new_agents = [copy_agent(model[id], model, maxid+i) for 
+                  (i, id) in enumerate(sort!(new_ids))]
+    remove_all!(model)
+    sizehint!(agent_container(model), length(new_ids))
+    for agent in new_agents
+        add_agent_pos!(agent, model)
+    end
+    return
 end
 
 """
-    replicate!(agent, model; kwargs...) 
+    replicate!(agent, model; kwargs...)
 
-Add a new agent to the `model` at the same position of the given agent, copying
-the values of its fields. With the `kwargs` it is possible to override the values
-by specifying new ones for some fields. 
+Add a new agent to the `model` copying the values of the fields of the given agent.
+With the `kwargs` it is possible to override the values by specifying new ones for
+some fields (except for the `id` field which is set to a new one automatically).
 Return the new agent instance.
 
 ## Example
 ```julia
 using Agents
-@agent A GridAgent{2} begin
+@agent struct A(GridAgent{2})
     k::Float64
     w::Float64
 end
 
-model = ABM(A, GridSpace((5, 5)))
+model = StandardABM(A, GridSpace((5, 5)))
 a = A(1, (2, 2), 0.5, 0.5)
 b = replicate!(a, model; w = 0.8)
 ```
 """
-function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    args = new_args(agent::A, model; kwargs...) 
-    newagent = A(nextid(model), args...)
+function replicate!(agent::AbstractAgent, model; kwargs...)
+    newagent = copy_agent(agent, model, nextid(model); kwargs...)
     add_agent_pos!(newagent, model)
     return newagent
 end
 
+function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
+    args = new_args(agent, model; kwargs...)
+    newagent = A(id_new, args...)
+    return newagent
+end
+
 function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    fields = fieldnames(A)
-    idx_id = findfirst(x -> x == :id, fields)
-    fields_no_id = tuple(fields[1:idx_id-1]..., fields[idx_id+1:end]...)
+    # the id is always the first field
+    fields_no_id = fieldnames(A)[2:end]
     if isempty(kwargs)
         new_args = (deepcopy(getfield(agent, x)) for x in fields_no_id)
     else

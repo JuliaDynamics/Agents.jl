@@ -19,7 +19,7 @@ In principle, the following should be done:
 1. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
 1. Extend `random_position(model)`.
 1. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
-1. Extend `nearby_ids(position, model, r)`.
+1. Extend `nearby_ids(pos, model, r)`.
 1. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
 
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` for performance reasons.

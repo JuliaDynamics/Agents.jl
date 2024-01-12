@@ -1,29 +1,42 @@
 using Agents, Test
 using Random
-using Agents, Test
+using StableRNGs
 
 @testset "Random Number Generation" begin
-    model = ABM(Agent2)
+    model = StandardABM(NoSpaceAgent; warn_deprecation = false)
     @test abmrng(model) == Random.default_rng()
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = ABM(Agent1, GridSpace((3,3)); rng)
-    agent = Agent1(1, (1,1))
-    add_agent_pos!(agent, model)
-    agent = Agent1(2, (1,1))
-    add_agent_single!(agent, model)
+    model = StandardABM(GridAgent{2}, GridSpace((3,3)); rng, warn_deprecation = false)
+    agent = add_agent_single!(model)
+
     # Test that model rng pool was used
     @test abmrng(model) ≠ rng0
-    @test agent.pos == (2,1)
-
-    model = ABM(Agent2; rng = RandomDevice())
-    @test_throws MethodError seed!(abmrng(model), 64)
+    @test agent.pos == (2, 1)
 end
 
 @testset "sample!" begin
+    rng = StableRNG(50)
+    model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
+    add_agent!((1,1), Agent1, model4)
+    add_agent!((2,2), Agent1, model4)
+    sample!(model4, 4)
+    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
+                              3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
+    @test res_fields == agents_fields
+    sample!(model4, 2)
+    res = Dict{Int64, Agent1}(5 => Agent1(5, (1, 1)), 6 => Agent1(6, (2, 2)))
+    res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
+    agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
+    @test allids(model4) == keys(res)
+    @test res_fields == agents_fields
+
     rng = StableRNG(42)
-    model = ABM(Agent2)
+    model = StandardABM(Agent2; rng = rng, warn_deprecation = false)
     for i in 1:20
         add_agent!(model, rand(abmrng(model)))
     end
@@ -35,25 +48,25 @@ end
     mean_weights_new = sum(allweights) / length(allweights)
     @test mean_weights_new > mean_weights
 
-    Random.seed!(6459)
-    #Guarantee all starting weights are unique
-    model3 = ABM(Agent2)
+    model2 = StandardABM(Agent2; rng = rng, warn_deprecation = false)
     while true
         for i in 1:20
-            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
+            add_agent!(model2, rand(abmrng(model2)) / rand(abmrng(model2)))
         end
-        allweights = [i.weight for i in allagents(model3)]
+        allweights = [i.weight for i in allagents(model2)]
         allunique(allweights) && break
     end
     # Cannot draw 50 samples out of a pool of 20 without replacement
-    @test_throws ErrorException sample!(model3, 50, :weight; replace = false)
-    sample!(model3, 15, :weight; replace = false)
-    allweights = [i.weight for i in allagents(model3)]
+    @test_throws ErrorException sample!(model2, 50, :weight; replace = false)
+    sample!(model2, 15, :weight; replace = false)
+    allweights = [i.weight for i in allagents(model2)]
     @test allunique(allweights)
-    model3 = ABM(Agent2)
+
+    model3 = StandardABM(Agent2; rng = rng, warn_deprecation = false)
+    # Guarantee all starting weights are unique
     while true
         for i in 1:20
-            add_agent!(model3, rand(model3.rng) / rand(model3.rng))
+            add_agent!(model3, rand(abmrng(model3)) / rand(abmrng(model3)))
         end
         allweights = [i.weight for i in allagents(model3)]
         allunique(allweights) && break
@@ -65,18 +78,22 @@ end
 
 @testset "random agent" begin
     space = GridSpace((10, 10))
-    model = ABM(Union{Daisy,Land}, space; warn = false)
+    model = StandardABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
-    add_agent!(Land(999, (1, 1), 999), model)
+    add_agent!(Land, model, 999)
 
     a = random_agent(model)
     @test typeof(a) <: Union{Daisy,Land}
 
     c1(a) = a isa Land
-    a = random_agent(model, c1)
-    @test a.id == 999
+    for alloc in (true, false)
+        a = random_agent(model, c1; alloc = alloc)
+        @test a.id == 101
+    end
 
     c2(a) = a isa Float64
-    a = random_agent(model, c2)
-    @test isnothing(a)
+    for alloc in (true, false)
+        a = random_agent(model, c2; alloc = alloc)
+        @test isnothing(a)
+    end
 end

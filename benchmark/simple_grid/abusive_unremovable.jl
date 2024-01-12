@@ -22,12 +22,12 @@ function initialize_abusiveunremovable()
     for i in 1:2N
         grp = i <= N ? 1 : 2
         pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
-        while model.space[pos...] > 0
+        while abmspace(model)[pos...] > 0
             pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
         end
 
         push!(model.agents, AbusiveUnremovableAgent(pos, grp, false))
-        model.space[pos...] = length(model.agents)
+        abmspace(model)[pos...] = length(model.agents)
     end
 
     return model
@@ -40,14 +40,14 @@ function simulate_abusiveunremovable!(model)
         if same_count >= min_to_be_happy
             agent.happy = true
         else
-            grid_dims = size(model.space)
+            grid_dims = size(abmspace(model))
             new_pos = (rand(1:grid_dims[1]), rand(1:grid_dims[2]))
-            while model.space[new_pos...] > 0
+            while abmspace(model)[new_pos...] > 0
                 new_pos = (rand(1:grid_dims[1]), rand(1:grid_dims[2]))
             end
-            model.space[agent.pos...] = 0
+            abmspace(model)[agent.pos...] = 0
             agent.pos = new_pos
-            model.space[agent.pos...] = i
+            abmspace(model)[agent.pos...] = i
         end
     end
 end
@@ -56,8 +56,8 @@ function count_nearby_same_abusiveunremovable(agent, model)
     same_count = 0
     for offset in moore
         new_pos = agent.pos .+ offset
-        if checkbounds(Bool, model.space, new_pos...) && model.space[new_pos...] != 0
-            if model.agents[model.space[new_pos...]].group == agent.group
+        if checkbounds(Bool, abmspace(model), new_pos...) && abmspace(model)[new_pos...] != 0
+            if model.agents[abmspace(model)[new_pos...]].group == agent.group
                 same_count += 1
             end
         end

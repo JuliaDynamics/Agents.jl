@@ -2,20 +2,18 @@ using BenchmarkTools, Agents
 
 const SUITE = BenchmarkGroup(["Schedulers"])
 
-mutable struct FakeAgent <: AbstractAgent
-    id::Int
+@agent struct FakeAgent(NoSpaceAgent)
     group::Int
     incr::Int
 end
 
-mutable struct OtherFakeAgent <: AbstractAgent
-    id::Int
+@agent struct OtherFakeAgent(NoSpaceAgent)
     group::Int
     incr::Int
 end
 
 function fake_model(; nagents, scheduler)
-    model = ABM(FakeAgent; scheduler)
+    model = StandardABM(FakeAgent; scheduler)
     for i in 1:nagents
         add_agent!(model, i % 2, 0)
     end
@@ -23,12 +21,12 @@ function fake_model(; nagents, scheduler)
 end
 
 function fake_model_multi(; nagents, scheduler)
-    model = ABM(Union{FakeAgent,OtherFakeAgent}; scheduler, warn = false)
+    model = StandardABM(Union{FakeAgent,OtherFakeAgent}; scheduler, warn = false)
     for i in 1:nagents
         if i % 2 == 0
-            add_agent!(FakeAgent(i, 0, 0), model)
+            add_agent!(FakeAgent, model, 0, 0)
         else
-            add_agent!(OtherFakeAgent(i, 1, 0), model)
+            add_agent!(OtherFakeAgent, model, 1, 0)
         end
     end
     model

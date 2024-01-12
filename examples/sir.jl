@@ -49,7 +49,7 @@ using DrWatson: @dict
 using CairoMakie
 CairoMakie.activate!() # hide
 
-@agent PoorSoul GraphAgent begin
+@agent struct PoorSoul(GraphAgent)
     days_infected::Int  # number of days since is infected
     status::Symbol  # 1: S, 2: I, 3:R
 end
@@ -97,7 +97,7 @@ function model_initiation(;
         death_rate
     )
     space = GraphSpace(complete_graph(C))
-    model = ABM(PoorSoul, space; properties, rng)
+    model = StandardABM(PoorSoul, space; agent_step!, properties, rng)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -167,9 +167,6 @@ function create_params(;
     return params
 end
 
-params = create_params(C = 8, max_travel_rate = 0.01)
-model = model_initiation(; params...)
-
 # ## SIR Stepping functions
 
 # Now we define the functions for modelling the virus spread in time
@@ -183,7 +180,7 @@ end
 
 function migrate!(agent, model)
     pid = agent.pos
-    m = sample(model.rng, 1:(model.C), Weights(model.migration_rates[pid, :]))
+    m = sample(abmrng(model), 1:(model.C), Weights(model.migration_rates[pid, :]))
     if m ≠ pid
         move_agent!(agent, m, model)
     end
@@ -197,13 +194,13 @@ function transmit!(agent, model)
         model.β_det[agent.pos]
     end
 
-    n = rate * abs(randn(model.rng))
+    n = rate * abs(randn(abmrng(model)))
     n <= 0 && return
 
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand(model.rng) ≤ model.reinfection_probability)
+           (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n <= 0 && return
@@ -215,7 +212,7 @@ update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand(model.rng) ≤ model.death_rate
+        if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
             agent.status = :R
@@ -224,6 +221,9 @@ function recover_or_die!(agent, model)
     end
 end
 
+params = create_params(C = 8, max_travel_rate = 0.01)
+model = model_initiation(; params...)
+
 # ## Example animation
 # At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
 # utilize the [`ABMObservable`](@ref). We do not need to collect data here,
@@ -231,7 +231,7 @@ end
 
 using CairoMakie
 CairoMakie.activate!() # hide
-abmobs = ABMObservable(model; agent_step!)
+abmobs = ABMObservable(model)
 
 # We then initialize elements that are lifted observables from `abmobs`:
 infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
@@ -279,20 +279,19 @@ nothing # hide
 model = model_initiation(; params...)
 
 to_collect = [(:status, f) for f in (infected, recovered, length)]
-data, _ = run!(model, agent_step!, 100; adata = to_collect)
+data, _ = run!(model, 100; adata = to_collect)
 data[1:10, :]
 
 # We now plot how quantities evolved in time to show
 # the exponential growth of the virus
 
 N = sum(model.Ns) # Total initial population
-x = data.step
 fig = Figure(resolution = (600, 400))
 ax = fig[1, 1] = Axis(fig, xlabel = "steps", ylabel = "log10(count)")
-li = lines!(ax, x, log10.(data[:, aggname(:status, infected)]), color = :blue)
-lr = lines!(ax, x, log10.(data[:, aggname(:status, recovered)]), color = :red)
-dead = log10.(N .- data[:, aggname(:status, length)])
-ld = lines!(ax, x, dead, color = :green)
+li = lines!(ax, data.step, log10.(data[:, dataname((:status, infected))]), color = :blue)
+lr = lines!(ax, data.step, log10.(data[:, dataname((:status, recovered))]), color = :red)
+dead = log10.(N .- data[:, dataname((:status, length))])
+ld = lines!(ax, data.step, dead, color = :green)
 Legend(fig[1, 2], [li, lr, ld], ["infected", "recovered", "dead"])
 fig
 

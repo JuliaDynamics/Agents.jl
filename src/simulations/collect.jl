@@ -1,11 +1,5 @@
-export run!,
-    offline_run!,
-    collect_agent_data!,
-    collect_model_data!,
-    init_agent_dataframe,
-    init_model_dataframe,
-    dataname,
-    should_we_collect
+export run!, offline_run!, collect_agent_data!, collect_model_data!,
+       init_agent_dataframe, init_model_dataframe, dataname
 
 ###################################################
 # Definition of the data collection API
@@ -28,12 +22,13 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model, agent_step! [, model_step!], n::Integer; kwargs...) → agent_df, model_df
-    run!(model, agent_step!, model_step!, n::Function; kwargs...) → agent_df, model_df
+    run!(model::ABM, n::Integer; kwargs...) → agent_df, model_df
+    run!(model::ABM, f::Function; kwargs...) → agent_df, model_df
+    run!(model::EventQueueABM, n::Float64; kwargs...) → agent_df, model_df
 
 Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
 data specified by the keywords, explained one by one below. Return the data as
-two `DataFrame`s, one for agent-level data and one for model-level data.
+two `DataFrame`s, one for agent-level data and one for model-level data. 
 
 See also [`offline_run!`](@ref) to write data to file while running the model.
 
@@ -93,31 +88,28 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
 ## Other keywords
-* `when=true` : at which steps `s` to perform the data collection and processing.
+* `when=true` : at which time `s` to perform the data collection and processing.
   A lot of flexibility is offered based on the type of `when`. If `when::AbstractVector`,
   then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
-  returns `true`. By default data are collected in every step.
-* `when_model = when` : same as `when` but for model data.
+  returns `true`. By default data are collected in every step. If `model` is a `EventQueueABM`,
+  passing `when` as a function is not supported.
+* `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
+  only `when_model = when` is supported.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
-* `agents_first=true` : Whether to update agents first and then the model, or vice versa.
 * `showprogress=false` : Whether to show progress
 """
 function run! end
 
-run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    run!(model::ABM, agent_step!, dummystep, n; kwargs...)
-
-function run!(model, agent_step!, model_step!, n;
+function run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
         mdata = nothing,
         adata = nothing,
         obtainer = identity,
-        agents_first = true,
         showprogress = false,
     )
     df_agent = init_agent_dataframe(model, adata)
@@ -135,39 +127,97 @@ function run!(model, agent_step!, model_step!, n;
         end
     end
 
-    s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, 1)
         s += 1
         ProgressMeter.next!(p)
     end
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
+    end
+    ProgressMeter.finish!(p)
+    return df_agent, df_model
+end
+
+function run!(model::EventQueueABM, n::Real;
+        when = true,
+        when_model = when,
+        mdata = nothing,
+        adata = nothing,
+        obtainer = identity,
+        showprogress = false,
+    )
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+
+    t = getfield(model, :time)
+    t0 = t[]
+    dt = when == true ? dt = 1.0 : dt = when
+    if dt isa AbstractVector
+        range_vals = [dt[1], diff(dt)...]
+    else
+        k = Int(div(n, dt))
+        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
+    end
+    for s in range_vals
+        if until(t[], t0, n, model)
+            step!(model, s)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+            ProgressMeter.next!(p)
+        else
+            break
+        end
+    end
+    if t[] < t0 + n
+        step!(model, t0+n-t[])
+        if !(dt isa AbstractVector)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+        end
+        ProgressMeter.next!(p)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
 
 """
-    offline_run!(model, agent_step! [, model_step!], n::Integer; kwargs...)
-    offline_run!(model, agent_step!, model_step!, n::Function; kwargs...)
+    offline_run!(model, n::Integer; kwargs...)
+    offline_run!(model, f::Function; kwargs...)
 
-Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory 
-dataframe, write the output to a file after collecting data `writing_interval` times and 
+Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory
+dataframe, write the output to a file after collecting data `writing_interval` times and
 empty the dataframe after each write.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
@@ -187,16 +237,12 @@ during execution.
 """
 function offline_run! end
 
-offline_run!(model::ABM, agent_step!, n::Int = 1; kwargs...) =
-    offline_run!(model::ABM, agent_step!, dummystep, n; kwargs...)
-
-function offline_run!(model, agent_step!, model_step!, n;
+function offline_run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
         mdata = nothing,
         adata = nothing,
         obtainer = identity,
-        agents_first = true,
         showprogress = false,
         backend::Symbol = :csv,
         adata_filename = "adata.$backend",
@@ -219,19 +265,19 @@ function offline_run!(model, agent_step!, model_step!, n;
     end
 
     writer = get_writer(backend)
-    run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+    run_and_write!(model, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
-        obtainer, agents_first,
+        obtainer,
         showprogress,
         writer, adata_filename, mdata_filename, writing_interval
     )
 end
 
-function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
+function run_and_write!(model, df_agent, df_model, n;
     when, when_model,
     mdata, adata,
-    obtainer, agents_first,
+    obtainer,
     showprogress,
     writer, adata_filename, mdata_filename, writing_interval
 )
@@ -244,9 +290,12 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
 
     agent_count_collections = 0
     model_count_collections = 0
-    while until(s, n, model)
+
+    t = getfield(model, :time)
+    t0, s = t[], 0
+    while until(t[], t0, n, model)
         if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata, s; obtainer)
+            collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
                 writer(adata_filename, df_agent, isfile(adata_filename))
@@ -254,24 +303,24 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
             end
         end
         if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata, s; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
                 writer(mdata_filename, df_model, isfile(mdata_filename))
                 empty!(df_model)
             end
         end
-        step!(model, agent_step!, model_step!, 1, agents_first)
+        step!(model, 1)
         s += 1
         ProgressMeter.next!(p)
     end
 
     if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata, s; obtainer)
+        collect_agent_data!(df_agent, model, adata; obtainer)
         agent_count_collections += 1
     end
     if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata, s; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
         model_count_collections += 1
     end
     # catch collected data that was not yet written to disk
@@ -288,6 +337,85 @@ function run_and_write!(model, agent_step!, model_step!, df_agent, df_model, n;
     return nothing
 end
 
+function run_and_write!(model::EventQueueABM, df_agent, df_model, n;
+    when, when_model,
+    mdata, adata,
+    obtainer,
+    showprogress,
+    writer, adata_filename, mdata_filename, writing_interval
+)
+    df_agent = init_agent_dataframe(model, adata)
+    df_model = init_model_dataframe(model, mdata)
+    if n isa Integer
+        if when == true
+            for c in eachcol(df_agent)
+                sizehint!(c, n)
+            end
+        end
+        if when_model == true
+            for c in eachcol(df_model)
+                sizehint!(c, n)
+            end
+        end
+    end
+
+    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+
+    agent_count_collections = 0
+    model_count_collections = 0
+
+    t = getfield(model, :time)
+    t0 = t[]
+    dt = when == true ? dt = 1.0 : dt = when
+    if dt isa AbstractVector
+        range_vals = [dt[1], diff(dt)...]
+    else
+        k = Int(div(n, dt))
+        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
+    end
+    for s in range_vals
+        if until(t[], t0, n, model)
+            step!(model, s)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+            agent_count_collections += 1
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, isfile(adata_filename))
+                empty!(df_agent)
+            end
+            model_count_collections += 1
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, isfile(mdata_filename))
+                empty!(df_model)
+            end
+            ProgressMeter.next!(p)
+        else
+            break
+        end
+    end
+    if t[] < t0 + n
+        step!(model, t0+n-t[])
+        if !(dt isa AbstractVector)
+            collect_agent_data!(df_agent, model, adata; obtainer)
+            collect_model_data!(df_model, model, mdata; obtainer)
+        end
+        ProgressMeter.next!(p)
+    end
+
+    # catch collected data that was not yet written to disk
+    if !isempty(df_agent)
+        writer(adata_filename, df_agent, isfile(adata_filename))
+        empty!(df_agent)
+    end
+    if !isempty(df_model)
+        writer(mdata_filename, df_model, isfile(mdata_filename))
+        empty!(df_model)
+    end
+
+    ProgressMeter.finish!(p)
+    return df_agent, df_model
+end
+
 """
     get_writer(backend)
 Return a function to write to file using a given `backend`.
@@ -299,11 +427,6 @@ function get_writer(backend)
     if backend == :csv
         return writer_csv
     elseif backend == :arrow
-        if Sys.iswindows()
-            error("""Arrow.jl integration currently does not work on Windows.
-            Please use another backend like `:csv` until the issue has been resolved.
-            Further info: https://github.com/JuliaDynamics/Agents.jl/issues/826""")
-        end
         return writer_arrow
     end
 end
@@ -321,22 +444,9 @@ function writer_arrow end
 Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 """
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
-
-"""
-    collect_agent_data!(df, model, properties, step = 0; obtainer = identity)
-Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
-of `properties` and `obtainer`). `step` is given because the step number information
-is not known.
-"""
-collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-
-function init_agent_dataframe(
-    model::ABM{S,A},
-    properties::AbstractArray,
-) where {S,A<:AbstractAgent}
-    nagents(model) < 1 &&
-        throw(ArgumentError("Model must have at least one agent to initialize data collection",))
-
+function init_agent_dataframe(model::ABM, properties::AbstractArray)
+    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
+    A = agenttype(model)
     utypes = union_types(A)
     std_headers = length(utypes) > 1 ? 3 : 2
 
@@ -349,7 +459,11 @@ function init_agent_dataframe(
     end
 
     types = Vector{Vector}(undef, std_headers + length(properties))
-    types[1] = Int[]
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
     types[2] = Int[]
 
     if std_headers == 3
@@ -361,12 +475,143 @@ function init_agent_dataframe(
 
     DataFrame(types, headers)
 end
+function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
+    nagents(model) < 1 && throw(ArgumentError(
+        "Model must have at least one agent to initialize data collection",
+    ))
+    headers = Vector{String}(undef, 1 + length(properties))
+    types = Vector{Vector}(undef, 1 + length(properties))
+    A = agenttype(model)
+    utypes = union_types(A)
 
-function single_agent_types!(
-    types::Vector{Vector{T} where T},
+    headers[1] = "step"
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
+
+    if length(utypes) > 1
+        multi_agent_agg_types!(types, utypes, headers, model, properties)
+    else
+        single_agent_agg_types!(types, headers, model, properties)
+    end
+    DataFrame(types, headers)
+end
+
+"""
+    init_model_dataframe(model, mdata) → model_df
+Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
+`mdata` can be a `Vector` or generator `Function`.
+"""
+function init_model_dataframe(model::ABM, properties::Vector)
+    headers = Vector{String}(undef, 1 + length(properties))
+    headers[1] = "step"
+    for i in 1:length(properties)
+        headers[i+1] = dataname(properties[i])
+    end
+
+    types = Vector{Vector}(undef, 1 + length(properties))
+    if model isa EventQueueABM
+        types[1] = Float64[]
+    else
+        types[1] = Int[]
+    end
+    for (i, k) in enumerate(properties)
+        types[i+1] = if typeof(k) <: Symbol
+            current_props = abmproperties(model)
+            # How the properties are accessed depends on the type
+            if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
+                typeof(current_props[k])[]
+            else
+                typeof(getfield(current_props, k))[]
+            end
+        else
+            current_type = typeof(k(model))
+            isconcretetype(current_type) || @warn(
+                "Type is not concrete when using $(k)" *
+                "on the model. Considering narrowing the type signature of $(k).",
+            )
+            current_type[]
+        end
+    end
+    DataFrame(types, headers)
+end
+init_model_dataframe(model::ABM, properties::Function) =
+    init_model_dataframe(model, properties(model))
+init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
+
+"""
+    collect_agent_data!(df, model, properties; obtainer = identity)
+Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
+of `properties` and `obtainer`).
+"""
+collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = sort!(collect(allagents(model)), by = a -> a.id)
+    dd = DataFrame()
+    dd[!, :step] = fill(abmtime(model), length(alla))
+    dd[!, :id] = map(a -> a.id, alla)
+    if :agent_type ∈ propertynames(df)
+        dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
+    end
+
+    for fn in properties
+        _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
+    end
+    append!(df, dd)
+    return df
+end
+function collect_agent_data!(
+    df,
     model::ABM,
-    properties::AbstractArray,
+    properties::Vector{<:Tuple}, 
+    step::Int = 0;
+    kwargs...,
 )
+    if step != 0
+        @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    alla = allagents(model)
+    push!(df[!, 1], abmtime(model))
+    for (i, prop) in enumerate(properties)
+        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
+    end
+    return df
+end
+
+"""
+    collect_model_data!(df, model, properties, obtainer = identity)
+Same as [`collect_agent_data!`](@ref) but for model data instead.
+`properties` can be a `Vector` or generator `Function`.
+"""
+function collect_model_data!(
+    df,
+    model,
+    properties::Vector,
+    step::Real = 0;
+    obtainer = identity,
+)
+    if step != 0
+        @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
+             now `abmtime(model)` is used automatically"
+    end
+    push!(df[!, :step], abmtime(model))
+    for fn in properties
+        push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
+    end
+    return df
+end
+collect_model_data!(df, model, properties::Function, step::Real = 0; kwargs...) =
+    collect_model_data!(df, model, properties(model), step; kwargs...)
+collect_model_data!(df, model, properties::Nothing, step::Real = 0; kwargs...) = df
+
+function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::AbstractArray)
     a = first(allagents(model))
     for (i, k) in enumerate(properties)
         current_type = typeof(get_data(a, k, identity))
@@ -375,6 +620,27 @@ function single_agent_types!(
             "on agents. Consider narrowing the type signature of $(k).",
         )
         types[i+2] = current_type[]
+    end
+end
+
+function single_agent_agg_types!(
+    types::Vector{Vector{T} where T},
+    headers::Vector{String},
+    model::ABM,
+    properties::AbstractArray,
+)
+    for (i, property) in enumerate(properties)
+        k, agg = property
+        headers[i+1] = dataname(property)
+        # This line assumes that `agg` can work with iterators directly
+        current_type = typeof(agg(
+            get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
+        ))
+        isconcretetype(current_type) || @warn(
+            "Type is not concrete when using function $(agg) " *
+            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+        )
+        types[i+1] = current_type[]
     end
 end
 
@@ -389,16 +655,16 @@ function multi_agent_types!(
     for (i, k) in enumerate(properties)
         current_types = DataType[]
         for atype in utypes
-            a = try 
+            a = try
                 first(Iterators.filter(a -> a isa atype, allagents(model)))
             catch
                 nothing
-            end 
-            
+            end
+
             if k isa Symbol
-                current_type = if hasproperty(a, k) 
+                current_type = if hasproperty(a, k)
                     typeof(get_data(a, k, identity))
-                else 
+                else
                     hasfield(atype, k) ? fieldtype(atype, k) : Missing
                 end
             else
@@ -425,88 +691,6 @@ function multi_agent_types!(
     end
 end
 
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
-    alla = sort!(collect(values(model.agents)), by = a -> a.id)
-    dd = DataFrame()
-    dd[!, :step] = fill(step, length(alla))
-    dd[!, :id] = map(a -> a.id, alla)
-    if :agent_type ∈ propertynames(df)
-        dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
-    end
-
-    for fn in properties
-        _add_col_data!(dd, eltype(df[!, dataname(fn)]), fn, alla; kwargs...)
-    end
-    append!(df, dd)
-    return df
-end
-
-function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T}
-    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
-end
-
-function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T>:Missing}
-    dd[!, dataname(property)] =
-        collect(get_data_missing(a, property, obtainer) for a in agent_iter)
-end
-
-# Aggregating version
-function init_agent_dataframe(
-    model::ABM{S,A},
-    properties::Vector{<:Tuple},
-) where {S,A<:AbstractAgent}
-    nagents(model) < 1 && throw(ArgumentError(
-        "Model must have at least one agent to " * "initialize data collection",
-    ))
-    headers = Vector{String}(undef, 1 + length(properties))
-    types = Vector{Vector}(undef, 1 + length(properties))
-
-    utypes = union_types(A)
-
-    headers[1] = "step"
-    types[1] = Int[]
-
-    if length(utypes) > 1
-        multi_agent_agg_types!(types, utypes, headers, model, properties)
-    else
-        single_agent_agg_types!(types, headers, model, properties)
-    end
-    DataFrame(types, headers)
-end
-
-function single_agent_agg_types!(
-    types::Vector{Vector{T} where T},
-    headers::Vector{String},
-    model::ABM,
-    properties::AbstractArray,
-)
-    for (i, property) in enumerate(properties)
-        k, agg = property
-        headers[i+1] = dataname(property)
-        # This line assumes that `agg` can work with iterators directly
-        current_type = typeof(agg(
-            get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
-        ))
-        isconcretetype(current_type) || @warn(
-            "Type is not concrete when using function $(agg) " *
-            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
-        )
-        types[i+1] = current_type[]
-    end
-end
-
 function multi_agent_agg_types!(
     types::Vector{Vector{T} where T},
     utypes::Tuple,
@@ -519,11 +703,11 @@ function multi_agent_agg_types!(
         headers[i+1] = dataname(property)
         current_types = DataType[]
         for atype in utypes
-            a = try 
+            a = try
                 first(Iterators.filter(a -> a isa atype, allagents(model)))
             catch
                 nothing
-            end 
+            end
 
             if k isa Symbol
                 current_type =
@@ -569,25 +753,26 @@ dataname(x::Function) = join(
     vcat([string(x)], ["$(prop)=$(getproperty(x, prop))" for prop in propertynames(x)]),
     "_",
 )
-@deprecate aggname dataname
-@deprecate aggname(k, agg) dataname((k, agg))
-@deprecate aggname(k, agg, condition) dataname((k, agg, condition))
 
-function collect_agent_data!(
-    df,
-    model::ABM,
-    properties::Vector{<:Tuple},
-    step::Int = 0;
-    kwargs...,
-)
-    alla = allagents(model)
-    push!(df[!, 1], step)
-    for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
-    end
-    return df
+function _add_col_data!(
+    dd::DataFrame,
+    col::Type{T},
+    property,
+    agent_iter;
+    obtainer = identity,
+) where {T}
+    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
-
+function _add_col_data!(
+    dd::DataFrame,
+    col::Type{T},
+    property,
+    agent_iter;
+    obtainer = identity,
+) where {T>:Missing}
+    dd[!, dataname(property)] =
+        collect(get_data_missing(a, property, obtainer) for a in agent_iter)
+end
 # Normal aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -599,7 +784,6 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
     push!(col, res)
 end
-
 # Conditional aggregates
 function _add_col_data!(
     col::AbstractVector{T},
@@ -612,71 +796,3 @@ function _add_col_data!(
     push!(col, res)
 end
 
-# Model data
-"""
-    init_model_dataframe(model, mdata) → model_df
-Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
-`mdata` can be a `Vector` or generator `Function`.
-"""
-function init_model_dataframe(model::ABM, properties::Vector)
-    headers = Vector{String}(undef, 1 + length(properties))
-    headers[1] = "step"
-    for i in 1:length(properties)
-        headers[i+1] = dataname(properties[i])
-    end
-
-    types = Vector{Vector}(undef, 1 + length(properties))
-    types[1] = Int[]
-    for (i, k) in enumerate(properties)
-        types[i+1] = if typeof(k) <: Symbol
-            current_props = model.properties
-            # How the properties are accessed depends on the type
-            if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
-                typeof(current_props[k])[]
-            else
-                typeof(getfield(current_props, k))[]
-            end
-        else
-            current_type = typeof(k(model))
-            isconcretetype(current_type) || @warn(
-                "Type is not concrete when using $(k)" *
-                "on the model. Considering narrowing the type signature of $(k).",
-            )
-            current_type[]
-        end
-    end
-    DataFrame(types, headers)
-end
-
-init_model_dataframe(model::ABM, properties::Function) =
-    init_model_dataframe(model, properties(model))
-
-init_model_dataframe(model::ABM, properties::Nothing) = DataFrame()
-
-"""
-    collect_model_data!(df, model, properties, step = 0, obtainer = identity)
-Same as [`collect_agent_data!`](@ref) but for model data instead.
-`properties` can be a `Vector` or generator `Function`.
-"""
-function collect_model_data!(
-    df,
-    model,
-    properties::Vector,
-    step::Int = 0;
-    obtainer = identity,
-)
-    push!(df[!, :step], step)
-    for fn in properties
-        push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
-    end
-    return df
-end
-
-collect_model_data!(df, model, properties::Function, step::Int = 0; kwargs...) =
-    collect_model_data!(df, model, properties(model), step; kwargs...)
-
-collect_model_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-
-###################################################
-# Parallel / replicates
-###################################################

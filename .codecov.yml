@@ -1,6 +1,12 @@
 ignore:
   - "examples"   # No need to cover the examples
   - "src/models" # Examples provide integration testing here
-  - "src/visualizations" # Plot recipes aren't tested
+  - "src/deprecations.jl"
+  - "src/visualizations.jl"
+  - "ext/AgentsVisualizations"
+  - "ext/AgentsOSMVisualizations"
+  - "ext/AgentsGraphVisualizations"
+  - "benchmark"
   - "test"
   - "docs"
+  

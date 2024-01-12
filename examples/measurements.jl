@@ -13,13 +13,13 @@
 using Agents
 using Measurements
 
-@agent Daisy GridAgent{2} begin
+@agent struct Daisy(GridAgent{2})
     breed::Symbol
     age::Int
     albedo::AbstractFloat # Allow Measurements
 end
 
-@agent Land GridAgent{2} begin
+@agent struct Land(GridAgent{2})
     temperature::AbstractFloat # Allow Measurements
 end
 
@@ -41,7 +41,7 @@ import StatsBase
 CairoMakie.activate!() # hide
 using Random # hide
 
-const DaisyWorld = ABM{<:GridSpace,Union{Daisy,Land}}
+const DaisyWorld = ABM{<:GridSpace}
 
 function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
     ids = ids_in_position(pos, model)
@@ -56,7 +56,7 @@ function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
 end
 
 function diffuse_temperature!(pos::Dims{2}, model::DaisyWorld)
-    ratio = get(model.properties, :ratio, 0.5)
+    ratio = get(abmproperties(model), :ratio, 0.5)
     ids = nearby_ids(pos, model)
     meantemp = sum(model[i].temperature for i in ids if model[i] isa Land) / 8
     land = model[ids_in_position(pos, model)[1]]
@@ -69,12 +69,11 @@ function propagate!(pos::Dims{2}, model::DaisyWorld)
         daisy = model[ids[2]]
         temperature = model[ids[1]].temperature
         seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand(model.rng) < seed_threshold
+        if rand(abmrng(model)) < seed_threshold
             filter_place_daisy(pos) = length(ids_in_position(pos, model)) == 1
             seeding_place = random_nearby_position(pos, model, 1, filter_place_daisy)
             if !isnothing(seeding_place)
-                a = Daisy(nextid(model), seeding_place, daisy.breed, 0, daisy.albedo)
-                add_agent_pos!(a, model)
+                add_agent!(seeding_place, Daisy, model, daisy.breed, 0, daisy.albedo)
             end
         end
     end
@@ -134,9 +133,11 @@ function daisyworld(;
     properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
     properties[:tick] = 0
     daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
-    model = ABM(
+    model = StandardABM(
         Union{Daisy,Land},
         space;
+        agent_step!, 
+        model_step!,
         scheduler = daisysched,
         properties = properties,
         warn = false,
@@ -149,17 +150,14 @@ function daisyworld(;
     white_positions =
         StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
     for wp in white_positions
-        wd = Daisy(nextid(model), wp, :white, rand(model.rng, 0:max_age), albedo_white)
-        add_agent_pos!(wd, model)
+        add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
     allowed = setdiff(grid, white_positions)
     black_positions =
         StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
     for bp in black_positions
-        wd = Daisy(nextid(model), bp, :black, rand(model.rng, 0:max_age), albedo_black)
-        add_agent_pos!(wd, model)
+        add_agent!(bp, Daisy, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end
-
     return model
 end
 
@@ -188,15 +186,13 @@ mdata = [:solar_luminosity]
 
 Random.seed!(19) # hide
 model = daisyworld(scenario = :ramp)
-agent_df, model_df =
-    run!(model, agent_step!, model_step!, 1000; adata = adata, mdata = mdata)
+agent_df, model_df = run!(model, 1000; adata = adata, mdata = mdata)
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
 lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
 lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
-leg =
-    f[1, 1] = Legend(
+leg = f[1, 1] = Legend(
         f,
         [lb, lw],
         ["black", "white"],
