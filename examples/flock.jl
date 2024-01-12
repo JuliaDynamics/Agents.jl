@@ -12,16 +12,13 @@
 # * fly towards the average position of neighbors
 # * fly in the average direction of neighbors
 
-# It is also available from the `Models` module as [`Models.flocking`](@ref).
-
 # ## Defining the core structures
 
 # We begin by calling the required packages and defining an agent type representing a bird.
-
 using Agents
 using Random, LinearAlgebra
 
-@agent Bird ContinuousAgent{2} begin
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -47,11 +44,11 @@ end
 # a model object using default values.
 function initialize_model(;
     n_birds = 100,
-    speed = 2.0,
-    cohere_factor = 0.4,
-    separation = 4.0,
+    speed = 1.5,
+    cohere_factor = 0.1,
+    separation = 2.0,
     separate_factor = 0.25,
-    match_factor = 0.02,
+    match_factor = 0.04,
     visual_distance = 5.0,
     extent = (100, 100),
     seed = 42,
@@ -59,9 +56,9 @@ function initialize_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, agent_step!, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
             model,
             vel,
@@ -76,8 +73,6 @@ function initialize_model(;
     return model
 end
 
-model = initialize_model()
-
 # ## Defining the agent_step!
 # `agent_step!` is the primary function called for each step and computes velocity
 # according to the three rules defined above.
@@ -90,7 +85,7 @@ function agent_step!(bird, model)
     for id in neighbor_ids
         N += 1
         neighbor = model[id].pos
-        heading = neighbor .- bird.pos
+        heading = get_direction(bird.pos, neighbor, model)
 
         ## `cohere` computes the average position of neighboring birds
         cohere = cohere .+ heading
@@ -112,6 +107,8 @@ function agent_step!(bird, model)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
+
+model = initialize_model()
 
 # ## Plotting the flock
 
@@ -140,9 +137,9 @@ figure
 
 # And let's also do a nice little video for it:
 abmvideo(
-    "flocking.mp4", model, agent_step!;
+    "flocking.mp4", model;
     am = bird_marker,
-    framerate = 20, frames = 100,
+    framerate = 20, frames = 150,
     title = "Flocking"
 )
 

@@ -24,7 +24,7 @@ using Random
 import ImageMagick
 using FileIO: load
 
-@agent Animal ContinuousAgent{3} begin
+@agent struct Animal(ContinuousAgent{3,Float64})
     type::Symbol # one of :rabbit, :fox or :hawk
     energy::Float64
 end
@@ -138,47 +138,24 @@ function initialize_model(
         dt = dt,
     )
 
-    model = ABM(Animal, space; rng, properties)
+    model = StandardABM(Animal, space; agent_step! = animal_step!, 
+                        model_step! = model_step!, rng, properties)
 
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
-        add_agent_pos!(
-            Rabbit(
-                nextid(model), ## Using `nextid` prevents us from having to manually keep track
-                               ## of animal IDs
-                random_walkable(model, model.landfinder),
-                rand(model.rng, Δe_grass:2Δe_grass),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.landfinder)
+        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_grass:2Δe_grass))
     end
     for _ in 1:n_foxes
-        add_agent_pos!(
-            Fox(
-                nextid(model),
-                random_walkable(model, model.landfinder),
-                rand(model.rng, Δe_rabbit:2Δe_rabbit),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.landfinder)
+        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
     for _ in 1:n_hawks
-        add_agent_pos!(
-            Hawk(
-                nextid(model),
-                random_walkable(model, model.airfinder),
-                rand(model.rng, Δe_rabbit:2Δe_rabbit),
-            ),
-            model,
-        )
+        pos = random_walkable(model, model.airfinder)
+        add_agent!(pos, Hawk, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
-
     return model
 end
-
-# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
-# model.
-model = initialize_model()
 
 # ## Stepping functions
 
@@ -254,7 +231,7 @@ function rabbit_step!(rabbit, model)
 
     ## Reproduce with a random probability, scaling according to the time passed each
     ## step
-    rand(model.rng) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
+    rand(abmrng(model)) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
 
     ## If the rabbit isn't already moving somewhere, move to a random spot
     if is_stationary(rabbit, model.landfinder)
@@ -275,7 +252,7 @@ function fox_step!(fox, model)
     ## Look for nearby rabbits that can be eaten
     food = [x for x in nearby_agents(fox, model) if x.type == :rabbit]
     if !isempty(food)
-        remove_agent!(rand(model.rng, food), model, model.landfinder)
+        remove_agent!(rand(abmrng(model), food), model, model.landfinder)
         fox.energy += model.Δe_rabbit
     end
 
@@ -290,7 +267,7 @@ function fox_step!(fox, model)
     end
 
     ## Random chance to reproduce every step
-    rand(model.rng) <= model.fox_repr * model.dt && reproduce!(fox, model)
+    rand(abmrng(model)) <= model.fox_repr * model.dt && reproduce!(fox, model)
 
     ## If the fox isn't already moving somewhere
     if is_stationary(fox, model.landfinder)
@@ -305,7 +282,7 @@ function fox_step!(fox, model)
             )
         else
             ## Move toward a random rabbit
-            plan_route!(fox, rand(model.rng, map(x -> x.pos, prey)), model.landfinder)
+            plan_route!(fox, rand(abmrng(model), map(x -> x.pos, prey)), model.landfinder)
         end
     end
 
@@ -320,7 +297,7 @@ function hawk_step!(hawk, model)
     food = [x for x in nearby_agents(hawk, model) if x.type == :rabbit]
     if !isempty(food)
         ## Eat (remove) the rabbit
-        remove_agent!(rand(model.rng, food), model, model.airfinder)
+        remove_agent!(rand(abmrng(model), food), model, model.airfinder)
         hawk.energy += model.Δe_rabbit
         ## Fly back up
         plan_route!(hawk, hawk.pos .+ (0., 0., 7.), model.airfinder)
@@ -334,7 +311,7 @@ function hawk_step!(hawk, model)
         return
     end
 
-    rand(model.rng) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
+    rand(abmrng(model)) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
 
     if is_stationary(hawk, model.airfinder)
         prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if x.type == :rabbit]
@@ -345,7 +322,7 @@ function hawk_step!(hawk, model)
                 model.airfinder,
             )
         else
-            plan_route!(hawk, rand(model.rng, map(x -> x.pos, prey)), model.airfinder)
+            plan_route!(hawk, rand(abmrng(model), map(x -> x.pos, prey)), model.airfinder)
         end
     end
 
@@ -357,7 +334,7 @@ end
 
 function reproduce!(animal, model)
     animal.energy = Float64(ceil(Int, animal.energy / 2))
-    add_agent_pos!(Animal(nextid(model), animal.pos, v0, animal.type, animal.energy), model)
+    add_agent!(animal.pos, Animal, model, v0, animal.type, animal.energy)
 end
 
 # The model stepping function simulates the growth of grass
@@ -371,8 +348,12 @@ function model_step!(model)
     )
     ## Grass regrows with a random probability, scaling with the amount of time passing
     ## each step of the model
-    growable .= rand(model.rng, length(growable)) .< model.regrowth_chance * model.dt
+    growable .= rand(abmrng(model), length(growable)) .< model.regrowth_chance * model.dt
 end
+
+# Passing in a sample heightmap to the `initialize_model` function we created returns the generated
+# model.
+model = initialize_model()
 
 # ## Visualization
 # Now we use `Makie` to create a visualization of the model running in 3D space
@@ -411,7 +392,7 @@ end
 # ```juia
 # abmvideo(
 #     "rabbit_fox_hawk.mp4",
-#     model, animal_step!, model_step!;
+#     model;
 #     figure = (resolution = (800, 700),),
 #     frames = 300,
 #     framerate = 15,

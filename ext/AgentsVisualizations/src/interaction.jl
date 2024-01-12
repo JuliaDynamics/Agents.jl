@@ -20,13 +20,13 @@ function add_controls!(fig, abmobs, spu)
     getfield.(Ref(abmobs), (:model, :agent_step!, :model_step!, :adata, :mdata, :adf, :mdf, :when))
 
     init_dataframes!(model[], adata, mdata, adf, mdf)
-    collect_data!(model[], when, adata, mdata, adf, mdf, abmobs.s[])
+    collect_data!(model[], when, adata, mdata, adf, mdf)
 
     # Create new layout for control buttons
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
 
     # Sliders
-    if model[].space isa Agents.ContinuousSpace
+    if abmspace(model[]) isa Agents.ContinuousSpace
         _sleepr, _sleep0 = 0:0.01:1, 0
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
@@ -40,7 +40,7 @@ function add_controls!(fig, abmobs, spu)
     step = Button(fig, label = "step\nmodel")
     on(step.clicks) do c
         Agents.step!(abmobs, speed[])
-        collect_data!(model[], when[], adata, mdata, adf, mdf, abmobs.s[])
+        collect_data!(model[], when[], adata, mdata, adf, mdf)
     end
     # Run button
     run = Button(fig, label = "run\nmodel")
@@ -54,22 +54,23 @@ function add_controls!(fig, abmobs, spu)
         end
     end
     # Reset button
+    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
+        agent_step! = Agents.agent_step_field(model)
+        model_step! = Agents.model_step_field(model)
+    end
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
         model[] = deepcopy(model0)
-        s = 0 # reset step counter
-        Agents.step!(model[], agent_step!, model_step!, s)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
-        abmobs.s[] = 0
         init_dataframes!(model[], adata, mdata, adf, mdf)
-        collect_data!(model[], when, adata, mdata, adf, mdf, abmobs.s[])
+        collect_data!(model[], when, adata, mdata, adf, mdf)
     end
     # Layout buttons
-    controllayout[2, :] = MakieLayout.hbox!(step, run, reset, clear; tellwidth = false)
+    controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
 
     return step.clicks, reset.clicks
 end
@@ -85,14 +86,14 @@ function init_dataframes!(model, adata, mdata, adf, mdf)
     return nothing
 end
 
-function collect_data!(model, when, adata, mdata, adf, mdf, s)
-    if Agents.should_we_collect(s, model, when)
+function collect_data!(model, when, adata, mdata, adf, mdf)
+    if Agents.should_we_collect(abmtime(model), model, when)
         if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata, s)
+            Agents.collect_agent_data!(adf[], model, adata)
             adf[] = adf[] # trigger Observable
         end
         if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata, s)
+            Agents.collect_model_data!(mdf[], model, mdata)
             mdf[] = mdf[] # trigger Observable
         end
     end
@@ -106,8 +107,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     slidervals = Dict{Symbol, Observable}()
     tuples_for_slidergrid = []
     for (i, (k, vals)) in enumerate(params)
-        startvalue = has_key(model[].properties, k) ?
-            get_value(model[].properties, k) : vals[1]
+        startvalue = has_key(abmproperties(model[]), k) ?
+            get_value(abmproperties(model[]), k) : vals[1]
         label = string(k)
         push!(tuples_for_slidergrid, (;label, range = vals, startvalue))
     end
@@ -120,8 +121,8 @@ function add_param_sliders!(fig, model, params, resetclick)
     update = Button(datalayout[end+1, :], label = "update", tellwidth = false)
     on(update.clicks) do c
         for (k, v) in pairs(slidervals)
-            if has_key(model[].properties, k)
-                set_value!(model[].properties, k, v[])
+            if has_key(abmproperties(model[]), k)
+                set_value!(abmproperties(model[]), k, v[])
             else
                 throw(KeyError("$k"))
             end

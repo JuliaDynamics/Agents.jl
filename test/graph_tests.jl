@@ -4,7 +4,7 @@ using Agents.Graphs
 @testset "mutable graph" begin
 
     g = complete_digraph(5)
-    abm = ABM(GraphAgent, GraphSpace(g))
+    abm = StandardABM(GraphAgent, GraphSpace(g), warn_deprecation = false)
     for n in 1:5
         for _ in 1:5
             add_agent!(n, abm)
@@ -34,7 +34,7 @@ using Agents.Graphs
     ids = nearby_ids(a, abm)
     @test isempty(ids)
 
-    abm = ABM(GraphAgent, GraphSpace(SimpleGraph()))
+    abm = StandardABM(GraphAgent, GraphSpace(SimpleGraph()), warn_deprecation = false)
     @test_throws ArgumentError add_agent!(abm)
     add_vertex!(abm)
     @test nv(abm) == 1

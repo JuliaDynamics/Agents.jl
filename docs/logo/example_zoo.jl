@@ -66,7 +66,7 @@ plotkwargs..., unikwargs...,)
 models[1] = daisy_obs
 
 # Flocking
-@agent Bird ContinuousAgent{2} begin
+@agent struct Bird(ContinuousAgent{2,Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -89,9 +89,9 @@ function flocking_model(;
     space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = ABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
             model,
             vel,
@@ -149,14 +149,14 @@ default_colors["primary"] = colorant"#a1777f"
 default_colors["secondary"] = colorant"#a18f78"
 default_colors["tertiary"] = colorant"#b3b381"
 
-@agent Zombie OSMAgent begin
+@agent struct Zombie(OSMAgent)
     infected::Bool
     speed::Float64
 end
 function initialise_zombies(; seed = 1234)
     map_path = OSM.test_map()
     properties = Dict(:dt => 1 / 60)
-    model = ABM(
+    model = StandardABM(
         Zombie,
         OpenStreetMapSpace(map_path);
         properties = properties,
@@ -165,22 +165,21 @@ function initialise_zombies(; seed = 1234)
 
     for id in 1:100
         start = random_position(model) # At an intersection
-        speed = rand(model.rng) * 5.0 + 2.0 # Random speed from 2-7kmph
-        human = Zombie(id, start, false, speed)
-        add_agent_pos!(human, model)
+        speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
+        human = add_agent!(start, Zombie, model, false, speed)
         OSM.plan_random_route!(human, model; limit = 50) # try 50 times to find a random route
     end
     start = OSM.nearest_road((9.9351811, 51.5328328), model)
     finish = OSM.nearest_node((9.945125635913511, 51.530876112711745), model)
 
-    speed = rand(model.rng) * 5.0 + 2.0 # Random speed from 2-7kmph
+    speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
     zombie = add_agent!(start, model, true, speed)
     plan_route!(zombie, finish, model)
     return model
 end
 function zombie_step!(agent, model)
     distance_left = move_along_route!(agent, model, agent.speed * model.dt)
-    if is_stationary(agent, model) && rand(model.rng) < 0.1
+    if is_stationary(agent, model) && rand(abmrng(model)) < 0.1
         OSM.plan_random_route!(agent, model; limit = 50)
         move_along_route!(agent, model, distance_left)
     end
@@ -204,9 +203,7 @@ models[7] = zombies_obs
 # Growing bacteria
 using Agents, LinearAlgebra
 using Random # hide
-mutable struct SimpleCell <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
+@agent struct SimpleCell(ContinuousAgent{2,Float64})
     length::Float64
     orientation::Float64
     growthprog::Float64
@@ -236,11 +233,11 @@ function bacteria_model_step!(model)
         if a.growthprog ≥ 1
             ## When a cell has matured, it divides into two daughter cells on the
             ## positions of its nodes.
-            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
-            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(abmrng(model)) + 0.05)
+            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(abmrng(model)) + 0.05)
             remove_agent!(a, model)
         else
-            ## The rest lengh of the internal spring grows with time. This causes
+            ## The rest length of the internal spring grows with time. This causes
             ## the nodes to physically separate.
             uv = unitvector(a.orientation)
             internalforce = model.hardness * (a.length - a.growthprog) .* uv
@@ -296,7 +293,7 @@ function transform_forces(agent::SimpleCell)
     return fsym, compression, torque
 end
 
-bacteria_model = ABM(
+bacteria_model = StandardABM(
     SimpleCell,
     ContinuousSpace((14, 9); spacing = 1.0, periodic = false);
     properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
@@ -334,21 +331,22 @@ models[4] = bacteria_obs
 
 # Mountain runners
 using Agents.Pathfinding
-@agent Runner GridAgent{2} begin end
+@agent struct Runner(GridAgent{2})
+end
 using FileIO
 
 function initialize_runners(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     space = GridSpace(size(heightmap); periodic = false)
     pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
-    model = ABM(
+    model = StandardABM(
         Runner,
         space;
         rng = MersenneTwister(seed),
         properties = Dict(:goal => goal, :pathfinder => pathfinder)
     )
     for _ in 1:10
-        runner = add_agent!((rand(model.rng, 100:350), rand(model.rng, 50:200)), model)
+        runner = add_agent!((rand(abmrng(model), 100:350), rand(abmrng(model), 50:200)), model)
         plan_route!(runner, goal, model.pathfinder)
     end
     return model
@@ -385,9 +383,9 @@ function forest_fire(; density = 0.7, griddims = (100, 100), seed = 2)
     rng = Random.MersenneTwister(seed)
     ## The `trees` field is coded such that
     ## Empty = 0, Green = 1, Burning = 2, Burnt = 3
-    forest = ABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
+    forest = StandardABM(GridAgent{2}, space; rng, properties = (trees = zeros(Int, griddims),))
     for I in CartesianIndices(forest.trees)
-        if rand(forest.rng) < density
+        if rand(abmrng(forest)) < density
             ## Set the trees at the left edge on fire
             forest.trees[I] = I[1] == 1 ? 2 : 1
         end
@@ -424,7 +422,7 @@ forest_obs = abmplot!(axs[5], forest_model;
 models[5] = forest_obs
 
 # Ants
-@agent Ant GridAgent{2} begin
+@agent struct Ant(GridAgent{2})
     has_food::Bool
     facing_direction::Int
     food_collected::Int
@@ -514,17 +512,17 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
         pheremone_ceiling
         )
 
-    model = UnremovableABM(
+    model = StandardABM(
         Ant,
         GridSpace(dimensions, periodic = false);
         properties,
         rng,
+        container = Vector,
         scheduler = Schedulers.Randomly()
     )
 
     for n in 1:number_ants
-        agent = Ant(n, (x_center, y_center), false, rand(model.rng, range(1, 8)), 0, false)
-        add_agent_pos!(agent, model)
+        add_agent!((x_center, y_center), Ant, model, false, rand(abmrng(model), range(1, 8)), 0, false)
     end
     return model
 end
@@ -550,7 +548,7 @@ function detect_change_direction(agent::Ant, model_layer::Matrix)
     end
 end
 function wiggle(agent::Ant, model::AntWorld)
-    direction = rand(model.rng, [0, rand(model.rng, [-1, 1])])
+    direction = rand(abmrng(model), [0, rand(abmrng(model), [-1, 1])])
     agent.facing_direction = mod1(agent.facing_direction + direction, number_directions)
 end
 function apply_pheremone(agent::Ant, model::AntWorld; pheremone_val::Int = 60, spread_pheremone::Bool = false)
@@ -650,18 +648,16 @@ antworld_obs = abmplot!(axs[6], antworld;
 models[6] = antworld_obs
 
 # Fractal growth
-@agent FractalParticle ContinuousAgent{2} begin
+@agent struct FractalParticle(ContinuousAgent{2,Float64})
     radius::Float64
     is_stuck::Bool
     spin_axis::Array{Float64,1}
 end
-FractalParticle(
-    id::Int,
+PropFractalParticle(
     radius::Float64,
     spin_clockwise::Bool;
-    pos = (0.0, 0.0),
     is_stuck = false,
-) = FractalParticle(id, pos, (0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
+) = (SVector(0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])
 
 rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
 function particle_radius(min_radius::Float64, max_radius::Float64, rng)
@@ -694,33 +690,23 @@ function initialize_fractal(;
     )
     ## space is periodic to allow particles going off one edge to wrap around to the opposite
     space = ContinuousSpace(space_extents; spacing = 1.0, periodic = true)
-    model = ABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
+    model = StandardABM(FractalParticle, space; properties, rng = Random.MersenneTwister(seed))
     center = space_extents ./ 2.0
     for i in 1:initial_particles
-        particle = FractalParticle(
-            i,
-            particle_radius(min_radius, max_radius, model.rng),
-            rand(model.rng) < clockwise_fraction,
-        )
+        p_r = particle_radius(min_radius, max_radius, abmrng(model))
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < clockwise_fraction)
         ## `add_agent!` automatically gives the particle a random position in the space
-        add_agent!(particle, model)
+        add_agent!(FractalParticle, model, prop_particle...)
     end
     ## create the seed particle
-    particle = FractalParticle(
-        initial_particles + 1,
-        particle_radius(min_radius, max_radius, model.rng),
-        true;
-        pos = center,
-        is_stuck = true,
-    )
-    ## `add_agent_pos!` will use the position of the agent passed in, instead of assigning it
-    ## to a random value
-    add_agent_pos!(particle, model)
+    p_r = particle_radius(min_radius, max_radius, abmrng(model))
+    prop_particle = PropFractalParticle(p_r, true; is_stuck = true)
+    ## here, we specified a position to give to the agent
+    add_agent!(center, FractalParticle, model, prop_particle...)
     return model
 end
 function fractal_particle_step!(agent::FractalParticle, model)
-    agent.is_stuck && return
-
+    agent.is_stuck && returnS
     for id in nearby_ids(agent.pos, model, agent.radius)
         if model[id].is_stuck
             agent.is_stuck = true
@@ -730,14 +716,14 @@ function fractal_particle_step!(agent::FractalParticle, model)
         end
     end
     ## radial vector towards the center of the space
-    radial = model.space.extent ./ 2.0 .- agent.pos
+    radial = abmspace(model).extent ./ 2.0 .- agent.pos
     radial = radial ./ norm(radial)
     ## tangential vector in the direction of orbit of the particle
-    tangent = Tuple(cross([radial..., 0.0], agent.spin_axis)[1:2])
+    tangent = SVector{2}(cross([radial..., 0.0], agent.spin_axis)[1:2])
     agent.vel =
         (
             radial .* model.attraction .+ tangent .* model.spin .+
-            rand_circle(model.rng) .* model.vibration
+            rand_circle(abmrng(model)) .* model.vibration
         ) ./ (agent.radius^2.0)
     move_agent!(agent, model, model.speed)
 end
@@ -746,13 +732,10 @@ end
 # as they get stuck to the growing fractal.
 function fractal_step!(model)
     while model.spawn_count > 0
-        particle = FractalParticle(
-            nextid(model),
-            particle_radius(model.min_radius, model.max_radius, model.rng),
-            rand(model.rng) < model.clockwise_fraction;
-            pos = (rand_circle(model.rng) .+ 1.0) .* model.space.extent .* 0.49,
-        )
-        add_agent_pos!(particle, model)
+        p_r = particle_radius(model.min_radius, model.max_radius, abmrng(model))
+        pos = (rand_circle(abmrng(model)) .+ 1.0) .* abmspace(model).extent .* 0.49
+        prop_particle = PropFractalParticle(p_r, rand(abmrng(model)) < model.clockwise_fraction)
+        add_agent!(pos, FractalParticle, model, prop_particle...)
         model.spawn_count -= 1
     end
 end
@@ -773,7 +756,7 @@ fractal_obs = abmplot!(axs[8], model;
 models[8] = fractal_obs
 
 # Social distancing
-@agent PoorSoul ContinuousAgent{2} begin
+@agent struct PoorSoul(ContinuousAgent{2,Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
@@ -806,19 +789,19 @@ function socialdistancing_init(;
         dt,
     )
     space = ContinuousSpace((1,1); spacing = 0.02)
-    model = ABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
+    model = StandardABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
     for ind in 1:N
-        pos = Tuple(rand(model.rng, 2))
+        pos = Tuple(rand(abmrng(model), 2))
         status = ind ≤ N - initial_infected ? :S : :I
         isisolated = ind ≤ isolated * N
         mass = isisolated ? Inf : 1.0
-        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
+        vel = isisolated ? (0.0, 0.0) : sincos(2π * rand(abmrng(model))) .* speed
 
         ## very high transmission probability
         ## we are modelling close encounters after all
-        β = (βmax - βmin) * rand(model.rng) + βmin
+        β = (βmax - βmin) * rand(abmrng(model)) + βmin
         add_agent!(pos, model, vel, mass, 0, status, β)
     end
 
@@ -830,10 +813,10 @@ function transmit!(a1, a2, rp)
     count(a.status == :I for a in (a1, a2)) ≠ 1 && return
     infected, healthy = a1.status == :I ? (a1, a2) : (a2, a1)
 
-    rand(model.rng) > infected.β && return
+    rand(abmrng(model)) > infected.β && return
 
     if healthy.status == :R
-        rand(model.rng) > rp && return
+        rand(abmrng(model)) > rp && return
     end
     healthy.status = :I
 end
@@ -846,7 +829,7 @@ end
 update!(agent) = agent.status == :I && (agent.days_infected += 1)
 function recover_or_die!(agent, model)
     if agent.days_infected ≥ model.infection_period
-        if rand(model.rng) ≤ model.death_rate
+        if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
             agent.status = :R

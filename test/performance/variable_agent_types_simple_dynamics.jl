@@ -7,103 +7,72 @@
 
 using Agents, Random
 
-mutable struct Agent1 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent1(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent2 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent2(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent3 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent3(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent4 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent4(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent5 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent5(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent6 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent6(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent7 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent7(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent8 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent8(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent9 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent9(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent10 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent10(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent11 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent11(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent12 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent12(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent13 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent13(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent14 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent14(GridAgent{2})
     money::Int
 end
 
-mutable struct Agent15 <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int}
+@agent struct Agent15(GridAgent{2})
     money::Int
 end
 
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
-    model = ABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
     id = 0
     for id in 1:n_agents
-        agent = Agent1(id, (0,0), 10)
-        add_agent!(agent, model)
+        add_agent!(Agent1, model, 10)
     end
     return model
 end
@@ -113,14 +82,13 @@ function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
     agents_used = agent_types[1:n_types]
     space = GridSpace(dims)
-    model = ABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
     id = 0
     agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
             id += 1
-            agent = A(id, (0,0), 10)
-            add_agent!(agent, model)
+            add_agent!(A, model, 10)
         end
     end
     return model

@@ -3,73 +3,122 @@ using CommonSolve: step!
 export step!, dummystep
 
 """
-    step!(model::ABM, agent_step!, n::Int = 1)
-    step!(model::ABM, agent_step!, model_step!, n::Int = 1, agents_first::Bool = true)
+    step!(model::ABM)
 
-Update agents `n` steps according to the stepping function `agent_step!`.
-Agents will be activated as specified by the `model.scheduler`.
-`model_step!` is triggered _after_ every scheduled agent has acted, unless
-the argument `agents_first` is `false` (which then first calls `model_step!` and then
-activates the agents).
+Perform one simulation step for the `model`.
+For continuous time models, this means to run to the model
+up to the next event and perform that.
 
-`step!` ignores scheduled IDs that do not exist within the model, allowing
-you to safely remove agents dynamically.
+    step!(model::ABM, t::Real)
 
-    step!(model, agent_step!, model_step!, n::Function, agents_first::Bool = true)
+Step the model forwards for total time `t`.
+For discrete time models such as [`StandardABM`](@ref),
+`t` must be an integer.
 
-In this version `n` is a function.
-Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
-current amount of steps taken, starting from 0.
-For this method of `step!`, `model_step!` must be provided always (use [`dummystep`](@ref)
-if you have no model stepping dynamics).
+    step!(model::ABM, f::Function)
 
-See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
-not be convenient.
+Step the model forwards until `f(model, t)` returns `true`,
+where `t` is the current amount of time the model has been evolved
+for, starting from 0.
+
+See also [Advanced stepping](@ref).
 """
-function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true)
-    step!(model, agent_step!, dummystep, n, agents_first)
+function CommonSolve.step!(model::ABM, n::Union{Real, Function} = 1)
+    agent_step! = agent_step_field(model)
+    model_step! = model_step_field(model)
+    t = getfield(model, :time)
+    step_ahead!(model, agent_step!, model_step!, n, t)
+    return model
 end
 
-function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
-    s = 0
-    while until(s, n, model)
+function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
+    agents_first = getfield(model, :agents_first)
+    t0 = t[]
+    while until(t[], t0, n, model)
         !agents_first && model_step!(model)
-        if agent_step! ≠ dummystep
-            activate_agents(model, agent_step!)
+        for id in schedule(model)
+            agent_step!(model[id], model)
         end
         agents_first && model_step!(model)
-        s += 1
+        t[] += 1
     end
 end
-
-function activate_agents(model::ABM, agent_step!)
-    activation_order = schedule(model)
-    for id in activation_order
-        id in allids(model) || continue
-        agent_step!(model[id], model)
+function step_ahead!(model::ABM, agent_step!::typeof(dummystep), model_step!, n, t)
+    t0 = t[]
+    while until(t[], t0, n, model)
+        model_step!(model)
+        t[] += 1
     end
+    return model
 end
 
-function activate_agents(model::UnremovableABM, agent_step!)
-    activation_order = schedule(model)
-    for id in activation_order
-        agent_step!(model[id], model)
-    end
+function CommonSolve.step!(model::EventQueueABM, t::Union{Real, Function})
+    queue = abmqueue(model)
+    model_t = getfield(model, :time)
+    step_ahead!(queue, model_t, t, model)
+    return model
+end
+function CommonSolve.step!(model::EventQueueABM)
+    queue = abmqueue(model)
+    model_t = getfield(model, :time)
+    one_step!(queue, model_t, model)
+    return model
 end
 
+function step_ahead!(queue, model_t, t::Real, model::EventQueueABM)
+    t0 = model_t[]
+    stop_time = t0 + t
+    while until(model_t[], t0, t, model)
+        one_step!(queue, model_t, stop_time, model)
+    end
+    return 
+end
+function step_ahead!(queue, model_t, f::Function, model::EventQueueABM)
+    t0 = model_t[]
+    while until(model_t[], t0, f, model)
+        one_step!(queue, model_t, model)
+    end
+    return 
+end
 
-"""
-    dummystep(model)
+function one_step!(queue, model_t, stop_time, model)
+    if isempty(queue)
+        model_t[] = stop_time
+        return
+    end
+    event_tuple, t_event = dequeue_pair!(queue)
+    if t_event > stop_time
+        model_t[] = stop_time
+        enqueue!(queue, event_tuple => t_event)
+    else
+        model_t[] = t_event
+        process_event!(event_tuple, model)
+    end
+    return
+end
+function one_step!(queue, model_t, model)
+    isempty(queue) && return
+    event_tuple, t_event = dequeue_pair!(queue)
+    model_t[] = t_event
+    process_event!(event_tuple, model)
+    return
+end
 
-Use instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(model) = nothing
-"""
-    dummystep(agent, model)
+function process_event!(event_tuple, model)
+    id, event_idx = event_tuple
+    agent_was_removed(id, model) && return
+    agent = model[id]
+    agentevent = abmevents(model)[event_idx]
+    agentevent.action!(agent, model)
+    agent_was_removed(id, model) && return
+    if getfield(model, :autogenerate_after_action)
+        add_event!(agent, model)
+    end
+    return
+end
 
-Use instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(agent, model) = nothing
+agent_was_removed(id, model::DictABM) = !haskey(agent_container(model), id)
+agent_was_removed(::Int, ::VecABM) = false
 
-until(s, n::Int, model) = s < n
-until(s, n, model) = !n(model, s)
+until(t1, t0, n::Real, ::ABM) = t1 < t0+n
+until(t1, t0, f, model::ABM) = !f(model, t1-t0)

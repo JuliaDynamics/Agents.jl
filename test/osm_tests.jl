@@ -2,9 +2,7 @@ using Test, Agents, Random
 using Agents.Graphs
 using StableRNGs
 
-mutable struct AgentOSM <: AbstractAgent
-    id::Int
-    pos::Tuple{Int,Int,Float64}
+@agent struct AgentOSM(OSMAgent)
 end
 
 @testset "OpenStreetMap space" begin
@@ -14,7 +12,7 @@ end
     @test sprint(show, space) ==
           "OpenStreetMapSpace with 3353 ways and 9753 nodes"
 
-    model = ABM(AgentOSM, space; rng = StableRNG(42))
+    model = StandardABM(AgentOSM, space; rng = StableRNG(42), warn_deprecation = false)
 
     start_lonlat = (9.9351811, 51.5328328)
     start_intersection = OSM.nearest_node(start_lonlat, model)
@@ -51,7 +49,7 @@ end
     @testset "Route planning" begin
         add_agent!(start_road, model)
         plan_route!(model[1], finish_road, model)
-        @test length(model.space.routes[1].route) == 85
+        @test length(abmspace(model).routes[1].route) == 85
 
         add_agent!(finish_intersection, model)
 
@@ -72,26 +70,26 @@ end
     @testset "Moving along routes" begin
         move_agent!(model[1], (start_road[2], start_road[2], 0.0), model)
         plan_route!(model[1], finish_road[1], model)
-        @test length(model.space.routes[1].route) == 95
+        @test length(abmspace(model).routes[1].route) == 95
 
         move_agent!(model[1], start_road, model)
         plan_route!(model[1], finish_road[1], model)
-        @test length(model.space.routes[1].route) == 86
+        @test length(abmspace(model).routes[1].route) == 86
 
         move_agent!(model[1], (start_road[2], start_road[2], 0.0), model)
         plan_route!(model[1], finish_road, model)
-        @test length(model.space.routes[1].route) == 94
+        @test length(abmspace(model).routes[1].route) == 94
 
         move_agent!(model[2], start_road, model)
         plan_route!(model[2], finish_road[1], model)
-        @test model.space.routes[1].route != model.space.routes[2].route
+        @test abmspace(model).routes[1].route != abmspace(model).routes[2].route
 
         plan_route!(model[2], finish_road, model)
-        @test length(model.space.routes[2].route) == 85
+        @test length(abmspace(model).routes[2].route) == 85
 
         @test !is_stationary(model[1], model)
         move_along_route!(model[1], model, 0.01)
-        @test length(model.space.routes[1].route) == 62
+        @test length(abmspace(model).routes[1].route) == 62
         move_along_route!(model[1], model, 1500)
         @test is_stationary(model[1], model)
     end
@@ -103,8 +101,8 @@ end
             route = plan_route!(model[2+i], finish_road, model)
         end
 
-        @test sort!(nearby_ids(model[6], model, 0.01)) == [2, 3, 4, 5, 7]
-        @test sort!(nearby_ids(model[6].pos, model, 2.0)) == [1, 2, 3, 4, 5, 6, 7]
+        @test sort!(collect(nearby_ids(model[6], model, 0.01))) == [2, 3, 4, 5, 7]
+        @test sort!(collect(nearby_ids(model[6].pos, model, 2.0))) == [1, 2, 3, 4, 5, 6, 7]
     end
 
     @testset "Long moves" begin
@@ -124,7 +122,7 @@ end
 
     @testset "Distances, road/route lengths" begin
         pos_1 = start_intersection[1]
-        nbor = Int(outneighbors(model.space.map.graph, pos_1[1])[1])
+        nbor = Int(outneighbors(abmspace(model).map.graph, pos_1[1])[1])
         rl = OSM.road_length(pos_1, nbor, model)
         @test OSM.distance(pos_1, nbor, model) ≈ rl
         @test OSM.distance(pos_1, pos_1, model) == 0.
@@ -133,10 +131,10 @@ end
         move_agent!(model[1], (pos_1, pos_1, 0.0), model)
         plan_route!(model[1], finish_intersection, model)
         len = sum(OSM.LightOSM.weights_from_path(
-            model.space.map,
-            reverse([model.space.map.index_to_node[i] for i in model.space.routes[1].route]),
+            abmspace(model).map,
+            reverse([abmspace(model).map.index_to_node[i] for i in abmspace(model).routes[1].route]),
         ))
-        len += OSM.road_length(pos_1, model.space.routes[1].route[end], model)
+        len += OSM.road_length(pos_1, abmspace(model).routes[1].route[end], model)
         @test OSM.distance(pos_1, finish_intersection, model) ≈ len
         @test OSM.route_length(model[1], model) ≈ len
     end

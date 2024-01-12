@@ -33,26 +33,21 @@
 using Agents
 
 # Below we define the `Particle` type, which represents the agents of the
-# simulation. The `Particle` type, for the `ContinousAgent{2}` space, will have additionally
+# simulation. The `Particle` type, for the `ContinuousAgent{2,Float64}` space, will have additionally
 # an `id` and `pos` (position) and `vel` (velocity) fields, which are automatically added
 # by the `@agent` macro.
-@agent Particle ContinuousAgent{2} begin
+@agent struct Particle(ContinuousAgent{2,Float64})
     r::Float64 # radius
     k::Float64 # repulsion force constant
     mass::Float64
 end
-Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)
+PropParticle(; vel, r, k, mass) = (vel, r, k, mass)
 
 # ## Required and data structures for CellListMap.jl
 #
 # We will use the high-level interface provided by the `PeriodicSystems` module
 # (requires version ≥0.7.22):
 using CellListMap.PeriodicSystems
-using StaticArrays
-# `StaticArrays` provides the `SVector` type, which is practical for the representation of
-# various vector types (e.g., positions or velocities) in small amount of dimensions.
-# Agents.jl uses `NTuple{D, Float64}` for that, which does not support vector operations
-# out of the box. In the future, Agents.jl may also switch the `pos` type to a static vector.
 
 # Two auxiliary arrays will be created on model initialization, to be passed to
 # the `PeriodicSystem` data structure:
@@ -90,7 +85,7 @@ function initialize_bouncing(;
     forces = similar(positions)
 
     ## Space and agents
-    space2d = ContinuousSpace(Tuple(sides); periodic=true)
+    space2d = ContinuousSpace(sides; periodic=true)
 
     ## Initialize CellListMap periodic system
     system = PeriodicSystem(
@@ -103,29 +98,30 @@ function initialize_bouncing(;
     )
 
     ## define the model properties
-    ## The clmap_system field contains the data required for CellListMap.jl
+    ## The system field contains the data required for CellListMap.jl
     properties = (
         dt=dt,
         number_of_particles=number_of_particles,
         system=system,
     )
-    model = ABM(Particle,
-        space2d,
+    model = StandardABM(Particle,
+        space2d;
+        agent_step!,
+        model_step!,
+        agents_first = false,
         properties=properties
     )
 
     ## Create active agents
     for id in 1:number_of_particles
-        add_agent_pos!(
-            Particle(
-                id=id,
-                r=(0.5 + 0.9 * rand()) * max_radius,
-                k=(10 + 20 * rand()), # random force constants
-                mass=10.0 + 100 * rand(), # random masses
-                pos=Tuple(positions[id]),
-                vel=(100 * randn(), 100 * randn()), # initial velocities
-            ),
-            model)
+        pos = positions[id]
+        prop_particle = PropParticle(
+            r = (0.5 + 0.9 * rand()) * max_radius,
+            k = 10 + 20 * rand(), # random force constants
+            mass = 10.0 + 100 * rand(), # random masses
+            vel = 100 * randn(SVector{2}) # initial velocities)
+            )
+        add_agent!(pos, Particle, model, prop_particle...)
     end
 
     return model
@@ -146,12 +142,12 @@ end
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
 function calc_forces!(x, y, i, j, d2, forces, model)
-    pᵢ = model[i]
-    pⱼ = model[j]
+    pi = model[i]
+    pj = model[j]
     d = sqrt(d2)
-    if d ≤ (pᵢ.r + pⱼ.r)
-        dr = y - x
-        fij = 2 * (pᵢ.k * pⱼ.k) * (d2 - (pᵢ.r + pⱼ.r)^2) * (dr / d)
+    if d ≤ (pi.r + pj.r)
+        dr = y - x # x and y are minimum-image relative coordinates
+        fij = 2 * (pi.k * pj.k) * (d2 - (pi.r + pj.r)^2) * (dr / d)
         forces[i] += fij
         forces[j] -= fij
     end
@@ -175,24 +171,22 @@ end
 # ## Update agent positions and velocities
 # The `agent_step!` function will update the particle positions and velocities,
 # given the forces, which are computed in the `model_step!` function. A simple
-# Euler step is used here for simplicity. We need to convert the static vectors
-# to tuples to conform the `Agents` API for the positions and velocities
-# of the agents. Finally, the positions within the `CellListMap.PeriodicSystem`
+# Euler step is used here for simplicity. Finally, the positions within the `CellListMap.PeriodicSystem`
 # structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
-    dt = model.properties.dt
+    dt = abmproperties(model).dt
     ## Retrieve the forces on agent id
     f = model.system.forces[id]
     a = f / agent.mass
     ## Update positions and velocities
-    v = SVector(agent.vel) + a * dt
-    x = SVector(agent.pos) + v * dt + (a / 2) * dt^2
-    x = normalize_position(Tuple(x), model)
-    agent.vel = Tuple(v)
+    v = agent.vel + a * dt
+    x = agent.pos + v * dt + (a / 2) * dt^2
+    x = normalize_position(x, model)
+    agent.vel = v
     move_agent!(agent, x, model)
     ## !!! IMPORTANT: Update positions in the CellListMap.PeriodicSystem
-    model.system.positions[id] = SVector(agent.pos)
+    model.system.positions[id] = agent.pos
     return nothing
 end
 
@@ -202,13 +196,10 @@ function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
     if isnothing(model)
         model = initialize_bouncing(number_of_particles=number_of_particles)
     end
-    Agents.step!(
-        model, agent_step!, model_step!, nsteps, false,
-    )
+    Agents.step!(model, nsteps)
 end
 # Which should be quite fast
 model = initialize_bouncing()
-simulate(model) # compile
 @time simulate(model)
 
 # and let's make a nice video with less particles,
@@ -220,7 +211,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 model = initialize_bouncing(number_of_particles=1000)
 abmvideo(
-    "celllistmap.mp4", model, agent_step!, model_step!;
+    "celllistmap.mp4", model;
     framerate=20, frames=200, spf=5,
     title="Softly bouncing particles with CellListMap.jl",
     as=p -> p.r, # marker size

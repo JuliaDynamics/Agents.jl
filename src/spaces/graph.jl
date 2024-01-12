@@ -56,29 +56,23 @@ end
 The minimal agent struct for usage with [`GraphSpace`](@ref).
 It has an additional `pos::Int` field. See also [`@agent`](@ref).
 """
-@agent GraphAgent NoSpaceAgent begin
+@agent struct GraphAgent(NoSpaceAgent)
     pos::Int
 end
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-random_position(model::ABM{<:GraphSpace}) = rand(model.rng, 1:nv(model))
+random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 
-function remove_agent_from_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
+function remove_agent_from_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
     agentpos = agent.pos
     ids = ids_in_position(agentpos, model)
     deleteat!(ids, findfirst(a -> a == agent.id, ids))
     return model
 end
 
-function add_agent_to_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
+function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
@@ -86,22 +80,21 @@ end
 # The following is for the discrete space API:
 npositions(space::GraphSpace) = nv(space.graph)
 positions(space::GraphSpace) = 1:npositions(space)
-ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
+ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = ids_in_position(n, abmspace(model))
+ids_in_position(n::Integer, space::GraphSpace) = space.stored_ids[n]
+
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################
 # Neighbors
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
-    if r == 0
-        return ids_in_position(pos, model)
-    end
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(model.space.stored_ids[pos], model.space.stored_ids[np]...)
+    vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A <: AbstractAgent}
+function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -113,13 +106,13 @@ function nearby_positions(
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     if neighbor_type == :default
-        Graphs.neighbors(model.space.graph, position)
+        Graphs.neighbors(abmspace(model).graph, position)
     elseif neighbor_type == :in
-        Graphs.inneighbors(model.space.graph, position)
+        Graphs.inneighbors(abmspace(model).graph, position)
     elseif neighbor_type == :out
-        Graphs.outneighbors(model.space.graph, position)
+        Graphs.outneighbors(abmspace(model).graph, position)
     else
-        Graphs.all_neighbors(model.space.graph, position)
+        Graphs.all_neighbors(abmspace(model).graph, position)
     end
 end
 
@@ -141,9 +134,9 @@ that of the one to be removed, while every other node remains as is. This means 
          remove_agent!(model[id], model)
      end
     V = nv(model)
-    success = Graphs.rem_vertex!(model.space.graph, n)
+    success = Graphs.rem_vertex!(abmspace(model).graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.stored_ids
+    s = abmspace(model).stored_ids
     s[V], s[n] = s[n], s[V]
     pop!(s)
 end
@@ -154,8 +147,8 @@ end
  You can connect this new node with existing ones using [`add_edge!`](@ref).
  """
  function add_node!(model::ABM{<:GraphSpace})
-     add_vertex!(model.space.graph)
-     push!(model.space.stored_ids, Int[])
+     add_vertex!(abmspace(model).graph)
+     push!(abmspace(model).stored_ids, Int[])
      return nv(model)
  end
 
@@ -173,9 +166,9 @@ function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
         remove_agent!(model[id], model)
     end
     V = nv(model)
-    success = Graphs.rem_vertex!(model.space.graph, n)
+    success = Graphs.rem_vertex!(abmspace(model).graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.stored_ids
+    s = abmspace(model).stored_ids
     s[V], s[n] = s[n], s[V]
     pop!(s)
 end
@@ -186,23 +179,23 @@ Add a new node (i.e. possible position) to the model's graph and return it.
 You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
 function Graphs.add_vertex!(model::ABM{<:GraphSpace})
-    add_vertex!(model.space.graph)
-    push!(model.space.stored_ids, Int[])
+    add_vertex!(abmspace(model).graph)
+    push!(abmspace(model).stored_ids, Int[])
     return nv(model)
 end
 
 """
     add_edge!(model::ABM{<:GraphSpace},  args...; kwargs...)
 Add a new edge (relationship between two positions) to the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 
 `args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
-Graphs.add_edge!(model::ABM{<:GraphSpace}, args::Vararg{Any, N}; kwargs...) where {N} = add_edge!(model.space.graph, args...; kwargs...)
+Graphs.add_edge!(model::ABM{<:GraphSpace}, args::Vararg{Any, N}; kwargs...) where {N} = add_edge!(abmspace(model).graph, args...; kwargs...)
 
 """
     rem_edge!(model::ABM{<:GraphSpace}, n, m)
 Remove an edge (relationship between two positions) from the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 """
-Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(model.space.graph, n, m)
+Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(abmspace(model).graph, n, m)

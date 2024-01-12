@@ -11,10 +11,11 @@ agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, npositions, ids_in_position, agents_in_position,
-       empty_positions, random_empty, has_empty_positions, empty_nearby_positions
+       empty_positions, random_empty, has_empty_positions, empty_nearby_positions,
+       random_id_in_position, random_agent_in_position
 
 
-positions(model::ABM) = positions(model.space)
+positions(model::ABM) = positions(abmspace(model))
 """
     positions(model::ABM{<:DiscreteSpace}) → ns
 Return an iterator over all positions of a model with a discrete space.
@@ -30,7 +31,7 @@ function positions(model::ABM{<:DiscreteSpace}, by::Symbol)
     n = collect(positions(model))
     itr = vec(n)
     if by == :random
-        shuffle!(model.rng, itr)
+        shuffle!(abmrng(model), itr)
     elseif by == :population
         sort!(itr, by = i -> length(ids_in_position(i, model)), rev = true)
     else
@@ -44,7 +45,7 @@ end
 
 Return the number of positions of a model with a discrete space.
 """
-npositions(model::ABM) = npositions(model.space)
+npositions(model::ABM) = npositions(abmspace(model))
 
 """
     ids_in_position(position, model::ABM{<:DiscreteSpace})
@@ -53,8 +54,7 @@ npositions(model::ABM) = npositions(model.space)
 Return the ids of agents in the position corresponding to `position` or position
 of `agent`.
 """
-ids_in_position(agent::A, model) where {A<:AbstractAgent} =
-    ids_in_position(agent.pos, model)
+ids_in_position(agent::AbstractAgent, model) = ids_in_position(agent.pos, model)
 
 """
     agents_in_position(position, model::ABM{<:DiscreteSpace})
@@ -62,8 +62,7 @@ ids_in_position(agent::A, model) where {A<:AbstractAgent} =
 
 Return an iterable of the agents in `position``, or in the position of `agent`.
 """
-agents_in_position(agent::A, model) where {A<:AbstractAgent} =
-    agents_in_position(agent.pos, model)
+agents_in_position(agent::AbstractAgent, model) = agents_in_position(agent.pos, model)
 agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model))
 
 """
@@ -76,10 +75,11 @@ function empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    isempty(position, model::ABM{<:DiscreteSpace})
+    isempty(pos, model::ABM{<:DiscreteSpace})
 Return `true` if there are no agents in `position`.
 """
-Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
+Base.isempty(pos::ValidPos, model::ABM{<:DiscreteSpace}) = isempty(pos, abmspace(model))
+Base.isempty(pos::ValidPos, space::DiscreteSpace) = isempty(ids_in_position(pos, space))
 
 """
     has_empty_positions(model::ABM{<:DiscreteSpace})
@@ -90,11 +90,8 @@ function has_empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
+    random_empty(model::ABM{<:DiscreteSpace})
 Return a random position without any agents, or `nothing` if no such positions exist.
-`cutoff` switches the search algorithm from probabilistic to a filter.
-Specifically, when `clamp(nagents(model)/npositions(model), 0.0, 1.0) < cutoff`,
-then the algorithm is probabilistic.
 """
 function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
     # This switch assumes the worst case (for this algorithm) of one
@@ -112,52 +109,84 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        isempty(empty) && return nothing
-        return rand(model.rng, collect(empty))
+        return resorvoir_sampling_single(empty, model)
     end
 end
 
 """
-    empty_nearby_positions(position, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
+    empty_nearby_positions(pos, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
     empty_nearby_positions(agent, model::ABM{<:DiscreteSpace}, r = 1; kwargs...)
 
-Return an iterable of all empty positions within "radius" `r` of the given `position`
-or the position of an `agent::AbstractAgent`.
+Return an iterable of all empty positions within radius `r` from the given position or the given agent.
 
 The value of `r` and possible keywords operate identically to [`nearby_positions`](@ref).
-
-This function only exists for discrete spaces with a finite amount of positions.
 """
 function empty_nearby_positions(agent::AbstractAgent, model, r = 1; kwargs...)
     return empty_nearby_positions(agent.pos, model, r; kwargs...)
 end
 function empty_nearby_positions(pos, model, r = 1; kwargs...)
-    return Iterators.filter(
-        Base.Fix2(isempty, model), nearby_positions(pos, model, r; kwargs...)
-    )
+    return Iterators.filter(pos -> isempty(pos, model), nearby_positions(pos, model, r; kwargs...))
 end
 
+"""
+    random_id_in_position(pos, model::ABM, [f, alloc = false]) → id
+Return a random id in the position specified in `pos`.
+
+A filter function `f(id)` can be passed so that to restrict the sampling on only those agents
+for which the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby position satisfies `f`.
+
+Use [`random_nearby_id`](@ref) instead to return the `id` of a random agent near the position of a
+given `agent`.
+"""
+function random_id_in_position(pos, model)
+    ids = ids_in_position(pos, model)
+    isempty(ids) && return nothing
+    return rand(abmrng(model), ids)
+end
+function random_id_in_position(pos, model, f, alloc = false)
+    iter_ids = ids_in_position(pos, model)
+    if alloc
+        return sampling_with_condition_single(iter_ids, f, model)
+    else
+        iter_filtered = Iterators.filter(id -> f(id), iter_ids)
+        return resorvoir_sampling_single(iter_filtered, model)
+    end
+end
+
+"""
+    random_agent_in_position(pos, model::ABM, [f, alloc = false]) → agent
+Return a random agent in the position specified in `pos`.
+
+A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents
+for which the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby position satisfies `f`.
+
+Use [`random_nearby_agent`](@ref) instead to return a random agent near the position of a given `agent`.
+"""
+function random_agent_in_position(pos, model)
+    id = random_id_in_position(pos, model)
+    isnothing(id) && return nothing
+    return model[id]
+end
+function random_agent_in_position(pos, model, f, alloc = false)
+    iter_ids = ids_in_position(pos, model)
+    if alloc
+        return sampling_with_condition_agents_single(iter_ids, f, model)
+    else
+        iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
+        id = resorvoir_sampling_single(iter_filtered, model)
+        isnothing(id) && return nothing
+        return model[id]
+    end
+end
 
 #######################################################################################
 # Discrete space extra agent adding stuff
 #######################################################################################
-export add_agent_single!, fill_space!, move_agent_single!
-
-"""
-    add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
-
-Add the `agent` to a random position in the space while respecting a maximum of one agent
-per position, updating the agent's position to the new one.
-
-This function does nothing if there aren't any empty positions.
-"""
-function add_agent_single!(agent::A, model::ABM{<:DiscreteSpace,A}) where {A<:AbstractAgent}
-    position = random_empty(model)
-    isnothing(position) && return nothing
-    agent.pos = position
-    add_agent_pos!(agent, model)
-    return agent
-end
+export add_agent_single!, fill_space!, move_agent_single!, swap_agents!
 
 """
     add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
@@ -172,43 +201,60 @@ function add_agent_single!(model::ABM{<:DiscreteSpace}, properties::Vararg{Any, 
 end
 
 """
-    fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, args...; kwargs...)
-    fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, f::Function; kwargs...)
+    add_agent_single!(A, model::ABM{<:DiscreteSpace}, properties...; kwargs...)
+Same as `add_agent!(A, model, properties...; kwargs...)` but ensures that it adds an agent
+into a position with no other agents (does nothing if no such position exists).
+"""
+function add_agent_single!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent = add_agent!(position, A, model, properties...; kwargs...)
+    return agent
+end
+
+"""
+    fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, args...)
+    fill_space!([A ,] model::ABM{<:DiscreteSpace,A}; kwargs...)
+    fill_space!([A ,] model::ABM{<:DiscreteSpace,A}, f::Function)
+
 Add one agent to each position in the model's space. Similarly with [`add_agent!`](@ref),
-the function creates the necessary agents and
-the `args...; kwargs...` are propagated into agent creation.
+`fill_space` creates the necessary agents and adds them to the model.
+Like in [`add_agent!`](@ref) you may use either `args...` or `kwargs...` to set
+the remaining properties of the agent.
+
+Alternatively, you may use the third version.
 If instead of `args...` a function `f` is provided, then `args = f(pos)` is the result of
 applying `f` where `pos` is each position (tuple for grid, integer index for graph).
+Hence, in this case `f` must create all other agent properties besides mandatory `id, pos`.
 
 An optional first argument is an agent **type** to be created, and targets mixed agent
 models where the agent constructor cannot be deduced (since it is a union).
 """
-fill_space!(model::ABM{S,A}, args::Vararg{Any, N}; kwargs...) where {N,S,A<:AbstractAgent} =
+function fill_space!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
+    A = agenttype(model)
     fill_space!(A, model, args...; kwargs...)
+end
 
 function fill_space!(
     ::Type{A},
-    model::ABM{<:DiscreteSpace,U},
+    model::ABM{<:DiscreteSpace},
     args::Vararg{Any, N};
     kwargs...,
-) where {N,A<:AbstractAgent,U<:AbstractAgent}
+) where {N,A<:AbstractAgent}
     for p in positions(model)
-        id = nextid(model)
-        add_agent_pos!(A(id, p, args...; kwargs...), model)
+        add_agent!(p, A, model, args...; kwargs...)
     end
     return model
 end
 
 function fill_space!(
     ::Type{A},
-    model::ABM{<:DiscreteSpace,U},
-    f::Function;
-    kwargs...,
-) where {A<:AbstractAgent,U<:AbstractAgent}
+    model::ABM{<:DiscreteSpace},
+    f::Function
+) where {A<:AbstractAgent}
     for p in positions(model)
-        id = nextid(model)
         args = f(p)
-        add_agent_pos!(A(id, p, args...; kwargs...), model)
+        add_agent!(p, A, model, args...)
     end
     return model
 end
@@ -222,12 +268,33 @@ per position. If there are no empty positions, the agent won't move.
 The keyword `cutoff = 0.998` is sent to [`random_empty`](@ref).
 """
 function move_agent_single!(
-    agent::A,
-    model::ABM{<:DiscreteSpace,A};
+    agent::AbstractAgent,
+    model::ABM{<:DiscreteSpace};
     cutoff = 0.998,
-) where {A<:AbstractAgent}
+)
     position = random_empty(model, cutoff)
     isnothing(position) && return nothing
     move_agent!(agent, position, model)
     return agent
+end
+
+"""
+    swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+
+Swap the given agent's positions, moving each of them to the position
+of the other agent.
+"""
+function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
+    remove_agent_from_space!(agent1, model)
+    remove_agent_from_space!(agent2, model)
+    agent1.pos, agent2.pos = agent2.pos, agent1.pos
+    add_agent_to_space!(agent1, model)
+    add_agent_to_space!(agent2, model)
+    return nothing
+end
+
+function remove_all_from_space!(model)
+    for p in positions(model)
+        empty!(ids_in_position(p, model))
+    end
 end

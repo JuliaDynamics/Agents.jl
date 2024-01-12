@@ -20,7 +20,7 @@ end
 
 abmplot_ids(model::ABM{<:SUPPORTED_SPACES}) = allids(model)
 # for GraphSpace the collected ids are the indices of the graph nodes (= agent positions)
-abmplot_ids(model::ABM{<:GraphSpace}) = eachindex(model.space.stored_ids)
+abmplot_ids(model::ABM{<:GraphSpace}) = eachindex(abmspace(model).stored_ids)
 
 
 #####
@@ -28,7 +28,7 @@ abmplot_ids(model::ABM{<:GraphSpace}) = eachindex(model.space.stored_ids)
 #####
 
 function abmplot_pos(model::ABM{<:SUPPORTED_SPACES}, offset, ids)
-    postype = agents_space_dimensionality(model.space) == 3 ? Point3f : Point2f
+    postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
         return [postype(model[i].pos) for i in ids]
     else
@@ -46,7 +46,7 @@ end
 
 abmplot_pos(model::ABM{<:GraphSpace}, offset, ids) = nothing
 
-agents_space_dimensionality(abm::ABM) = agents_space_dimensionality(abm.space)
+agents_space_dimensionality(abm::ABM) = agents_space_dimensionality(abmspace(abm))
 agents_space_dimensionality(::AbstractGridSpace{D}) where {D} = D
 agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
 agents_space_dimensionality(::OpenStreetMapSpace) = 2
@@ -62,7 +62,7 @@ abmplot_colors(model::ABM{<:SUPPORTED_SPACES}, ac::Function, ids) =
     to_color.([ac(model[i]) for i in ids])
 # in GraphSpace we iterate over a list of agents (not agent ids) at a graph node position
 abmplot_colors(model::ABM{<:GraphSpace}, ac::Function, ids) =
-    to_color.(ac(model[id] for id in model.space.stored_ids[idx]) for idx in ids)
+    to_color.(ac(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids)
 
 #####
 ## markers
@@ -91,7 +91,7 @@ end
 # TODO: Add support for polygon markers for GraphSpace if possible with GraphMakie
 abmplot_marker(model::ABM{<:GraphSpace}, used_poly, am, pos, ids) = am
 abmplot_marker(model::ABM{<:GraphSpace}, used_poly, am::Function, pos, ids) =
-    [am(model[id] for id in model.space.stored_ids[idx]) for idx in ids]
+    [am(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids]
 
 user_used_polygons(am, marker) = false
 user_used_polygons(am::Makie.Polygon, marker) = true
@@ -108,7 +108,7 @@ abmplot_markersizes(model::ABM{<:SUPPORTED_SPACES}, as::Function, ids) =
 
 abmplot_markersizes(model::ABM{<:GraphSpace}, as, ids) = as
 abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function, ids) =
-    [as(model[id] for id in model.space.stored_ids[idx]) for idx in ids]
+    [as(model[id] for id in abmspace(model).stored_ids[idx]) for idx in ids]
 
 
 #####

@@ -21,10 +21,9 @@ sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 
 Example usage in the [Flocking model](@ref).
 """
-euclidean_distance(a::A, b::B, model::ABM,
-) where {A <: AbstractAgent,B <: AbstractAgent} = euclidean_distance(a.pos, b.pos, model.space)
-
-euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, model.space)
+euclidean_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) = 
+    euclidean_distance(a.pos, b.pos, abmspace(model))
+euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, abmspace(model))
 
 function euclidean_distance(
     p1::ValidPos,
@@ -43,6 +42,31 @@ function euclidean_distance(
     sqrt(sum(min.(direct, spacesize(space) .- direct).^2))
 end
 
+function euclidean_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    s = spacesize(space)
+    distance_squared = zero(eltype(p1))
+    for i in eachindex(p1)
+        if P[i]
+            distance_squared += euclidean_distance_periodic(p1[i], p2[i], s[i])^2
+        else
+            distance_squared += euclidean_distance_direct(p1[i], p2[i])^2
+        end
+    end
+    return sqrt(distance_squared)
+end
+
+function euclidean_distance_direct(x1::Real, x2::Real)
+    abs(x1 - x2)
+end
+function euclidean_distance_periodic(x1::Real, x2::Real, l::Real)
+    direct = abs(x1 - x2)
+    min(direct, l - direct)
+end
+
 """
     manhattan_distance(a, b, model::ABM)
 
@@ -50,17 +74,16 @@ Return the manhattan distance between `a` and `b` (either agents or agent positi
 respecting periodic boundary conditions (if in use). Works with any space where it makes
 sense: currently `AbstractGridSpace` and `ContinuousSpace`.
 """
-manhattan_distance(a::A, b::B, model::ABM
-) where {A <: AbstractAgent,B <: AbstractAgent} = manhattan_distance(a.pos, b.pos, model.space)
-
-manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, model.space)
+manhattan_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) = 
+    manhattan_distance(a.pos, b.pos, abmspace(model))
+manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, abmspace(model))
 
 function manhattan_distance(
     p1::ValidPos,
     p2::ValidPos,
     space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
-    sum(abs.(p1 .- p2))
+    sum(manhattan_distance_direct.(p1, p2))
 end
 
 function manhattan_distance(
@@ -68,8 +91,32 @@ function manhattan_distance(
     p2::ValidPos,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
-    direct = abs.(p1 .- p2)
-    sum(min.(direct, spacesize(space) .- direct))
+    sum(manhattan_distance_periodic.(p1, p2, spacesize(space)))
+end
+
+function manhattan_distance(
+    p1::ValidPos,
+    p2::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    s = spacesize(space)
+    distance = zero(eltype(p1))
+    for i in eachindex(p1)
+        if P[i]
+            distance += manhattan_distance_periodic(p1[i], p2[i], s[i])
+        else
+            distance += manhattan_distance_direct(p1[i], p2[i])
+        end
+    end
+    return distance
+end
+
+function manhattan_distance_direct(x1::Real, x2::Real)
+    abs(x1 - x2)
+end
+function manhattan_distance_periodic(x1::Real, x2::Real, s::Real)
+    direct = abs(x1 - x2)
+    min(direct, s - direct)
 end
 
 """
@@ -77,7 +124,7 @@ end
 Return the direction vector from the position `from` to position `to` taking into account
 periodicity of the space.
 """
-get_direction(from, to, model::ABM) = get_direction(from, to, model.space)
+get_direction(from, to, model::ABM) = get_direction(from, to, abmspace(model))
 
 function get_direction(
     from::ValidPos,
@@ -97,6 +144,21 @@ function get_direction(
     return to .- from
 end
 
+function get_direction(
+    from::ValidPos,
+    to::ValidPos,
+    space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
+) where {D,P}
+    direct_dir = to .- from
+    inverse_dir = direct_dir .- sign.(direct_dir) .* spacesize(space)
+    return map(
+        i -> P[i] ?
+        (abs(direct_dir[i]) <= abs(inverse_dir[i]) ? direct_dir[i] : inverse_dir[i]) :
+        direct_dir[i],
+        1:D
+    )
+end
+
 #######################################################################################
 # %% Utilities for graph-based spaces (Graph/OpenStreetMap)
 #######################################################################################
@@ -107,13 +169,13 @@ _get_graph(space::OpenStreetMapSpace) = space.map.graph
     nv(model::ABM)
 Return the number of positions (vertices) in the `model` space.
 """
-Graphs.nv(abm::ABM{<:GraphBasedSpace}) = Graphs.nv(_get_graph(abm.space))
+Graphs.nv(model::ABM{<:GraphBasedSpace}) = Graphs.nv(_get_graph(abmspace(model)))
 
 """
     ne(model::ABM)
 Return the number of edges in the `model` space.
 """
-Graphs.ne(abm::ABM{<:GraphBasedSpace}) = Graphs.ne(_get_graph(abm.space))
+Graphs.ne(model::ABM{<:GraphBasedSpace}) = Graphs.ne(_get_graph(abmspace(model)))
 
 positions(model::ABM{<:GraphBasedSpace}) = 1:nv(model)
 
