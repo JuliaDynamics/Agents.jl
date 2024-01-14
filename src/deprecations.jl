@@ -83,33 +83,9 @@ macro agent(new_name, base_type, extra_fields)
     end)
 end
 
-"""
-    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
-Add the `agent` to the model in the given position.
-If `pos` is not given, the `agent` is added to a random position.
-The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
-the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
-the `agent`'s position.
-The type of `pos` must match the underlying space position type.
-"""
-function add_agent!(agent::AbstractAgent, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    agent.pos = pos
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    add_agent_pos!(agent, model)
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
+    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`" 
+    add_agent_own_pos!(agent, model)
 end
 
 function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)

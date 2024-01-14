@@ -200,7 +200,7 @@ function add_agent_single!(agent::AbstractAgent, model::ABM{<:DiscreteSpace})
     position = random_empty(model)
     isnothing(position) && return nothing
     agent.pos = position
-    add_agent_pos!(agent, model)
+    add_agent_own_pos!(agent, model)
     return agent
 end
 

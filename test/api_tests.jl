@@ -28,19 +28,19 @@ using StableRNGs
 
     @test add_agent!(3, Agent7, model, attributes...).pos == 3
     a = Agent7(model, 3, attributes...)
-    @test add_agent_pos!(a, model).pos == 3
+    @test add_agent_own_pos!(a, model).pos == 3
 
     model = StandardABM(Agent1, GridSpace((10, 10)), warn_deprecation = false)
     @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
     a = Agent1(model; pos = (9, 8))
-    @test add_agent_pos!(a, model).pos == (9, 8)
+    @test add_agent_own_pos!(a, model).pos == (9, 8)
 end
 
 @testset "add_agent! (nothing space)" begin
     model = StandardABM(Agent0, warn_deprecation = false)
     @test add_agent!(model).id == 1
     a = Agent0(model)
-    @test add_agent_pos!(a, model).id == 2
+    @test add_agent_own_pos!(a, model).id == 2
 end
 
 @testset "move_agent!" begin

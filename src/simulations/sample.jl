@@ -69,7 +69,7 @@ function add_newids_bulk!(model::ABM, new_ids)
     remove_all!(model)
     sizehint!(agent_container(model), length(new_ids))
     for agent in new_agents
-        add_agent_pos!(agent, model)
+        add_agent_own_pos!(agent, model)
     end
     return
 end
@@ -97,7 +97,7 @@ b = replicate!(a, model; w = 0.8)
 """
 function replicate!(agent::AbstractAgent, model; kwargs...)
     newagent = copy_agent(agent, model, nextid(model); kwargs...)
-    add_agent_pos!(newagent, model)
+    add_agent_own_pos!(newagent, model)
     return newagent
 end
 
