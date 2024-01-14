@@ -31,7 +31,7 @@ using Agents, CairoMakie
 
 # TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
 using Pkg
-Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
 using AgentsExampleZoo: daisyworld
 
 model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
