@@ -30,17 +30,11 @@ Pkg.status(["Agents", "CairoMakie"];
 using Agents, CairoMakie
 
 # TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
-try
-    using Pkg
-    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
-    using AgentsExampleZoo
-catch
-    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
-    using AgentsExampleZoo
-end
+using Pkg
+Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+using AgentsExampleZoo: daisyworld
 
-
-model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
     scenario = :change)
 model
 
@@ -122,7 +116,7 @@ nothing #hide
 # abmvideo
 # ```
 # E.g., continuing from above,
-model = AgentsExampleZoo.daisyworld()
+model = daisyworld()
 abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
 
 # ```@raw html
@@ -166,7 +160,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model; params, plotkwargs...,
     adata, mdata, figure = (; resolution = (1600,800))
 )
@@ -239,7 +233,8 @@ fig
 # and plot it with [`abmplot`](@ref).
 using Graphs
 using ColorTypes
-sir_model = AgentsExampleZoo.sir()
+using AgentsExampleZoo: sir
+sir_model = sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
     l_agents_here = length(agents_here)
