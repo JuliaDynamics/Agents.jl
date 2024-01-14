@@ -133,7 +133,7 @@ function sampling_with_condition_single(iter, condition, model, transform=identi
     @inbounds while n != 0
         index_id = rand(rng, 1:n)
         el = population[index_id]
-        condition(transform(el)) && return transform(el)
+        condition(transform(el)) && return el
         population[index_id], population[n] = population[n], population[index_id]
         n -= 1
     end

@@ -82,11 +82,15 @@ end
 function fallback_random_agent(model, condition, alloc)
     if alloc
         iter_ids = allids(model)
-        return sampling_with_condition_agents_single(iter_ids, condition, model)
+        id = sampling_with_condition_single(iter_ids, condition, model, id -> model[id])
+        isnothing(id) && return nothing
+        return model[id]
     else
         iter_agents = allagents(model)
         iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
-        return resorvoir_sampling_single(iter_filtered, model)
+        agent = itsample(abmrng(model), iter_filtered)
+        isnothing(agent) && return nothing
+        return agent
     end
 end
 

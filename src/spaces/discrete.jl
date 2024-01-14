@@ -153,7 +153,7 @@ function random_id_in_position(pos, model, f, alloc = false, transform = identit
         iter_filtered = Iterators.filter(id -> f(transform(id)), iter_ids)
         id = itsample(abmrng(model), iter_filtered)
         isnothing(id) && return nothing
-        return model[id]
+        return id
     end
 end
 

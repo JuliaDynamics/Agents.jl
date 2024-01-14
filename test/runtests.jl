@@ -4,9 +4,14 @@ using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
 # TODO: when AgentsExampleZoo is released, remove these Pkg commands
-using Pkg
-Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
-using AgentsExampleZoo
+try
+    using Pkg
+    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+    using AgentsExampleZoo
+catch
+    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
+    using AgentsExampleZoo
+end
 
 using Distributed
 addprocs(2)
