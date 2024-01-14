@@ -165,7 +165,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model = daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model; params, plotkwargs...,
     adata, mdata, figure = (; resolution = (1600,800))
 )
