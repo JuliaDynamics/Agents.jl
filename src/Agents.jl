@@ -13,12 +13,11 @@ using Distributed
 using Graphs
 using IteratorSampling
 using MacroTools
+import ProgressMeter
 using Random
 using StaticArrays: SVector
 export SVector
 import LinearAlgebra
-import ProgressMeter
-
 
 # Core structures of Agents.jl
 include("core/agents.jl")
