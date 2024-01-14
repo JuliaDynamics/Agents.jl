@@ -141,6 +141,7 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
              step!(model, n = 1, agents_first = true)"
     end
     s = 0
+    t = getfield(model, :time)
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
@@ -150,6 +151,7 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
         end
         agents_first && model_step!(model)
         s += 1
+        t[] += 1
     end
 end
 
@@ -414,4 +416,6 @@ function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N}
     StandardABM(args...; kwargs..., container=Vector)
 end
 
+until(s, n::Int, model) = s < n
+until(s, f, model) = !f(model, s)
 
