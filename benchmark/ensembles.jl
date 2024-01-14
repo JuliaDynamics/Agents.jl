@@ -3,7 +3,7 @@
     using BenchmarkTools
     # TODO: when AgentsExampleZoo is released, remove these Pkg commands
     using Pkg
-    Pkg.add(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
     using AgentsExampleZoo: schelling, schelling_agent_step!, SchellingAgent
 end
 
