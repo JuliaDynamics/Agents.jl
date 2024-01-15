@@ -109,7 +109,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        return itsample(abmrng(model), empty)
+        return IteratorSampling.itsample(abmrng(model), empty)
     end
 end
 
@@ -151,7 +151,7 @@ function random_id_in_position(pos, model, f, alloc = false, transform = identit
         return sampling_with_condition_single(iter_ids, f, model, transform)
     else
         iter_filtered = Iterators.filter(id -> f(transform(id)), iter_ids)
-        id = itsample(abmrng(model), iter_filtered)
+        id = IteratorSampling.itsample(abmrng(model), iter_filtered)
         isnothing(id) && return nothing
         return id
     end

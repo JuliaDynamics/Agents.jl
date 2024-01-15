@@ -305,6 +305,7 @@ nearby_agents(a, model, r = 1; kwargs...) =
 """
     random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
 Return the `id` of a random agent near the position of the given `agent`. 
+
 Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -316,17 +317,20 @@ is expensive since in this case the allocating version can be more performant.
 
 For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
 position.
+
+This function, as all the other methods which sample from lazy iterators, uses an optimized 
+algorithm which doesn't require to collect all elements to just sample one of them.
 """
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        return itsample(abmrng(model), iter)
+        return IteratorSampling.itsample(abmrng(model), iter)
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(id -> f(id), iter)
-            return itsample(abmrng(model), iter_filtered)
+            return IteratorSampling.itsample(abmrng(model), iter_filtered)
         end    
     end
 end
@@ -349,13 +353,13 @@ position.
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter_ids = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        id = itsample(abmrng(model), iter_ids)
+        id = IteratorSampling.itsample(abmrng(model), iter_ids)
     else
         if alloc
             id = sampling_with_condition_single(iter_ids, f, model, id -> model[id])
         else
             iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-            id = itsample(abmrng(model), iter_filtered)
+            id = IteratorSampling.itsample(abmrng(model), iter_filtered)
         end
     end
     isnothing(id) && return nothing
@@ -377,13 +381,13 @@ is expensive since in this case the allocating version can be more performant.
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
-        return itsample(abmrng(model), iter)
+        return IteratorSampling.itsample(abmrng(model), iter)
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(pos -> f(pos), iter)
-            return itsample(abmrng(model), iter_filtered)
+            return IteratorSampling.itsample(abmrng(model), iter_filtered)
         end
     end
 end
