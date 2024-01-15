@@ -101,11 +101,6 @@ function paramscan(
 
     progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
     mapfun = parallel ? pmap : map
-    println(combs)
-    println(mapfun)
-    println(output_params)
-    println(initialize)
-    println(kwargs)
     all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
         run_single(comb, output_params, initialize; n, kwargs...)
     end
