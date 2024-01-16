@@ -347,3 +347,9 @@ offline_run!
 
 In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
 for details.
+
+## Merge multiple agents types
+
+```@docs
+@compact
+```
