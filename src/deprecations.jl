@@ -83,6 +83,7 @@ macro agent(new_name, base_type, extra_fields)
     end)
 end
 
+export add_agent_pos!
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
     @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`" 
     add_agent_own_pos!(agent, model)
