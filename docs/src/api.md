@@ -54,6 +54,7 @@ OpenStreetMapSpace
 ## Adding agents
 ```@docs
 add_agent!
+add_agent_own_pos!
 replicate!
 nextid
 random_position

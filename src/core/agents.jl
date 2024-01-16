@@ -176,6 +176,14 @@ Person = Union{Fisher, Baker}
 f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
+Agents.jl has a convenience function [`add_agent!`](@ref) to create and add agents
+to the model automatically. In the case you want to create some agents by yourself
+you can use a constructor accepting the model as first argument so that internal fields,
+such as the `id`, are set automatically
+```julia
+model = StandardABM(GridAgent{2}, GridSpace((10,10)))
+a = GridAgent{2}(model, (3,4)) # the id is set automatically
+```
 """
 macro agent(struct_repr)
     new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
@@ -185,10 +193,21 @@ macro agent(struct_repr)
                         $(new_fields...)
                       end)
     __AGENT_GENERATOR__[namify(new_type)] = MacroTools.prewalk(rmlines, expr_new_type)
-    expr = quote @kwdef $expr_new_type end
+    expr = quote 
+    	   @kwdef $expr_new_type 
+    	   $(new_type_no_params)(m::ABM, args...) = 
+               $(new_type_no_params)(Agents.nextid(m), args...)
+           $(new_type_no_params)(m::ABM; kwargs...) = 
+               $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
+           if $(new_params) != []
+               $(new_type)(m::ABM, args...) where {$(new_params...)} = 
+                   $(new_type)(Agents.nextid(m), args...)
+               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
+                   $(new_type)(; id = Agents.nextid(m), kwargs...)
+           end
+        end
     quote Base.@__doc__($(esc(expr))) end
 end
-
 
 """
     @compact struct YourCompactedAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
@@ -416,4 +435,3 @@ function remove_prev_methods(a_t)
                     Base.delete_method(m)
                 end
             end)
-end
