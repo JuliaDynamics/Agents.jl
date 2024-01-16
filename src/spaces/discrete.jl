@@ -109,7 +109,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        return resorvoir_sampling_single(empty, model)
+        return IteratorSampling.itsample(abmrng(model), empty)
     end
 end
 
@@ -145,13 +145,15 @@ function random_id_in_position(pos, model)
     isempty(ids) && return nothing
     return rand(abmrng(model), ids)
 end
-function random_id_in_position(pos, model, f, alloc = false)
+function random_id_in_position(pos, model, f, alloc = false, transform = identity)
     iter_ids = ids_in_position(pos, model)
     if alloc
-        return sampling_with_condition_single(iter_ids, f, model)
+        return sampling_with_condition_single(iter_ids, f, model, transform)
     else
-        iter_filtered = Iterators.filter(id -> f(id), iter_ids)
-        return resorvoir_sampling_single(iter_filtered, model)
+        iter_filtered = Iterators.filter(id -> f(transform(id)), iter_ids)
+        id = IteratorSampling.itsample(abmrng(model), iter_filtered)
+        isnothing(id) && return nothing
+        return id
     end
 end
 
@@ -172,15 +174,9 @@ function random_agent_in_position(pos, model)
     return model[id]
 end
 function random_agent_in_position(pos, model, f, alloc = false)
-    iter_ids = ids_in_position(pos, model)
-    if alloc
-        return sampling_with_condition_agents_single(iter_ids, f, model)
-    else
-        iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-        id = resorvoir_sampling_single(iter_filtered, model)
-        isnothing(id) && return nothing
-        return model[id]
-    end
+    id = random_id_in_position(pos, model, f, alloc, id -> model[id])
+    isnothing(id) && return nothing
+    return model[id]
 end
 
 #######################################################################################

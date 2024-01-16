@@ -304,8 +304,8 @@ nearby_agents(a, model, r = 1; kwargs...) =
 
 """
     random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
-Return the `id` of a random agent near the position of the given `agent` using an optimized
-algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
+Return the `id` of a random agent near the position of the given `agent`. 
+
 Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
@@ -317,18 +317,21 @@ is expensive since in this case the allocating version can be more performant.
 
 For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
 position.
+
+This function, as all the other methods which sample from lazy iterators, uses an optimized 
+algorithm which doesn't require to collect all elements to just sample one of them.
 """
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        return resorvoir_sampling_single(iter, model)
+        return IteratorSampling.itsample(abmrng(model), iter)
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(id -> f(id), iter)
-            return resorvoir_sampling_single(iter_filtered, model)
-        end
+            return IteratorSampling.itsample(abmrng(model), iter_filtered)
+        end    
     end
 end
 
@@ -348,21 +351,19 @@ For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a 
 position.
 """
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
+    iter_ids = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        id = random_nearby_id(a, model, r; kwargs...)
-        isnothing(id) && return nothing
-        return model[id]
+        id = IteratorSampling.itsample(abmrng(model), iter_ids)
     else
-        iter_ids = nearby_ids(a, model, r; kwargs...)
         if alloc
-            return sampling_with_condition_agents_single(iter_ids, f, model)
+            id = sampling_with_condition_single(iter_ids, f, model, id -> model[id])
         else
             iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-            id = resorvoir_sampling_single(iter_filtered, model)
-            isnothing(id) && return nothing
-            return model[id]
+            id = IteratorSampling.itsample(abmrng(model), iter_filtered)
         end
     end
+    isnothing(id) && return nothing
+    return model[id]
 end
 
 """
@@ -380,69 +381,13 @@ is expensive since in this case the allocating version can be more performant.
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
-        return resorvoir_sampling_single(iter, model)
+        return IteratorSampling.itsample(abmrng(model), iter)
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(pos -> f(pos), iter)
-            return resorvoir_sampling_single(iter_filtered, model)
+            return IteratorSampling.itsample(abmrng(model), iter_filtered)
         end
-    end
-end
-
-#######################################################################################
-# %% sampling functions
-#######################################################################################
-
-function sampling_with_condition_single(iter, condition, model)
-    population = collect(iter)
-    n = length(population)
-    rng = abmrng(model)
-    @inbounds while n != 0
-        index_id = rand(rng, 1:n)
-        el = population[index_id]
-        condition(el) && return el
-        population[index_id], population[n] = population[n], population[index_id]
-        n -= 1
-    end
-    return nothing
-end
-
-# almost a copy of sampling_with_condition_single, but it's better to call this one
-# when selecting an agent since collecting ids is less costly than collecting agents
-function sampling_with_condition_agents_single(iter, condition, model)
-    population = collect(iter)
-    n = length(population)
-    rng = abmrng(model)
-    @inbounds while n != 0
-        index_id = rand(rng, 1:n)
-        el = population[index_id]
-        condition(model[el]) && return model[el]
-        population[index_id], population[n] = population[n], population[index_id]
-        n -= 1
-    end
-    return nothing
-end
-
-# Reservoir sampling function (https://en.wikipedia.org/wiki/Reservoir_sampling)
-function resorvoir_sampling_single(iter, model)
-    res = iterate(iter)
-    isnothing(res) && return nothing
-    rng = abmrng(model)
-    el, state = res
-    w = rand(rng)
-    while true
-        skip_counter = ceil(Int, randexp(rng)/log(1-w))
-        while skip_counter != 0
-            skip_res = iterate(iter, state)
-            isnothing(skip_res) && return el
-            state = skip_res[2]
-            skip_counter += 1
-        end
-        res = iterate(iter, state)
-        isnothing(res) && return el
-        el, state = res
-        w *= rand(rng)
     end
 end
