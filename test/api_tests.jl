@@ -342,3 +342,35 @@ end
     @test agent1.pos == (1, 3)
     @test agent2.pos == (2, 4)
 end
+
+@testset "compact agents macro" begin
+
+    @compact struct Animal{T,N,J}(GridAgent{2})
+        @agent struct Wolf{T,N}
+            energy::T = 0.5
+            ground_speed::N
+            const fur_color::Symbol
+        end
+        @agent struct Hawk{T,N,J}
+            energy::T = 0.1
+            ground_speed::N
+            flight_speed::J
+        end
+    end
+
+    hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
+    hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+    wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
+    wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+
+    @test hawk_1.energy == 1.0
+    @test hawk_2.energy == 0.1
+    @test wolf_1.energy == 2.0
+    @test wolf_2.energy == 0.5
+    @test hawk_1.flight_speed == 3
+    @test hawk_2.flight_speed == 2
+    @test wolf_1.fur_color == :black
+    @test wolf_2.fur_color == :white
+    @test_throws "" hawk_1.fur_color
+    @test_throws "" wolf_1.flight_speed
+end
