@@ -13,7 +13,6 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 =#
 export move_agent!,
     add_agent!,
-    add_agent_pos!,
     add_agent_own_pos!,
     remove_agent!,
     remove_all!,
