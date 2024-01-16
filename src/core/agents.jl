@@ -189,6 +189,72 @@ macro agent(struct_repr)
     quote Base.@__doc__($(esc(expr))) end
 end
 
+
+"""
+    @compact struct YourCompactedAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+        @agent FirstAgentType{X}
+            first_property::X # shared with second agent
+            second_property_with_default::Bool = true
+        end
+        @agent SecondAgentType{X,Y}
+            first_property::X = 3
+            third_property::Y
+        end
+        # etc...
+    end
+
+Compactify multiple agents in a single type. Each agent has a `type` field which
+defines which type of agent it is. Convenient constructors for each agent type are 
+also provided.
+
+Using this macro can be useful for performance of multi-agents models because combining
+multiple agents in only one avoids dynamic dispatch and abstract containers problems, 
+at the cost of more memory consumption. 
+
+## Examples
+
+Let's say you have this definition:
+
+```
+@compact struct Animal{T}(GridAgent{2})
+    @agent struct Wolf
+        energy::Float64 = 0.5
+        ground_speed::Float64
+        const fur_color::Symbol
+    end
+    @agent struct Hawk{T}
+        energy::Float64 = 0.1
+        ground_speed::Float64
+        flight_speed::T
+    end
+end
+```
+
+Then you can create `Wolf` and `Hawk` agents normally, like so
+
+```
+hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
+hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
+wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+```
+
+It is important to notice, though, that the `Wolf` and `Hawk` types are just 
+conceptual and all agents are actually of type `Animal` in this case. 
+The way to retrieve the group to which an agent belongs is through its `type` 
+field e.g.
+
+```
+hawk_1.type # :hawk
+wolf_2.type # :wolf
+```
+
+See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
+
+## Current limitations
+
+- Impossibility to inherit from a compactified agent.
+"""
 macro compact(struct_repr)
     new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
@@ -226,10 +292,14 @@ macro compact(struct_repr)
         a_spec_n_d = [d != "#328723329" ? Expr(:kw, n, d) : (:($n)) 
                       for (n, d) in zip(a_spec_n, a_d)]
         f_params_kwargs = [a_base_n..., a_spec_n_d...]
-        f_params_kwargs = Expr(:parameters, f_params_kwargs...)
+        f_params_kwargs = Expr(:parameters, f_params_kwargs...)        
         f_params_args = [a_base_n..., a_spec_n...]
         f_params_args_with_T = [retrieve_fields_names(base_fields, true)..., 
                                 retrieve_fields_names(a_f, true)...]
+        a_spec_n2_d = [d != "#328723329" ? Expr(:kw, n, d) : (:($n)) 
+                      for (n, d) in zip(retrieve_fields_names(a_f, true), a_d)]
+        f_params_kwargs_with_T = [a_base_n..., a_spec_n2_d...]
+        f_params_kwargs_with_T = Expr(:parameters, f_params_kwargs_with_T...)
         type = Symbol(lowercase(string(namify(a_t))))
         f_inside_args = [common_fields_n..., noncommon_fields_n...]
         f_inside_args = [f in a_spec_n ? f : (:(Agents.uninit)) for f in f_inside_args]
@@ -253,25 +323,26 @@ macro compact(struct_repr)
             end
             )
         if !isempty(new_type_p)
-            expr_function_with_T = :(
+            expr_function_args_with_T = :(
                 function $(namify(a_t))($(f_params_args_with_T...)) where {$(a_t_p...)}
                     return $new_type_n{$(new_type_p...)}($(f_inside_args...))
                 end
                 )
-        else
-            expr_function_with_T = :()
-        end
-        remove_prev_methods = :(
-            if @isdefined $(namify(a_t))
-                for m in methods($(namify(a_t)))
-                    Base.delete_method(m)
+            expr_function_kwargs_with_T = :(
+                function $(namify(a_t))($f_params_kwargs_with_T) where {$(a_t_p...)}
+                    return $new_type_n{$(new_type_p...)}($(f_inside_args...))
                 end
-            end
-            )
-        push!(expr_functions, remove_prev_methods)
+                )
+        else
+            expr_function_args_with_T = :()
+            expr_function_kwargs_with_T = :()
+        end
+        remove_prev_functions = remove_prev_methods(a_t)
+        push!(expr_functions, remove_prev_functions)
         push!(expr_functions, expr_function_kwargs)
         push!(expr_functions, expr_function_args)
-        push!(expr_functions, expr_function_with_T)
+        push!(expr_functions, expr_function_args_with_T)
+        push!(expr_functions, expr_function_kwargs_with_T)
     end
     expr = quote 
             $(Base.@__doc__ expr_new_type)
@@ -337,4 +408,12 @@ function retrieve_fields_names(fields, only_consts = false)
         push!(field_names, f)
     end
     return field_names
+end
+    
+function remove_prev_methods(a_t)
+    return :(if @isdefined $(namify(a_t))
+                for m in methods($(namify(a_t)))
+                    Base.delete_method(m)
+                end
+            end)
 end
