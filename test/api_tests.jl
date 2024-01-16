@@ -343,7 +343,7 @@ end
     @test agent2.pos == (2, 4)
 end
 
-@testset "compact agents macro" begin
+@testset "@compact macro" begin
 
     @compact struct Animal{T,N,J}(GridAgent{2})
         @agent struct Wolf{T,N}
