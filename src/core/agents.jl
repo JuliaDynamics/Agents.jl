@@ -192,7 +192,8 @@ macro agent(struct_repr)
                         $(base_fields...)
                         $(new_fields...)
                       end)
-    __AGENT_GENERATOR__[namify(new_type)] = MacroTools.prewalk(rmlines, expr_new_type)
+    new_type_no_params = namify(new_type)
+    __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
     expr = quote 
     	   @kwdef $expr_new_type 
     	   $(new_type_no_params)(m::ABM, args...) = 
