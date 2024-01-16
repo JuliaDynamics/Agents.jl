@@ -252,14 +252,6 @@ macro compact(struct_repr)
     return esc(expr)
 end
 
-#function Wolf(; id, pos, ground_speed, fur_color, energy = 0.5)
-#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
-#end
-
-#function Wolf(id, pos, energy, ground_speed, fur_color)
-#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
-#end
-
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
         @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
