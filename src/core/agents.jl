@@ -227,10 +227,20 @@ macro compact(struct_repr)
         f_params_kwargs = [a_base_n..., a_spec_n_d...]
         f_params_kwargs = Expr(:parameters, f_params_kwargs...)
         f_params_args = [a_base_n..., a_spec_n...]
+        f_params_args_with_T = [retrieve_fields_names(base_fields, true)..., 
+                                retrieve_fields_names(a_f, true)...]
         type = Symbol(lowercase(string(namify(a_t))))
         f_inside_args = [common_fields_n..., noncommon_fields_n...]
         f_inside_args = [f in a_spec_n ? f : (:(Agents.uninit)) for f in f_inside_args]
         f_inside_args = [a_base_n..., Expr(:quote, type), f_inside_args...]
+        @capture(a_t, a_t_n_{a_t_p__})
+        a_t_p === nothing && (a_t_p = [])
+        @capture(new_type, new_type_n_{new_type_p__})
+        if new_type_p === nothing 
+            new_type_n, new_type_p = new_type, []
+        end
+        new_type_p = [t in a_t_p ? t : (:(Agents.LazilyInitializedFields.Uninitialized)) 
+                      for t in new_type_p]
         expr_function_kwargs = :(
             function $(namify(a_t))($f_params_kwargs)
                 return $(namify(new_type))($(f_inside_args...))
@@ -241,8 +251,14 @@ macro compact(struct_repr)
                 return $(namify(new_type))($(f_inside_args...))
             end
             )
+        expr_function_with_T = :(
+            function $(namify(a_t))($(f_params_args_with_T...)) where {$(a_t_p...)}
+                return $new_type_n{$(new_type_p...)}($(f_inside_args...))
+            end
+            )
         push!(expr_functions, expr_function_kwargs)
         push!(expr_functions, expr_function_args)
+        push!(expr_functions, expr_function_with_T)
     end
     expr = quote 
             $(Base.@__doc__ expr_new_type)
@@ -251,6 +267,14 @@ macro compact(struct_repr)
            end
     return esc(expr)
 end
+
+#function Wolf(; id, pos, ground_speed, fur_color, energy = 0.5)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
+
+#function Wolf(id, pos, energy, ground_speed, fur_color)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
 
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
