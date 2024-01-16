@@ -176,6 +176,14 @@ Person = Union{Fisher, Baker}
 f(x::Animal) = ... # uses `CommonTraits` fields
 f(x::Person) = ... # uses fields that all "persons" have
 ```
+Agents.jl has a convenience function [`add_agent!`](@ref) to create and add agents
+to the model automatically. In the case you want to create some agents by yourself
+you can use a constructor accepting the model as first argument so that internal fields,
+such as the `id`, are set automatically
+```julia
+model = StandardABM(GridAgent{2}, GridSpace((10,10)))
+a = GridAgent{2}(model, (3,4)) # the id is set automatically
+```
 """
 macro agent(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
@@ -190,11 +198,26 @@ macro agent(struct_repr)
         base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
     end
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
                       end)
-    __AGENT_GENERATOR__[namify(new_type)] = MacroTools.prewalk(rmlines, expr_new_type)
-    expr = quote @kwdef $expr_new_type end
+    new_type_no_params = namify(new_type)
+    __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
+    expr = quote 
+    	   @kwdef $expr_new_type 
+    	   $(new_type_no_params)(m::ABM, args...) = 
+               $(new_type_no_params)(Agents.nextid(m), args...)
+           $(new_type_no_params)(m::ABM; kwargs...) = 
+               $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
+           if $(new_params) != []
+               $(new_type)(m::ABM, args...) where {$(new_params...)} = 
+                   $(new_type)(Agents.nextid(m), args...)
+               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
+                   $(new_type)(; id = Agents.nextid(m), kwargs...)
+           end
+        end
     quote Base.@__doc__($(esc(expr))) end
 end

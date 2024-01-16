@@ -4,7 +4,7 @@ using StableRNGs
 
 # TODO: All of these tests are "bad" in the sense that they should be moved
 # to individual space test files.
-@testset "add_agent! (discrete)" begin
+@testset "add_agent! (discrete space)" begin
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
     model = StandardABM(Agent7, space; properties, warn_deprecation = false)
@@ -17,6 +17,8 @@ using StableRNGs
     @test model[1].f1 == model[2].f1
     @test model[1].f2 == model[2].f2
     @test add_agent_single!(model, attributes...).pos ∈ 1:10
+    a = Agent7(model, 1, attributes...)
+    @test add_agent_single!(a, model).pos ∈ 1:10
     fill_space!(model, attributes...)
     @test !has_empty_positions(model)
     add_agent_single!(Agent7, model, attributes...)
@@ -25,9 +27,20 @@ using StableRNGs
     @test a.pos ∈ 1:10
 
     @test add_agent!(3, Agent7, model, attributes...).pos == 3
+    a = Agent7(model, 3, attributes...)
+    @test add_agent_own_pos!(a, model).pos == 3
 
     model = StandardABM(Agent1, GridSpace((10, 10)), warn_deprecation = false)
     @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
+    a = Agent1(model; pos = (9, 8))
+    @test add_agent_own_pos!(a, model).pos == (9, 8)
+end
+
+@testset "add_agent! (nothing space)" begin
+    model = StandardABM(Agent0, warn_deprecation = false)
+    @test add_agent!(model).id == 1
+    a = Agent0(model)
+    @test add_agent_own_pos!(a, model).id == 2
 end
 
 @testset "move_agent!" begin

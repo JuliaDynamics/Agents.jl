@@ -14,7 +14,11 @@ function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, args::Vararg{
     else
         newagent = A(; id = id, kwargs...)
     end
-    add_agent_pos!(newagent, model)
+    add_agent_own_pos!(newagent, model)
+end
+
+function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
+    add_agent_own_pos!(agent, model)
 end
 
 nearby_ids(agent::AbstractAgent, model::ABM{Nothing}, r = 1) = allids(model)
