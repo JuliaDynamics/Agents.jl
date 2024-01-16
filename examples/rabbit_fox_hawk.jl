@@ -24,18 +24,21 @@ using Random
 import ImageMagick
 using FileIO: load
 
-@agent struct Animal(ContinuousAgent{3,Float64})
-    type::Symbol # one of :rabbit, :fox or :hawk
-    energy::Float64
+@compact struct Animal(ContinuousAgent{3,Float64})
+    @agent struct Rabbit
+        energy::Float64
+    end
+    @agent struct Fox
+        energy::Float64
+    end
+    @agent struct Hawk
+        energy::Float64
+    end
 end
 
-# Some utility functions to create specific types of agents,
-# and find the euclidean norm of a Vector
-const v0 = (0.0, 0.0, 0.0) # we don't use the velocity field here
-Rabbit(id, pos, energy) = Animal(id, pos, v0, :rabbit, energy)
-Fox(id, pos, energy) = Animal(id, pos, v0, :fox, energy)
-Hawk(id, pos, energy) = Animal(id, pos, v0, :hawk, energy)
+# A utility function to find the euclidean norm of a Vector
 eunorm(vec) = √sum(vec .^ 2)
+const v0 = (0.0, 0.0, 0.0) # we don't use the velocity field here
 
 # The environment is generated from a heightmap: a 2D matrix, where each value denotes the
 # height of the terrain at that point. We segregate the model into 4 regions based on the
@@ -144,15 +147,15 @@ function initialize_model(
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
         pos = random_walkable(model, model.landfinder)
-        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_grass:2Δe_grass))
+        add_agent!(pos, Rabbit, model, v0, rand(abmrng(model), Δe_grass:2Δe_grass))
     end
     for _ in 1:n_foxes
         pos = random_walkable(model, model.landfinder)
-        add_agent!(pos, Rabbit, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
+        add_agent!(pos, Rabbit, model, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
     for _ in 1:n_hawks
         pos = random_walkable(model, model.airfinder)
-        add_agent!(pos, Hawk, model, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
+        add_agent!(pos, Hawk, model, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
     return model
 end

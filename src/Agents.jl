@@ -10,6 +10,8 @@ end Agents
 using Distributed
 using DataStructures
 using Graphs
+using LazilyInitializedFields
+export @lazy
 using DataFrames
 using MacroTools
 using Random

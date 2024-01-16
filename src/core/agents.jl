@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, NoSpaceAgent
+export AbstractAgent, @agent, @compact, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
@@ -178,18 +178,8 @@ f(x::Person) = ... # uses fields that all "persons" have
 ```
 """
 macro agent(struct_repr)
-    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
-        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
-    end
-    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
-    base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
-    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
-    old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
-    new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
-    for (old, new) in zip(old_args, new_args)
-        base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
-    end
-    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
+    base_fields = compute_base_fields(base_type_spec)
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
@@ -198,3 +188,134 @@ macro agent(struct_repr)
     expr = quote @kwdef $expr_new_type end
     quote Base.@__doc__($(esc(expr))) end
 end
+
+macro compact(struct_repr)
+    new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
+    base_fields = compute_base_fields(base_type_spec)
+    types_each, fields_each, default_each = [], [], []
+    for a_spec in agent_specs
+        @capture(a_spec, @agent astruct_spec_)
+        a_comps = decompose_struct_no_base(astruct_spec)
+        push!(types_each, a_comps[1])
+        push!(fields_each, a_comps[3][1])
+        push!(default_each, a_comps[3][2])
+    end
+    common_fields = intersect(fields_each...)
+    noncommon_fields = setdiff(union(fields_each...), common_fields)
+    common_fields_n = retrieve_fields_names(common_fields)
+    noncommon_fields_n = retrieve_fields_names(noncommon_fields)
+    if isempty(noncommon_fields)
+        islazy = false
+    else
+        islazy = true
+        noncommon_fields = [f.head == :const ? :(@lazy $(f.args[1])) : (:(@lazy $f)) 
+                            for f in noncommon_fields]
+    end
+    expr_new_type = :(mutable struct $new_type <: $abstract_type
+                        $(base_fields...)
+                        type::Symbol
+                        $(common_fields...)
+                        $(noncommon_fields...)
+                      end)
+    expr_new_type = islazy ? :(@lazy $expr_new_type) : expr_new_type
+    expr_functions = []
+    for (a_t, a_f, a_d) in zip(types_each, fields_each, default_each)
+        a_base_n = retrieve_fields_names(base_fields)
+        a_spec_n = retrieve_fields_names(a_f)
+        a_spec_n_d = [d != "#328723329" ? Expr(:kw, n, d) : (:($n)) 
+                      for (n, d) in zip(a_spec_n, a_d)]
+        f_params_kwargs = [a_base_n..., a_spec_n_d...]
+        f_params_kwargs = Expr(:parameters, f_params_kwargs...)
+        f_params_args = [a_base_n..., a_spec_n...]
+        type = Symbol(lowercase(string(a_t)))
+        f_inside_args = [common_fields_n..., noncommon_fields_n...]
+        f_inside_args = [f in a_spec_n ? f : (:(Agents.uninit)) for f in f_inside_args]
+        f_inside_args = [a_base_n..., Expr(:quote, type), f_inside_args...]
+        expr_function_kwargs = :(
+            function $a_t($f_params_kwargs)
+                return $new_type($(f_inside_args...))
+            end
+            )
+        expr_function_args = :(
+            function $a_t($(f_params_args...))
+                return $new_type($(f_inside_args...))
+            end
+            )
+        push!(expr_functions, expr_function_kwargs)
+        push!(expr_functions, expr_function_args)
+    end
+    expr = quote 
+            $(Base.@__doc__ expr_new_type)
+            $(expr_functions...)
+            $new_type
+           end
+    return esc(expr)
+end
+
+#function Wolf(; id, pos, ground_speed, fur_color, energy = 0.5)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
+
+#function Wolf(id, pos, energy, ground_speed, fur_color)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
+
+function decompose_struct_base(struct_repr)
+    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
+    end
+    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
+    return new_type, base_type_spec, abstract_type, new_fields
+end
+
+function decompose_struct_no_base(struct_repr, split_default=true)
+    if !@capture(struct_repr, struct new_type_ <: abstract_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_ new_fields__ end)
+    end
+    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
+    if split_default
+        new_fields_with_defs = [[], []]
+        for f in new_fields
+            if !@capture(f, t_ = k_)
+                @capture(f, t_)
+                k = "#328723329"
+            end
+            push!(new_fields_with_defs[1], t)
+            push!(new_fields_with_defs[2], k)
+        end
+        new_fields = new_fields_with_defs
+    end
+    return new_type, abstract_type, new_fields
+end
+
+function decompose_struct(struct_repr)
+    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
+    end
+    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
+    return new_type, base_type_spec, abstract_type, new_fields
+end
+
+function compute_base_fields(base_type_spec)
+    base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
+    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
+    old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
+    new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
+    for (old, new) in zip(old_args, new_args)
+        base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
+    end
+    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    return base_fields
+end
+
+function retrieve_fields_names(fields)
+    field_names = []
+    for f in fields
+        f.head == :const && (f = f.args[1])
+        f.head == :(::) && (f = f.args[1])
+        push!(field_names, f)
+    end
+    return field_names
+end
+        
+
