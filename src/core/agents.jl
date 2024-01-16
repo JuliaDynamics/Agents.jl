@@ -194,9 +194,11 @@ macro agent(struct_repr)
                       end)
     new_type_no_params = namify(new_type)
     __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
     expr = quote 
-    	   @kwdef $expr_new_type 
-    	   $(new_type_no_params)(m::ABM, args...) = 
+           @kwdef $expr_new_type 
+           $(new_type_no_params)(m::ABM, args...) = 
                $(new_type_no_params)(Agents.nextid(m), args...)
            $(new_type_no_params)(m::ABM; kwargs...) = 
                $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
@@ -436,3 +438,4 @@ function remove_prev_methods(a_t)
                     Base.delete_method(m)
                 end
             end)
+end
