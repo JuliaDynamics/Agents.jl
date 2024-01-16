@@ -217,6 +217,7 @@ macro compact(struct_repr)
                         $(common_fields...)
                         $(noncommon_fields...)
                       end)
+
     expr_new_type = islazy ? :(@lazy $expr_new_type) : expr_new_type
     expr_functions = []
     for (a_t, a_f, a_d) in zip(types_each, fields_each, default_each)
@@ -251,11 +252,23 @@ macro compact(struct_repr)
                 return $(namify(new_type))($(f_inside_args...))
             end
             )
-        expr_function_with_T = :(
-            function $(namify(a_t))($(f_params_args_with_T...)) where {$(a_t_p...)}
-                return $new_type_n{$(new_type_p...)}($(f_inside_args...))
+        if !isempty(new_type_p)
+            expr_function_with_T = :(
+                function $(namify(a_t))($(f_params_args_with_T...)) where {$(a_t_p...)}
+                    return $new_type_n{$(new_type_p...)}($(f_inside_args...))
+                end
+                )
+        else
+            expr_function_with_T = :()
+        end
+        remove_prev_methods = :(
+            if @isdefined $(namify(a_t))
+                for m in methods($(namify(a_t)))
+                    Base.delete_method(m)
+                end
             end
             )
+        push!(expr_functions, remove_prev_methods)
         push!(expr_functions, expr_function_kwargs)
         push!(expr_functions, expr_function_args)
         push!(expr_functions, expr_function_with_T)
