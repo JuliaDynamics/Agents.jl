@@ -227,18 +227,18 @@ macro compact(struct_repr)
         f_params_kwargs = [a_base_n..., a_spec_n_d...]
         f_params_kwargs = Expr(:parameters, f_params_kwargs...)
         f_params_args = [a_base_n..., a_spec_n...]
-        type = Symbol(lowercase(string(a_t)))
+        type = Symbol(lowercase(string(namify(a_t))))
         f_inside_args = [common_fields_n..., noncommon_fields_n...]
         f_inside_args = [f in a_spec_n ? f : (:(Agents.uninit)) for f in f_inside_args]
         f_inside_args = [a_base_n..., Expr(:quote, type), f_inside_args...]
         expr_function_kwargs = :(
-            function $a_t($f_params_kwargs)
-                return $new_type($(f_inside_args...))
+            function $(namify(a_t))($f_params_kwargs)
+                return $(namify(new_type))($(f_inside_args...))
             end
             )
         expr_function_args = :(
-            function $a_t($(f_params_args...))
-                return $new_type($(f_inside_args...))
+            function $(namify(a_t))($(f_params_args...))
+                return $(namify(new_type))($(f_inside_args...))
             end
             )
         push!(expr_functions, expr_function_kwargs)
@@ -247,10 +247,18 @@ macro compact(struct_repr)
     expr = quote 
             $(Base.@__doc__ expr_new_type)
             $(expr_functions...)
-            $new_type
+            $(namify(new_type))
            end
     return esc(expr)
 end
+
+#function Wolf(; id, pos, ground_speed, fur_color, energy = 0.5)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
+
+#function Wolf(id, pos, energy, ground_speed, fur_color)
+#    return Animal(id, pos, :wolf, energy, ground_speed, uninit, fur_color)
+#end
 
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
@@ -300,14 +308,12 @@ function compute_base_fields(base_type_spec)
     return base_fields
 end
 
-function retrieve_fields_names(fields)
+function retrieve_fields_names(fields, only_consts = false)
     field_names = []
     for f in fields
         f.head == :const && (f = f.args[1])
-        f.head == :(::) && (f = f.args[1])
+        !only_consts && f.head == :(::) && (f = f.args[1])
         push!(field_names, f)
     end
     return field_names
 end
-        
-
