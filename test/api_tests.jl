@@ -373,4 +373,51 @@ end
     @test wolf_2.fur_color == :white
     @test_throws "" hawk_1.fur_color
     @test_throws "" wolf_1.flight_speed
+    @test hawk_1.type == hawk_2.type == :hawk
+    @test wolf_1.type == wolf_2.type == :wolf
+
+    @compact struct A{T}(NoSpaceAgent)
+        @agent struct B{T}
+            a::T = 1
+            b::Int
+            c::Symbol
+        end
+        @agent struct C
+            b::Int = 2
+            c::Symbol
+            d::Vector{Int}
+        end
+        @agent struct D{T}
+            c::Symbol = :k
+            d::Vector{Int}
+            a::T
+        end
+    end
+
+    b1 = B(1, 2, 1, :s)
+    c1 = C(1, 1, :s, Int[])
+    d1 = D(1, :s, [1], 1.0)
+    b2 = B(; id = 1, b = 1, c = :s)
+    c2 = C(; id = 1, c = :s, d = [1,2])
+    d2 = D(; id = 1, d = [1], a = true)
+
+    @test b2.a == 1
+    @test c2.b == 2
+    @test d2.c == :k
+    @test b1.type == b2.type == :b
+    @test c1.type == c2.type == :c
+    @test d1.type == d2.type == :d
+    @test_throws "" b2.d
+    @test_throws "" c1.a
+    @test_throws "" d1.b
+    @test d2.a == true
+    @test b2.c == c2.c == b1.c == c1.c == d1.c == :s
+
+    fake_step!(a) = nothing
+    model = StandardABM(A, agent_step! = fake_step!)
+
+    add_agent!(B, model, 2, 1, :s)
+    add_agent!(C, model, 1, :s, Int[])
+    add_agent!(D, model, :s, [1], 1.0)
+    @test nagents(model) == 3
 end
