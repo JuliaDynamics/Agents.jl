@@ -249,7 +249,7 @@ function fill_space!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
 end
 
 function fill_space!(
-    A::Union{Function, ::Type{<:AbstractAgent}},
+    A::Union{Function, Type{<:AbstractAgent}},
     model::ABM{<:DiscreteSpace},
     args::Vararg{Any, N};
     kwargs...,
@@ -261,7 +261,7 @@ function fill_space!(
 end
 
 function fill_space!(
-    A::Union{Function, ::Type{<:AbstractAgent}},
+    A::Union{Function, Type{<:AbstractAgent}},
     model::ABM{<:DiscreteSpace},
     f::Function
 )
