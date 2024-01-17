@@ -133,4 +133,4 @@ The result is that having many types (here 15 different types) makes the code ab
 
 **Notice that this is a temporary problem! In the future we plan to re-work Agents.jl internals regarding multi-agent models and deal with this performance hit without requiring the user to do something differently.**
 
-At the moment, if you want to use many different agent types, you can try using the [@compact](@ref) macro. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
+At the moment, if you want to use many different agent types, you can try using the [`@compact`](@ref) macro. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it. In the majority of cases, the additional storage occupied by the model agents should be much less of a burden versus the type stability one gains by [`@compact`](@ref), hence, we recommend trying that.
