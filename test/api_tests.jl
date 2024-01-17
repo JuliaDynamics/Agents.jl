@@ -443,8 +443,8 @@ end
     @test g.y == 2
     @test_throws "" f.y
     @test_throws "" g.x
-    @test f.type == :firstagent
-    @test g.type == :secondagent
+    @test f.type == :f
+    @test g.type == :g
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
 
