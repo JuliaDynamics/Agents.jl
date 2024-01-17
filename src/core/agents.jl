@@ -213,7 +213,7 @@ macro agent(struct_repr)
 end
 
 """
-    @compact struct YourCompactedAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+    @compact struct YourParentAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
         @agent FirstAgentType{X}
             first_property::X # shared with second agent
             second_property_with_default::Bool = true
