@@ -9,50 +9,37 @@
 ################### DEFINITION 1 ###############
 using Agents, Random, BenchmarkTools
 
-@agent struct GridAgentOne <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentOne(GridAgent{2})
     one::Float64
     two::Bool
+    three::Int
 end
 
 @agent struct GridAgentTwo(GridAgent{2})
     one::Float64
     two::Bool
+    four::Float64
 end
 
 @agent struct GridAgentThree(GridAgent{2})
     one::Float64
     two::Bool
+    five::Bool
 end
 
 @agent struct GridAgentFour(GridAgent{2})
     one::Float64
     two::Bool
+    six::Int8
 end
 
 @agent struct GridAgentFive(GridAgent{2})
     one::Float64
     two::Bool
+    seven::Int32
 end
 
-model1 = StandardABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
-    GridSpace((15, 15));
-    warn = false,
-    rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
-)
-
-for _ in 1:50
-    add_agent!(GridAgentOne, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentTwo, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-end
-
-agent_step!(agent::GridAgentOne, model1) = walk!(agent, rand, model1)
+agent_step!(agent::GridAgentOne, model1) = randomwalk!(agent, model1)
 function agent_step!(agent::GridAgentTwo, model1)
     agent.one += rand(abmrng(model1))
     agent.two = rand(abmrng(model1), Bool)
@@ -60,7 +47,7 @@ end
 function agent_step!(agent::GridAgentThree, model1)
     if any(a-> a isa GridAgentTwo, nearby_agents(agent, model1))
         agent.two = true
-        walk!(agent, rand, model1)
+        randomwalk!(agent, model1)
     end
 end
 function agent_step!(agent::GridAgentFour, model1)
@@ -73,43 +60,67 @@ function agent_step!(agent::GridAgentFive, model1)
     walk!(agent, sign.(farthest.pos .- agent.pos), model1)
 end
 
-################### DEFINITION 2 ###############
-
-@agent struct GridAgentAll(GridAgent{2})
-    one::Float64
-    two::Bool
-    type::Symbol
-end
-
-model2 = StandardABM(
-    GridAgentAll,
+model1 = StandardABM(
+    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
     GridSpace((15, 15));
+    agent_step!,
+    warn = false,
     rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
+    scheduler = Schedulers.Randomly(),
 )
 
-for _ in 1:50
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :one)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :two)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :three)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :four)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :five)
+for i in 1:50
+    add_agent!(GridAgentOne, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
+    add_agent!(GridAgentTwo, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Float64(i))
+    add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), true)
+    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int8(i))
+    add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int32(i))
+end
+
+################### DEFINITION 2 ###############
+
+@multiagent struct GridAgentAll(GridAgent{2})
+    @agent struct GridAgentOne
+        one::Float64
+        two::Bool
+        three::Int
+    end
+    @agent struct GridAgentTwo
+        one::Float64
+        two::Bool
+        four::Float64
+    end
+    @agent struct GridAgentThree
+        one::Float64
+        two::Bool
+        five::Bool
+    end
+    @agent struct GridAgentFour
+        one::Float64
+        two::Bool
+        six::Int8
+    end
+    @agent struct GridAgentFive
+        one::Float64
+        two::Bool
+        seven::Int32
+    end
 end
 
 function agent_step!(agent::GridAgentAll, model2)
-    if agent.type == :one
+    if agent.type == :gridagentone
         agent_step_one!(agent, model2)
-    elseif agent.type == :two
+    elseif agent.type == :gridagenttwo
         agent_step_two!(agent, model2)
-    elseif agent.type == :three
+    elseif agent.type == :gridagentthree
         agent_step_three!(agent, model2)
-    elseif agent.type == :four
+    elseif agent.type == :gridagentfour
         agent_step_four!(agent, model2)
     else
         agent_step_five!(agent, model2)
     end
 end
-agent_step_one!(agent, model2) = walk!(agent, rand, model2)
+agent_step_one!(agent, model2) = randomwalk!(agent, model2)
 function agent_step_two!(agent, model2)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
@@ -117,7 +128,7 @@ end
 function agent_step_three!(agent, model2)
     if any(a-> a.type == :two, nearby_agents(agent, model2))
         agent.two = true
-        walk!(agent, rand, model2)
+        randomwalk!(agent, model2)
     end
 end
 function agent_step_four!(agent, model2)
@@ -132,11 +143,27 @@ function agent_step_five!(agent, model2)
     end
 end
 
+model2 = StandardABM(
+    GridAgentAll,
+    GridSpace((15, 15));
+    agent_step!,
+    rng = MersenneTwister(42),
+    scheduler = Schedulers.Randomly(),
+)
+
+for i in 1:50
+    add_agent!(GridAgentOne, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+    add_agent!(GridAgentTwo, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
+    add_agent!(GridAgentThree, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
+    add_agent!(GridAgentFour, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int8(i))
+    add_agent!(GridAgentFive, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
+end
+
 ################### Benchmarks ###############
 
-@btime step!($model1, agent_step!, dummystep, 500)
-@btime step!($model2, agent_step!, dummystep, 500)
+@btime step!($model1, 500)
+@btime step!($model2, 500)
 
 # Results:
-# 718.589 ms (11581560 allocations: 704.26 MiB)
-# 141.673 ms (2292318  allocations: 149.54 MiB)
+# 303.112 ms (4214469 allocations: 314.92 MiB)
+# 62.311 ms (2202340 allocations: 119.68 MiB)
