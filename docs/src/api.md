@@ -352,5 +352,5 @@ for details.
 ## Merge multiple agent-types
 
 ```@docs
-@compact
+@multiagent
 ```
