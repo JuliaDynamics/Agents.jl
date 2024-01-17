@@ -345,7 +345,7 @@ end
 
 @testset "@compact macro" begin
 
-    @compact struct Animal{T,N,J}(GridAgent{2})
+    @multiagent struct Animal{T,N,J}(GridAgent{2})
         @agent struct Wolf{T,N}
             energy::T = 0.5
             ground_speed::N
@@ -376,7 +376,7 @@ end
     @test hawk_1.type == hawk_2.type == :hawk
     @test wolf_1.type == wolf_2.type == :wolf
 
-    @compact struct A{T}(NoSpaceAgent)
+    @multiagent struct A{T}(NoSpaceAgent)
         @agent struct B{T}
             a::T = 1
             b::Int
@@ -412,6 +412,9 @@ end
     @test_throws "" d1.b
     @test d2.a == true
     @test b2.c == c2.c == b1.c == c1.c == d1.c == :s
+    @test b1 isa A && b2 isa A
+    @test c1 isa A && c2 isa A
+    @test d1 isa A && d2 isa A
 
     fake_step!(a) = nothing
     model = StandardABM(A, agent_step! = fake_step!)
@@ -420,4 +423,29 @@ end
     add_agent!(C, model, 1, :s, Int[])
     add_agent!(D, model, :s, [1], 1.0)
     @test nagents(model) == 3
+
+    abstract type AbstractE <: AbstractAgent end
+    @multiagent struct E(NoSpaceAgent) <: AbstractE
+        @agent struct F
+            x::Int
+        end
+        @agent struct G
+            y::Int
+        end
+    end
+
+    f = F(1, 1)
+    g = G(2, 2)
+
+    @test f.id == 1
+    @test g.id == 2
+    @test f.x == 1
+    @test g.y == 2
+    @test_throws "" f.y
+    @test_throws "" g.x
+    @test f.type == :firstagent
+    @test g.type == :secondagent
+    @test E <: AbstractE && E <: AbstractE
+    @test f isa E && g isa E
+
 end

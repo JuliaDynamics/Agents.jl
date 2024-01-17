@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @compact, NoSpaceAgent
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent
 
 """
     YourAgentType <: AbstractAgent
@@ -213,7 +213,7 @@ macro agent(struct_repr)
 end
 
 """
-    @compact struct YourParentAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+    @multiagent struct YourParentAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
         @agent FirstAgentType{X}
             first_property::X # shared with second agent
             second_property_with_default::Bool = true
@@ -238,7 +238,7 @@ at the cost of more memory consumption.
 Let's say you have this definition:
 
 ```
-@compact struct Animal{T}(GridAgent{2})
+@multiagent struct Animal{T}(GridAgent{2})
     @agent struct Wolf
         energy::Float64 = 0.5
         ground_speed::Float64
@@ -277,7 +277,7 @@ See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
 
 - Impossibility to inherit from a compactified agent.
 """
-macro compact(struct_repr)
+macro multiagent(struct_repr)
     new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
     types_each, fields_each, default_each = [], [], []

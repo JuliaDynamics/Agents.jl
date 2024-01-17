@@ -24,7 +24,7 @@ using Random
 import ImageMagick
 using FileIO: load
 
-@compact struct Animal(ContinuousAgent{3,Float64})
+@multiagent struct Animal(ContinuousAgent{3,Float64})
     @agent struct Rabbit
         energy::Float64
     end
