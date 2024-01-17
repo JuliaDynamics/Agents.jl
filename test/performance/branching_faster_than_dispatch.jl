@@ -39,6 +39,12 @@ end
     seven::Int32
 end
 
+@agent struct GridAgentSix(GridAgent{2})
+    one::Float64
+    two::Bool
+    eight::Int64
+end
+
 agent_step!(agent::GridAgentOne, model1) = randomwalk!(agent, model1)
 function agent_step!(agent::GridAgentTwo, model1)
     agent.one += rand(abmrng(model1))
@@ -59,9 +65,12 @@ function agent_step!(agent::GridAgentFive, model1)
     farthest = targets[idx]
     walk!(agent, sign.(farthest.pos .- agent.pos), model1)
 end
+function agent_step!(agent::GridAgentSix, model1)
+    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model1))
+end
 
 model1 = StandardABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
+    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive,GridAgentSix},
     GridSpace((15, 15));
     agent_step!,
     warn = false,
@@ -75,6 +84,7 @@ for i in 1:50
     add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), true)
     add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int8(i))
     add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int32(i))
+    add_agent!(GridAgentSix, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
 end
 
 ################### DEFINITION 2 ###############
@@ -105,6 +115,11 @@ end
         two::Bool
         seven::Int32
     end
+    @agent struct GridAgentSix
+        one::Float64
+        two::Bool
+        eight::Int64
+    end
 end
 
 function agent_step!(agent::GridAgentAll, model2)
@@ -116,8 +131,10 @@ function agent_step!(agent::GridAgentAll, model2)
         agent_step_three!(agent, model2)
     elseif agent.type == :gridagentfour
         agent_step_four!(agent, model2)
-    else
+    elseif agent.type == :gridagentfive
         agent_step_five!(agent, model2)
+    else
+        agent_step_six!(agent, model2)
     end
 end
 agent_step_one!(agent, model2) = randomwalk!(agent, model2)
@@ -142,6 +159,9 @@ function agent_step_five!(agent, model2)
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end
 end
+function agent_step_six!(agent, model2)
+    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
+end
 
 model2 = StandardABM(
     GridAgentAll,
@@ -157,6 +177,7 @@ for i in 1:50
     add_agent!(GridAgentThree, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
     add_agent!(GridAgentFour, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int8(i))
     add_agent!(GridAgentFive, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
+    add_agent!(GridAgentSix, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
 end
 
 ################### Benchmarks ###############
@@ -165,5 +186,6 @@ end
 @btime step!($model2, 500)
 
 # Results:
-# 303.112 ms (4214469 allocations: 314.92 MiB)
-# 62.311 ms (2202340 allocations: 119.68 MiB)
+# 543.859 ms (5048500 allocations: 344.51 MiB)
+# 77.375 ms (2981645 allocations: 142.59 MiB)
+
