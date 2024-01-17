@@ -426,26 +426,25 @@ end
 
     abstract type AbstractE <: AbstractAgent end
     @multiagent struct E(NoSpaceAgent) <: AbstractE
-        @agent struct A
+        @agent struct B
             x::Int
         end
-        @agent struct B
+        @agent struct C
             y::Int
         end
     end
 
-    a = A(1, 1)
-    b = B(2, 2)
+    b = B(1, 1)
+    c = C(2, 2)
 
-    @test a.id == 1
-    @test b.id == 2
-    @test a.x == 1
-    @test b.y == 2
-    @test_throws "" a.y
-    @test_throws "" b.x
-    @test a.type == :a
+    @test b.id == 1
+    @test c.id == 2
+    @test b.x == 1
+    @test c.y == 2
+    @test_throws "" b.y
+    @test_throws "" c.x
     @test b.type == :b
+    @test c.type == :c
     @test E <: AbstractE && E <: AbstractE
-    @test a isa E && b isa E
-
+    @test b isa E && c isa E
 end
