@@ -30,7 +30,7 @@ end
 @agent struct GridAgentFour(GridAgent{2})
     one::Float64
     two::Bool
-    six::Int8
+    six::Int16
 end
 
 @agent struct GridAgentFive(GridAgent{2})
@@ -78,11 +78,11 @@ model1 = StandardABM(
     scheduler = Schedulers.Randomly(),
 )
 
-for i in 1:50
+for i in 1:500
     add_agent!(GridAgentOne, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
     add_agent!(GridAgentTwo, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Float64(i))
     add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), true)
-    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int8(i))
+    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int16(i))
     add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int32(i))
     add_agent!(GridAgentSix, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
 end
@@ -108,7 +108,7 @@ end
     @agent struct GridAgentFour
         one::Float64
         two::Bool
-        six::Int8
+        six::Int16
     end
     @agent struct GridAgentFive
         one::Float64
@@ -143,7 +143,7 @@ function agent_step_two!(agent, model2)
     agent.two = rand(abmrng(model2), Bool)
 end
 function agent_step_three!(agent, model2)
-    if any(a-> a.type == :two, nearby_agents(agent, model2))
+    if any(a-> a.type == :gridagenttwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
@@ -171,21 +171,27 @@ model2 = StandardABM(
     scheduler = Schedulers.Randomly(),
 )
 
-for i in 1:50
+for i in 1:500
     add_agent!(GridAgentOne, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
     add_agent!(GridAgentTwo, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
     add_agent!(GridAgentThree, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
-    add_agent!(GridAgentFour, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int8(i))
+    add_agent!(GridAgentFour, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i))
     add_agent!(GridAgentFive, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
     add_agent!(GridAgentSix, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
 end
 
 ################### Benchmarks ###############
 
-@btime step!($model1, 500)
-@btime step!($model2, 500)
+@btime step!($model1, 50)
+@btime step!($model2, 50)
 
 # Results:
-# 543.859 ms (5048500 allocations: 344.51 MiB)
-# 77.375 ms (2981645 allocations: 142.59 MiB)
+# 3.581 s (39242250 allocations: 2.45 GiB)
+# 527.646 ms (22926750 allocations: 983.50 MiB)
 
+Base.summarysize(model1)
+Base.summarysize(model2)
+
+# Results:
+# 491.20 KiB
+# 686.13 KiB
