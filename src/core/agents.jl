@@ -225,20 +225,23 @@ end
         # etc...
     end
 
-Compactify multiple agents in a single type. Each agent has a `type` field which
-defines which type of agent it is. Convenient constructors for each agent type are 
-also provided.
+Compactify multiple agents in a single one. Notice that in this case there is only
+one real type, while all the others are conceptual, and so they can't be dispatch
+upon.
 
 Using this macro can be useful for performance of multi-agents models because combining
-multiple agents in only one avoids dynamic dispatch and abstract containers problems, 
-at the cost of more memory consumption. 
+multiple agents in only one avoids dynamic dispatch and abstract containers problems. 
+
+Two different versions of @multiagent can be used by passing either :opt_speed or :opt_memory
+as the first argument. The first optimizes the agents representation for speed, the 
+second does the same for memory, at the cost of a moderate drop in performance. 
 
 ## Examples
 
 Let's say you have this definition:
 
 ```
-@multiagent struct Animal{T}(GridAgent{2})
+@multiagent :opt_speed struct Animal{T}(GridAgent{2})
     @agent struct Wolf
         energy::Float64 = 0.5
         ground_speed::Float64
@@ -263,12 +266,12 @@ wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
 
 It is important to notice, though, that the `Wolf` and `Hawk` types are just 
 conceptual and all agents are actually of type `Animal` in this case. 
-The way to retrieve the group to which an agent belongs is through its `type` 
-field e.g.
+The way to retrieve the group to which an agent belongs is through the
+function `kindof` e.g.
 
 ```
-hawk_1.type # :hawk
-wolf_2.type # :wolf
+kindof(hawk_1) # :Hawk
+kindof(wolf_2) # :Wolf
 ```
 
 See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
@@ -277,100 +280,31 @@ See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
 
 - Impossibility to inherit from a compactified agent.
 """
-macro multiagent(struct_repr)
+macro multiagent(version, struct_repr)
     new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
-    types_each, fields_each, default_each = [], [], []
+    agent_specs_with_base = []
     for a_spec in agent_specs
         @capture(a_spec, @agent astruct_spec_)
-        a_comps = decompose_struct_no_base(astruct_spec)
-        push!(types_each, a_comps[1])
-        push!(fields_each, a_comps[3][1])
-        push!(default_each, a_comps[3][2])
+        int_type, new_fields = decompose_struct(astruct_spec)
+        push!(agent_specs_with_base,
+              :(mutable struct $int_type
+                    $(base_fields...)
+                    $(new_fields...)
+                end))
     end
-    common_fields = intersect(fields_each...)
-    noncommon_fields = setdiff(union(fields_each...), common_fields)
-    common_fields_n = retrieve_fields_names(common_fields)
-    noncommon_fields_n = retrieve_fields_names(noncommon_fields)
-    if isempty(noncommon_fields)
-        islazy = false
+    t = :($new_type <: $abstract_type)
+    a_specs = :(begin $(agent_specs_with_base...) end)
+    if version == :opt_speed 
+        expr = quote
+                   MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
+               end
     else
-        islazy = true
-        noncommon_fields = [f.head == :const ? :(@lazy $(f.args[1])) : (:(@lazy $f)) 
-                            for f in noncommon_fields]
+        expr = quote
+                   MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
+               end
     end
-    expr_new_type = :(mutable struct $new_type <: $abstract_type
-                        $(base_fields...)
-                        type::Symbol
-                        $(common_fields...)
-                        $(noncommon_fields...)
-                      end)
-
-    expr_new_type = islazy ? :(@lazy $expr_new_type) : expr_new_type
-    expr_functions = []
-    for (a_t, a_f, a_d) in zip(types_each, fields_each, default_each)
-        a_base_n = retrieve_fields_names(base_fields)
-        a_spec_n = retrieve_fields_names(a_f)
-        a_spec_n_d = [d != "#328723329" ? Expr(:kw, n, d) : (:($n)) 
-                      for (n, d) in zip(a_spec_n, a_d)]
-        f_params_kwargs = [a_base_n..., a_spec_n_d...]
-        f_params_kwargs = Expr(:parameters, f_params_kwargs...)        
-        f_params_args = [a_base_n..., a_spec_n...]
-        f_params_args_with_T = [retrieve_fields_names(base_fields, true)..., 
-                                retrieve_fields_names(a_f, true)...]
-        a_spec_n2_d = [d != "#328723329" ? Expr(:kw, n, d) : (:($n)) 
-                      for (n, d) in zip(retrieve_fields_names(a_f, true), a_d)]
-        f_params_kwargs_with_T = [a_base_n..., a_spec_n2_d...]
-        f_params_kwargs_with_T = Expr(:parameters, f_params_kwargs_with_T...)
-        type = Symbol(lowercase(string(namify(a_t))))
-        f_inside_args = [common_fields_n..., noncommon_fields_n...]
-        f_inside_args = [f in a_spec_n ? f : (:(Agents.uninit)) for f in f_inside_args]
-        f_inside_args = [a_base_n..., Expr(:quote, type), f_inside_args...]
-        @capture(a_t, a_t_n_{a_t_p__})
-        a_t_p === nothing && (a_t_p = [])
-        @capture(new_type, new_type_n_{new_type_p__})
-        if new_type_p === nothing 
-            new_type_n, new_type_p = new_type, []
-        end
-        new_type_p = [t in a_t_p ? t : (:(Agents.LazilyInitializedFields.Uninitialized)) 
-                      for t in new_type_p]
-        expr_function_kwargs = :(
-            function $(namify(a_t))($f_params_kwargs)
-                return $(namify(new_type))($(f_inside_args...))
-            end
-            )
-        expr_function_args = :(
-            function $(namify(a_t))($(f_params_args...))
-                return $(namify(new_type))($(f_inside_args...))
-            end
-            )
-        if !isempty(new_type_p)
-            expr_function_args_with_T = :(
-                function $(namify(a_t))($(f_params_args_with_T...)) where {$(a_t_p...)}
-                    return $new_type_n{$(new_type_p...)}($(f_inside_args...))
-                end
-                )
-            expr_function_kwargs_with_T = :(
-                function $(namify(a_t))($f_params_kwargs_with_T) where {$(a_t_p...)}
-                    return $new_type_n{$(new_type_p...)}($(f_inside_args...))
-                end
-                )
-        else
-            expr_function_args_with_T = :()
-            expr_function_kwargs_with_T = :()
-        end
-        remove_prev_functions = remove_prev_methods(a_t)
-        push!(expr_functions, remove_prev_functions)
-        push!(expr_functions, expr_function_kwargs)
-        push!(expr_functions, expr_function_args)
-        push!(expr_functions, expr_function_args_with_T)
-        push!(expr_functions, expr_function_kwargs_with_T)
-    end
-    expr = quote 
-            $(Base.@__doc__ expr_new_type)
-            $(expr_functions...)
-            $(namify(new_type))
-           end
+    expr = macroexpand(MixedStructTypes, expr)
     return esc(expr)
 end
 
@@ -382,32 +316,11 @@ function decompose_struct_base(struct_repr)
     return new_type, base_type_spec, abstract_type, new_fields
 end
 
-function decompose_struct_no_base(struct_repr, split_default=true)
-    if !@capture(struct_repr, struct new_type_ <: abstract_type_ new_fields__ end)
+function decompose_struct(struct_repr)
+    if !@capture(struct_repr, struct new_type_ new_fields__ end)
         @capture(struct_repr, struct new_type_ new_fields__ end)
     end
-    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
-    if split_default
-        new_fields_with_defs = [[], []]
-        for f in new_fields
-            if !@capture(f, t_ = k_)
-                @capture(f, t_)
-                k = "#328723329"
-            end
-            push!(new_fields_with_defs[1], t)
-            push!(new_fields_with_defs[2], k)
-        end
-        new_fields = new_fields_with_defs
-    end
-    return new_type, abstract_type, new_fields
-end
-
-function decompose_struct(struct_repr)
-    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
-        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
-    end
-    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
-    return new_type, base_type_spec, abstract_type, new_fields
+    return new_type, new_fields
 end
 
 function compute_base_fields(base_type_spec)
@@ -420,22 +333,4 @@ function compute_base_fields(base_type_spec)
     end
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     return base_fields
-end
-
-function retrieve_fields_names(fields, only_consts = false)
-    field_names = []
-    for f in fields
-        f.head == :const && (f = f.args[1])
-        !only_consts && f.head == :(::) && (f = f.args[1])
-        push!(field_names, f)
-    end
-    return field_names
-end
-    
-function remove_prev_methods(a_t)
-    return :(if @isdefined $(namify(a_t))
-                for m in methods($(namify(a_t)))
-                    Base.delete_method(m)
-                end
-            end)
 end

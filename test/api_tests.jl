@@ -343,20 +343,48 @@ end
     @test agent2.pos == (2, 4)
 end
 
-@testset "@compact macro" begin
-
-    @multiagent struct Animal{T,N,J}(GridAgent{2})
-        @agent struct Wolf{T,N}
-            energy::T = 0.5
-            ground_speed::N
-            const fur_color::Symbol
-        end
-        @agent struct Hawk{T,N,J}
-            energy::T = 0.1
-            ground_speed::N
-            flight_speed::J
-        end
+@multiagent :opt_memory struct Animal{T,N,J}(GridAgent{2})
+    @agent struct Wolf{T,N}
+        energy::T = 0.5
+        ground_speed::N
+        const fur_color::Symbol
     end
+    @agent struct Hawk{T,N,J}
+        energy::T = 0.1
+        ground_speed::N
+        flight_speed::J
+    end
+end
+
+@multiagent :opt_speed struct A{T}(NoSpaceAgent)
+    @agent struct B{T}
+        a::T = 1
+        b::Int
+        c::Symbol
+    end
+    @agent struct C
+        b::Int = 2
+        c::Symbol
+        d::Vector{Int}
+    end
+    @agent struct D{T}
+        c::Symbol = :k
+        d::Vector{Int}
+        a::T
+    end
+end
+
+abstract type AbstractE <: AbstractAgent end
+@multiagent :opt_memory struct E(NoSpaceAgent) <: AbstractE
+    @agent struct F
+        x::Int
+    end
+    @agent struct G
+        y::Int
+    end
+end
+
+@testset "@multiagent macro" begin
 
     hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
     hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
@@ -373,26 +401,8 @@ end
     @test wolf_2.fur_color == :white
     @test_throws "" hawk_1.fur_color
     @test_throws "" wolf_1.flight_speed
-    @test hawk_1.type == hawk_2.type == :hawk
-    @test wolf_1.type == wolf_2.type == :wolf
-
-    @multiagent struct A{T}(NoSpaceAgent)
-        @agent struct B{T}
-            a::T = 1
-            b::Int
-            c::Symbol
-        end
-        @agent struct C
-            b::Int = 2
-            c::Symbol
-            d::Vector{Int}
-        end
-        @agent struct D{T}
-            c::Symbol = :k
-            d::Vector{Int}
-            a::T
-        end
-    end
+    @test kindof(hawk_1) == kindof(hawk_2) == :Hawk
+    @test kindof(wolf_1) == kindof(wolf_2) == :Wolf
 
     b1 = B(1, 2, 1, :s)
     c1 = C(1, 1, :s, Int[])
@@ -404,9 +414,9 @@ end
     @test b2.a == 1
     @test c2.b == 2
     @test d2.c == :k
-    @test b1.type == b2.type == :b
-    @test c1.type == c2.type == :c
-    @test d1.type == d2.type == :d
+    @test kindof(b1) == kindof(b2) == :B
+    @test kindof(c1) == kindof(c2) == :C
+    @test kindof(d1) == kindof(d2) == :D
     @test_throws "" b2.d
     @test_throws "" c1.a
     @test_throws "" d1.b
@@ -424,27 +434,17 @@ end
     add_agent!(D, model, :s, [1], 1.0)
     @test nagents(model) == 3
 
-    abstract type AbstractE <: AbstractAgent end
-    @multiagent struct E(NoSpaceAgent) <: AbstractE
-        @agent struct B
-            x::Int
-        end
-        @agent struct C
-            y::Int
-        end
-    end
+    f = F(1, 1)
+    g = G(2, 2)
 
-    b = B(1, 1)
-    c = C(2, 2)
-
-    @test b.id == 1
-    @test c.id == 2
-    @test b.x == 1
-    @test c.y == 2
-    @test_throws "" b.y
-    @test_throws "" c.x
-    @test b.type == :b
-    @test c.type == :c
+    @test f.id == 1
+    @test g.id == 2
+    @test f.x == 1
+    @test g.y == 2
+    @test_throws "" f.y
+    @test_throws "" g.x
+    @test kindof(f) == :F
+    @test kindof(g) == :G
     @test E <: AbstractE && E <: AbstractE
-    @test b isa E && c isa E
+    @test f isa E && g isa E
 end
