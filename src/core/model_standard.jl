@@ -123,7 +123,7 @@ function StandardABM(
          pass the stepping functions in step!, run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration
          abmvideo and ABMObservable"
     end
-    agent_validator(A, space, warn)
+    !(ismultiagenttype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
     agents_types = union_types(A)

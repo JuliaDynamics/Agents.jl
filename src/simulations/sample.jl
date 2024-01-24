@@ -107,11 +107,11 @@ function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
     return newagent
 end
 
-function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
+function new_args(agent, model; kwargs...)
     # the id is always the first field
-    fields_no_id = fieldnames(A)[2:end]
+    fields_no_id = propertynames(agent)[2:end]
     if isempty(kwargs)
-        new_args = (deepcopy(getfield(agent, x)) for x in fields_no_id)
+        new_args = (deepcopy(getproperty(agent, x)) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
         new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
@@ -119,7 +119,7 @@ function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
 end
 
 function choose_arg(x, kwargs_nt, agent)
-    return deepcopy(getfield(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
+    return deepcopy(getproperty(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
 end
 
 #######################################################################################

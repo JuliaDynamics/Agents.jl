@@ -17,7 +17,7 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
-__AGENT_GENERATOR__ = Dict{Symbol, Expr}()
+const __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
 """
     NoSpaceAgent <: AbstractAgent
@@ -298,15 +298,19 @@ macro multiagent(version, struct_repr)
     if version == :opt_speed 
         expr = quote
                    MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
+                   Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
                end
     else
         expr = quote
                    MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
+                   Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
                end
     end
-    expr = macroexpand(MixedStructTypes, expr)
+    expr = macroexpand(__module__, expr)
     return esc(expr)
 end
+
+ismultiagenttype(::Type) = false
 
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)

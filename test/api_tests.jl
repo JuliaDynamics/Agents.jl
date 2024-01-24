@@ -404,6 +404,13 @@ end
     @test kindof(hawk_1) == kindof(hawk_2) == :Hawk
     @test kindof(wolf_1) == kindof(wolf_2) == :Wolf
 
+    fake_step!(a) = nothing
+    model = StandardABM(Animal, GridSpace((5, 5)); agent_step! = fake_step!)
+
+    add_agent!(Hawk, model, 1.0, 2.0, 3)
+    add_agent!(Wolf, model, 2.0, 3.0, :black)
+    @test nagents(model) == 2
+
     b1 = B(1, 2, 1, :s)
     c1 = C(1, 1, :s, Int[])
     d1 = D(1, :s, [1], 1.0)
@@ -426,8 +433,7 @@ end
     @test c1 isa A && c2 isa A
     @test d1 isa A && d2 isa A
 
-    fake_step!(a) = nothing
-    model = StandardABM(A, agent_step! = fake_step!)
+    model = StandardABM(A; agent_step! = fake_step!)
 
     add_agent!(B, model, 2, 1, :s)
     add_agent!(C, model, 1, :s, Int[])

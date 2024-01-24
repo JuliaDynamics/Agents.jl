@@ -16,8 +16,6 @@ using IteratorSampling
 using MacroTools
 using MixedStructTypes
 export MixedStructTypes
-using SumTypes
-export SumTypes
 import ProgressMeter
 using Random
 using StaticArrays: SVector
