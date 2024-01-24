@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @multiagent, NoSpaceAgent
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof
 
 """
     YourAgentType <: AbstractAgent
@@ -306,7 +306,7 @@ macro multiagent(version, struct_repr)
                    Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
                end
     end
-    expr = macroexpand(__module__, expr)
+    expr = macroexpand(Agents, expr)
     return esc(expr)
 end
 

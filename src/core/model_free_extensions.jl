@@ -11,7 +11,6 @@ Return an agent given its ID.
 """
 Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
 
-
 """
     allids(model)
 Return an iterator over all agent IDs of the model.

@@ -169,9 +169,10 @@ end
 # from any nearby predators.
 
 function animal_step!(animal, model)
-    if animal.type == :rabbit
+    kind = kindof(animal)
+    if kind == :Rabbit
         rabbit_step!(animal, model)
-    elseif animal.type == :fox
+    elseif kind == :Fox
         fox_step!(animal, model)
     else
         hawk_step!(animal, model)
@@ -202,7 +203,7 @@ function rabbit_step!(rabbit, model)
     ## Get a list of positions of all nearby predators
     predators = [
         x.pos for x in nearby_agents(rabbit, model, model.rabbit_vision) if
-            x.type == :fox || x.type == :hawk
+            kindof(x) == :fox || kindof(x) == :hawk
             ]
     ## If the rabbit sees a predator and isn't already moving somewhere
     if !isempty(predators) && is_stationary(rabbit, model.landfinder)
@@ -253,7 +254,7 @@ end
 
 function fox_step!(fox, model)
     ## Look for nearby rabbits that can be eaten
-    food = [x for x in nearby_agents(fox, model) if x.type == :rabbit]
+    food = [x for x in nearby_agents(fox, model) if kindof(x) == :rabbit]
     if !isempty(food)
         remove_agent!(rand(abmrng(model), food), model, model.landfinder)
         fox.energy += model.Δe_rabbit
@@ -275,7 +276,7 @@ function fox_step!(fox, model)
     ## If the fox isn't already moving somewhere
     if is_stationary(fox, model.landfinder)
         ## Look for any nearby rabbits
-        prey = [x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
+        prey = [x for x in nearby_agents(fox, model, model.fox_vision) if kindof(x) == :rabbit]
         if isempty(prey)
             ## Move anywhere if no rabbits were found
             plan_route!(
@@ -297,7 +298,7 @@ end
 
 function hawk_step!(hawk, model)
     ## Look for rabbits nearby
-    food = [x for x in nearby_agents(hawk, model) if x.type == :rabbit]
+    food = [x for x in nearby_agents(hawk, model) if kindof(x) == :rabbit]
     if !isempty(food)
         ## Eat (remove) the rabbit
         remove_agent!(rand(abmrng(model), food), model, model.airfinder)
@@ -317,7 +318,7 @@ function hawk_step!(hawk, model)
     rand(abmrng(model)) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
 
     if is_stationary(hawk, model.airfinder)
-        prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if x.type == :rabbit]
+        prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if kindof(x) == :rabbit]
         if isempty(prey)
             plan_route!(
                 hawk,
@@ -337,7 +338,7 @@ end
 
 function reproduce!(animal, model)
     animal.energy = Float64(ceil(Int, animal.energy / 2))
-    add_agent!(animal.pos, Animal, model, v0, animal.type, animal.energy)
+    add_agent!(animal.pos, eval(kindof(animal)), model, v0, animal.energy)
 end
 
 # The model stepping function simulates the growth of grass
@@ -370,9 +371,9 @@ model = initialize_model()
 # ```
 
 function animalcolor(a)
-    if a.type == :rabbit
+    if kindof(a) == :rabbit
         :brown
-    elseif a.type == :fox
+    elseif kindof(a) == :fox
         :orange
     else
         :blue

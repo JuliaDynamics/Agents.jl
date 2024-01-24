@@ -143,7 +143,7 @@ function agent_step_two!(agent, model2)
     agent.two = rand(abmrng(model2), Bool)
 end
 function agent_step_three!(agent, model2)
-    if any(a-> a.type == :gridagenttwo, nearby_agents(agent, model2))
+    if any(a-> kindof(a) == :gridagenttwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
