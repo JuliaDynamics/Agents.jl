@@ -410,6 +410,8 @@ end
     add_agent!(Hawk, model, 1.0, 2.0, 3)
     add_agent!(Wolf, model, 2.0, 3.0, :black)
     @test nagents(model) == 2
+    sample!(model, 2)
+    @test nagents(model) == 2
 
     b1 = B(1, 2, 1, :s)
     c1 = C(1, 1, :s, Int[])
@@ -439,7 +441,9 @@ end
     add_agent!(C, model, 1, :s, Int[])
     add_agent!(D, model, :s, [1], 1.0)
     @test nagents(model) == 3
-
+    sample!(model, 2)
+    @test nagents(model) == 2
+    
     f = F(1, 1)
     g = G(2, 2)
 
