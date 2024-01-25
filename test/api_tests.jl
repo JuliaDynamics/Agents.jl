@@ -375,7 +375,7 @@ end
 end
 
 abstract type AbstractE <: AbstractAgent end
-@multiagent :opt_memory struct E(NoSpaceAgent) <: AbstractE
+@multiagent struct E(NoSpaceAgent) <: AbstractE
     @agent struct F
         x::Int
     end

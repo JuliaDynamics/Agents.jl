@@ -312,6 +312,10 @@ macro multiagent(version, struct_repr)
     return esc(expr)
 end
 
+macro multiagent(struct_repr)
+    return esc(:(@multiagent :opt_speed $struct_repr))
+end
+
 ismultiagenttype(::Type) = false
 ismultiagentsumtype(::Type) = false
 ismultiagentcompacttype(::Type) = false
