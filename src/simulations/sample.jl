@@ -104,7 +104,11 @@ end
 function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
     args = new_args(agent, model; kwargs...)
     if ismultiagenttype(A)
-        newagent = eval(kindof(agent))(id_new, args...)
+        newagent = copy(agent)
+        newargs = collect(args)
+        for p in propertynames(agent)[2:end]
+            setproperty!(agent, p, args[i])
+        end
     else
         newagent = A(id_new, args...)
     end
