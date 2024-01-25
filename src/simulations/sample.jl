@@ -107,7 +107,7 @@ function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
         newagent = copy(agent)
         newargs = collect(args)
         for p in propertynames(agent)[2:end]
-            setproperty!(agent, p, args[i])
+            setproperty!(newagent, p, args[i])
         end
     else
         newagent = A(id_new, args...)
