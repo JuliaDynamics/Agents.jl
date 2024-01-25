@@ -89,49 +89,49 @@ end
 
 ################### DEFINITION 2 ###############
 
-@multiagent struct GridAgentAll(GridAgent{2})
-    @agent struct GridAgentOne
+@multiagent :opt_speed struct GridAgent2All(GridAgent{2})
+    @agent struct GridAgent2One
         one::Float64
         two::Bool
         three::Int
     end
-    @agent struct GridAgentTwo
+    @agent struct GridAgent2Two
         one::Float64
         two::Bool
         four::Float64
     end
-    @agent struct GridAgentThree
+    @agent struct GridAgent2Three
         one::Float64
         two::Bool
         five::Bool
     end
-    @agent struct GridAgentFour
+    @agent struct GridAgent2Four
         one::Float64
         two::Bool
         six::Int16
     end
-    @agent struct GridAgentFive
+    @agent struct GridAgent2Five
         one::Float64
         two::Bool
         seven::Int32
     end
-    @agent struct GridAgentSix
+    @agent struct GridAgent2Six
         one::Float64
         two::Bool
         eight::Int64
     end
 end
 
-function agent_step!(agent::GridAgentAll, model2)
-    if agent.type == :gridagentone
+function agent_step!(agent::GridAgent2All, model2)
+    if kindof(agent) == :GridAgent2One
         agent_step_one!(agent, model2)
-    elseif agent.type == :gridagenttwo
+    elseif kindof(agent) == :GridAgent2Two
         agent_step_two!(agent, model2)
-    elseif agent.type == :gridagentthree
+    elseif kindof(agent) == :GridAgent2Three
         agent_step_three!(agent, model2)
-    elseif agent.type == :gridagentfour
+    elseif kindof(agent) == :GridAgent2Four
         agent_step_four!(agent, model2)
-    elseif agent.type == :gridagentfive
+    elseif kindof(agent) == :GridAgent2Five
         agent_step_five!(agent, model2)
     else
         agent_step_six!(agent, model2)
@@ -164,7 +164,7 @@ function agent_step_six!(agent, model2)
 end
 
 model2 = StandardABM(
-    GridAgentAll,
+    GridAgent2All,
     GridSpace((15, 15));
     agent_step!,
     rng = MersenneTwister(42),
@@ -172,26 +172,28 @@ model2 = StandardABM(
 )
 
 for i in 1:500
-    add_agent!(GridAgentOne, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
-    add_agent!(GridAgentTwo, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
-    add_agent!(GridAgentThree, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
-    add_agent!(GridAgentFour, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i))
-    add_agent!(GridAgentFive, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
-    add_agent!(GridAgentSix, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+    add_agent!(GridAgent2One, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+    add_agent!(GridAgent2Two, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
+    add_agent!(GridAgent2Three, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
+    add_agent!(GridAgent2Four, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i))
+    add_agent!(GridAgent2Five, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
+    add_agent!(GridAgent2Six, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
 end
 
 ################### Benchmarks ###############
 
 @btime step!($model1, 50)
-@btime step!($model2, 50)
+@btime step!($model2, 50) # repeat also with :opt_memory
 
 # Results:
-# 3.581 s (39242250 allocations: 2.45 GiB)
-# 527.646 ms (22926750 allocations: 983.50 MiB)
+# multiple types: 3.732 s (39242250 allocations: 2.45 GiB)
+# @multiagent :opt_speed: 577.185 ms (25818000 allocations: 1.05 GiB)
+# @multiagent :opt_memory: 870.460 ms (25868000 allocations: 1.05 GiB)
 
 Base.summarysize(model1)
-Base.summarysize(model2)
+Base.summarysize(model2) # repeat also with :opt_memory
 
 # Results:
-# 491.20 KiB
-# 686.13 KiB
+# multiple types: 491.20 KiB
+# @multiagent :opt_speed: 686.13 KiB
+# @multiagent :opt_memory: 563.12 KiB
