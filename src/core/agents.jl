@@ -234,7 +234,7 @@ multiple agents in only one avoids dynamic dispatch and abstract containers prob
 
 Two different versions of @multiagent can be used by passing either :opt_speed or :opt_memory
 as the first argument. The first optimizes the agents representation for speed, the 
-second does the same for memory, at the cost of a moderate drop in performance. 
+second does the same for memory, at the cost of a moderate drop in performance.
 
 ## Examples
 
@@ -294,21 +294,36 @@ macro multiagent(version, struct_repr)
                 end))
     end
     t = :($new_type <: $abstract_type)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == :opt_speed 
         expr = quote
                    MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
-                   Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
-                   Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
+                   Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
     else
         expr = quote
                    MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
-                   Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
-                   Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
+                   Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
     end
+
+    expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
+    if new_params != []
+        expr_multiagent_p = :(Agents.ismultiagenttype(::Type{$(new_type)}) where {$(new_params...)} = true)
+    else
+        expr_multiagent_p = :()
+    end
+
     expr = macroexpand(Agents, expr)
+
+    expr = quote
+               $expr
+               $expr_multiagent
+               $expr_multiagent_p
+           end
+
     return esc(expr)
 end
 

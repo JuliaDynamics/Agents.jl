@@ -103,11 +103,12 @@ end
 
 function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
     args = new_args(agent, model; kwargs...)
-    println(ismultiagentsumtype(A))
     if ismultiagentsumtype(A)
         newagent = copy(agent)
-        for (p,v) in zip(propertynames(agent)[2:end], args)
-            setproperty!(newagent, p, v)
+        if !isempty(kwargs)
+            for (p,v) in zip(propertynames(agent)[2:end], args)
+                setproperty!(newagent, p, v)
+            end
         end
     else
         newagent = A(id_new, args...)
