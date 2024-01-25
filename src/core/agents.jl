@@ -299,11 +299,13 @@ macro multiagent(version, struct_repr)
         expr = quote
                    MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
                    Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
+                   Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
                end
     else
         expr = quote
                    MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
                    Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true
+                   Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
                end
     end
     expr = macroexpand(Agents, expr)
@@ -311,6 +313,8 @@ macro multiagent(version, struct_repr)
 end
 
 ismultiagenttype(::Type) = false
+ismultiagentsumtype(::Type) = false
+ismultiagentcompacttype(::Type) = false
 
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
