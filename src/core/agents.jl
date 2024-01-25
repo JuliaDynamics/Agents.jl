@@ -297,16 +297,18 @@ macro multiagent(version, struct_repr)
     @capture(new_type, _{new_params__})
     new_params === nothing && (new_params = [])
     a_specs = :(begin $(agent_specs_with_base...) end)
-    if version == :opt_speed 
+    if version == QuoteNode(:opt_speed) 
         expr = quote
                    MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
-    else
+    elseif version == QuoteNode(:opt_memory)
         expr = quote
                    MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
                    Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
+    else
+        error("The version of @multiagent chosen was not recognized, use either :opt_speed or :opt_memory instead.")
     end
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
