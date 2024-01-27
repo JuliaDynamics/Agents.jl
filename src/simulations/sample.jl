@@ -126,10 +126,10 @@ function new_args_sum_t(agent, model; kwargs...)
     # the id is always the first field
     fields_no_id = propertynames(agent)[2:end]
     if isempty(kwargs)
-        new_args = (getproperty(agent, x) for x in fields_no_id)
+        new_args = map(x -> getproperty(agent, x), fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
-        new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
+        new_args = map(x -> choose_arg(x, kwargs_nt, agent), fields_no_id)
     end
 end
 
