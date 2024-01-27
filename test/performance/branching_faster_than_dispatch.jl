@@ -123,20 +123,22 @@ end
 end
 
 function agent_step!(agent::GridAgent2All, model2)
-    if kindof(agent) == :GridAgent2One
+    kind = kindof(agent)
+    if kind === :GridAgent2One
         agent_step_one!(agent, model2)
-    elseif kindof(agent) == :GridAgent2Two
+    elseif kind === :GridAgent2Two
         agent_step_two!(agent, model2)
-    elseif kindof(agent) == :GridAgent2Three
+    elseif kind === :GridAgent2Three
         agent_step_three!(agent, model2)
-    elseif kindof(agent) == :GridAgent2Four
+    elseif kind === :GridAgent2Four
         agent_step_four!(agent, model2)
-    elseif kindof(agent) == :GridAgent2Five
+    elseif kind === :GridAgent2Five
         agent_step_five!(agent, model2)
     else
         agent_step_six!(agent, model2)
     end
 end
+
 agent_step_one!(agent, model2) = randomwalk!(agent, model2)
 function agent_step_two!(agent, model2)
     agent.one += rand(abmrng(model2))
