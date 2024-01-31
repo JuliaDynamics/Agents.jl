@@ -184,6 +184,10 @@ such as the `id`, are set automatically
 model = StandardABM(GridAgent{2}, GridSpace((10,10)))
 a = GridAgent{2}(model, (3,4)) # the id is set automatically
 ```
+
+There is also another macro available in Agents.jl named [`@multiagent`](@ref) which
+can help improving the performance of multi-agent models. Refer to its docstring for more
+details.
 """
 macro agent(struct_repr)
     new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
@@ -213,28 +217,33 @@ macro agent(struct_repr)
 end
 
 """
-    @multiagent struct YourParentAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
-        @agent FirstAgentType{X}
+    @multiagent struct YourAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+        @agent FirstAgentSubType{X}
             first_property::X # shared with second agent
             second_property_with_default::Bool = true
         end
-        @agent SecondAgentType{X,Y}
+        @agent SecondAgentSubType{X,Y}
             first_property::X = 3
             third_property::Y
         end
         # etc...
     end
 
-Compactify multiple agents in a single one. Notice that in this case there is only
-one real type, while all the others are conceptual, and so they can't be dispatch
-upon.
+Define multiple agent "subtypes", which are actually only variants of a unique 
+overarching type. This means that all "subtypes" are conceptual: they are simply 
+convenience functions defined that initialize the common proper type correctly 
+(see examples below for more). Because the "subtypes" are not real Julia `Types`, 
+you cannot use multiple dispatch on them.
 
-Using this macro can be useful for performance of multi-agents models because combining
-multiple agents in only one avoids dynamic dispatch and abstract containers problems. 
+Using this macro can be useful for performance of multi-agents models because 
+combining multiple agents in only one avoids type instabilities issues which leads 
+to a decrease in performance. See the [performance-tips](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#Avoid-Unions-of-many-different-agent-types-1),
+page for a more throughout analysis of its performance advantages.
 
-Two different versions of @multiagent can be used by passing either :opt_speed or :opt_memory
-as the first argument. The first optimizes the agents representation for speed, the 
-second does the same for memory, at the cost of a moderate drop in performance.
+Two different versions of `@multiagent` can be used by passing either `:opt_speed` or 
+`:opt_memory` as the first argument. The first optimizes the agents representation for
+speed, the second does the same for memory, at the cost of a moderate drop in performance. 
+By default it uses `:opt_speed`.
 
 ## Examples
 
@@ -266,8 +275,7 @@ wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
 
 It is important to notice, though, that the `Wolf` and `Hawk` types are just 
 conceptual and all agents are actually of type `Animal` in this case. 
-The way to retrieve the group to which an agent belongs is through the
-function `kindof` e.g.
+The way to retrieve the variant of the agent is through the function `kindof` e.g.
 
 ```
 kindof(hawk_1) # :Hawk

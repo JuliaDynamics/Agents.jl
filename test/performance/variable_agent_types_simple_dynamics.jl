@@ -68,7 +68,7 @@ end
     money::Int
 end
 
-@multiagent :opt_speed struct AgentAll(GridAgent{2})
+@multiagent :opt_memory struct AgentAll(GridAgent{2})
     @agent struct Agent1m
         money::Int
     end
@@ -210,9 +210,26 @@ for n in n_types
     t = @belapsed run_simulation_n($n_steps; n_types=$n)
     push!(times, t/time_1)
 end
-t = @belapsed run_simulation_15_multi($n_steps)
-println(t/time_1)
-println(times)
+t_multi = @belapsed run_simulation_15_multi($n_steps)
+t_multi_rel = t_multi/time_1
+
+println("relative time of model with 1 type: 1")
+for (n, t) in zip(n_types, times)
+    println("relative time of model with $n types: $t")
+end
+println("relative time of model with @multiagent :opt_speed: $t_multi_rel")
+
+# relative time of model with 1 type: 1
+#
+# relative time of model with 2 types: 1.287252249521869
+# relative time of model with 3 types: 1.4146741156162865
+# relative time of model with 4 types: 4.059042824599718
+# relative time of model with 5 types: 5.243935156955378
+# relative time of model with 10 types: 7.694527211389013
+# relative time of model with 15 types: 11.243909260086886
+#
+# relative time of model with @multiagent :opt_speed: 1.004122351734208
+# relative time of model with @multiagent :opt_memory: 2.8898100796366544
 
 import CairoMakie
 fig, ax, = CairoMakie.lines(n_types, times)
