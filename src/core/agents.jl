@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, NoSpaceAgent
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof
 
 """
     YourAgentType <: AbstractAgent
@@ -17,7 +17,7 @@ and hence it is the **the only supported way to create agent types**.
 """
 abstract type AbstractAgent end
 
-__AGENT_GENERATOR__ = Dict{Symbol, Expr}()
+const __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
 """
     NoSpaceAgent <: AbstractAgent
@@ -184,31 +184,25 @@ such as the `id`, are set automatically
 model = StandardABM(GridAgent{2}, GridSpace((10,10)))
 a = GridAgent{2}(model, (3,4)) # the id is set automatically
 ```
+
+There is also another macro available in Agents.jl named [`@multiagent`](@ref) which
+can help improving the performance of multi-agent models. Refer to its docstring for more
+details.
 """
 macro agent(struct_repr)
-    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
-        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
-    end
-    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
-    base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
-    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
-    old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
-    new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
-    for (old, new) in zip(old_args, new_args)
-        base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
-    end
-    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
-    @capture(new_type, _{new_params__})
-    new_params === nothing && (new_params = [])
+    new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
+    base_fields = compute_base_fields(base_type_spec)
     expr_new_type = :(mutable struct $new_type <: $abstract_type
                         $(base_fields...)
                         $(new_fields...)
                       end)
     new_type_no_params = namify(new_type)
     __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
     expr = quote 
-    	   @kwdef $expr_new_type 
-    	   $(new_type_no_params)(m::ABM, args...) = 
+           @kwdef $expr_new_type 
+           $(new_type_no_params)(m::ABM, args...) = 
                $(new_type_no_params)(Agents.nextid(m), args...)
            $(new_type_no_params)(m::ABM; kwargs...) = 
                $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
@@ -220,4 +214,160 @@ macro agent(struct_repr)
            end
         end
     quote Base.@__doc__($(esc(expr))) end
+end
+
+"""
+    @multiagent struct YourAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+        @agent FirstAgentSubType{X}
+            first_property::X # shared with second agent
+            second_property_with_default::Bool = true
+        end
+        @agent SecondAgentSubType{X,Y}
+            first_property::X = 3
+            third_property::Y
+        end
+        # etc...
+    end
+
+Define multiple agent "subtypes", which are actually only variants of a unique 
+overarching type. This means that all "subtypes" are conceptual: they are simply 
+convenience functions defined that initialize the common proper type correctly 
+(see examples below for more). Because the "subtypes" are not real Julia `Types`, 
+you cannot use multiple dispatch on them.
+
+Using this macro can be useful for performance of multi-agents models because 
+combining multiple agents in only one avoids type instabilities issues which leads 
+to a decrease in performance. See the [performance-tips](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#Avoid-Unions-of-many-different-agent-types-1),
+page for a more throughout analysis of its performance advantages.
+
+Two different versions of `@multiagent` can be used by passing either `:opt_speed` or 
+`:opt_memory` as the first argument. The first optimizes the agents representation for
+speed, the second does the same for memory, at the cost of a moderate drop in performance. 
+By default it uses `:opt_speed`.
+
+## Examples
+
+Let's say you have this definition:
+
+```
+@multiagent :opt_speed struct Animal{T}(GridAgent{2})
+    @agent struct Wolf
+        energy::Float64 = 0.5
+        ground_speed::Float64
+        const fur_color::Symbol
+    end
+    @agent struct Hawk{T}
+        energy::Float64 = 0.1
+        ground_speed::Float64
+        flight_speed::T
+    end
+end
+```
+
+Then you can create `Wolf` and `Hawk` agents normally, like so
+
+```
+hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
+hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
+wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+```
+
+It is important to notice, though, that the `Wolf` and `Hawk` types are just 
+conceptual and all agents are actually of type `Animal` in this case. 
+The way to retrieve the variant of the agent is through the function `kindof` e.g.
+
+```
+kindof(hawk_1) # :Hawk
+kindof(wolf_2) # :Wolf
+```
+
+See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
+
+## Current limitations
+
+- Impossibility to inherit from a compactified agent.
+"""
+macro multiagent(version, struct_repr)
+    new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
+    base_fields = compute_base_fields(base_type_spec)
+    agent_specs_with_base = []
+    for a_spec in agent_specs
+        @capture(a_spec, @agent astruct_spec_)
+        int_type, new_fields = decompose_struct(astruct_spec)
+        push!(agent_specs_with_base,
+              :(mutable struct $int_type
+                    $(base_fields...)
+                    $(new_fields...)
+                end))
+    end
+    t = :($new_type <: $abstract_type)
+    @capture(new_type, _{new_params__})
+    new_params === nothing && (new_params = [])
+    a_specs = :(begin $(agent_specs_with_base...) end)
+    if version == QuoteNode(:opt_speed) 
+        expr = quote
+                   MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
+                   Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
+               end
+    elseif version == QuoteNode(:opt_memory)
+        expr = quote
+                   MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
+                   Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
+               end
+    else
+        error("The version of @multiagent chosen was not recognized, use either :opt_speed or :opt_memory instead.")
+    end
+
+    expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
+    if new_params != []
+        expr_multiagent_p = :(Agents.ismultiagenttype(::Type{$(new_type)}) where {$(new_params...)} = true)
+    else
+        expr_multiagent_p = :()
+    end
+
+    expr = macroexpand(Agents, expr)
+
+    expr = quote
+               $expr
+               $expr_multiagent
+               $expr_multiagent_p
+           end
+
+    return esc(expr)
+end
+
+macro multiagent(struct_repr)
+    return esc(:(@multiagent :opt_speed $struct_repr))
+end
+
+ismultiagenttype(::Type) = false
+ismultiagentsumtype(::Type) = false
+ismultiagentcompacttype(::Type) = false
+
+function decompose_struct_base(struct_repr)
+    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
+    end
+    abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
+    return new_type, base_type_spec, abstract_type, new_fields
+end
+
+function decompose_struct(struct_repr)
+    if !@capture(struct_repr, struct new_type_ new_fields__ end)
+        @capture(struct_repr, struct new_type_ new_fields__ end)
+    end
+    return new_type, new_fields
+end
+
+function compute_base_fields(base_type_spec)
+    base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
+    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
+    old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
+    new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
+    for (old, new) in zip(old_args, new_args)
+        base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
+    end
+    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    return base_fields
 end

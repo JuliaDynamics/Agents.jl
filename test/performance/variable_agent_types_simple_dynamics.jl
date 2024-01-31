@@ -1,3 +1,4 @@
+
 # The following simple model has a variable number of agent types,
 # but there is no removing or creating of additional agents.
 # It creates a model that has the same number of agents and does
@@ -5,7 +6,7 @@
 # are split in a varying number of agents. It shows how much of a
 # performance hit is to have many different agent types.
 
-using Agents, Random
+using Agents, Random, BenchmarkTools
 
 @agent struct Agent1(GridAgent{2})
     money::Int
@@ -67,9 +68,59 @@ end
     money::Int
 end
 
+@multiagent :opt_memory struct AgentAll(GridAgent{2})
+    @agent struct Agent1m
+        money::Int
+    end
+    @agent struct Agent2m
+        money::Int
+    end
+    @agent struct Agent3m
+        money::Int
+    end
+    @agent struct Agent4m
+        money::Int
+    end
+    @agent struct Agent5m
+        money::Int
+    end
+    @agent struct Agent6m
+        money::Int
+    end
+    @agent struct Agent7m
+        money::Int
+    end
+    @agent struct Agent8m
+        money::Int
+    end
+    @agent struct Agent9m
+        money::Int
+    end
+    @agent struct Agent10m
+        money::Int
+    end
+    @agent struct Agent11m
+        money::Int
+    end
+    @agent struct Agent12m
+        money::Int
+    end
+    @agent struct Agent13m
+        money::Int
+    end
+    @agent struct Agent14m
+        money::Int
+    end
+    @agent struct Agent15m
+        money::Int
+    end
+end
+
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
-    model = StandardABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Agent1, space; agent_step!, 
+                        scheduler=Schedulers.Randomly(), 
+                        rng = Xoshiro(42), warn=false)
     id = 0
     for id in 1:n_agents
         add_agent!(Agent1, model, 10)
@@ -77,17 +128,34 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     return model
 end
 
-function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
+function initialize_model_15_multi(;n_agents=600, dims=(5,5))
+    agent_types = [Agent1m,Agent2m,Agent3m,Agent4m,Agent5m,Agent6m,Agent7m,Agent8m,
+                   Agent9m,Agent10m,Agent11m,Agent12m,Agent13m,Agent14m,Agent15m]
+    agents_used = agent_types[1:15]
+    space = GridSpace(dims)
+    model = StandardABM(AgentAll, space; agent_step!, 
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
+    agents_per_type = div(n_agents, 15)
+    for A in agents_used
+        for _ in 1:agents_per_type
+            add_agent!(A, model, 10)
+        end
+    end
+    return model
+end
+
+function initialize_model_n(;n_agents=600, n_types=1, dims=(5,5))
     agent_types = [Agent1,Agent2,Agent3,Agent4,Agent5,Agent6,Agent7,Agent8,
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
     agents_used = agent_types[1:n_types]
     space = GridSpace(dims)
-    model = StandardABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
-    id = 0
+    model = StandardABM(Union{agents_used...}, space; agent_step!, 
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
     agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
-            id += 1
             add_agent!(A, model, 10)
         end
     end
@@ -103,7 +171,7 @@ end
 
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
-    cell = rand(collect(neighbors))
+    cell = rand(abmrng(model), collect(neighbors))
     move_agent!(agent, cell, model)
     return nothing
 end
@@ -116,38 +184,52 @@ function exchange!(agent, other_agent)
     return nothing
 end
 
-function run_simulation_1(n_steps, n_reps)
-    t = @timed for _ in 1:n_reps
-        model = initialize_model_1()
-        Agents.step!(model, agent_step!, n_steps)
-    end
-    return t[2]/n_reps
+function run_simulation_1(n_steps)
+    model = initialize_model_1()
+    Agents.step!(model, n_steps)
 end
 
-function run_simulation(n_steps, n_reps; n_types)
-    t = @timed for _ in 1:n_reps
-        model = initialize_model(;n_types=n_types)
-        Agents.step!(model, agent_step!, n_steps)
-    end
-    return t[2]/n_reps
+function run_simulation_15_multi(n_steps)
+    model = initialize_model_15_multi()
+    Agents.step!(model, n_steps)
+end
+
+function run_simulation_n(n_steps; n_types)
+    model = initialize_model_n(; n_types=n_types)
+    Agents.step!(model, n_steps)
 end
 
 # %% Run the simulation, do performance estimate, first with 1, then with many
-Random.seed!(2514)
-n_steps = 500
-n_reps = 5
+n_steps = 50
 n_types = [2,3,4,5,10,15]
-# compile
-run_simulation_1(1, 1)
-for n in n_types; run_simulation(1, 1; n_types=n); end  # compile
 
-time_1 = run_simulation_1(n_steps, n_reps)
+time_1 = @belapsed run_simulation_1($n_steps)
 times = Float64[]
 for n in n_types
     println(n)
-    t = run_simulation(n_steps, n_reps; n_types=n)
+    t = @belapsed run_simulation_n($n_steps; n_types=$n)
     push!(times, t/time_1)
 end
+t_multi = @belapsed run_simulation_15_multi($n_steps)
+t_multi_rel = t_multi/time_1
+
+println("relative time of model with 1 type: 1")
+for (n, t) in zip(n_types, times)
+    println("relative time of model with $n types: $t")
+end
+println("relative time of model with @multiagent :opt_speed: $t_multi_rel")
+
+# relative time of model with 1 type: 1
+#
+# relative time of model with 2 types: 1.287252249521869
+# relative time of model with 3 types: 1.4146741156162865
+# relative time of model with 4 types: 4.059042824599718
+# relative time of model with 5 types: 5.243935156955378
+# relative time of model with 10 types: 7.694527211389013
+# relative time of model with 15 types: 11.243909260086886
+#
+# relative time of model with @multiagent :opt_speed: 1.004122351734208
+# relative time of model with @multiagent :opt_memory: 2.8898100796366544
 
 import CairoMakie
 fig, ax, = CairoMakie.lines(n_types, times)
@@ -155,3 +237,4 @@ CairoMakie.scatter!(ax, n_types, times)
 ax.xlabel = "# types"
 ax.ylabel = "time, relative to 1 type"
 fig
+

@@ -11,8 +11,11 @@ using DataFrames
 using DataStructures
 using Distributed
 using Graphs
+using DataFrames
 using IteratorSampling
 using MacroTools
+using MixedStructTypes
+export MixedStructTypes
 import ProgressMeter
 using Random
 using StaticArrays: SVector

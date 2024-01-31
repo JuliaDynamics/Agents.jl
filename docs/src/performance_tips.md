@@ -117,7 +117,7 @@ Specifically, you can represent this property as a standard Julia `Array` that i
 
 For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## Avoid `Union`s of many different agent types (temporary!)
+## Avoid `Union`s of many different agent types
 Due to the way Julia's type system works, and the fact that agents are grouped in a dictionary mapping IDs to agent instances, using multiple types for different agents always creates a performance hit because it leads to type instability.
 
 Thankfully, due to some performance enhancements in Base Julia, unions of up to three different Agent types do not suffer much. You can see this by running the `test/performance/variable_agent_types_simple_dynamics.jl` file, which benchmarks the time to run a model that will do exactly the same amount of numeric operations, but each time subdividing it among an increasing number of agent types. Its output is
@@ -129,8 +129,10 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
-The result is that having many types (here 15 different types) makes the code about 5-6 times slower.
+The result is that having many types (here 15 different types) makes the code about 10 times slower.
 
-**Notice that this is a temporary problem! In the future we plan to re-work Agents.jl internals regarding multi-agent models and deal with this performance hit without requiring the user to do something differently.**
+If you have less than four agent types in your model, using different types is still recommended
+because the impact on performance is small. Alternatively, if you have a bigger number of agent 
+types, you can consider using the [`@multiagent`](@ref) macro which can improve the time of a model 
+run considerably and, in many cases, without incurring almost any additional memory increase.
 
-At the moment, if you want to use many different agent types, you can try including all properties all types should have in one type. You can specify what "type" of agent it is via including a field `type` or `kind` whose value is a symbol: `:wolf, :sheep, :grass`. Properties that should only belong to one kind of agent could be initialized with a "null" value for the other kinds. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
