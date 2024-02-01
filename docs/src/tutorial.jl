@@ -14,8 +14,7 @@
 # and other model-level properties relevant to the simulation.
 
 # An Agents.jl simulation is composed of first building such an `AgentBasedModel`
-# (steps 1-4 below) and then evolving it and analyzing it (steps 5-7 below).
-# To set up an ABM simulation in Agents.jl, a user only needs to follow these steps:
+# (steps 1-4 below) and then evolving it and analyzing it (steps 5-7 below):
 
 # 1. Choose what **kind of space** the agents will live in, for example a graph, a grid,
 #   etc. Several spaces are provided by Agents.jl and can be initialized immediately.
@@ -53,8 +52,39 @@
 # Agents.jl can be readily used with any other Julia package, exactly because its design
 # is based on existing, and widely established, Julia language concepts.
 
-# ## The Schelling model rules
-lala.
+# ## The Schelling segregation model basic rules
+
+# * A fixed pre-determined number of agents exist in the model.
+# * Agents belong to one of two groups (1 or 2).
+# * The agents live in a two-dimensional non-periodic grid.
+# * Only one agent per position is allowed.
+# * At each state pf the simulation,
+#   each agent looks at its 8 neighboring positions (cardinal and diagonal directions).
+#   It then counts how many neighboring agents belong to the same group (if any).
+#   This leads to 8 neighboring positions per position (except at the edges of the grid).
+# * If an agent has at least `min_to_be_happy` neighbors belonging to the same group,
+#   then it becomes happy.
+# * Else, the agent is unhappy and moves to a new random location in space
+#   while respecting the 1-agent-per-position rule.
+
+# In the following we will built this model following the aforementioned steps.
+# The 0-th step of any Agents.jl simulation is to bring the package into scope:
+
+using Agents
+
+# ## Step 1: Creating the space
+
+# Agents.jl offers multiple spaces one can utilize to perform simulations,
+# all of which are listed in the [available spaces section](@ref available_spaces).
+# If we go through the list, we quickly realize that the space we need to use here is
+# [`GridSpaceSingle`](@ref) which is a grid that allows only one agent per position.
+# So, we can go ahead and create an instance of this type.
+# We need to specify the total size of the grid, and also that the distance metric should be
+# the Chebyshev one, which means that diagonal and orthogonal directions quantify
+# as the same distance away. We also specify that the space should _not_ be periodic.
+
+size = (10, 10)
+space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 
 # ## Time evolution
 

@@ -30,10 +30,12 @@ abmevents
 abmrates
 ```
 
-## Available spaces
-Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see [Creating a new space type](@ref).
+## [Available spaces](@ref available_spaces)
+
+Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see the developer documentation on [creating a new space type](@ref make_new_space).
 
 ### Discrete spaces
+
 ```@docs
 GraphSpace
 GridSpace
@@ -41,11 +43,13 @@ GridSpaceSingle
 ```
 
 Here is a specification of how the metrics look like:
-```@example
+
+```@example MAIN
 include("distances_example_plot.jl") # hide
 ```
 
 ### Continuous spaces
+
 ```@docs
 ContinuousSpace
 OpenStreetMapSpace
