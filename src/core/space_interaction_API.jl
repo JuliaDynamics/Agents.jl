@@ -262,7 +262,8 @@ function add_agent!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(A, model, args...; kwargs...)
 end
 
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
+function add_agent!(A::Type, model::ABM, 
+        args::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(random_position(model), A, model, args...; kwargs...)
 end
 
@@ -279,7 +280,7 @@ end
 # lowest level - actually constructs the agent
 function add_agent!(
     pos::ValidPos,
-    A::Type{<:AbstractAgent},
+    A::Type,
     model::ABM,
     args::Vararg{Any, N};
     kwargs...,

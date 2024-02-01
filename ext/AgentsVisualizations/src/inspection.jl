@@ -128,7 +128,7 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     end
     agentstring *= "pos: $(agent_pos)\n"
 
-    for field in fieldnames(A)[3:end]
+    for field in propertynames(agent)[3:end]
         val = getproperty(agent, field)
         if val isa AbstractFloat
             val = round(val, sigdigits=2)

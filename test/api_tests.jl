@@ -342,3 +342,119 @@ end
     @test agent1.pos == (1, 3)
     @test agent2.pos == (2, 4)
 end
+
+@multiagent :opt_memory struct Animal{T,N,J}(GridAgent{2})
+    @agent struct Wolf{T,N}
+        energy::T = 0.5
+        ground_speed::N
+        const fur_color::Symbol
+    end
+    @agent struct Hawk{T,N,J}
+        energy::T = 0.1
+        ground_speed::N
+        flight_speed::J
+    end
+end
+
+@multiagent :opt_speed struct A{T}(NoSpaceAgent)
+    @agent struct B{T}
+        a::T = 1
+        b::Int
+        c::Symbol
+    end
+    @agent struct C
+        b::Int = 2
+        c::Symbol
+        d::Vector{Int}
+    end
+    @agent struct D{T}
+        c::Symbol = :k
+        d::Vector{Int}
+        a::T
+    end
+end
+
+abstract type AbstractE <: AbstractAgent end
+@multiagent struct E(NoSpaceAgent) <: AbstractE
+    @agent struct F
+        x::Int
+    end
+    @agent struct G
+        y::Int
+    end
+end
+
+@testset "@multiagent macro" begin
+
+    hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
+    hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+    wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
+    wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+
+    @test hawk_1.energy == 1.0
+    @test hawk_2.energy == 0.1
+    @test wolf_1.energy == 2.0
+    @test wolf_2.energy == 0.5
+    @test hawk_1.flight_speed == 3
+    @test hawk_2.flight_speed == 2
+    @test wolf_1.fur_color == :black
+    @test wolf_2.fur_color == :white
+    @test_throws "" hawk_1.fur_color
+    @test_throws "" wolf_1.flight_speed
+    @test kindof(hawk_1) == kindof(hawk_2) == :Hawk
+    @test kindof(wolf_1) == kindof(wolf_2) == :Wolf
+
+    fake_step!(a) = nothing
+    model = StandardABM(Animal, GridSpace((5, 5)); agent_step! = fake_step!)
+
+    add_agent!(Hawk, model, 1.0, 2.0, 3)
+    add_agent!(Wolf, model, 2.0, 3.0, :black)
+    @test nagents(model) == 2
+    sample!(model, 2)
+    @test nagents(model) == 2
+
+    b1 = B(1, 2, 1, :s)
+    c1 = C(1, 1, :s, Int[])
+    d1 = D(1, :s, [1], 1.0)
+    b2 = B(; id = 1, b = 1, c = :s)
+    c2 = C(; id = 1, c = :s, d = [1,2])
+    d2 = D(; id = 1, d = [1], a = true)
+
+    @test b2.a == 1
+    @test c2.b == 2
+    @test d2.c == :k
+    @test kindof(b1) == kindof(b2) == :B
+    @test kindof(c1) == kindof(c2) == :C
+    @test kindof(d1) == kindof(d2) == :D
+    @test_throws "" b2.d
+    @test_throws "" c1.a
+    @test_throws "" d1.b
+    @test d2.a == true
+    @test b2.c == c2.c == b1.c == c1.c == d1.c == :s
+    @test b1 isa A && b2 isa A
+    @test c1 isa A && c2 isa A
+    @test d1 isa A && d2 isa A
+
+    model = StandardABM(A; agent_step! = fake_step!)
+
+    add_agent!(B, model, 2, 1, :s)
+    add_agent!(C, model, 1, :s, Int[])
+    add_agent!(D, model, :s, [1], 1.0)
+    @test nagents(model) == 3
+    sample!(model, 2)
+    @test nagents(model) == 2
+    
+    f = F(1, 1)
+    g = G(2, 2)
+
+    @test f.id == 1
+    @test g.id == 2
+    @test f.x == 1
+    @test g.y == 2
+    @test_throws "" f.y
+    @test_throws "" g.x
+    @test kindof(f) == :F
+    @test kindof(g) == :G
+    @test E <: AbstractE && E <: AbstractE
+    @test f isa E && g isa E
+end
