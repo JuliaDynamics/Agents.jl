@@ -177,29 +177,129 @@ Stacktrace:
 
 # ## Step 3:
 
-# ## Step 3: defining the dynamic rule functions
+# ## Step 3: form of the evolution rule(s) in discrete time
 
-#   For the discrete time version
-#   (this tutorial) the evolution rule needs to be provided as at least one, or at most
-#   two functions: an agent stepping function, that acts on each agent one by one, and/or
-#   a model stepping function, that steps the entire model as a whole.
-#   These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
+# The form of the evolution rule(s) depends on the type of [`AgentBasedModel`](@ref)
+# we want to use. For the example we are following here, we will use
+# [`StandardABM`](@ref). For this, time is discrete. In this case,
+# the evolution rule needs to be provided as at least one, or at most
+# two functions: an agent stepping function, that acts on scheduled agents one by one, and/or
+# a model stepping function, that steps the entire model as a whole.
+# These functions are standard Julia functions that take advantage of the
+# Agents.jl [API](@ref). At each discrete step of the simulation,
+# the agent stepping function is applied once to all activated agents,
+# and the model stepping function is applied once to the model.
+# The model stepping function may also modify arbitrarily many
+# agents since at any point all agents of the simulation are accessible
+# from the agent based model.
 
-# ## Time evolution
+# To give you an idea, here is an example of a model stepping function:
+# ```julia
+# function model_step!(model)
+#     exchange = model.exchange # obtain the `exchange` model property
+#     agent = model[5] # obtain agent with ID = 5
+#     # Iterate over neighboring agents (within distance 1)
+#     for neighbor in nearby_agents(model, agent, 1)
+#         transfer = minimum(neighbor.money, exchange)
+#         agent.money += transfer
+#         neighbor.money -= transfer
+#     end
+#     return # function end. As it is in-place it `return`s nothing.
+# end
+# ```
 
-# This tutorial utilizes a standard version of ABMs
-# During the simulation, the model evolves in discrete steps. During one step, the user
-# decides which agents will act, how they will act, how many times, and whether any
-# model-level properties will be adjusted.
-# Once the time evolution is defined, collecting data during time evolution is
-# straightforward by simply stating which data should be collected.
+# This model stepping function did not operate on all agents of the model,
+# only on agent with ID 5 and its spatial neighbors.
+# Typically you would want to operate on more agents, which is why
+# Agents.jl also allows the concept of the agent stepping function.
+# This feature enables scheduling agents automatically given some
+# scheduling rule, skipping the agents that were scheduled to act but have been
+# removed from the model (due to e.g., the actions of other agents),
+# and also allows optimizations that are based on the specific type of `AgentBasedModel`.
 
+# Given the example above, an agent stepping function that would perform a similar
+# currency exchange between agents would look like
+# ```julia
+# function agent_step!(agent, model)
+#     exchange = model.exchange # obtain the `exchange` model property
+#     # Iterate over neighboring agents (within distance 1)
+#     for neighbor in nearby_agents(model, agent, 1)
+#         transfer = minimum(neighbor.money, exchange)
+#         agent.money += transfer
+#         neighbor.money -= transfer
+#     end
+#     agent.age += 1
+#     # if too old, pass fortune onto heir and remove from model
+#     if agent.age > 75
+#         heir = replicate!(agent, model)
+#         heir.age = 1
+#         remove_agent!(agent, modeL)
+#     end
+#     return # function end. As it is in-place it `return`s nothing.
+# end
+# ```
+
+# We stress that in contrast to the above `model_step!`,
+# `agent_step!` will be called for _every_ scheduled agent,
+# while `model_step!` will only be called _once_ per simulation step.
+# By default, all agents in the model are scheduled once per step,
+# but we will discuss this more later in the "scheduling" section.
+
+# At least one of the model or agent stepping functions must be provided.
+
+# ## Step 3: application to the Schelling model
+
+# Great, lets now apply this knowledge to create the evolution rule
+# for the Schelling segregation model. Reading the rules of the game
+# we realize that there is no need for a model stepping function.
+# Thus, we define the agent stepping function only:
+
+function agent_step!(agent, model)
+    ## Here we access a model-level property `min_to_be_happy`.
+    ## This will have an assigned value once we create the model.
+    minhappy = model.min_to_be_happy
+    count_neighbors_same_group = 0
+    ## For each neighbor, get group and compare to current agent's group
+    ## and increment `count_neighbors_same_group` as appropriately.
+    ## Here `nearby_agents` (with default arguments) will provide an iterator
+    ## over the nearby agents one grid point away, which are at most 8.
+    for neighbor in nearby_agents(agent, model)
+        if agent.group == neighbor.group
+            count_neighbors_same_group += 1
+        end
+    end
+    ## After counting the neighbors, decide whether or not to move the agent.
+    ## If count_neighbors_same_group is at least the min_to_be_happy, set the
+    ## mood to true. Otherwise, move the agent to a random position, and set
+    ## mood to false.
+    if count_neighbors_same_group ≥ minhappy
+        agent.mood = true
+    else
+        agent.mood = false
+        move_agent_single!(agent, model)
+    end
+    return
+end
+
+# Here we used some of the built-in functionality of Agents.jl, in particular:
+# - [`nearby_positions`](@ref) that returns the neighboring position
+#   on which the agent resides
+# - [`move_agent_single!`](@ref) which moves # agents to random empty position on the grid
+#   while respecting an at most 1 agent per position rule
+# - `model[id]` which returns the agent with given `id` in the `model`,
+# . `model.min_to_be_happy` which returns the model-level property named `min_to_be_happy`
+
+# A full list of built-in functionality
+# and their explanations are available in the [API](@ref) page.
 
 # ## Step 4: the `AgentBasedModel`
 
 # ## Step 4: initializing the model
 
 # ## Step 4: populating it with agents
+
+# ## Step 4: scheduler and RNG
+
 
 # ## Step 4: making the initialization a keyword-based function
 
@@ -217,3 +317,4 @@ Stacktrace:
 
 # Finally, for models where multiple agent types are needed,
 # the [`@multiagent`](@ref) macro could be used to improve the performance of the simulation.
+#

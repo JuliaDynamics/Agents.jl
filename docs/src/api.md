@@ -3,11 +3,15 @@
 The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## [More ABM implementations](@id ABM_Implementations)
+## [AgentBasedModel](@id ABM_Implementations)
 
-Besides the generic interface of [`AgentBasedModel`](@ref), and the [`StandardABM`](@ref), highlighted in the tutorial, there is also:
+- [`AgentBasedModel`](@ref)
+- [`StandardABM`](@ref)
+- [`EventQueueABM`](@ref)
 
 ```@docs
+AgentBasedModel
+StandardABM
 EventQueueABM
 ```
 
