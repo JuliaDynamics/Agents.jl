@@ -20,6 +20,7 @@ spacesize(space::GridSpaceSingle) = space.extent
 
 """
     GridSpaceSingle(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
+
 This is a specialized version of [`GridSpace`](@ref) that allows only one
 agent per position, and utilizes this knowledge to offer significant performance
 gains versus [`GridSpace`](@ref).

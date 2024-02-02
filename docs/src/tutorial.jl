@@ -23,15 +23,13 @@
 #   The types must contain some mandatory fields, which is ensured by using
 #   [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
 # 3. Define the **evolution rule(s)**, i.e., how the model evolves in time.
+#   The evolution rule(s) are always standard Julia functions that take advantage of
+#   the Agents.jl [API](@ref).
 #   The exact way one defines the evolution rules depends on the type of `AgentBasedModel`
 #   used. Agents.jl allows simulations in both discrete time via [`StandardABM`](@ref)
 #   as well as continuous time via [`EventQueueABM`](@ref). In this tutorial we will
 #   learn the discrete-time version. See the [rock-paper-scissors](@ref eventbased_tutorial)
-#   example for an introduction to the continuous time version. For the discrete time version
-#   (this tutorial) the evolution rule needs to be provided as at least one, or at most
-#   two functions: an agent stepping function, that acts on each agent one by one, and/or
-#   a model stepping function, that steps the entire model as a whole.
-#   These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
+#   example for an introduction to the continuous time version.
 # 4. Initialize an **`AgentBasedModel` instance** that contains the agent type(s), the
 #   chosen space, the evolution rule(s), other optional additional model-level properties,
 #   and other simulation tuning properties like schedulers or random number generators.
@@ -72,7 +70,7 @@
 
 using Agents
 
-# ## Step 1: Creating the space
+# ## Step 1: creating the space
 
 # Agents.jl offers multiple spaces one can utilize to perform simulations,
 # all of which are listed in the [available spaces section](@ref available_spaces).
@@ -85,6 +83,85 @@ using Agents
 
 size = (10, 10)
 space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
+
+# ## Step 2: the `@agent` command
+
+# Agents in Agents.jl are instances of user-defined `struct`s that subtype `AbstractAgent`.
+# This means that agents are data containers that contain some particular data fields that are necessary
+# to perform simulations with Agents.jl, as well as any other data field that
+# the user requires. If an agent instance `agent` exists in the simulation
+# then the data field named "weight" is obtained from the agent using `agent.weight`.
+# This is standard Julia syntax to access the data field named "weight" for any data structure
+# that contains such a field.
+
+# To create agent types, and define what properties they should have, it is strongly
+# recommended to use the [`@agent`](@ref) command. You can read its documentation in detail
+# if you wish to understand it deeply. But the long story made sort is that this command
+# ensures that agents have the minimum amount of required necessary properties
+# to function within a given space and model by "inheriting" pre-defined agent properties
+# suited for each type of space.
+
+# The simplest syntax of [`@agent`] is (and see its documentation for all its capabilities):
+# ```julia
+# @agent struct YourAgentType(AgentTypeToInheritFrom) [<: OptionalSupertype]
+#     extra_property::Float64 # annotating the type leads to good computational performance
+#     other_extra_property_with_default::Bool = true
+#     const other_extra_const_property::Int
+#     # etc...
+# end
+# ```
+
+# The macro usage may seem intimidating at first, but it is in truth very simple!
+# For example,
+# ```julia
+# @agent struct Person(GridAgent{2})
+#     age::Int
+#     money::Float64
+# end
+# ```
+# would make an agent type with named properties `age, money`,
+# while also inheriting all named properties of the `GridAgent{2}` predefined type.
+# These properties are `(id::Int, pos::Tuple{Int, Int})` and are necessary for simulating
+# agents in a two-dimensional grid space.
+# The documentation of each space describes what pre-defined agent one needs to inherit from
+# in the `@agent` command, which is how we found that we need to put `GridAgent{2}` there.
+# The `{2}` is simply an annotation that the space is 2-dimensional, as Agents.jl allows
+# simulations in arbitrary-dimensional spaces.
+
+
+# ## Step 2: creating the agent type
+
+# With this knowledge, let's now make the agent type for the Schelling segregation model.
+# According to the rules of the game, the agent needs to have two auxilary properties:
+# its mood (boolean) and the group it belongs to (integer). The agent also needs to
+# inherit from `GridAgent{2}` as in the example above. So, we define:
+
+@agent struct SchellingAgent(GridAgent{2})
+    mood::Bool # whether the agent is happy in its position
+    group::Int # The group of the agent, determines mood as it interacts with neighbors
+end
+
+# Let's explitily print the fields of the data structure `SchellingAgent` that we created:
+
+for (name, type) in zip(fieldnames(SchellingAgent), fieldtypes(SchellingAgent))
+    println(name, "::", type)
+end
+
+# All these fields can be accessed during the simulation, but it is important
+# to keep in mind that `id` cannot be modified, and `pos` must never be modified
+# directly; only through valid API functions such as [`move_agent!`](@ref).
+
+
+
+# ## Step 3:
+
+# ## Step 3: defining the dynamic rule functions
+
+#   For the discrete time version
+#   (this tutorial) the evolution rule needs to be provided as at least one, or at most
+#   two functions: an agent stepping function, that acts on each agent one by one, and/or
+#   a model stepping function, that steps the entire model as a whole.
+#   These functions are standard Julia functions that take advantage of the Agents.jl [API](@ref).
 
 # ## Time evolution
 
@@ -100,3 +177,9 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 
 
 # ## 4.1 Applying it to Schelling
+
+
+# ## Multiple agent types
+
+# Finally, for models where multiple agent types are needed,
+# the [`@multiagent`](@ref) macro could be used to improve the performance of the simulation.

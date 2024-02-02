@@ -45,7 +45,7 @@ For example,
     money::Float64
 end
 ```
-would make an agent type with named properties `age, money`, while also inheriting all named properties of the `GridAgent{2}` predefined type (which is necessary for simulating agents in a two-dimensional grid space). 
+would make an agent type with named properties `age, money`, while also inheriting all named properties of the `GridAgent{2}` predefined type (which is necessary for simulating agents in a two-dimensional grid space).
 
 Finally, for models where multiple agent types are needed, the [`@multiagent`](@ref) macro could be used to improve the performance of the simulation.
 

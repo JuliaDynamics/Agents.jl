@@ -11,6 +11,26 @@ Besides the generic interface of [`AgentBasedModel`](@ref), and the [`StandardAB
 EventQueueABM
 ```
 
+## Agent types
+
+```@docs
+@agent
+@multiagent
+AbstractAgent
+```
+
+### Minimal agent types
+
+The [`@agent`](@ref) macro can be used to define new agent types from the minimal agent types that are listed below:
+
+```@docs
+NoSpaceAgent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
+```
+
 ## Agent/model retrieval and access
 
 ```@docs
@@ -208,17 +228,6 @@ These methods follow the conventions outlined above in [A note on iteration](@re
 iter_agent_groups
 map_agent_groups
 index_mapped_groups
-```
-
-## Minimal agent types
-The [`@agent`](@ref) macro can be used to define new agent types from the minimal agent types that are listed below:
-
-```@docs
-NoSpaceAgent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
 ```
 
 ## Parameter scanning
