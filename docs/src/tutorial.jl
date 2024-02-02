@@ -104,14 +104,14 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 # The simplest syntax of [`@agent`] is (and see its documentation for all its capabilities):
 # ```julia
 # @agent struct YourAgentType(AgentTypeToInheritFrom) [<: OptionalSupertype]
-#     extra_property::Float64 # annotating the type leads to good computational performance
+#     extra_property::Float64 # annotating the type leads to optimal computational performance
 #     other_extra_property_with_default::Bool = true
-#     const other_extra_const_property::Int
+#     const other_extra_constant_property::Int
 #     # etc...
 # end
 # ```
 
-# The macro usage may seem intimidating at first, but it is in truth very simple!
+# The command may seem intimidating at first, but it is in truth very simple!
 # For example,
 # ```julia
 # @agent struct Person(GridAgent{2})
@@ -151,7 +151,29 @@ end
 # to keep in mind that `id` cannot be modified, and `pos` must never be modified
 # directly; only through valid API functions such as [`move_agent!`](@ref).
 
+# For example, if we initialize such an agent
 
+example_agent = SchellingAgent(id = 1, pos = (2, 3), mood = true, group = 1)
+
+# we can obtain
+
+example_agent.mood
+
+# and set
+
+example_agent.mood = false
+
+# but can't set the `id`:
+
+```julia
+example_agent.id = 2
+```
+```
+ERROR: setfield!: const field .id of type SchellingAgent cannot be changed
+Stacktrace:
+ [1] setproperty!(x::SchellingAgent, f::Symbol, v::Int64)
+   @ Base .\Base.jl:41
+```
 
 # ## Step 3:
 
@@ -173,10 +195,22 @@ end
 # straightforward by simply stating which data should be collected.
 
 
-# ## 4. The `AgentBasedModel`
+# ## Step 4: the `AgentBasedModel`
 
+# ## Step 4: initializing the model
 
-# ## 4.1 Applying it to Schelling
+# ## Step 4: populating it with agents
+
+# ## Step 4: making the initialization a keyword-based function
+
+# TODO:
+# This ties well with stuff like paramscan or automatic parallelizatioln
+
+# It is recommended to initialize agents with
+# [`add_agent!`](@ref), instead of manually creating them by calling their type.
+# as we did in Step 2 for the `example_agent`.
+# This is because allowing Agents.jl to take care of setting the agent IDs leads
+# to performance optimizations and guaranteed correctness of the simulation.
 
 
 # ## Multiple agent types
