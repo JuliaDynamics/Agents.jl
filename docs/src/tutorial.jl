@@ -6,6 +6,10 @@
 # The tutorial will utilize various versions of the [Schelling segregation model](https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation)
 # as an example to apply the concepts we learn.
 
+# Besides the normal step-by-step educative version of the tutorial, there is also
+# [the fast, shortened version](@ref tutorial_fast) at the end of this page.
+# We recommend the normal tutorial though!
+
 # ## Core steps of an Agents.jl simulation
 
 # In Agents.jl a central abstract structure called `AgentBasedModel` contains all
@@ -33,6 +37,7 @@
 # 4. Initialize an **`AgentBasedModel` instance** that contains the agent type(s), the
 #   chosen space, the evolution rule(s), other optional additional model-level properties,
 #   and other simulation tuning properties like schedulers or random number generators.
+#   Then, populate this model with agent instances.
 # 5. _(Trivial)_ **evolve the model** forwards in time.
 # 6. _(Optional)_ **Visualize the model** and animate its time evolution.
 #   This can help checking that the model behaves as expected and there aren't any mistakes,
@@ -175,8 +180,6 @@ Stacktrace:
    @ Base .\Base.jl:41
 ```
 
-# ## Step 3:
-
 # ## Step 3: form of the evolution rule(s) in discrete time
 
 # The form of the evolution rule(s) depends on the type of [`AgentBasedModel`](@ref)
@@ -187,7 +190,7 @@ Stacktrace:
 # a model stepping function, that steps the entire model as a whole.
 # These functions are standard Julia functions that take advantage of the
 # Agents.jl [API](@ref). At each discrete step of the simulation,
-# the agent stepping function is applied once to all activated agents,
+# the agent stepping function is applied once to all scheduled agents,
 # and the model stepping function is applied once to the model.
 # The model stepping function may also modify arbitrarily many
 # agents since at any point all agents of the simulation are accessible
@@ -217,44 +220,13 @@ Stacktrace:
 # removed from the model (due to e.g., the actions of other agents),
 # and also allows optimizations that are based on the specific type of `AgentBasedModel`.
 
-# Given the example above, an agent stepping function that would perform a similar
-# currency exchange between agents would look like
-# ```julia
-# function agent_step!(agent, model)
-#     exchange = model.exchange # obtain the `exchange` model property
-#     # Iterate over neighboring agents (within distance 1)
-#     for neighbor in nearby_agents(model, agent, 1)
-#         transfer = minimum(neighbor.money, exchange)
-#         agent.money += transfer
-#         neighbor.money -= transfer
-#     end
-#     agent.age += 1
-#     # if too old, pass fortune onto heir and remove from model
-#     if agent.age > 75
-#         heir = replicate!(agent, model)
-#         heir.age = 1
-#         remove_agent!(agent, modeL)
-#     end
-#     return # function end. As it is in-place it `return`s nothing.
-# end
-# ```
+# ## Step 3: agent stepping function for the Schelling model
 
-# We stress that in contrast to the above `model_step!`,
-# `agent_step!` will be called for _every_ scheduled agent,
-# while `model_step!` will only be called _once_ per simulation step.
-# By default, all agents in the model are scheduled once per step,
-# but we will discuss this more later in the "scheduling" section.
+# According to the rules of the Schelling segregation model,
+# we don't need a model stepping function, but an agent stepping function
+# that acts on all agents. So we define:
 
-# At least one of the model or agent stepping functions must be provided.
-
-# ## Step 3: application to the Schelling model
-
-# Great, lets now apply this knowledge to create the evolution rule
-# for the Schelling segregation model. Reading the rules of the game
-# we realize that there is no need for a model stepping function.
-# Thus, we define the agent stepping function only:
-
-function agent_step!(agent, model)
+function schelling_step!(agent, model)
     ## Here we access a model-level property `min_to_be_happy`.
     ## This will have an assigned value once we create the model.
     minhappy = model.min_to_be_happy
@@ -292,25 +264,199 @@ end
 # A full list of built-in functionality
 # and their explanations are available in the [API](@ref) page.
 
+# We stress that in contrast to the above `model_step!`,
+# `schelling_step!` will be called for _every_ scheduled agent,
+# while `model_step!` would only be called _once_ per simulation step.
+# By default, all agents in the model are scheduled once per step,
+# but we will discuss this more later in the "scheduling" section.
+
+# At least one of the model or agent stepping functions must be provided.
+
 # ## Step 4: the `AgentBasedModel`
+
+# The `AgentBasedModel` is the central structure in an Agents.jl simulation that
+# map agent IDs to agent instances (which is why the `.id` field cannot be changed),
+# as well as containing all information necessary to perform the simulation:
+# the evolution rules, the space, model-level properties, and more.
+
+# Additiohally [`AgentBasedModel`](@ref) defines an interface that research
+# can build upon to create new flavors of ABMs that can still benefit for the
+# thousands of functions Agents.jl offers out of the box such as [`move_agent!`](@ref).
 
 # ## Step 4: initializing the model
 
+# In this simulation we are using [`StandardABM`](@ref). From its documentation,
+# we learn that to initialize it we have to provide the agent type(s)
+# participating in the simulation, the space instance, and, as keyword arguments,
+# the evolution rules, and any model-level properties.
+
+# Here, we have define the first three already. The only model-level property
+# for the Schelling simulation would be the minimum agents of the same group
+# required for an agent to be happy. We make this a dictionary so we can access
+# this property by name:
+properties = Dict(:min_to_be_happy => 3)
+
+# And now, we simply put everything together in the [`StadardABM`](@ref) constructor:
+
+schelling = StandardABM(
+    ## input arguments
+    SchellingAgent, space;
+    ## keyword arguments
+    properties, # in Julia if the input variable and keyword are named the same,
+                ## you don't need to repeat the keyword!
+    agent_step! = schelling_step!
+)
+
+# The model is printed in the console displaying all of the most basic information about it.
+
+# ## Step 4: an (optional) scheduler
+
+# Since we opted to use an `agent_step!` function, the scheduler of the model matters.
+# Here we used the default scheduler (which is also the fastest one) to create
+# the model. We could instead try to activate the agents according to their
+# property `:group`, so that all agents of group 1 act first.
+# We would then use the scheduler [`Schedulers.ByProperty`](@ref) like so:
+
+scheduler = Schedulers.ByProperty(:group)
+
+# and pass this to the model creation
+
+schelling = StandardABM(
+    SchellingAgent,
+    space;
+    properties,
+    agent_step! = schelling_step!,
+    scheduler,
+)
+
 # ## Step 4: populating it with agents
 
-# ## Step 4: scheduler and RNG
+# The printing above says that the model has 0 agents, as indeed,
+# we haven't added any. We could also obtain this information with the
+# [`nagents`](@ref) function:
 
+nagents(schelling)
+
+# We can add agents to this model using [`add_agent!`](@ref).
+# This function generates a new agent instance and adds it to the model.
+# The function automatically configures the agent ID and chooses a random position for
+# it by default (while the user can specify one if necessary).
+# The subsequent arguments given to [`add_agent!`](@ref), i.e., beyond the optional position
+# and the model instance are all the extra properties the agent type(s) have,
+# which was decided when we made the agent type(s) with the [`@agent`](@ref) command above.
+
+# For example, this adds the agent to a specified position, and attributes `false`
+# to its `mood` and `1` to its group`:
+
+added_agent_1 = add_agent!((1, 1), schelling, false, 1)
+
+# while this adds an agent to a randomly picked position as we did not provide a position
+# as the first input to the function:
+
+added_agent_2 = add_agent!(schelling, false, 1)
+
+# Notice also that agent fields may be specified by keyowrds as well,
+# which is arguably the more readable syntax:
+
+added_agent_3 = add_agent!(schelling; mood = true, group = 2)
+
+# If we spend some time learning the [API](@ref) functions, we realize that
+# For the Schelling model specification, there is a more fitting function to use:
+# [`add_agent_single!`](@ref), which offers an automated way to create and add agents
+# while ensuring that we have at most 1 agent per unique position.
+
+added_agent_4 = add_agent_single!(schelling; mood = false, group = 1)
+
+# And let's confirm that now the model should have 4 agents
+
+nagents(schelling)
+
+# ## Step 4: random number generator
+
+# Each ABM in Agents.jl contains a random number generator (RNG) instance that can be
+# obtained with `abmrng(model)`. A benefit of this approach is making models deterministic
+# so that they can be run again and yield the same output.
+# For reproducibility and performance reasons, one should never use `rand()` without using
+# the RNG in the evolution rule(s) functions. Indeed, throughout our examples we use
+# `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc, providing
+# the RNG as the first input to the `rand` function.
+# All functions of the Agents.jl [API](@ref) that utilize randomness, such as the
+# [`add_agent_single!`](@ref) function we used above, internally use `abmrng(model)` as well.
+
+# You can explicitly choose the RNG the model will use by passing an instance of an
+# `AbstractRNG`. For example a common RNG is `Xoshiro`,
+# and we give this to the model via the `rng` keyword:
+
+using Random: Xoshiro # access the RNG object
+
+schelling = StandardABM(
+    SchellingAgent,
+    space;
+    properties,
+    agent_step! = schelling_step!,
+    scheduler,
+    rng = Xoshiro(1234) # input number is the seed
+)
 
 # ## Step 4: making the initialization a keyword-based function
 
-# TODO:
-# This ties well with stuff like paramscan or automatic parallelizatioln
+# It is recommended that model initialization is done through a
+# function obtaining all initialization parameters as keywords.
+# Inside this function the model should be populated by agents as well.
 
-# It is recommended to initialize agents with
-# [`add_agent!`](@ref), instead of manually creating them by calling their type.
-# as we did in Step 2 for the `example_agent`.
-# This is because allowing Agents.jl to take care of setting the agent IDs leads
-# to performance optimizations and guaranteed correctness of the simulation.
+# This has several advantages. First, it makes it easy to recreate the model and
+# change its parameters. Second, because the function is defined based on keywords,
+# it will be of further use in [`paramscan`](@ref) as we will discuss below.
+
+function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy = 3, seed = 125)
+    space = GridSpaceSingle(gridsize; periodic = false)
+    properties = Dict(:min_to_be_happy => min_to_be_happy)
+    rng = Xoshiro(seed)
+    model = StandardABM(
+        SchellingAgent, space;
+        agent_step! = schelling_step!, properties, rng,
+        container = Vector, # agents are not removed, so we us this
+        scheduler = Schedulers.Randomly() # all agents are activated once at random
+    )
+    ## populate the model with agents, adding equal amount of the two types of agents
+    ## at random positions in the model. At the start all agents are unhappy.
+    for n in 1:total_agents
+        add_agent_single!(model; mood = false, group = n < total_agents / 2 ? 1 : 2)
+    end
+    return model
+end
+
+schelling = initialize()
+
+# ## Step 5: evolve the model
+
+# Alright, now that we have a model populated with agents we can evolve it forwards
+# in time. This step is rather trivial. We simply call the [`step!`](@ref)
+# function on the model
+
+step!(schelling)
+
+# which progresses the simulation for one step. Or, we can progress
+# for arbitrary many steps
+
+step!(schelling, 3)
+
+# or, we can progress until a provided function that inputs the model and
+# the current model time evaluates to `true`.
+# For example, lets step until at least 80% of the agents are happy.
+
+happy90(model, time) = count(a -> a.mood == true, allagents(model))/nagents(model) ≥ 0.9
+
+step!(schelling, happy90)
+
+# And we can see how many steps we have taken in total so far with [`abmtime`](@ref)
+
+abmtime(schelling)
+
+# ## Step 6: Visualizations
+
+# ## Step 7: data collection
+
 
 
 # ## Multiple agent types
@@ -318,3 +464,7 @@ end
 # Finally, for models where multiple agent types are needed,
 # the [`@multiagent`](@ref) macro could be used to improve the performance of the simulation.
 #
+
+# ## [Tutorial - fast version](@id tutorial_fast)
+
+# Gotta go fast!

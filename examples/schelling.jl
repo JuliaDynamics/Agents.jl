@@ -163,7 +163,7 @@ agent = schelling[2]
 # We know that the number of agents in the model never changes.
 # This means that we shouldn't use the default version of ABM that is initialized
 # by `ABM` because it allows deletion of agents (at a performance deficit) and we
-# don't need that feature here.The only change necessary for this to work is to 
+# don't need that feature here.The only change necessary for this to work is to
 # simply add `container = Vector` when building the model.
 
 schelling = StandardABM(SchellingAgent, space; agent_step!, properties, container = Vector)
@@ -185,7 +185,7 @@ function initialize(; total_agents = 320, griddims = (20, 20), min_to_be_happy =
     rng = Random.Xoshiro(seed)
     model = StandardABM(
         SchellingAgent, space;
-        agent_step!, properties, rng, 
+        agent_step!, properties, rng,
         container = Vector, scheduler = Schedulers.Randomly()
     )
     ## populate the model with agents, adding equal amount of the two types of agents

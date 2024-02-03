@@ -196,10 +196,6 @@ run!(model, agent_step!, model_step!, 10; mdata = assets)
 
 ## Seeding and Random numbers
 
-Each ABM in Agents.jl contains a random number generator (RNG) instance that can be obtained with `abmrng(model)`. A benefit of this approach is making models deterministic so that they can be run again and yield the same output. To do this, always pass a specifically seeded RNG to the model creation, e.g. `rng = Random.MersenneTwister(1234)` and then give this `rng` to the model creation.
-
-For reproducibility and performance reasons, one should never use `rand()` without using the RNG, thus throughout our examples we use `rand(abmrng(model))` or `rand(abmrng(model), 1:10, 100)`, etc.
-
 ## An educative example
 
 A simple, education-oriented example of using the basic Agents.jl API is given in [Schelling's segregation model](@ref).
