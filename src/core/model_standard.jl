@@ -101,6 +101,36 @@ evolution, a vector can be used instead, see keyword `container`.
   call the `model_step!` function, or vice versa.
 - `warn=true`: some type tests for `AgentType` are done, and by default
   warnings are thrown when appropriate.
+
+## Advanced stepping
+
+Some advanced models may require special handling for scheduling, or may need to
+schedule agents several times and act on different subsets of agents with different
+functions during a single simulation step.
+In such a scenario, it is more sensible to provide only a model stepping function,
+where all the dynamics is contained within.
+
+Here is an example:
+
+```julia
+function complex_model_step!(model)
+    # tip: these schedulers should be defined as properties of the model
+    scheduler1 = Schedulers.Randomly()
+    scheduler2 = user_defined_function_with_model_as_input
+    for id in schedule(model, scheduler1)
+        agent_step1!(model[id], model)
+    end
+    intermediate_model_action!(model)
+    for id in schedule(model, scheduler2)
+        agent_step2!(model[id], model)
+    end
+    if model.step_counter % 100 == 0
+        model_action_every_100_steps!(model)
+    end
+    final_model_action!(model)
+    return
+end
+```
 """
 function StandardABM(
     ::Type{A},
