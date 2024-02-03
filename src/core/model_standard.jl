@@ -159,9 +159,37 @@ end
 construct_agent_container(::Type{<:Dict}, A) = Dict{Int,A}
 construct_agent_container(::Type{<:Vector}, A) = Vector{A}
 construct_agent_container(container, A) = throw(
-    "Unrecognised container $container, please specify either Dict or Vector."
+    "Unrecognised container $container, please specify either `Dict` or `Vector`."
 )
 
 function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
 end
+
+#######################################################################################
+# %% Pretty printing
+#######################################################################################
+function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
+  n = isconcretetype(A) ? nameof(A) : string(A)
+  typecontainer = C <: AbstractDict ? "Dict" : "Vector"
+  s = "StandardABM with $(nagents(abm)) agents of type $(n)"
+  s *= "\n agents container: $(typecontainer)"
+  if abmspace(abm) === nothing
+      s *= "\n space: nothing (no spatial structure)"
+  else
+      s *= "\n space: $(sprint(show, abmspace(abm)))"
+  end
+  s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
+  print(io, s)
+  if !(isnothing(abmproperties(abm)))
+      if typeof(abmproperties(abm)) <: Dict
+          props = collect(keys(abmproperties(abm)))
+      else
+          props = collect(propertynames(abmproperties(abm)))
+      end
+      print(io, "\n properties: ", join(props, ", "))
+  end
+end
+
+schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x) = Symbol(typeof(x))

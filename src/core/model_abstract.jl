@@ -195,4 +195,3 @@ Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be 
 """
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
-

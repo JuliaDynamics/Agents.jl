@@ -76,31 +76,3 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
         end
     end
 end
-
-#######################################################################################
-# %% Pretty printing
-#######################################################################################
-function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
-    n = isconcretetype(A) ? nameof(A) : string(A)
-    typecontainer = C isa Dict ? Dict : Vector
-    s = "StandardABM with $(nagents(abm)) agents of type $(n)"
-    s *= "\n agents container: $(typecontainer)"
-    if abmspace(abm) === nothing
-        s *= "\n space: nothing (no spatial structure)"
-    else
-        s *= "\n space: $(sprint(show, abmspace(abm)))"
-    end
-    s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
-    print(io, s)
-    if abmproperties(abm) ≠ nothing
-        if typeof(abmproperties(abm)) <: Dict
-            props = collect(keys(abmproperties(abm)))
-        else
-            props = collect(propertynames(abmproperties(abm)))
-        end
-        print(io, "\n properties: ", join(props, ", "))
-    end
-end
-
-schedulername(x::Union{Function,DataType}) = nameof(x)
-schedulername(x) = Symbol(typeof(x))
