@@ -37,6 +37,7 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
+- [`EventQueueABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 
@@ -45,15 +46,20 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 - `model.property`:  If the model `properties` is a dictionary with
   key type `Symbol`, or if it is a composite type (`struct`), then the syntax
   `model.property` will return the model property with key `:property`.
+- `abmtime(model)` will return the current time of the model. All models start from time 0
+  and time is incremented as the model is [`step!`](@ref)-ed.
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
 - `allids(model)/allagents(model)` returns an iterator over all IDs/agents in the model.
 
-Many more querying functions (such as [`random_agent`](@ref)) are obtained automatically from
-this interface. Along with the internal interface described in the Developer's Docs,
-the interface allows instances of `AgentBasedModel` to be used with any of the [API](@ref)
-functions such as `move_agent!`, etc.
+`AgentBasedModel` defines an extendable interface composed of the above syntax as well
+as a few more additional functions described in the Developer's Docs.
+Following this interface you can implement new variants of an `AgentBasedModel`.
+The interface allows instances of `AgentBasedModel` to be used with any of the [API](@ref).
+For example, functions such as [`random_agent`](@ref), [`move_agent!`](@ref) or
+[`add_agent`](@ref) do not need to be implemented manually but work out of the box
+provided the `AgentBasedModel` interface is followed.
 """
 abstract type AgentBasedModel{S<:SpaceType} end
 const ABM = AgentBasedModel
@@ -100,7 +106,7 @@ abmspace(model::ABM) = getfield(model, :space)
 
 """
     abmtime(model::ABM)
-Return the current time of the `model`. 
+Return the current time of the `model`.
 All models are initialized at time 0.
 """
 abmtime(model::ABM) = getfield(model, :time)[]
