@@ -443,13 +443,19 @@ step!(schelling, 3)
 
 # or, we can progress until a provided function that inputs the model and
 # the current model time evaluates to `true`.
-# For example, lets step until at least 80% of the agents are happy.
+# For example, lets step until at least 90% of the agents are happy.
 
 happy90(model, time) = count(a -> a.mood == true, allagents(model))/nagents(model) ≥ 0.9
 
 step!(schelling, happy90)
 
-# And we can see how many steps we have taken in total so far with [`abmtime`](@ref)
+# Note that in the above function we didn't actually utilize the `time` argument.
+# In a realistic setting it is strongly recommended to utilize it to put an additional
+# condition bounding the total number of steps (such as `if time > 1000; return true`),
+# so that the time evolution does not fall into an infinite loop because the function
+# never evaluates to `true`.
+
+# In any case, we can see how many steps we have taken in total so far with [`abmtime`](@ref)
 
 abmtime(schelling)
 
