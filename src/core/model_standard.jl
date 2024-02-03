@@ -166,6 +166,19 @@ function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
 end
 
+
+"""
+    dummystep(model)
+
+Used instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
+
+    dummystep(agent, model)
+
+Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
+"""
+dummystep(model) = nothing
+dummystep(agent, model) = nothing
+
 #######################################################################################
 # %% Pretty printing
 #######################################################################################

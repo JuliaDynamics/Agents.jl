@@ -47,7 +47,7 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
   key type `Symbol`, or if it is a composite type (`struct`), then the syntax
   `model.property` will return the model property with key `:property`.
 - `abmtime(model)` will return the current time of the model. All models start from time 0
-  and time is incremented as the model is [`step!`](@ref)-ed.
+  and time is incremented as the model is [`step!`](@ref)-ped.
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
@@ -183,15 +183,3 @@ remove_agent_from_model!(agent, model) = notimplemented(model)
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
 end
-
-"""
-    dummystep(model)
-
-Used instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
-
-    dummystep(agent, model)
-
-Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(model) = nothing
-dummystep(agent, model) = nothing
