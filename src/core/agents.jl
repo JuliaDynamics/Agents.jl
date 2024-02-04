@@ -1,5 +1,8 @@
 export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof
 
+###########################################################################################
+# @agent
+###########################################################################################
 """
     YourAgentType <: AbstractAgent
 
@@ -216,6 +219,9 @@ macro agent(struct_repr)
     quote Base.@__doc__($(esc(expr))) end
 end
 
+###########################################################################################
+# @multiagent
+###########################################################################################
 """
     @multiagent struct YourAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
         @agent FirstAgentSubType{X}
@@ -317,7 +323,7 @@ macro multiagent(version, struct_repr)
                    Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
     else
-        error("The version of @multiagent chosen was not recognized, use either :opt_speed or :opt_memory instead.")
+        error("The version of @multiagent chosen was not recognized, use either `:opt_speed` or `:opt_memory` instead.")
     end
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)

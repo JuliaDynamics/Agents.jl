@@ -657,6 +657,7 @@ adf
 end
 
 # and, when making the model we would specify
+
 model = StandardABM(
     Union{SchellingAgent, Politician}, # type of agents
     space; # space they live in
@@ -667,9 +668,9 @@ model = StandardABM(
 # a function that calls other functions depending on the type, such as
 
 function union_step!(agent, model)
-    if agent isa AgentSchelling
+    if typeof(agent) <: AgentSchelling
         schelling_step!(agent, model)
-    elseif agent isa Politician
+    elseif typeof(agent) <: Politician
         politician_step!(agent, model)
     end
 end
@@ -687,7 +688,7 @@ model = StandardABM(
 # [multiple dispatch system](https://docs.julialang.org/en/v1/manual/methods/).
 # Hence, we can use the same function name and add dispatch to it, such as:
 
-function dispatch_step!(agent::Schelling, model)
+function dispatch_step!(agent::SchellingAgent, model)
     # stuff.
 end
 
@@ -699,11 +700,70 @@ end
 
 # ## Multiple agent types with `@multiagent`
 
-# [`@multiagent`](@ref) does not offer the multiple dispatch possibility, but in the
-# majority of cases leads to better computational performance.
+# In the majority of cases [`@multiagent`](@ref) offers drastically larger computationa does not offer the multiple dispatch possibility, but in the
+# majority of cases leads to better computational performance. Intentially
+# the command has been designed to be as similar to [`@agent`](@ref) as possible.
+# The syntax to use it is like so:
 
-# TODO:.
+@multiagent struct MultiSchelling{X}(GridAgent{2})
+    @agent struct Civilian # can't re-define existing `Schelling` name
+        mood::Bool = false
+        group::Int
+    end
+    @agent struct Governor{X} # can't redefine existing `Politician` name
+        group::Int
+        influence::X
+    end
+end
 
+# This macro created three names into scope:
+
+(MultiSchelling, Civilian, Governor)
+
+# however, only one of these names is an actual Julia type:
+
+fieldnames(MultiSchelling)
+
+# that contains all fields of all subtypes without duplication, while
+
+fieldnames(Civilian)
+
+# doesn't have any fields. Instead,
+# you should think of `Civilian, Governor` as just convenience functions that have been
+# defined for you to "behave like" types. E.g., you can initialize
+
+civ = Civilian(; id = 2, pos = (2, 2), group = 2) # default `mood`
+
+# or
+
+gov = Governor(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
+
+# exactly as if these were types made with [`@agent`](@ref).
+# These are all of type `MultiSchelling`
+
+typeof(gov)
+
+# and hence you can't use `typeof` to differentiate them. But you can use
+
+kindof(gov)
+
+# instead. Hence, the agent stepping function should be something like
+
+function multi_step!(agent, model)
+    if kindof(agent) == :Civilian
+        schelling_step!(agent, model)
+    elseif kindof(agent) == :Governor
+        politician_step!(agent, model)
+    end
+end
+
+# and give that to the model creation
+
+model = StandardABM(
+    MultiSchelling, # the multi-agent supertype is given as the type
+    space;
+    agent_step! = multi_step!
+)
 
 # ## Adding agents of different types to the model
 
@@ -712,3 +772,38 @@ end
 # usage. To add agents to a model, we use the existing [`add_agent!`](@ref)
 # command, but now specifying as a first argument the type of agent to add.
 
+# For example, in the union case we provide the `Union` type when we create the model,
+
+model = StandardABM(Union{SchellingAgent, Politician}, space)
+
+# we add them by specifying the type
+
+add_agent!(SchellingAgent, model; group = 1, mood = true)
+
+# or
+
+add_agent!(Politician, model; preferred_demographic = 1)
+
+# and we see
+
+collect(allagents(model))
+
+# For the `@multiagent` case, there is really no difference. We have
+
+model = StandardABM(MultiSchelling, space)
+
+# we add
+
+add_agent!(Civilian, model; group = 1)
+
+# or
+
+add_agent!(Governor, model; influence = 0.5, group = 1)
+
+# and we see
+
+collect(allagents(model))
+
+# And that's the end of the tutorial!!!
+# You can visit other examples to see other types of usage of Agents.jl,
+# or go into the [API](@ref) to find the functions you need to make your own ABM!
