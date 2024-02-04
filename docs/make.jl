@@ -33,6 +33,9 @@ pages = [
 
 # %%
 
+println("Converting tutorial...")
+Literate.markdown(joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src"), outdir; credit = false)
+
 println("Converting Examples...")
 
 indir = joinpath(@__DIR__, "..", "examples")
