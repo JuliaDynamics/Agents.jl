@@ -1,7 +1,7 @@
 cd(@__DIR__)
 println("Loading packages...")
 using Agents
-using LightOSM
+using Agents.LightOSM
 using CairoMakie
 import Literate
 
