@@ -116,10 +116,58 @@ end
     end
 end
 
+@multiagent :opt_speed struct AgentAllSpeed(GridAgent{2})
+    @agent struct Agent1s
+        money::Int
+    end
+    @agent struct Agent2s
+        money::Int
+    end
+    @agent struct Agent3s
+        money::Int
+    end
+    @agent struct Agent4s
+        money::Int
+    end
+    @agent struct Agent5s
+        money::Int
+    end
+    @agent struct Agent6s
+        money::Int
+    end
+    @agent struct Agent7s
+        money::Int
+    end
+    @agent struct Agent8s
+        money::Int
+    end
+    @agent struct Agent9s
+        money::Int
+    end
+    @agent struct Agent10s
+        money::Int
+    end
+    @agent struct Agent11s
+        money::Int
+    end
+    @agent struct Agent12s
+        money::Int
+    end
+    @agent struct Agent13s
+        money::Int
+    end
+    @agent struct Agent14s
+        money::Int
+    end
+    @agent struct Agent15s
+        money::Int
+    end
+end
+
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
-    model = StandardABM(Agent1, space; agent_step!, 
-                        scheduler=Schedulers.Randomly(), 
+    model = StandardABM(Agent1, space; agent_step!,
+                        scheduler=Schedulers.Randomly(),
                         rng = Xoshiro(42), warn=false)
     id = 0
     for id in 1:n_agents
@@ -133,7 +181,24 @@ function initialize_model_15_multi(;n_agents=600, dims=(5,5))
                    Agent9m,Agent10m,Agent11m,Agent12m,Agent13m,Agent14m,Agent15m]
     agents_used = agent_types[1:15]
     space = GridSpace(dims)
-    model = StandardABM(AgentAll, space; agent_step!, 
+    model = StandardABM(AgentAll, space; agent_step!,
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
+    agents_per_type = div(n_agents, 15)
+    for A in agents_used
+        for _ in 1:agents_per_type
+            add_agent!(A, model, 10)
+        end
+    end
+    return model
+end
+
+function initialize_model_15_multi_speed(;n_agents=600, dims=(5,5))
+    agent_types = [Agent1s,Agent2s,Agent3s,Agent4s,Agent5s,Agent6s,Agent7s,Agent8s,
+                   Agent9s,Agent10s,Agent11s,Agent12s,Agent13s,Agent14s,Agent15s]
+    agents_used = agent_types[1:15]
+    space = GridSpace(dims)
+    model = StandardABM(AgentAllSpeed, space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
     agents_per_type = div(n_agents, 15)
@@ -150,7 +215,7 @@ function initialize_model_n(;n_agents=600, n_types=1, dims=(5,5))
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
     agents_used = agent_types[1:n_types]
     space = GridSpace(dims)
-    model = StandardABM(Union{agents_used...}, space; agent_step!, 
+    model = StandardABM(Union{agents_used...}, space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
     agents_per_type = div(n_agents, n_types)
@@ -193,6 +258,10 @@ function run_simulation_15_multi(n_steps)
     model = initialize_model_15_multi()
     Agents.step!(model, n_steps)
 end
+function run_simulation_15_multi_speed(n_steps)
+    model = initialize_model_15_multi_speed()
+    Agents.step!(model, n_steps)
+end
 
 function run_simulation_n(n_steps; n_types)
     model = initialize_model_n(; n_types=n_types)
@@ -213,11 +282,15 @@ end
 t_multi = @belapsed run_simulation_15_multi($n_steps)
 t_multi_rel = t_multi/time_1
 
+t_multi_speed = @belapsed run_simulation_15_multi_speed($n_steps)
+t_multi_rel_speed = t_multi_speed/time_1
+
 println("relative time of model with 1 type: 1")
 for (n, t) in zip(n_types, times)
     println("relative time of model with $n types: $t")
 end
-println("relative time of model with @multiagent :opt_speed: $t_multi_rel")
+println("relative time of model with @multiagent :opt_memory: $t_multi_rel")
+println("relative time of model with @multiagent :opt_speed: $t_multi_rel_speed")
 
 # relative time of model with 1 type: 1
 #
@@ -232,9 +305,12 @@ println("relative time of model with @multiagent :opt_speed: $t_multi_rel")
 # relative time of model with @multiagent :opt_memory: 2.8898100796366544
 
 import CairoMakie
-fig, ax, = CairoMakie.lines(n_types, times)
+fig, ax, = CairoMakie.scatterlines(n_types, times; label = "Union")
+hlines!(ax, t_multi_rel; color = Cycled(2), linewidth = 3, linestyle = :dot, label = "@multi; opt_memory")
+hlines!(ax, t_multi_rel_speed; color = Cycled(4), linestyle = :dash, linewidth = 3, label = "@multi; opt_speed")
 CairoMakie.scatter!(ax, n_types, times)
 ax.xlabel = "# types"
 ax.ylabel = "time, relative to 1 type"
+axislegend(ax; position = :lt)
+ax.yticks = 0:1:10
 fig
-
