@@ -21,6 +21,7 @@ const __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
 """
     NoSpaceAgent <: AbstractAgent
+
 The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
@@ -31,49 +32,52 @@ __AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAg
 eval(__AGENT_GENERATOR__[:NoSpaceAgent])
 
 """
-    @agent struct YourAgentType{X}(AnotherAgentType) [<: OptionalSupertype]
+    @agent struct YourAgentType{X}(AgentTypeToInherit) [<: OptionalSupertype]
         extra_property::X
         other_extra_property_with_default::Bool = true
         const other_extra_const_property::Int
         # etc...
     end
 
-Define an agent struct which includes all fields that `AnotherAgentType` has,
-as well as any additional ones the user may provide.
-See below for examples.
+Define an agent struct which includes all fields that `AgentTypeToInherit` has,
+as well as any additional ones the user may provide. The macro supports all syntaxes
+that the standard Julia `mutable struct` command allows for, such as `const` field
+declaration or default values for some fields. Additionally, the resulting type
+will always have a keyword constructor defined for it (using `@kwdef`).
+See below for examples and see also [`@multiagent`](@ref).
 
-Using `@agent` is the only supported way to create agent types for Agents.jl.
+Using `@agent` is the recommended way to create agent types for Agents.jl.
 
 Structs created with `@agent` by default subtype `AbstractAgent`.
 They cannot subtype each other, as all structs created from `@agent` are concrete types
-and `AnotherAgentType` itself is also concrete (only concrete types have fields).
+and `AgentTypeToInherit` itself is also concrete (only concrete types have fields).
 If you want `YourAgentType` to subtype something other than `AbstractAgent`, use
 the optional argument `OptionalSupertype` (which itself must then subtype `AbstractAgent`).
 
 ## Usage
 
 The macro `@agent` has two primary uses:
+
 1. To include the mandatory fields for a particular space in your agent struct.
    In this case you would use one of the minimal agent types as `AnotherAgentType`.
-2. A convenient way to include fields from another, already existing struct.
+2. A convenient way to include fields from another, already existing struct,
+   thereby establishing a toolkit for "type inheritance" in Julia.
 
 The existing minimal agent types are:
+
 - [`NoSpaceAgent`](@ref)
 - [`GraphAgent`](@ref)
 - [`GridAgent`](@ref)
 - [`ContinuousAgent`](@ref)
 - [`OSMAgent`](@ref)
 
-All will attribute an `id::Int` field, and besides `NoSpaceAgent` will also attribute
-a `pos` field. You should **never directly manipulate the mandatory fields `id, pos`**
-that the resulting new agent type will have. The `id` is an unchangeable field.
-Use functions like [`move_agent!`](@ref) etc., to change the position.
+which describe which fields they will contribute to the new type.
 
 ## Examples
 ### Example without optional hierarchy
 Using
 ```julia
-@agent struct Person{T}(GridAgent{2}) 
+@agent struct Person{T}(GridAgent{2})
     age::Int
     moneyz::T
 end
@@ -87,7 +91,7 @@ mutable struct Person{T} <: AbstractAgent
     moneyz::T
 end
 ```
-Notice that you can also use default values for some fields, in this case you 
+Notice that you can also use default values for some fields, in this case you
 will need to specify the field names with the non-default values
 ```julia
 @agent struct Person2{T}(GridAgent{2})
@@ -184,10 +188,6 @@ such as the `id`, are set automatically
 model = StandardABM(GridAgent{2}, GridSpace((10,10)))
 a = GridAgent{2}(model, (3,4)) # the id is set automatically
 ```
-
-There is also another macro available in Agents.jl named [`@multiagent`](@ref) which
-can help improving the performance of multi-agent models. Refer to its docstring for more
-details.
 """
 macro agent(struct_repr)
     new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
@@ -200,16 +200,16 @@ macro agent(struct_repr)
     __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
     @capture(new_type, _{new_params__})
     new_params === nothing && (new_params = [])
-    expr = quote 
-           @kwdef $expr_new_type 
-           $(new_type_no_params)(m::ABM, args...) = 
+    expr = quote
+           @kwdef $expr_new_type
+           $(new_type_no_params)(m::ABM, args...) =
                $(new_type_no_params)(Agents.nextid(m), args...)
-           $(new_type_no_params)(m::ABM; kwargs...) = 
+           $(new_type_no_params)(m::ABM; kwargs...) =
                $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
            if $(new_params) != []
-               $(new_type)(m::ABM, args...) where {$(new_params...)} = 
+               $(new_type)(m::ABM, args...) where {$(new_params...)} =
                    $(new_type)(Agents.nextid(m), args...)
-               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} = 
+               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} =
                    $(new_type)(; id = Agents.nextid(m), kwargs...)
            end
         end
@@ -229,20 +229,20 @@ end
         # etc...
     end
 
-Define multiple agent "subtypes", which are actually only variants of a unique 
-overarching type. This means that all "subtypes" are conceptual: they are simply 
-convenience functions defined that initialize the common proper type correctly 
-(see examples below for more). Because the "subtypes" are not real Julia `Types`, 
+Define multiple agent "subtypes", which are actually only variants of a unique
+overarching type. This means that all "subtypes" are conceptual: they are simply
+convenience functions defined that initialize the common proper type correctly
+(see examples below for more). Because the "subtypes" are not real Julia `Types`,
 you cannot use multiple dispatch on them.
 
-Using this macro can be useful for performance of multi-agents models because 
-combining multiple agents in only one avoids type instabilities issues which leads 
+Using this macro can be useful for performance of multi-agents models because
+combining multiple agents in only one avoids type instabilities issues which leads
 to a decrease in performance. See the [performance-tips](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#Avoid-Unions-of-many-different-agent-types-1),
 page for a more throughout analysis of its performance advantages.
 
-Two different versions of `@multiagent` can be used by passing either `:opt_speed` or 
+Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
 `:opt_memory` as the first argument. The first optimizes the agents representation for
-speed, the second does the same for memory, at the cost of a moderate drop in performance. 
+speed, the second does the same for memory, at the cost of a moderate drop in performance.
 By default it uses `:opt_speed`.
 
 ## Examples
@@ -273,8 +273,8 @@ wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
 wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
 ```
 
-It is important to notice, though, that the `Wolf` and `Hawk` types are just 
-conceptual and all agents are actually of type `Animal` in this case. 
+It is important to notice, though, that the `Wolf` and `Hawk` types are just
+conceptual and all agents are actually of type `Animal` in this case.
 The way to retrieve the variant of the agent is through the function `kindof` e.g.
 
 ```
@@ -305,7 +305,7 @@ macro multiagent(version, struct_repr)
     @capture(new_type, _{new_params__})
     new_params === nothing && (new_params = [])
     a_specs = :(begin $(agent_specs_with_base...) end)
-    if version == QuoteNode(:opt_speed) 
+    if version == QuoteNode(:opt_speed)
         expr = quote
                    MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true

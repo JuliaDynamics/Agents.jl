@@ -90,11 +90,11 @@ adf # a Julia `DataFrame`
 # and other model-level properties relevant to the simulation.
 
 # An Agents.jl simulation is composed of first building such an `AgentBasedModel`
-# (steps 1-4 below) and then evolving it and analyzing it (steps 5-7 below):
+# (steps 1-4 below) and then evolving it and/or analyzing it (steps 5-7 below):
 
 # 1. Choose what **kind of space** the agents will live in, for example a graph, a grid,
 #   etc. Several spaces are provided by Agents.jl and can be initialized immediately.
-# 2. Define the **agent type** (or types, for mixed models) that will populate the ABM.
+# 2. Define the **agent type(s)** that will populate the ABM.
 #   Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref).
 #   The types must contain some mandatory fields, which is ensured by using
 #   [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
@@ -242,7 +242,7 @@ example_agent.mood = false
 
 # but can't set the `id`:
 
-```julia
+```
 example_agent.id = 2
 ```
 ```
@@ -306,7 +306,7 @@ function schelling_step!(agent, model)
     ## For each neighbor, get group and compare to current agent's group
     ## and increment `count_neighbors_same_group` as appropriately.
     ## Here `nearby_agents` (with default arguments) will provide an iterator
-    ## over the nearby agents one grid point away, which are at most 8.
+    ## over the nearby agents one grid cell away, which are at most 8.
     for neighbor in nearby_agents(agent, model)
         if agent.group == neighbor.group
             count_neighbors_same_group += 1
@@ -628,12 +628,83 @@ adf
 # collected data. You should consult the documentation of [`run!`](@ref) for more
 # power over data collection.
 
-# ## Multiple agent types
+# _**And this concludes the main tutorial!**_
 
-# Finally, for models where multiple agent types are needed,
-# the [`@multiagent`](@ref) macro could be used to improve the performance of the simulation.
-#
+# ## Multiple agent types in Agents.jl
 
-# ## [Tutorial - fast version](@id tutorial_fast)
+# In realistic modelling situations it is often the case the the ABM is composed
+# of different types of agents. Agents.jl supports two ways for multi-agent ABMs.
+# The first is with the `Union` type (this subsection), and the second
+# is with [`@multiagent`](@ref) command (next subsection). `@multiagent` is recommended
+# as default, because in many cases it will have performance advantages over the `Union` approach
+# without having tangile disadvantages. However, we strongly recommend you to read through
+# the [comparison of the two approaches](@ref multi_vs_union).
 
-# Gotta go fast!
+# ## Multiple agent types with `Union` types
+
+# The simplest way to add more agent types is to make more of them with
+# [`@agent`](@ref) and then give a `Union` of agent types as the agent type when
+# making the `AgentBasedModel`. For example, lets say that a new type of agent enters
+# the simulation; a politician that would "attract" a preferred demographic.
+# We then would make
+
+@agent struct Politician(GridAgent{2})
+    preferred_demographic::Int
+end
+
+# and, when making the model we would specify
+model = StandardABM(
+    Union{SchellingAgent, Politician}, # type of agents
+    space; # space they live in
+)
+
+# Naturally, we would have to define a new agent stepping function that would
+# act differently depending on the agent type. This could be done by making
+# a function that calls other functions depending on the type, such as
+
+function union_step!(agent, model)
+    if agent isa AgentSchelling
+        schelling_step!(agent, model)
+    elseif agent isa Politician
+        politician_step!(agent, model)
+    end
+end
+
+# and then passing
+
+model = StandardABM(
+    Union{SchellingAgent, Politician}, # type of agents
+    space; # space they live in
+    agent_step! = union_step!
+)
+
+# This approach also works with the [`@multiagent`](@ref) possibility we discuss below.
+# `Union` types however also offer the unique possibility of utilizing Julia's
+# [multiple dispatch system](https://docs.julialang.org/en/v1/manual/methods/).
+# Hence, we can use the same function name and add dispatch to it, such as:
+
+function dispatch_step!(agent::Schelling, model)
+    # stuff.
+end
+
+function dispatch_step!(agent::Politician, model)
+    # other stuff.
+end
+
+# and give `dispatch_step!` to the `agent_step!` keyword during model creation.
+
+# ## Multiple agent types with `@multiagent`
+
+# [`@multiagent`](@ref) does not offer the multiple dispatch possibility, but in the
+# majority of cases leads to better computational performance.
+
+# TODO:.
+
+
+# ## Adding agents of different types to the model
+
+# Regardless of whether you went down the `Union` or `@multiagent` route,
+# the API of Agents.jl has been designed such that there is no difference in subsequent
+# usage. To add agents to a model, we use the existing [`add_agent!`](@ref)
+# command, but now specifying as a first argument the type of agent to add.
+
