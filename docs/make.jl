@@ -9,7 +9,6 @@ pages = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
-        "examples/schelling.md",
         "examples/sir.md",
         "examples/flock.md",
         "examples/zombies.md",
