@@ -640,6 +640,10 @@ adf
 # without having tangile disadvantages. However, we strongly recommend you to read through
 # the [comparison of the two approaches](@ref multi_vs_union).
 
+# _Note that multiple agent types is a possibility entirely orthogonal to
+# the type of `AgentBasedModel` or the type of space. Everything we describe here
+# works for any Agents.jl simulation._
+
 # ## Multiple agent types with `Union` types
 
 # The simplest way to add more agent types is to make more of them with
