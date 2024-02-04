@@ -455,15 +455,106 @@ step!(schelling, happy90)
 # so that the time evolution does not fall into an infinite loop because the function
 # never evaluates to `true`.
 
-# In any case, we can see how many steps we have taken in total so far with [`abmtime`](@ref)
+# In any case, we can see how many steps the model has taken so far with [`abmtime`](@ref)
 
 abmtime(schelling)
 
 # ## Step 6: Visualizations
 
+# There is a [dedicated tutorial](@ref vis_tutorial) for visualization, animation, and making custom
+# interactive GUIs for agent based models. Here, we will use the
+# the [`abmplot`](@ref) function to plot the distribution of agents on a
+# 2D grid at every step, using the
+# [Makie](http://makie.juliaplots.org/stable/) plotting ecosystem.
+
+# First, we load the plotting backend
+
+using CairoMakie # choosing a plotting backend
+CairoMakie.activate!() # hide
+
+# and then we simply define functions that given an agent
+# they return its color or marker.
+# Let's color the two groups orange and blue and make one a square and the other a circle.
+
+groupcolor(a) = a.group == 1 ? :blue : :orange
+groupmarker(a) = a.group == 1 ? :circle : :rect
+
+# We pass those functions to [`abmplot`](@ref)
+
+figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure # returning the figure displays it
+
+# The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
+
+schelling = initialize()
+abmvideo(
+    "schelling.mp4", schelling;
+    ac = groupcolor, am = groupmarker, as = 10,
+    framerate = 4, frames = 20,
+    title = "Schelling's segregation model"
+)
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schelling.mp4" type="video/mp4">
+# </video>
+# ```
+
 # ## Step 7: data collection
 
+# Running the model and collecting data while the model runs is done with the [`run!`](@ref)
+# function. Besides `run!`, there is also the [`paramscan`](@ref) function
+# that performs data collection while scanning ranges of the parameters of the model,
+# and the [`ensemblerun!`](@ref) that performs ensemble simulations and data collection.
 
+# The [`run!`](@ref) function has been designed for maximum flexibility:
+# practically all scenarios of data collection are possible, whether you need
+# agent data, model data, aggregated data, or arbitrary combinations.
+
+# To use [`run!`](@ref) we simply priovide a vector of what agent properties
+# to collect as data. The `adata` keyword corresponds to the
+# "agent data", and there is the `mdata` keyword for model data.
+
+# For example, specifying the properties as `Symbol`s means to collect
+# the named properties
+
+adata = [:pos, :mood, :group]
+
+schelling = initialize()
+adf, mdf = run!(schelling, 5; adata) # run for 5 steps
+adf[end-10:end, :] # display only the last few rows
+
+# [`run!`](@ref) collects data in the form of a `DataFrame` which is Julia's
+# premier format for tabular data (and you need to learn how to use it independelty
+# of Agents.jl, see the documentation of DataFrames.jl).
+# Above, data were collected for each agent and for each step of the simulation.
+
+# Besides `Symbol`s, we can specify functions as agent data to collect
+
+x(agent) = agent.pos[1]
+schelling = initialize()
+adata = [x, :mood, :group]
+adf, mdf = run!(schelling, 5; adata)
+adf[end-10:end, :] # display only the last few rows
+
+# With the above `adata` vector, we collected all agent's data.
+# We can instead collect aggregated data for the agents.
+# For example, let's only get the number of happy individuals, and the
+# average of the "x" (not very interesting, but anyway!).
+# To do this, make `adata` a vector of `Tuple`s, where the first
+# entry of the tuple is the data to collect, and the second how to
+# aggregate it over agents.
+
+
+using Statistics: mean
+schelling = initialize();
+adata = [(:mood, sum), (x, mean)]
+adf, mdf = run!(schelling, 5; adata)
+adf
+
+# Other examples in the documentation are more realistic, with more meaningful
+# collected data. You should consult the documentation of [`run!`](@ref) for more
+# power over data collection.
 
 # ## Multiple agent types
 

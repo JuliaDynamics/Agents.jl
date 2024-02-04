@@ -234,15 +234,18 @@ map_agent_groups
 index_mapped_groups
 ```
 
-## Parameter scanning
+## Data collection and analysis
 ```@docs
+run!
+ensemblerun!
 paramscan
 ```
 
-## Data collection
-The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
-But there are other functions that are related to simulations listed here.
-Specifically, these functions aid in making custom data collection loops, instead of using the `run!` function.
+
+### Manual data collection
+
+The central simulation function is [`run!`](@ref).
+Here are some functions that aid in making custom data collection loops, instead of using the `run!` function.
 
 For example, the core loop of `run!` is just
 ```julia
@@ -321,10 +324,6 @@ ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
-## Ensemble runs and Parallelization
-```@docs
-ensemblerun!
-```
 
 ### How to use `Distributed`
 To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
