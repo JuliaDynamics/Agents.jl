@@ -1,5 +1,11 @@
 # # Tutorial
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../schelling.mp4" type="video/mp4">
+# </video>
+# ```
+
 # This is the main overarching tutorial for Agents.jl. It will walk you through the
 # typical workflow of doing agent based modelling (ABM) using Agents.jl,
 # while introducing and explaining the core components of Agents.jl.
