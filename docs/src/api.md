@@ -19,8 +19,9 @@ EventQueueABM
 
 ```@docs
 @agent
-@multiagent
 AbstractAgent
+@multiagent
+kindof
 ```
 
 ### Minimal agent types

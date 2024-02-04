@@ -3,7 +3,7 @@ export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof
 """
     YourAgentType <: AbstractAgent
 
-Agents participating in Agents.jl simulations are instances of user-defined Types that
+Agents participating in Agents.jl simulations are instances of user-defined types that
 are subtypes of `AbstractAgent`.
 
 Your agent type(s) **must have** the `id::Int` field as first field.
@@ -230,18 +230,19 @@ end
     end
 
 Define multiple agent "subtypes", which are actually only variants of a unique
-overarching type. This means that all "subtypes" are conceptual: they are simply
+overarching type `YourAgentType`. This means that all "subtypes" are conceptual: they are simply
 convenience functions defined that initialize the common proper type correctly
 (see examples below for more). Because the "subtypes" are not real Julia `Types`,
-you cannot use multiple dispatch on them.
+you cannot use multiple dispatch on them. You also cannot distinguish them
+on the basis of `typeof`, but need to use instead the `kindof` function.
 
-Using this macro can be useful for performance of multi-agents models because
-combining multiple agents in only one avoids type instabilities issues which leads
-to a decrease in performance. See the [performance-tips](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#Avoid-Unions-of-many-different-agent-types-1),
-page for a more throughout analysis of its performance advantages.
+See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
+for why in most cases it is better to use `@multiagent` than making multiple
+agent types manually.
 
 Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
-`:opt_memory` as the first argument. The first optimizes the agents representation for
+`:opt_memory` as the first argument (before the `struct` keyword).
+The first optimizes the agents representation for
 speed, the second does the same for memory, at the cost of a moderate drop in performance.
 By default it uses `:opt_speed`.
 
@@ -370,4 +371,14 @@ function compute_base_fields(base_type_spec)
     end
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     return base_fields
+end
+
+"""
+    kindof(agent::AbstractAgent) → kind::Symbol
+
+Return the "kind" (instead of type) of the agent, which is the name given to the
+agent subtype when it was created with [`@multiagent`](@ref).
+"""
+function MixedStructTypes.kindof(a::AbstractAgent)
+    throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
 end
