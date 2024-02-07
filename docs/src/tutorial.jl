@@ -49,7 +49,7 @@ function schelling_step!(agent, model)
         end
     end
     ## After counting the neighbors, decide whether or not to move the agent.
-    ## If count_neighbors_same_group is at least min_to_be_happy, set the
+    ## If `count_neighbors_same_group` is at least min_to_be_happy, set the
     ## mood to true. Otherwise, move the agent to a random position, and set
     ## mood to false.
     if count_neighbors_same_group ≥ minhappy
@@ -139,7 +139,7 @@ adf # a Julia `DataFrame`
 # * Agents belong to one of two groups (1 or 2).
 # * The agents live in a two-dimensional non-periodic grid.
 # * Only one agent per position is allowed.
-# * At each state pf the simulation,
+# * At each state of the simulation,
 #   each agent looks at its 8 neighboring positions (cardinal and diagonal directions).
 #   It then counts how many neighboring agents belong to the same group (if any).
 #   This leads to 8 neighboring positions per position (except at the edges of the grid).
@@ -148,7 +148,7 @@ adf # a Julia `DataFrame`
 # * Else, the agent is unhappy and moves to a new random location in space
 #   while respecting the 1-agent-per-position rule.
 
-# In the following we will built this model following the aforementioned steps.
+# In the following we will build this model following the aforementioned steps.
 # The 0-th step of any Agents.jl simulation is to bring the package into scope:
 
 using Agents
@@ -334,7 +334,7 @@ end
 # Here we used some of the built-in functionality of Agents.jl, in particular:
 # - [`nearby_positions`](@ref) that returns the neighboring position
 #   on which the agent resides
-# - [`move_agent_single!`](@ref) which moves # agents to random empty position on the grid
+# - [`move_agent_single!`](@ref) which moves an agent to a random empty position on the grid
 #   while respecting an at most 1 agent per position rule
 # - `model[id]` which returns the agent with given `id` in the `model`,
 # . `model.min_to_be_happy` which returns the model-level property named `min_to_be_happy`
@@ -368,13 +368,13 @@ end
 # participating in the simulation, the space instance, and, as keyword arguments,
 # the evolution rules, and any model-level properties.
 
-# Here, we have define the first three already. The only model-level property
+# Here, we have defined the first three already. The only model-level property
 # for the Schelling simulation would be the minimum agents of the same group
 # required for an agent to be happy. We make this a dictionary so we can access
 # this property by name:
 properties = Dict(:min_to_be_happy => 3)
 
-# And now, we simply put everything together in the [`StadardABM`](@ref) constructor:
+# And now, we simply put everything together in the [`StandardABM`](@ref) constructor:
 
 schelling = StandardABM(
     ## input arguments
@@ -589,7 +589,7 @@ abmvideo(
 # practically all scenarios of data collection are possible, whether you need
 # agent data, model data, aggregated data, or arbitrary combinations.
 
-# To use [`run!`](@ref) we simply priovide a vector of what agent properties
+# To use [`run!`](@ref) we simply provide a vector of what agent properties
 # to collect as data. The `adata` keyword corresponds to the
 # "agent data", and there is the `mdata` keyword for model data.
 
@@ -603,8 +603,8 @@ adf, mdf = run!(schelling, 5; adata) # run for 5 steps
 adf[end-10:end, :] # display only the last few rows
 
 # [`run!`](@ref) collects data in the form of a `DataFrame` which is Julia's
-# premier format for tabular data (and you need to learn how to use it independelty
-# of Agents.jl, see the documentation of DataFrames.jl).
+# premier format for tabular data (and you probably need to learn how to use it independently
+# of Agents.jl if you don't know it yet, see the documentation of DataFrames.jl to do so).
 # Above, data were collected for each agent and for each step of the simulation.
 
 # Besides `Symbol`s, we can specify functions as agent data to collect
@@ -639,14 +639,14 @@ adf
 # ## Multiple agent types in Agents.jl
 
 # In realistic modelling situations it is often the case the the ABM is composed
-# of different types of agents. Agents.jl supports two ways for multi-agent ABMs.
-# The first is with the `Union` type (this subsection), and the second
-# is with [`@multiagent`](@ref) command (next subsection). `@multiagent` is recommended
+# of different types of agents. Agents.jl supports two approaches for multi-agent ABMs.
+# The first uses the `Union` type (this subsection), and the second
+# uses the [`@multiagent`](@ref) command (next subsection). `@multiagent` is recommended
 # as default, because in many cases it will have performance advantages over the `Union` approach
-# without having tangile disadvantages. However, we strongly recommend you to read through
+# without having tangible disadvantages. However, we strongly recommend you to read through
 # the [comparison of the two approaches](@ref multi_vs_union).
 
-# _Note that multiple agent types is a possibility entirely orthogonal to
+# _Note that using multiple agent types is a possibility entirely orthogonal to
 # the type of `AgentBasedModel` or the type of space. Everything we describe here
 # works for any Agents.jl simulation._
 
@@ -654,7 +654,7 @@ adf
 
 # The simplest way to add more agent types is to make more of them with
 # [`@agent`](@ref) and then give a `Union` of agent types as the agent type when
-# making the `AgentBasedModel`. For example, lets say that a new type of agent enters
+# making the `AgentBasedModel`. For example, let's say that a new type of agent enters
 # the simulation; a politician that would "attract" a preferred demographic.
 # We then would make
 
@@ -706,8 +706,8 @@ end
 
 # ## Multiple agent types with `@multiagent`
 
-# In the majority of cases [`@multiagent`](@ref) offers drastically larger computationa does not offer the multiple dispatch possibility, but in the
-# majority of cases leads to better computational performance. Intentially
+# [`@multiagent`](@ref) does not offer the multiple dispatch possibility, but in the
+# majority of cases leads to better computational performance. Intentionally
 # the command has been designed to be as similar to [`@agent`](@ref) as possible.
 # The syntax to use it is like so:
 
@@ -735,7 +735,7 @@ fieldnames(MultiSchelling)
 fieldnames(Civilian)
 
 # doesn't have any fields. Instead,
-# you should think of `Civilian, Governor` as just convenience functions that have been
+# you should think of `Civilian` and `Governor` as just convenience functions that have been
 # defined for you to "behave like" types. E.g., you can initialize
 
 civ = Civilian(; id = 2, pos = (2, 2), group = 2) # default `mood`
