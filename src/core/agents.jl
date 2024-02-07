@@ -223,7 +223,7 @@ end
 # @multiagent
 ###########################################################################################
 """
-    @multiagent struct YourAgentType{X,Y}(BaseAgentType) [<: OptionalSupertype]
+    @multiagent struct YourAgentType{X,Y}(AgentTypeToInherit) [<: OptionalSupertype]
         @agent FirstAgentSubType{X}
             first_property::X # shared with second agent
             second_property_with_default::Bool = true

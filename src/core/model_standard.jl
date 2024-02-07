@@ -40,7 +40,7 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 A concrete implementation of an [`AgentBasedModel`](@ref), which is also the most
 commonly used in agent based modelling studies. It operates in discrete time.
-As input, it requires least one, or at most
+As input, it requires at least one, or at most
 two functions: an agent stepping function and a model stepping function.
 At each discrete step of the simulation,
 the agent stepping function is applied once to all scheduled agents,
