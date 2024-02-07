@@ -246,7 +246,15 @@ paramscan
 ### Manual data collection
 
 The central simulation function is [`run!`](@ref).
-Here are some functions that aid in making custom data collection loops, instead of using the `run!` function.
+Here are some functions that aid in making custom data collection loops, instead of using the `run!` function:
+
+```@docs
+init_agent_dataframe
+collect_agent_data!
+init_model_dataframe
+collect_model_data!
+dataname
+```
 
 For example, the core loop of `run!` is just
 ```julia
@@ -268,16 +276,6 @@ end
 return df_agent, df_model
 ```
 (here `until` and `should_we_collect` are internal functions)
-
-`run!` uses the following functions:
-
-```@docs
-init_agent_dataframe
-collect_agent_data!
-init_model_dataframe
-collect_model_data!
-dataname
-```
 
 ## [Schedulers](@id Schedulers)
 ```@docs
