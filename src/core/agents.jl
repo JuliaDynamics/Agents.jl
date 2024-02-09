@@ -296,7 +296,7 @@ macro multiagent(version, struct_repr)
         @capture(a_spec, @agent astruct_spec_)
         int_type, new_fields = decompose_struct(astruct_spec)
         push!(agent_specs_with_base,
-              :(mutable struct $int_type
+              :(@kwdef mutable struct $int_type
                     $(base_fields...)
                     $(new_fields...)
                 end))
@@ -307,12 +307,12 @@ macro multiagent(version, struct_repr)
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed) 
         expr = quote
-                   MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
+                   MixedStructTypes.@compact_structs $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
-                   MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
+                   MixedStructTypes.@sum_structs $t $a_specs
                    Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
                end
     else
