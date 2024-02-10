@@ -302,36 +302,30 @@ macro multiagent(version, struct_repr)
                 end))
     end
     t = :($new_type <: $abstract_type)
-    @capture(new_type, _{new_params__})
-    new_params === nothing && (new_params = [])
+    @capture(new_type, new_type_n_{new_params__})
+    new_params === nothing && (new_type_n, new_params = (new_type, []))
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed) 
         expr = quote
                    MixedStructTypes.@compact_structs $t $a_specs
-                   Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
+                   Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
                    MixedStructTypes.@sum_structs $t $a_specs
-                   Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
+                   Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
                end
     else
         error("The version of @multiagent chosen was not recognized, use either :opt_speed or :opt_memory instead.")
     end
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
-    if new_params != []
-        expr_multiagent_p = :(Agents.ismultiagenttype(::Type{$(new_type)}) where {$(new_params...)} = true)
-    else
-        expr_multiagent_p = :()
-    end
 
     expr = macroexpand(Agents, expr)
 
     expr = quote
                $expr
                $expr_multiagent
-               $expr_multiagent_p
            end
 
     return esc(expr)
@@ -371,3 +365,4 @@ function compute_base_fields(base_type_spec)
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     return base_fields
 end
+
