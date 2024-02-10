@@ -304,6 +304,8 @@ macro multiagent(version, struct_repr)
     t = :($new_type <: $abstract_type)
     @capture(new_type, new_type_n_{new_params__})
     new_params === nothing && (new_type_n, new_params = (new_type, []))
+    new_params_no_constr = [p isa Expr && p.head == :(<:) ? p.args[1] : p for p in new_params]
+    new_type_no_constr = :($new_type_n{$(new_params_no_constr...)})
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed) 
         expr = quote
@@ -320,12 +322,28 @@ macro multiagent(version, struct_repr)
     end
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
+    if new_params != []
+        if version == QuoteNode(:opt_speed) 
+            expr_multiagent_p = quote
+                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+                Agents.ismultiagentcompacttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+            end
+        else
+            expr_multiagent_p = quote
+                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+                Agents.ismultiagentsumtype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+            end
+        end
+    else
+        expr_multiagent_p = :()
+    end
 
     expr = macroexpand(Agents, expr)
 
     expr = quote
                $expr
                $expr_multiagent
+               $expr_multiagent_p
            end
 
     return esc(expr)
@@ -365,4 +383,3 @@ function compute_base_fields(base_type_spec)
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     return base_fields
 end
-
