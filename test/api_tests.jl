@@ -384,6 +384,28 @@ abstract type AbstractE <: AbstractAgent end
     end
 end
 
+@multiagent :opt_speed struct MultiSchelling1{X}(GridAgent{2})
+    @agent struct Civilian1 # can't re-define existing `Schelling` name
+        mood::Bool = false
+        group::Int
+    end
+    @agent struct Governor1{X<:Real} # can't redefine existing `Politician` name
+        group::Int
+        influence::X
+    end
+end
+
+@multiagent :opt_memory struct MultiSchelling2{X}(GridAgent{2})
+    @agent struct Civilian2 # can't re-define existing `Schelling` name
+        mood::Bool = false
+        group::Int
+    end
+    @agent struct Governor2{X<:Real} # can't redefine existing `Politician` name
+        group::Int
+        influence::X
+    end
+end
+
 @testset "@multiagent macro" begin
 
     hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
@@ -457,4 +479,13 @@ end
     @test kindof(g) == :G
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
+
+    
+    civ = Civilian1(; id = 2, pos = (2, 2), group = 2)
+    gov = Governor1(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
+    civ = Civilian2(; id = 2, pos = (2, 2), group = 2)
+    gov = Governor2(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
+
+    @test_throws "" Governor1(; id = 3 , pos = (2, 2), group = 2, influence = im)
+    @test_throws "" Governor2(; id = 3 , pos = (2, 2), group = 2, influence = im)
 end
