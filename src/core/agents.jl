@@ -302,8 +302,11 @@ macro multiagent(version, struct_repr)
                 end))
     end
     t = :($new_type <: $abstract_type)
-    @capture(new_type, new_type_n_{new_params__})
-    new_params === nothing && (new_type_n, new_params = (new_type, []))
+    c = @capture(new_type, new_type_n_{new_params__})
+    if c == false 
+        new_type_n = new_type
+        new_params = []
+    end
     new_params_no_constr = [p isa Expr && p.head == :(<:) ? p.args[1] : p for p in new_params]
     new_type_no_constr = :($new_type_n{$(new_params_no_constr...)})
     a_specs = :(begin $(agent_specs_with_base...) end)
