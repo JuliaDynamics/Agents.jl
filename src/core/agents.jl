@@ -296,24 +296,29 @@ macro multiagent(version, struct_repr)
         @capture(a_spec, @agent astruct_spec_)
         int_type, new_fields = decompose_struct(astruct_spec)
         push!(agent_specs_with_base,
-              :(mutable struct $int_type
+              :(@kwdef mutable struct $int_type
                     $(base_fields...)
                     $(new_fields...)
                 end))
     end
     t = :($new_type <: $abstract_type)
-    @capture(new_type, _{new_params__})
-    new_params === nothing && (new_params = [])
+    c = @capture(new_type, new_type_n_{new_params__})
+    if c == false 
+        new_type_n = new_type
+        new_params = []
+    end
+    new_params_no_constr = [p isa Expr && p.head == :(<:) ? p.args[1] : p for p in new_params]
+    new_type_no_constr = :($new_type_n{$(new_params_no_constr...)})
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed) 
         expr = quote
-                   MixedStructTypes.@compact_struct_type @kwdef $t $a_specs
-                   Agents.ismultiagentcompacttype(::Type{$(new_type)}) where {$(new_params...)} = true
+                   MixedStructTypes.@compact_structs $t $a_specs
+                   Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
-                   MixedStructTypes.@sum_struct_type @kwdef $t $a_specs
-                   Agents.ismultiagentsumtype(::Type{$(new_type)}) where {$(new_params...)} = true
+                   MixedStructTypes.@sum_structs $t $a_specs
+                   Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
                end
     else
         error("The version of @multiagent chosen was not recognized, use either :opt_speed or :opt_memory instead.")
@@ -321,7 +326,17 @@ macro multiagent(version, struct_repr)
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
     if new_params != []
-        expr_multiagent_p = :(Agents.ismultiagenttype(::Type{$(new_type)}) where {$(new_params...)} = true)
+        if version == QuoteNode(:opt_speed) 
+            expr_multiagent_p = quote
+                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+                Agents.ismultiagentcompacttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+            end
+        else
+            expr_multiagent_p = quote
+                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+                Agents.ismultiagentsumtype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
+            end
+        end
     else
         expr_multiagent_p = :()
     end
