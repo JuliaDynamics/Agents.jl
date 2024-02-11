@@ -99,32 +99,32 @@ adf # a Julia `DataFrame`
 # (steps 1-4 below) and then evolving it and/or analyzing it (steps 5-7 below):
 
 # 1. Choose what **kind of space** the agents will live in, for example a graph, a grid,
-#   etc. Several spaces are provided by Agents.jl and can be initialized immediately.
+#    etc. Several spaces are provided by Agents.jl and can be initialized immediately.
 # 2. Define the **agent type(s)** that will populate the ABM.
-#   Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref).
-#   The types must contain some mandatory fields, which is ensured by using
-#   [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
+#    Agent types are Julia `mutable struct`s that are created with [`@agent`](@ref).
+#    The types must contain some mandatory fields, which is ensured by using
+#    [`@agent`](@ref). The remaining fields of the agent type are up to the user's choice.
 # 3. Define the **evolution rule(s)**, i.e., how the model evolves in time.
-#   The evolution rule(s) are always standard Julia functions that take advantage of
-#   the Agents.jl [API](@ref).
-#   The exact way one defines the evolution rules depends on the type of `AgentBasedModel`
-#   used. Agents.jl allows simulations in both discrete time via [`StandardABM`](@ref)
-#   as well as continuous time via [`EventQueueABM`](@ref). In this tutorial we will
-#   learn the discrete-time version. See the [rock-paper-scissors](@ref eventbased_tutorial)
-#   example for an introduction to the continuous time version.
+#    The evolution rule(s) are always standard Julia functions that take advantage of
+#    the Agents.jl [API](@ref).
+#    The exact way one defines the evolution rules depends on the type of `AgentBasedModel`
+#    used. Agents.jl allows simulations in both discrete time via [`StandardABM`](@ref)
+#    as well as continuous time via [`EventQueueABM`](@ref). In this tutorial we will
+#    learn the discrete-time version. See the [rock-paper-scissors](@ref eventbased_tutorial)
+#    example for an introduction to the continuous time version.
 # 4. Initialize an **`AgentBasedModel` instance** that contains the agent type(s), the
-#   chosen space, the evolution rule(s), other optional additional model-level properties,
-#   and other simulation tuning properties like schedulers or random number generators.
-#   Then, populate this model with agent instances.
+#    chosen space, the evolution rule(s), other optional additional model-level properties,
+#    and other simulation tuning properties like schedulers or random number generators.
+#    Then, populate this model with agent instances.
 # 5. _(Trivial)_ **evolve the model** forwards in time.
 # 6. _(Optional)_ **Visualize the model** and animate its time evolution.
-#   This can help checking that the model behaves as expected and there aren't any mistakes,
-#   or can be used in making figures for a paper/presentation.
+#    This can help checking that the model behaves as expected and there aren't any mistakes,
+#    or can be used in making figures for a paper/presentation.
 # 7. **Collect data**. To do this, specify which data should be collected, by providing
-#   one standard Julia `Vector` of data-to-collect for agents, for example
-#   `[:mood, :wealth]`, and another one for the model. The agent data names are given as
-#   the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref).
-#   This function outputs collected data in the form of a `DataFrame`.
+#    one standard Julia `Vector` of data-to-collect for agents, for example
+#    `[:mood, :wealth]`, and another one for the model. The agent data names are given as
+#    the keyword `adata` and the model as keyword `mdata` to the function [`run!`](@ref).
+#    This function outputs collected data in the form of a `DataFrame`.
 
 # In the spirit of simple design, all of these steps are done by defining simple Julia
 # data structures, like vectors, dictionaries, functions, or structs.
