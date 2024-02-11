@@ -1,4 +1,5 @@
-# # Visualizations and Animations for Agent Based Models
+# # [Visualizations and Animations for Agent Based Models](@id vis_tutorial)
+
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
@@ -39,7 +40,7 @@ catch
     using AgentsExampleZoo
 end
 
-model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
     scenario = :change)
 model
 
@@ -101,7 +102,7 @@ adata = [(black, count), (white, count)]
 temperature(model) = mean(model.temperature)
 mdata = [temperature, :solar_luminosity]
 fig, abmobs = abmexploration(model;
-    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"], 
+    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"],
     mdata, mlabels = ["T", "L"]
 )
 nothing #hide
@@ -130,6 +131,8 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # </video>
 # ```
 
+# You could of course also explicitly use `abmplot` in a `record` loop for
+# finer control over additional plot elements.
 
 # ## Agent inspection
 

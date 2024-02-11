@@ -40,67 +40,87 @@ union_types(T::Union) = (union_types(T.a)..., union_types(T.b)...)
 
 A concrete implementation of an [`AgentBasedModel`](@ref), which is also the most
 commonly used in agent based modelling studies. It operates in discrete time.
-Here is a summary of how the time evolution of this model works:
-
-In each simulation step, agents are scheduled to act based on a user-provided scheduler.
-The scheduler goes through every agent that has been scheduled and
-for each, it performs an action on the agent. The action
-(which is called an "agent stepping function") is a generic Julia function
-`agent_step!(agent, model)` that may do anything and utilize any function
-from the Agents.jl [API](@ref) or the entire Julia ecosystem.
-Either before any agent activates, or after all scheduled agents have activated,
-a model-wide stepping function `model_step!(model)` can be called
-whose purpose is to perform model-wide operations.
+As input, it requires at least one, or at most
+two functions: an agent stepping function and a model stepping function.
+At each discrete step of the simulation,
+the agent stepping function is applied once to all scheduled agents,
+and the model stepping function is applied once to the model.
 
 See also [`EventQueueABM`](@ref) for a continuous time variant.
 
-Here is how to construct a `StandardABM`:
+To construct a `StandardABM` use the syntax:
 
-    StandardABM(AgentTypes [, space]; properties, agent_step!, model_step!, kwargs...)
+    StandardABM(AgentType(s) [, space]; properties, agent_step!, model_step!, kwargs...)
 
-Creates a model expecting agents of type `AgentType` living in the given `space`.
-It can support supports multiple agent types by passing a `Union` of agent types
-as `AgentType`. Have a look at [Performance Tips](@ref) for potential
-drawbacks of this approach.
+The model expects agents of type `AgentType(s)` living in the given `space`.
+`AgentType(s)` is the result of [`@agent`](@ref), [`@multiagent`](@ref) or
+a `Union` of agent types.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
-If it is omitted then all agents are virtually in one position and there is no spatial structure.
+If it is omitted then all agents are virtually in one position and there is no spatial
+structure.
 Spaces are mutable objects and are not designed to be shared between models.
 Create a fresh instance of a space with the same properties if you need to do this.
 
-The evolution rules are functions given to the keywords `agent_step!`, `model_step!`, `schedule`. If
-`agent_step!` is not provided, the evolution rules is just the function given to `model_step!`.
-Each step of a simulation with `StandardABM` proceeds as follows:
-If `agent_step!` is not provided, then a simulation step is equivalent with
-calling `model_step!`. If `agent_step!` is provided, then a simulation step
-first schedules agents by calling the scheduler. Then, it applies the `agent_step!` function
-to all scheduled agents. Then, the `model_step!` function is called
-(optionally, the `model_step!` function may be called before activating the agents).
-
-`StandardABM` stores by default agents in a dictionary mapping unique `Int` IDs to agents.
-For better performance, in case the number of agents can only increase during the model
-evolution, a vector can be used instead, see keyword `container`.
+The evolution rules are functions given to the keywords `agent_step!`, `model_step!`.
 
 ## Keywords
 
-- `agent_step! = dummystep`: the optional stepping function for each agent contained in the
-  model. For complicated models, it could be more suitable to use only `model_step!` to evolve
-  the model.
-- `model_step! = dummystep`: the optional stepping function for the model.
-- `container = Dict`: the type of container the agents are stored at. Use `Vector` if no agents are removed
-  during the simulation. This allows storing agents more efficiently, yielding faster retrieval and
-  iteration over agents.
-- `properties = nothing`: additional model-level properties that the user may decide upon
-  and include in the model. `properties` can be an arbitrary container of data,
+- `agent_step!`: the optional agent stepping function that must be in the form
+  `agent_step!(agent, model)` and is called for each scheduled `agent`.
+- `model_step!`: the optional model stepping function that must be in the form
+  `model_step!(model)`. At least one of `agent_step!` or `model_step!` must be given.
+  For complicated models, it could be more suitable to use only `model_step!` to evolve
+  the model, see below the "advanced stepping" example.
+- `container = Dict`: the type of container the agents are stored at.
+  Use `Vector` if no agents are removed during the simulation.
+  This allows storing agents more efficiently, yielding faster retrieval and
+  iteration over agents. Use `Dict` if agents are expected to be removed during the simulation.
+- `properties = nothing`: additional model-level properties that the user may
+  include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
 - `scheduler = Schedulers.fastest`: is the scheduler that decides the (default)
   activation order of the agents. See the [scheduler API](@ref Schedulers) for more options.
-- `rng = Random.default_rng()`: the random number generation stored and used by the model
+  By default all agents are activated once per step in the fastest sequence possible.
+  `scheduler` is completely ignored if no `agent_step!` function is given, as it is assumed
+  that in this case the user takes control of scheduling, e.g., as in the "advanced stepping"
+  example below.
+- `rng = Random.default_rng()`: the random number generator stored and used by the model
   in all calls to random functions. Accepts any subtype of `AbstractRNG`.
 - `agents_first::Bool = true`: whether to schedule and activate agents first and then
-  call the `model_step!` function, or vice versa.
-- `warn=true`: some type tests for `AgentType` are done, and by default
+  call the `model_step!` function, or vice versa. Ignored if no `agent_step!` is given.
+- `warn=true`: some type tests for `AgentType(s)` are done, and by default
   warnings are thrown when appropriate.
+
+## Advanced stepping
+
+Some advanced models may require special handling for scheduling, or may need to
+schedule agents several times and act on different subsets of agents with different
+functions during a single simulation step.
+In such a scenario, it is more sensible to provide only a model stepping function,
+where all the dynamics is contained within.
+
+Here is an example:
+
+```julia
+function complex_model_step!(model)
+    # tip: these schedulers should be defined as properties of the model
+    scheduler1 = Schedulers.Randomly()
+    scheduler2 = user_defined_function_with_model_as_input
+    for id in schedule(model, scheduler1)
+        agent_step1!(model[id], model)
+    end
+    intermediate_model_action!(model)
+    for id in schedule(model, scheduler2)
+        agent_step2!(model[id], model)
+    end
+    if model.step_counter % 100 == 0
+        model_action_every_100_steps!(model)
+    end
+    final_model_action!(model)
+    return
+end
+```
 """
 function StandardABM(
     ::Type{A},
@@ -139,9 +159,50 @@ end
 construct_agent_container(::Type{<:Dict}, A) = Dict{Int,A}
 construct_agent_container(::Type{<:Vector}, A) = Vector{A}
 construct_agent_container(container, A) = throw(
-    "Unrecognised container $container, please specify either Dict or Vector."
+    "Unrecognised container $container, please specify either `Dict` or `Vector`."
 )
 
 function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
 end
+
+
+"""
+    dummystep(model)
+
+Used instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
+
+    dummystep(agent, model)
+
+Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
+"""
+dummystep(model) = nothing
+dummystep(agent, model) = nothing
+
+#######################################################################################
+# %% Pretty printing
+#######################################################################################
+function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
+  n = isconcretetype(A) ? nameof(A) : string(A)
+  typecontainer = C <: AbstractDict ? "Dict" : "Vector"
+  s = "StandardABM with $(nagents(abm)) agents of type $(n)"
+  s *= "\n agents container: $(typecontainer)"
+  if abmspace(abm) === nothing
+      s *= "\n space: nothing (no spatial structure)"
+  else
+      s *= "\n space: $(sprint(show, abmspace(abm)))"
+  end
+  s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
+  print(io, s)
+  if !(isnothing(abmproperties(abm)))
+      if typeof(abmproperties(abm)) <: Dict
+          props = collect(keys(abmproperties(abm)))
+      else
+          props = collect(propertynames(abmproperties(abm)))
+      end
+      print(io, "\n properties: ", join(props, ", "))
+  end
+end
+
+schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x) = Symbol(typeof(x))

@@ -33,12 +33,14 @@ export move_agent!,
 #######################################################################################
 """
     random_position(model) → pos
+
 Return a random position in the model's space (always with appropriate Type).
 """
 random_position(model) = notimplemented(model)
 
 """
     add_agent_to_space!(agent, model)
+
 Add the agent to the underlying space structure at the agent's own position.
 This function is called after the agent is already inserted into the model dictionary
 and `maxid` has been updated. This function is NOT part of the public API.
@@ -202,7 +204,7 @@ end
 
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
-    
+
 Add the `agent` to the model in the given position.
 If `pos` is not given, the `agent` is added to a random position.
 The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
@@ -327,7 +329,7 @@ nearby_agents(a, model, r = 1; kwargs...) =
 
 """
     random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
-Return the `id` of a random agent near the position of the given `agent`. 
+Return the `id` of a random agent near the position of the given `agent`.
 
 Return `nothing` if no agents are nearby.
 
@@ -341,7 +343,7 @@ is expensive since in this case the allocating version can be more performant.
 For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
 position.
 
-This function, as all the other methods which sample from lazy iterators, uses an optimized 
+This function, as all the other methods which sample from lazy iterators, uses an optimized
 algorithm which doesn't require to collect all elements to just sample one of them.
 """
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
@@ -354,7 +356,7 @@ function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...
         else
             iter_filtered = Iterators.filter(id -> f(id), iter)
             return IteratorSampling.itsample(abmrng(model), iter_filtered)
-        end    
+        end
     end
 end
 

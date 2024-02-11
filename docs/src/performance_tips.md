@@ -117,10 +117,19 @@ Specifically, you can represent this property as a standard Julia `Array` that i
 
 For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## Avoid `Union`s of many different agent types
-Due to the way Julia's type system works, and the fact that agents are grouped in a dictionary mapping IDs to agent instances, using multiple types for different agents always creates a performance hit because it leads to type instability.
+## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 
-Thankfully, due to some performance enhancements in Base Julia, unions of up to three different Agent types do not suffer much. You can see this by running the `test/performance/variable_agent_types_simple_dynamics.jl` file, which benchmarks the time to run a model that will do exactly the same amount of numeric operations, but each time subdividing it among an increasing number of agent types. Its output is
+Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
+On the other hand, a `Union` of different types allows utilizing Julia's multiple dispatch system.
+
+The [`@multiagent`](@ref) macro does not make multiple types. It only makes one large type and defines convenience "constructors" on top of it, giving the illusion that multiple types exist. Therefore it completely eliminates type instability.
+[`@multiagent`](@ref) has two versions. In `:opt_speed` the created agents are optimized such as there is virtually no performance difference between having 1 agent type at the cost of each agent occupying more memory that in the `Union` case.
+In `:opt_memory` each agent is optimized to occupy practically the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+
+In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
+We then compare the performance of the three versions for multiple agent types.
+The `@multiagent` has 15 type of agents for either of its possibilities, while the `Union` incrementally gets more agents from 2 to 15.
+Here are the results of how much time it took to run each version:
 
 ```@example performance
 using Agents
@@ -129,10 +138,6 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
-The result is that having many types (here 15 different types) makes the code about 10 times slower.
-
-If you have less than four agent types in your model, using different types is still recommended
-because the impact on performance is small. Alternatively, if you have a bigger number of agent 
-types, you can consider using the [`@multiagent`](@ref) macro which can improve the time of a model 
-run considerably and, in many cases, without incurring almost any additional memory increase.
-
+We see that Unions of up to three different Agent types do not suffer much.
+Hence, if you have less than four agent types in your model, using different types is still a valid option and allows you to utilize multiple dispatch.
+For more agent types however we recommend using the [`@multiagent`](@ref) macro.
