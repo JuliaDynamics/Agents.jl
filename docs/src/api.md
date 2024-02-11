@@ -261,17 +261,17 @@ For example, the core loop of `run!` is just
 df_agent = init_agent_dataframe(model, adata)
 df_model = init_model_dataframe(model, mdata)
 
-t = getfield(model, :time)
-t0, s = t[], 0
-while until(t[], t0, n, model)
-  if should_we_collect(s, model, when)
+t0 = abmtime(model)
+t = t0
+while until(t, t0, n, model)
+  if should_we_collect(t, model, when)
       collect_agent_data!(df_agent, model, adata)
   end
-  if should_we_collect(s, model, when_model)
+  if should_we_collect(t, model, when_model)
       collect_model_data!(df_model, model, mdata)
   end
   step!(model, 1)
-  s += 1
+  t = abmtime(model)
 end
 return df_agent, df_model
 ```
