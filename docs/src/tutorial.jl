@@ -695,11 +695,11 @@ model = StandardABM(
 # Hence, we can use the same function name and add dispatch to it, such as:
 
 function dispatch_step!(agent::SchellingAgent, model)
-    # stuff.
+    ## stuff.
 end
 
 function dispatch_step!(agent::Politician, model)
-    # other stuff.
+    ## other stuff.
 end
 
 # and give `dispatch_step!` to the `agent_step!` keyword during model creation.

@@ -1,7 +1,7 @@
 cd(@__DIR__)
 println("Loading packages...")
 using Agents
-using Agents.LightOSM
+using LightOSM
 using CairoMakie
 import Literate
 
@@ -31,9 +31,11 @@ pages = [
 ]
 
 # %%
-
 println("Converting tutorial...")
-Literate.markdown(joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src"), outdir; credit = false)
+Literate.markdown(
+    joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src");
+    credit = false
+)
 
 println("Converting Examples...")
 
@@ -60,6 +62,8 @@ include("build_docs_with_style.jl")
 build_docs_with_style(pages, Agents, LightOSM;
     expandfirst = ["index.md"],
     authors = "George Datseris and contributors.",
+    warnonly = true,
+    htmlkw = (size_threshold = 20000 * 2^10, ),
 )
 
 println("Finished")
