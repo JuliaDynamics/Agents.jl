@@ -775,7 +775,7 @@ model = StandardABM(
 
 # Regardless of whether you went down the `Union` or `@multiagent` route,
 # the API of Agents.jl has been designed such that there is no difference in subsequent
-# usage. To add agents to a model, we use the existing [`add_agent!`](@ref)
+# usage. To add agents to a model, we use the existing [`add_agent_single!`](@ref)
 # command, but now specifying as a first argument the type of agent to add.
 
 # For example, in the union case we provide the `Union` type when we create the model,
