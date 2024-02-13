@@ -784,11 +784,11 @@ model = StandardABM(Union{SchellingAgent, Politician}, space)
 
 # we add them by specifying the type
 
-add_agent!(SchellingAgent, model; group = 1, mood = true)
+add_agent_single!(SchellingAgent, model; group = 1, mood = true)
 
 # or
 
-add_agent!(Politician, model; preferred_demographic = 1)
+add_agent_single!(Politician, model; preferred_demographic = 1)
 
 # and we see
 
@@ -800,11 +800,11 @@ model = StandardABM(MultiSchelling, space)
 
 # we add
 
-add_agent!(Civilian, model; group = 1)
+add_agent_single!(Civilian, model; group = 1)
 
 # or
 
-add_agent!(Governor, model; influence = 0.5, group = 1)
+add_agent_single!(Governor, model; influence = 0.5, group = 1)
 
 # and we see
 
