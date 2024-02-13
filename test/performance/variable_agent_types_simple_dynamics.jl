@@ -306,8 +306,8 @@ println("relative time of model with @multiagent :opt_speed: $t_multi_rel_speed"
 
 import CairoMakie
 fig, ax, = CairoMakie.scatterlines(n_types, times; label = "Union")
-scatter!(ax, 15, t_multi_rel; color = Cycled(2), marker = :circle, markersize = 20, label = "@multi; opt_memory")
-scatter!(ax, 15, t_multi_rel_speed; color = Cycled(4), marker = :rect, markersize = 20, label = "@multi; opt_speed")
+scatter!(ax, 15, t_multi_rel; marker = :circle, markersize = 20, label = "@multi; opt_memory")
+scatter!(ax, 15, t_multi_rel_speed; marker = :rect, markersize = 20, label = "@multi; opt_speed")
 CairoMakie.scatter!(ax, n_types, times)
 ax.xlabel = "# types"
 ax.ylabel = "time relative to 1 type"
