@@ -52,7 +52,6 @@ abmscheduler
 abmspace
 abmtime
 abmevents
-abmrates
 ```
 
 ## [Available spaces](@ref available_spaces)
