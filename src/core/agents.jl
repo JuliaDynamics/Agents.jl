@@ -22,6 +22,10 @@ abstract type AbstractAgent end
 
 const __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
+__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAgent
+                                           const id::Int
+                                       end)
+
 """
     NoSpaceAgent <: AbstractAgent
 
@@ -29,9 +33,6 @@ The minimal agent struct for usage with `nothing` as space (i.e., no space).
 It has the field `id::Int`, and potentially other internal fields that
 are not documented as part of the public API. See also [`@agent`](@ref).
 """
-__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAgent
-                                           const id::Int
-                                       end)
 eval(__AGENT_GENERATOR__[:NoSpaceAgent])
 
 """
