@@ -68,7 +68,7 @@ end
     money::Int
 end
 
-@multiagent :opt_memory struct AgentAll(GridAgent{2})
+@multiagent :opt_memory struct AgentAllMemory(GridAgent{2})
     @agent struct Agent1m
         money::Int
     end
@@ -176,12 +176,12 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     return model
 end
 
-function initialize_model_15_multi(;n_agents=600, dims=(5,5))
+function initialize_model_15_multi_memory(;n_agents=600, dims=(5,5))
     agent_types = [Agent1m,Agent2m,Agent3m,Agent4m,Agent5m,Agent6m,Agent7m,Agent8m,
                    Agent9m,Agent10m,Agent11m,Agent12m,Agent13m,Agent14m,Agent15m]
     agents_used = agent_types[1:15]
     space = GridSpace(dims)
-    model = StandardABM(AgentAll, space; agent_step!,
+    model = StandardABM(AgentAllMemory, space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
     agents_per_type = div(n_agents, 15)
@@ -254,8 +254,8 @@ function run_simulation_1(n_steps)
     Agents.step!(model, n_steps)
 end
 
-function run_simulation_15_multi(n_steps)
-    model = initialize_model_15_multi()
+function run_simulation_15_multi_memory(n_steps)
+    model = initialize_model_15_multi_memory()
     Agents.step!(model, n_steps)
 end
 function run_simulation_15_multi_speed(n_steps)
@@ -279,7 +279,7 @@ for n in n_types
     t = @belapsed run_simulation_n($n_steps; n_types=$n)
     push!(times, t/time_1)
 end
-t_multi = @belapsed run_simulation_15_multi($n_steps)
+t_multi = @belapsed run_simulation_15_multi_memory($n_steps)
 t_multi_rel = t_multi/time_1
 
 t_multi_speed = @belapsed run_simulation_15_multi_speed($n_steps)
@@ -305,14 +305,14 @@ println("relative time of model with @multiagent :opt_speed: $t_multi_rel_speed"
 # relative time of model with @multiagent :opt_memory: 2.8898100796366544
 
 using CairoMakie
-fig, ax, = CairoMakie.scatterlines(n_types, times; label = "Union")
-scatter!(ax, 15, t_multi_rel; color = Cycled(2), marker = :circle, markersize = 20, label = "@multi; opt_memory")
-scatter!(ax, 15, t_multi_rel_speed; color = Cycled(4), marker = :rect, markersize = 20, label = "@multi; opt_speed")
-CairoMakie.scatter!(ax, n_types, times)
+fig, ax = CairoMakie.scatterlines(n_types, times; label = "Union");
+scatter!(ax, 15, t_multi_rel; color = Cycled(2), marker = :circle, markersize = 12, label = "@multi; opt_memory")
+scatter!(ax, 15, t_multi_rel_speed; color = Cycled(4), marker = :rect, markersize = 12, label = "@multi; opt_speed")
+scatter!(ax, n_types, times)
 ax.xlabel = "# types"
 ax.ylabel = "time relative to 1 type"
 ax.title = "Union types vs @multiagent macro"
 axislegend(ax; position = :lt)
-ax.yticks = 0:1:10
+ax.yticks = 0:1:ceil(Int, maximum(times))
 ax.xticks = 2:2:16
 fig
