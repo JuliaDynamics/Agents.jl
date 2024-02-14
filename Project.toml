@@ -42,7 +42,7 @@ AgentsVisualizations = "Makie"
 [compat]
 Arrow = "2"
 CSV = "0.9.7, 0.10"
-CommonSolve = "0.2"
+CommonSolve = "0.2.4"
 DataFrames = "0.21, 0.22, 1"
 DataStructures = "0.18"
 Distributed = "1"
