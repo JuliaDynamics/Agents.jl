@@ -52,7 +52,6 @@ abmscheduler
 abmspace
 abmtime
 abmevents
-abmrates
 ```
 
 ## [Available spaces](@ref available_spaces)
@@ -85,7 +84,6 @@ OpenStreetMapSpace
 add_agent!
 add_agent_own_pos!
 replicate!
-nextid
 random_position
 ```
 
