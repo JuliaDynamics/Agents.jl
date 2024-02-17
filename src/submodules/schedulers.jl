@@ -58,15 +58,16 @@ end
 
 """
     Schedulers.fastest
-A scheduler that activates all agents once per step in the order dictated by the
-agent's container, which is arbitrary (the keys sequence of a dictionary).
-This is the fastest way to activate all agents once per step.
+
+A scheduler that orders all agent IDs once per step in the fastest way possible,
+which is the default order dictaed by the agent container.
 """
 fastest(model::ABM) = allids(model)
 
 """
     Schedulers.ByID()
-A scheduler that activates all agents at each step according to their id.
+
+A scheduler that orders all agent IDs by their integer value.
 """
 struct ByID
     ids::Vector{Int}
@@ -83,7 +84,8 @@ end
 
 """
     Schedulers.Randomly()
-A scheduler that activates all agents once per step in a random order.
+
+A scheduler that randomly orders all agent IDs.
 Different random ordering is used at each different step.
 """
 struct Randomly
@@ -98,8 +100,8 @@ end
 
 """
     Schedulers.Partially(p)
-A scheduler that at each step activates only `p` percentage of randomly
-chosen agents.
+
+A scheduler that orders only `p` percentage of randomly chosen agent IDs.
 """
 struct Partially{R<:Real}
     p::R
@@ -116,8 +118,9 @@ end
 
 """
     Schedulers.ByProperty(property)
-A scheduler that at each step activates the agents in an order dictated by
-their `property`, with agents with greater `property` acting first. `property` can be a
+
+A scheduler that orders agent IDs by their `property`, with agents with greater `property`
+being ordered first. `property` can be a
 `Symbol`, which just dictates which field of the agents to compare, or a function which
 inputs an agent and outputs a real number.
 """
@@ -149,16 +152,15 @@ end
 
 A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
-Otherwise returns agents grouped in order of appearance in the `Union`.
+  Otherwise returns agent IDs grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
-the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+  the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 - `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref))
 
----
 
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)
 
-A scheduler that activates agents by type in specified order (since
+A scheduler that orders agent IDs by type in specified order (since
 `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
 agents within each group.
 """
