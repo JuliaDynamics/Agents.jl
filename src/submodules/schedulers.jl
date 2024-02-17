@@ -16,7 +16,8 @@ Submodule containing all predefined schedulers of Agents.jl that can be used wit
 [`StandardABM`](@ref).
 
 Schedulers have a very simple interface. They are functions that take as an input the ABM and
-return an iterator over agent IDs. Notice that this iterator can be non-allocated specialized
+return an iterator over agent IDs: `f(model) -> iterator`.
+Notice that this iterator can be non-allocated specialized
 type or just a standard vector of IDs.
 
 Schedulers have many purposes:
