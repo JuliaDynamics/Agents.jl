@@ -7,10 +7,6 @@ Return an iterator over the scheduled IDs using the model's default scheduler.
 """
 schedule(model::ABM) = abmscheduler(model)(model)
 
-# Deprecated:
-schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
-schedule(model::Agents.VecABM, scheduler) = scheduler(model)
-
 # Notice how the above lines are *outside* the submodule
 
 """

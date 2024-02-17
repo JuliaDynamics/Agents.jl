@@ -1,4 +1,3 @@
-
 # v6 deprecations
 
 # From before the move to an interface for ABMs and making `ABM` abstract.
@@ -85,7 +84,7 @@ end
 
 export add_agent_pos!
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`" 
+    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`"
     add_agent_own_pos!(agent, model)
 end
 
@@ -369,7 +368,7 @@ end
 agent_step_field(model::ABM) = getfield(model, :agent_step)
 model_step_field(model::ABM) = getfield(model, :model_step)
 
-function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} 
+function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N}
     @warn "UnremovableABM is deprecated. Use StandardABM(...; container = Vector, ...) instead."
     StandardABM(args...; kwargs..., container=Vector)
 end
@@ -377,3 +376,5 @@ end
 until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)
 
+schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
+schedule(model::Agents.VecABM, scheduler) = scheduler(model)
