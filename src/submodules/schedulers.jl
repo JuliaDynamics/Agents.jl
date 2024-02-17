@@ -60,7 +60,7 @@ end
 """
     Schedulers.fastest
 
-A scheduler that orders all agent IDs once per step in the fastest way possible,
+A scheduler that orders all agent IDs in the fastest way possible,
 which is the default order dictaed by the agent container.
 """
 fastest(model::ABM) = allids(model)
