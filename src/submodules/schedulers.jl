@@ -1,16 +1,14 @@
 export schedule, Schedulers
 
 """
-    schedule(model [, scheduler]) → ids
+    schedule(model::StandardABM) → ids
 
-If no `scheduler` is given, it returns an iterator over the scheduled IDs using the model's
-scheduler, otherwise it uses the given custom scheduler, which can be either a function which
-accepts `model` as argument or one of the already defined schedulers inside Agents.jl. See
-the [manual scheduling](@ref manual_scheduling) section for usage examples.
+Return an iterator over the scheduled IDs using the model's default scheduler.
 """
-schedule(model::ABM) = schedule(model, abmscheduler(model))
+schedule(model::ABM) = abmscheduler(model)(model)
+
+# Deprecated:
 schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
-schedule(model::Agents.VecABM) = abmscheduler(model)(model)
 schedule(model::Agents.VecABM, scheduler) = scheduler(model)
 
 # Notice how the above lines are *outside* the submodule
