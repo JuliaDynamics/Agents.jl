@@ -24,7 +24,7 @@ Schedulers have many purposes:
 
 1. Can be given in [`StandardABM`](@ref) as a default scheduler.
    This functionality is only meaningful when the `agent_step!` has been configured.
-   The function `abmscheduler(model)` will return the default scheduler of the model.
+   The function `schedule(model)` will return the scheduled IDs.
 2. Can be used by a user when performing [manual scheduling](@ref manual_scheduling)
    in case `agent_step!` has not been configured.
 3. Can be used to globally filter agents by type/property/whatever. For example,
