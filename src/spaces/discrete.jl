@@ -109,7 +109,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        return IteratorSampling.itsample(abmrng(model), empty)
+        return IteratorSampling.itsample(abmrng(model), empty; method=:alg_L)
     end
 end
 
