@@ -37,6 +37,8 @@ function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
     while until(t[], t0, n, model)
         !agents_first && model_step!(model)
         for id in schedule(model)
+            # ensure we don't act on agent that doesn't exist
+            haskey(agent_container(model), id) || continue
             agent_step!(model[id], model)
         end
         agents_first && model_step!(model)
@@ -71,14 +73,14 @@ function step_ahead!(queue, model_t, t::Real, model::EventQueueABM)
     while until(model_t[], t0, t, model)
         one_step!(queue, model_t, stop_time, model)
     end
-    return 
+    return
 end
 function step_ahead!(queue, model_t, f::Function, model::EventQueueABM)
     t0 = model_t[]
     while until(model_t[], t0, f, model)
         one_step!(queue, model_t, model)
     end
-    return 
+    return
 end
 
 function one_step!(queue, model_t, stop_time, model)
