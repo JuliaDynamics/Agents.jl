@@ -23,7 +23,7 @@ for, starting from the model's initial time.
 
 See also [Advanced stepping](@ref).
 """
-function CommonSolve.step!(model::StandardABM, n::Union{Real, Function} = 1)
+function CommonSolve.step!(model::ABM, n::Union{Real, Function} = 1)
     agent_step! = agent_step_field(model)
     model_step! = model_step_field(model)
     t = getfield(model, :time)
@@ -31,7 +31,7 @@ function CommonSolve.step!(model::StandardABM, n::Union{Real, Function} = 1)
     return model
 end
 
-function step_ahead!(model::StandardABM, agent_step!, model_step!, n, t)
+function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
     agents_first = getfield(model, :agents_first)
     t0 = t[]
     while until(t[], t0, n, model)
@@ -39,14 +39,14 @@ function step_ahead!(model::StandardABM, agent_step!, model_step!, n, t)
         for id in schedule(model)
             # ensure we don't act on agent that doesn't exist
             # (this condition can be skipped for `VecABM`)
-            model isa VecABM && (hasid(model, id) || continue)
+            id_not_removed(id, model) || continue
             agent_step!(model[id], model)
         end
         agents_first && model_step!(model)
         t[] += 1
     end
 end
-function step_ahead!(model::StandardABM, agent_step!::typeof(dummystep), model_step!, n, t)
+function step_ahead!(model::ABM, agent_step!::typeof(dummystep), model_step!, n, t)
     t0 = t[]
     while until(t[], t0, n, model)
         model_step!(model)
@@ -109,19 +109,19 @@ end
 
 function process_event!(event_tuple, model)
     id, event_idx = event_tuple
-    agent_was_removed(id, model) && return
+    !id_not_removed(id, model) && return
     agent = model[id]
     agentevent = abmevents(model)[event_idx]
     agentevent.action!(agent, model)
-    agent_was_removed(id, model) && return
+    !id_not_removed(id, model) && return
     if getfield(model, :autogenerate_after_action)
         add_event!(agent, model)
     end
     return
 end
 
-agent_was_removed(id, model::DictABM) = !hasid(model, id)
-agent_was_removed(::Int, ::VecABM) = false
+id_not_removed(id, model::DictABM) = hasid(model, id)
+id_not_removed(::Int, ::VecABM) = true
 
 until(t1, t0, n::Real, ::ABM) = t1 < t0+n
 until(t1, t0, f, model::ABM) = !f(model, t1-t0)
