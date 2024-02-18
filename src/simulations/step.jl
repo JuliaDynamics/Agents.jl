@@ -38,7 +38,7 @@ function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
         !agents_first && model_step!(model)
         for id in schedule(model)
             # ensure we don't act on agent that doesn't exist
-            haskey(agent_container(model), id) || continue
+            hasid(model, id) || continue
             agent_step!(model[id], model)
         end
         agents_first && model_step!(model)
@@ -119,7 +119,7 @@ function process_event!(event_tuple, model)
     return
 end
 
-agent_was_removed(id, model::DictABM) = !haskey(agent_container(model), id)
+agent_was_removed(id, model::DictABM) = !hasid(model, id)
 agent_was_removed(::Int, ::VecABM) = false
 
 until(t1, t0, n::Real, ::ABM) = t1 < t0+n
