@@ -152,7 +152,8 @@ end
 
 Return `true` if the `model` has an agent with given `id` or has the given `agent`.
 """
-hasid(model, id) = haskey(agent_container(model), id)
+hasid(model, id::Int) = haskey(agent_container(model), id)
+hasid(model::VecABM, id::Int) = id ≤ nagents(model)
 hasid(model, a::AbstractAgent) = hasid(model, a.id)
 
 ###########################################################################################
