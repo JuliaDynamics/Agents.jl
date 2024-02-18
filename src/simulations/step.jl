@@ -19,7 +19,7 @@ For discrete time models such as [`StandardABM`](@ref),
 
 Step the model forwards until `f(model, t)` returns `true`,
 where `t` is the current amount of time the model has been evolved
-for, starting from 0.
+for, starting from the model's initial time.
 
 See also [Advanced stepping](@ref).
 """
