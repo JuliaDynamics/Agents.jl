@@ -1,4 +1,3 @@
-
 const DictABM = Union{StandardABM{S,A,Dict{Int,A}} where {S,A},
                       EventQueueABM{S,A,Dict{Int,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,Vector{A}} where {S,A},
@@ -6,6 +5,7 @@ const VecABM = Union{StandardABM{S,A,Vector{A}} where {S,A},
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::VecABM) = nagents(model) + 1
+hasid(model::VecABM, id::Int) = id ≤ nagents(model)
 
 function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     if haskey(agent_container(model), agent.id)

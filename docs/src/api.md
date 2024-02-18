@@ -46,6 +46,7 @@ random_agent
 nagents
 allagents
 allids
+hasid
 abmproperties
 abmrng
 abmscheduler
@@ -276,12 +277,16 @@ return df_agent, df_model
 (here `until` and `should_we_collect` are internal functions)
 
 ## [Schedulers](@id Schedulers)
+
 ```@docs
 Schedulers
+schedule
 ```
 
 ### Predefined schedulers
+
 Some useful schedulers are available below as part of the Agents.jl API:
+
 ```@docs
 Schedulers.fastest
 Schedulers.ByID
