@@ -115,7 +115,7 @@ function complex_model_step!(model)
     end
     intermediate_model_action!(model)
     for id in scheduler2(model)
-        # here `_step2!` may delete agents, so we check for it manually
+        # here `agent_step2!` may delete agents, so we check for it manually
         hasid(model, id) || continue
         agent_step2!(model[id], model)
     end
