@@ -376,4 +376,7 @@ end
 until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)
 
-schedule(model::ABM, scheduler) = scheduler(model)
+function schedule(model::ABM, scheduler)
+    @warn "`schedule(model::ABM, scheduler)` deprecated in favor of `scheduler(model)`."
+    Iterators.filter(id -> id in allids(model), scheduler(model))
+end
