@@ -34,6 +34,10 @@ using StableRNGs
     @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
     a = Agent1(model; pos = (9, 8))
     @test add_agent_own_pos!(a, model).pos == (9, 8)
+
+    @test hasid(model, 1)
+    @test hasid(model, a)
+    @test !hasid(model, 5)
 end
 
 @testset "add_agent! (nothing space)" begin
@@ -465,7 +469,7 @@ end
     @test nagents(model) == 3
     sample!(model, 2)
     @test nagents(model) == 2
-    
+
     f = F(1, 1)
     g = G(2, 2)
 
@@ -480,7 +484,7 @@ end
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
 
-    
+
     civ = Civilian1(; id = 2, pos = (2, 2), group = 2)
     gov = Governor1(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
     civ = Civilian2(; id = 2, pos = (2, 2), group = 2)

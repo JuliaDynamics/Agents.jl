@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmspace, abmtime, abmproperties
+export abmrng, abmscheduler, abmspace, abmtime, abmproperties, hasid
 
 ###########################################################################################
 # %% Fundamental type definitions
@@ -52,6 +52,7 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
   It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
 - `allids(model)/allagents(model)` returns an iterator over all IDs/agents in the model.
+- `hasid(model, id)` returns `true` if the model has an agent with given `id`.
 
 `AgentBasedModel` defines an extendable interface composed of the above syntax as well
 as a few more additional functions described in the Developer's Docs.
@@ -144,6 +145,15 @@ function Base.setproperty!(m::ABM, s::Symbol, x)
         throw(exception)
     end
 end
+
+"""
+    hasid(model, id::Int) → true/false
+    hasid(model, agent::AbstractAgent) → true/false
+
+Return `true` if the `model` has an agent with given `id` or has the given `agent`.
+"""
+hasid(model, id) = haskey(agent_container(model), id)
+hasid(model, a::AbstractAgent) = hasid(model, a.id)
 
 ###########################################################################################
 # %% Mandatory methods - internal

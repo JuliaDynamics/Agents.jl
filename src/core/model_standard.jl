@@ -100,6 +100,9 @@ functions during a single simulation step.
 In such a scenario, it is more sensible to provide only a model stepping function,
 where all the dynamics is contained within.
 
+Note that if you do not use the automated `agent_step!` option, you need to manually
+check for removed agents during evolution, using the [`hasid`](@ref) function.
+
 Here is an example:
 
 ```julia
@@ -112,6 +115,8 @@ function complex_model_step!(model)
     end
     intermediate_model_action!(model)
     for id in scheduler2(model)
+        # here `_step2!` may delete agents, so we check for it manually
+        hasid(model, id) || continue
         agent_step2!(model[id], model)
     end
     if model.step_counter % 100 == 0

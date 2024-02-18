@@ -23,6 +23,7 @@ model is used automatically.
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
 - A new function `swap_agents` can be used to swap an agents couple in a discrete space.
 - The model time/step is tracked automatically, accessible through `abmtime(model)`.
+- New function `hasid`
 
 ## Performance Improvements
 
@@ -30,6 +31,10 @@ model is used automatically.
 - The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
 - The `nearby_agents` function for `ContinuousSpace` and `GridSpace` is now 1.5x faster than before.
 - The `sample!` function is much faster than before.
+
+## Deprecations
+
+- `schedule(model, scheduler)` is deprecated. Use `scheduler(model)` directly.
 
 
 # v5.17
