@@ -375,6 +375,3 @@ end
 
 until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)
-
-schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
-schedule(model::Agents.VecABM, scheduler) = scheduler(model)
