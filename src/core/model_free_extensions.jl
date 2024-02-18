@@ -87,7 +87,7 @@ function fallback_random_agent(model, condition, alloc)
     else
         iter_agents = allagents(model)
         iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
-        agent = IteratorSampling.itsample(abmrng(model), iter_filtered)
+        agent = IteratorSampling.itsample(abmrng(model), iter_filtered; method=:alg_L)
         isnothing(agent) && return nothing
         return agent
     end
