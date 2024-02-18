@@ -39,7 +39,7 @@ function step_ahead!(model::ABM, agent_step!, model_step!, n, t)
         for id in schedule(model)
             # ensure we don't act on agent that doesn't exist
             # (this condition can be skipped for `VecABM`)
-            id_not_removed(id, model) || continue
+            agent_not_removed(id, model) || continue
             agent_step!(model[id], model)
         end
         agents_first && model_step!(model)
@@ -109,19 +109,19 @@ end
 
 function process_event!(event_tuple, model)
     id, event_idx = event_tuple
-    !id_not_removed(id, model) && return
+    !agent_not_removed(id, model) && return
     agent = model[id]
     agentevent = abmevents(model)[event_idx]
     agentevent.action!(agent, model)
-    !id_not_removed(id, model) && return
+    !agent_not_removed(id, model) && return
     if getfield(model, :autogenerate_after_action)
         add_event!(agent, model)
     end
     return
 end
 
-id_not_removed(id, model::DictABM) = hasid(model, id)
-id_not_removed(::Int, ::VecABM) = true
+agent_not_removed(id, model::DictABM) = hasid(model, id)
+agent_not_removed(::Int, ::VecABM) = true
 
 until(t1, t0, n::Real, ::ABM) = t1 < t0+n
 until(t1, t0, f, model::ABM) = !f(model, t1-t0)
