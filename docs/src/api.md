@@ -46,6 +46,7 @@ random_agent
 nagents
 allagents
 allids
+hasid
 abmproperties
 abmrng
 abmscheduler
