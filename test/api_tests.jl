@@ -35,6 +35,10 @@ using StableRNGs
     a = Agent1(model; pos = (9, 8))
     @test add_agent_own_pos!(a, model).pos == (9, 8)
 
+    model = StandardABM(Agent3, GridSpace((10, 10)), warn_deprecation = false)
+    add_agent!(model)
+    @test model[1].weight == 2.0
+
     @test hasid(model, 1)
     @test hasid(model, a)
     @test !hasid(model, 5)
