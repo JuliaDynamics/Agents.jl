@@ -286,7 +286,7 @@ function add_agent!(
     kwargs...,
 ) where {N}
     id = nextid(model)
-    if isempty(kwargs)
+    if !isempty(args)
         newagent = A(id, pos, args...)
     else
         newagent = A(; id = id, pos = pos, kwargs...)
