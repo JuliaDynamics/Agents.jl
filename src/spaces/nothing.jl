@@ -9,7 +9,7 @@ otherwise they will try to add `nothing` to the agent position.
 # is attempted to be given to the agent creation...
 function add_agent!(A::Type, model::ABM{Nothing}, args::Vararg{Any, N}; kwargs...) where {N} 
     id = nextid(model)
-    if isempty(kwargs)
+    if !isempty(args)
         newagent = A(id, args...)
     else
         newagent = A(; id = id, kwargs...)
