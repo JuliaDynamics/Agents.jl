@@ -35,7 +35,7 @@ end
 end
 
 @agent struct Agent3(GridAgent{2}) 
-    weight::Float64
+    weight::Float64 = 2.0
 end
 
 @agent struct Agent4(GridAgent{2}) 
