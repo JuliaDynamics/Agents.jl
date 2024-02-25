@@ -285,10 +285,20 @@ Stacktrace:
 
 # This is not a limitation of Agents.jl but a fundamental limitation of the Julia
 # language that very likely will be addressed in the near future.
-# For now, you can simply do a mass rename in the text editor you use to
+# Normally, you would need to restart your Julia session to redefine a custom `struct`.
+# However, it is simpler to just do a mass rename in the text editor you use to
 # write Julia code (for example, Ctrl+Shift+H in VSCode can do a mass rename).
-# Change the name opf the agent type to e.g., the same name ending in 2, 3, ...,
-# and carry on. Inconvenient, but thankfully it only takes a couple of seconds to resolve!
+# Change the name of the agent type to e.g., the same name ending in 2, 3, ...,
+# and carry on, until you are happy with the final configuration. When this happens
+# you will have to restart Julia and rename the type back to having no numeric ending.
+# Inconvenient, but thankfully it only takes a couple of seconds to resolve!
+
+# !!! note "This is the most performant version, unfortunately."
+#     Throughout the development of Agents.jl we have thought of this "redefining
+#     annoyance" and ways to resolve it. Unfortunately, all alternative design approaches
+#     to agent based modelling that don't have redefinition problems lead to drastic
+#     performance downsides. Given that mass-renaming in the development phase of a project
+#     is not too big of a hurdle, we decided to stick with the most performant design!
 
 # ## Step 3: form of the evolution rule(s) in discrete time
 
