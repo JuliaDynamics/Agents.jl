@@ -147,16 +147,16 @@ function Base.iterate(iter::GridSpaceIdIterator)
     # First, check if the position index is valid (bounds checking)
     # AND whether the position is empty. If not, proceed to next position index.
     while invalid(pos_index, iter)
-        pos_i += 1
         # Stop iteration if `pos_index` exceeded the amount of positions
-        pos_i > L && return nothing
+        pos_i === L && return nothing
+        pos_i += 1
         pos_index = combine(indices[pos_i], origin, iter)
     end
     # We have a valid position index and a non-empty position
     ids_in_pos = iter.stored_ids[pos_index...]
     id = ids_in_pos[1]
-    end
     return (id, IdIteratorState(pos_i, 2, ids_in_pos))
+    end
 end
 
 # For performance we need a different method of starting the iteration
@@ -164,28 +164,30 @@ end
 # known knowledge of `pos_i` being a valid position index.
 function Base.iterate(iter::GridSpaceIdIterator, state)
     @inbounds begin
-    indices, L, origin = iter.indices, iter.L, iter.origin
-    combine, invalid = iter.nocheck ? (combine_positions_nocheck, invalid_access_nocheck) :
-                                      (combine_positions, invalid_access)
-    pos_i, inner_i, ids_in_pos = state.pos_i, state.inner_i, state.ids_in_pos
+    inner_i, ids_in_pos = state.inner_i, state.ids_in_pos
     if inner_i > length(ids_in_pos)
         # we have exhausted IDs in current position, so we reset and go to next
+        pos_i, L = state.pos_i, iter.L
+        # Stop iteration if `pos_i` exceeded the amount of positions
+        pos_i === L && return nothing
+        indices, origin = iter.indices, iter.origin
+        combine, invalid = iter.nocheck ? (combine_positions_nocheck, invalid_access_nocheck) :
+                                          (combine_positions, invalid_access)
         pos_i += 1
-        # Stop iteration if `pos_index` exceeded the amount of positions
-        pos_i > L && return nothing
-        inner_i = 1
         pos_index = combine(indices[pos_i], origin, iter)
         # Of course, we need to check if we have valid index
         while invalid(pos_index, iter)
+            pos_i === L && return nothing
             pos_i += 1
-            pos_i > L && return nothing
             pos_index = combine(indices[pos_i], origin, iter)
         end
         ids_in_pos = iter.stored_ids[pos_index...]
+        state.pos_i, state.ids_in_pos = pos_i, ids_in_pos
+        inner_i = 1
     end
     # We reached the next valid position and non-empty position
     id = ids_in_pos[inner_i]
-    state.pos_i, state.inner_i, state.ids_in_pos = pos_i, inner_i + 1, ids_in_pos
+    state.inner_i = inner_i + 1
     return (id, state)
     end
 end
