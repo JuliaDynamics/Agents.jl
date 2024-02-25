@@ -351,12 +351,12 @@ end
 end
 
 @multiagent :opt_memory struct Animal{T,N,J}(GridAgent{2})
-    @agent struct Wolf{T,N}
+    @subagent struct Wolf{T,N}
         energy::T = 0.5
         ground_speed::N
         const fur_color::Symbol
     end
-    @agent struct Hawk{T,N,J}
+    @subagent struct Hawk{T,N,J}
         energy::T = 0.1
         ground_speed::N
         flight_speed::J
@@ -364,17 +364,17 @@ end
 end
 
 @multiagent :opt_speed struct A{T}(NoSpaceAgent)
-    @agent struct B{T}
+    @subagent struct B{T}
         a::T = 1
         b::Int
         c::Symbol
     end
-    @agent struct C
+    @subagent struct C
         b::Int = 2
         c::Symbol
         d::Vector{Int}
     end
-    @agent struct D{T}
+    @subagent struct D{T}
         c::Symbol = :k
         d::Vector{Int}
         a::T
@@ -383,31 +383,31 @@ end
 
 abstract type AbstractE <: AbstractAgent end
 @multiagent struct E(NoSpaceAgent) <: AbstractE
-    @agent struct F
+    @subagent struct F
         x::Int
     end
-    @agent struct G
+    @subagent struct G
         y::Int
     end
 end
 
 @multiagent :opt_speed struct MultiSchelling1{X}(GridAgent{2})
-    @agent struct Civilian1 # can't re-define existing `Schelling` name
+    @subagent struct Civilian1 # can't re-define existing `Schelling` name
         mood::Bool = false
         group::Int
     end
-    @agent struct Governor1{X<:Real} # can't redefine existing `Politician` name
+    @subagent struct Governor1{X<:Real} # can't redefine existing `Politician` name
         group::Int
         influence::X
     end
 end
 
 @multiagent :opt_memory struct MultiSchelling2{X}(GridAgent{2})
-    @agent struct Civilian2 # can't re-define existing `Schelling` name
+    @subagent struct Civilian2 # can't re-define existing `Schelling` name
         mood::Bool = false
         group::Int
     end
-    @agent struct Governor2{X<:Real} # can't redefine existing `Politician` name
+    @subagent struct Governor2{X<:Real} # can't redefine existing `Politician` name
         group::Int
         influence::X
     end

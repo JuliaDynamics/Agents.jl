@@ -69,97 +69,97 @@ end
 end
 
 @multiagent :opt_memory struct AgentAllMemory(GridAgent{2})
-    @agent struct Agent1m
+    @subagent struct Agent1m
         money::Int
     end
-    @agent struct Agent2m
+    @subagent struct Agent2m
         money::Int
     end
-    @agent struct Agent3m
+    @subagent struct Agent3m
         money::Int
     end
-    @agent struct Agent4m
+    @subagent struct Agent4m
         money::Int
     end
-    @agent struct Agent5m
+    @subagent struct Agent5m
         money::Int
     end
-    @agent struct Agent6m
+    @subagent struct Agent6m
         money::Int
     end
-    @agent struct Agent7m
+    @subagent struct Agent7m
         money::Int
     end
-    @agent struct Agent8m
+    @subagent struct Agent8m
         money::Int
     end
-    @agent struct Agent9m
+    @subagent struct Agent9m
         money::Int
     end
-    @agent struct Agent10m
+    @subagent struct Agent10m
         money::Int
     end
-    @agent struct Agent11m
+    @subagent struct Agent11m
         money::Int
     end
-    @agent struct Agent12m
+    @subagent struct Agent12m
         money::Int
     end
-    @agent struct Agent13m
+    @subagent struct Agent13m
         money::Int
     end
-    @agent struct Agent14m
+    @subagent struct Agent14m
         money::Int
     end
-    @agent struct Agent15m
+    @subagent struct Agent15m
         money::Int
     end
 end
 
 @multiagent :opt_speed struct AgentAllSpeed(GridAgent{2})
-    @agent struct Agent1s
+    @subagent struct Agent1s
         money::Int
     end
-    @agent struct Agent2s
+    @subagent struct Agent2s
         money::Int
     end
-    @agent struct Agent3s
+    @subagent struct Agent3s
         money::Int
     end
-    @agent struct Agent4s
+    @subagent struct Agent4s
         money::Int
     end
-    @agent struct Agent5s
+    @subagent struct Agent5s
         money::Int
     end
-    @agent struct Agent6s
+    @subagent struct Agent6s
         money::Int
     end
-    @agent struct Agent7s
+    @subagent struct Agent7s
         money::Int
     end
-    @agent struct Agent8s
+    @subagent struct Agent8s
         money::Int
     end
-    @agent struct Agent9s
+    @subagent struct Agent9s
         money::Int
     end
-    @agent struct Agent10s
+    @subagent struct Agent10s
         money::Int
     end
-    @agent struct Agent11s
+    @subagent struct Agent11s
         money::Int
     end
-    @agent struct Agent12s
+    @subagent struct Agent12s
         money::Int
     end
-    @agent struct Agent13s
+    @subagent struct Agent13s
         money::Int
     end
-    @agent struct Agent14s
+    @subagent struct Agent14s
         money::Int
     end
-    @agent struct Agent15s
+    @subagent struct Agent15s
         money::Int
     end
 end

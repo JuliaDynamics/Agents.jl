@@ -25,13 +25,13 @@ import ImageMagick
 using FileIO: load
 
 @multiagent :opt_speed struct Animal(ContinuousAgent{3,Float64})
-    @agent struct Rabbit
+    @subagent struct Rabbit
         energy::Float64
     end
-    @agent struct Fox
+    @subagent struct Fox
         energy::Float64
     end
-    @agent struct Hawk
+    @subagent struct Hawk
         energy::Float64
     end
 end

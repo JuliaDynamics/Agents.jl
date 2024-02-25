@@ -227,11 +227,11 @@ end
 ###########################################################################################
 """
     @multiagent struct YourAgentType{X,Y}(AgentTypeToInherit) [<: OptionalSupertype]
-        @agent FirstAgentSubType{X}
+        @subagent FirstAgentSubType{X}
             first_property::X # shared with second agent
             second_property_with_default::Bool = true
         end
-        @agent SecondAgentSubType{X,Y}
+        @subagent SecondAgentSubType{X,Y}
             first_property::X = 3
             third_property::Y
         end
@@ -261,12 +261,12 @@ Let's say you have this definition:
 
 ```
 @multiagent :opt_speed struct Animal{T}(GridAgent{2})
-    @agent struct Wolf
+    @subagent struct Wolf
         energy::Float64 = 0.5
         ground_speed::Float64
         const fur_color::Symbol
     end
-    @agent struct Hawk{T}
+    @subagent struct Hawk{T}
         energy::Float64 = 0.1
         ground_speed::Float64
         flight_speed::T
@@ -303,7 +303,7 @@ macro multiagent(version, struct_repr)
     base_fields = compute_base_fields(base_type_spec)
     agent_specs_with_base = []
     for a_spec in agent_specs
-        @capture(a_spec, @agent astruct_spec_)
+        @capture(a_spec, @subagent astruct_spec_)
         int_type, new_fields = decompose_struct(astruct_spec)
         push!(agent_specs_with_base,
               :(@kwdef mutable struct $int_type

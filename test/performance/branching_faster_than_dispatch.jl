@@ -90,32 +90,32 @@ end
 ################### DEFINITION 2 ###############
 
 @multiagent :opt_speed struct GridAgent2All(GridAgent{2})
-    @agent struct GridAgent2One
+    @subagent struct GridAgent2One
         one::Float64
         two::Bool
         three::Int
     end
-    @agent struct GridAgent2Two
+    @subagent struct GridAgent2Two
         one::Float64
         two::Bool
         four::Float64
     end
-    @agent struct GridAgent2Three
+    @subagent struct GridAgent2Three
         one::Float64
         two::Bool
         five::Bool
     end
-    @agent struct GridAgent2Four
+    @subagent struct GridAgent2Four
         one::Float64
         two::Bool
         six::Int16
     end
-    @agent struct GridAgent2Five
+    @subagent struct GridAgent2Five
         one::Float64
         two::Bool
         seven::Int32
     end
-    @agent struct GridAgent2Six
+    @subagent struct GridAgent2Six
         one::Float64
         two::Bool
         eight::Int64
