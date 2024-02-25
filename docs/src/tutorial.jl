@@ -194,7 +194,8 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 # end
 # ```
 
-# The command may seem intimidating at first, but it is in truth very simple!
+# The command may seem intimidating at first, but it is in truth not that different
+# from Julia's native [`struct` definition](https://docs.julialang.org/en/v1/manual/types/#Composite-Types)!
 # For example,
 # ```julia
 # @agent struct Person(GridAgent{2})
@@ -257,6 +258,47 @@ Stacktrace:
  [1] setproperty!(x::SchellingAgent, f::Symbol, v::Int64)
    @ Base .\Base.jl:41
 ```
+
+# ## Step 2: redefining agent types
+
+# You will notice that _it is not possible to redefine_ agent types using the same
+# name as the one they were originally defined with. E.g., this will error:
+
+# ```julia
+# @agent struct SchellingAgent(GridAgent{2})
+#     mood::Bool # whether the agent is happy in its position
+#     group::Int # The group of the agent, determines mood as it interacts with neighbors
+#     age::Int
+# end
+# ```
+
+# ```
+# ERROR: invalid redefinition of constant Main.SchellingAgent
+# Stacktrace:
+#  [1] macro expansion
+#    @ util.jl:609 [inlined]
+#  [2] macro expansion
+#    @ .julia\dev\Agents\src\core\agents.jl:210 [inlined]
+#  [3] top-level scope
+#    @ .julia\dev\Agents\docs\src\tutorial.jl:266
+# ```
+
+# This is not a limitation of Agents.jl but a fundamental limitation of the Julia
+# language that very likely will be addressed in the near future.
+# Normally, you would need to restart your Julia session to redefine a custom `struct`.
+# However, it is simpler to just do a mass rename in the text editor you use to
+# write Julia code (for example, Ctrl+Shift+H in VSCode can do a mass rename).
+# Change the name of the agent type to e.g., the same name ending in 2, 3, ...,
+# and carry on, until you are happy with the final configuration. When this happens
+# you will have to restart Julia and rename the type back to having no numeric ending.
+# Inconvenient, but thankfully it only takes a couple of seconds to resolve!
+
+# !!! note "This is the most performant version, unfortunately."
+#     Throughout the development of Agents.jl we have thought of this "redefining
+#     annoyance" and ways to resolve it. Unfortunately, all alternative design approaches
+#     to agent based modelling that don't have redefinition problems lead to drastic
+#     performance downsides. Given that mass-renaming in the development phase of a project
+#     is not too big of a hurdle, we decided to stick with the most performant design!
 
 # ## Step 3: form of the evolution rule(s) in discrete time
 
