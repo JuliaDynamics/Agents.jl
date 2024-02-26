@@ -3,7 +3,7 @@
 # All methods, whose defaults won't apply, must be extended
 # during the definition of a new ABM type.
 export AgentBasedModel, ABM
-export abmrng, abmscheduler, abmspace, abmproperties
+export abmrng, abmscheduler, abmspace, abmtime, abmproperties, hasid
 
 ###########################################################################################
 # %% Fundamental type definitions
@@ -37,6 +37,7 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 ## Available concrete implementations
 
 - [`StandardABM`](@ref)
+- [`EventQueueABM`](@ref)
 
 ## Interface of `AgentBasedModel`
 
@@ -45,15 +46,21 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 - `model.property`:  If the model `properties` is a dictionary with
   key type `Symbol`, or if it is a composite type (`struct`), then the syntax
   `model.property` will return the model property with key `:property`.
+- `abmtime(model)` will return the current time of the model. All models start from time 0
+  and time is incremented as the model is [`step!`](@ref)-ped.
 - `abmrng(model)` will return the random number generator of the model.
   It is strongly recommended to give `abmrng(model)` to all calls to `rand` and similar
   functions, so that reproducibility can be established in your modelling workflow.
 - `allids(model)/allagents(model)` returns an iterator over all IDs/agents in the model.
+- `hasid(model, id)` returns `true` if the model has an agent with given `id`.
 
-Many more querying functions (such as [`random_agent`](@ref)) are obtained automatically from
-this interface. Along with the internal interface described in the Developer's Docs,
-the interface allows instances of `AgentBasedModel` to be used with any of the [API](@ref)
-functions such as `move_agent!`, etc.
+`AgentBasedModel` defines an extendable interface composed of the above syntax as well
+as a few more additional functions described in the Developer's Docs.
+Following this interface you can implement new variants of an `AgentBasedModel`.
+The interface allows instances of `AgentBasedModel` to be used with any of the [API](@ref).
+For example, functions such as [`random_agent`](@ref), [`move_agent!`](@ref) or
+[`add_agent`](@ref) do not need to be implemented manually but work out of the box
+provided the `AgentBasedModel` interface is followed.
 """
 abstract type AgentBasedModel{S<:SpaceType} end
 const ABM = AgentBasedModel
@@ -97,6 +104,13 @@ Return the space instance stored in the `model`.
 abmspace(model::ABM) = getfield(model, :space)
 
 """
+    abmtime(model::ABM)
+Return the current time of the `model`.
+All models are initialized at time 0.
+"""
+abmtime(model::ABM) = getfield(model, :time)[]
+
+"""
     model.prop
     getproperty(model::ABM, :prop)
 
@@ -130,13 +144,23 @@ function Base.setproperty!(m::ABM, s::Symbol, x)
     end
 end
 
+"""
+    hasid(model, id::Int) → true/false
+    hasid(model, agent::AbstractAgent) → true/false
+
+Return `true` if the `model` has an agent with given `id` or has the given `agent`.
+"""
+hasid(model, id::Int) = haskey(agent_container(model), id)
+# vector version is extended in the model_accessing_API.jl
+hasid(model, a::AbstractAgent) = hasid(model, a.id)
+
 ###########################################################################################
 # %% Mandatory methods - internal
 ###########################################################################################
 # The first type parameter of any `ABM` subtype must be the space type.
 spacetype(::ABM{S}) where {S} = S
 
-agenttype(model::ABM) = notimplemented(model)
+tuple_agenttype(model::ABM) = getfield(model, :agents_types)
 
 """
     agent_container(model::ABM)
@@ -151,7 +175,6 @@ agent_container(model::ABM) = getfield(model, :agents)
 Return a valid `id` for creating a new agent with it.
 """
 nextid(model::ABM) = notimplemented(model)
-
 
 """
     add_agent_to_model!(agent, model)

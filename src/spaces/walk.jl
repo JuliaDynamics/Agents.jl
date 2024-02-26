@@ -205,8 +205,8 @@ function random_empty_pos_in_offsets(offsets, agent, model)
         n_attempts -= 1
     end
     targets = Iterators.map(β -> normalize_position(agent.pos .+ β, model), offsets)
-    check_empty = pos -> isempty(pos, model)
-    return sampling_with_condition_single(targets, check_empty, model)
+    empty_targets = Iterators.filter(pos -> isempty(pos, model), targets)
+    return IteratorSampling.itsample(abmrng(model), empty_targets; method=:alg_R)
 end
 
 """

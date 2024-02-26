@@ -9,50 +9,43 @@
 ################### DEFINITION 1 ###############
 using Agents, Random, BenchmarkTools
 
-@agent struct GridAgentOne <: AbstractAgent
-    id::Int
-    pos::Dims{2}
+@agent struct GridAgentOne(GridAgent{2})
     one::Float64
     two::Bool
+    three::Int
 end
 
 @agent struct GridAgentTwo(GridAgent{2})
     one::Float64
     two::Bool
+    four::Float64
 end
 
 @agent struct GridAgentThree(GridAgent{2})
     one::Float64
     two::Bool
+    five::Bool
 end
 
 @agent struct GridAgentFour(GridAgent{2})
     one::Float64
     two::Bool
+    six::Int16
 end
 
 @agent struct GridAgentFive(GridAgent{2})
     one::Float64
     two::Bool
+    seven::Int32
 end
 
-model1 = StandardABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
-    GridSpace((15, 15));
-    warn = false,
-    rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
-)
-
-for _ in 1:50
-    add_agent!(GridAgentOne, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentTwo, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
-    add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool))
+@agent struct GridAgentSix(GridAgent{2})
+    one::Float64
+    two::Bool
+    eight::Int64
 end
 
-agent_step!(agent::GridAgentOne, model1) = walk!(agent, rand, model1)
+agent_step!(agent::GridAgentOne, model1) = randomwalk!(agent, model1)
 function agent_step!(agent::GridAgentTwo, model1)
     agent.one += rand(abmrng(model1))
     agent.two = rand(abmrng(model1), Bool)
@@ -60,7 +53,7 @@ end
 function agent_step!(agent::GridAgentThree, model1)
     if any(a-> a isa GridAgentTwo, nearby_agents(agent, model1))
         agent.two = true
-        walk!(agent, rand, model1)
+        randomwalk!(agent, model1)
     end
 end
 function agent_step!(agent::GridAgentFour, model1)
@@ -72,52 +65,89 @@ function agent_step!(agent::GridAgentFive, model1)
     farthest = targets[idx]
     walk!(agent, sign.(farthest.pos .- agent.pos), model1)
 end
+function agent_step!(agent::GridAgentSix, model1)
+    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model1))
+end
+
+model1 = StandardABM(
+    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive,GridAgentSix},
+    GridSpace((15, 15));
+    agent_step!,
+    warn = false,
+    rng = MersenneTwister(42),
+    scheduler = Schedulers.Randomly(),
+)
+
+for i in 1:500
+    add_agent!(GridAgentOne, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
+    add_agent!(GridAgentTwo, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Float64(i))
+    add_agent!(GridAgentThree, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), true)
+    add_agent!(GridAgentFour, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int16(i))
+    add_agent!(GridAgentFive, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), Int32(i))
+    add_agent!(GridAgentSix, model1, rand(abmrng(model1)), rand(abmrng(model1), Bool), i)
+end
 
 ################### DEFINITION 2 ###############
 
-@agent struct GridAgentAll(GridAgent{2})
-    one::Float64
-    two::Bool
-    type::Symbol
-end
-
-model2 = StandardABM(
-    GridAgentAll,
-    GridSpace((15, 15));
-    rng = MersenneTwister(42),
-    scheduler = Schedulers.randomly,
-)
-
-for _ in 1:50
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :one)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :two)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :three)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :four)
-    add_agent!(GridAgentAll, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), :five)
-end
-
-function agent_step!(agent::GridAgentAll, model2)
-    if agent.type == :one
-        agent_step_one!(agent, model2)
-    elseif agent.type == :two
-        agent_step_two!(agent, model2)
-    elseif agent.type == :three
-        agent_step_three!(agent, model2)
-    elseif agent.type == :four
-        agent_step_four!(agent, model2)
-    else
-        agent_step_five!(agent, model2)
+@multiagent :opt_speed struct GridAgent2All(GridAgent{2})
+    @subagent struct GridAgent2One
+        one::Float64
+        two::Bool
+        three::Int
+    end
+    @subagent struct GridAgent2Two
+        one::Float64
+        two::Bool
+        four::Float64
+    end
+    @subagent struct GridAgent2Three
+        one::Float64
+        two::Bool
+        five::Bool
+    end
+    @subagent struct GridAgent2Four
+        one::Float64
+        two::Bool
+        six::Int16
+    end
+    @subagent struct GridAgent2Five
+        one::Float64
+        two::Bool
+        seven::Int32
+    end
+    @subagent struct GridAgent2Six
+        one::Float64
+        two::Bool
+        eight::Int64
     end
 end
-agent_step_one!(agent, model2) = walk!(agent, rand, model2)
+
+function agent_step!(agent::GridAgent2All, model2)
+    kind = kindof(agent)
+    if kind === :GridAgent2One
+        agent_step_one!(agent, model2)
+    elseif kind === :GridAgent2Two
+        agent_step_two!(agent, model2)
+    elseif kind === :GridAgent2Three
+        agent_step_three!(agent, model2)
+    elseif kind === :GridAgent2Four
+        agent_step_four!(agent, model2)
+    elseif kind === :GridAgent2Five
+        agent_step_five!(agent, model2)
+    else
+        agent_step_six!(agent, model2)
+    end
+end
+
+agent_step_one!(agent, model2) = randomwalk!(agent, model2)
 function agent_step_two!(agent, model2)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
 end
 function agent_step_three!(agent, model2)
-    if any(a-> a.type == :two, nearby_agents(agent, model2))
+    if any(a-> kindof(a) == :gridagenttwo, nearby_agents(agent, model2))
         agent.two = true
-        walk!(agent, rand, model2)
+        randomwalk!(agent, model2)
     end
 end
 function agent_step_four!(agent, model2)
@@ -131,12 +161,41 @@ function agent_step_five!(agent, model2)
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end
 end
+function agent_step_six!(agent, model2)
+    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
+end
+
+model2 = StandardABM(
+    GridAgent2All,
+    GridSpace((15, 15));
+    agent_step!,
+    rng = MersenneTwister(42),
+    scheduler = Schedulers.Randomly(),
+)
+
+for i in 1:500
+    add_agent!(GridAgent2One, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+    add_agent!(GridAgent2Two, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
+    add_agent!(GridAgent2Three, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
+    add_agent!(GridAgent2Four, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i))
+    add_agent!(GridAgent2Five, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
+    add_agent!(GridAgent2Six, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+end
 
 ################### Benchmarks ###############
 
-@btime step!($model1, agent_step!, dummystep, 500)
-@btime step!($model2, agent_step!, dummystep, 500)
+@btime step!($model1, 50)
+@btime step!($model2, 50) # repeat also with :opt_memory
 
 # Results:
-# 718.589 ms (11581560 allocations: 704.26 MiB)
-# 141.673 ms (2292318  allocations: 149.54 MiB)
+# multiple types: 3.732 s (39242250 allocations: 2.45 GiB)
+# @multiagent :opt_speed: 577.185 ms (25818000 allocations: 1.05 GiB)
+# @multiagent :opt_memory: 870.460 ms (25868000 allocations: 1.05 GiB)
+
+Base.summarysize(model1)
+Base.summarysize(model2) # repeat also with :opt_memory
+
+# Results:
+# multiple types: 491.20 KiB
+# @multiagent :opt_speed: 686.13 KiB
+# @multiagent :opt_memory: 563.12 KiB

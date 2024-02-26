@@ -1,4 +1,5 @@
-# # Visualizations and Animations for Agent Based Models
+# # [Visualizations and Animations for Agent Based Models](@id vis_tutorial)
+
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
@@ -29,14 +30,24 @@ Pkg.status(["Agents", "CairoMakie"];
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
 
-model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+# TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
+try
+    using Pkg
+    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+    using AgentsExampleZoo
+catch
+    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
+    using AgentsExampleZoo
+end
+
+model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
     scenario = :change)
 model
 
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a::Models.Daisy) = a.breed # agent color
+daisycolor(a) = a.breed # agent color
 as = 20    # agent size
 am = '✿'  # agent marker
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
@@ -96,10 +107,10 @@ adata = [(black, count), (white, count)]
 temperature(model) = mean(model.temperature)
 mdata = [temperature, :solar_luminosity]
 fig, abmobs = abmexploration(model;
-    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"], 
+    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"],
     mdata, mlabels = ["T", "L"]
 )
-nothing # hide
+nothing #hide
 
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
@@ -116,7 +127,7 @@ nothing # hide
 # abmvideo
 # ```
 # E.g., continuing from above,
-model = Models.daisyworld()
+model = AgentsExampleZoo.daisyworld()
 abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
 
 # ```@raw html
@@ -125,6 +136,8 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # </video>
 # ```
 
+# You could of course also explicitly use `abmplot` in a `record` loop for
+# finer control over additional plot elements.
 
 # ## Agent inspection
 
@@ -160,7 +173,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # not familiar yet.
 
 # create a basic abmplot with controls and sliders
-model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
+model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model; params, plotkwargs...,
     adata, mdata, figure = (; size = (1600,800))
 )
@@ -233,7 +246,7 @@ fig
 # and plot it with [`abmplot`](@ref).
 using Graphs
 using ColorTypes
-sir_model = Models.sir()
+sir_model = AgentsExampleZoo.sir()
 city_size(agents_here) = 0.005 * length(agents_here)
 function city_color(agents_here)
     l_agents_here = length(agents_here)

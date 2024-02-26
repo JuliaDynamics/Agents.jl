@@ -5,20 +5,23 @@ the `remove_agent!` and `add_agent!` functions directly,
 otherwise they will try to add `nothing` to the agent position.
 =#
 
-add_agent_to_space!(::AbstractAgent, ::ABM{Nothing}) = nothing
-
 # We need to extend this one, because otherwise there is a `pos` that
 # is attempted to be given to the agent creation...
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM{Nothing}, args::Vararg{Any, N}; kwargs...) where {N}
+function add_agent!(A::Type, model::ABM{Nothing}, args::Vararg{Any, N}; kwargs...) where {N} 
     id = nextid(model)
-    if isempty(kwargs)
+    if !isempty(args)
         newagent = A(id, args...)
     else
         newagent = A(; id = id, kwargs...)
     end
-    add_agent_pos!(newagent, model)
+    add_agent_own_pos!(newagent, model)
 end
 
-nearby_ids(position, model::ABM{Nothing}, r = 1) = allids(model)
+function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
+    add_agent_own_pos!(agent, model)
+end
+
+nearby_ids(agent::AbstractAgent, model::ABM{Nothing}, r = 1) = allids(model)
 remove_agent_from_space!(agent, model::ABM{Nothing}) = nothing
 add_agent_to_space!(agent, model::ABM{Nothing}) = nothing
+remove_all_from_space!(::ABM{Nothing}) = nothing

@@ -133,7 +133,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     getfield(abm, :maxid)[] = t.maxid
 
     for a in t.agents
-        Agents.add_agent_pos!(a, abm)
+        Agents.add_agent_own_pos!(a, abm)
     end
     return abm
 end

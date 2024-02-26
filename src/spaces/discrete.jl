@@ -75,10 +75,11 @@ function empty_positions(model::ABM{<:DiscreteSpace})
 end
 
 """
-    isempty(position, model::ABM{<:DiscreteSpace})
+    isempty(pos, model::ABM{<:DiscreteSpace})
 Return `true` if there are no agents in `position`.
 """
-Base.isempty(pos, model::ABM) = isempty(ids_in_position(pos, model))
+Base.isempty(pos::ValidPos, model::ABM{<:DiscreteSpace}) = isempty(pos, abmspace(model))
+Base.isempty(pos::ValidPos, space::DiscreteSpace) = isempty(ids_in_position(pos, space))
 
 """
     has_empty_positions(model::ABM{<:DiscreteSpace})
@@ -108,7 +109,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        return resorvoir_sampling_single(empty, model)
+        return IteratorSampling.itsample(abmrng(model), empty; method=:alg_L)
     end
 end
 
@@ -144,13 +145,15 @@ function random_id_in_position(pos, model)
     isempty(ids) && return nothing
     return rand(abmrng(model), ids)
 end
-function random_id_in_position(pos, model, f, alloc = false)
+function random_id_in_position(pos, model, f, alloc = false, transform = identity)
     iter_ids = ids_in_position(pos, model)
     if alloc
-        return sampling_with_condition_single(iter_ids, f, model)
+        return sampling_with_condition_single(iter_ids, f, model, transform)
     else
-        iter_filtered = Iterators.filter(id -> f(id), iter_ids)
-        return resorvoir_sampling_single(iter_filtered, model)
+        iter_filtered = Iterators.filter(id -> f(transform(id)), iter_ids)
+        id = IteratorSampling.itsample(abmrng(model), iter_filtered; method=:alg_R)
+        isnothing(id) && return nothing
+        return id
     end
 end
 
@@ -171,21 +174,31 @@ function random_agent_in_position(pos, model)
     return model[id]
 end
 function random_agent_in_position(pos, model, f, alloc = false)
-    iter_ids = ids_in_position(pos, model)
-    if alloc
-        return sampling_with_condition_agents_single(iter_ids, f, model)
-    else
-        iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-        id = resorvoir_sampling_single(iter_filtered, model)
-        isnothing(id) && return nothing
-        return model[id]
-    end
+    id = random_id_in_position(pos, model, f, alloc, id -> model[id])
+    isnothing(id) && return nothing
+    return model[id]
 end
 
 #######################################################################################
 # Discrete space extra agent adding stuff
 #######################################################################################
 export add_agent_single!, fill_space!, move_agent_single!, swap_agents!
+
+"""
+    add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
+
+Add the `agent` to a random position in the space while respecting a maximum of one agent
+per position, updating the agent's position to the new one.
+
+This function does nothing if there aren't any empty positions.
+"""
+function add_agent_single!(agent::AbstractAgent, model::ABM{<:DiscreteSpace})
+    position = random_empty(model)
+    isnothing(position) && return nothing
+    agent.pos = position
+    add_agent_own_pos!(agent, model)
+    return agent
+end
 
 """
     add_agent_single!(model::ABM{<:DiscreteSpace}, properties...; kwargs...)
@@ -204,7 +217,7 @@ end
 Same as `add_agent!(A, model, properties...; kwargs...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
 """
-function add_agent_single!(A::Type{<:AbstractAgent}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+function add_agent_single!(A::Type, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
     position = random_empty(model)
     isnothing(position) && return nothing
     agent = add_agent!(position, A, model, properties...; kwargs...)
@@ -235,22 +248,18 @@ function fill_space!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
 end
 
 function fill_space!(
-    ::Type{A},
+    A::Type, 
     model::ABM{<:DiscreteSpace},
     args::Vararg{Any, N};
     kwargs...,
-) where {N,A<:AbstractAgent}
+) where {N}
     for p in positions(model)
         add_agent!(p, A, model, args...; kwargs...)
     end
     return model
 end
 
-function fill_space!(
-    ::Type{A},
-    model::ABM{<:DiscreteSpace},
-    f::Function
-) where {A<:AbstractAgent}
+function fill_space!(A::Type, model::ABM{<:DiscreteSpace}, f::Function)
     for p in positions(model)
         args = f(p)
         add_agent!(p, A, model, args...)
@@ -290,4 +299,10 @@ function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
     add_agent_to_space!(agent1, model)
     add_agent_to_space!(agent2, model)
     return nothing
+end
+
+function remove_all_from_space!(model)
+    for p in positions(model)
+        empty!(ids_in_position(p, model))
+    end
 end

@@ -1,4 +1,3 @@
-
 # v6 deprecations
 
 # From before the move to an interface for ABMs and making `ABM` abstract.
@@ -83,52 +82,10 @@ macro agent(new_name, base_type, extra_fields)
     end)
 end
 
-"""
-    add_agent_single!(agent, model::ABM{<:DiscreteSpace}) → agent
-
-Add the `agent` to a random position in the space while respecting a maximum of one agent
-per position, updating the agent's position to the new one.
-
-This function does nothing if there aren't any empty positions.
-"""
-function add_agent_single!(agent::AbstractAgent, model::ABM{<:DiscreteSpace})
-    @warn "Adding agent with add_agent_single!(agent::AbstractAgent, model::ABM) is deprecated.
-           Use add_agent_single!([pos,] A::Type, model::ABM; kwargs...) or add_agent_single!([pos,] A::Type, model::ABM, args...)."
-    position = random_empty(model)
-    isnothing(position) && return nothing
-    agent.pos = position
-    add_agent_pos!(agent, model)
-    return agent
-end
-
-"""
-    add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
-Add the `agent` to the model in the given position.
-If `pos` is not given, the `agent` is added to a random position.
-The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
-the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
-the `agent`'s position.
-
-The type of `pos` must match the underlying space position type.
-"""
-function add_agent!(agent::AbstractAgent, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    agent.pos = pos
-    add_agent_pos!(agent, model)
-end
-
-function add_agent!(agent::AbstractAgent, model::ABM{Nothing})
-    @warn "Adding agent with add_agent!(agent::AbstractAgent, model::ABM) is deprecated.
-           Use add_agent!([pos,] A::Type, model::ABM; kwargs...) or add_agent!([pos,] A::Type, model::ABM, args...)."
-    add_agent_pos!(agent, model)
+export add_agent_pos!
+function add_agent_pos!(agent::AbstractAgent, model::ABM)
+    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`"
+    add_agent_own_pos!(agent, model)
 end
 
 function CommonSolve.step!(model::ABM, agent_step!, n::Int=1, agents_first::Bool=true; warn_deprecation = true)
@@ -141,6 +98,7 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
              step!(model, n = 1, agents_first = true)"
     end
     s = 0
+    t = getfield(model, :time)
     while until(s, n, model)
         !agents_first && model_step!(model)
         if agent_step! ≠ dummystep
@@ -150,6 +108,7 @@ function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_f
         end
         agents_first && model_step!(model)
         s += 1
+        t[] += 1
     end
 end
 
@@ -409,9 +368,15 @@ end
 agent_step_field(model::ABM) = getfield(model, :agent_step)
 model_step_field(model::ABM) = getfield(model, :model_step)
 
-function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N} 
+function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N}
     @warn "UnremovableABM is deprecated. Use StandardABM(...; container = Vector, ...) instead."
     StandardABM(args...; kwargs..., container=Vector)
 end
 
+until(s, n::Int, model) = s < n
+until(s, f, model) = !f(model, s)
 
+function schedule(model::ABM, scheduler)
+    @warn "`schedule(model::ABM, scheduler)` deprecated in favor of `scheduler(model)`."
+    Iterators.filter(id -> id in allids(model), scheduler(model))
+end

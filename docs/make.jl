@@ -9,13 +9,11 @@ pages = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
     "Examples" => [
-        "examples/schelling.md",
         "examples/sir.md",
         "examples/flock.md",
         "examples/zombies.md",
         "examples/predator_prey.md",
         "examples/rabbit_fox_hawk.md",
-        # "models.md", # I'm removing this from the docs; will be deprecated in the future
         "examples.md"
     ],
     "api.md",
@@ -33,6 +31,11 @@ pages = [
 ]
 
 # %%
+println("Converting tutorial...")
+Literate.markdown(
+    joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src");
+    credit = false
+)
 
 println("Converting Examples...")
 
@@ -59,6 +62,8 @@ include("build_docs_with_style.jl")
 build_docs_with_style(pages, Agents, LightOSM;
     expandfirst = ["index.md"],
     authors = "George Datseris and contributors.",
+    warnonly = true,
+    htmlkw = (size_threshold = 20000 * 2^10, ),
 )
 
 println("Finished")

@@ -68,7 +68,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     end
     on(resetclick) do clicks
         for ax in axs
-            vlines!(ax, [abmobs.s.val], color = "#c41818")
+            vlines!(ax, [abmtime(abmobs.model[])], color = "#c41818")
         end
     end
     return nothing
@@ -83,11 +83,11 @@ function Agents.abmvideo(file, model;
         recordkwargs = (compression = 20,), kwargs...
     )
     # add some title stuff
-    s = Observable(0) # counter of current step
+    abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), s)
+        t = lift(x -> title*", step = "*string(x), abmtime_obs)
     elseif showstep
-        t = lift(x -> "step = "*string(x), s)
+        t = lift(x -> "step = "*string(x), abmtime_obs)
     else
         t = title
     end
@@ -104,7 +104,7 @@ function Agents.abmvideo(file, model;
         for j in 1:frames-1
             recordframe!(io)
             Agents.step!(abmobs, spf)
-            s[] += spf; s[] = s[]
+            abmtime_obs[] = abmtime(model)
         end
         recordframe!(io)
     end

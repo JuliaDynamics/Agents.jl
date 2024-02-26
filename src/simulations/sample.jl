@@ -22,7 +22,7 @@ function sample!(
     model::ABM,
     n::Int,
     weight = nothing;
-    replace = true,
+    replace = true
 )
     nagents(model) == 0 && return nothing
     org_ids = collect(allids(model))
@@ -32,11 +32,15 @@ function sample!(
     else
         new_ids = sample(abmrng(model), org_ids, n, replace = replace)
     end
-    add_newids!(model, org_ids, new_ids)
+    if n <= length(org_ids) / 2
+        add_newids_bulk!(model, new_ids)
+    else
+        add_newids_each!(model, org_ids, new_ids)
+    end
+    return model
 end
 
-#Used in sample!
-function add_newids!(model, org_ids, new_ids)
+function add_newids_each!(model::ABM, org_ids, new_ids)
     sort!(org_ids)
     sort!(new_ids)
     i, L = 1, length(new_ids)
@@ -48,12 +52,24 @@ function add_newids!(model, org_ids, new_ids)
             remove_agent!(agent, model)
         else
             i += 1
-            while i <= L && new_ids[i] == id
+            while i <= L && (@inbounds new_ids[i] == id)
                 replicate!(agent, model)
                 i += 1
             end
-            i <= L && (id_new = new_ids[i])
+            i <= L && (@inbounds id_new = new_ids[i])
         end
+    end
+    return
+end
+
+function add_newids_bulk!(model::ABM, new_ids)
+    maxid = getfield(model, :maxid)[]
+    new_agents = [copy_agent(model[id], model, maxid+i) for 
+                  (i, id) in enumerate(sort!(new_ids))]
+    remove_all!(model)
+    sizehint!(agent_container(model), length(new_ids))
+    for agent in new_agents
+        add_agent_own_pos!(agent, model)
     end
     return
 end
@@ -79,24 +95,62 @@ a = A(1, (2, 2), 0.5, 0.5)
 b = replicate!(a, model; w = 0.8)
 ```
 """
-function replicate!(agent::A, model; kwargs...) where {A<:AbstractAgent}
-    args = new_args(agent, model; kwargs...)
-    newagent = A(nextid(model), args...)
-    add_agent_pos!(newagent, model)
+function replicate!(agent::AbstractAgent, model; kwargs...)
+    newagent = copy_agent(agent, model, nextid(model); kwargs...)
+    add_agent_own_pos!(newagent, model)
     return newagent
 end
 
-function new_args(agent::A, model; kwargs...) where {A<:AbstractAgent}
+function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
+    if ismultiagentsumtype(A)
+        args_sum_t = new_args_sum_t(agent, model; kwargs...)
+        newagent = MixedStructTypes.constructor(agent)(id_new, args_sum_t...)
+    else
+        args_t = new_args_t(agent, model; kwargs...)
+        newagent = A(id_new, args_t...)
+    end
+    return newagent
+end
+
+function new_args_t(agent, model; kwargs...)
     # the id is always the first field
-    fields_no_id = fieldnames(A)[2:end]
+    fields_no_id = fieldnames(typeof(agent))[2:end]
     if isempty(kwargs)
-        new_args = (deepcopy(getfield(agent, x)) for x in fields_no_id)
+        new_args = (getfield(agent, x) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
         new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
     end
 end
+function new_args_sum_t(agent, model; kwargs...)
+    # the id is always the first field
+    fields_no_id = propertynames(agent)[2:end]
+    if isempty(kwargs)
+        new_args = map(x -> getproperty(agent, x), fields_no_id)
+    else
+        kwargs_nt = NamedTuple(kwargs)
+        new_args = map(x -> choose_arg(x, kwargs_nt, agent), fields_no_id)
+    end
+end
 
 function choose_arg(x, kwargs_nt, agent)
-    return deepcopy(getfield(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x))
+    return getproperty(hasproperty(kwargs_nt, x) ? kwargs_nt : agent, x)
+end
+
+#######################################################################################
+# %% sampling functions
+#######################################################################################
+
+function sampling_with_condition_single(iter, condition, model, transform=identity)
+    population = collect(iter)
+    n = length(population)
+    rng = abmrng(model)
+    @inbounds while n != 0
+        index_id = rand(rng, 1:n)
+        el = population[index_id]
+        condition(transform(el)) && return el
+        population[index_id], population[n] = population[n], population[index_id]
+        n -= 1
+    end
+    return nothing
 end

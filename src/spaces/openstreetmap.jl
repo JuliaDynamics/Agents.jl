@@ -748,6 +748,12 @@ function Agents.move_agent!(
     Agents.add_agent_to_space!(agent, model)
 end
 
+function Agents.remove_all_from_space!(model::ABM{<:OpenStreetMapSpace})
+    for c in abmspace(model).s
+        empty!(c)
+    end
+end
+
 """
     move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 
@@ -978,8 +984,13 @@ ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
         reverse_ids_on_road(pos_1, pos_2, model),
     ))
 
-Agents.nearby_positions(pos::Tuple{Int,Int,Float64}, model, args::Vararg{Any, N}; kwargs...) where {N} =
+function Agents.nearby_positions(
+        pos::Tuple{Int,Int,Float64}, 
+        model::ABM{<:OpenStreetMapSpace}, 
+        args::Vararg{Any, N}; kwargs...
+    ) where {N}
     nearby_positions(pos[1], model, args...; kwargs...)
+end
 
 function Agents.nearby_positions(
         position::Int,

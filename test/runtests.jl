@@ -3,6 +3,15 @@ using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
+# TODO: when AgentsExampleZoo is released, remove these Pkg commands
+try
+    using Pkg
+    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
+    using AgentsExampleZoo
+catch
+    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
+    using AgentsExampleZoo
+end
 
 using Distributed
 addprocs(2)
@@ -12,6 +21,7 @@ addprocs(2)
     using Agents.Graphs, Agents.DataFrames
     using StatsBase: mean
     using StableRNGs
+    using AgentsExampleZoo
 end
 
 @agent struct Agent0(NoSpaceAgent)
@@ -25,7 +35,7 @@ end
 end
 
 @agent struct Agent3(GridAgent{2}) 
-    weight::Float64
+    weight::Float64 = 2.0
 end
 
 @agent struct Agent4(GridAgent{2}) 
@@ -150,6 +160,7 @@ function flocking_model_agent_step!(bird, model)
 end
 
 @testset "Agents.jl Tests" begin
+    include("package_sanity_tests.jl")
     include("model_creation_tests.jl")
     include("api_tests.jl")
     include("randomness_tests.jl")

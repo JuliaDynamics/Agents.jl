@@ -117,10 +117,19 @@ Specifically, you can represent this property as a standard Julia `Array` that i
 
 For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## Avoid `Union`s of many different agent types (temporary!)
-Due to the way Julia's type system works, and the fact that agents are grouped in a dictionary mapping IDs to agent instances, using multiple types for different agents always creates a performance hit because it leads to type instability.
+## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 
-Thankfully, due to some performance enhancements in Base Julia, unions of up to three different Agent types do not suffer much. You can see this by running the `test/performance/variable_agent_types_simple_dynamics.jl` file, which benchmarks the time to run a model that will do exactly the same amount of numeric operations, but each time subdividing it among an increasing number of agent types. Its output is
+Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
+On the other hand, a `Union` of different types allows utilizing Julia's multiple dispatch system.
+
+The [`@multiagent`](@ref) macro does not make multiple types. It only makes one large type and defines convenience "constructors" on top of it, giving the illusion that multiple types exist. Therefore it completely eliminates type instability.
+[`@multiagent`](@ref) has two versions. In `:opt_speed` the created agents are optimized such as there is virtually no performance difference between having 1 agent type at the cost of each agent occupying more memory that in the `Union` case.
+In `:opt_memory` each agent is optimized to occupy practically the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+
+In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
+We then compare the performance of the three versions for multiple agent types.
+The `@multiagent` has 15 type of agents for either of its possibilities, while the `Union` incrementally gets more agents from 2 to 15.
+Here are the results of how much time it took to run each version:
 
 ```@example performance
 using Agents
@@ -129,8 +138,6 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
-The result is that having many types (here 15 different types) makes the code about 5-6 times slower.
-
-**Notice that this is a temporary problem! In the future we plan to re-work Agents.jl internals regarding multi-agent models and deal with this performance hit without requiring the user to do something differently.**
-
-At the moment, if you want to use many different agent types, you can try including all properties all types should have in one type. You can specify what "type" of agent it is via including a field `type` or `kind` whose value is a symbol: `:wolf, :sheep, :grass`. Properties that should only belong to one kind of agent could be initialized with a "null" value for the other kinds. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
+We see that Unions of up to three different Agent types do not suffer much.
+Hence, if you have less than four agent types in your model, using different types is still a valid option and allows you to utilize multiple dispatch.
+For more agent types however we recommend using the [`@multiagent`](@ref) macro.

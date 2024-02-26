@@ -11,7 +11,6 @@ Return an agent given its ID.
 """
 Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
 
-
 """
     allids(model)
 Return an iterator over all agent IDs of the model.
@@ -82,10 +81,20 @@ end
 function fallback_random_agent(model, condition, alloc)
     if alloc
         iter_ids = allids(model)
-        return sampling_with_condition_agents_single(iter_ids, condition, model)
+        id = sampling_with_condition_single(iter_ids, condition, model, id -> model[id])
+        isnothing(id) && return nothing
+        return model[id]
     else
         iter_agents = allagents(model)
         iter_filtered = Iterators.filter(agent -> condition(agent), iter_agents)
-        return resorvoir_sampling_single(iter_filtered, model)
+        agent = IteratorSampling.itsample(abmrng(model), iter_filtered; method=:alg_L)
+        isnothing(agent) && return nothing
+        return agent
+    end
+end
+
+function remove_all_from_model!(model::ABM)
+    for a in allagents(model)
+        remove_agent_from_model!(a, model)
     end
 end

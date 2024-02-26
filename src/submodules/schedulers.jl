@@ -1,17 +1,11 @@
 export schedule, Schedulers
 
 """
-    schedule(model [, scheduler]) → ids
+    schedule(model::StandardABM) → ids
 
-If no `scheduler` is given, it returns an iterator over the scheduled IDs using the model's
-scheduler, otherwise it uses the given custom scheduler, which can be either a function which
-accepts `model` as argument or one of the already defined schedulers inside Agents.jl. See
-the [manual scheduling](@ref manual_scheduling) section for usage examples.
+Return an iterator over the scheduled IDs using the model's default scheduler.
 """
-schedule(model::ABM) = schedule(model, abmscheduler(model))
-schedule(model::ABM, scheduler) = Iterators.filter(id -> id in allids(model), scheduler(model))
-schedule(model::Agents.VecStandardABM) = abmscheduler(model)(model)
-schedule(model::Agents.VecStandardABM, scheduler) = scheduler(model)
+schedule(model::ABM) = abmscheduler(model)(model)
 
 # Notice how the above lines are *outside* the submodule
 
@@ -22,16 +16,20 @@ Submodule containing all predefined schedulers of Agents.jl that can be used wit
 [`StandardABM`](@ref).
 
 Schedulers have a very simple interface. They are functions that take as an input the ABM and
-return an iterator over agent IDs. Notice that this iterator can be non-allocated specialized
+return an iterator over agent IDs: `f(model) -> iterator`.
+Notice that this iterator can be non-allocated specialized
 type or just a standard vector of IDs.
 
-Schedulers have two purposes:
+Schedulers have many purposes:
 
 1. Can be given in [`StandardABM`](@ref) as a default scheduler.
    This functionality is only meaningful when the `agent_step!` has been configured.
-   The function `abmscheduler(model)` will return the default scheduler of the model.
+   The function `schedule(model)` will return the scheduled IDs.
 2. Can be used by a user when performing [manual scheduling](@ref manual_scheduling)
    in case `agent_step!` has not been configured.
+3. Can be used to globally filter agents by type/property/whatever. For example,
+   one can use the [`ByProperty`](@ref) scheduler to simply obtain
+   the list of all agent IDs that satisfy a particular property.
 
 See also [Advanced scheduling](@ref) for making more advanced schedulers.
 """
@@ -52,7 +50,7 @@ function get_ids!(ids::Vector{Int}, model::ABM)
     end
 end
 
-function get_ids!(ids::Vector{Int}, model::Agents.VecStandardABM)
+function get_ids!(ids::Vector{Int}, model::Agents.VecABM)
     n_sched = length(ids)
     nagents(model) == n_sched && return nothing
     resize!(ids, nagents(model))
@@ -61,15 +59,16 @@ end
 
 """
     Schedulers.fastest
-A scheduler that activates all agents once per step in the order dictated by the
-agent's container, which is arbitrary (the keys sequence of a dictionary).
-This is the fastest way to activate all agents once per step.
+
+A scheduler that orders all agent IDs in the fastest way possible,
+which is the default order dictated by the agent container.
 """
 fastest(model::ABM) = allids(model)
 
 """
     Schedulers.ByID()
-A scheduler that activates all agents at each step according to their id.
+
+A scheduler that orders all agent IDs by their integer value.
 """
 struct ByID
     ids::Vector{Int}
@@ -82,11 +81,12 @@ function (sched::ByID)(model::ABM)
     sort!(sched.ids)
 end
 
-(sched::ByID)(model::Agents.VecStandardABM) = allids(model)
+(sched::ByID)(model::Agents.VecABM) = allids(model)
 
 """
     Schedulers.Randomly()
-A scheduler that activates all agents once per step in a random order.
+
+A scheduler that randomly orders all agent IDs.
 Different random ordering is used at each different step.
 """
 struct Randomly
@@ -101,8 +101,8 @@ end
 
 """
     Schedulers.Partially(p)
-A scheduler that at each step activates only `p` percentage of randomly
-chosen agents.
+
+A scheduler that orders only `p` percentage of randomly chosen agent IDs.
 """
 struct Partially{R<:Real}
     p::R
@@ -119,8 +119,9 @@ end
 
 """
     Schedulers.ByProperty(property)
-A scheduler that at each step activates the agents in an order dictated by
-their `property`, with agents with greater `property` acting first. `property` can be a
+
+A scheduler that orders agent IDs by their `property`, with agents with greater `property`
+being ordered first. `property` can be a
 `Symbol`, which just dictates which field of the agents to compare, or a function which
 inputs an agent and outputs a real number.
 """
@@ -152,16 +153,15 @@ end
 
 A scheduler useful only for mixed agent models using `Union` types.
 - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
-Otherwise returns agents grouped in order of appearance in the `Union`.
+  Otherwise returns agent IDs grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
-the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+  the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
 - `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref))
 
----
 
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)
 
-A scheduler that activates agents by type in specified order (since
+A scheduler that orders agent IDs by type in specified order (since
 `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
 agents within each group.
 """

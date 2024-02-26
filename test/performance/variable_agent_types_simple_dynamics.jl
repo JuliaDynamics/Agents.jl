@@ -1,3 +1,4 @@
+
 # The following simple model has a variable number of agent types,
 # but there is no removing or creating of additional agents.
 # It creates a model that has the same number of agents and does
@@ -5,7 +6,7 @@
 # are split in a varying number of agents. It shows how much of a
 # performance hit is to have many different agent types.
 
-using Agents, Random
+using Agents, Random, BenchmarkTools
 
 @agent struct Agent1(GridAgent{2})
     money::Int
@@ -67,9 +68,33 @@ end
     money::Int
 end
 
+agents_m = [Symbol(:AgentAllMemory, :($y)) for y in [2,3,4,5,10,15]]
+subagents_m = [[Symbol(:Agent, :($x), :m, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
+expr_subagents_m = [[:(@subagent struct $(Symbol(:Agent, :($x), :m, :($y)))
+                            money::Int
+                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
+for (a, subs) in zip(agents_m, expr_subagents_m)
+    @eval @multiagent :opt_memory struct $a(GridAgent{2})
+        $(subs...)
+    end
+end
+
+agents_s = [Symbol(:AgentAllSpeed, :($y)) for y in [2,3,4,5,10,15]]
+subagents_s = [[Symbol(:Agent, :($x), :s, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
+expr_subagents_s = [[:(@subagent struct $(Symbol(:Agent, :($x), :s, :($y)))
+                           money::Int
+                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
+for (a, subs) in zip(agents_s, expr_subagents_s)
+    @eval @multiagent :opt_speed struct $a(GridAgent{2})
+        $(subs...)
+    end
+end
+
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
-    model = StandardABM(Agent1, space; scheduler=Schedulers.randomly, warn=false)
+    model = StandardABM(Agent1, space; agent_step!,
+                        scheduler=Schedulers.Randomly(),
+                        rng = Xoshiro(42), warn=false)
     id = 0
     for id in 1:n_agents
         add_agent!(Agent1, model, 10)
@@ -77,17 +102,49 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     return model
 end
 
-function initialize_model(;n_agents=600, n_types=1, dims=(5,5))
+function initialize_model_multi_memory(;n_agents=600, n_types=1, dims=(5,5))
+    i = findfirst(x -> length(x) == n_types, subagents_m)
+    agents_used = [eval(sa) for sa in subagents_m[i]]
+    space = GridSpace(dims)
+    model = StandardABM(eval(agents_m[i]), space; agent_step!,
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
+    agents_per_type = div(n_agents, n_types)
+    for A in agents_used
+        for _ in 1:agents_per_type
+            add_agent!(A, model, 10)
+        end
+    end
+    return model
+end
+
+function initialize_model_multi_speed(;n_agents=600, n_types=1, dims=(5,5))
+    i = findfirst(x -> length(x) == n_types, subagents_s)
+    agents_used = [eval(sa) for sa in subagents_s[i]]
+    space = GridSpace(dims)
+    model = StandardABM(eval(agents_s[i]), space; agent_step!,
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
+    agents_per_type = div(n_agents, n_types)
+    for A in agents_used
+        for _ in 1:agents_per_type
+            add_agent!(A, model, 10)
+        end
+    end
+    return model
+end
+
+function initialize_model_n(;n_agents=600, n_types=1, dims=(5,5))
     agent_types = [Agent1,Agent2,Agent3,Agent4,Agent5,Agent6,Agent7,Agent8,
         Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
     agents_used = agent_types[1:n_types]
     space = GridSpace(dims)
-    model = StandardABM(Union{agents_used...}, space; scheduler=Schedulers.randomly, warn=false)
-    id = 0
+    model = StandardABM(Union{agents_used...}, space; agent_step!,
+                        scheduler=Schedulers.Randomly(), warn=false,
+                        rng = Xoshiro(42))
     agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
-            id += 1
             add_agent!(A, model, 10)
         end
     end
@@ -103,7 +160,7 @@ end
 
 function move!(agent, model)
     neighbors = nearby_positions(agent, model)
-    cell = rand(collect(neighbors))
+    cell = rand(abmrng(model), collect(neighbors))
     move_agent!(agent, cell, model)
     return nothing
 end
@@ -116,42 +173,58 @@ function exchange!(agent, other_agent)
     return nothing
 end
 
-function run_simulation_1(n_steps, n_reps)
-    t = @timed for _ in 1:n_reps
-        model = initialize_model_1()
-        Agents.step!(model, agent_step!, n_steps)
-    end
-    return t[2]/n_reps
+function run_simulation_1(n_steps)
+    model = initialize_model_1()
+    Agents.step!(model, n_steps)
 end
 
-function run_simulation(n_steps, n_reps; n_types)
-    t = @timed for _ in 1:n_reps
-        model = initialize_model(;n_types=n_types)
-        Agents.step!(model, agent_step!, n_steps)
-    end
-    return t[2]/n_reps
+function run_simulation_multi_memory(n_steps; n_types)
+    model = initialize_model_multi_memory(; n_types=n_types)
+    Agents.step!(model, n_steps)
+end
+function run_simulation_multi_speed(n_steps; n_types)
+    model = initialize_model_multi_speed(; n_types=n_types)
+    Agents.step!(model, n_steps)
+end
+
+function run_simulation_n(n_steps; n_types)
+    model = initialize_model_n(; n_types=n_types)
+    Agents.step!(model, n_steps)
 end
 
 # %% Run the simulation, do performance estimate, first with 1, then with many
-Random.seed!(2514)
-n_steps = 500
-n_reps = 5
+n_steps = 50
 n_types = [2,3,4,5,10,15]
-# compile
-run_simulation_1(1, 1)
-for n in n_types; run_simulation(1, 1; n_types=n); end  # compile
 
-time_1 = run_simulation_1(n_steps, n_reps)
-times = Float64[]
+time_1 = @belapsed run_simulation_1($n_steps)
+times_n = Float64[]
+times_multi_m = Float64[]
+times_multi_s = Float64[]
 for n in n_types
     println(n)
-    t = run_simulation(n_steps, n_reps; n_types=n)
-    push!(times, t/time_1)
+    t = @belapsed run_simulation_n($n_steps; n_types=$n)
+    push!(times_n, t/time_1)
+    t_multi = @belapsed run_simulation_multi_memory($n_steps; n_types=$n)
+    push!(times_multi_m, t_multi/time_1)
+    t_multi_speed = @belapsed run_simulation_multi_speed($n_steps; n_types=$n)
+    push!(times_multi_s, t_multi_speed/time_1)
 end
 
-import CairoMakie
-fig, ax, = CairoMakie.lines(n_types, times)
-CairoMakie.scatter!(ax, n_types, times)
+println("relative time of model with 1 type: 1")
+for (n, t1, t2, t3) in zip(n_types, times_n, times_multi_m, times_multi_s)
+    println("relative time of model with $n types: $t1")
+    println("relative time of model with $n @multiagent :opt_memory: $t2")
+    println("relative time of model with $n @multiagent :opt_speed: $t3")
+end
+
+using CairoMakie
+fig, ax = CairoMakie.scatterlines(n_types, times_n; label = "Union");
+scatterlines!(ax, n_types, times_multi_s; label = "@multi :opt_speed")
+scatterlines!(ax, n_types, times_multi_m; label = "@multi :opt_memory")
 ax.xlabel = "# types"
-ax.ylabel = "time, relative to 1 type"
+ax.ylabel = "time relative to 1 type"
+ax.title = "Union types vs @multiagent macro"
+axislegend(ax; position = :lt)
+ax.yticks = 0:1:ceil(Int, maximum(times_n))
+ax.xticks = 2:2:16
 fig

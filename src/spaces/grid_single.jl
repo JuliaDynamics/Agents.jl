@@ -20,6 +20,7 @@ spacesize(space::GridSpaceSingle) = space.extent
 
 """
     GridSpaceSingle(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
+
 This is a specialized version of [`GridSpace`](@ref) that allows only one
 agent per position, and utilizes this knowledge to offer significant performance
 gains versus [`GridSpace`](@ref).
@@ -57,7 +58,7 @@ end
 # move_agent! does not need be implemented.
 # The generic version at core/space_interaction_API.jl covers it.
 # `random_empty` comes from spaces/discrete.jl as long as we extend:
-Base.isempty(pos, model::ABM{<:GridSpaceSingle}) = abmspace(model).stored_ids[pos...] == 0
+Base.isempty(pos::ValidPos, model::ABM{<:GridSpaceSingle}) = abmspace(model).stored_ids[pos...] == 0
 # And we also need to extend the iterator of empty positions
 function empty_positions(model::ABM{<:GridSpaceSingle})
     Iterators.filter(i -> abmspace(model).stored_ids[i...] == 0, positions(model))
@@ -75,7 +76,6 @@ See also [`isempty`](@ref).
 function id_in_position(pos, model::ABM{<:GridSpaceSingle})
     return abmspace(model).stored_ids[pos...]
 end
-
 
 #######################################################################################
 # Implementation of nearby_stuff
@@ -155,4 +155,10 @@ end
 function nearby_ids(
     a::AbstractAgent, model::ABM{<:GridSpaceSingle}, r = 1)
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
+end
+
+function remove_all_from_space!(model::ABM{<:GridSpaceSingle})
+    for p in positions(model)
+        abmspace(model).stored_ids[p...] = 0
+    end
 end

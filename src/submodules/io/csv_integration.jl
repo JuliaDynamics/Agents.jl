@@ -79,21 +79,21 @@ function populate_from_csv!(
     if isempty(col_map)
         if row_number_is_id
             for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
-                Agents.add_agent_pos!(agent_type(id, row...), model)
+                Agents.add_agent_own_pos!(agent_type(id, row...), model)
             end
         else
             for row in CSV.Rows(read(filename); kwargs..., validate = false)
-                Agents.add_agent_pos!(agent_type(row...), model)
+                Agents.add_agent_own_pos!(agent_type(row...), model)
             end
         end
     else
         if row_number_is_id
             for (id, row) in enumerate(CSV.Rows(read(filename); kwargs..., validate = false))
-                Agents.add_agent_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
+                Agents.add_agent_own_pos!(agent_type(; id, (k => row[v] for (k, v) in col_map)...), model)
             end
         else
             for row in CSV.Rows(read(filename); kwargs..., validate = false)
-                Agents.add_agent_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
+                Agents.add_agent_own_pos!(agent_type(; (k => row[v] for (k, v) in col_map)...), model)
             end
         end
     end

@@ -4,7 +4,7 @@ using StableRNGs
 
 # TODO: All of these tests are "bad" in the sense that they should be moved
 # to individual space test files.
-@testset "add_agent! (discrete)" begin
+@testset "add_agent! (discrete space)" begin
     properties = Dict(:x1 => 1)
     space = GraphSpace(complete_digraph(10))
     model = StandardABM(Agent7, space; properties, warn_deprecation = false)
@@ -17,6 +17,8 @@ using StableRNGs
     @test model[1].f1 == model[2].f1
     @test model[1].f2 == model[2].f2
     @test add_agent_single!(model, attributes...).pos ∈ 1:10
+    a = Agent7(model, 1, attributes...)
+    @test add_agent_single!(a, model).pos ∈ 1:10
     fill_space!(model, attributes...)
     @test !has_empty_positions(model)
     add_agent_single!(Agent7, model, attributes...)
@@ -25,9 +27,27 @@ using StableRNGs
     @test a.pos ∈ 1:10
 
     @test add_agent!(3, Agent7, model, attributes...).pos == 3
+    a = Agent7(model, 3, attributes...)
+    @test add_agent_own_pos!(a, model).pos == 3
 
     model = StandardABM(Agent1, GridSpace((10, 10)), warn_deprecation = false)
     @test add_agent!((7, 8), Agent1, model).pos == (7, 8)
+    a = Agent1(model; pos = (9, 8))
+    @test add_agent_own_pos!(a, model).pos == (9, 8)
+    @test hasid(model, 1)
+    @test hasid(model, a)
+    @test !hasid(model, 5)
+
+    model = StandardABM(Agent3, GridSpace((10, 10)), warn_deprecation = false)
+    add_agent!(model)
+    @test model[1].weight == 2.0
+end
+
+@testset "add_agent! (nothing space)" begin
+    model = StandardABM(Agent0, warn_deprecation = false)
+    @test add_agent!(model).id == 1
+    a = Agent0(model)
+    @test add_agent_own_pos!(a, model).id == 2
 end
 
 @testset "move_agent!" begin
@@ -135,13 +155,13 @@ end
     @test nagents(model) == 3
 
     model = StandardABM(GridAgent{2}, GridSpace((10, 10)), warn_deprecation = false)
-
     # Testing remove_all!(model::ABM)
     for i in 1:20
         add_agent_single!(GridAgent{2}, model)
     end
     remove_all!(model)
     @test nagents(model) == 0
+    @test all(p -> isempty(p, model), positions(model)) == true
 
     # Testing remove_all!(model::ABM, n::Int)
     for i in 1:20
@@ -159,6 +179,22 @@ end
     @test nagents(model) == 20
     remove_all!(model, a -> a.id > 5)
     @test nagents(model) == 5
+
+    model = StandardABM(GridAgent{2}, GridSpaceSingle((10, 10)), warn_deprecation = false)
+    for i in 1:20
+        add_agent_single!(GridAgent{2}, model)
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(p -> isempty(p, model), positions(model)) == true
+
+    model = StandardABM(ContinuousAgent{2, Float64}, ContinuousSpace((10, 10)), warn_deprecation = false)
+    for i in 1:20
+        add_agent!(ContinuousAgent{2, Float64}, model, SVector(10*rand(), 10*rand()))
+    end
+    remove_all!(model)
+    @test nagents(model) == 0
+    @test all(p -> isempty(p, abmspace(model).grid), positions(abmspace(model).grid)) == true
 
 end
 
@@ -223,6 +259,20 @@ end
             @test model.count == 0
         end
     end
+end
+
+@testset "model time updates" begin
+    model_step!(model) = nothing
+    agent_step!(a, model) = nothing
+    f(model, t) = t > 100
+    model = StandardABM(Agent2; agent_step!, model_step!)
+    @test abmtime(model) == 0
+    step!(model, 1)
+    @test abmtime(model) == 1
+    step!(model, 10)
+    @test abmtime(model) == 11
+    step!(model, f)
+    @test abmtime(model) == 112
 end
 
 @testset "Higher order groups" begin
@@ -298,4 +348,151 @@ end
     swap_agents!(agent1, agent2, model)
     @test agent1.pos == (1, 3)
     @test agent2.pos == (2, 4)
+end
+
+@multiagent :opt_memory struct Animal{T,N,J}(GridAgent{2})
+    @subagent struct Wolf{T,N}
+        energy::T = 0.5
+        ground_speed::N
+        const fur_color::Symbol
+    end
+    @subagent struct Hawk{T,N,J}
+        energy::T = 0.1
+        ground_speed::N
+        flight_speed::J
+    end
+end
+
+@multiagent :opt_speed struct A{T}(NoSpaceAgent)
+    @subagent struct B{T}
+        a::T = 1
+        b::Int
+        c::Symbol
+    end
+    @subagent struct C
+        b::Int = 2
+        c::Symbol
+        d::Vector{Int}
+    end
+    @subagent struct D{T}
+        c::Symbol = :k
+        d::Vector{Int}
+        a::T
+    end
+end
+
+abstract type AbstractE <: AbstractAgent end
+@multiagent struct E(NoSpaceAgent) <: AbstractE
+    @subagent struct F
+        x::Int
+    end
+    @subagent struct G
+        y::Int
+    end
+end
+
+@multiagent :opt_speed struct MultiSchelling1{X}(GridAgent{2})
+    @subagent struct Civilian1 # can't re-define existing `Schelling` name
+        mood::Bool = false
+        group::Int
+    end
+    @subagent struct Governor1{X<:Real} # can't redefine existing `Politician` name
+        group::Int
+        influence::X
+    end
+end
+
+@multiagent :opt_memory struct MultiSchelling2{X}(GridAgent{2})
+    @subagent struct Civilian2 # can't re-define existing `Schelling` name
+        mood::Bool = false
+        group::Int
+    end
+    @subagent struct Governor2{X<:Real} # can't redefine existing `Politician` name
+        group::Int
+        influence::X
+    end
+end
+
+@testset "@multiagent macro" begin
+
+    hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
+    hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+    wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
+    wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+
+    @test hawk_1.energy == 1.0
+    @test hawk_2.energy == 0.1
+    @test wolf_1.energy == 2.0
+    @test wolf_2.energy == 0.5
+    @test hawk_1.flight_speed == 3
+    @test hawk_2.flight_speed == 2
+    @test wolf_1.fur_color == :black
+    @test wolf_2.fur_color == :white
+    @test_throws "" hawk_1.fur_color
+    @test_throws "" wolf_1.flight_speed
+    @test kindof(hawk_1) == kindof(hawk_2) == :Hawk
+    @test kindof(wolf_1) == kindof(wolf_2) == :Wolf
+
+    fake_step!(a) = nothing
+    model = StandardABM(Animal, GridSpace((5, 5)); agent_step! = fake_step!)
+
+    add_agent!(Hawk, model, 1.0, 2.0, 3)
+    add_agent!(Wolf, model, 2.0, 3.0, :black)
+    @test nagents(model) == 2
+    sample!(model, 2)
+    @test nagents(model) == 2
+
+    b1 = B(1, 2, 1, :s)
+    c1 = C(1, 1, :s, Int[])
+    d1 = D(1, :s, [1], 1.0)
+    b2 = B(; id = 1, b = 1, c = :s)
+    c2 = C(; id = 1, c = :s, d = [1,2])
+    d2 = D(; id = 1, d = [1], a = true)
+
+    @test b2.a == 1
+    @test c2.b == 2
+    @test d2.c == :k
+    @test kindof(b1) == kindof(b2) == :B
+    @test kindof(c1) == kindof(c2) == :C
+    @test kindof(d1) == kindof(d2) == :D
+    @test_throws "" b2.d
+    @test_throws "" c1.a
+    @test_throws "" d1.b
+    @test d2.a == true
+    @test b2.c == c2.c == b1.c == c1.c == d1.c == :s
+    @test b1 isa A && b2 isa A
+    @test c1 isa A && c2 isa A
+    @test d1 isa A && d2 isa A
+
+    model = StandardABM(A; agent_step! = fake_step!)
+
+    add_agent!(B, model, 2, 1, :s)
+    add_agent!(C, model, 1, :s, Int[])
+    add_agent!(D, model, :s, [1], 1.0)
+    @test nagents(model) == 3
+    sample!(model, 2)
+    @test nagents(model) == 2
+
+    f = F(1, 1)
+    g = G(2, 2)
+
+    @test f.id == 1
+    @test g.id == 2
+    @test f.x == 1
+    @test g.y == 2
+    @test_throws "" f.y
+    @test_throws "" g.x
+    @test kindof(f) == :F
+    @test kindof(g) == :G
+    @test E <: AbstractE && E <: AbstractE
+    @test f isa E && g isa E
+
+
+    civ = Civilian1(; id = 2, pos = (2, 2), group = 2)
+    gov = Governor1(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
+    civ = Civilian2(; id = 2, pos = (2, 2), group = 2)
+    gov = Governor2(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
+
+    @test_throws "" Governor1(; id = 3 , pos = (2, 2), group = 2, influence = im)
+    @test_throws "" Governor2(; id = 3 , pos = (2, 2), group = 2, influence = im)
 end

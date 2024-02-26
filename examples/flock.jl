@@ -12,8 +12,6 @@
 # * fly towards the average position of neighbors
 # * fly in the average direction of neighbors
 
-# It is also available from the `Models` module as [`Models.flocking`](@ref).
-
 # ## Defining the core structures
 
 # We begin by calling the required packages and defining an agent type representing a bird.
