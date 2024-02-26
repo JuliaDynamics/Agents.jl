@@ -57,7 +57,7 @@ end
 ## SIR
 
 using GraphMakie.Graphs
-using GLMakie.Colors.ColorTypes
+using CairoMakie.Colors.ColorTypes
 using GraphMakie: Shell
 
 function sir_test()
