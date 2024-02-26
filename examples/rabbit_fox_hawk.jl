@@ -383,12 +383,12 @@ end
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
 # we explicitly provide ranges to specify where the heightmap should be plotted.
-function static_preplot!(ax, model)
+function static_preplot!(ax, p)
     surface!(
         ax,
         (100/205):(100/205):100,
         (100/205):(100/205):100,
-        model.heightmap;
+        p.abmobs[].model.heightmap;
         colormap = :terrain
     )
 end

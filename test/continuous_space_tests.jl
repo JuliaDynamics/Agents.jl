@@ -674,7 +674,7 @@ end
 ac = (a) -> colors[a.id]
 am = (a) -> markers[a.id]
 
-static_preplot! = (ax, model) -> begin
+static_preplot! = (ax, p) -> begin
     xs = 0:spacing:extent[1]
     vlines!(ax, xs; ymin = 0, ymax = extent[2], color = :gray)
     ys = 0:spacing:extent[2]

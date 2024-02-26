@@ -57,7 +57,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
   instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
   placed naturally.
-* `static_preplot!` : A function `f(ax, model)` that plots something after the heatmap
+* `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
   but before the agents.
 * `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space. 
   Directly passed to
@@ -292,7 +292,7 @@ Return `nothing, nothing` if you want to disable this.
 function get_axis_limits end
 
 """
-    agentsplot!(ax, model::ABM{S}, p::ABMPlot) where {S<:Agents.AbstractSpace}
+    agentsplot!(ax, p::ABMPlot)
 
 Plot agents at their positions.
 """
@@ -301,7 +301,7 @@ function agentsplot! end
 ## Preplots
 
 """
-    spaceplot!(ax, model::ABM{S}; spaceplotkwargs...) where {S<:Agents.AbstractSpace}
+    spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
 
 Create a space-dependent preplot.
 """

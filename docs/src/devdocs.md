@@ -9,8 +9,6 @@ If you wish to do any development work, it is better to use
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
 
-## Custom space type
-
 ## [Creating a new space type](@ref make_new_space)
 
 Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the source file: [`src/core/space_interaction_API.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/space_interaction_API.jl).
@@ -71,15 +69,15 @@ end
 function Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace})
 end
 
-function Agents.agentsplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot)
+function Agents.agentsplot!(ax, p::ABMPlot)
 end
 
 ## Preplots (optional)
 
-function Agents.spaceplot!(ax, model::ABM{<:Agents.AbstractSpace}; spaceplotkwargs...)
+function Agents.spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
 end
 
-function Agents.static_preplot!(ax, model::ABM{<:Agents.AbstractSpace}, p::ABMPlot)
+function Agents.static_preplot!(ax, p::ABMPlot)
 end
 
 ## Lifting (optional)

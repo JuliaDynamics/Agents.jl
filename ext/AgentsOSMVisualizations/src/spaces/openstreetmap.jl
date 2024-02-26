@@ -21,8 +21,8 @@ end
 `OSMSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot` 
 with them in the given Makie axis.
 """
-function Agents.spaceplot!(ax::Axis, model::ABM{<:OSMSpace}; spaceplotkwargs...)
-    return Agents.osmplot!(ax, model; spaceplotkwargs...)
+function Agents.spaceplot!(ax::Axis, p::ABMP{<:OSMSpace}; spaceplotkwargs...)
+    return Agents.osmplot!(ax, p; spaceplotkwargs...)
 end
 
 ## Lifting

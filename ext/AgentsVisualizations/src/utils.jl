@@ -7,13 +7,13 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
         # Required
         hasmethod(agents_space_dimensionality, (S, )),
         hasmethod(get_axis_limits, (ABM{S}, )),
-        hasmethod(agentsplot!, (Axis, ABM{S}, _ABMPlot)) ||
-            hasmethod(agentsplot!, (Axis3, ABM{S}, _ABMPlot)),
+        hasmethod(agentsplot!, (Axis, ABMP{S})) ||
+            hasmethod(agentsplot!, (Axis3, ABMP{S})),
         # Preplots (Optional)
-        hasmethod(spaceplot!, (Axis, ABM{S}), (:ac, :am, :as)) ||
-            hasmethod(spaceplot!, (Axis3, ABM{S}), (:ac, :am, :as)),
-        hasmethod(static_preplot!, (Axis, ABM{S}, _ABMPlot)) ||
-            hasmethod(static_preplot!, (Axis3, ABM{S}, _ABMPlot)),
+        hasmethod(spaceplot!, (Axis, ABMP{S}), (:ac, :am, :as)) ||
+            hasmethod(spaceplot!, (Axis3, ABMP{S}), (:ac, :am, :as)),
+        hasmethod(static_preplot!, (Axis, ABMP{S})) ||
+            hasmethod(static_preplot!, (Axis3, ABMP{S})),
         # Lifting (optional)
         hasmethod(abmplot_heatobs, (ABM{S}, Any)),
         hasmethod(abmplot_pos, (ABM{S}, Any)),
@@ -32,10 +32,10 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     === Required
     $(checkmark(1))\tagents_space_dimensionality(space::$S)
     $(checkmark(2))\tget_axis_limits(model::ABM{S})
-    $(checkmark(3))\tagentsplot!(ax, model::ABM{S})
+    $(checkmark(3))\tagentsplot!(ax, p::ABMPlot)
     === Preplots (optional)
-    $(checkmark(4))\tspaceplot!(ax, model::ABM{S}; spaceplotkwargs...)
-    $(checkmark(5))\tstatic_preplot!(ax, model::ABM{S}, p::ABMPlot)
+    $(checkmark(4))\tspaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
+    $(checkmark(5))\tstatic_preplot!(ax, p::ABMPlot)
     === Lifting (optional)
     $(checkmark(6))\tabmplot_heatobs(model::ABM{S}, heatarray)
     $(checkmark(7))\tabmplot_pos(model::ABM{S}, offset)

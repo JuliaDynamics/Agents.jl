@@ -2,7 +2,7 @@ Agents.agents_space_dimensionality(model::ABM) =
     Agents.agents_space_dimensionality(abmspace(model))
 
 "Plot agents into a 2D space."
-function Agents.agentsplot!(ax::Axis, model::ABM, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis, p::ABMP)
     if p._used_poly[]
         poly!(p, p.marker; p.color, p.agentsplotkwargs...)
     else
@@ -12,7 +12,7 @@ function Agents.agentsplot!(ax::Axis, model::ABM, p::_ABMPlot)
 end
 
 "Plot agents into a 3D space."
-function Agents.agentsplot!(ax::Axis3, model::ABM, p::_ABMPlot)
+function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
     p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
     meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     return p
@@ -20,16 +20,16 @@ end
 
 ## Preplots
 
-Agents.spaceplot!(ax::Axis, model::ABM; spaceplotkwargs...) = nothing
-Agents.spaceplot!(ax::Axis3, model::ABM; spaceplotkwargs...) = nothing
+Agents.spaceplot!(ax::Axis, p::_ABMPlot; spaceplotkwargs...) = nothing
+Agents.spaceplot!(ax::Axis3, p::_ABMPlot; spaceplotkwargs...) = nothing
 
-function Agents.static_preplot!(ax::Axis, model::ABM, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
+function Agents.static_preplot!(ax::Axis, p::_ABMPlot)
+    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
     return nothing
 end
 
-function Agents.static_preplot!(ax::Axis3, model::ABM, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, model, p)
+function Agents.static_preplot!(ax::Axis3, p::_ABMPlot)
+    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
     return nothing
 end
 

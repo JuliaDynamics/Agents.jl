@@ -142,10 +142,10 @@ function Makie.plot!(p::_ABMPlot)
     merge_spaceplotkwargs!(p)
     merge_agentsplotkwargs!(p)
 
-    spaceplot!(ax, model; p.spaceplotkwargs...)
+    spaceplot!(ax, p; p.spaceplotkwargs...)
     heatmap!(ax, p)
-    static_preplot!(ax, model, p)
-    agentsplot!(ax, model, p)
+    static_preplot!(ax, p)
+    agentsplot!(ax, p)
 
     p.stepclick, p.resetclick = add_interaction!(ax, p)
 
