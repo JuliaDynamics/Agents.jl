@@ -112,7 +112,7 @@ struct CustomSpace{D,P} <: Agents.AbstractGridSpace{D,P}
     offsets_within_radius_no_0::Vector{Vector{NTuple{D,Int}}}
     field_that_should_be_a_property_instead::Bool
 end
-spacesize(space::CustomSpace) = space.extent
+Agents.spacesize(space::CustomSpace) = space.extent
 
 """
     CustomSpace(d::NTuple{D, Int}; periodic = true, metric = :chebyshev)
@@ -322,4 +322,5 @@ end
     sir_test()
     zombies_test()
     custom_space_schelling_test()
+    @test 1 === 1
 end
