@@ -68,99 +68,25 @@ end
     money::Int
 end
 
-@multiagent :opt_memory struct AgentAllMemory(GridAgent{2})
-    @subagent struct Agent1m
-        money::Int
-    end
-    @subagent struct Agent2m
-        money::Int
-    end
-    @subagent struct Agent3m
-        money::Int
-    end
-    @subagent struct Agent4m
-        money::Int
-    end
-    @subagent struct Agent5m
-        money::Int
-    end
-    @subagent struct Agent6m
-        money::Int
-    end
-    @subagent struct Agent7m
-        money::Int
-    end
-    @subagent struct Agent8m
-        money::Int
-    end
-    @subagent struct Agent9m
-        money::Int
-    end
-    @subagent struct Agent10m
-        money::Int
-    end
-    @subagent struct Agent11m
-        money::Int
-    end
-    @subagent struct Agent12m
-        money::Int
-    end
-    @subagent struct Agent13m
-        money::Int
-    end
-    @subagent struct Agent14m
-        money::Int
-    end
-    @subagent struct Agent15m
-        money::Int
+agents_m = [Symbol(:AgentAllMemory, :($y)) for y in [2,3,4,5,10,15]]
+subagents_m = [[Symbol(:Agent, :($x), :m, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
+expr_subagents_m = [[:(@subagent struct $(Symbol(:Agent, :($x), :m, :($y)))
+                            money::Int
+                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
+for (a, subs) in zip(agents_m, expr_subagents_m)
+    @eval @multiagent :opt_memory struct $a(GridAgent{2})
+        $(subs...)
     end
 end
 
-@multiagent :opt_speed struct AgentAllSpeed(GridAgent{2})
-    @subagent struct Agent1s
-        money::Int
-    end
-    @subagent struct Agent2s
-        money::Int
-    end
-    @subagent struct Agent3s
-        money::Int
-    end
-    @subagent struct Agent4s
-        money::Int
-    end
-    @subagent struct Agent5s
-        money::Int
-    end
-    @subagent struct Agent6s
-        money::Int
-    end
-    @subagent struct Agent7s
-        money::Int
-    end
-    @subagent struct Agent8s
-        money::Int
-    end
-    @subagent struct Agent9s
-        money::Int
-    end
-    @subagent struct Agent10s
-        money::Int
-    end
-    @subagent struct Agent11s
-        money::Int
-    end
-    @subagent struct Agent12s
-        money::Int
-    end
-    @subagent struct Agent13s
-        money::Int
-    end
-    @subagent struct Agent14s
-        money::Int
-    end
-    @subagent struct Agent15s
-        money::Int
+agents_s = [Symbol(:AgentAllSpeed, :($y)) for y in [2,3,4,5,10,15]]
+subagents_s = [[Symbol(:Agent, :($x), :s, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
+expr_subagents_s = [[:(@subagent struct $(Symbol(:Agent, :($x), :s, :($y)))
+                           money::Int
+                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
+for (a, subs) in zip(agents_s, expr_subagents_s)
+    @eval @multiagent :opt_speed struct $a(GridAgent{2})
+        $(subs...)
     end
 end
 
@@ -176,15 +102,14 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     return model
 end
 
-function initialize_model_15_multi_memory(;n_agents=600, dims=(5,5))
-    agent_types = [Agent1m,Agent2m,Agent3m,Agent4m,Agent5m,Agent6m,Agent7m,Agent8m,
-                   Agent9m,Agent10m,Agent11m,Agent12m,Agent13m,Agent14m,Agent15m]
-    agents_used = agent_types[1:15]
+function initialize_model_multi_memory(;n_agents=600, n_types=1, dims=(5,5))
+    i = findfirst(x -> length(x) == n_types, subagents_m)
+    agents_used = [eval(sa) for sa in subagents_m[i]]
     space = GridSpace(dims)
-    model = StandardABM(AgentAllMemory, space; agent_step!,
+    model = StandardABM(eval(agents_m[i]), space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
-    agents_per_type = div(n_agents, 15)
+    agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
             add_agent!(A, model, 10)
@@ -193,15 +118,14 @@ function initialize_model_15_multi_memory(;n_agents=600, dims=(5,5))
     return model
 end
 
-function initialize_model_15_multi_speed(;n_agents=600, dims=(5,5))
-    agent_types = [Agent1s,Agent2s,Agent3s,Agent4s,Agent5s,Agent6s,Agent7s,Agent8s,
-                   Agent9s,Agent10s,Agent11s,Agent12s,Agent13s,Agent14s,Agent15s]
-    agents_used = agent_types[1:15]
+function initialize_model_multi_speed(;n_agents=600, n_types=1, dims=(5,5))
+    i = findfirst(x -> length(x) == n_types, subagents_s)
+    agents_used = [eval(sa) for sa in subagents_s[i]]
     space = GridSpace(dims)
-    model = StandardABM(AgentAllSpeed, space; agent_step!,
+    model = StandardABM(eval(agents_s[i]), space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
-    agents_per_type = div(n_agents, 15)
+    agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
             add_agent!(A, model, 10)
@@ -254,12 +178,12 @@ function run_simulation_1(n_steps)
     Agents.step!(model, n_steps)
 end
 
-function run_simulation_15_multi_memory(n_steps)
-    model = initialize_model_15_multi_memory()
+function run_simulation_multi_memory(n_steps; n_types)
+    model = initialize_model_multi_memory(; n_types=n_types)
     Agents.step!(model, n_steps)
 end
-function run_simulation_15_multi_speed(n_steps)
-    model = initialize_model_15_multi_speed()
+function run_simulation_multi_speed(n_steps; n_types)
+    model = initialize_model_multi_speed(; n_types=n_types)
     Agents.step!(model, n_steps)
 end
 
@@ -273,46 +197,34 @@ n_steps = 50
 n_types = [2,3,4,5,10,15]
 
 time_1 = @belapsed run_simulation_1($n_steps)
-times = Float64[]
+times_n = Float64[]
+times_multi_m = Float64[]
+times_multi_s = Float64[]
 for n in n_types
     println(n)
     t = @belapsed run_simulation_n($n_steps; n_types=$n)
-    push!(times, t/time_1)
+    push!(times_n, t/time_1)
+    t_multi = @belapsed run_simulation_multi_memory($n_steps; n_types=$n)
+    push!(times_multi_m, t_multi/time_1)
+    t_multi_speed = @belapsed run_simulation_multi_speed($n_steps; n_types=$n)
+    push!(times_multi_s, t_multi_speed/time_1)
 end
-t_multi = @belapsed run_simulation_15_multi_memory($n_steps)
-t_multi_rel = t_multi/time_1
-
-t_multi_speed = @belapsed run_simulation_15_multi_speed($n_steps)
-t_multi_rel_speed = t_multi_speed/time_1
 
 println("relative time of model with 1 type: 1")
-for (n, t) in zip(n_types, times)
-    println("relative time of model with $n types: $t")
+for (n, t1, t2, t3) in zip(n_types, times_n, times_multi_m, times_multi_s)
+    println("relative time of model with $n types: $t1")
+    println("relative time of model with $n @multiagent :opt_memory: $t2")
+    println("relative time of model with $n @multiagent :opt_speed: $t3")
 end
-println("relative time of model with @multiagent :opt_memory: $t_multi_rel")
-println("relative time of model with @multiagent :opt_speed: $t_multi_rel_speed")
-
-# relative time of model with 1 type: 1
-#
-# relative time of model with 2 types: 1.287252249521869
-# relative time of model with 3 types: 1.4146741156162865
-# relative time of model with 4 types: 4.059042824599718
-# relative time of model with 5 types: 5.243935156955378
-# relative time of model with 10 types: 7.694527211389013
-# relative time of model with 15 types: 11.243909260086886
-#
-# relative time of model with @multiagent :opt_speed: 1.004122351734208
-# relative time of model with @multiagent :opt_memory: 2.8898100796366544
 
 using CairoMakie
-fig, ax = CairoMakie.scatterlines(n_types, times; label = "Union");
-scatter!(ax, 15, t_multi_rel_speed; color = Cycled(2), marker = :circle, markersize = 12, label = "@multi :opt_speed")
-scatter!(ax, 15, t_multi_rel; color = Cycled(4), marker = :rect, markersize = 12, label = "@multi :opt_memory")
-scatter!(ax, n_types, times)
+fig, ax = CairoMakie.scatterlines(n_types, times_n; label = "Union");
+scatterlines!(ax, n_types, times_multi_s; label = "@multi :opt_speed")
+scatterlines!(ax, n_types, times_multi_m; label = "@multi :opt_memory")
 ax.xlabel = "# types"
 ax.ylabel = "time relative to 1 type"
 ax.title = "Union types vs @multiagent macro"
 axislegend(ax; position = :lt)
-ax.yticks = 0:1:ceil(Int, maximum(times))
+ax.yticks = 0:1:ceil(Int, maximum(times_n))
 ax.xticks = 2:2:16
 fig
