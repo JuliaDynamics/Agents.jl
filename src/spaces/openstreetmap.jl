@@ -957,6 +957,21 @@ function Agents.nearby_ids(
     return nearby
 end
 
+function Agents.nearby_ids(
+        pos::Tuple{Float32, Float32},
+        model::ABM{<:OpenStreetMapSpace},
+        distance::Real,
+        args...;
+        kwargs...
+    )
+    # need to create an iterator for all agents' lonlat positions as Float32
+    # the Float32 conversion is needed for inspection in visualization extension
+    # TODO maybe track agents' lonlat positions as Float32 inside the space itself?
+    ids_lonlat32 = ((id, Float32.(lonlat(model[id], model))) for id in allids(model))
+    nearby = (id for (id, apos) in ids_lonlat32 if sqrt(sum(abs2.(pos .- apos))) <= distance)
+    return nearby
+end
+
 forward_ids_on_road(pos_1::Int, pos_2::Int, model::ABM{<:OpenStreetMapSpace}) =
     Iterators.filter(i -> model[i].pos[2] == pos_2, abmspace(model).s[pos_1])
 

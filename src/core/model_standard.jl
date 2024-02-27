@@ -141,12 +141,15 @@ function StandardABM(
     warn_deprecation = true
 ) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
-        @warn "From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
-         as keywords argument when defining the model. The old version is deprecated. Passing these
-         functions to methods of the library which required them before version 6.0 is also deprecated
-         since they can be retrieved from the model instance, in particular this means it is not needed to
-         pass the stepping functions in step!, run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration
-         abmvideo and ABMObservable"
+        @warn """
+        From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
+        as keywords argument when defining the model. The old version is deprecated.
+        Passing these functions to methods of the library which required them before 
+        version 6.0 is also deprecated since they can be retrieved from the model instance. 
+        In particular this means it is not needed to pass the stepping functions in step!, 
+        run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and 
+        ABMObservable.
+        """
     end
     !(ismultiagenttype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)

@@ -145,7 +145,7 @@ model = schoolyard()
 using CairoMakie
 CairoMakie.activate!() # hide
 
-function static_preplot!(ax, model)
+function static_preplot!(ax, p)
     obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
     CairoMakie.hidedecorations!(ax) # hide tick labels etc.
     CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students

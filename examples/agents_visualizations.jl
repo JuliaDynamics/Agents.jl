@@ -50,9 +50,14 @@ model
 daisycolor(a) = a.breed # agent color
 as = 20    # agent size
 am = '✿'  # agent marker
-scatterkwargs = (strokewidth = 1.0,) # add stroke around each agent
-fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, scatterkwargs)
+agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
+fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, agentsplotkwargs)
 fig
+
+# !!! note "Supported keyword arguments"
+#     We do not check internally, if the keyword arguments passed to `abmplot` are 
+#     supported. Please make sure that there are no typos and that the used kwargs are 
+#     supported by the [`abmplot`](@ref) function. Otherwise they will be ignored.
 
 # Besides agents, we can also plot spatial properties as a heatmap.
 # Here we plot the temperature of the planet by providing the name
@@ -61,7 +66,7 @@ heatarray = :temperature
 heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     ac = daisycolor, as, am,
-    scatterkwargs = (strokewidth = 1.0,),
+    agentsplotkwargs = (strokewidth = 1.0,),
     heatarray, heatkwargs
 )
 
@@ -170,7 +175,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # create a basic abmplot with controls and sliders
 model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
 fig, ax, abmobs = abmplot(model; params, plotkwargs...,
-    adata, mdata, figure = (; resolution = (1600,800))
+    adata, mdata, figure = (; size = (1600,800))
 )
 fig
 
@@ -253,7 +258,7 @@ end
 # To further style the edges and nodes of the resulting graph plot, we can leverage
 # the functionality of [GraphMakie.graphplot](https://graph.makie.org/stable/#GraphMakie.graphplot)
 # and pass all the desired keyword arguments to it via a named tuple called
-# `graphplotkwargs`.
+# `agentsplotkwargs`.
 # When using functions for edge color and width, they should return either one color or
 # a vector with the same length (or twice) as current number of edges in the underlying
 # graph.
@@ -270,7 +275,7 @@ function edge_width(model)
     end
     return w
 end
-graphplotkwargs = (
+agentsplotkwargs = (
     layout = Shell(), # node positions
     arrow_show = false, # hide directions of graph edges
     edge_color = edge_color, # change edge colors and widths with own functions
@@ -278,5 +283,5 @@ graphplotkwargs = (
     edge_plottype = :linesegments # needed for tapered edge widths
 )
 
-fig, ax, abmobs = abmplot(sir_model; as = city_size, ac = city_color, graphplotkwargs)
+fig, ax, abmobs = abmplot(sir_model; as = city_size, ac = city_color, agentsplotkwargs)
 fig

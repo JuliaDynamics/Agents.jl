@@ -35,8 +35,8 @@ OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 
 [extensions]
 AgentsArrow = "Arrow"
-AgentsGraphVisualizations = "GraphMakie"
-AgentsOSMVisualizations = "OSMMakie"
+AgentsGraphVisualizations = ["Makie", "GraphMakie"]
+AgentsOSMVisualizations = ["Makie", "OSMMakie"]
 AgentsVisualizations = "Makie"
 
 [compat]

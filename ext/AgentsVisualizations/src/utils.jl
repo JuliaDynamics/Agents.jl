@@ -1,6 +1,98 @@
 export subscript, superscript
 export record_interaction
 
+function Agents.check_space_visualization_API(::ABM{S}) where {S}
+    checkmark(i) = checks[i] ? "✔" : "❌"
+    checks = [
+        # Required
+        hasmethod(agents_space_dimensionality, (S, )),
+        hasmethod(get_axis_limits, (ABM{S}, )),
+        hasmethod(agentsplot!, (Axis, ABMP{S})) ||
+            hasmethod(agentsplot!, (Axis3, ABMP{S})),
+        # Preplots (Optional)
+        hasmethod(spaceplot!, (Axis, ABMP{S}), (:ac, :am, :as)) ||
+            hasmethod(spaceplot!, (Axis3, ABMP{S}), (:ac, :am, :as)),
+        hasmethod(static_preplot!, (Axis, ABMP{S})) ||
+            hasmethod(static_preplot!, (Axis3, ABMP{S})),
+        # Lifting (optional)
+        hasmethod(abmplot_heatobs, (ABM{S}, Any)),
+        hasmethod(abmplot_pos, (ABM{S}, Any)),
+        hasmethod(abmplot_colors, (ABM{S}, Function)) ||
+            hasmethod(abmplot_colors, (ABM{S}, Any)),
+        hasmethod(abmplot_markers, (ABM{S}, Function, Any)) ||
+            hasmethod(abmplot_markers, (ABM{S}, Any, Any)),
+        hasmethod(abmplot_markersizes, (ABM{S}, Function)) ||
+            hasmethod(abmplot_markersizes, (ABM{S}, Any)),
+        # Inspection (optional)
+        hasmethod(convert_element_pos, (S, Any)),
+        hasmethod(ids_to_inspect, (ABM{S}, Any)),
+    ]
+    @info """Checking for methods that have to be defined to plot an ABM with custom space \
+    type S <: $S.
+    === Required
+    $(checkmark(1))\tagents_space_dimensionality(space::$S)
+    $(checkmark(2))\tget_axis_limits(model::ABM{S})
+    $(checkmark(3))\tagentsplot!(ax, p::ABMPlot)
+    === Preplots (optional)
+    $(checkmark(4))\tspaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
+    $(checkmark(5))\tstatic_preplot!(ax, p::ABMPlot)
+    === Lifting (optional)
+    $(checkmark(6))\tabmplot_heatobs(model::ABM{S}, heatarray)
+    $(checkmark(7))\tabmplot_pos(model::ABM{S}, offset)
+    $(checkmark(8))\tabmplot_colors(model::ABM{S}, ac)
+    $(checkmark(9))\tabmplot_marker(model::ABM{S}, am, pos)
+    $(checkmark(10))\tabmplot_markersizes(model::ABM{$S}, as)
+    === Inspection (optional)
+    $(checkmark(11))\tconvert_element_pos(::S, pos)
+    $(checkmark(12))\tids_to_inspect(model::ABM{S}, pos)
+    $(count(checks))/$(length(checks)) checks were successful.
+    """
+    if !all(checks[1:3])
+        @error """Requirements for plotting of space not met.
+        Please reference the Agents.jl documentation \
+        (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
+    end
+    return checks
+end
+
+function has_custom_space(::ABM{S}) where {S}
+    S <: Nothing &&
+        @info "An empty plot will be drawn for agents in a model with Nothing space."
+    if S <: Union{GridSpace, GridSpaceSingle, OSMSpace, ContinuousSpace, 
+        GraphSpace, Nothing}
+        return false
+    end
+    return true
+end
+
+first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
+
+function merge_spaceplotkwargs!(p)
+    if hasproperty(p, :osmplotkwargs)
+        @warn "Usage of osmplotkwargs is deprecated. " *
+            "Please remove it from the call to abmplot and " * 
+            "use only spaceplotkwargs instead."
+        merge!(p.spaceplotkwargs, p.osmplotkwargs)
+    end
+    return p.spaceplotkwargs
+end
+
+function merge_agentsplotkwargs!(p)
+    if hasproperty(p, :scatterkwargs)
+        @warn """Usage of the scatterkwargs keyword argument is deprecated.
+            Please remove it from the call to abmplot and \
+            use only agentsplotkwargs instead."""
+        merge!(p.agentsplotkwargs, p.scatterkwargs)
+    end
+    if hasproperty(p, :graphplotkwargs)
+        @warn """Usage of the graphplotkwargs keyword argument is deprecated.
+            Please remove it from the call to abmplot and \
+            use only agentsplotkwargs instead."""
+        merge!(p.agentsplotkwargs, p.graphplotkwargs)
+    end
+    return p.agentsplotkwargs
+end
+
 ##########################################################################################
 # Check/get/set
 ##########################################################################################

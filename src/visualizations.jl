@@ -37,7 +37,8 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `scatterkwargs = ()` : Additional keyword arguments propagated to the `scatter!` call.
+* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that 
+  plots the agents (typically `scatter!`).
 
 ### Preplot related
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
@@ -56,14 +57,16 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
   instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
   placed naturally.
-* `static_preplot!` : A function `f(ax, model)` that plots something after the heatmap
+* `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
   but before the agents.
-* `osmkwargs = NamedTuple()` : keywords directly passed to `OSMMakie.osmplot!`
-  if model space is `OpenStreetMapSpace`.
-* `graphplotkwargs = NamedTuple()` : keywords directly passed to
-  [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
+* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space. 
+  Directly passed to
+  * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
+  * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
   if model space is `GraphSpace`.
 * `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space aspect ratio.
+* `enable_space_checks = true`: Set to `false` to disable checks related to the model
+  space.
 
 The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
 `axis` which can be used to change the automatically created `Figure` and `Axis` objects.
@@ -107,6 +110,28 @@ See `abmplot`.
 function abmplot! end
 export abmplot, abmplot!
 
+"""
+Helper function to retrieve the automatically generated `ABMPlot` type from the
+`AgentsVisualizations` extension.
+Returns `nothing` if `AgentsVisualizations` was not loaded.
+"""
+function get_ABMPlot_type()
+  AgentsVisualizations = Base.get_extension(Agents, :AgentsVisualizations)
+  isnothing(AgentsVisualizations) && return nothing
+  return AgentsVisualizations._ABMPlot
+end
+
+"""
+    add_interaction!(ax)
+    add_interaction!(ax, p::_ABMPlot)
+
+Adds model control buttons and parameter sliders according to the plotting parameters 
+`add_controls` (if true) and `params` (if not empty).
+Buttons and sliders are placed next to each other in a new layout position below the 
+position of `ax`.
+"""
+function add_interaction! end
+export add_interaction!
 
 """
     ABMObservable(model; adata, mdata, when) → abmobs
@@ -236,8 +261,97 @@ Scale given polygon by `s`, assuming polygon's center of reference is the origin
 function scale_polygon end
 export translate_polygon, scale_polygon, rotate_polygon
 
+############################################################################################
+## Visualization API
+############################################################################################
+
+"""
+    check_space_visualization_API(model::ABM)
+
+Checks whether all the necessary method extensions indicated in 
+[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl) 
+have been defined.
+"""
+function check_space_visualization_API end
+
+## Required
+
+"""
+    agents_space_dimensionality(space::S) where {S<:Agents.AbstractSpace}
+
+Return dimensionality of given model space.
+"""
+function agents_space_dimensionality end
+
+"""
+    get_axis_limits(model::ABM{S}) where {S<:Agents.AbstractSpace}
+
+Return appropriate axis limits for given model.
+Return `nothing, nothing` if you want to disable this.
+"""
+function get_axis_limits end
+
+"""
+    agentsplot!(ax, p::ABMPlot)
+
+Plot agents at their positions.
+"""
+function agentsplot! end
+
+## Preplots
+
+"""
+    spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
+
+Create a space-dependent preplot.
+"""
+function spaceplot! end
+
+function static_preplot! end
+
+## Lifting
+
+"""
+    abmplot_heatobs(model::ABM{S}, heatarray)
+"""
+function abmplot_heatobs end
+"""
+    abmplot_pos(model::ABM{S}, offset)
+"""
+function abmplot_pos end
+"""
+  abmplot_colors(model::ABM{S}, ac)
+  abmplot_colors(model::ABM{S}, ac::Function)
+"""
+function abmplot_colors end
+"""
+    abmplot_markers(model::ABM{S}, am, pos)
+    abmplot_markers(model::ABM{S}, am::Function, pos)
+"""
+function abmplot_markers end
+"""
+    abmplot_markersizes(model::ABM{S}, as)
+    abmplot_markersizes(model::ABM{S}, as::Function)
+"""
+function abmplot_markersizes end
+
+## Inspection
+
+"""
+    convert_element_pos(::S, pos)
+
+Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie 
+figure (e.g. a single scatter point representing an agent) to its corresponding position in 
+the given space `S`.
+"""
+function convert_element_pos end
+
+"""
+    ids_to_inspect(model::ABM{S}, pos)
+"""
+function ids_to_inspect end
+
 # Some cheat functions that only exist so that we can have
 # a conditional dependency on OSMMakie and GraphMakie
-function agents_osmplot! end
-function agents_graphplot! end
-
+function osmplot! end
+function graphplot! end
