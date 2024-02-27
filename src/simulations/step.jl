@@ -38,7 +38,6 @@ function step_ahead!(model::StandardABM, agent_step!, model_step!, n, t)
         !agents_first && model_step!(model)
         for id in schedule(model)
             # ensure we don't act on agent that doesn't exist
-            # (this condition can be skipped for `VecABM`)
             agent_not_removed(id, model) || continue
             agent_step!(model[id], model)
         end

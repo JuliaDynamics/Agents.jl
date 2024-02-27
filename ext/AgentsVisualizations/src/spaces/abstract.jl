@@ -36,7 +36,7 @@ end
 function old_static_preplot!(ax, model, p)
     @warn "Usage of the static_preplot! kwarg is deprecated. " *
         "Please remove it from the call to abmplot and define a custom method for " *
-        "Agents.static_preplot!(ax, model, p) instead."
+        "Agents.static_preplot!(ax, model, p) instead." maxlog=1
     return p.static_preplot![](ax, model)
 end
 

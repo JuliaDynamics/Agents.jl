@@ -17,7 +17,7 @@ macro agent(new_name, base_type, super_type, extra_fields)
                   const other_extra_const_property::Int
                   # etc...
               end
-          "
+          " maxlog=1
     # hack for backwards compatibility (PR #846)
     if base_type isa Expr
         if base_type.args[1] == :ContinuousAgent && length(base_type.args) == 2
@@ -84,7 +84,7 @@ end
 
 export add_agent_pos!
 function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`"
+    @warn "`add_agent_pos(agent, model)` is deprecated in favor of `add_agent_own_pos(agent, model)`" maxlog=1
     add_agent_own_pos!(agent, model)
 end
 
@@ -95,7 +95,7 @@ end
 function CommonSolve.step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true; warn_deprecation = true)
     if warn_deprecation
         @warn "Passing agent_step! and model_step! to step! is deprecated. Use the new version
-             step!(model, n = 1, agents_first = true)"
+             step!(model, n = 1, agents_first = true)" maxlog=1
     end
     s = 0
     t = getfield(model, :time)
@@ -127,7 +127,7 @@ function run!(model, agent_step!, model_step!, n;
     )
     if warn_deprecation
         @warn "Passing agent_step! and model_step! to run! is deprecated.
-          These functions should be already contained inside the model instance."
+          These functions should be already contained inside the model instance." maxlog=1
     end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
@@ -190,7 +190,7 @@ function offline_run!(model, agent_step!, model_step!, n;
     )
     if warn_deprecation
         @warn "Passing agent_step! and model_step! to offline_run! is deprecated.
-          These functions should be already contained inside the model instance."
+          These functions should be already contained inside the model instance." maxlog=1
     end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
@@ -289,7 +289,7 @@ function ensemblerun!(
 )
     if warn_deprecation
         @warn "Passing agent_step! and model_step! to ensemblerun! is deprecated.
-      These functions should be already contained inside the model instance."
+      These functions should be already contained inside the model instance." maxlog=1
     end
     if parallel
         return parallel_ensemble(models, agent_step!, model_step!, n;
@@ -369,7 +369,7 @@ agent_step_field(model::ABM) = getfield(model, :agent_step)
 model_step_field(model::ABM) = getfield(model, :model_step)
 
 function UnremovableABM(args::Vararg{Any, N}; kwargs...) where {N}
-    @warn "UnremovableABM is deprecated. Use StandardABM(...; container = Vector, ...) instead."
+    @warn "UnremovableABM is deprecated. Use StandardABM(...; container = Vector, ...) instead." maxlog=1
     StandardABM(args...; kwargs..., container=Vector)
 end
 
@@ -377,6 +377,6 @@ until(s, n::Int, model) = s < n
 until(s, f, model) = !f(model, s)
 
 function schedule(model::ABM, scheduler)
-    @warn "`schedule(model::ABM, scheduler)` deprecated in favor of `scheduler(model)`."
+    @warn "`schedule(model::ABM, scheduler)` deprecated in favor of `scheduler(model)`." maxlog=1
     Iterators.filter(id -> id in allids(model), scheduler(model))
 end

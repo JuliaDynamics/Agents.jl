@@ -146,7 +146,7 @@ function EventQueueABM(
     @warn "This model type is still experimental which means that it is subject to breaking changes in the
         future. Also, while all the core functionalities have been implemented, this model type 
         has some more limited features than `StandardABM`: in particular, visualizations and 
-        IO functionalities are incomplete."
+        IO functionalities are incomplete." maxlog=1
     !(ismultiagenttype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()

@@ -1,4 +1,5 @@
 [deps]
+AgentsExampleZoo = "88acaeb2-2f63-4ada-bca2-2825d9da22ed"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
