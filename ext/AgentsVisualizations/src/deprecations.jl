@@ -4,7 +4,7 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
         recordkwargs = (compression = 20,), kwargs...
     )
     @warn "Passing agent_step! and model_step! to abmvideo is deprecated.
-      These functions should be already contained inside the model instance."
+      These functions should be already contained inside the model instance." maxlog=1
     # add some title stuff
     if title ≠ "" && showstep
         t = lift(x -> title*", step = "*string(x), abmtime(model))

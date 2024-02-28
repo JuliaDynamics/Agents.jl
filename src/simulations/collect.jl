@@ -550,7 +550,7 @@ collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = 
 function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
+             now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
@@ -575,7 +575,7 @@ function collect_agent_data!(
 )
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
+             now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = allagents(model)
     push!(df[!, 1], abmtime(model))
@@ -599,7 +599,7 @@ function collect_model_data!(
 )
     if step != 0
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
-             now `abmtime(model)` is used automatically"
+             now `abmtime(model)` is used automatically" maxlog=1
     end
     push!(df[!, :step], abmtime(model))
     for fn in properties

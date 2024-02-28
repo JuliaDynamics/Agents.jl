@@ -149,7 +149,7 @@ function StandardABM(
         In particular this means it is not needed to pass the stepping functions in step!, 
         run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and 
         ABMObservable.
-        """
+        """ maxlog=1
     end
     !(ismultiagenttype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)

@@ -34,7 +34,7 @@ function Agents.abmplot!(ax, model::ABM;
         model_step! = Agents.model_step_field(model)
     elseif warn_deprecation
         @warn "Passing agent_step! and model_step! to abmplot! is deprecated. 
-          These functions should be already contained inside the model instance."
+          These functions should be already contained inside the model instance." maxlog=1
     end
     abmobs = ABMObservable(model; agent_step!, model_step!, adata, mdata, when)
     abmplot!(ax, abmobs; kwargs...)

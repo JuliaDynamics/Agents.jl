@@ -21,7 +21,7 @@ function agent_validator(
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
         the same behavior as previous Agents.jl versions.
-        """
+        """ maxlog=1
         for type in union_types(A)
             do_checks(type, space, warn)
         end
@@ -36,7 +36,7 @@ Helper function for `agent_validator`.
 function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:SpaceType}
     if warn
         isbitstype(A) &&
-        @warn "Agent type is not mutable, and most library functions assume that it is."
+        @warn "Agent type is not mutable, and most library functions assume that it is." maxlog=1
     end
     (any(isequal(:id), fieldnames(A)) && fieldnames(A)[1] == :id) ||
     throw(ArgumentError("First field of agent type must be `id` (and should be of type `Int`)."))
@@ -54,7 +54,7 @@ function do_checks(::Type{A}, space::S, warn::Bool) where {A<:AbstractAgent, S<:
             throw(ArgumentError("`pos` field in agent type must be of type `NTuple{Int}` when using GridSpace."))
         elseif space_type <: ContinuousSpace
             if pos_type <: NTuple{D,<:AbstractFloat} where {D}
-                warn && @warn "Using `NTuple` for the `pos` and `vel` fields of agent types in ContinuousSpace is deprecated. Use `SVector` instead."
+                warn && @warn "Using `NTuple` for the `pos` and `vel` fields of agent types in ContinuousSpace is deprecated. Use `SVector` instead." maxlog=1
             elseif !(pos_type <: SVector{D,<:AbstractFloat} where {D} || (!isconcretetype(A) && pos_type <: SVector{D} where {D}))
                 throw(ArgumentError("`pos` field in agent type must be of type `SVector{<:AbstractFloat}` when using ContinuousSpace."))
             end

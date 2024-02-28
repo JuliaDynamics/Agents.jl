@@ -89,7 +89,7 @@ function paramscan(
 )
     if agent_step! != dummystep || model_step! != dummystep
     @warn "Passing agent_step! and model_step! to paramscan is deprecated.
-          These functions should be already presented inside the model instance."
+          These functions should be already presented inside the model instance." maxlog=1
     end
     if include_constants
         output_params = collect(keys(parameters))
