@@ -1,7 +1,7 @@
-const DictABM = Union{StandardABM{S,A,Dict{Int,A}} where {S,A},
-                      EventQueueABM{S,A,Dict{Int,A}} where {S,A}}
-const VecABM = Union{StandardABM{S,A,Vector{A}} where {S,A},
-                     EventQueueABM{S,A,Vector{A}} where {S,A}}
+const DictABM = Union{StandardABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
+                      EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
+const VecABM = Union{StandardABM{S,A,<:AbstractVector{A}} where {S,A},
+                     EventQueueABM{S,A,<:AbstractVector{A}} where {S,A}}
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::VecABM) = nagents(model) + 1
