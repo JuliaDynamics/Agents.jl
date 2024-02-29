@@ -1,5 +1,5 @@
-const DictABM = Union{StandardABM{S,A,<:AbstractDict{Integer,A}} where {S,A},
-                      EventQueueABM{S,A,<:AbstractDict{Integer,A}} where {S,A}}
+const DictABM = Union{StandardABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
+                      EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,<:AbstractVector{A}} where {S,A},
                      EventQueueABM{S,A,<:AbstractVector{A}} where {S,A}}
 
