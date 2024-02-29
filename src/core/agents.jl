@@ -196,6 +196,11 @@ a = GridAgent{2}(model, (3,4)) # the id is set automatically
 ```
 """
 macro agent(struct_repr)
+    expr = _agent(struct_repr)
+    return :(Base.@__doc__($(esc(expr))))
+end
+
+function _agent(struct_repr)
     new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
     expr_new_type = :(mutable struct $new_type <: $abstract_type
@@ -219,7 +224,7 @@ macro agent(struct_repr)
                    $(new_type)(; id = Agents.nextid(m), kwargs...)
            end
         end
-    quote Base.@__doc__($(esc(expr))) end
+    return expr
 end
 
 ###########################################################################################
@@ -299,6 +304,16 @@ See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
 - Impossibility to inherit from a compactified agent.
 """
 macro multiagent(version, struct_repr)
+    expr = _multiagent(version, struct_repr)
+    return esc(expr)
+end
+
+macro multiagent(struct_repr)
+    expr = _multiagent(QuoteNode(:opt_speed), struct_repr)
+    return esc(expr)
+end
+
+function _multiagent(version, struct_repr)
     new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
     agent_specs_with_base = []
@@ -359,11 +374,7 @@ macro multiagent(version, struct_repr)
                $expr_multiagent_p
            end
 
-    return esc(expr)
-end
-
-macro multiagent(struct_repr)
-    return esc(:(@multiagent :opt_speed $struct_repr))
+    return expr
 end
 
 ismultiagenttype(::Type) = false
