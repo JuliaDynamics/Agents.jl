@@ -164,8 +164,8 @@ function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) wher
     return StandardABM(typeof(agent), args...; kwargs...)
 end
 
-construct_agent_container(::Type{<:Dict}, A) = Dict{Int,A}
-construct_agent_container(::Type{<:Vector}, A) = Vector{A}
+construct_agent_container(::Type{T}, A) where {T<:AbstractDict} = Dict{Int,A}
+construct_agent_container(::Type{T}, A) where {T<:AbstractVector} = Vector{A}
 construct_agent_container(container, A) = throw(
     "Unrecognised container $container, please specify either `Dict` or `Vector`."
 )
