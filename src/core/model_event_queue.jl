@@ -135,7 +135,7 @@ can be evolved in time.
 function EventQueueABM(
         ::Type{A}, events::E,
         space::S = nothing;
-        container::Type = Dict{Int},
+        container::Type = Dict,
         properties::P = nothing,
         rng::R = Random.default_rng(),
         warn = true,

@@ -123,7 +123,7 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
     abm = StandardABM(
         A,
         from_serializable(t.space; kwargs...),
-        container = t.agents_container,
+        container = type_no_p(t.agents_container),
         scheduler = get(kwargs, :scheduler, Schedulers.fastest),
         properties = from_serializable(t.properties; kwargs...),
         rng = t.rng,
@@ -136,6 +136,16 @@ function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
         Agents.add_agent_own_pos!(a, abm)
     end
     return abm
+end
+
+function type_no_p(::Type{T}) where {T}
+    params = T.parameters
+    Tn = isempty(params) ? T : T.name.wrapper
+    if Tn <: AbstractArray && params[2] === 1
+        return Tn{A, 1} where A
+    else
+        return Tn
+    end
 end
 
 function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}

@@ -132,7 +132,7 @@ function StandardABM(
     space::S = nothing;
     agent_step!::G = dummystep,
     model_step!::K = dummystep,
-    container::Type = Dict{Int},
+    container::Type = Dict,
     scheduler::F = Schedulers.fastest,
     properties::P = nothing,
     rng::R = Random.default_rng(),
