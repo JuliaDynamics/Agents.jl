@@ -103,7 +103,7 @@ Breaking changes:
 
 New functionalities:
 
-- A new @multiagent macro allows to run multi-agent simulations much more efficiently. It has
+- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
   no performance difference between having 1 agent type at the cost of each agent occupying 
   more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
