@@ -4,6 +4,15 @@
 
 _We tried to deprecate every major change, resulting in practically no breakage from v5 to v6. However, in version v6.2 we will remove all deprecations (and hence un-updated code will break)_
 
+- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
+  two version: In `:opt_speed` the created agents are optimized such as there is virtually
+  no performance difference between having 1 agent type at the cost of each agent occupying 
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
+  the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through 
+  the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
+- Both the visualization and the model abstract interface have been refactored to improve the user
+  experience to conform to the Agents.jl API when creating a new model type and its visualizations.
 - Deprecations that were in place in v5 (see section `# v5` of this CHANGELOG) have been removed.
 - The way the evolution rule (`agent_step!, model_step!`) is handled has changed. Now, the stepping functions must be given to the agent based model during construction of the model instead of given to `step!, run!, abmplot, ...`. This change is important and allows us to:
   - Have Agents.jl have the same mental model as DifferentialEquations.jl, DynamicalSystems.jl, and other dynamical modelling packages, where the evolution rules are part of the central simulation struct.
@@ -20,15 +29,16 @@ model is used automatically.
 ## New features
 
 - Grid and continuous spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
+- `Arrow` backend in `offline_run! is now supported` also for Windows users.
+- The model time/step is tracked automatically, accessible through `abmtime(model)`.
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
 - A new function `swap_agents` can be used to swap an agents couple in a discrete space.
-- The model time/step is tracked automatically, accessible through `abmtime(model)`.
 - New function `hasid`
 
 ## Performance Improvements
 
 - A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
-- The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
+- The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are much faster thanks to a faster sampling function.
 - The `nearby_agents` function for `ContinuousSpace` and `GridSpace` is now 1.5x faster than before.
 - The `sample!` function is much faster than before.
 
