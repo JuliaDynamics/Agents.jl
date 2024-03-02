@@ -75,9 +75,16 @@ update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
-
-Breaking changes:
-
+    
+- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
+  two version: In `:opt_speed` the created agents are optimized such as there is virtually
+  no performance difference between having 1 agent type at the cost of each agent occupying 
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
+  the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through 
+  the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
+- Both the visualization and the model abstract interface have been refactored to improve the user
+  experience to conform to the Agents.jl API when creating a new model type and its visualizations.
 - The functions `agent_step!` and `model_step!` should now be passed as keyword arguments
   when a `StandardABM` is created. Passing those functions to the Agents.jl API functions
   which support them as argument is deprecated since now they are already available inside
@@ -100,23 +107,10 @@ Breaking changes:
   from `Float64`, you will also need to change the type of the `ContinuousSpace` extent accordingly.
   Agents in `ContinuousSpace` now require `SVector` for their `pos` and `vel` fields instead of `NTuple`.
   Using `NTuple`s in `ContinuousSpace` is now deprecated.
-
-New functionalities:
-
-- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
-  two version: In `:opt_speed` the created agents are optimized such as there is virtually
-  no performance difference between having 1 agent type at the cost of each agent occupying 
-  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
-  the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
-- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through 
-  the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
-- Both the visualization and the model abstract interface have been refactored to improve the user
-  experience to conform to the Agents.jl API when creating a new model type and its visualizations.
 - It is now possible to create a mixed-boundary `GridSpace`s which allows to mix periodic and non-periodic dimensions
   in a `GridSpace`.
 - `Arrow` backend in `offline_run! is now supported` also for Windows users.
 - Some new minor functionalities: `abmtime`, `swap_agents!`, `random_id_in_position`, `random_agent_in_position`.
-
 
 See the online documentation for more!
 """
