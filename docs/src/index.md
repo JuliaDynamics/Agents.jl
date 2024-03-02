@@ -29,7 +29,7 @@ using CairoMakie, Agents
       the model.
     - A new `container` keyword can be passed during the model creation to decide the container
       type of the agents inside the model. By default it is equal to `Dict`. Passing `Vector` in 
-      a `StandardABM` instead recreates the functionality of an `UnremovableABM`, as such this model 
+      a `StandardABM` instead recreates the functionality of an `UnremovableABM`, so this model 
       type is deprecated. 
     - The `@agent` macro is now THE way to create agent types for Agents.jl simulations since
       now supports declaring default and constant fields. Directly creating structs by hand is
