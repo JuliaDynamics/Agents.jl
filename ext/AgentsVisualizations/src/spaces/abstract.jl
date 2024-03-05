@@ -3,7 +3,7 @@ Agents.agents_space_dimensionality(model::ABM) =
 
 "Plot agents into a 2D space."
 function Agents.agentsplot!(ax::Axis, p::ABMP)
-    if p._used_poly[]
+    if user_used_polygons(p.am[], p.marker[])
         poly!(p, p.marker; p.color, p.agentsplotkwargs...)
     else
         scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
