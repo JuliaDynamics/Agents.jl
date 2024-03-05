@@ -151,7 +151,7 @@ function initialize_model(
     end
     for _ in 1:n_foxes
         pos = random_walkable(model, model.landfinder)
-        add_agent!(pos, Rabbit, model, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
+        add_agent!(pos, Fox, model, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
     end
     for _ in 1:n_hawks
         pos = random_walkable(model, model.airfinder)
@@ -371,24 +371,25 @@ model = initialize_model()
 # ```
 
 function animalcolor(a)
-    if kindof(a) == :rabbit
+    if kindof(a) === :Rabbit
         :brown
-    elseif kindof(a) == :fox
+    elseif kindof(a) === :Fox
         :orange
     else
         :blue
     end
 end
-
+    
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
 # we explicitly provide ranges to specify where the heightmap should be plotted.
-function static_preplot!(ax, p)
+const ABMPlot = Agents.get_ABMPlot_type()
+function Agents.static_preplot!(ax::Axis3, p::ABMPlot)
     surface!(
         ax,
         (100/205):(100/205):100,
         (100/205):(100/205):100,
-        p.abmobs[].model.heightmap;
+        p.abmobs[].model[].heightmap;
         colormap = :terrain
     )
 end
@@ -402,7 +403,6 @@ end
 #     framerate = 15,
 #     ac = animalcolor,
 #     as = 1.0,
-#     static_preplot!,
 #     title = "Rabbit Fox Hawk with pathfinding"
 # )
 # ```

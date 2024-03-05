@@ -132,7 +132,13 @@ end
 function Makie.plot!(p::_ABMPlot)
     model = p.abmobs[].model[]
     ax = p.ax[]
-    p.adjust_aspect[] && (ax.aspect = DataAspect())
+    if p.adjust_aspect[]
+        if ax isa Axis
+            ax.aspect = DataAspect()
+        elseif ax isa Axis3
+            ax.aspect = :data
+        end
+    end
     set_axis_limits!(ax, model)
 
     p.pos, p.color, p.marker, p.markersize = 

@@ -3,8 +3,8 @@ Agents.agents_space_dimensionality(model::ABM) =
 
 "Plot agents into a 2D space."
 function Agents.agentsplot!(ax::Axis, p::ABMP)
-    if p._used_poly[]
-        poly!(p, p.marker; p.color, p.agentsplotkwargs...)
+    if user_used_polygons(p.am[], p.marker[])
+        poly!(p, p.marker; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     else
         scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     end
@@ -13,7 +13,9 @@ end
 
 "Plot agents into a 3D space."
 function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
-    p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
+    if p.am[] === :circle 
+        p.am[], p.marker[] = :Sphere, Sphere(Point3f(0), 1)
+    end
     meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     return p
 end
