@@ -13,7 +13,8 @@ end
 
 "Plot agents into a 3D space."
 function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
-    p.marker[] == :circle && (p.marker[] = Sphere(Point3f(0), 1))
+    p.am[] = :Sphere
+    p.marker[] = Sphere(Point3f(0), 1)
     meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     return p
 end
