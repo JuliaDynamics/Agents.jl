@@ -373,7 +373,7 @@ model = initialize_model()
 function animalcolor(a)
     if kindof(a) === :Rabbit
         :brown
-    elsei kindof(a) === :Fox
+    elseif kindof(a) === :Fox
         :orange
     else
         :blue
