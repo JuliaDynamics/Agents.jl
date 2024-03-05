@@ -69,6 +69,9 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         enable_space_checks = true,
         kwargs...
     )
+    if any(x -> x in keys(kwargs), [:as, :am, :ac])
+        @warn "Keywords `as, am, ac` has been deprecated in favor of 
+          `agent_size, agent_marker, agent_color`" maxlog=1
     if enable_space_checks
         if has_custom_space(abmobs.model[])
             Agents.check_space_visualization_API(abmobs.model[])
