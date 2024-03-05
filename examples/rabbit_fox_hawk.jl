@@ -371,15 +371,15 @@ model = initialize_model()
 # ```
 
 function animalcolor(a)
-    if kindof(a) == :rabbit
+    if kindof(a) === :Rabbit
         :brown
-    elseif kindof(a) == :fox
+    elsei kindof(a) === :Fox
         :orange
     else
         :blue
     end
 end
-
+    
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
 # we explicitly provide ranges to specify where the heightmap should be plotted.
