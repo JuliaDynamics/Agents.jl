@@ -39,6 +39,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   - Have Agents.jl have the same mental model as DifferentialEquations.jl, DynamicalSystems.jl, and other dynamical modelling packages, where the evolution rules are part of the central simulation struct.
   - Allows us to develop new types of models that may have rules that are defined differently, without being based on e.g., two particular functions.
   - Allows us to develop (in the future) a new model type that is optimized for multi-agent simulations.
+  - Allows other developers of agent based modelling packages to integrate with Agents.jl by extending the established API.
 - The `UnremovableABM` type is deprecated, instead `container = Vector` should be passed when creating the model.
 - Passing the `step` argument to `collect_model_data!, collect_agent_data!` is deprecated since the time of the model
   is used automatically.
