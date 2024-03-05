@@ -366,3 +366,19 @@ offline_run!
 
 In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
 for details.
+
+## Visualizations
+
+```@docs
+abmplot
+abmplot!
+abmexploration
+abmvideo
+ABMObservable
+add_interaction!
+agent2string
+translate_polygon
+scale_polygon
+rotate_polygon
+```
+
