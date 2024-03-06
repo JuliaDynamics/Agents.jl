@@ -127,8 +127,7 @@ The [`@multiagent`](@ref) macro does not make multiple types. It only makes one 
 In `:opt_memory` each agent is optimized to occupy practically the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
 
 In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
-We then compare the performance of the three versions for multiple agent types.
-The `@multiagent` has 15 type of agents for either of its possibilities, while the `Union` incrementally gets more agents from 2 to 15.
+We then compare the performance of the three versions for multiple agent types, incrementally employing more agents from 2 to 15.
 Here are the results of how much time it took to run each version:
 
 ```@example performance

@@ -14,6 +14,8 @@ Some major highlights of Agents.jl are:
 2. It is simple: has a very short learning curve and requires writing minimal code
 3. Has an extensive interface of thousands of out-of-the box possible agent actions
 4. Straightforwardly allows simulations on Open Street Maps
+5. Allows both traditional discrete-time ABM simulations as well as continuous time
+   "event queue based" ABM simulations.
 
 The simplicity of Agents.jl is due to the intuitive space-agnostic modelling approach we have implemented: agent actions are specified using generically named functions (such as "move agent" or "find nearby agents") that do not depend on the actual space the agents exist in, nor on the properties of the agents themselves. Overall this leads to ultra fast model prototyping where even changing the space the agents live in is matter of only a couple of lines of code.
 
