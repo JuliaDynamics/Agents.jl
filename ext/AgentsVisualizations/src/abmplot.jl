@@ -72,12 +72,14 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
     if any(x -> x in keys(kwargs), [:as, :am, :ac])
         @warn "Keywords `as, am, ac` has been deprecated in favor of 
           `agent_size, agent_marker, agent_color`" maxlog=1
+        kwargs = deprecate_asamac(kwargs)
     end
     if enable_space_checks
         if has_custom_space(abmobs.model[])
             Agents.check_space_visualization_API(abmobs.model[])
         end
     end
+
     _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
 
     # Model inspection on mouse hover
@@ -108,9 +110,9 @@ This is the internal recipe for creating an `_ABMPlot`.
         ax=nothing,
 
         # Agent
-        ac=JULIADYNAMICS_COLORS[1],
-        as=15,
-        am=:circle,
+        agent_color=JULIADYNAMICS_COLORS[1],
+        agent_size=15,
+        agent_marker=:circle,
         offset=nothing,
         spaceplotkwargs = NamedTuple(),
         agentsplotkwargs = NamedTuple(),
@@ -140,7 +142,7 @@ function Makie.plot!(p::_ABMPlot)
     set_axis_limits!(ax, model)
 
     p.pos, p.color, p.marker, p.markersize = 
-        lift_attributes(p.abmobs[].model, p.ac, p.as, p.am, p.offset)
+        lift_attributes(p.abmobs[].model, p.agent_color, p.agent_size, p.agent_marker, p.offset)
 
     # gracefully handle deprecations of old plot kwargs
     merge_spaceplotkwargs!(p)
