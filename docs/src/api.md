@@ -376,7 +376,6 @@ abmexploration
 abmvideo
 ABMObservable
 add_interaction!
-agent2string
 translate_polygon
 scale_polygon
 rotate_polygon
