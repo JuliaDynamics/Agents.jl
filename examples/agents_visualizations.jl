@@ -48,10 +48,10 @@ model
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
 daisycolor(a) = a.breed # agent color
-as = 20    # agent size
-am = '✿'  # agent marker
+agent_size = 20    # agent size
+agent_marker = '✿'  # agent marker
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
-fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, agentsplotkwargs)
+fig, ax, abmobs = abmplot(model; agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs)
 fig
 
 # !!! note "Supported keyword arguments"
@@ -65,7 +65,7 @@ fig
 heatarray = :temperature
 heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
-    ac = daisycolor, as, am,
+    agent_color = daisycolor, agent_size, agent_marker,
     agentsplotkwargs = (strokewidth = 1.0,),
     heatarray, heatkwargs
 )
@@ -283,5 +283,5 @@ agentsplotkwargs = (
     edge_plottype = :linesegments # needed for tapered edge widths
 )
 
-fig, ax, abmobs = abmplot(sir_model; as = city_size, ac = city_color, agentsplotkwargs)
+fig, ax, abmobs = abmplot(sir_model; agent_size = city_size, agent_color = city_color, agentsplotkwargs)
 fig
