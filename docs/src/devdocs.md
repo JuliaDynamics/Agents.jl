@@ -37,7 +37,10 @@ of them are 1-liner "accessor" functions
 (that return e.g., the rng, or the space instance).
 
 The most important mandatory method is to extend `step!` for your new type.
-All other methods for e.g., accessor functions are in the file
+You can see the existing implementations of `step!` for e.g.,
+[`StandardABM`](@ref) or [`EventQueueABM`](@ref) to get an idea.
+
+All other mandatory method extensions for e.g., accessor functions are in the file
 [`src/core/model_abstract.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/model_abstract.jl).
 As you will notice, the overwhelming majority of required methods have a
 default implementation that e.g., attempts to return a field named `:rng`.
