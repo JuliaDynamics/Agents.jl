@@ -401,8 +401,8 @@ end
 #     figure = (size = (800, 700),),
 #     frames = 300,
 #     framerate = 15,
-#     ac = animalcolor,
-#     as = 1.0,
+#     agent_color = animalcolor,
+#     agent_size = 1.0,
 #     title = "Rabbit Fox Hawk with pathfinding"
 # )
 # ```

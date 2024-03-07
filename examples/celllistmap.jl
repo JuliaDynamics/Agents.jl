@@ -214,8 +214,8 @@ abmvideo(
     "celllistmap.mp4", model;
     framerate=20, frames=200, spf=5,
     title="Softly bouncing particles with CellListMap.jl",
-    as=p -> p.r, # marker size
-    ac=p -> p.k # marker color
+    agent_size=p -> p.r,
+    agent_color=p -> p.k
 )
 
 # ```@raw html

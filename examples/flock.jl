@@ -116,7 +116,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 
 # The great thing about [`abmplot`](@ref) is its flexibility. We can incorporate the
-# direction of the birds when plotting them, by making the "marker" function `am`
+# direction of the birds when plotting them, by making the "marker" function `agent_marker`
 # create a `Polygon`: a triangle with same orientation as the bird's velocity.
 # It is as simple as defining the following function:
 
@@ -129,16 +129,16 @@ end
 # Where we have used the utility functions `scale_polygon` and `rotate_polygon` to act on a
 # predefined polygon. `translate_polygon` is also available.
 # We now give `bird_marker` to `abmplot`, and notice how
-# the `as` keyword is meaningless when using polygons as markers.
+# the `agent_size` keyword is meaningless when using polygons as markers.
 
 model = initialize_model()
-figure, = abmplot(model; am = bird_marker)
+figure, = abmplot(model; agent_marker = bird_marker)
 figure
 
 # And let's also do a nice little video for it:
 abmvideo(
     "flocking.mp4", model;
-    am = bird_marker,
+    agent_marker = bird_marker,
     framerate = 20, frames = 150,
     title = "Flocking"
 )

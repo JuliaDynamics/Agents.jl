@@ -101,7 +101,7 @@ zombies = initialise_zombies()
 
 abmvideo("outbreak.mp4", zombies;
     title = "Zombie outbreak", framerate = 15, frames = 200,
-    ac = zombie_color, as = zombie_size
+    agent_color = zombie_color, agent_size = zombie_size
 )
 
 # ```@raw html
