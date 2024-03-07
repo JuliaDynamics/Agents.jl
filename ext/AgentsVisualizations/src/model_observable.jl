@@ -31,11 +31,11 @@ function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     notify(model)
     if Agents.should_we_collect(abmtime(model[]), model[], abmobs.when)
         if !isnothing(abmobs.adata)
-            Agents.collect_agent_data!(adf[], model[], abmobs.adata; offset_time=abmobs._offset_time[])
+            Agents.collect_agent_data!(adf[], model[], abmobs.adata; _offset_time=abmobs._offset_time[])
             notify(adf)
         end
         if !isnothing(abmobs.mdata)
-            Agents.collect_model_data!(mdf[], model[], abmobs.mdata; offset_time=abmobs._offset_time[])
+            Agents.collect_model_data!(mdf[], model[], abmobs.mdata; _offset_time=abmobs._offset_time[])
             notify(mdf)
         end
     end
