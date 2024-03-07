@@ -120,7 +120,7 @@ abmtime(model::ABM) = getfield(model, :time)[]
 Return a property with name `:prop` from the current `model`, assuming the model `properties`
 are either a dictionary with key type `Symbol` or a Julia struct.
 For example, if a model has the set of properties `Dict(:weight => 5, :current => false)`,
-retrieving these values can be obtained via `model.weight`.
+retrieving these values can be obtained via `model.weight` or `model.current`.
 """
 function Base.getproperty(m::ABM, s::Symbol)
     p = abmproperties(m)
