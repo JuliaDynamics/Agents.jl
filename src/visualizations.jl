@@ -13,26 +13,26 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 ## Keyword arguments
 
 ### Agent related
-* `ac, as, am` : These three keywords decide the color, size, and marker, that
+* `agent_color, agent_size, agent_marker` : These three keywords decide the color, size, and marker, that
   each agent will be plotted as. They can each be either a constant or a *function*,
   which takes as an input a single agent and outputs the corresponding value. If the model
-  uses a `GraphSpace`, `ac, as, am` functions instead take an *iterable of agents* in each
+  uses a `GraphSpace`, `agent_color, agent_size, agent_marker` functions instead take an *iterable of agents* in each
   position (i.e. node of the graph).
 
-  Using constants: `ac = "#338c54", as = 15, am = :diamond`
+  Using constants: `agent_color = "#338c54", agent_size = 15, agent_marker = :diamond`
 
   Using functions:
   ```julia
-  ac(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
-  as(a) = 10rand()
-  am(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
+  agent_color(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
+  agent_size(a) = 10rand()
+  agent_marker(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
   ```
-  Notice that for 2D models, `am` can be/return a `Makie.Polygon` instance, which plots each agent
+  Notice that for 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
   creating the polygon. In this case, the keyword `as` is meaningless, as each polygon has
   its own size. Use the functions `scale, rotate_polygon` to transform this polygon.
 
-  3D models currently do not support having different markers. As a result, `am` cannot be
+  3D models currently do not support having different markers. As a result, `agent_marker` cannot be
   a function. It should be a `Mesh` or 3D primitive (such as `Sphere` or `Rect3D`).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
@@ -320,18 +320,18 @@ function abmplot_heatobs end
 """
 function abmplot_pos end
 """
-  abmplot_colors(model::ABM{S}, ac)
-  abmplot_colors(model::ABM{S}, ac::Function)
+  abmplot_colors(model::ABM{S}, agent_color)
+  abmplot_colors(model::ABM{S}, agent_color::Function)
 """
 function abmplot_colors end
 """
-    abmplot_markers(model::ABM{S}, am, pos)
-    abmplot_markers(model::ABM{S}, am::Function, pos)
+    abmplot_markers(model::ABM{S}, agent_marker, pos)
+    abmplot_markers(model::ABM{S}, agent_marker::Function, pos)
 """
 function abmplot_markers end
 """
-    abmplot_markersizes(model::ABM{S}, as)
-    abmplot_markersizes(model::ABM{S}, as::Function)
+    abmplot_markersizes(model::ABM{S}, agent_size)
+    abmplot_markersizes(model::ABM{S}, agent_size::Function)
 """
 function abmplot_markersizes end
 

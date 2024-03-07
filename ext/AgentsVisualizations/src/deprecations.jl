@@ -29,3 +29,12 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
     end
     return nothing
 end
+
+function deprecate_asamac(kwargs)
+    kwargs = NamedTuple(kwargs)
+    new_kw = Dict(:as => :agent_size, :am => :agent_marker, :ac => :agent_color)
+    subs = filter(x -> x in keys(kwargs), [:as, :am, :ac])
+    kwargs_no_deprs = NamedTuple(p for p in pairs(kwargs) if !in(p[1], subs))
+    kwargs_no_deprs = (; kwargs_no_deprs..., (new_kw[x] => getfield(kwargs, x) for x in subs)...)
+    return kwargs_no_deprs
+end

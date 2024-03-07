@@ -210,9 +210,9 @@ heatkwargs = (colormap = [:brown, :green], colorrange = (0, 1))
 
 # and put everything together and give it to [`abmplot`](@ref)
 plotkwargs = (;
-    ac = acolor,
-    as = 25,
-    am = ashape,
+    agent_color = acolor,
+    agent_size = 25,
+    agent_marker = ashape,
     offset,
     agentsplotkwargs = (strokewidth = 1.0, strokecolor = :black),
     heatarray = grasscolor,
