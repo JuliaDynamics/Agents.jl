@@ -23,7 +23,6 @@ end
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
     abmobs._offset_time[] += n
-    println("time ", abmobs._offset_time[])
     if Agents.agent_step_field(model[]) != Agents.dummystep || Agents.model_step_field(model[]) != Agents.dummystep
         Agents.step!(model[], n; kwargs...)
     else
