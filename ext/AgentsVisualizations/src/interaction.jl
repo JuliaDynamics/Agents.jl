@@ -63,7 +63,9 @@ function add_controls!(fig, abmobs, spu)
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
+        t = abmtime(model[])
         model[] = deepcopy(model0)
+        getfield(model[], :time)[] = t
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")

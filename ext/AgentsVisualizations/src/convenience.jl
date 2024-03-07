@@ -68,7 +68,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     end
     on(resetclick) do clicks
         for ax in axs
-            vlines!(ax, [abmtime(abmobs.model[])], color = "#c41818")
+            vlines!(ax, [abmobs._offset_time[]], color = "#c41818")
         end
     end
     return nothing

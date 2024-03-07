@@ -17,12 +17,13 @@ function Agents.ABMObservable(model::AgentBasedModel;
         mdf = Observable(Agents.init_model_dataframe(model, mdata))
     end
     return ABMObservable(
-        Observable(model), agent_step!, model_step!, adata, mdata, adf, mdf, Observable(0), when
+        Observable(model), agent_step!, model_step!, adata, mdata, adf, mdf, Observable(0), Observable(0), when
     )
 end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
+    abmobs._offset_time[] += n
     if Agents.agent_step_field(model[]) != Agents.dummystep || Agents.model_step_field(model[]) != Agents.dummystep
         Agents.step!(model[], n; kwargs...)
     else
