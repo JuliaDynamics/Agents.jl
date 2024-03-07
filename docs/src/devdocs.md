@@ -1,5 +1,20 @@
 # Developer Docs
 
+## Internal infrastructure overview
+
+When it comes to development of new code, the overwhelming majority of
+Agents.jl is composed of three parts:
+
+1. The model time-stepping dynamics and agent storage and retrieval logic
+2. The space agent storage, movement, and neighborhood searching logic
+3. The rest of the API which is largely agnostic to the above two
+
+Arguably the most important aspect of the Agents.jl design is that the above
+three pillars of the infrastructure are **orthogonal**. That is, if someone
+wanted to add a new space, they would **not** have to care about neither
+the model stepping dynamics, nor the majority of the remaining Agents.jl
+API, such as sampling, data collection, etc. etc.
+
 ## Cloning the repository
 
 Since we include documentation with many animated gifs and videos in the repository, a standard clone can be larger than expected.
@@ -8,6 +23,29 @@ If you wish to do any development work, it is better to use
 ```bash
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
+
+## [Creating a new model type](@ref make_new_model)
+
+Note that new model types target applications where a fundamentally different
+way to define the "time evolution" or "dynamic rule" is required.
+If any of the existing [`AgentBasedModel`](@ref) subtypes satisfy the type
+of time stepping, then you don't have to create a new type of model.
+
+Creating a new model type within Agents.jl is simple.
+Although it requires extending a bit more than a dozen functions, the majority
+of them are 1-liner "accessor" functions
+(that return e.g., the rng, or the space instance).
+
+The most important mandatory method is to extend `step!` for your new type.
+You can see the existing implementations of `step!` for e.g.,
+[`StandardABM`](@ref) or [`EventQueueABM`](@ref) to get an idea.
+
+All other mandatory method extensions for e.g., accessor functions are in the file
+[`src/core/model_abstract.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/model_abstract.jl).
+As you will notice, the overwhelming majority of required methods have a
+default implementation that e.g., attempts to return a field named `:rng`.
+The rest of the methods by default return a "not implemented" error message
+(and those you also need to extend mandatorily).
 
 ## [Creating a new space type](@ref make_new_space)
 
@@ -26,16 +64,17 @@ In principle, the following should be done:
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` for performance reasons.
 
 ### Visualization of a custom space
-Visualization of a new space type within Agents.jl works in a very similar fashion to 
+
+Visualization of a new space type within Agents.jl works in a very similar fashion to
 creating a new space type.
-As before, all custom space types should implement this API and be subtypes of 
+As before, all custom space types should implement this API and be subtypes of
 `AbstractSpace`.
 To implement this API for your custom space:
 
 1. Copy the methods from the list below.
-    Make sure to also copy the first line defining the `ABMPlot` type in your working 
+    Make sure to also copy the first line defining the `ABMPlot` type in your working
     environment which is necesary to be able to extend the API.
-    Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot 
+    Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot
     properties that have been lifted from them (see the "Lifting" section of this API).
     You can then easily access them inside your functions via the dot syntax, e.g. with
     `p.color` or `p.plotkwargs`, and use them as needed.
@@ -44,16 +83,16 @@ To implement this API for your custom space:
 1. Implement optional methods as needed.
     Some methods DO NOT need to be implemented for every space, they are optional.
     The necessity to implement these methods depends on the supertypes of your custom type.
-    For example, you will get a lot of methods "for free" if your `CustomType` is a subtype 
+    For example, you will get a lot of methods "for free" if your `CustomType` is a subtype
     of `Agents.AbstractGridSpace`.
-    As a general rule of thumb: The more abstract your `CustomSpace`'s supertype is, the 
+    As a general rule of thumb: The more abstract your `CustomSpace`'s supertype is, the
     more methods you will have to extend/adapt.
 
 !!! info "Checking for missing methods"
-    We provide a convenient function `Agents.check_space_visualization_API(::ABM)` to check 
-    for the availability of methods used to plot ABMs with custom spaces via `abmplot`. 
-    By default, the function is called whenever you want to plot a custom space. 
-    This behavior can be disabled by passing `enable_space_checks = false` as a keyword 
+    We provide a convenient function `Agents.check_space_visualization_API(::ABM)` to check
+    for the availability of methods used to plot ABMs with custom spaces via `abmplot`.
+    By default, the function is called whenever you want to plot a custom space.
+    This behavior can be disabled by passing `enable_space_checks = false` as a keyword
     argument to `abmplot`.
 
 The methods to be extended for visualization of a new space type are structured into four
@@ -63,7 +102,7 @@ groups:
 ## Required
 const ABMPlot = Agents.get_ABMPlot_type()
 
-function Agents.agents_space_dimensionality(space::Agents.AbstractSpace) 
+function Agents.agents_space_dimensionality(space::Agents.AbstractSpace)
 end
 
 function Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace})
@@ -112,8 +151,8 @@ function Agents.ids_to_inspect(model::ABM{<:Agents.AbstractSpace}, pos)
 end
 ```
 
-!!! tip "Changing visualization of existing space types" 
-    The same approach outlined above also applies in cases when you want to overwrite the 
+!!! tip "Changing visualization of existing space types"
+    The same approach outlined above also applies in cases when you want to overwrite the
     default methods for an already existing space type.
     For instance, this might often be the case for models with `Nothing` space.
 
@@ -131,6 +170,7 @@ Pathfinding.delta_cost
 ## Implementing custom serialization
 
 ### For model properties
+
 Custom serialization may be required if your properties contain non-serializable data, such as
 functions. Alternatively, if it is possible to recalculate some properties during deserialization
 it may be space-efficient to not save them. To implement custom serialization, define methods
@@ -142,6 +182,7 @@ AgentsIO.from_serializable
 ```
 
 ### For agent structs
+
 Similarly to model properties, you may need to implement custom serialization for agent structs.
 `from_serializable` and `to_serializable` are not called during (de)serialization of agent structs.
 Instead, [JLD2's custom serialization functionality](https://juliaio.github.io/JLD2.jl/stable/customserialization/)
@@ -152,9 +193,11 @@ override any values in the agent structs. To save space, the agents in the seria
 will have empty `route` fields.
 
 ## OpenStreetMapSpace internals
+
 Details about the internal details of the OSMSpace are discussed in the docstring of `OSM.OpenStreetMapPath`.
 
 ## Benchmarking
+
 As Agents.jl is developed we want to monitor code efficiency through
 _benchmarks_. A benchmark is a function or other bit of code whose execution is
 timed so that developers and users can keep track of how long different API
