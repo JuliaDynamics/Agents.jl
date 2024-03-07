@@ -39,6 +39,9 @@ interface (see below). `ABM` is an alias to `AgentBasedModel`.
 - [`StandardABM`](@ref)
 - [`EventQueueABM`](@ref)
 
+It is also straightforward to create your own versions of `AgentBasedModel`,
+see [the corresponding entry in the developer documentation](@ref make_new_model).
+
 ## Interface of `AgentBasedModel`
 
 - `model[id]` returns the agent with given `id`.
