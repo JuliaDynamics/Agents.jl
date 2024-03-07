@@ -48,8 +48,8 @@ model
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
 daisycolor(a) = a.breed # agent color
-agent_size = 20    # agent size
-agent_marker = '✿'  # agent marker
+agent_size = 20
+agent_marker = '✿'
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
 fig, ax, abmobs = abmplot(model; ac = daisycolor, as, am, agentsplotkwargs)
 fig
