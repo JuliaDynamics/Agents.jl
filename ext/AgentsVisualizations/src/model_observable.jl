@@ -17,13 +17,13 @@ function Agents.ABMObservable(model::AgentBasedModel;
         mdf = Observable(Agents.init_model_dataframe(model, mdata))
     end
     return ABMObservable(
-        Observable(model), agent_step!, model_step!, adata, mdata, adf, mdf, Observable(0), Observable(0), when
-    )
+        Observable(model), agent_step!, model_step!, adata, mdata, adf, mdf, Observable(0), when)
 end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
     abmobs._offset_time[] += n
+    println("time ", abmobs._offset_time[])
     if Agents.agent_step_field(model[]) != Agents.dummystep || Agents.model_step_field(model[]) != Agents.dummystep
         Agents.step!(model[], n; kwargs...)
     else
@@ -32,11 +32,11 @@ function Agents.step!(abmobs::ABMObservable, n; kwargs...)
     notify(model)
     if Agents.should_we_collect(abmtime(model[]), model[], abmobs.when)
         if !isnothing(abmobs.adata)
-            Agents.collect_agent_data!(adf[], model[], abmobs.adata)
+            Agents.collect_agent_data!(adf[], model[], abmobs.adata; offset_time=abmobs._offset_time[])
             notify(adf)
         end
         if !isnothing(abmobs.mdata)
-            Agents.collect_model_data!(mdf[], model[], abmobs.mdata)
+            Agents.collect_model_data!(mdf[], model[], abmobs.mdata; offset_time=abmobs._offset_time[])
             notify(mdf)
         end
     end

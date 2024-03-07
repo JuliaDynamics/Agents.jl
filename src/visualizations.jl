@@ -158,8 +158,7 @@ struct ABMObservable{M, AS, MS, AD, MD, ADF, MDF, W, S}
     mdata::MD
     adf::ADF # this is `nothing` or `Observable`
     mdf::MDF # this is `nothing` or `Observable`
-    s::S # Observable{Int}
-    _offset_time::S
+    _offset_time::S # Observable{Int}
     when::W
 end
 export ABMObservable
