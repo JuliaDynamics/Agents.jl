@@ -92,11 +92,11 @@ end
 function collect_data!(abmobs, model, when, adata, mdata, adf, mdf)
     if Agents.should_we_collect(abmtime(model), model, when)
         if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata; offset_time=abmobs._offset_time[])
+            Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
             adf[] = adf[] # trigger Observable
         end
         if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata; offset_time=abmobs._offset_time[])
+            Agents.collect_model_data!(mdf[], model, mdata; _offset_time=abmobs._offset_time[])
             mdf[] = mdf[] # trigger Observable
         end
     end
