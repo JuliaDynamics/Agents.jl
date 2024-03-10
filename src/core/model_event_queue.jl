@@ -1,5 +1,6 @@
 export EventQueueABM, AgentEvent
 export abmqueue, abmevents, abmtime, add_event!
+using DataStructures: OrderedDict
 
 """
     AgentEvent(; action!, propensity, kinds, [timing])
@@ -32,7 +33,7 @@ if `event_idx` and `t` are given.
 Base.@kwdef struct AgentEvent{F<:Function, P, A, T<:Function}
     action!::F = dummystep
     propensity::P = 1.0
-    types::A = nothing
+    kinds::A = nothing
     timing::T = exp_propensity
 end
 
@@ -44,16 +45,16 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,ET,PT,FPT,TI,Q} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,ET,PT,FPT,EK,Q} <: AgentBasedModel{S}
     agents::C
     space::S
     properties::P
     rng::R
     events::E
-    idx_events_each_type::ET
-    propensities_each_type::PT
+    idx_events_each_kind::ET
+    propensities_each_kind::PT
     idx_func_propensities_each_type::FPT
-    type_to_idx::TI
+    kind_to_idx::Dict{Symbol, EK} # EK = `events` key type
     # maps an agent type to its applicable events
     event_queue::Q
     autogenerate_on_add::Bool
@@ -123,7 +124,7 @@ intended to be used to choose events, see the `events` argument below).
 Only the [`@multiagent`](@ref) macro is supported and agent "kinds" should be
 compared with the [`kindof`](@ref) function as instructed in the main [Tutorial](@ref).
 
-`space` is an instance of a space configuration that the agents will move and interact in.
+`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 
 `events` is a container of instances of [`AgentEvent`](@ref),
 which are the events that are scheduled and then affect agents.
@@ -166,58 +167,53 @@ function EventQueueABM(
     agents = C()
     I = events isa Tuple ? Int : keytype(events)
     queue = PriorityQueue{Tuple{I, Int}, Float64}()
-    agent_types = union_types(A)
-    type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
-    idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types]
-                            for t in agent_types]
-    propensities_each_type = [zeros(length(e)) for e in idx_events_each_type]
-    idx_func_propensities_each_type = [Int[] for _ in idx_events_each_type]
-    for i in 1:length(agent_types)
-        propensities_type = propensities_each_type[i]
-        for (q, j) in enumerate(idx_events_each_type[i])
+
+    agent_kinds = decompose_kinds(A)
+
+    # precompute a dictionary mapping the agent kind (Symbol) to a
+    # vectors of indices, each vector corresponding
+    # to all valid events that can apply to a given agent kind
+    idx_events_each_kind = OrderedDict(kind =>
+        [i for (i, e) in enumerate(events) if kind ∈ e.kinds]
+        for kind in agent_kinds
+    )
+    # initialize vectors for the propensities (they are updated in-place later)
+    propensities_each_kind = [zeros(length(e)) for e in idx_events_each_kind]
+
+
+    # what the hell does this loop do...?
+    # We loop over all propensities. For those that are functions, we can
+    # update the corresponding propensities entry, which will stay fixed.
+    # For the others, we keep track of the indices of the events whose
+    # propensities is a function. Later on when we compute propensities,
+    # only the indices with propensity <: Function are re-updated!
+    idx_func_propensities_each_type = [Int[] for _ in idx_events_each_kind]
+    for i in eachindex(agent_kinds)
+        propensities_type = propensities_each_kind[i]
+        for (q, j) in enumerate(idx_events_each_kind[i])
             if events[j].propensity isa Real
                 propensities_type[q] = events[j].propensity
-            else
+            else # propensity is a custom function!
                 push!(idx_func_propensities_each_type[i], q)
             end
         end
     end
-    ET,PT,FPT,TI,Q = typeof.((idx_events_each_type, propensities_each_type,
-                              idx_func_propensities_each_type, type_to_idx, queue))
+
+    # construct the type
+    ET,PT,FPT,Q = typeof.((
+        idx_events_each_kind, propensities_each_kind,
+        idx_func_propensities_each_type, queue
+    ))
     return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
-        agents, space, properties, rng, events, idx_events_each_type,
-        propensities_each_type, idx_func_propensities_each_type, type_to_idx,
+        agents, space, properties, rng, events, idx_events_each_kind,
+        propensities_each_kind, idx_func_propensities_each_type,
         queue, autogenerate_on_add, autogenerate_after_action, Ref(0), Ref(0.0)
     )
 end
 
-# standard accessors
-"""
-    abmqueue(model::EventQueueABM)
+# functions used in the construction of the `EventQueueABM`
 
-Return the queue of scheduled events in the `model`.
-The queue maps two integers (agent id, event index) to
-the time the event will occur, in absolute time.
-"""
-abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
 
-"""
-    abmevents(model::EventQueueABM)
-
-Return all possible events stored in the model.
-"""
-abmevents(model::EventQueueABM) = getfield(model, :events)
-
-"""
-    abmtime(model::AgentBasedModel)
-
-Return the current time of the model.
-All models are initialized at time 0.
-"""
-abmtime(model::EventQueueABM) = getfield(model, :time)[]
-
-containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
-agenttype(::EventQueueABM{S,A}) where {S,A} = A
 
 ###########################################################################################
 # %% Adding events to the queue
@@ -246,9 +242,9 @@ current time of the `model`.
 function add_event!(agent, model)
     events = abmevents(model)
     # Here, we retrieve the applicable events for the agent
-    idx = getfield(model, :type_to_idx)[typeof(agent)]
-    events_type = getfield(model, :idx_events_each_type)[idx]
-    propensities_type = getfield(model, :propensities_each_type)[idx]
+    idx = getfield(model, :kind_to_idx)[typeof(agent)]
+    events_type = getfield(model, :idx_events_each_kind)[idx]
+    propensities_type = getfield(model, :propensities_each_kind)[idx]
     idx_func_propensities_type = getfield(model, :idx_func_propensities_each_type)[idx]
     # After, we update the propensity vector
     for i in idx_func_propensities_type
@@ -282,3 +278,33 @@ function sample_propensity(rng, wv)
     end
     return i
 end
+
+###########################################################################################
+# %% `AgentBasedModel` API: standard accessors
+###########################################################################################
+"""
+    abmqueue(model::EventQueueABM)
+
+Return the queue of scheduled events in the `model`.
+The queue maps two integers (agent id, event index) to
+the time the event will occur, in absolute time.
+"""
+abmqueue(model::EventQueueABM) = getfield(model, :event_queue)
+
+"""
+    abmevents(model::EventQueueABM)
+
+Return all possible events stored in the model.
+"""
+abmevents(model::EventQueueABM) = getfield(model, :events)
+
+"""
+    abmtime(model::AgentBasedModel)
+
+Return the current time of the model.
+All models are initialized at time 0.
+"""
+abmtime(model::EventQueueABM) = getfield(model, :time)[]
+
+containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
+agenttype(::EventQueueABM{S,A}) where {S,A} = A

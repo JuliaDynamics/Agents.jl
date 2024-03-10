@@ -249,6 +249,7 @@ convenience functions defined that initialize the common proper type correctly
 (see examples below for more). Because the "subtypes" are not real Julia `Types`,
 you cannot use multiple dispatch on them. You also cannot distinguish them
 on the basis of `typeof`, but need to use instead the `kindof` function.
+That is why these "types" are often referred to as "kinds" in the documentation.
 
 See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
 for why in most cases it is better to use `@multiagent` than making multiple
@@ -328,7 +329,7 @@ function _multiagent(version, struct_repr)
     end
     t = :($new_type <: $abstract_type)
     c = @capture(new_type, new_type_n_{new_params__})
-    if c == false 
+    if c == false
         new_type_n = new_type
         new_params = []
     end
@@ -351,7 +352,7 @@ function _multiagent(version, struct_repr)
 
     expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
     if new_params != []
-        if version == QuoteNode(:opt_speed) 
+        if version == QuoteNode(:opt_speed)
             expr_multiagent_p = quote
                 Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
                 Agents.ismultiagentcompacttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
@@ -377,6 +378,7 @@ function _multiagent(version, struct_repr)
     return expr
 end
 
+# This function is extended in the `@multiagent` macro
 ismultiagenttype(::Type) = false
 ismultiagentsumtype(::Type) = false
 ismultiagentcompacttype(::Type) = false
@@ -416,4 +418,9 @@ agent subtype when it was created with [`@multiagent`](@ref).
 """
 function MixedStructTypes.kindof(a::AbstractAgent)
     throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
+end
+
+# This function is extended in the `@multiagent` macro
+function decompose_kinds(A::Type)
+    return (nameof(A), )
 end
