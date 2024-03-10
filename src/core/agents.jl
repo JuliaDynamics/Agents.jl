@@ -421,6 +421,6 @@ function MixedStructTypes.kindof(a::AbstractAgent)
 end
 
 # This function is extended in the `@multiagent` macro
-function decompose_kinds(A::Type)
+function allkinds(A::Type)
     return (nameof(A), )
 end
