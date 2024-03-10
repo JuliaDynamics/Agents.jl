@@ -2,7 +2,7 @@ export EventQueueABM, AgentEvent
 export abmqueue, abmevents, abmtime, add_event!
 
 """
-    AgentEvent(; action!, propensity, types, [timing])
+    AgentEvent(; action!, propensity, kinds, [timing])
 
 An event instance that can be given to [`EventQeueABM`](@ref).
 
@@ -12,7 +12,11 @@ An event instance that can be given to [`EventQeueABM`](@ref).
   of the automatic generation of events by Agents.jl.
 - `propensity = 1.0`: it can be either a constant real number,
   or a function `propensity(agent, model)` that returns the propensity of the event.
-- `types = AbstractAgent`: the supertype of agents the `action!` function can be applied to.
+- `kinds = nothing`: the kinds of agents the `action!` function can be applied to.
+  As [`EventQueueABM`](@ref) only works with [`@multiagent`](@ref), the
+  agent kinds are `Symbol`s. The default value `nothing` means that the `action!`
+  may apply to any kind of agents. Otherwise, it must a be **tuple** of `Symbol`s
+  representing the agent kinds, such as `(:Rock, :Paper, :Scissors)`.
 - `timing = Agents.exp_propensity`: decides how long after its generation the event should
   trigger. By default the time is a randomly sampled time from an exponential distribution
   with parameter the total propensity of all applicable events to the agent.
@@ -26,7 +30,7 @@ if `event_idx` and `t` are given.
 Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T<:Function}
     action!::F = dummystep
     propensity::P = 1.0
-    types::A = AbstractAgent
+    types::A = nothing
     timing::T = exp_propensity
 end
 
