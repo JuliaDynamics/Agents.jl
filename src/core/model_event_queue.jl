@@ -113,15 +113,23 @@ while also allowing "Gillespie"-like configuration with the default settings.
 
 Here is how to construct an `EventQueueABM`:
 
-    EventQueueABM(AgentTypes, events [, space]; kwargs...)
+    EventQueueABM(AgentType, events [, space]; kwargs...)
 
 Create an instance of an [`EventQueueABM`](@ref).
-`AgentTypes, space` are exactly as in [`StandardABM`](@ref).
-`events` is a container (typically a tuple) of instances of [`AgentEvent`](@ref),
+`AgentType` is a _single_ agent type representing the agents that participate
+in the simulation. Unlike [`StandardABM`](@ref), `EventQueueABM` does not support
+`Union` agent types for multi-agent simulations (because multiple dispatch is not
+intended to be used to choose events, see the `events` argument below).
+Only the [`@multiagent`](@ref) macro is supported and agent "kinds" should be
+compared with the [`kindof`](@ref) function as instructed in the main [Tutorial](@ref).
+
+`space` is an instance of a space configuration that the agents will move and interact in.
+
+`events` is a container of instances of [`AgentEvent`](@ref),
 which are the events that are scheduled and then affect agents.
+A `Tuple` or `NamedTuple` for `events` leads to optimal performance.
 The key type of `events` is also what is given to [`add_event!`](@ref),
-hence, `events` can be e.g., a dictionary with string keys so that it is
-easier to reference events in [`add_event!`](@ref).
+hence in the case of `NamedTuple` the event index can be a `Symbol`.
 
 By default, each time a new agent is added to the model via [`add_agent!`](@ref), a new
 event is generated based on the pool of possible events that can affect the agent.
@@ -131,7 +139,8 @@ the function [`add_event!`](@ref) to add events to the queue so that the model
 can be evolved in time.
 (you can always use this function regardless of the default event scheduling behavior)
 
-## Keywords
+## Keyword arguments
+
 - `container, properties, rng, warn`: same as in [`StandardABM`](@ref).
 - `autogenerate_on_add::Bool = true`: whether to automatically generate a new event for
   an agent when the agent is added to the model.
@@ -228,10 +237,10 @@ end
 Generate a randomly chosen event for the `agent` and add it to the queue,
 based on the propensities and as described in [`EventQueueABM`](@ref).
 
-    add_event!(agent, event_idx::Int, t::Real, model::EventQueueABM)
+    add_event!(agent, event_idx, t::Real, model::EventQueueABM)
 
 Add a new event to the queue to be triggered for `agent`, based on the index of the
-event (from the list of events). The event will trigger in `t` time _from_ the
+event (from the given `events` to the `model`). The event will trigger in `t` time _from_ the
 current time of the `model`.
 """
 function add_event!(agent, model)
@@ -255,7 +264,8 @@ function add_event!(agent, model)
     t = selected_event.timing(agent, model, selected_prop)
     add_event!(agent, event_idx, t, model)
 end
-function add_event!(agent::AbstractAgent, event_idx::Int, t::Real, model::EventQueueABM)
+
+function add_event!(agent::AbstractAgent, event_idx, t::Real, model::EventQueueABM)
     enqueue!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
     return
 end
