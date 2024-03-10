@@ -17,6 +17,8 @@ An event instance that can be given to [`EventQeueABM`](@ref).
   agent kinds are `Symbol`s. The default value `nothing` means that the `action!`
   may apply to any kind of agents. Otherwise, it must a be **tuple** of `Symbol`s
   representing the agent kinds, such as `(:Rock, :Paper, :Scissors)`.
+  A tuple must still be used if the action applies to only one kind of agent,
+  such as `(:Rock, )` (notice the closing comma).
 - `timing = Agents.exp_propensity`: decides how long after its generation the event should
   trigger. By default the time is a randomly sampled time from an exponential distribution
   with parameter the total propensity of all applicable events to the agent.
@@ -27,7 +29,7 @@ An event instance that can be given to [`EventQeueABM`](@ref).
 Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored
 if `event_idx` and `t` are given.
 """
-Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T<:Function}
+Base.@kwdef struct AgentEvent{F<:Function, P, A, T<:Function}
     action!::F = dummystep
     propensity::P = 1.0
     types::A = nothing
@@ -88,12 +90,12 @@ The events have four pieces of information:
    first all applicable events for that agent
    are collected. Then, their propensities are calculated. The event generated then
    is selected randomly by weighting each possible event by its propensity.
-3. The agent type(s) the event applies to. By default it applies to all types.
+3. The agent kinds(s) the event applies to. By default it applies to all kinds.
 4. The timing of the event, i.e., when should it be triggered once it is generated.
    By default this is an exponentially distributed random variable divided by the
    propensity of the event. I.e., it follows a Poisson process with the propensity
    as the "rate". The timings of the events therefore establish the natural
-   timescales of the system.
+   timescales of the ABM.
 
 Events are scheduled in a temporally ordered queue, and once
 the model evolution time reaches the event time, the event is "triggered".
@@ -103,7 +105,7 @@ a new event is generated for the same agent (if the agent still exists), chosen 
 based on the propensities as discussed above. Then a time for the new event
 is generated and the new event is added back to the queue.
 In this way, an event always generates a new event after it has finished its action
-(by default; can be overwritten).
+(by default; this can be overwritten).
 
 `EventQueueABM` is a generalization of "Gillespie"-like simulations, offering
 more power and flexibility than a standard Gillespie simulation,
