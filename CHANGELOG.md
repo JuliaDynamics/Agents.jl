@@ -10,12 +10,14 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 
 ## New features
 
+- `AgentBasedModel` defines an API that new model types may extend.
+  in contrast to the discrete time of `StandardABM`!
 - A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
-  no performance difference between having 1 agent type at the cost of each agent occupying 
-  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
+  no performance difference between having 1 agent type at the cost of each agent occupying
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
   the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
-- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through 
+- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
   the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
 - Both the visualization and the model abstract interface have been refactored to improve the user
   experience to conform to the Agents.jl API when creating a new model type and its visualizations.
