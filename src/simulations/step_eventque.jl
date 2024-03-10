@@ -52,6 +52,7 @@ function one_step!(queue, model_t, model)
 end
 
 function process_event!(event_tuple, model)
+    # TODO: study type stability of this function
     id, event_idx = event_tuple
     !agent_not_removed(id, model) && return
     agent = model[id]
