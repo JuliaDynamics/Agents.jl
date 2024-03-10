@@ -1,6 +1,6 @@
-
 function CommonSolve.step!(model::EventQueueABM, t::Union{Real, Function})
     queue = abmqueue(model)
+    # Keep in mind that `model_t` is a `Ref`!!! Hence the usage of `[]`!
     model_t = getfield(model, :time)
     step_ahead!(queue, model_t, t, model)
     return model

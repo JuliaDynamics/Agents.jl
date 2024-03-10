@@ -13,11 +13,11 @@ An event instance that can be given to [`EventQeueABM`](@ref).
 - `propensity = 1.0`: it can be either a constant real number,
   or a function `propensity(agent, model)` that returns the propensity of the event.
 - `types = AbstractAgent`: the supertype of agents the `action!` function can be applied to.
-- `timing = Agents.exp_propensity`: decides how long after its generation the event should 
-  trigger. By default the time is a randomly sampled time from an exponential distribution 
+- `timing = Agents.exp_propensity`: decides how long after its generation the event should
+  trigger. By default the time is a randomly sampled time from an exponential distribution
   with parameter the total propensity of all applicable events to the agent.
   I.e., by default the "Gillespie" algorithm is used to time the events.
-  Alternatively, it can be a custom function `timing(agent, model, propensity)` 
+  Alternatively, it can be a custom function `timing(agent, model, propensity)`
   which will return the time.
 
 Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored
@@ -63,8 +63,8 @@ A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
 continuous time, in contrast with the discrete time nature of [`StandardABM`](@ref).
 
 This is still experimental which means that it is subject to breaking changes in the
-future. Also, while all the core functionalities have been implemented, this model type 
-has some more limited features than `StandardABM`: in particular, visualizations and 
+future. Also, while all the core functionalities have been implemented, this model type
+has some more limited features than `StandardABM`: in particular, visualizations and
 IO functionalities are incomplete.
 
 Here is a summary of how the time evolution of this model works:
@@ -77,7 +77,7 @@ The events have four pieces of information:
    Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
    and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
    The `action!` function may spawn new events by using the automatic or the manual
-   of the [`add_event!`](@ref) function, the default behavior is to generate new events 
+   of the [`add_event!`](@ref) function, the default behavior is to generate new events
    automatically.
 2. The propensity of the event. A propensity is a concept similar to a probability mass.
    When automatically generating a new event for an agent,
@@ -139,13 +139,12 @@ function EventQueueABM(
         properties::P = nothing,
         rng::R = Random.default_rng(),
         warn = true,
-        warn_deprecation = false, 
         autogenerate_on_add = true,
         autogenerate_after_action = true,
     ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
     @warn "This model type is still experimental which means that it is subject to breaking changes in the
-        future. Also, while all the core functionalities have been implemented, this model type 
-        has some more limited features than `StandardABM`: in particular, visualizations and 
+        future. Also, while all the core functionalities have been implemented, this model type
+        has some more limited features than `StandardABM`: in particular, visualizations and
         IO functionalities are incomplete." maxlog=1
     !(ismultiagenttype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
@@ -154,7 +153,7 @@ function EventQueueABM(
     queue = PriorityQueue{Tuple{I, Int}, Float64}()
     agent_types = union_types(A)
     type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
-    idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types] 
+    idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types]
                             for t in agent_types]
     propensities_each_type = [zeros(length(e)) for e in idx_events_each_type]
     idx_func_propensities_each_type = [Int[] for _ in idx_events_each_type]
@@ -168,11 +167,11 @@ function EventQueueABM(
             end
         end
     end
-    ET,PT,FPT,TI,Q = typeof.((idx_events_each_type, propensities_each_type, 
+    ET,PT,FPT,TI,Q = typeof.((idx_events_each_type, propensities_each_type,
                               idx_func_propensities_each_type, type_to_idx, queue))
     return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
-        agents, space, properties, rng, events, idx_events_each_type, 
-        propensities_each_type, idx_func_propensities_each_type, type_to_idx, 
+        agents, space, properties, rng, events, idx_events_each_type,
+        propensities_each_type, idx_func_propensities_each_type, type_to_idx,
         queue, autogenerate_on_add, autogenerate_after_action, Ref(0), Ref(0.0)
     )
 end
