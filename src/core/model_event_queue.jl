@@ -54,7 +54,6 @@ struct EventQueueABM{
     idx_events_each_kind::ET
     propensities_each_kind::PT
     idx_func_propensities_each_type::FPT
-    kind_to_idx::Dict{Symbol, EK} # EK = `events` key type
     # maps an agent type to its applicable events
     event_queue::Q
     autogenerate_on_add::Bool
@@ -250,7 +249,7 @@ current time of the `model`.
 function add_event!(agent, model) # TODO: Study type stability of this function
     events = abmevents(model)
     # Here, we retrieve the applicable events for the agent and corresponding info
-    idx = getfield(model, :kind_to_idx)[kindof(agent)]
+    idx = getfield(model, :kind_to_index)[kindof(agent)]
     valid_event_idxs = getfield(model, :idx_events_each_kind)[idx]
     propensities = getfield(model, :propensities_each_kind)[idx]
     func_propensities_idxs = getfield(model, :idx_func_propensities_each_type)[idx]

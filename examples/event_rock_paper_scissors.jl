@@ -173,13 +173,13 @@ space = GridSpaceSingle((100, 100))
 
 rng = Xoshiro(42)
 
-# TODO: This doesn't work yet!
+# TODO: This still doesn't work.
 model = EventQueueABM(RPS, events, space; rng, warn = false)
 
-# populating the model with agents is as in the main [Tutorial](@ref),
-# using the [`add_agent!`](@ref) function. The only difference here
-# is that (by default), when an agent is added to the model, the
-# an event is generated for it and added to the queue.
+# populating the model with agents is the same as in the main [Tutorial](@ref),
+# using the [`add_agent!`](@ref) function.
+# By default, when an agent is added to the model
+# an event is also generated for it and added to the queue.
 
 for p in positions(model)
     type = rand(abmrng(model), (Rock, Paper, Scissors))
