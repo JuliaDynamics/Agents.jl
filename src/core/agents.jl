@@ -419,8 +419,3 @@ agent subtype when it was created with [`@multiagent`](@ref).
 function MixedStructTypes.kindof(a::AbstractAgent)
     throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
 end
-
-# This function is extended in the `@multiagent` macro
-function allkinds(A::Type)
-    return (nameof(A), )
-end

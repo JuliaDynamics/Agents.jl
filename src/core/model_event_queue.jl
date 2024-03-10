@@ -157,11 +157,12 @@ function EventQueueABM(
         autogenerate_on_add = true,
         autogenerate_after_action = true,
     ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
-    @warn "This model type is still experimental which means that it is subject to breaking changes in the
+    if warn
+        @warn "This model type is still experimental which means that it is subject to breaking changes in the
         future. Also, while all the core functionalities have been implemented, this model type
         has some more limited features than `StandardABM`: in particular, visualizations and
         IO functionalities are incomplete." maxlog=1
-    !(ismultiagenttype(A)) && agent_validator(A, space, warn)
+    end
     C = construct_agent_container(container, A)
     agents = C()
     I = events isa Tuple ? Int : keytype(events) # `Tuple` doesn't define `keytype`...
@@ -206,7 +207,7 @@ function EventQueueABM(
         idx_events_each_kind, propensities_each_kind,
         idx_func_propensities_each_type, queue
     ))
-    return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
+    return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,Q}(
         agents, space, properties, rng, events, kind_to_index, idx_events_each_kind,
         propensities_each_kind, idx_func_propensities_each_type,
         queue, autogenerate_on_add, autogenerate_after_action, Ref(0), Ref(0.0)

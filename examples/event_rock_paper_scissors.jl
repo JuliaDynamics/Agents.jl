@@ -1,14 +1,13 @@
 # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
 # This is an introductory example. Similarly to
-# [Schelling's segregation model](@ref), its goal is to provide a tutorial
-# but for the [`EventQueueABM`](@ref) instead of the [`StandardABM`](@ref).
-# It assumes that you have gone through both the [Tutorial](@ref) and
-# the [Schelling's segregation model](@ref) example.
+# Schelling's segregation model of the main [Tutorial](@ref), its goal is to provide a tutorial
+# for the [`EventQueueABM`](@ref) instead of the [`StandardABM`](@ref).
+# It assumes that you have gone through the [Tutorial](@ref) first.
 
 # The spatial rock-paper-scissors (RPS) is an ABM with the following rules:
 
-# * Agents can be any of three types: Rock, Paper, or Scissors.
+# * Agents can be any of three "kinds": Rock, Paper, or Scissors.
 # * Agents live in a 2D periodic grid space allowing only one
 #   agent per cell.
 # * When an agent activates, it can do one of three actions:
@@ -32,10 +31,14 @@
 
 using Agents, Random
 
-# and defining the three agent types
-@agent struct Rock(GridAgent{2}) end
-@agent struct Paper(GridAgent{2}) end
-@agent struct Scissors(GridAgent{2}) end
+# and defining the three agent types using [`multiagent`](@ref)
+# (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
+
+@multiagent struct RPS(GridAgent{2})
+    @subagent struct Rock end
+    @subagent struct Paper end
+    @subagent struct Scissors end
+end
 
 # Actions of events are standard Julia functions that utilize Agents.jl [API](@ref),
 # exactly like those given as
@@ -51,12 +54,16 @@ function attack!(agent, model)
     ## do nothing if there isn't anyone nearby
     isnothing(contender) && return
     ## else perform standard rock paper scissors logic
-    ## and remove the contender if you win
-    if agent isa Rock && contender isa Scissors
+    ## and remove the contender if you win.
+    ## Remember to compare agents with `kindof` instead of
+    ## `typeof` since we use `@multiagent` (see main Tutorial)
+    kind = kindof(agent)
+    kindc = kindof(contender)
+    if kind === :Rock && kindc === :Scissors
         remove_agent!(contender, model)
-    elseif agent isa Scissors && contender isa Paper
+    elseif kind === :Scissors && kindc === :Paper
         remove_agent!(contender, model)
-    elseif agent isa Paper && contender isa Rock
+    elseif kind === :Paper && kindc === :Rock
         remove_agent!(contender, model)
     end
     return
@@ -112,9 +119,10 @@ end
 attack_propensity = 1.0
 movement_propensity = 0.5
 
-# while the propensity for reproduction will be a function
+# while the propensity for reproduction will be a function modelling
+# "seasonality", so that willingness to reproduce goes up and down periodically
 function reproduction_propensity(agent, model)
-    return (1/2) ^ ceil(Int, abmtime(model))
+    return cos(abmtime(model))^2
 end
 
 ## Creating the `AgentEvent` structures
@@ -122,16 +130,16 @@ end
 # Events are registered as an [`AgentEvent`](@ref), then are added into a container,
 # and then given to the [`EventQueueABM`](@ref).
 # The attack and reproduction events affect all agents,
-# and hence we don't need to specify an agent type that this event
-# applies to, leaving the `AbstractAgent` as the default.
+# and hence we don't need to specify what agents this event
+# applies to.
 
 attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 
 reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_propensity)
 
 # The movement event does not apply to rocks however,
-# so we need to specify the agent super type that it applies to,
-# which is `Union{Scissors, Paper}`.
+# so we need to specify the agent "kinds" that it applies to,
+# which is `(:Scissors, :Paper)`.
 # Additionally, we would like to change how the timing of the movement events works.
 # We want to change it from an exponential distribution sample to something else.
 # This "something else" is once again an arbitrary Julia function,
@@ -147,7 +155,7 @@ end
 
 movement_event = AgentEvent(
     action! = move!, propensity = movement_propensity,
-    types = Union{Scissors, Paper}, timing = movement_time
+    kinds = (:Scissors, :Paper), timing = movement_time
 )
 
 # we wrap all events in a tuple and we are done with the setting up part!
@@ -164,8 +172,9 @@ events = (attack_event, reproduction_event, movement_event)
 space = GridSpaceSingle((100, 100))
 
 rng = Xoshiro(42)
-AgentTypes = Union{Rock, Paper, Scissors}
-model = EventQueueABM(AgentTypes, events, space; rng, warn = false)
+
+# TODO: This doesn't work yet!
+model = EventQueueABM(RPS, events, space; rng, warn = false)
 
 # populating the model with agents is as in the main [Tutorial](@ref),
 # using the [`add_agent!`](@ref) function. The only difference here
