@@ -22,6 +22,7 @@ EventQueueABM
 AbstractAgent
 @multiagent
 kindof
+allkinds
 ```
 
 ### Minimal agent types

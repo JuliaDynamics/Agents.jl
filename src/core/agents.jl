@@ -1,4 +1,5 @@
-export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof, allkinds
+using MixedStructTypes: allkinds
 
 ###########################################################################################
 # @agent
@@ -248,8 +249,9 @@ overarching type `YourAgentType`. This means that all "subtypes" are conceptual:
 convenience functions defined that initialize the common proper type correctly
 (see examples below for more). Because the "subtypes" are not real Julia `Types`,
 you cannot use multiple dispatch on them. You also cannot distinguish them
-on the basis of `typeof`, but need to use instead the `kindof` function.
+on the basis of `typeof`, but need to use instead the [`kindof`](@ref) function.
 That is why these "types" are often referred to as "kinds" in the documentation.
+See also the [`allkinds`](@ref) function for a convenient way to obtain all kinds.
 
 See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
 for why in most cases it is better to use `@multiagent` than making multiple
@@ -418,4 +420,14 @@ agent subtype when it was created with [`@multiagent`](@ref).
 """
 function MixedStructTypes.kindof(a::AbstractAgent)
     throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
+end
+
+"""
+    allkinds(AgentType::Type) → kinds::Tuple
+
+Return all "kinds" that compose the given agent type that was generated via
+the [`@multiagent`](@ref) macro. The kinds are returned as a tuple of `Symbol`s.
+"""
+function MixedStructTypes.allkinds(a::Type{<:AbstractAgent})
+    (nameof(a), ) # this function is extended automatically in the macro
 end
