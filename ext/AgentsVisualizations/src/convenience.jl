@@ -79,10 +79,14 @@ end
 ##########################################################################################
 
 function Agents.abmvideo(file, model;
-        spf = 1, framerate = 30, frames = 300,  title = "", showstep = true,
+        spf = nothing, dt = 1, framerate = 30, frames = 300,  title = "", showstep = true,
         figure = (size = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
+    if !isnothing(spf)
+        @warn "keyword `spf` is deprecated in favor of `dt`." maxlog=1
+        dt = spf
+    end
     # add some title stuff
     abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
@@ -104,7 +108,7 @@ function Agents.abmvideo(file, model;
     record(fig, file; framerate, recordkwargs...) do io
         for j in 1:frames-1
             recordframe!(io)
-            Agents.step!(abmobs, spf)
+            Agents.step!(abmobs, dt)
             abmtime_obs[] = abmtime(model)
         end
         recordframe!(io)

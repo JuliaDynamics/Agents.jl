@@ -48,6 +48,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - `add_agent_pos!` has been deprecated in favor of the more descriptive `add_agent_own_pos!`.
 - `schedule(model, scheduler)` is deprecated. Use `scheduler(model)` together with `hasid(model)`.
 - Deprecations that were in place in v5 (see section `# v5` of this CHANGELOG) have been removed.
+- Keyword `spf` is deprecated in favor of `dt` in `abmvideo`.
 
 # v5.17
 

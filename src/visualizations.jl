@@ -37,7 +37,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that 
+* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that
   plots the agents (typically `scatter!`).
 
 ### Preplot related
@@ -59,7 +59,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   placed naturally.
 * `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
   but before the agents.
-* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space. 
+* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space.
   Directly passed to
   * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
   * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
@@ -125,9 +125,9 @@ end
     add_interaction!(ax)
     add_interaction!(ax, p::_ABMPlot)
 
-Adds model control buttons and parameter sliders according to the plotting parameters 
+Adds model control buttons and parameter sliders according to the plotting parameters
 `add_controls` (if true) and `params` (if not empty).
-Buttons and sliders are placed next to each other in a new layout position below the 
+Buttons and sliders are placed next to each other in a new layout position below the
 position of `ax`.
 """
 function add_interaction! end
@@ -205,8 +205,8 @@ saved at given path `file`, by recording the behavior of the interactive version
 The plotting is identical as in [`abmplot`](@ref) and applicable keywords are propagated.
 
 ## Keywords
-* `spf = 1`: Steps-per-frame, i.e. how many times to step the model before recording a new
-  frame.
+* `dt = 1`: Time to evolve between each recorded frame. For [`StandardABM`](@ref)
+  this must be an integer and it is identical to how many steps to take per frame.
 * `framerate = 30`: The frame rate of the exported video.
 * `frames = 300`: How many frames to record in total, including the starting frame.
 * `title = ""`: The title of the figure.
@@ -268,8 +268,8 @@ export translate_polygon, scale_polygon, rotate_polygon
 """
     check_space_visualization_API(model::ABM)
 
-Checks whether all the necessary method extensions indicated in 
-[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl) 
+Checks whether all the necessary method extensions indicated in
+[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl)
 have been defined.
 """
 function check_space_visualization_API end
@@ -340,8 +340,8 @@ function abmplot_markersizes end
 """
     convert_element_pos(::S, pos)
 
-Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie 
-figure (e.g. a single scatter point representing an agent) to its corresponding position in 
+Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie
+figure (e.g. a single scatter point representing an agent) to its corresponding position in
 the given space `S`.
 """
 function convert_element_pos end
