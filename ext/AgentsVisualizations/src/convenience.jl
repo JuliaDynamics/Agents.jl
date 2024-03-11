@@ -92,9 +92,9 @@ function Agents.abmvideo(file, model;
     # add some title stuff
     abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), abmtime_obs)
+        t = lift(x -> title*", time = "*string(x), abmtime_obs)
     elseif showstep
-        t = lift(x -> "step = "*string(x), abmtime_obs)
+        t = lift(x -> "time = "*string(x), abmtime_obs)
     else
         t = title
     end
