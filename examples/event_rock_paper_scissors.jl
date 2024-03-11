@@ -197,6 +197,20 @@ abmqueue(model)
 # Note that the timing of the events
 # has been rounded for display reasons!
 
+# Now, as per-usual in Agents.jl we are making a keyword-based function
+# for constructing the model, so that it is easier to handle later.
+
+function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
+    space = GridSpaceSingle((nx, ny))
+    rng = Xoshiro(seed)
+    model = EventQueueABM(RPS, events, space; rng, warn = false)
+    for p in positions(model)
+        type = rand(abmrng(model), (Rock, Paper, Scissors))
+        add_agent!(p, type, model)
+    end
+    return model
+end
+
 # ## Time evolution
 # %% #src
 
@@ -204,15 +218,9 @@ abmqueue(model)
 # to that of [`StandardABM`](@ref), but time is continuous.
 # So, when calling `step!` we pass in a real time.
 
-step!(model, 10.0)
+step!(model, 123.456)
 
-dummyplot(model)
-
-#
-
-step!(model, 100.0)
-
-dummyplot(model)
+nagents(model)
 
 # Alternatively we could give a function for when to terminate the time evolution.
 # For example, we terminate if any of the three types of agents become less
@@ -237,26 +245,43 @@ step!(model, terminate)
 
 abmtime(model)
 
-
 # ## Visualization
 
-# Visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
+# The entirety of the Agents.jl [API](@ref) is orthogonal/agnostic to what
+# model we have. This means that whatever we do, plotting, data collection, etc.,
+# has identical syntax irrespectively of whether we have a `StandardABM` or `EventQueueABM`.
+
+# Hence, visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
 # that we learned in the [visualization tutorial](@ref vis_tutorial).
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
 
+
 const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
 agent_color(agent) = colormap[kindof(agent)]
-
-fig, ax, abmobs = abmplot(model; agent_color, agent_marker = :rect, agent_size = 5)
+plotkw = (agent_color, agent_marker = :rect, agent_size = 5)
+fig, ax, abmobs = abmplot(model; plotkw...)
 
 fig
+
+#
+
+model = initialize_rps()
+abmvideo("rps_eventqueue.mp4", model;
+    dt = 0.5, title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
+)
+
+# We see model dynamics similar to Schelling's segregation model:
+# neighborhoods for same-type agents form! But they are not static,
+# but rather expand and contract over time!
 
 # ## Data collection
 
 # Data collection also works almost identically to [`StandardABM`](@ref).
 
 # Here we will simply collect the number of each agent kind.
+
+model = initialize_rps()
 
 adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 
