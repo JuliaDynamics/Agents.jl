@@ -22,17 +22,17 @@ should_we_collect(s, model, when::Bool) = when
 should_we_collect(s, model, when) = when(model, s)
 
 """
-    run!(model::ABM, n::Integer; kwargs...) → agent_df, model_df
-    run!(model::ABM, f::Function; kwargs...) → agent_df, model_df
-    run!(model::EventQueueABM, n::Float64; kwargs...) → agent_df, model_df
+    run!(model::ABM, t::Union{Real, Function}; kwargs...)
 
-Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
+Run the model (call [`step!`](@ref)`(model, t)` and collect
 data specified by the keywords, explained one by one below. Return the data as
-two `DataFrame`s, one for agent-level data and one for model-level data. 
+two `DataFrame`s, `agent_df, model_df`,
+one for agent-level data and one for model-level data.
 
 See also [`offline_run!`](@ref) to write data to file while running the model.
 
 ## Data-deciding keywords
+
 * `adata::Vector` means "agent data to collect". If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
@@ -88,11 +88,16 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
 ## Other keywords
-* `when=true` : at which time `s` to perform the data collection and processing.
-  A lot of flexibility is offered based on the type of `when`. If `when::AbstractVector`,
-  then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
-  returns `true`. By default data are collected in every step. If `model` is a `EventQueueABM`,
-  passing `when` as a function is not supported.
+
+* `when = 1` : at which time `s` to perform the data collection and processing.
+  A lot of flexibility is offered based on the type of `when`:
+  - `when::Real`: data are collected each time the model is evolved for at least `when`
+     units of time. For discrete time models like [`StandardABM`](@ref) this must be an
+     integer and in essence it means how many steps to evolve between each data collection.
+     For continuous time models like [`EventQueueABM`](@ref) `when` is the _least_ amount
+     of time to evolve the model (with maximum being until an upcoming event is triggered).
+  - `when::AbstractVector`: data are collected if `s ∈ when`.
+  - `when::Function`: data are collected if `when(model, s)` returns `true`.
 * `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
   only `when_model = when` is supported.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
@@ -105,7 +110,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 function run! end
 
 function run!(model::ABM, n::Union{Function, Real};
-        when = true,
+        when = 1,
         when_model = when,
         mdata = nothing,
         adata = nothing,
@@ -115,12 +120,12 @@ function run!(model::ABM, n::Union{Function, Real};
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
-        if when == true
+        if when == 1
             for c in eachcol(df_agent)
                 sizehint!(c, n)
             end
         end
-        if when_model == true
+        if when_model == 1
             for c in eachcol(df_model)
                 sizehint!(c, n)
             end
@@ -213,8 +218,7 @@ function run!(model::EventQueueABM, n::Real;
 end
 
 """
-    offline_run!(model, n::Integer; kwargs...)
-    offline_run!(model, f::Function; kwargs...)
+    offline_run!(model, t::Union{Real, Function}; kwargs...)
 
 Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory
 dataframe, write the output to a file after collecting data `writing_interval` times and
@@ -223,6 +227,7 @@ Useful when the amount of collected data is expected to exceed the memory availa
 during execution.
 
 ## Keywords
+
 * `backend=:csv` : backend to use for writing data.
   Currently supported backends: `:csv`, `:arrow`
 * `adata_filename="adata.\$backend"` : a file to write agent data on.
@@ -230,10 +235,7 @@ during execution.
 * `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
 * `writing_interval=1` : write to file every `writing_interval` times data collection
-  is triggered. If the `when` keyword is not set, this corresponds to writing to file
-  every `writing_interval` steps; otherwise, the data will be written every
-  `writing_interval` times the `when` condition is satisfied
-  (the same applies to `when_model`).
+  is triggered (which is set by the `when` and `when_model` keywords).
 """
 function offline_run! end
 
@@ -569,7 +571,7 @@ end
 function collect_agent_data!(
     df,
     model::ABM,
-    properties::Vector{<:Tuple}, 
+    properties::Vector{<:Tuple},
     step::Int = 0;
     _offset_time = 0,
     kwargs...,

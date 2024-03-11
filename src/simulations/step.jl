@@ -11,9 +11,10 @@ up to the next event and perform that.
 
     step!(model::ABM, t::Real)
 
-Step the model forwards for total time `t`.
-For discrete time models such as [`StandardABM`](@ref),
-`t` must be an integer.
+Step the model forwards until there is a temporal difference `≥ t`
+from the current model time. I.e., step the model forwards for at least `t` time.
+For discrete time models like [`StandardABM`](@ref) `t` must be integer
+and evolves the model for _exactly_ `t` steps.
 
     step!(model::ABM, f::Function)
 
