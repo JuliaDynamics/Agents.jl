@@ -11,14 +11,10 @@ function Agents.ABMObservable(model::AgentBasedModel;
     return ABMObservable(Observable(model), adata, mdata, adf, mdf, Observable(abmtime(model)), when)
 end
 
-function Agents.step!(abmobs::ABMObservable, n; kwargs...)
+function Agents.step!(abmobs::ABMObservable, n)
     model, adf, mdf = abmobs.model, abmobs.adf, abmobs.mdf
     abmobs._offset_time[] += n
-    if Agents.agent_step_field(model[]) != Agents.dummystep || Agents.model_step_field(model[]) != Agents.dummystep
-        Agents.step!(model[], n; kwargs...)
-    else
-        Agents.step!(model[], abmobs.agent_step!, abmobs.model_step!, n; warn_deprecation = false, kwargs...)
-    end
+    Agents.step!(model[], n)
     notify(model)
     if Agents.should_we_collect(abmtime(model[]), model[], abmobs.when)
         if !isnothing(abmobs.adata)
