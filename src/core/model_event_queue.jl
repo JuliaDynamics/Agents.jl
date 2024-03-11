@@ -321,3 +321,5 @@ abmtime(model::EventQueueABM) = getfield(model, :time)[]
 
 containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
 agenttype(::EventQueueABM{S,A}) where {S,A} = A
+
+discretimeabm(::StandardABM) = false
