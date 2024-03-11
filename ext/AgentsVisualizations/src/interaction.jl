@@ -18,8 +18,8 @@ Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
 "Initialize standard model control buttons."
 function add_controls!(fig, abmobs, spu)
 
-    model, agent_step!, model_step!, adata, mdata, adf, mdf, when =
-    getfield.(Ref(abmobs), (:model, :agent_step!, :model_step!, :adata, :mdata, :adf, :mdf, :when))
+    model, adata, mdata, adf, mdf, when =
+    getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
 
     init_dataframes!(model[], adata, mdata, adf, mdf)
     collect_data!(abmobs, model[], when, adata, mdata, adf, mdf)
@@ -33,6 +33,7 @@ function add_controls!(fig, abmobs, spu)
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
     end
+    # TODO: Fix/change `spu` to be just `dt`.
     sg = SliderGrid(controllayout[1,1], (label = "spu", range = spu[]),
         (label = "sleep", range = _sleepr, startvalue = _sleep0),
     )
@@ -56,10 +57,6 @@ function add_controls!(fig, abmobs, spu)
         end
     end
     # Reset button
-    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
-        agent_step! = Agents.agent_step_field(model)
-        model_step! = Agents.model_step_field(model)
-    end
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c

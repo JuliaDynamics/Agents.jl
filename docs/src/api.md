@@ -381,4 +381,3 @@ translate_polygon
 scale_polygon
 rotate_polygon
 ```
-
