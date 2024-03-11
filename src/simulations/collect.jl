@@ -4,23 +4,6 @@ export run!, offline_run!, collect_agent_data!, collect_model_data!,
 ###################################################
 # Definition of the data collection API
 ###################################################
-get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
-get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
-
-get_data_missing(a, s::Symbol, obtainer::Function) =
-    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
-function get_data_missing(a, f::Function, obtainer::Function)
-    try
-        obtainer(f(a))
-    catch
-        missing
-    end
-end
-
-should_we_collect(s, model, when::AbstractVector) = s ∈ when
-should_we_collect(s, model, when::Bool) = when
-should_we_collect(s, model, when) = when(model, s)
-
 """
     run!(model::ABM, t::Union{Real, Function}; kwargs...)
 
@@ -100,6 +83,10 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   - `when::Function`: data are collected if `when(model, s)` returns `true`.
 * `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
   only `when_model = when` is supported.
+* `dt = 1.0`: minimum stepping time for continuous time models between data collection
+  checks of `when` and possible data recording time.
+  If `when isa Real` then it must hold `dt ≤ minimum(when, when_model)`.
+  This keyword is ignored for discrete time models.
 * `obtainer = identity` : method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
@@ -109,6 +96,23 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 """
 function run! end
 
+get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
+get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
+
+get_data_missing(a, s::Symbol, obtainer::Function) =
+    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
+function get_data_missing(a, f::Function, obtainer::Function)
+    try
+        obtainer(f(a))
+    catch
+        missing
+    end
+end
+
+should_we_collect(s, ds, model, when::Real) = when ≥ ds
+should_we_collect(s, ds, model, when::AbstractVector) = s ∈ when
+should_we_collect(s, ds, model, when::Function) = when(model, s)
+
 function run!(model::ABM, n::Union{Function, Real};
         when = 1,
         when_model = when,
@@ -116,7 +120,13 @@ function run!(model::ABM, n::Union{Function, Real};
         adata = nothing,
         obtainer = identity,
         showprogress = false,
+        dt = 1.0
     )
+    if discretimeabm(model)
+        dt = 1
+    end
+
+    # Set-up part
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -138,19 +148,31 @@ function run!(model::ABM, n::Union{Function, Real};
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
-    t = getfield(model, :time)
-    t0, s = t[], 0
-    while until(t[], t0, n, model)
-        if should_we_collect(s, model, when)
+    # introduce function barrier for the collection loop.
+    _run!(model, df_agent, df_model, when, when_model,
+        mdata, adata, obtainer, dt, p
+    )
+end
+function _run!(model, df_agent, df_model, when, when_model,
+        mdata, adata, obtainer, dt, p
+    )
+
+    t0 = s = sprev = abmtime(model)
+
+    while until(s, t0, n, model)
+        ds = s - sprev
+        sprev = s
+        if should_we_collect(s, ds, model, when)
             collect_agent_data!(df_agent, model, adata; obtainer)
         end
-        if should_we_collect(s, model, when_model)
+        if should_we_collect(s, ds, model, when_model)
             collect_model_data!(df_model, model, mdata; obtainer)
         end
-        step!(model, 1)
-        s += 1
+        step!(model, dt)
+        s = abmtime(model)
         ProgressMeter.next!(p)
     end
+    # final collection step for when the loop exited
     if should_we_collect(s, model, when)
         collect_agent_data!(df_agent, model, adata; obtainer)
     end
@@ -161,61 +183,61 @@ function run!(model::ABM, n::Union{Function, Real};
     return df_agent, df_model
 end
 
-function run!(model::EventQueueABM, n::Real;
-        when = true,
-        when_model = when,
-        mdata = nothing,
-        adata = nothing,
-        obtainer = identity,
-        showprogress = false,
-    )
-    df_agent = init_agent_dataframe(model, adata)
-    df_model = init_model_dataframe(model, mdata)
-    if n isa Integer
-        if when == true
-            for c in eachcol(df_agent)
-                sizehint!(c, n)
-            end
-        end
-        if when_model == true
-            for c in eachcol(df_model)
-                sizehint!(c, n)
-            end
-        end
-    end
+# function run!(model::EventQueueABM, n::Real;
+#         when = true,
+#         when_model = when,
+#         mdata = nothing,
+#         adata = nothing,
+#         obtainer = identity,
+#         showprogress = false,
+#     )
+#     df_agent = init_agent_dataframe(model, adata)
+#     df_model = init_model_dataframe(model, mdata)
+#     if n isa Integer
+#         if when == true
+#             for c in eachcol(df_agent)
+#                 sizehint!(c, n)
+#             end
+#         end
+#         if when_model == true
+#             for c in eachcol(df_model)
+#                 sizehint!(c, n)
+#             end
+#         end
+#     end
 
-    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+#     p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
 
-    t = getfield(model, :time)
-    t0 = t[]
-    dt = when == true ? dt = 1.0 : dt = when
-    if dt isa AbstractVector
-        range_vals = [dt[1], diff(dt)...]
-    else
-        k = Int(div(n, dt))
-        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
-    end
-    for s in range_vals
-        if until(t[], t0, n, model)
-            step!(model, s)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-            ProgressMeter.next!(p)
-        else
-            break
-        end
-    end
-    if t[] < t0 + n
-        step!(model, t0+n-t[])
-        if !(dt isa AbstractVector)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-        end
-        ProgressMeter.next!(p)
-    end
-    ProgressMeter.finish!(p)
-    return df_agent, df_model
-end
+#     t = getfield(model, :time)
+#     t0 = t[]
+#     dt = when == true ? dt = 1.0 : dt = when
+#     if dt isa AbstractVector
+#         range_vals = [dt[1], diff(dt)...]
+#     else
+#         k = Int(div(n, dt))
+#         range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
+#     end
+#     for s in range_vals
+#         if until(t[], t0, n, model)
+#             step!(model, s)
+#             collect_agent_data!(df_agent, model, adata; obtainer)
+#             collect_model_data!(df_model, model, mdata; obtainer)
+#             ProgressMeter.next!(p)
+#         else
+#             break
+#         end
+#     end
+#     if t[] < t0 + n
+#         step!(model, t0+n-t[])
+#         if !(dt isa AbstractVector)
+#             collect_agent_data!(df_agent, model, adata; obtainer)
+#             collect_model_data!(df_model, model, mdata; obtainer)
+#         end
+#         ProgressMeter.next!(p)
+#     end
+#     ProgressMeter.finish!(p)
+#     return df_agent, df_model
+# end
 
 """
     offline_run!(model, t::Union{Real, Function}; kwargs...)
