@@ -44,22 +44,23 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,ET,PT,FPT,EK,Q} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,ET,PT,FPT,Q} <: AgentBasedModel{S}
+    # core ABM stuff
     agents::C
     space::S
     properties::P
     rng::R
+    maxid::Base.RefValue{Int64}
+    time::Base.RefValue{Float64}
+    # Specific to event queue
     events::E
     kind_to_index::Dict{Symbol, Int}
     idx_events_each_kind::ET
     propensities_each_kind::PT
     idx_func_propensities_each_type::FPT
-    # maps an agent type to its applicable events
     event_queue::Q
     autogenerate_on_add::Bool
     autogenerate_after_action::Bool
-    maxid::Base.RefValue{Int64}
-    time::Base.RefValue{Float64}
 end
 
 """
@@ -207,9 +208,12 @@ function EventQueueABM(
         idx_func_propensities_each_type, queue
     ))
     return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,Q}(
-        agents, space, properties, rng, events, kind_to_index, idx_events_each_kind,
+
+        agents, space, properties, rng, Ref(0), Ref(0.0),
+
+        events, kind_to_index, idx_events_each_kind,
         propensities_each_kind, idx_func_propensities_each_type,
-        queue, autogenerate_on_add, autogenerate_after_action, Ref(0), Ref(0.0)
+        queue, autogenerate_on_add, autogenerate_after_action,
     )
 end
 

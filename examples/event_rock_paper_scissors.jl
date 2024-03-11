@@ -186,19 +186,28 @@ for p in positions(model)
     add_agent!(p, type, model)
 end
 
+# We can see the list of scheduled events via
+
+abmqueue(model)
+
+# there are currently as many scheduled events because as the amount
+# of agents we added to the model.
+
 using CairoMakie
 function dummyplot(model)
     fig = Figure()
-    ax = Axis(fig[1,1])
+    ax = Axis(fig[1,1], limits = ((0.5, 100.5), (0.5, 100.5)))
     alla = allagents(model)
-    colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
+    colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
     pos = [a.pos for a in alla]
-    color = [colormap[typeof(a)] for a in alla]
-    scatter!(ax, pos; color, markersize = 10)
+    color = [colormap[kindof(a)] for a in alla]
+    scatter!(ax, pos; color, markersize = 5, marker = :rect)
     return fig
 end
 
 dummyplot(model)
+
+
 
 # ## Time evolution
 # %% #src
