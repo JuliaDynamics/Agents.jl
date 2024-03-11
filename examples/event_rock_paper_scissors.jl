@@ -197,20 +197,6 @@ abmqueue(model)
 # Note that the timing of the events
 # has been rounded for display reasons!
 
-using CairoMakie
-function dummyplot(model)
-    fig = Figure()
-    ax = Axis(fig[1,1], limits = ((0.5, 100.5), (0.5, 100.5)))
-    alla = allagents(model)
-    colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
-    pos = [a.pos for a in alla]
-    color = [colormap[kindof(a)] for a in alla]
-    scatter!(ax, pos; color, markersize = 5, marker = :rect)
-    return fig
-end
-
-dummyplot(model)
-
 # ## Time evolution
 # %% #src
 
@@ -250,6 +236,21 @@ end
 step!(model, terminate)
 
 abmtime(model)
+
+
+# ## Visualization
+
+# Visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
+# that we learned in the [visualization tutorial](@ref vis_tutorial).
+# Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
+# corresponds to continuous time and does not have to be an integer.
+
+const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
+agent_color(agent) = colormap[kindof(agent)]
+
+fig, abmobs = abmplot(model; agent_color, agent_marker = :rect, agent_size = 5)
+
+fig
 
 # ## Data collection
 
