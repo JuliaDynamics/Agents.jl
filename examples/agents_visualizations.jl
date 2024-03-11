@@ -122,14 +122,15 @@ nothing #hide
 # </video>
 # ```
 
-# ```@docs
+# ```@docs; canonical = false
 # abmexploration
 # ```
 
 # ## ABM Videos
-# ```@docs
+# ```@docs; canonical = false
 # abmvideo
 # ```
+
 # E.g., continuing from above,
 model = AgentsExampleZoo.daisyworld()
 abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
@@ -157,7 +158,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # ![RabbitFoxHawk inspection example](https://github.com/JuliaDynamics/JuliaDynamics/tree/master/videos/agents/RabbitFoxHawk_inspection.png)
 
 # The tooltip can be customized by extending `Agents.agent2string`.
-# ```@docs
+# ```@docs; canonical = false
 # Agents.agent2string
 # ```
 
@@ -169,7 +170,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # The same steps are necessary when we want to create custom plots that compose
 # animations of the model space and other aspects.
 
-# ```@docs
+# ```@docs; canonical = false
 # ABMObservable
 # ```
 # To do custom animations you need to have a good idea of how Makie's animation system works.

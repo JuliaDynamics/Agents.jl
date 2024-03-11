@@ -248,7 +248,7 @@ abmtime(model)
 const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
 agent_color(agent) = colormap[kindof(agent)]
 
-fig, abmobs = abmplot(model; agent_color, agent_marker = :rect, agent_size = 5)
+fig, ax, abmobs = abmplot(model; agent_color, agent_marker = :rect, agent_size = 5)
 
 fig
 

@@ -13,6 +13,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 ## Keyword arguments
 
 ### Agent related
+
 * `agent_color, agent_size, agent_marker` : These three keywords decide the color, size, and marker, that
   each agent will be plotted as. They can each be either a constant or a *function*,
   which takes as an input a single agent and outputs the corresponding value. If the model
@@ -41,6 +42,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   plots the agents (typically `scatter!`).
 
 ### Preplot related
+
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
   as a heatmap over the space.
   Its values can be standard data accessors given to functions like `run!`, i.e.
@@ -75,9 +77,10 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
 
 ## Evolution related
 
-* `add_controls::Bool = false`: If `true`, `abmplot` switches to
-  "interactive application GUI" mode (this is done by default in [`abmexploration`](@ref)).
-  The model evolves interactively using `Agents.step!`.
+* `add_controls::Bool`: If `true`, `abmplot` switches to
+  "interactive application GUI" mode where the model evolves interactively using `Agents.step!`.
+  `add_controls` is by default `false` unless `params` (see below) is not empty.
+  `add_controls` is also always `true` in [`abmexploration`](@ref).
   The application has the following interactive elements:
   1. "step": advances the simulation once for `spu` steps.
   1. "run": starts/stops the continuous evolution of the model.
