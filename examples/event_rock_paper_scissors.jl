@@ -15,7 +15,7 @@
 #      If the agent loses the RPS game it gets removed.
 #   1. Move: choose a random nearby position. If it is empty move
 #      to it, otherwise swap positions with the agent there.
-#   1. Reproduce: choose a random empty nearby position (if any).
+#   1. Reproduce: choose a random empty nearby position (if any exist).
 #      Generate there a new agent of the same type.
 
 # And that's it really!
@@ -91,9 +91,6 @@ end
 function reproduce!(agent, model)
     pos = random_nearby_position(agent, model, 1, pos -> isempty(pos, model))
     isnothing(pos) && return
-    # newagent = copy_agent(agent, model, nextid(model); kwargs...)
-    # add_agent_own_pos!(newagent, model)
-    # add_agent!(pos, Agents.MixedStructTypes.constructor(agent), model)
     replicate!(agent, pos, model)
     return
 end
@@ -169,15 +166,14 @@ events = (attack_event, reproduction_event, movement_event)
 # ## Creating and populating the `EventQueueABM`
 
 # This step is almost identical to making a [`StandardABM`](@ref) in the main [Tutorial](@ref).
-# We create an instance of [`EventQueueABM`](@ref) by giving it the agent types it will
-# have, the events vector, and a space (optionally, defaults to no space).
+# We create an instance of [`EventQueueABM`](@ref) by giving it the agent type it will
+# have, the events, and a space (optionally, defaults to no space).
 # Here we have
 
 space = GridSpaceSingle((100, 100))
 
 rng = Xoshiro(42)
 
-# TODO: This still doesn't work.
 model = EventQueueABM(RPS, events, space; rng, warn = false)
 
 # populating the model with agents is the same as in the main [Tutorial](@ref),
@@ -194,8 +190,12 @@ end
 
 abmqueue(model)
 
-# there are currently as many scheduled events because as the amount
+# Here the queue maps pairs of (agent id, event index) to the time
+# the events will trigger.
+# There are currently as many scheduled events because as the amount
 # of agents we added to the model.
+# Note that the timing of the events
+# has been rounded for display reasons!
 
 using CairoMakie
 function dummyplot(model)
