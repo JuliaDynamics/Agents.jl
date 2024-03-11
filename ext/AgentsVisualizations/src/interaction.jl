@@ -1,7 +1,7 @@
 function Agents.add_interaction!(ax, p)
     if p.add_controls[]
         @assert !isnothing(ax) "Need `ax` to add model controls."
-        stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.spu)
+        stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.dt[])
         if !isempty(p.params[])
             @assert !isnothing(ax) "Need `ax` to add plots and parameter sliders."
             add_param_sliders!(ax.parent, p.abmobs[].model, p.params[], resetclick)
@@ -16,7 +16,7 @@ end
 Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
 
 "Initialize standard model control buttons."
-function add_controls!(fig, abmobs, spu)
+function add_controls!(fig, abmobs, dt)
 
     model, adata, mdata, adf, mdf, when =
     getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
@@ -33,8 +33,10 @@ function add_controls!(fig, abmobs, spu)
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
     end
-    # TODO: Fix/change `spu` to be just `dt`.
-    sg = SliderGrid(controllayout[1,1], (label = "spu", range = spu[]),
+
+    dtrange = isnothing(dt) ? _default_dts_from_model(abmobs.model[]) : dt
+    sg = SliderGrid(controllayout[1,1],
+        (label = "dt", range = dtrange, startvalue = 1),
         (label = "sleep", range = _sleepr, startvalue = _sleep0),
     )
     speed, slep = [s.value for s in sg.sliders]
@@ -74,6 +76,11 @@ function add_controls!(fig, abmobs, spu)
 
     return step.clicks, reset.clicks
 end
+
+_default_dts_from_model(::StandardABM) = 1:50
+_default_dts_from_model(::EventQueueABM) = 0.1:0.1:10.0
+
+
 
 "Initialize agent and model dataframes."
 function init_dataframes!(model, adata, mdata, adf, mdf)

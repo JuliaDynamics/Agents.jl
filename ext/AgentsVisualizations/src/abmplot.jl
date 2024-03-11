@@ -125,8 +125,7 @@ This is the internal recipe for creating an `_ABMPlot`.
         # Add parameter sliders if params are provided
         params=Dict(),
         # Animation evolution speed
-        spu=1:50,
-
+        dt=nothing,
         # Internal Attributes necessary for inspection, controls, etc. to work
         _used_poly=false,
     )

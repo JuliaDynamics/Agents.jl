@@ -82,14 +82,16 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
   `add_controls` is by default `false` unless `params` (see below) is not empty.
   `add_controls` is also always `true` in [`abmexploration`](@ref).
   The application has the following interactive elements:
-  1. "step": advances the simulation once for `spu` steps.
+  1. "step": advances the simulation once for `dt` time.
   1. "run": starts/stops the continuous evolution of the model.
   1. "reset model": resets the model to its initial state from right after starting the
      interactive application.
-  1. Two sliders control the animation speed: "spu" decides how many model steps should be
-     done before the plot is updated, and "sleep" the `sleep()` time between updates.
+  1. Two sliders control the animation speed: "dt" decides how much time to evolve the model
+     before the plot is updated, and "sleep" the `sleep()` time between updates.
 * `enable_inspection = add_controls`: If `true`, enables agent inspection on mouse hover.
-* `spu = 1:50`: The values of the "spu" slider.
+* `dt = 1:50`: The values of the "dt" slider which is the time to step the model forwards
+  in each frame update, which calls `step!(model, dt)`. This defaults to `1:50`
+  for discrete time models and to `0.1:0.1:10.0` for continuous time ones.
 * `params = Dict()` : This is a dictionary which decides which parameters of the model will
   be configurable from the interactive application. Each entry of `params` is a pair of
   `Symbol` to an `AbstractVector`, and provides a range of possible values for the parameter
