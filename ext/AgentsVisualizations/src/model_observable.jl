@@ -1,7 +1,5 @@
 function Agents.ABMObservable(model::AgentBasedModel;
-        adata = nothing,
-        mdata = nothing,
-        when = true,
+        adata = nothing, mdata = nothing, when = true,
     )
     adf = mdf = nothing
     if !isnothing(adata)
@@ -10,7 +8,7 @@ function Agents.ABMObservable(model::AgentBasedModel;
     if !isnothing(mdata)
         mdf = Observable(Agents.init_model_dataframe(model, mdata))
     end
-    return ABMObservable(Observable(model), adata, mdata, adf, mdf, Observable(0), when)
+    return ABMObservable(Observable(model), adata, mdata, adf, mdf, Observable(abmtime(model)), when)
 end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
