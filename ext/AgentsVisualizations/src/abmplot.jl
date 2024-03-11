@@ -60,7 +60,8 @@ end
 
 function Agents.abmplot!(ax, abmobs::ABMObservable;
         # These keywords are propagated to the _ABMPlot recipe
-        add_controls = false,
+        params = Dict(),
+        add_controls = !isempty(params),
         enable_inspection = add_controls,
         enable_space_checks = true,
         kwargs...
@@ -76,7 +77,7 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         end
     end
 
-    _abmplot!(ax, abmobs; ax, add_controls, kwargs...)
+    _abmplot!(ax, abmobs; ax, add_controls, params, kwargs...)
 
     # Model inspection on mouse hover
     enable_inspection && DataInspector(ax.parent)

@@ -14,7 +14,7 @@
 # The animation at the start of the page is created using the code of this page, see below.
 
 # The docs are built using versions:
-using Pkg
+import Pkg
 Pkg.status(["Agents", "CairoMakie"];
     mode = PKGMODE_MANIFEST, io=stdout
 )
@@ -40,8 +40,9 @@ catch
     using AgentsExampleZoo
 end
 
-model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
-    scenario = :change)
+model = AgentsExampleZoo.daisyworld(;
+    solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
+)
 model
 
 # Now, to plot daisyworld we provide a function for the color
@@ -51,13 +52,17 @@ daisycolor(a) = a.breed # agent color
 agent_size = 20    # agent size
 agent_marker = '✿'  # agent marker
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
-fig, ax, abmobs = abmplot(model; agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs)
-fig
+fig, ax, abmobs = abmplot(model;
+    agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
+)
+fig # returning the figure displays it
 
 # !!! note "Supported keyword arguments"
-#     We do not check internally, if the keyword arguments passed to `abmplot` are 
-#     supported. Please make sure that there are no typos and that the used kwargs are 
+#     We do not check internally, if the keyword arguments passed to `abmplot` are
+#     supported. Please make sure that there are no typos and that the used kwargs are
 #     supported by the [`abmplot`](@ref) function. Otherwise they will be ignored.
+#     This is an unfortunate consequence of how Makie.jl recipes work, and we believe
+#     that in the future this problem will be addressed in Makie.jl.
 
 # Besides agents, we can also plot spatial properties as a heatmap.
 # Here we plot the temperature of the planet by providing the name
@@ -73,20 +78,19 @@ plotkwargs = (;
 fig, ax, abmobs = abmplot(model; plotkwargs...)
 fig
 
-
-# ```@docs
+# ```@docs; canonical = false
 # abmplot
 # ```
 
 # ## Interactive ABM Applications
 
 # Continuing from the Daisyworld plots above, we can turn them into interactive
-# applications straightforwardly, simply by providing the stepping functions
-# as illustrated in the documentation of [`abmplot`](@ref).
+# applications straightforwardly, simply by setting the keyword `add_controls = true`
+# as discussed in the documentation of [`abmplot`](@ref).
 # Note that [`GLMakie`](https://makie.juliaplots.org/v0.15/documentation/backends_and_output/)
 # should be used instead of `CairoMakie` when wanting to use the interactive
-# aspects of the plots.
-fig, ax, abmobs = abmplot(model; plotkwargs...)
+# aspects of the plots!
+fig, ax, abmobs = abmplot(model; add_controls = true, plotkwargs...)
 fig
 
 # One could click the run button and see the model evolve.
