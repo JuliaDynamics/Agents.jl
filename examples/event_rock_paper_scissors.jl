@@ -275,6 +275,17 @@ abmvideo("rps_eventqueue.mp4", model;
 # neighborhoods for same-type agents form! But they are not static,
 # but rather expand and contract over time!
 
+# We could explore this interactively by launching the interactive GUI
+# with the [`abmexploration`](@ref) function!
+
+# Let's first define the data we want to visualize, which in this
+# case is just the count of each agent kind
+
+adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+alabels = ["rocks", "papers", "scissorss"]
+model = initialize_rps()
+fig, abmobs = abmexploration(model; adata, alabels, when = 0.5)
+
 # ## Data collection
 
 # Data collection also works almost identically to [`StandardABM`](@ref).
@@ -285,6 +296,6 @@ model = initialize_rps()
 
 adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 
-adf, mdf = run!(model, 5.0; adata, when = 0.5)
+adf, mdf = run!(model, 5.0; adata, when = 0.5, dt = 0.1)
 
 adf

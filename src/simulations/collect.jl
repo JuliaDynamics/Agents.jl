@@ -124,6 +124,12 @@ function run!(model::ABM, n::Union{Function, Real};
     )
     if discretimeabm(model)
         dt = 1
+    else
+        w1 = when isa Real ? when : Inf
+        w2 = when_model isa Real ? when : Inf
+        if dt > min(w1, w2)
+            throw(ArgumentError("Given `dt` in `run!` is larger than `when/when_model`"))
+        end
     end
 
     # Set-up part
@@ -149,11 +155,11 @@ function run!(model::ABM, n::Union{Function, Real};
     end
 
     # introduce function barrier for the collection loop.
-    _run!(model, df_agent, df_model, when, when_model,
+    _run!(model, df_agent, df_model, n, when, when_model,
         mdata, adata, obtainer, dt, p
     )
 end
-function _run!(model, df_agent, df_model, when, when_model,
+function _run!(model, df_agent, df_model, n, when, when_model,
         mdata, adata, obtainer, dt, p
     )
 
@@ -173,71 +179,16 @@ function _run!(model, df_agent, df_model, when, when_model,
         ProgressMeter.next!(p)
     end
     # final collection step for when the loop exited
-    if should_we_collect(s, model, when)
+    ds = s - sprev
+    if should_we_collect(s, ds, model, when)
         collect_agent_data!(df_agent, model, adata; obtainer)
     end
-    if should_we_collect(s, model, when_model)
+    if should_we_collect(s, ds, model, when_model)
         collect_model_data!(df_model, model, mdata; obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
-
-# function run!(model::EventQueueABM, n::Real;
-#         when = true,
-#         when_model = when,
-#         mdata = nothing,
-#         adata = nothing,
-#         obtainer = identity,
-#         showprogress = false,
-#     )
-#     df_agent = init_agent_dataframe(model, adata)
-#     df_model = init_model_dataframe(model, mdata)
-#     if n isa Integer
-#         if when == true
-#             for c in eachcol(df_agent)
-#                 sizehint!(c, n)
-#             end
-#         end
-#         if when_model == true
-#             for c in eachcol(df_model)
-#                 sizehint!(c, n)
-#             end
-#         end
-#     end
-
-#     p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
-
-#     t = getfield(model, :time)
-#     t0 = t[]
-#     dt = when == true ? dt = 1.0 : dt = when
-#     if dt isa AbstractVector
-#         range_vals = [dt[1], diff(dt)...]
-#     else
-#         k = Int(div(n, dt))
-#         range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
-#     end
-#     for s in range_vals
-#         if until(t[], t0, n, model)
-#             step!(model, s)
-#             collect_agent_data!(df_agent, model, adata; obtainer)
-#             collect_model_data!(df_model, model, mdata; obtainer)
-#             ProgressMeter.next!(p)
-#         else
-#             break
-#         end
-#     end
-#     if t[] < t0 + n
-#         step!(model, t0+n-t[])
-#         if !(dt isa AbstractVector)
-#             collect_agent_data!(df_agent, model, adata; obtainer)
-#             collect_model_data!(df_model, model, mdata; obtainer)
-#         end
-#         ProgressMeter.next!(p)
-#     end
-#     ProgressMeter.finish!(p)
-#     return df_agent, df_model
-# end
 
 """
     offline_run!(model, t::Union{Real, Function}; kwargs...)
@@ -299,12 +250,15 @@ function offline_run!(model::ABM, n::Union{Function, Real};
 end
 
 function run_and_write!(model, df_agent, df_model, n;
-    when, when_model,
-    mdata, adata,
-    obtainer,
-    showprogress,
-    writer, adata_filename, mdata_filename, writing_interval
-)
+        when, when_model,
+        mdata, adata,
+        obtainer,
+        showprogress,
+        writer, adata_filename, mdata_filename, writing_interval
+    )
+    if model isa EventQueueABM
+        error("offline_run! has not yet been tested with EventQueueABM")
+    end
     s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
@@ -314,6 +268,8 @@ function run_and_write!(model, df_agent, df_model, n;
 
     agent_count_collections = 0
     model_count_collections = 0
+
+    # TODO: Update this function to be like the new `run!`
 
     t = getfield(model, :time)
     t0, s = t[], 0
@@ -359,85 +315,6 @@ function run_and_write!(model, df_agent, df_model, n;
 
     ProgressMeter.finish!(p)
     return nothing
-end
-
-function run_and_write!(model::EventQueueABM, df_agent, df_model, n;
-    when, when_model,
-    mdata, adata,
-    obtainer,
-    showprogress,
-    writer, adata_filename, mdata_filename, writing_interval
-)
-    df_agent = init_agent_dataframe(model, adata)
-    df_model = init_model_dataframe(model, mdata)
-    if n isa Integer
-        if when == true
-            for c in eachcol(df_agent)
-                sizehint!(c, n)
-            end
-        end
-        if when_model == true
-            for c in eachcol(df_model)
-                sizehint!(c, n)
-            end
-        end
-    end
-
-    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
-
-    agent_count_collections = 0
-    model_count_collections = 0
-
-    t = getfield(model, :time)
-    t0 = t[]
-    dt = when == true ? dt = 1.0 : dt = when
-    if dt isa AbstractVector
-        range_vals = [dt[1], diff(dt)...]
-    else
-        k = Int(div(n, dt))
-        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
-    end
-    for s in range_vals
-        if until(t[], t0, n, model)
-            step!(model, s)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-            agent_count_collections += 1
-            if agent_count_collections % writing_interval == 0
-                writer(adata_filename, df_agent, isfile(adata_filename))
-                empty!(df_agent)
-            end
-            model_count_collections += 1
-            if model_count_collections % writing_interval == 0
-                writer(mdata_filename, df_model, isfile(mdata_filename))
-                empty!(df_model)
-            end
-            ProgressMeter.next!(p)
-        else
-            break
-        end
-    end
-    if t[] < t0 + n
-        step!(model, t0+n-t[])
-        if !(dt isa AbstractVector)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-        end
-        ProgressMeter.next!(p)
-    end
-
-    # catch collected data that was not yet written to disk
-    if !isempty(df_agent)
-        writer(adata_filename, df_agent, isfile(adata_filename))
-        empty!(df_agent)
-    end
-    if !isempty(df_model)
-        writer(mdata_filename, df_model, isfile(mdata_filename))
-        empty!(df_model)
-    end
-
-    ProgressMeter.finish!(p)
-    return df_agent, df_model
 end
 
 """
