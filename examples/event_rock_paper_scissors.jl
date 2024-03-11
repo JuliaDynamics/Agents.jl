@@ -40,6 +40,8 @@ using Agents, Random
     @subagent struct Scissors end
 end
 
+# %% #src
+
 # Actions of events are standard Julia functions that utilize Agents.jl [API](@ref),
 # exactly like those given as
 # `agent_step!` in [`StandardABM`](@ref). They act on an agent
@@ -89,7 +91,10 @@ end
 function reproduce!(agent, model)
     pos = random_nearby_position(agent, model, 1, pos -> isempty(pos, model))
     isnothing(pos) && return
-    add_agent!(pos, typeof(agent), model)
+    # newagent = copy_agent(agent, model, nextid(model); kwargs...)
+    # add_agent_own_pos!(newagent, model)
+    # add_agent!(pos, Agents.MixedStructTypes.constructor(agent), model)
+    replicate!(agent, pos, model)
     return
 end
 
@@ -130,8 +135,7 @@ end
 # Events are registered as an [`AgentEvent`](@ref), then are added into a container,
 # and then given to the [`EventQueueABM`](@ref).
 # The attack and reproduction events affect all agents,
-# and hence we don't need to specify what agents this event
-# applies to.
+# and hence we don't need to specify what agents they apply to.
 
 attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 
@@ -207,8 +211,6 @@ end
 
 dummyplot(model)
 
-
-
 # ## Time evolution
 # %% #src
 
@@ -216,15 +218,47 @@ dummyplot(model)
 # to that of [`StandardABM`](@ref), but time is continuous.
 # So, when calling `step!` we pass in a real time.
 
-step!(model, 1.0)
+step!(model, 10.0)
+
+dummyplot(model)
+
+#
+
+step!(model, 100.0)
+
+dummyplot(model)
 
 # Alternatively we could give a function for when to terminate the time evolution.
+# For example, we terminate if any of the three types of agents become less
+# than a threshold
+
+function terminate(model, t)
+    kinds = allkinds(RPS)
+    threshold = 1000
+    ## Alright, this code snippet loops over all kinds,
+    ## and for each it checks if it is less than the threshold.
+    ## if any is, it returns `true`, otherwise `false.`
+    logic = any(kinds) do kind
+        n = count(a -> kindof(a) == kind, allagents(model))
+        return n < threshold
+    end
+    ## For safety, in case this never happens, we also add a trigger
+    ## regarding the total evolution time
+    return logic || (t > 1000.0)
+end
+
+step!(model, terminate)
+
+abmtime(model)
 
 # ## Data collection
 
 # Data collection also works almost identically to [`StandardABM`](@ref).
 
-# Here we will simply collect the number of each agent type.
-adata = [(a -> a isa X, count) for X in (Rock, Paper, Scissors)]
+# Here we will simply collect the number of each agent kind.
 
-run!(model, 10.0; adata, when = 0.2)
+adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+
+adf, mdf = run!(model, 5.0; adata, when = 0.5)
+
+adf
