@@ -150,10 +150,8 @@ The field `abmobs.s` is also an observable containing the current step number.
 
 All plotting and interactivity should be defined by `lift`ing these observables.
 """
-struct ABMObservable{M, AS, MS, AD, MD, ADF, MDF, W, S}
+struct ABMObservable{M, AD, MD, ADF, MDF, W, S}
     model::M # Observable{AgentBasedModel}
-    agent_step!::AS
-    model_step!::MS
     adata::AD
     mdata::MD
     adf::ADF # this is `nothing` or `Observable`

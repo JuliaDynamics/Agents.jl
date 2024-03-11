@@ -26,19 +26,16 @@ function Agents.abmplot!(ax, model::ABM;
         adata=nothing,
         mdata=nothing,
         when=true,
-        warn_deprecation = true,
+        # These keywords are propagated to the actual plotting recipe that uses the observable
         kwargs...
     )
-    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
-        agent_step! = Agents.agent_step_field(model)
-        model_step! = Agents.model_step_field(model)
-    elseif warn_deprecation
-        @warn "Passing agent_step! and model_step! to abmplot! is deprecated. 
-          These functions should be already contained inside the model instance." maxlog=1
+    if !isnothing(agent_step!) || !isnothing(model_step!)
+        @warn "Passing agent_step! and model_step! to abmplot! is deprecated.
+        They are ignored.
+        These functions should be already contained inside the model instance."
     end
-    abmobs = ABMObservable(model; agent_step!, model_step!, adata, mdata, when)
+    abmobs = ABMObservable(model; adata, mdata, when)
     abmplot!(ax, abmobs; kwargs...)
-
     return abmobs
 end
 
@@ -58,7 +55,6 @@ function Agents.abmplot(abmobs::ABMObservable;
     fig = Figure(; figure...)
     ax = fig[1, 1][1, 1] = axistype(abmobs.model[])(fig; axis...)
     abmplot!(ax, abmobs; kwargs...)
-
     return fig, ax, abmobs
 end
 
@@ -70,7 +66,7 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
         kwargs...
     )
     if any(x -> x in keys(kwargs), [:as, :am, :ac])
-        @warn "Keywords `as, am, ac` has been deprecated in favor of 
+        @warn "Keywords `as, am, ac` has been deprecated in favor of
           `agent_size, agent_marker, agent_color`" maxlog=1
         kwargs = deprecate_asamac(kwargs)
     end
@@ -147,7 +143,7 @@ function Makie.plot!(p::_ABMPlot)
     end
     set_axis_limits!(ax, model)
 
-    p.pos, p.color, p.marker, p.markersize = 
+    p.pos, p.color, p.marker, p.markersize =
         lift_attributes(p.abmobs[].model, p.agent_color, p.agent_size, p.agent_marker, p.offset)
 
     # gracefully handle deprecations of old plot kwargs
@@ -184,7 +180,7 @@ end
 function heatmap!(ax, p::_ABMPlot)
     heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
     isnothing(heatobs[]) && return nothing
-    hmap = Makie.heatmap!(p, heatobs; 
+    hmap = Makie.heatmap!(p, heatobs;
         colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
     p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
     # TODO: Set colorbar to be "glued" to axis

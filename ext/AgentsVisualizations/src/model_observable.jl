@@ -1,14 +1,8 @@
 function Agents.ABMObservable(model::AgentBasedModel;
-        agent_step! = Agents.dummystep,
-        model_step! = Agents.dummystep,
         adata = nothing,
         mdata = nothing,
         when = true,
     )
-    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
-        agent_step! = Agents.agent_step_field(model)
-        model_step! = Agents.model_step_field(model)
-    end
     adf = mdf = nothing
     if !isnothing(adata)
         adf = Observable(Agents.init_agent_dataframe(model, adata))
@@ -16,8 +10,7 @@ function Agents.ABMObservable(model::AgentBasedModel;
     if !isnothing(mdata)
         mdf = Observable(Agents.init_model_dataframe(model, mdata))
     end
-    return ABMObservable(
-        Observable(model), agent_step!, model_step!, adata, mdata, adf, mdf, Observable(0), when)
+    return ABMObservable(Observable(model), adata, mdata, adf, mdf, Observable(0), when)
 end
 
 function Agents.step!(abmobs::ABMObservable, n; kwargs...)
