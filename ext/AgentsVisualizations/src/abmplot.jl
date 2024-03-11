@@ -29,7 +29,7 @@ function Agents.abmplot!(ax, model::ABM;
         # These keywords are propagated to the actual plotting recipe that uses the observable
         kwargs...
     )
-    if !isnothing(agent_step!) || !isnothing(model_step!)
+    if agent_step! != Agents.dummystep || model_step! != Agents.dummystep
         @warn "Passing agent_step! and model_step! to abmplot! is deprecated.
         They are ignored.
         These functions should be already contained inside the model instance."
@@ -60,7 +60,7 @@ end
 
 function Agents.abmplot!(ax, abmobs::ABMObservable;
         # These keywords are propagated to the _ABMPlot recipe
-        add_controls = _default_add_controls(abmobs.agent_step!, abmobs.model_step!),
+        add_controls = false,
         enable_inspection = add_controls,
         enable_space_checks = true,
         kwargs...
@@ -84,7 +84,7 @@ function Agents.abmplot!(ax, abmobs::ABMObservable;
     return abmobs
 end
 
-_default_add_controls(as, ms) = (as != Agents.dummystep) || (ms != Agents.dummystep)
+_default_add_controls(as, ms) = true
 
 """
     _abmplot(model::ABM; kwargs...) → fig, ax, abmplot_object

@@ -8,7 +8,9 @@ function Agents.abmexploration(model;
         plotkwargs = NamedTuple(),
         kwargs...
     )
-    fig, ax, abmobs = abmplot(model; figure, axis, warn_deprecation = false, kwargs...)
+    fig, ax, abmobs = abmplot(model;
+        figure, axis, warn_deprecation = false, add_controls = true, kwargs...
+    )
     p = first_abmplot_in(ax)
 
     adata, mdata = abmobs.adata, abmobs.mdata

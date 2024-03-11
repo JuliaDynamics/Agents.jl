@@ -74,8 +74,9 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
 # Interactivity
 
 ## Evolution related
-* `add_controls::Bool`: If `true`, `abmplot` switches to "interactive application" mode.
-  This is by default `true` if the model contains either `agent_step!` or `model_step!`.
+
+* `add_controls::Bool = false`: If `true`, `abmplot` switches to
+  "interactive application GUI" mode (this is done by default in [`abmexploration`](@ref)).
   The model evolves interactively using `Agents.step!`.
   The application has the following interactive elements:
   1. "step": advances the simulation once for `spu` steps.
@@ -125,7 +126,7 @@ end
     add_interaction!(ax)
     add_interaction!(ax, p::_ABMPlot)
 
-Adds model control buttons and parameter sliders according to the plotting parameters
+Adds model control buttons and parameter sliders according to the plotting keywords
 `add_controls` (if true) and `params` (if not empty).
 Buttons and sliders are placed next to each other in a new layout position below the
 position of `ax`.
