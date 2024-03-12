@@ -104,7 +104,7 @@ end
 function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
     if ismultiagentsumtype(A)
         args_sum_t = new_args_sum_t(agent, model; kwargs...)
-        newagent = MixedStructTypes.constructor(agent)(id_new, args_sum_t...)
+        newagent = kindconstructor(agent)(id_new, args_sum_t...)
     else
         args_t = new_args_t(agent, model; kwargs...)
         newagent = A(id_new, args_t...)

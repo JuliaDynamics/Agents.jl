@@ -53,9 +53,9 @@ end
 function Agents.abmplot_pos(model::ABM, offset)
     postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
-        return [postype(model[i].pos) for i in allids(model)]
+        return postype[postype(model[i].pos) for i in allids(model)]
     else
-        return [postype(model[i].pos .+ offset(model[i])) for i in allids(model)]
+        return postype[postype(model[i].pos .+ offset(model[i])) for i in allids(model)]
     end
 end
 
