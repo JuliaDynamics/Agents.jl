@@ -30,8 +30,9 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     axs = []
 
     for i in 1:La # add adata plots
-        y_label = string(adata[i][2]) * "_" * string(adata[i][1])
-        points = @lift(Point2f.($(abmobs.adf).step, $(abmobs.adf)[:,y_label]))
+        y_label = dataname(adata[i])
+        # string(adata[i][2]) * "_" * string(adata[i][1])
+        points = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf)[:, y_label]))
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(alabels) ? y_label : alabels[i]
@@ -44,7 +45,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
 
     for i in 1:Lm # add mdata plots
         y_label = string(mdata[i])
-        points = @lift(Point2f.($(abmobs.mdf).step, $(abmobs.mdf)[:,y_label]))
+        points = @lift(Point2f.($(abmobs.mdf).time, $(abmobs.mdf)[:,y_label]))
         ax = plotlayout[i+La, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(mlabels) ? y_label : mlabels[i]
@@ -58,7 +59,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     if La+Lm > 1
         for ax in @view(axs[1:end-1]); hidexdecorations!(ax, grid = false); end
     end
-    axs[end].xlabel = "step"
+    axs[end].xlabel = "time"
 
     # Trigger correct, and efficient, linking of x-axis
     linkxaxes!(axs[end], axs[1:end-1]...)

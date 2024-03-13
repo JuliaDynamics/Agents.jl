@@ -286,7 +286,7 @@ abmvideo("rps_eventqueue.mp4", model;
 adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 alabels = ["rocks", "papers", "scissorss"]
 model = initialize_rps()
-fig, abmobs = abmexploration(model; adata, alabels, when = 0.5)
+fig, abmobs = abmexploration(model; adata, alabels, when = 0.5, plotkw...)
 fig
 
 # ## Data collection
