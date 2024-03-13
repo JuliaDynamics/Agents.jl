@@ -72,7 +72,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 
 ## Other keywords
 
-* `when = 1` : at which time `s` to perform the data collection and processing.
+* `when = 1`: at which times to perform the data collection and processing.
   A lot of flexibility is offered based on the type of `when`:
   - `when::Real`: data are collected each time the model is evolved for at least `when`
      units of time. For discrete time models like [`StandardABM`](@ref) this must be an
@@ -81,37 +81,20 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
      of time to evolve the model (with maximum being until an upcoming event is triggered).
   - `when::AbstractVector`: data are collected if `s ∈ when`.
   - `when::Function`: data are collected if `when(model, s)` returns `true`.
-* `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
+* `when_model = when`: same as `when` but for model data. If `model` is a `EventQueueABM`,
   only `when_model = when` is supported.
 * `dt = 1.0`: minimum stepping time for continuous time models between data collection
   checks of `when` and possible data recording time.
   If `when isa Real` then it must hold `dt ≤ minimum(when, when_model)`.
   This keyword is ignored for discrete time models.
-* `obtainer = identity` : method to transfer collected data to the `DataFrame`.
+* `obtainer = identity`: method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
-* `showprogress=false` : Whether to show progress
+* `showprogress=false`: Whether to show progress
 """
 function run! end
-
-get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
-get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
-
-get_data_missing(a, s::Symbol, obtainer::Function) =
-    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
-function get_data_missing(a, f::Function, obtainer::Function)
-    try
-        obtainer(f(a))
-    catch
-        missing
-    end
-end
-
-should_we_collect(s, ds, model, when::Real) = when ≥ ds
-should_we_collect(s, ds, model, when::AbstractVector) = s ∈ when
-should_we_collect(s, ds, model, when::Function) = when(model, s)
 
 function run!(model::ABM, n::Union{Function, Real};
         when = 1,
@@ -163,15 +146,20 @@ function _run!(model, df_agent, df_model, n, when, when_model,
         mdata, adata, obtainer, dt, p
     )
 
-    t0 = s = sprev = abmtime(model)
+    t0 = s = abmtime(model)
+    # here we need to trackers of elapsed time since last collect:
+    # one for model and one for agents dataframes. They are used only
+    # if `when :: Real`.
+    s_last_collect = s
+    s_last_collect_model = s
 
     while until(s, t0, n, model)
-        ds = s - sprev
-        sprev = s
-        if should_we_collect(s, ds, model, when)
+        if should_we_collect(s, s - s_last_collect, model, when)
+            s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
         end
-        if should_we_collect(s, ds, model, when_model)
+        if should_we_collect(s, s - s_last_collect_model, model, when_model)
+            s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
         end
         step!(model, dt)
@@ -179,16 +167,33 @@ function _run!(model, df_agent, df_model, n, when, when_model,
         ProgressMeter.next!(p)
     end
     # final collection step for when the loop exited
-    ds = s - sprev
-    if should_we_collect(s, ds, model, when)
+    if should_we_collect(s, s - s_last_collect, model, when)
         collect_agent_data!(df_agent, model, adata; obtainer)
     end
-    if should_we_collect(s, ds, model, when_model)
+    if should_we_collect(s, s - s_last_collect_model, model, when_model)
         collect_model_data!(df_model, model, mdata; obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
+
+get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
+get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
+
+get_data_missing(a, s::Symbol, obtainer::Function) =
+    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
+function get_data_missing(a, f::Function, obtainer::Function)
+    try
+        obtainer(f(a))
+    catch
+        missing
+    end
+end
+
+should_we_collect(s, ds, model, when::Real) = ds ≥ when
+should_we_collect(s, ds, model, when::AbstractVector) = s ∈ when
+should_we_collect(s, ds, model, when::Function) = when(model, s)
+
 
 """
     offline_run!(model, t::Union{Real, Function}; kwargs...)

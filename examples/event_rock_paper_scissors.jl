@@ -29,7 +29,7 @@
 
 # We start by loading `Agents`
 
-using Agents, Random
+using Agents
 
 # and defining the three agent types using [`multiagent`](@ref)
 # (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
@@ -172,6 +172,7 @@ events = (attack_event, reproduction_event, movement_event)
 
 space = GridSpaceSingle((100, 100))
 
+using Random: Xoshiro
 rng = Xoshiro(42)
 
 model = EventQueueABM(RPS, events, space; rng, warn = false)
@@ -256,6 +257,7 @@ abmtime(model)
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
 
+using CairoMakie
 
 const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
 agent_color(agent) = colormap[kindof(agent)]
@@ -287,7 +289,7 @@ model = initialize_rps()
 fig, abmobs = abmexploration(model; adata, alabels, when = 0.5)
 
 # ## Data collection
-
+# %% #src
 # Data collection also works almost identically to [`StandardABM`](@ref).
 
 # Here we will simply collect the number of each agent kind.
