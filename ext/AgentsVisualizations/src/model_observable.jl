@@ -10,13 +10,13 @@ function Agents.ABMObservable(model::AgentBasedModel;
     end
     abmobs = ABMObservable(Observable(model), adata, mdata, adf, mdf, Observable(abmtime(model)), when, Observable(abmtime(model)))
     # always collect data at initialization irrespectively of `when`:
-    collect_data!(abmobs, abmobs.model[], Val{true}(), adata, mdata, adf, mdf)
+    collect_data!(abmobs, abmobs.model[], adata, mdata, adf, mdf)
     return abmobs
 end
 
 # This special data collection clause is so that we can reset the model and
 # collect the data immediatelly after reset irrespectively of `when`
-function collect_data!(abmobs, model, ::Val{true}, adata, mdata, adf, mdf)
+function collect_data!(abmobs, model, adata, mdata, adf, mdf)
     if !isnothing(adata)
         Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
         notify(adf)

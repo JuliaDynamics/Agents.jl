@@ -21,9 +21,6 @@ function add_controls!(fig, abmobs, dt)
     model, adata, mdata, adf, mdf, when =
     getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
 
-    # we always collect data at the start, we need it to layout the plots
-    collect_data!(abmobs, model[], Val{true}(), adata, mdata, adf, mdf)
-
     # Create new layout for control buttons
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
 
@@ -71,8 +68,8 @@ function add_controls!(fig, abmobs, dt)
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
         reinit_dataframes!(model[], adata, mdata, adf, mdf)
-        # always collect data after clear:
-        collect_data!(abmobs, model[], Val{true}(), adata, mdata, adf, mdf)
+        # always collect data after clear, as the dataframes have been emptied
+        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
         abmobs.t_last_collect[] = abmtime(model[])
     end
     # Layout buttons
