@@ -263,6 +263,7 @@ function run_and_write!(model, df_agent, df_model, n;
         showprogress,
         writer, adata_filename, mdata_filename, writing_interval
     )
+    error("offline_run! has not yet been updated to model agnostic code.")
     if model isa EventQueueABM
         error("offline_run! has not yet been tested with EventQueueABM")
     end
@@ -359,7 +360,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     std_headers = length(utypes) > 1 ? 3 : 2
 
     headers = Vector{String}(undef, std_headers + length(properties))
-    headers[1] = "step"
+    headers[1] = "time"
     headers[2] = "id"
 
     for i in 1:length(properties)
@@ -392,7 +393,7 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     A = agenttype(model)
     utypes = union_types(A)
 
-    headers[1] = "step"
+    headers[1] = "time"
     if model isa EventQueueABM
         types[1] = Float64[]
     else
@@ -414,7 +415,7 @@ Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
 """
 function init_model_dataframe(model::ABM, properties::Vector)
     headers = Vector{String}(undef, 1 + length(properties))
-    headers[1] = "step"
+    headers[1] = "time"
     for i in 1:length(properties)
         headers[i+1] = dataname(properties[i])
     end
