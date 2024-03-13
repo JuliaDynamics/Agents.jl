@@ -665,7 +665,6 @@ adf[end-10:end, :] # display only the last few rows
 # entry of the tuple is the data to collect, and the second how to
 # aggregate it over agents.
 
-
 using Statistics: mean
 schelling = initialize();
 adata = [(:mood, sum), (x, mean)]

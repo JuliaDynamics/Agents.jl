@@ -83,16 +83,17 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   - `when::Function`: data are collected if `when(model, s)` returns `true`.
 * `when_model = when`: same as `when` but for model data. If `model` is a `EventQueueABM`,
   only `when_model = when` is supported.
+* `init = true`: Whether to collect data at the initial model state before it is stepped.
 * `dt = 1.0`: minimum stepping time for continuous time models between data collection
   checks of `when` and possible data recording time.
   If `when isa Real` then it must hold `dt ≤ minimum(when, when_model)`.
-  This keyword is ignored for discrete time models.
+  This keyword is ignored for discrete time models as it is 1 by definition.
 * `obtainer = identity`: method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
-* `showprogress=false`: Whether to show progress
+* `showprogress=false`: Whether to show progress.
 """
 function run! end
 
@@ -103,6 +104,7 @@ function run!(model::ABM, n::Union{Function, Real};
         adata = nothing,
         obtainer = identity,
         showprogress = false,
+        init = true,
         dt = 1.0
     )
     if discretimeabm(model)
@@ -129,6 +131,11 @@ function run!(model::ABM, n::Union{Function, Real};
                 sizehint!(c, n)
             end
         end
+    end
+
+    if init
+        collect_agent_data!(df_agent, model, adata; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
     end
 
     p = if typeof(n) <: Int
