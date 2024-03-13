@@ -246,13 +246,43 @@ step!(model, terminate)
 
 abmtime(model)
 
-# ## Visualization
+# ## Data collection
+# %% #src
 
 # The entirety of the Agents.jl [API](@ref) is orthogonal/agnostic to what
 # model we have. This means that whatever we do, plotting, data collection, etc.,
 # has identical syntax irrespectively of whether we have a `StandardABM` or `EventQueueABM`.
 
-# Hence, visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
+# Hence, data collection also works almost identically to [`StandardABM`](@ref).
+
+# Here we will simply collect the number of each agent kind.
+
+model = initialize_rps()
+
+adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+
+adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.1)
+
+adf[1:10, :]
+
+# Let's visualize the population sizes versus time:
+
+tvec = adf[!, :time]
+populations = adf[:, Not(:time)]
+alabels = ["rocks", "papers", "scissorss"]
+
+fig = Figure()
+ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
+for (i, l) in enumerate(alabels)
+    lines!(ax, tvec, populations[!, i]; label = l)
+end
+axislegend(ax)
+fig
+
+
+# ## Visualization
+
+# Visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
 # that we learned in the [visualization tutorial](@ref vis_tutorial).
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
@@ -284,8 +314,6 @@ abmvideo("rps_eventqueue.mp4", model;
 # Let's first define the data we want to visualize, which in this
 # case is just the count of each agent kind
 
-adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
-alabels = ["rocks", "papers", "scissorss"]
 model = initialize_rps()
 fig, abmobs = abmexploration(model; adata, alabels, when = 0.5, plotkw...)
 fig
@@ -295,31 +323,4 @@ for _ in 1:100 # this loop simulates pressing the `run!` button
     step!(abmobs, 1.0)
 end
 
-fig
-
-
-# ## Data collection
-# %% #src
-# Data collection also works almost identically to [`StandardABM`](@ref).
-
-# Here we will simply collect the number of each agent kind.
-
-model = initialize_rps()
-
-adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
-
-adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.1)
-
-adf[1:10, :]
-
-# Let's visualize the population sizes versus time:
-tvec = adf[!, :time]
-populations = adf[:, Not(:time)]
-
-fig = Figure()
-ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
-for (i, l) in enumerate(alabels)
-    lines!(ax, tvec, populations[!, i]; label = l)
-end
-axislegend(ax)
 fig
