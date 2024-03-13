@@ -451,7 +451,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     std_headers = length(utypes) > 1 ? 3 : 2
 
     headers = Vector{String}(undef, std_headers + length(properties))
-    headers[1] = "step"
+    headers[1] = "time"
     headers[2] = "id"
 
     for i in 1:length(properties)
@@ -484,7 +484,7 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     A = agenttype(model)
     utypes = union_types(A)
 
-    headers[1] = "step"
+    headers[1] = "time"
     if model isa EventQueueABM
         types[1] = Float64[]
     else
@@ -506,7 +506,7 @@ Initialize a dataframe to add data later with [`collect_model_data!`](@ref).
 """
 function init_model_dataframe(model::ABM, properties::Vector)
     headers = Vector{String}(undef, 1 + length(properties))
-    headers[1] = "step"
+    headers[1] = "time"
     for i in 1:length(properties)
         headers[i+1] = dataname(properties[i])
     end
@@ -554,7 +554,7 @@ function collect_agent_data!(df, model, properties::Vector, step::Int = 0; _offs
     end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :step] = fill(abmtime(model)+_offset_time, length(alla))
+    dd[!, :time] = fill(abmtime(model)+_offset_time, length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -603,7 +603,7 @@ function collect_model_data!(
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
-    push!(df[!, :step], abmtime(model)+_offset_time)
+    push!(df[!, :time], abmtime(model)+_offset_time)
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end

@@ -54,13 +54,13 @@
             "text/csv",
             describe(init_agent_dataframe(model, props), :eltype),
         ) ==
-              "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
+              "\"variable\",\"eltype\"\n\"time\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
         props = [:year]
         @test sprint(
             show,
             "text/csv",
             describe(init_model_dataframe(model, props), :eltype),
-        ) == "\"variable\",\"eltype\"\n\"step\",\"Int64\"\n\"year\",\"Int64\"\n"
+        ) == "\"variable\",\"eltype\"\n\"time\",\"Int64\"\n\"year\",\"Int64\"\n"
 
         @test_throws ErrorException init_agent_dataframe(model, [:UNKNOWN])
     end
@@ -86,18 +86,18 @@
         props = [:weight]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
-        # Expecting weight values of all three agents. ID and step included.
+        # Expecting weight values of all three agents. ID and time included.
         @test size(df) == (3, 3)
-        @test propertynames(df) == [:step, :id, :weight]
+        @test propertynames(df) == [:time, :id, :weight]
         @test mean(df[!, :weight]) ≈ 0.37333333333
 
         props = [(:weight, mean)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
-        # Activate aggregation. Weight column is expected to be one value for this step,
+        # Activate aggregation. Weight column is expected to be one value for this time point,
         # renamed mean(weight). ID is meaningless and will therefore be dropped.
         @test size(df) == (1, 2)
-        @test propertynames(df) == [:step, :mean_weight]
+        @test propertynames(df) == [:time, :mean_weight]
         @test df[1, dataname((:weight, mean))] ≈ 0.37333333333
 
         # Add a function as a property
@@ -105,14 +105,14 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (3, 4)
-        @test propertynames(df) == [:step, :id, :weight, :x_position]
+        @test propertynames(df) == [:time, :id, :weight, :x_position]
         @test mean(df[!, :x_position]) ≈ 4.3333333
 
         props = [(:weight, mean), (x_position, mean)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
-        @test propertynames(df) == [:step, :mean_weight, :mean_x_position]
+        @test propertynames(df) == [:time, :mean_weight, :mean_x_position]
         @test df[1, dataname(props[2])] ≈ 4.3333333
 
         xtest(agent) = agent.pos[1] > 5
@@ -122,14 +122,14 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (1, 2)
-        @test propertynames(df) == [:step, :mean_weight_ytest]
+        @test propertynames(df) == [:time, :mean_weight_ytest]
         @test df[1, dataname((:weight, mean, ytest))] ≈ 0.67
 
         props = [(:weight, mean), (:weight, mean, ytest)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
-        @test propertynames(df) == [:step, :mean_weight, :mean_weight_ytest]
+        @test propertynames(df) == [:time, :mean_weight, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.37333333333
         @test df[1, dataname(props[2])] ≈ 0.67
 
@@ -137,7 +137,7 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (1, 3)
-        @test propertynames(df) == [:step, :mean_weight_xtest, :mean_weight_ytest]
+        @test propertynames(df) == [:time, :mean_weight_xtest, :mean_weight_ytest]
         @test df[1, dataname(props[1])] ≈ 0.35
         @test df[1, dataname(props[2])] ≈ 0.67
     end
@@ -157,12 +157,12 @@
         )
 
         @test size(agent_data) == (11, 2)
-        @test propertynames(agent_data) == [:step, :mean_weight]
-        @test maximum(agent_data[!, :step]) == 1820
+        @test propertynames(agent_data) == [:time, :mean_weight]
+        @test maximum(agent_data[!, :time]) == 1820
 
         @test size(model_data) == (6, 3)
-        @test propertynames(model_data) == [:step, :flag, :year]
-        @test maximum(model_data[!, :step]) == 1825
+        @test propertynames(model_data) == [:time, :flag, :year]
+        @test maximum(model_data[!, :time]) == 1825
 
         agent_data, model_data = run!(
             model,
@@ -207,11 +207,11 @@
 
             adata_saved = CSV.read("adata.csv", DataFrame)
             @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:step, :mean_weight]
+            @test propertynames(adata_saved) == [:time, :mean_weight]
 
             mdata_saved = CSV.read("mdata.csv", DataFrame)
             @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:step, :flag, :year]
+            @test propertynames(mdata_saved) == [:time, :flag, :year]
 
             rm("adata.csv")
             rm("mdata.csv")
@@ -237,11 +237,11 @@
 
             adata_saved = DataFrame(Arrow.Table("adata.arrow"))
             @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:step, :mean_weight]
+            @test propertynames(adata_saved) == [:time, :mean_weight]
 
             mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
             @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:step, :flag, :year]
+            @test propertynames(mdata_saved) == [:time, :flag, :year]
 
             @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
             @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
@@ -293,20 +293,20 @@
         end
 
         @test size(daily_model_data) == (1825, 3)
-        @test propertynames(daily_model_data) == [:step, :flag, :year]
-        @test maximum(daily_model_data[!, :step]) == 1825
+        @test propertynames(daily_model_data) == [:time, :flag, :year]
+        @test maximum(daily_model_data[!, :time]) == 1825
 
         @test size(daily_model_data_fn) == (1825, 3)
-        @test propertynames(daily_model_data_fn) == [:step, :flagfn, :yearfn]
-        @test maximum(daily_model_data_fn[!, :step]) == 1825
+        @test propertynames(daily_model_data_fn) == [:time, :flagfn, :yearfn]
+        @test maximum(daily_model_data_fn[!, :time]) == 1825
 
         @test size(daily_agent_aggregate) == (1825, 2)
-        @test propertynames(daily_agent_aggregate) == [:step, :mean_weight]
-        @test maximum(daily_agent_aggregate[!, :step]) == 1825
+        @test propertynames(daily_agent_aggregate) == [:time, :mean_weight]
+        @test maximum(daily_agent_aggregate[!, :time]) == 1825
 
         @test size(yearly_agent_data) == (15, 3)
-        @test propertynames(yearly_agent_data) == [:step, :id, :weight]
-        @test maximum(yearly_agent_data[!, :step]) == 1825
+        @test propertynames(yearly_agent_data) == [:time, :id, :weight]
+        @test maximum(yearly_agent_data[!, :time]) == 1825
 
         @test dummystep(model) === nothing
         @test dummystep(model[1], model) === nothing
@@ -328,7 +328,7 @@
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (2, 4)
-        @test propertynames(df) == [:step, :id, :agent_type, :pos]
+        @test propertynames(df) == [:time, :id, :agent_type, :pos]
         @test df[1, :pos] == model[1].pos
         @test df[2, :pos] == model[2].pos
 
@@ -541,7 +541,7 @@ end
                                    mdata = [numagents, :min_to_be_happy])
 
         @test length(unique(adf.ensemble)) == expected_nensembles
-        @test length(unique(adf.step)) == nsteps + 1
+        @test length(unique(adf.time)) == nsteps + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
@@ -557,7 +557,7 @@ end
                                    when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
-        @test length(unique(adf.step)) == (nsteps / 10) + 1
+        @test length(unique(adf.time)) == (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
@@ -575,7 +575,7 @@ end
                                    when = (model, step) -> step % 10 == 0 )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
-        @test length(unique(adf.step)) ≤ (nsteps / 10) + 1
+        @test length(unique(adf.time)) ≤ (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 end
@@ -640,7 +640,7 @@ end
             n,
             mdata,
         )
-        @test unique(mdf.step) == 0:10
+        @test unique(mdf.time) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
 
         # test whether paramscan accepts n::Function
@@ -650,7 +650,7 @@ end
             forest_fire;
             n = terminate,
             mdata)
-        @test unique(mdf.step) == 0:3
+        @test unique(mdf.time) == 0:3
     end
 
     @testset "Parallel Scan" begin
@@ -682,7 +682,7 @@ end
             mdata,
             parallel = true
         )
-        @test unique(mdf.step) == 0:10
+        @test unique(mdf.time) == 0:10
         @test unique(mdf.density) == [0.6, 0.7, 0.8]
 
         # test whether paramscan accepts n::Function
@@ -693,7 +693,7 @@ end
             n = terminate,
             mdata,
             parallel = true)
-        @test unique(mdf.step) == 0:3
+        @test unique(mdf.time) == 0:3
     end
 end
 

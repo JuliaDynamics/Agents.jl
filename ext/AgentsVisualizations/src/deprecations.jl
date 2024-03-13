@@ -7,9 +7,9 @@ function Agents.abmvideo(file, model, agent_step!, model_step! = Agents.dummyste
       These functions should be already contained inside the model instance." maxlog=1
     # add some title stuff
     if title ≠ "" && showstep
-        t = lift(x -> title*", step = "*string(x), abmtime(model))
+        t = lift(x -> title*", time = "*string(x), abmtime(model))
     elseif showstep
-        t = lift(x -> "step = "*string(x), abmtime(model))
+        t = lift(x -> "time = "*string(x), abmtime(model))
     else
         t = title
     end
