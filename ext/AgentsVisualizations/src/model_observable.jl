@@ -14,8 +14,6 @@ function Agents.ABMObservable(model::AgentBasedModel;
     return abmobs
 end
 
-# This special data collection clause is so that we can reset the model and
-# collect the data immediatelly after reset irrespectively of `when`
 function collect_data!(abmobs, model, adata, mdata, adf, mdf)
     if !isnothing(adata)
         Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
