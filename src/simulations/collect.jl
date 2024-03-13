@@ -219,6 +219,8 @@ during execution.
 """
 function offline_run! end
 
+# TODO: This whole function can be merged with `run!` by adding
+# an additional dispatch to `collect_agent_data!` that has more arguments........
 function offline_run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
@@ -230,6 +232,7 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         adata_filename = "adata.$backend",
         mdata_filename = "mdata.$backend",
         writing_interval = 1,
+        init = true,
     )
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
@@ -252,7 +255,7 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, writing_interval
+        writer, adata_filename, mdata_filename, writing_interval, init
     )
 end
 
@@ -261,28 +264,31 @@ function run_and_write!(model, df_agent, df_model, n;
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, writing_interval
+        writer, adata_filename, mdata_filename, writing_interval, init
     )
-    error("offline_run! has not yet been updated to model agnostic code.")
-    if model isa EventQueueABM
-        error("offline_run! has not yet been tested with EventQueueABM")
-    end
-    s = 0
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
-
     agent_count_collections = 0
     model_count_collections = 0
 
-    # TODO: Update this function to be like the new `run!`
+    # this part of the data collection is practically identical to `run!`
+    if init
+        collect_agent_data!(df_agent, model, adata; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
+    end
 
-    t = getfield(model, :time)
-    t0, s = t[], 0
+    t0 = s = abmtime(model)
+    s_last_collect = s
+    s_last_collect_model = s
     while until(t[], t0, n, model)
-        if should_we_collect(s, model, when)
+        step!(model, dt)
+        s = abmtime(dt)
+
+        if should_we_collect(s, s - s_last_collect, model, when)
+            s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
@@ -290,7 +296,8 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_agent)
             end
         end
-        if should_we_collect(s, model, when_model)
+        if should_we_collect(s, s - s_last_collect_model, model, when_model)
+            s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
@@ -298,29 +305,8 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, 1)
-        s += 1
         ProgressMeter.next!(p)
     end
-
-    if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata; obtainer)
-        agent_count_collections += 1
-    end
-    if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata; obtainer)
-        model_count_collections += 1
-    end
-    # catch collected data that was not yet written to disk
-    if !isempty(df_agent)
-        writer(adata_filename, df_agent, isfile(adata_filename))
-        empty!(df_agent)
-    end
-    if !isempty(df_model)
-        writer(mdata_filename, df_model, isfile(mdata_filename))
-        empty!(df_model)
-    end
-
     ProgressMeter.finish!(p)
     return nothing
 end
