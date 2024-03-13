@@ -21,7 +21,6 @@ function add_controls!(fig, abmobs, dt)
     model, adata, mdata, adf, mdf, when =
     getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
 
-    init_dataframes!(model[], adata, mdata, adf, mdf)
     # we always collect data at the start, we need it to layout the plots
     collect_data!(abmobs, model[], Val{true}(), adata, mdata, adf, mdf)
 
@@ -45,13 +44,10 @@ function add_controls!(fig, abmobs, dt)
     # Step button
     # We need an additional observable that keep track of the last time data
     # was collected. Here collection is the same for agent of models so we need 1 variable.
-    t_last_collect = Observable(abmtime(model[]))
     step = Button(fig, label = "step\nmodel")
     on(step.clicks) do c
+        # notice that stepping the abmobs both steps the model and collects data!!!
         Agents.step!(abmobs, dtslider[])
-        collect_data!(
-            abmobs, model[], when[], adata, mdata, adf, mdf, t_last_collect
-        )
     end
     # Run button
     run = Button(fig, label = "run\nmodel")
@@ -74,10 +70,10 @@ function add_controls!(fig, abmobs, dt)
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
-        init_dataframes!(model[], adata, mdata, adf, mdf)
+        reinit_dataframes!(model[], adata, mdata, adf, mdf)
         # always collect data after clear:
         collect_data!(abmobs, model[], Val{true}(), adata, mdata, adf, mdf)
-        t_last_collect[] = abmtime(model[])
+        abmobs.t_last_collect[] = abmtime(model[])
     end
     # Layout buttons
     controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
@@ -87,44 +83,13 @@ end
 _default_dts_from_model(::StandardABM) = 1:50
 _default_dts_from_model(::EventQueueABM) = 0.1:0.1:10.0
 
-
-
-"Initialize agent and model dataframes."
-function init_dataframes!(model, adata, mdata, adf, mdf)
+"reinitialize agent and model dataframes."
+function reinit_dataframes!(model, adata, mdata, adf, mdf)
     if !isnothing(adata)
         adf.val = Agents.init_agent_dataframe(model, adata)
     end
     if !isnothing(mdata)
         mdf.val = Agents.init_model_dataframe(model, mdata)
-    end
-    return nothing
-end
-
-function collect_data!(abmobs, model, when, adata, mdata, adf, mdf, t_last_collect)
-    t = abmtime(model)
-    if Agents.should_we_collect(t, t - t_last_collect[], model, when)
-        if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
-            adf[] = adf[] # trigger Observable
-        end
-        if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata; _offset_time=abmobs._offset_time[])
-            mdf[] = mdf[] # trigger Observable
-        end
-        t_last_collect[] = t
-    end
-    return nothing
-end
-# This special data collection clause is so that we can reset the model and
-# collect the data immediatelly after reset irrespectively of `when`
-function collect_data!(abmobs, model, ::Val{true}, adata, mdata, adf, mdf)
-    if !isnothing(adata)
-        Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
-        adf[] = adf[] # trigger Observable
-    end
-    if !isnothing(mdata)
-        Agents.collect_model_data!(mdf[], model, mdata; _offset_time=abmobs._offset_time[])
-        mdf[] = mdf[] # trigger Observable
     end
     return nothing
 end

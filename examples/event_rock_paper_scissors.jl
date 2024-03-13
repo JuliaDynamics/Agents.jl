@@ -270,7 +270,8 @@ fig
 
 model = initialize_rps()
 abmvideo("rps_eventqueue.mp4", model;
-    dt = 0.5, title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
+    dt = 0.5, frames = 300,
+    title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
 )
 
 # We see model dynamics similar to Schelling's segregation model:
@@ -288,6 +289,14 @@ alabels = ["rocks", "papers", "scissorss"]
 model = initialize_rps()
 fig, abmobs = abmexploration(model; adata, alabels, when = 0.5, plotkw...)
 fig
+
+# We can then step the observable and see the updates in the plot:
+for _ in 1:100 # this loop simulates pressing the `run!` button
+    step!(abmobs, 1.0)
+end
+
+fig
+
 
 # ## Data collection
 # %% #src
