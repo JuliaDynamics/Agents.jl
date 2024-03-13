@@ -287,6 +287,7 @@ adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 alabels = ["rocks", "papers", "scissorss"]
 model = initialize_rps()
 fig, abmobs = abmexploration(model; adata, alabels, when = 0.5)
+fig
 
 # ## Data collection
 # %% #src
@@ -298,6 +299,18 @@ model = initialize_rps()
 
 adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 
-adf, mdf = run!(model, 5.0; adata, when = 0.5, dt = 0.1)
+adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.1)
 
-adf
+adf[1:10, :]
+
+# Let's visualize the population sizes versus time:
+tvec = adf[!, :time]
+populations = adf[:, Not(:time)]
+
+fig = Figure()
+ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
+for (i, l) in enumerate(alabels)
+    lines!(ax, tvec, populations[!, i]; label = l)
+end
+axislegend(ax)
+fig
