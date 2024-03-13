@@ -11,7 +11,11 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 ## New features
 
 - `AgentBasedModel` defines an API that new model types may extend.
-  in contrast to the discrete time of `StandardABM`!
+  This opens the door for making new types of models as well as better integration
+  of other agent based modelling frameworks with Agents.jl.
+- Every aspect of Agents.jl is orthogonal to `AgentBasedModel`: movement and neighbor searching in any space, data collection, visualizations, etc., are independent of the specific type of `AgentBasedModel` and work out of the box with any model.
+- Logic of `run!` has been improved to accommodate both discrete and continuous time models. This is reflected in the new options for the keyword `when`.
+  - A new keyword `init` is now available for `run!` to data collect from the model before evolving it.
 - A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
   no performance difference between having 1 agent type at the cost of each agent occupying
