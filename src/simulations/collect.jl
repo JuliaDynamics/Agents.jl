@@ -161,6 +161,10 @@ function _run!(model, df_agent, df_model, n, when, when_model,
     s_last_collect_model = s
 
     while until(s, t0, n, model)
+        # we are first stepping and then collecting, as there is a dedicated
+        # `init` step in the previous setup function.
+        step!(model, dt)
+        s = abmtime(model)
         if should_we_collect(s, s - s_last_collect, model, when)
             s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
@@ -169,16 +173,7 @@ function _run!(model, df_agent, df_model, n, when, when_model,
             s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
         end
-        step!(model, dt)
-        s = abmtime(model)
         ProgressMeter.next!(p)
-    end
-    # final collection step for when the loop exited
-    if should_we_collect(s, s - s_last_collect, model, when)
-        collect_agent_data!(df_agent, model, adata; obtainer)
-    end
-    if should_we_collect(s, s - s_last_collect_model, model, when_model)
-        collect_model_data!(df_model, model, mdata; obtainer)
     end
     ProgressMeter.finish!(p)
     return df_agent, df_model
