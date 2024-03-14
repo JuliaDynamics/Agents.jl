@@ -75,7 +75,7 @@ update_name = "update_v$(version_number)"
 update_message = """
 Update message: Agents v$(version_number)
 Welcome to this new update of Agents.jl!
-    
+
 - A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
   no performance difference between having 1 agent type at the cost of each agent occupying 
