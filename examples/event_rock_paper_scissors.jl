@@ -97,7 +97,8 @@ end
 function reproduce!(agent, model)
     pos = random_nearby_position(agent, model, 1, pos -> isempty(pos, model))
     isnothing(pos) && return
-    replicate!(agent, pos, model)
+    ## pass target position as a keyword argument
+    replicate!(agent, model; pos)
     return
 end
 

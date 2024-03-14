@@ -75,15 +75,14 @@ function add_newids_bulk!(model::ABM, new_ids)
 end
 
 """
-    replicate!(agent::AbstractAgent [, pos], model; kwargs...)
+    replicate!(agent::AbstractAgent model; kwargs...)
 
 Add a new agent to the `model` copying the values of the fields of the given agent.
 With the `kwargs` it is possible to override the values by specifying new ones for
-some fields (except for the `id` field which is set to a new one automatically).
-Return the new agent instance.
+some fields, including the `pos` field.
+The `id` field is set to a new one automatically.
 
-The second position argument is optional; it defaults to `agent.pos` and is the
-position to add the new agent at.
+Return the new agent instance.
 
 ## Example
 ```julia
@@ -99,11 +98,8 @@ b = replicate!(a, model; w = 0.8)
 ```
 """
 function replicate!(agent::AbstractAgent, model; kwargs...)
-    return replicate!(agent, agent.pos, model; kwargs...)
-end
-function replicate!(agent::AbstractAgent, pos::ValidPos, model; kwargs...)
     newagent = copy_agent(agent, model, nextid(model); kwargs...)
-    add_agent!(newagent, pos, model)
+    add_agent_own_pos!(newagent, model)
     return newagent
 end
 
