@@ -6,16 +6,18 @@ using Agents, Test
         @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector)
 
         extra_args = ifelse(ModelType != EventQueueABM, (), ((),))
-        extra_kwargs = ifelse(ModelType != EventQueueABM, (), ((autogenerate_on_add=false),))
-        model = ModelType(NoSpaceAgent, extra_args...; properties = Dict(:a => 2, :b => "test"), 
-                          container = ContainerType, warn_deprecation = false, extra_kwargs...)
+        extra_kwargs = ifelse(ModelType != EventQueueABM, (warn_deprecation = false, ), ((autogenerate_on_add=false),))
+        model = ModelType(NoSpaceAgent, extra_args...;
+            properties = Dict(:a => 2, :b => "test"),
+            container = ContainerType, extra_kwargs...
+        )
         for i in 1:5
             add_agent!(model)
         end
         if ModelType == StandardABM
             @test abmscheduler(model) == Schedulers.fastest
         end
-        
+
         @test abmtime(model) == 0
         @test abmproperties(model) == Dict(:a => 2, :b => "test")
         a = model[1]
@@ -41,8 +43,7 @@ using Agents, Test
             par3::String
         end
         properties = Properties(1,1.0,"Test")
-        model = ModelType(NoSpaceAgent, extra_args...; properties, container = ContainerType, warn_deprecation = false,
-                          extra_kwargs...)
+        model = ModelType(NoSpaceAgent, extra_args...; properties, container = ContainerType, extra_kwargs...)
         @test abmproperties(model) isa Properties
         @test model.par1 == 1
         @test model.par2 == 1.0
@@ -56,7 +57,7 @@ using Agents, Test
         @test model.par3 == "Changed"
         @test_throws ErrorException model.par4 = 5
 
-        model = ModelType(NoSpaceAgent, extra_args...; container = ContainerType, warn_deprecation = false, extra_kwargs...)
+        model = ModelType(NoSpaceAgent, extra_args...; container = ContainerType, extra_kwargs...)
         @test_throws ErrorException model.a = 5
         end
     end
@@ -64,7 +65,11 @@ end
 
 @testset "model access typestability" begin
     prop1 = Dict(:a => 0.5)
-    prop2 = Agent2(1, 0.5)
+    struct TestContainer
+        x::Int
+        weight::Float64
+    end
+    prop2 = TestContainer(1, 0.5)
     model1 = StandardABM(NoSpaceAgent; properties = prop1, warn_deprecation = false)
     model2 = StandardABM(NoSpaceAgent; properties = prop2, warn_deprecation = false)
 
@@ -75,22 +80,23 @@ end
 end
 
 @testset "Core methods" begin
-    model = StandardABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
-    @test Agents.agenttype(model) == Agent3
+    model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
+    @test Agents.agenttype(model) == GridAgent{2}
     @test Agents.spacetype(model) <: GridSpace
     @test size(abmspace(model)) == (5,5)
     @test all(isempty(p, model) for p in positions(model))
 end
 
 @testset "Display" begin
+    using Agents.Graphs: path_graph
     model = StandardABM(NoSpaceAgent, warn_deprecation = false)
     @test occursin("no spatial structure", sprint(show, model))
-    model = StandardABM(Agent3, GridSpace((5,5)), warn_deprecation = false)
+    model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
     @test sprint(show, model)[1:25] == "StandardABM with 0 agents"
     @test sprint(show, Agents.abmspace(model)) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
-    model = StandardABM(Agent6, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
+    model = StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
     @test sprint(show, Agents.abmspace(model)) == "periodic continuous space with [1.0, 1.0] extent and spacing=0.05"
-    model = StandardABM(Agent5, GraphSpace(path_graph(5)), warn_deprecation = false)
+    model = StandardABM(GraphAgent, GraphSpace(path_graph(5)), warn_deprecation = false)
     @test sprint(show, Agents.abmspace(model)) == "GraphSpace with 5 positions and 4 edges"
 end
 
