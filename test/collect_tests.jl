@@ -1,3 +1,5 @@
+using Agents, Test
+
 @testset "DataCollection" begin
     mutable struct Nested
         data::Vector{Float64}
@@ -526,7 +528,7 @@ end
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
         basemodels = [AgentsExampleZoo.schelling(; numagents)
-                      for numagents in numagents_low:numagents_high 
+                      for numagents in numagents_low:numagents_high
                       for _ in 1:nreplicates]
         return basemodels
     end
