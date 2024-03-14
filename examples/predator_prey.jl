@@ -242,9 +242,9 @@ adf, mdf = run!(sheepwolfgrass, steps; adata, mdata)
 function plot_population_timeseries(adf, mdf)
     figure = Figure(size = (600, 400))
     ax = figure[1, 1] = Axis(figure; xlabel = "Step", ylabel = "Population")
-    sheepl = lines!(ax, adf.step, adf.count_sheep, color = :cornsilk4)
-    wolfl = lines!(ax, adf.step, adf.count_wolf, color = RGBAf(0.2, 0.2, 0.3))
-    grassl = lines!(ax, mdf.step, mdf.count_grass, color = :green)
+    sheepl = lines!(ax, adf.time, adf.count_sheep, color = :cornsilk4)
+    wolfl = lines!(ax, adf.time, adf.count_wolf, color = RGBAf(0.2, 0.2, 0.3))
+    grassl = lines!(ax, mdf.time, mdf.count_grass, color = :green)
     figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
     figure
 end
