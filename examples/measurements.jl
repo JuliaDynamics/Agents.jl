@@ -190,8 +190,8 @@ agent_df, model_df = run!(model, 1000; adata = adata, mdata = mdata)
 
 f = Figure(resolution = (600, 800))
 ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
-lb = lines!(ax, agent_df.step, agent_df.count_black_daisies, linewidth = 2, color = :blue)
-lw = lines!(ax, agent_df.step, agent_df.count_white_daisies, linewidth = 2, color = :red)
+lb = lines!(ax, agent_df.time, agent_df.count_black_daisies, linewidth = 2, color = :blue)
+lw = lines!(ax, agent_df.time, agent_df.count_white_daisies, linewidth = 2, color = :red)
 leg = f[1, 1] = Legend(
         f,
         [lb, lw],
@@ -210,10 +210,10 @@ highband =
 lowband =
     Measurements.value.(agent_df[!, dataname(adata[3])]) -
     Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
-band!(ax2, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
+band!(ax2, agent_df.time, lowband, highband, color = (:steelblue, 0.5))
 lines!(
     ax2,
-    agent_df.step,
+    agent_df.time,
     Measurements.value.(agent_df[!, dataname(adata[3])]),
     linewidth = 2,
     color = :blue,
@@ -226,10 +226,10 @@ highband =
 lowband =
     Measurements.value.(model_df.solar_luminosity) -
     Measurements.uncertainty.(model_df.solar_luminosity)
-band!(ax3, agent_df.step, lowband, highband, color = (:steelblue, 0.5))
+band!(ax3, agent_df.time, lowband, highband, color = (:steelblue, 0.5))
 lines!(
     ax3,
-    agent_df.step,
+    agent_df.time,
     Measurements.value.(model_df.solar_luminosity),
     linewidth = 2,
     color = :blue,

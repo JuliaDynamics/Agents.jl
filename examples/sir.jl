@@ -288,10 +288,10 @@ data[1:10, :]
 N = sum(model.Ns) # Total initial population
 fig = Figure(size = (600, 400))
 ax = fig[1, 1] = Axis(fig, xlabel = "steps", ylabel = "log10(count)")
-li = lines!(ax, data.step, log10.(data[:, dataname((:status, infected))]), color = :blue)
-lr = lines!(ax, data.step, log10.(data[:, dataname((:status, recovered))]), color = :red)
+li = lines!(ax, data.time, log10.(data[:, dataname((:status, infected))]), color = :blue)
+lr = lines!(ax, data.time, log10.(data[:, dataname((:status, recovered))]), color = :red)
 dead = log10.(N .- data[:, dataname((:status, length))])
-ld = lines!(ax, data.step, dead, color = :green)
+ld = lines!(ax, data.time, dead, color = :green)
 Legend(fig[1, 2], [li, lr, ld], ["infected", "recovered", "dead"])
 fig
 
