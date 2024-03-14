@@ -73,16 +73,16 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 ## Other keywords
 
 * `when = 1`: at which times to perform the data collection and processing.
-  A lot of flexibility is offered based on the type of `when`:
+  A lot of flexibility is offered based on the type of `when`. Let
+  `t = abmtime(model)` (which is updated throughout the `run!` process).
   - `when::Real`: data are collected each time the model is evolved for at least `when`
      units of time. For discrete time models like [`StandardABM`](@ref) this must be an
      integer and in essence it means how many steps to evolve between each data collection.
      For continuous time models like [`EventQueueABM`](@ref) `when` is the _least_ amount
      of time to evolve the model (with maximum being until an upcoming event is triggered).
-  - `when::AbstractVector`: data are collected if `s ∈ when`.
-  - `when::Function`: data are collected if `when(model, s)` returns `true`.
-* `when_model = when`: same as `when` but for model data. If `model` is a `EventQueueABM`,
-  only `when_model = when` is supported.
+  - `when::AbstractVector`: data are collected for `t ∈ when`.
+  - `when::Function`: data are collected whenever `when(model, t)` returns `true`.
+* `when_model = when`: same as `when` but for model data.
 * `init = true`: Whether to collect data at the initial model state before it is stepped.
 * `dt = 0.01`: minimum stepping time for continuous time models between data collection
   checks of `when` and possible data recording time.
