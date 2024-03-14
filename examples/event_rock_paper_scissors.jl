@@ -1,5 +1,11 @@
 # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rps_eventqueue.mp4" type="video/mp4">
+# </video>
+# ```
+
 # This is an introductory example. Similarly to
 # Schelling's segregation model of the main [Tutorial](@ref), its goal is to provide a tutorial
 # for the [`EventQueueABM`](@ref) instead of the [`StandardABM`](@ref).
@@ -303,6 +309,12 @@ abmvideo("rps_eventqueue.mp4", model;
     dt = 0.5, frames = 300,
     title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
 )
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rps_eventqueue.mp4" type="video/mp4">
+# </video>
+# ```
 
 # We see model dynamics similar to Schelling's segregation model:
 # neighborhoods for same-type agents form! But they are not static,
