@@ -197,8 +197,8 @@ plot_layout = fig[:,end+1] = GridLayout()
 count_layout = plot_layout[1,1] = GridLayout()
 
 # collect tuples with x and y values for black and white daisys
-blacks = @lift(Point2f.($(abmobs.adf).step, $(abmobs.adf).count_black))
-whites = @lift(Point2f.($(abmobs.adf).step, $(abmobs.adf).count_white))
+blacks = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf).count_black))
+whites = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf).count_white))
 
 # create an axis to plot into and style it to our liking
 ax_counts = Axis(count_layout[1,1];
