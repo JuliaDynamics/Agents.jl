@@ -84,7 +84,7 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 * `when_model = when`: same as `when` but for model data. If `model` is a `EventQueueABM`,
   only `when_model = when` is supported.
 * `init = true`: Whether to collect data at the initial model state before it is stepped.
-* `dt = 1.0`: minimum stepping time for continuous time models between data collection
+* `dt = 0.01`: minimum stepping time for continuous time models between data collection
   checks of `when` and possible data recording time.
   If `when isa Real` then it must hold `dt ≤ minimum(when, when_model)`.
   This keyword is ignored for discrete time models as it is 1 by definition.
@@ -105,7 +105,7 @@ function run!(model::ABM, n::Union{Function, Real};
         obtainer = identity,
         showprogress = false,
         init = true,
-        dt = 1.0
+        dt = 0.01,
     )
     if discretimeabm(model)
         dt = 1

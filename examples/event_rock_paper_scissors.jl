@@ -261,7 +261,7 @@ model = initialize_rps()
 
 adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
 
-adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.1)
+adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.01)
 
 adf[1:10, :]
 
