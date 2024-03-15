@@ -4,35 +4,18 @@ export run!, offline_run!, collect_agent_data!, collect_model_data!,
 ###################################################
 # Definition of the data collection API
 ###################################################
-get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
-get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
-
-get_data_missing(a, s::Symbol, obtainer::Function) =
-    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
-function get_data_missing(a, f::Function, obtainer::Function)
-    try
-        obtainer(f(a))
-    catch
-        missing
-    end
-end
-
-should_we_collect(s, model, when::AbstractVector) = s ∈ when
-should_we_collect(s, model, when::Bool) = when
-should_we_collect(s, model, when) = when(model, s)
-
 """
-    run!(model::ABM, n::Integer; kwargs...) → agent_df, model_df
-    run!(model::ABM, f::Function; kwargs...) → agent_df, model_df
-    run!(model::EventQueueABM, n::Float64; kwargs...) → agent_df, model_df
+    run!(model::ABM, t::Union{Real, Function}; kwargs...)
 
-Run the model (step it with the input arguments propagated into [`step!`](@ref)) and collect
+Run the model (call [`step!`](@ref)`(model, t)` and collect
 data specified by the keywords, explained one by one below. Return the data as
-two `DataFrame`s, one for agent-level data and one for model-level data. 
+two `DataFrame`s, `agent_df, model_df`,
+one for agent-level data and one for model-level data.
 
 See also [`offline_run!`](@ref) to write data to file while running the model.
 
 ## Data-deciding keywords
+
 * `adata::Vector` means "agent data to collect". If an entry is a `Symbol`, e.g. `:weight`,
   then the data for this entry is agent's field `weight`. If an entry is a `Function`, e.g.
   `f`, then the data for this entry is just `f(a)` for each agent `a`.
@@ -88,43 +71,71 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 `a2(a) = a isa Agent2; adata = [(:weight, sum, a2)]` to filter out the missing results.
 
 ## Other keywords
-* `when=true` : at which time `s` to perform the data collection and processing.
-  A lot of flexibility is offered based on the type of `when`. If `when::AbstractVector`,
-  then data are collected if `s ∈ when`. Otherwise data are collected if `when(model, s)`
-  returns `true`. By default data are collected in every step. If `model` is a `EventQueueABM`,
-  passing `when` as a function is not supported.
-* `when_model = when` : same as `when` but for model data. If `model` is a `EventQueueABM`,
-  only `when_model = when` is supported.
-* `obtainer = identity` : method to transfer collected data to the `DataFrame`.
+
+* `when = 1`: at which times to perform the data collection and processing.
+  A lot of flexibility is offered based on the type of `when`. Let
+  `t = abmtime(model)` (which is updated throughout the `run!` process).
+  - `when::Real`: data are collected each time the model is evolved for at least `when`
+     units of time. For discrete time models like [`StandardABM`](@ref) this must be an
+     integer and in essence it means how many steps to evolve between each data collection.
+     For continuous time models like [`EventQueueABM`](@ref) `when` is the _least_ amount
+     of time to evolve the model (with maximum being until an upcoming event is triggered).
+  - `when::AbstractVector`: data are collected for `t ∈ when`.
+  - `when::Function`: data are collected whenever `when(model, t)` returns `true`.
+* `when_model = when`: same as `when` but for model data.
+* `init = true`: Whether to collect data at the initial model state before it is stepped.
+* `dt = 0.01`: minimum stepping time for continuous time models between data collection
+  checks of `when` and possible data recording time.
+  If `when isa Real` then it must hold `dt ≤ minimum(when, when_model)`.
+  This keyword is ignored for discrete time models as it is 1 by definition.
+* `obtainer = identity`: method to transfer collected data to the `DataFrame`.
   Typically only change this to [`copy`](https://docs.julialang.org/en/v1/base/base/#Base.copy)
   if some data are mutable containers (e.g. `Vector`) which change during evolution,
   or [`deepcopy`](https://docs.julialang.org/en/v1/base/base/#Base.deepcopy) if some data are
   nested mutable containers. Both of these options have performance penalties.
-* `showprogress=false` : Whether to show progress
+* `showprogress=false`: Whether to show progress.
 """
 function run! end
 
 function run!(model::ABM, n::Union{Function, Real};
-        when = true,
+        when = 1,
         when_model = when,
         mdata = nothing,
         adata = nothing,
         obtainer = identity,
         showprogress = false,
+        init = true,
+        dt = 0.01,
     )
+    if discretimeabm(model)
+        dt = 1
+    else
+        w1 = when isa Real ? when : Inf
+        w2 = when_model isa Real ? when : Inf
+        if dt > min(w1, w2)
+            throw(ArgumentError("Given `dt` in `run!` is larger than `when/when_model`"))
+        end
+    end
+
+    # Set-up part
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
-        if when == true
+        if when == 1
             for c in eachcol(df_agent)
                 sizehint!(c, n)
             end
         end
-        if when_model == true
+        if when_model == 1
             for c in eachcol(df_model)
                 sizehint!(c, n)
             end
         end
+    end
+
+    if init
+        collect_agent_data!(df_agent, model, adata; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
     end
 
     p = if typeof(n) <: Int
@@ -133,77 +144,33 @@ function run!(model::ABM, n::Union{Function, Real};
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
-    t = getfield(model, :time)
-    t0, s = t[], 0
-    while until(t[], t0, n, model)
-        if should_we_collect(s, model, when)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-        end
-        if should_we_collect(s, model, when_model)
-            collect_model_data!(df_model, model, mdata; obtainer)
-        end
-        step!(model, 1)
-        s += 1
-        ProgressMeter.next!(p)
-    end
-    if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata; obtainer)
-    end
-    if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata; obtainer)
-    end
-    ProgressMeter.finish!(p)
-    return df_agent, df_model
-end
-
-function run!(model::EventQueueABM, n::Real;
-        when = true,
-        when_model = when,
-        mdata = nothing,
-        adata = nothing,
-        obtainer = identity,
-        showprogress = false,
+    # introduce function barrier for the collection loop.
+    _run!(model, df_agent, df_model, n, when, when_model,
+        mdata, adata, obtainer, dt, p
     )
-    df_agent = init_agent_dataframe(model, adata)
-    df_model = init_model_dataframe(model, mdata)
-    if n isa Integer
-        if when == true
-            for c in eachcol(df_agent)
-                sizehint!(c, n)
-            end
-        end
-        if when_model == true
-            for c in eachcol(df_model)
-                sizehint!(c, n)
-            end
-        end
-    end
+end
+function _run!(model, df_agent, df_model, n, when, when_model,
+        mdata, adata, obtainer, dt, p
+    )
 
-    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+    t0 = s = abmtime(model)
+    # here we need to trackers of elapsed time since last collect:
+    # one for model and one for agents dataframes. They are used only
+    # if `when :: Real`.
+    s_last_collect = s
+    s_last_collect_model = s
 
-    t = getfield(model, :time)
-    t0 = t[]
-    dt = when == true ? dt = 1.0 : dt = when
-    if dt isa AbstractVector
-        range_vals = [dt[1], diff(dt)...]
-    else
-        k = Int(div(n, dt))
-        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
-    end
-    for s in range_vals
-        if until(t[], t0, n, model)
-            step!(model, s)
+    while until(s, t0, n, model)
+        # we are first stepping and then collecting, as there is a dedicated
+        # `init` step in the previous setup function.
+        step!(model, dt)
+        s = abmtime(model)
+        if should_we_collect(s, s - s_last_collect, model, when)
+            s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-            ProgressMeter.next!(p)
-        else
-            break
         end
-    end
-    if t[] < t0 + n
-        step!(model, t0+n-t[])
-        if !(dt isa AbstractVector)
-            collect_agent_data!(df_agent, model, adata; obtainer)
+        if should_we_collect(s, s - s_last_collect_model, model, when_model)
+            s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
         end
         ProgressMeter.next!(p)
@@ -211,32 +178,50 @@ function run!(model::EventQueueABM, n::Real;
     ProgressMeter.finish!(p)
     return df_agent, df_model
 end
+
+get_data(a, s::Symbol, obtainer::Function = identity) = obtainer(getproperty(a, s))
+get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
+
+get_data_missing(a, s::Symbol, obtainer::Function) =
+    hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
+function get_data_missing(a, f::Function, obtainer::Function)
+    try
+        obtainer(f(a))
+    catch
+        missing
+    end
+end
+
+should_we_collect(s, ds, model, when::Real) = ds ≥ when
+should_we_collect(s, ds, model, when::AbstractVector) = s ∈ when
+should_we_collect(s, ds, model, when::Function) = when(model, s)
+
 
 """
-    offline_run!(model, n::Integer; kwargs...)
-    offline_run!(model, f::Function; kwargs...)
+    offline_run!(model, t::Union{Real, Function}; kwargs...)
 
-Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory
+Do the same as [`run`](@ref), but instead of collecting all the data into an in-memory
 dataframe, write the output to a file after collecting data `writing_interval` times and
 empty the dataframe after each write.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
 
 ## Keywords
+
 * `backend=:csv` : backend to use for writing data.
-  Currently supported backends: `:csv`, `:arrow`
+  Currently supported backends: `:csv`, `:arrow`.
 * `adata_filename="adata.\$backend"` : a file to write agent data on.
   Appends to the file if it already exists, otherwise creates the file.
 * `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
-* `writing_interval=1` : write to file every `writing_interval` times data collection
-  is triggered. If the `when` keyword is not set, this corresponds to writing to file
-  every `writing_interval` steps; otherwise, the data will be written every
-  `writing_interval` times the `when` condition is satisfied
-  (the same applies to `when_model`).
+* `writing_interval=1` : write to file every `writing_interval` times data 
+  collection is triggered (which is set by the `when` and `when_model` keywords).
+- All other keywords are propagated to [`run!`](@ref).
 """
 function offline_run! end
 
+# TODO: This whole function can be merged with `run!` by adding
+# an additional dispatch to `collect_agent_data!` that has more arguments........
 function offline_run!(model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
@@ -248,7 +233,18 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         adata_filename = "adata.$backend",
         mdata_filename = "mdata.$backend",
         writing_interval = 1,
+        init = true,
+        dt = 0.01,
     )
+    if discretimeabm(model)
+        dt = 1
+    else
+        w1 = when isa Real ? when : Inf
+        w2 = when_model isa Real ? when : Inf
+        if dt > min(w1, w2)
+            throw(ArgumentError("Given `dt` in `run!` is larger than `when/when_model`"))
+        end
+    end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -270,31 +266,41 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, writing_interval
+        writer, adata_filename, mdata_filename, writing_interval, init, dt
     )
 end
 
 function run_and_write!(model, df_agent, df_model, n;
-    when, when_model,
-    mdata, adata,
-    obtainer,
-    showprogress,
-    writer, adata_filename, mdata_filename, writing_interval
-)
-    s = 0
+        when, when_model,
+        mdata, adata,
+        obtainer,
+        showprogress,
+        writer, adata_filename, mdata_filename, writing_interval, init, dt
+    )
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
 
+    # this part of the data collection is practically identical to `run!`
+    if init
+        collect_agent_data!(df_agent, model, adata; obtainer)
+        collect_model_data!(df_model, model, mdata; obtainer)
+    end
+
     agent_count_collections = 0
     model_count_collections = 0
 
-    t = getfield(model, :time)
-    t0, s = t[], 0
-    while until(t[], t0, n, model)
-        if should_we_collect(s, model, when)
+    t0 = s = abmtime(model)
+    s_last_collect = s
+    s_last_collect_model = s
+    while until(abmtime(model), t0, n, model)
+        step!(model, dt)
+        s = abmtime(model)
+
+        if should_we_collect(s, s - s_last_collect, model, when)
+            s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
             agent_count_collections += 1
             if agent_count_collections % writing_interval == 0
@@ -302,7 +308,8 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_agent)
             end
         end
-        if should_we_collect(s, model, when_model)
+        if should_we_collect(s, s - s_last_collect_model, model, when_model)
+            s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
             model_count_collections += 1
             if model_count_collections % writing_interval == 0
@@ -310,114 +317,15 @@ function run_and_write!(model, df_agent, df_model, n;
                 empty!(df_model)
             end
         end
-        step!(model, 1)
-        s += 1
         ProgressMeter.next!(p)
     end
-
-    if should_we_collect(s, model, when)
-        collect_agent_data!(df_agent, model, adata; obtainer)
-        agent_count_collections += 1
-    end
-    if should_we_collect(s, model, when_model)
-        collect_model_data!(df_model, model, mdata; obtainer)
-        model_count_collections += 1
-    end
-    # catch collected data that was not yet written to disk
-    if !isempty(df_agent)
-        writer(adata_filename, df_agent, isfile(adata_filename))
-        empty!(df_agent)
-    end
-    if !isempty(df_model)
-        writer(mdata_filename, df_model, isfile(mdata_filename))
-        empty!(df_model)
-    end
-
     ProgressMeter.finish!(p)
     return nothing
 end
 
-function run_and_write!(model::EventQueueABM, df_agent, df_model, n;
-    when, when_model,
-    mdata, adata,
-    obtainer,
-    showprogress,
-    writer, adata_filename, mdata_filename, writing_interval
-)
-    df_agent = init_agent_dataframe(model, adata)
-    df_model = init_model_dataframe(model, mdata)
-    if n isa Integer
-        if when == true
-            for c in eachcol(df_agent)
-                sizehint!(c, n)
-            end
-        end
-        if when_model == true
-            for c in eachcol(df_model)
-                sizehint!(c, n)
-            end
-        end
-    end
-
-    p = ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
-
-    agent_count_collections = 0
-    model_count_collections = 0
-
-    t = getfield(model, :time)
-    t0 = t[]
-    dt = when == true ? dt = 1.0 : dt = when
-    if dt isa AbstractVector
-        range_vals = [dt[1], diff(dt)...]
-    else
-        k = Int(div(n, dt))
-        range_vals = Iterators.flatten((Iterators.repeated(0.0, 1), Iterators.repeated(dt, k)))
-    end
-    for s in range_vals
-        if until(t[], t0, n, model)
-            step!(model, s)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-            agent_count_collections += 1
-            if agent_count_collections % writing_interval == 0
-                writer(adata_filename, df_agent, isfile(adata_filename))
-                empty!(df_agent)
-            end
-            model_count_collections += 1
-            if model_count_collections % writing_interval == 0
-                writer(mdata_filename, df_model, isfile(mdata_filename))
-                empty!(df_model)
-            end
-            ProgressMeter.next!(p)
-        else
-            break
-        end
-    end
-    if t[] < t0 + n
-        step!(model, t0+n-t[])
-        if !(dt isa AbstractVector)
-            collect_agent_data!(df_agent, model, adata; obtainer)
-            collect_model_data!(df_model, model, mdata; obtainer)
-        end
-        ProgressMeter.next!(p)
-    end
-
-    # catch collected data that was not yet written to disk
-    if !isempty(df_agent)
-        writer(adata_filename, df_agent, isfile(adata_filename))
-        empty!(df_agent)
-    end
-    if !isempty(df_model)
-        writer(mdata_filename, df_model, isfile(mdata_filename))
-        empty!(df_model)
-    end
-
-    ProgressMeter.finish!(p)
-    return df_agent, df_model
-end
-
 """
     get_writer(backend)
+
 Return a function to write to file using a given `backend`.
 The returned writer function will take three arguments:
 filename, data to write, whether to append to existing file or not.
@@ -547,14 +455,14 @@ Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
 of `properties` and `obtainer`).
 """
 collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; _offset_time = 0, kwargs...)
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :time] = fill(abmtime(model)+_offset_time, length(alla))
+    dd[!, :time] = fill(abmtime(model), length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -569,9 +477,8 @@ end
 function collect_agent_data!(
     df,
     model::ABM,
-    properties::Vector{<:Tuple}, 
+    properties::Vector{<:Tuple},
     step::Int = 0;
-    _offset_time = 0,
     kwargs...,
 )
     if step != 0
@@ -579,7 +486,7 @@ function collect_agent_data!(
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = allagents(model)
-    push!(df[!, 1], abmtime(model)+_offset_time)
+    push!(df[!, 1], abmtime(model))
     for (i, prop) in enumerate(properties)
         _add_col_data!(df[!, i+1], prop, alla; kwargs...)
     end
@@ -596,14 +503,13 @@ function collect_model_data!(
     model,
     properties::Vector,
     step::Real = 0;
-    _offset_time = 0,
     obtainer = identity,
 )
     if step != 0
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
-    push!(df[!, :time], abmtime(model)+_offset_time)
+    push!(df[!, :time], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end
@@ -797,4 +703,3 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
-

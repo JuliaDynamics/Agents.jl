@@ -22,6 +22,7 @@ EventQueueABM
 AbstractAgent
 @multiagent
 kindof
+allkinds
 ```
 
 ### Minimal agent types
@@ -380,4 +381,3 @@ translate_polygon
 scale_polygon
 rotate_polygon
 ```
-

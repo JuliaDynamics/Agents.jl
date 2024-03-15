@@ -195,3 +195,10 @@ remove_agent_from_model!(agent, model) = notimplemented(model)
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
 end
+
+"""
+    discretimeabm(model)
+
+Return `true` if the model is in discrete time, `false` if it is continuous.
+"""
+discretimeabm(model::ABM) = notimplemented(model)

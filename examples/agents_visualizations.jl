@@ -14,7 +14,7 @@
 # The animation at the start of the page is created using the code of this page, see below.
 
 # The docs are built using versions:
-using Pkg
+import Pkg
 Pkg.status(["Agents", "CairoMakie"];
     mode = PKGMODE_MANIFEST, io=stdout
 )
@@ -29,35 +29,31 @@ Pkg.status(["Agents", "CairoMakie"];
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
+using AgentsExampleZoo
 
-# TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
-try
-    using Pkg
-    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
-    using AgentsExampleZoo
-catch
-    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
-    using AgentsExampleZoo
-end
-
-model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
-    scenario = :change)
+model = AgentsExampleZoo.daisyworld(;
+    solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
+)
 model
 
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a) = a.breed # agent color
-agent_size = 20    # agent size
-agent_marker = '✿'  # agent marker
+daisycolor(a) = a.breed
+agent_size = 20
+agent_marker = '✿'
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
-fig, ax, abmobs = abmplot(model; agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs)
-fig
+fig, ax, abmobs = abmplot(model;
+    agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
+)
+fig # returning the figure displays it
 
 # !!! note "Supported keyword arguments"
-#     We do not check internally, if the keyword arguments passed to `abmplot` are 
-#     supported. Please make sure that there are no typos and that the used kwargs are 
+#     We do not check internally, if the keyword arguments passed to `abmplot` are
+#     supported. Please make sure that there are no typos and that the used kwargs are
 #     supported by the [`abmplot`](@ref) function. Otherwise they will be ignored.
+#     This is an unfortunate consequence of how Makie.jl recipes work, and we believe
+#     that in the future this problem will be addressed in Makie.jl.
 
 # Besides agents, we can also plot spatial properties as a heatmap.
 # Here we plot the temperature of the planet by providing the name
@@ -73,20 +69,24 @@ plotkwargs = (;
 fig, ax, abmobs = abmplot(model; plotkwargs...)
 fig
 
-
-# ```@docs
+# ```@docs; canonical = false
 # abmplot
 # ```
 
 # ## Interactive ABM Applications
 
 # Continuing from the Daisyworld plots above, we can turn them into interactive
-# applications straightforwardly, simply by providing the stepping functions
-# as illustrated in the documentation of [`abmplot`](@ref).
+# applications straightforwardly, simply by setting the keyword `add_controls = true`
+# as discussed in the documentation of [`abmplot`](@ref).
 # Note that [`GLMakie`](https://makie.juliaplots.org/v0.15/documentation/backends_and_output/)
 # should be used instead of `CairoMakie` when wanting to use the interactive
-# aspects of the plots.
-fig, ax, abmobs = abmplot(model; plotkwargs...)
+# aspects of the plots!
+
+# ```julia
+# using GLMakie
+# ```
+
+fig, ax, abmobs = abmplot(model; add_controls = true, plotkwargs...)
 fig
 
 # One could click the run button and see the model evolve.
@@ -100,6 +100,7 @@ fig
 
 # One can furthermore collect data while the model evolves and visualize them using the
 # convenience function [`abmexploration`](@ref)
+
 using Statistics: mean
 black(a) = a.breed == :black
 white(a) = a.breed == :white
@@ -118,14 +119,15 @@ nothing #hide
 # </video>
 # ```
 
-# ```@docs
+# ```@docs; canonical = false
 # abmexploration
 # ```
 
 # ## ABM Videos
-# ```@docs
+# ```@docs; canonical = false
 # abmvideo
 # ```
+
 # E.g., continuing from above,
 model = AgentsExampleZoo.daisyworld()
 abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwargs...)
@@ -153,7 +155,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # ![RabbitFoxHawk inspection example](https://github.com/JuliaDynamics/JuliaDynamics/tree/master/videos/agents/RabbitFoxHawk_inspection.png)
 
 # The tooltip can be customized by extending `Agents.agent2string`.
-# ```@docs
+# ```@docs; canonical = false
 # Agents.agent2string
 # ```
 
@@ -165,7 +167,7 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # The same steps are necessary when we want to create custom plots that compose
 # animations of the model space and other aspects.
 
-# ```@docs
+# ```@docs; canonical = false
 # ABMObservable
 # ```
 # To do custom animations you need to have a good idea of how Makie's animation system works.

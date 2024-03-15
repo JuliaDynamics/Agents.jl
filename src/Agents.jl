@@ -47,6 +47,8 @@ include("spaces/walk.jl")
 
 # Stepping and data collection functionality
 include("simulations/step.jl")
+include("simulations/step_standard.jl")
+include("simulations/step_eventqueue.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
@@ -78,10 +80,10 @@ Welcome to this new update of Agents.jl!
 
 - A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
-  no performance difference between having 1 agent type at the cost of each agent occupying 
-  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically 
+  no performance difference between having 1 agent type at the cost of each agent occupying
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
   the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
-- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through 
+- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
   the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
 - Both the visualization and the model abstract interface have been refactored to improve the user
   experience to conform to the Agents.jl API when creating a new model type and its visualizations.
@@ -90,9 +92,9 @@ Welcome to this new update of Agents.jl!
   which support them as argument is deprecated since now they are already available inside
   the model.
 - A new `container` keyword can be passed during the model creation to decide the container
-  type of the agents inside the model. By default it is equal to `Dict`. Passing `Vector` in 
-  a `StandardABM` instead recreates the functionality of an `UnremovableABM`, so this model 
-  type is deprecated. 
+  type of the agents inside the model. By default it is equal to `Dict`. Passing `Vector` in
+  a `StandardABM` instead recreates the functionality of an `UnremovableABM`, so this model
+  type is deprecated.
 - The `@agent` macro is now THE way to create agent types for Agents.jl simulations since
   now supports declaring default and constant fields. Directly creating structs by hand is
   no longer mentioned in the documentation at all. This will allow us in the future to utilize

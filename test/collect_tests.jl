@@ -1,4 +1,14 @@
+using Agents, Test, Agents.DataFrames
+using CSV, Arrow
+
 @testset "DataCollection" begin
+    @agent struct AgentWeight(GridAgent{2})
+        weight::Float64 = 2.0
+    end
+    @agent struct AgentInteger(GridAgent{2})
+        p::Int = 1
+    end
+
     mutable struct Nested
         data::Vector{Float64}
     end
@@ -20,7 +30,7 @@
 
     function initialize()
         model = StandardABM(
-            Agent3,
+            AgentWeight,
             GridSpace((10, 10));
             agent_step! = agent_step!,
             model_step! = model_step!,
@@ -145,6 +155,7 @@
     @testset "High-level API for Collections" begin
         # Extract data from the model every year for five years,
         # with the average `weight` of all agents every six months.
+        model = initialize()
         each_year(model, step) = step % 365 == 0
         six_months(model, step) = step % 182 == 0
         agent_data, model_data = run!(
@@ -156,7 +167,7 @@
             adata = [(:weight, mean)],
         )
 
-        @test size(agent_data) == (11, 2)
+        @test size(agent_data) == (11, 2) # note time 0 is also data collected!
         @test propertynames(agent_data) == [:time, :mean_weight]
         @test maximum(agent_data[!, :time]) == 1820
 
@@ -164,93 +175,114 @@
         @test propertynames(model_data) == [:time, :flag, :year]
         @test maximum(model_data[!, :time]) == 1825
 
+        # test when being a vector
+        model = initialize()
         agent_data, model_data = run!(
             model,
             365 * 5;
-            when_model = [1, 365 * 5],
-            when = false,
+            when_model = [1, 365],
             mdata = [:flag, :year],
-            adata = [(:weight, mean)],
         )
-        @test size(agent_data) == (0, 2)
-        @test size(model_data) == (2, 3)
+        @test size(agent_data) == (0, 0)
+        @test model_data.time == [0, 1, 365]
 
+        # test without initial collection
+        model = initialize()
+        agent_data, model_data = run!(
+            model,
+            365 * 5;
+            when_model = [1, 365],
+            mdata = [:flag, :year],
+            init = false
+        )
+        @test model_data.time == [1, 365]
+
+        # test nested container
+        model = initialize()
         _, model_data = run!(
             model,
             365 * 5;
-            when_model = [1, 365 * 5],
-            when = false,
+            when_model = [365 * 3, 365*4],
             mdata = [:deep],
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
 
+        model = initialize()
         _, model_data = run!(
             model,
             365 * 5;
             when_model = [365 * 5],
-            when = false,
+            init = false,
             mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
 
         @testset "Writing to file while running" begin
-
-            # CSV
-            offline_run!(model, 365 * 5;
-                when_model = each_year,
-                when = six_months,
-                mdata = [:flag, :year],
-                adata = [(:weight, mean)],
-                writing_interval = 3
-            )
-
-            adata_saved = CSV.read("adata.csv", DataFrame)
-            @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:time, :mean_weight]
-
-            mdata_saved = CSV.read("mdata.csv", DataFrame)
-            @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:time, :flag, :year]
-
-            rm("adata.csv")
-            rm("mdata.csv")
-            @test !isfile("adata.csv")
-            @test !isfile("mdata.csv")
-
-            # removing .arrow files after operating on them causes IO errors on Windows
-            # so to make tests on Windows work we need to remove them when a new test
-            # run occurs
-            if Sys.iswindows()
-                isfile("adata.arrow") && rm("adata.arrow")
-                isfile("mdata.arrow") && rm("mdata.arrow")
+            # ensure we are clean: there are no files leftover
+            for file in ("adata.csv", "mdata.csv", "adata.arrow", "mdata.arrow")
+                isfile(file) && rm(file)
             end
 
-            offline_run!(model, 365 * 5;
-                when_model = each_year,
-                when = six_months,
-                backend = :arrow,
-                mdata = [:flag, :year],
-                adata = [(:weight, mean)],
-                writing_interval = 3
-            )
+            @testset "CSV" begin
+                # CSV
+                model = initialize()
+                offline_run!(model, 365 * 5;
+                    when_model = each_year,
+                    when = six_months,
+                    mdata = [:flag, :year],
+                    adata = [(:weight, mean)],
+                )
 
-            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
-            @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:time, :mean_weight]
+                adata_saved = CSV.read("adata.csv", DataFrame)
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:time, :mean_weight]
 
-            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
-            @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:time, :flag, :year]
+                mdata_saved = CSV.read("mdata.csv", DataFrame)
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:time, :flag, :year]
 
-            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
-            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+                rm("adata.csv")
+                rm("mdata.csv")
+                @test !isfile("adata.csv")
+                @test !isfile("mdata.csv")
+            end
 
-            if !(Sys.iswindows())
-                rm("adata.arrow")
-                rm("mdata.arrow")
-                @test !isfile("adata.arrow")
-                @test !isfile("mdata.arrow")
+            @testset "Arrow" begin
+                # removing .arrow files after operating on them causes IO errors on Windows
+                # so to make tests on Windows work we need to remove them when a new test
+                # run occurs
+                if Sys.iswindows()
+                    isfile("adata.arrow") && rm("adata.arrow")
+                    isfile("mdata.arrow") && rm("mdata.arrow")
+                end
+
+                model = initialize()
+                offline_run!(model, 365 * 5;
+                    when_model = each_year,
+                    when = six_months,
+                    backend = :arrow,
+                    mdata = [:flag, :year],
+                    adata = [(:weight, mean)],
+                )
+
+                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:time, :mean_weight]
+
+                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:time, :flag, :year]
+
+                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+
+                if !(Sys.iswindows())
+                    rm("adata.arrow")
+                    rm("mdata.arrow")
+                    @test !isfile("adata.arrow")
+                    @test !isfile("mdata.arrow")
+                end
             end
 
             # Backends
@@ -259,6 +291,15 @@
             end
             @test_throws AssertionError begin
                 offline_run!(model, 365 * 5; backend = :hdf5)
+            end
+
+            # just ensure we end clean
+            for file in ("adata.csv", "mdata.csv", "adata.arrow", "mdata.arrow")
+                if isfile(file)
+                    try rm(file)
+                    catch
+                    end
+                end
             end
         end
     end
@@ -319,9 +360,9 @@
     end
 
     @testset "Mixed-ABM collections" begin
-        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
-        add_agent!((10, 7), Agent4, model, 5)
+        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
+        add_agent!((10, 7), AgentInteger, model, 5)
 
         # Expect position type (both agents have it)
         props = [:pos]
@@ -332,7 +373,7 @@
         @test df[1, :pos] == model[1].pos
         @test df[2, :pos] == model[2].pos
 
-        # Expect weight for Agent3, but missing for Agent4
+        # Expect weight for AgentWeight, but missing for AgentInteger
         props = [:weight]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
@@ -357,8 +398,8 @@
         @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, dataname(props[2])])
 
-        add_agent!((2, 4), Agent3, model, 19.81)
-        add_agent!((4, 1), Agent4, model, 3)
+        add_agent!((2, 4), AgentWeight, model, 19.81)
+        add_agent!((4, 1), AgentInteger, model, 3)
 
         props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
@@ -384,8 +425,8 @@
         @test typeof(df.sum_pos1) <: Vector{Int}
         @test df[1, :sum_pos1] == 22
 
-        # Expect aggregate to filter out Agent4's
-        a3(a) = a isa Agent3
+        # Expect aggregate to filter out AgentInteger's
+        a3(a) = a isa AgentWeight
         props = [(pos1, sum, a3)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
@@ -411,10 +452,10 @@
         @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = StandardABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
+        model = StandardABM(Union{AgentWeight,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
-        add_agent!((2, 4), Agent3, model, 19.81)
+        add_agent!((2, 4), AgentWeight, model, 19.81)
         add_agent!((4, 1), Agent3Int, model, 3)
 
         props = [:weight]
@@ -436,16 +477,16 @@
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
+        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
 
-        # get fieldtype from Agent4 struct definition when agent is absent
+        # get fieldtype from AgentInteger struct definition when agent is absent
         props = [:weight, :p]
         df = init_agent_dataframe(model, props)
         @test eltype(df[!, :p]) == Union{Int, Missing}
 
-        # Add Agent4 and check data collection
-        add_agent!((4, 1), Agent4, model, 3)
+        # Add AgentInteger and check data collection
+        add_agent!((4, 1), AgentInteger, model, 3)
         collect_agent_data!(df, model, props)
         @test size(df) == (2, 5)
         @test df[1, :weight] == model[1].weight
@@ -486,12 +527,11 @@
             model,
             365 * 5;
             when_model = [1, 365 * 5],
-            when = false,
+            init = false,
             mdata = [:flag, :year, :container, :deep],
-            adata = [(:weight, mean)],
             obtainer = deepcopy,
         )
-        @test size(agent_data) == (0, 2)
+        @test size(agent_data) == (0, 0)
         @test size(model_data) == (2, 5)
     end
 
@@ -503,7 +543,7 @@
         end
 
         model = StandardABM(
-            Agent3,
+            AgentWeight,
             GridSpace((10, 10));
             properties=Props(1, false),
             warn_deprecation = false
@@ -526,7 +566,7 @@ end
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
         basemodels = [AgentsExampleZoo.schelling(; numagents)
-                      for numagents in numagents_low:numagents_high 
+                      for numagents in numagents_low:numagents_high
                       for _ in 1:nreplicates]
         return basemodels
     end
@@ -712,7 +752,7 @@ end
 @testset "ensemblerun! and different seeds" begin
     as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = StandardABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
+        abm = StandardABM(AgentInteger, GridSpace((4, 4)); agent_step! = as!,
                   rng = MersenneTwister(seed), warn_deprecation = false)
         fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm

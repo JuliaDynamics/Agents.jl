@@ -8,7 +8,9 @@ function Agents.abmexploration(model;
         plotkwargs = NamedTuple(),
         kwargs...
     )
-    fig, ax, abmobs = abmplot(model; figure, axis, warn_deprecation = false, kwargs...)
+    fig, ax, abmobs = abmplot(model;
+        figure, axis, warn_deprecation = false, add_controls = true, kwargs...
+    )
     p = first_abmplot_in(ax)
 
     adata, mdata = abmobs.adata, abmobs.mdata
@@ -28,8 +30,10 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     axs = []
 
     for i in 1:La # add adata plots
-        y_label = string(adata[i][2]) * "_" * string(adata[i][1])
-        points = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf)[:,y_label]))
+        y_label = dataname(adata[i])
+        # string(adata[i][2]) * "_" * string(adata[i][1])
+        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)), 
+                                $(abmobs.adf)[:, y_label]))
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(alabels) ? y_label : alabels[i]
@@ -42,7 +46,8 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
 
     for i in 1:Lm # add mdata plots
         y_label = string(mdata[i])
-        points = @lift(Point2f.($(abmobs.mdf).time, $(abmobs.mdf)[:,y_label]))
+        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)), 
+                                $(abmobs.mdf)[:,y_label]))
         ax = plotlayout[i+La, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(mlabels) ? y_label : mlabels[i]
@@ -69,20 +74,34 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     on(resetclick) do clicks
 
         for ax in axs
-            vlines!(ax, [abmobs._offset_time[]], color = "#c41818")
+            vlines!(ax, [abmobs.offset_time_adf[][1][]], color = "#c41818")
         end
     end
     return nothing
 end
 
+function apply_offsets(times, offsets)
+    offsets_vec = offsets[2]
+    n = length(times) - length(offsets_vec)
+    if n > 0
+        append!(offsets_vec, fill(offsets[1][], n))
+    else
+        resize!(offsets_vec, length(times))
+    end
+    return times .+ offsets_vec
+end
 
 ##########################################################################################
 
 function Agents.abmvideo(file, model;
-        spf = 1, framerate = 30, frames = 300,  title = "", showstep = true,
+        spf = nothing, dt = 1, framerate = 30, frames = 300,  title = "", showstep = true,
         figure = (size = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
+    if !isnothing(spf)
+        @warn "keyword `spf` is deprecated in favor of `dt`." maxlog=1
+        dt = spf
+    end
     # add some title stuff
     abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
@@ -93,18 +112,15 @@ function Agents.abmvideo(file, model;
         t = title
     end
     axis = (title = t, titlealign = :left, axis...)
-
-    agent_step! = Agents.agent_step_field(model)
-    model_step! = Agents.model_step_field(model)
     fig, ax, abmobs = abmplot(model;
-    add_controls = false, warn_deprecation = false, agent_step!, model_step!, figure, axis, kwargs...)
+    add_controls = false, warn_deprecation = false, figure, axis, kwargs...)
 
     resize_to_layout!(fig)
 
     record(fig, file; framerate, recordkwargs...) do io
         for j in 1:frames-1
             recordframe!(io)
-            Agents.step!(abmobs, spf)
+            Agents.step!(abmobs, dt)
             abmtime_obs[] = abmtime(model)
         end
         recordframe!(io)

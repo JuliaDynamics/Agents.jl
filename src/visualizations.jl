@@ -13,6 +13,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 ## Keyword arguments
 
 ### Agent related
+
 * `agent_color, agent_size, agent_marker` : These three keywords decide the color, size, and marker, that
   each agent will be plotted as. They can each be either a constant or a *function*,
   which takes as an input a single agent and outputs the corresponding value. If the model
@@ -37,10 +38,11 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that 
+* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that
   plots the agents (typically `scatter!`).
 
 ### Preplot related
+
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
   as a heatmap over the space.
   Its values can be standard data accessors given to functions like `run!`, i.e.
@@ -59,7 +61,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   placed naturally.
 * `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
   but before the agents.
-* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space. 
+* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space.
   Directly passed to
   * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
   * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
@@ -74,18 +76,22 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
 # Interactivity
 
 ## Evolution related
-* `add_controls::Bool`: If `true`, `abmplot` switches to "interactive application" mode.
-  This is by default `true` if the model contains either `agent_step!` or `model_step!`.
-  The model evolves interactively using `Agents.step!`.
+
+* `add_controls::Bool`: If `true`, `abmplot` switches to
+  "interactive application GUI" mode where the model evolves interactively using `Agents.step!`.
+  `add_controls` is by default `false` unless `params` (see below) is not empty.
+  `add_controls` is also always `true` in [`abmexploration`](@ref).
   The application has the following interactive elements:
-  1. "step": advances the simulation once for `spu` steps.
+  1. "step": advances the simulation once for `dt` time.
   1. "run": starts/stops the continuous evolution of the model.
   1. "reset model": resets the model to its initial state from right after starting the
      interactive application.
-  1. Two sliders control the animation speed: "spu" decides how many model steps should be
-     done before the plot is updated, and "sleep" the `sleep()` time between updates.
+  1. Two sliders control the animation speed: "dt" decides how much time to evolve the model
+     before the plot is updated, and "sleep" the `sleep()` time between updates.
 * `enable_inspection = add_controls`: If `true`, enables agent inspection on mouse hover.
-* `spu = 1:50`: The values of the "spu" slider.
+* `dt = 1:50`: The values of the "dt" slider which is the time to step the model forwards
+  in each frame update, which calls `step!(model, dt)`. This defaults to `1:50`
+  for discrete time models and to `0.1:0.1:10.0` for continuous time ones.
 * `params = Dict()` : This is a dictionary which decides which parameters of the model will
   be configurable from the interactive application. Each entry of `params` is a pair of
   `Symbol` to an `AbstractVector`, and provides a range of possible values for the parameter
@@ -125,9 +131,9 @@ end
     add_interaction!(ax)
     add_interaction!(ax, p::_ABMPlot)
 
-Adds model control buttons and parameter sliders according to the plotting parameters 
+Adds model control buttons and parameter sliders according to the plotting keywords
 `add_controls` (if true) and `params` (if not empty).
-Buttons and sliders are placed next to each other in a new layout position below the 
+Buttons and sliders are placed next to each other in a new layout position below the
 position of `ax`.
 """
 function add_interaction! end
@@ -136,30 +142,30 @@ export add_interaction!
 """
     ABMObservable(model; adata, mdata, when) → abmobs
 
-`abmobs` contains all information necessary to step an agent based model interactively.
-It is also returned by [`abmplot`](@ref).
+`abmobs` contains all information necessary to step an agent based model interactively,
+as well as collect data while stepping interactively.
+`ABMObservable` also returned by [`abmplot`](@ref).
 
-Calling `Agents.step!(abmobs, n)` will step the model for `n` using the provided
-`agent_step!, model_step!` cotained in the model as in [`Agents.step!`](@ref).
+Calling `Agents.step!(abmobs, t)` will step the model for `t` time and collect data
+as in [`Agents.run!`](@ref).
 
 The fields `abmobs.model, abmobs.adf, abmobs.mdf` are _observables_ that contain
 the [`AgentBasedModel`](@ref), and the agent and model dataframes with collected data.
 Data are collected as described in [`Agents.run!`](@ref) using the `adata, mdata, when`
 keywords. All three observables are updated on stepping (when it makes sense).
-The field `abmobs.s` is also an observable containing the current step number.
 
 All plotting and interactivity should be defined by `lift`ing these observables.
 """
-struct ABMObservable{M, AS, MS, AD, MD, ADF, MDF, W, S}
+struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
     model::M # Observable{AgentBasedModel}
-    agent_step!::AS
-    model_step!::MS
     adata::AD
     mdata::MD
     adf::ADF # this is `nothing` or `Observable`
     mdf::MDF # this is `nothing` or `Observable`
-    _offset_time::S # Observable{Int}
     when::W
+    t_last_collect::S # observable of last timepoint where data was collected (for `when`)
+    offset_time_adf::K
+    offset_time_mdf::K
 end
 export ABMObservable
 
@@ -205,8 +211,8 @@ saved at given path `file`, by recording the behavior of the interactive version
 The plotting is identical as in [`abmplot`](@ref) and applicable keywords are propagated.
 
 ## Keywords
-* `spf = 1`: Steps-per-frame, i.e. how many times to step the model before recording a new
-  frame.
+* `dt = 1`: Time to evolve between each recorded frame. For [`StandardABM`](@ref)
+  this must be an integer and it is identical to how many steps to take per frame.
 * `framerate = 30`: The frame rate of the exported video.
 * `frames = 300`: How many frames to record in total, including the starting frame.
 * `title = ""`: The title of the figure.
@@ -268,8 +274,8 @@ export translate_polygon, scale_polygon, rotate_polygon
 """
     check_space_visualization_API(model::ABM)
 
-Checks whether all the necessary method extensions indicated in 
-[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl) 
+Checks whether all the necessary method extensions indicated in
+[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl)
 have been defined.
 """
 function check_space_visualization_API end
@@ -340,8 +346,8 @@ function abmplot_markersizes end
 """
     convert_element_pos(::S, pos)
 
-Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie 
-figure (e.g. a single scatter point representing an agent) to its corresponding position in 
+Convert a `Point{2, Float32}`/`Point{3, Float32}` position of an element in the Makie
+figure (e.g. a single scatter point representing an agent) to its corresponding position in
 the given space `S`.
 """
 function convert_element_pos end

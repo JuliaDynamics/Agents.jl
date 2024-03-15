@@ -1,14 +1,19 @@
 # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rps_eventqueue.mp4" type="video/mp4">
+# </video>
+# ```
+
 # This is an introductory example. Similarly to
-# [Schelling's segregation model](@ref), its goal is to provide a tutorial
-# but for the [`EventQueueABM`](@ref) instead of the [`StandardABM`](@ref).
-# It assumes that you have gone through both the [Tutorial](@ref) and
-# the [Schelling's segregation model](@ref) example.
+# Schelling's segregation model of the main [Tutorial](@ref), its goal is to provide a tutorial
+# for the [`EventQueueABM`](@ref) instead of the [`StandardABM`](@ref).
+# It assumes that you have gone through the [Tutorial](@ref) first.
 
 # The spatial rock-paper-scissors (RPS) is an ABM with the following rules:
 
-# * Agents can be any of three types: Rock, Paper, or Scissors.
+# * Agents can be any of three "kinds": Rock, Paper, or Scissors.
 # * Agents live in a 2D periodic grid space allowing only one
 #   agent per cell.
 # * When an agent activates, it can do one of three actions:
@@ -16,7 +21,7 @@
 #      If the agent loses the RPS game it gets removed.
 #   1. Move: choose a random nearby position. If it is empty move
 #      to it, otherwise swap positions with the agent there.
-#   1. Reproduce: choose a random empty nearby position (if any).
+#   1. Reproduce: choose a random empty nearby position (if any exist).
 #      Generate there a new agent of the same type.
 
 # And that's it really!
@@ -30,12 +35,18 @@
 
 # We start by loading `Agents`
 
-using Agents, Random
+using Agents
 
-# and defining the three agent types
-@agent struct Rock(GridAgent{2}) end
-@agent struct Paper(GridAgent{2}) end
-@agent struct Scissors(GridAgent{2}) end
+# and defining the three agent types using [`multiagent`](@ref)
+# (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
+
+@multiagent struct RPS(GridAgent{2})
+    @subagent struct Rock end
+    @subagent struct Paper end
+    @subagent struct Scissors end
+end
+
+# %% #src
 
 # Actions of events are standard Julia functions that utilize Agents.jl [API](@ref),
 # exactly like those given as
@@ -51,12 +62,16 @@ function attack!(agent, model)
     ## do nothing if there isn't anyone nearby
     isnothing(contender) && return
     ## else perform standard rock paper scissors logic
-    ## and remove the contender if you win
-    if agent isa Rock && contender isa Scissors
+    ## and remove the contender if you win.
+    ## Remember to compare agents with `kindof` instead of
+    ## `typeof` since we use `@multiagent` (see main Tutorial)
+    kind = kindof(agent)
+    kindc = kindof(contender)
+    if kind === :Rock && kindc === :Scissors
         remove_agent!(contender, model)
-    elseif agent isa Scissors && contender isa Paper
+    elseif kind === :Scissors && kindc === :Paper
         remove_agent!(contender, model)
-    elseif agent isa Paper && contender isa Rock
+    elseif kind === :Paper && kindc === :Rock
         remove_agent!(contender, model)
     end
     return
@@ -82,7 +97,8 @@ end
 function reproduce!(agent, model)
     pos = random_nearby_position(agent, model, 1, pos -> isempty(pos, model))
     isnothing(pos) && return
-    add_agent!(pos, typeof(agent), model)
+    ## pass target position as a keyword argument
+    replicate!(agent, model; pos)
     return
 end
 
@@ -112,9 +128,10 @@ end
 attack_propensity = 1.0
 movement_propensity = 0.5
 
-# while the propensity for reproduction will be a function
+# while the propensity for reproduction will be a function modelling
+# "seasonality", so that willingness to reproduce goes up and down periodically
 function reproduction_propensity(agent, model)
-    return (1/2) ^ ceil(Int, abmtime(model))
+    return cos(abmtime(model))^2
 end
 
 ## Creating the `AgentEvent` structures
@@ -122,16 +139,15 @@ end
 # Events are registered as an [`AgentEvent`](@ref), then are added into a container,
 # and then given to the [`EventQueueABM`](@ref).
 # The attack and reproduction events affect all agents,
-# and hence we don't need to specify an agent type that this event
-# applies to, leaving the `AbstractAgent` as the default.
+# and hence we don't need to specify what agents they apply to.
 
 attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 
 reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_propensity)
 
 # The movement event does not apply to rocks however,
-# so we need to specify the agent super type that it applies to,
-# which is `Union{Scissors, Paper}`.
+# so we need to specify the agent "kinds" that it applies to,
+# which is `(:Scissors, :Paper)`.
 # Additionally, we would like to change how the timing of the movement events works.
 # We want to change it from an exponential distribution sample to something else.
 # This "something else" is once again an arbitrary Julia function,
@@ -147,7 +163,7 @@ end
 
 movement_event = AgentEvent(
     action! = move!, propensity = movement_propensity,
-    types = Union{Scissors, Paper}, timing = movement_time
+    kinds = (:Scissors, :Paper), timing = movement_time
 )
 
 # we wrap all events in a tuple and we are done with the setting up part!
@@ -157,39 +173,51 @@ events = (attack_event, reproduction_event, movement_event)
 # ## Creating and populating the `EventQueueABM`
 
 # This step is almost identical to making a [`StandardABM`](@ref) in the main [Tutorial](@ref).
-# We create an instance of [`EventQueueABM`](@ref) by giving it the agent types it will
-# have, the events vector, and a space (optionally, defaults to no space).
+# We create an instance of [`EventQueueABM`](@ref) by giving it the agent type it will
+# have, the events, and a space (optionally, defaults to no space).
 # Here we have
 
 space = GridSpaceSingle((100, 100))
 
+using Random: Xoshiro
 rng = Xoshiro(42)
-AgentTypes = Union{Rock, Paper, Scissors}
-model = EventQueueABM(AgentTypes, events, space; rng, warn = false)
 
-# populating the model with agents is as in the main [Tutorial](@ref),
-# using the [`add_agent!`](@ref) function. The only difference here
-# is that (by default), when an agent is added to the model, the
-# an event is generated for it and added to the queue.
+model = EventQueueABM(RPS, events, space; rng, warn = false)
+
+# populating the model with agents is the same as in the main [Tutorial](@ref),
+# using the [`add_agent!`](@ref) function.
+# By default, when an agent is added to the model
+# an event is also generated for it and added to the queue.
 
 for p in positions(model)
     type = rand(abmrng(model), (Rock, Paper, Scissors))
     add_agent!(p, type, model)
 end
 
-using CairoMakie
-function dummyplot(model)
-    fig = Figure()
-    ax = Axis(fig[1,1])
-    alla = allagents(model)
-    colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
-    pos = [a.pos for a in alla]
-    color = [colormap[typeof(a)] for a in alla]
-    scatter!(ax, pos; color, markersize = 10)
-    return fig
-end
+# We can see the list of scheduled events via
 
-dummyplot(model)
+abmqueue(model)
+
+# Here the queue maps pairs of (agent id, event index) to the time
+# the events will trigger.
+# There are currently as many scheduled events because as the amount
+# of agents we added to the model.
+# Note that the timing of the events
+# has been rounded for display reasons!
+
+# Now, as per-usual in Agents.jl we are making a keyword-based function
+# for constructing the model, so that it is easier to handle later.
+
+function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
+    space = GridSpaceSingle((nx, ny))
+    rng = Xoshiro(seed)
+    model = EventQueueABM(RPS, events, space; rng, warn = false)
+    for p in positions(model)
+        type = rand(abmrng(model), (Rock, Paper, Scissors))
+        add_agent!(p, type, model)
+    end
+    return model
+end
 
 # ## Time evolution
 # %% #src
@@ -198,15 +226,114 @@ dummyplot(model)
 # to that of [`StandardABM`](@ref), but time is continuous.
 # So, when calling `step!` we pass in a real time.
 
-step!(model, 1.0)
+step!(model, 123.456)
+
+nagents(model)
 
 # Alternatively we could give a function for when to terminate the time evolution.
+# For example, we terminate if any of the three types of agents become less
+# than a threshold
+
+function terminate(model, t)
+    kinds = allkinds(RPS)
+    threshold = 1000
+    ## Alright, this code snippet loops over all kinds,
+    ## and for each it checks if it is less than the threshold.
+    ## if any is, it returns `true`, otherwise `false.`
+    logic = any(kinds) do kind
+        n = count(a -> kindof(a) == kind, allagents(model))
+        return n < threshold
+    end
+    ## For safety, in case this never happens, we also add a trigger
+    ## regarding the total evolution time
+    return logic || (t > 1000.0)
+end
+
+step!(model, terminate)
+
+abmtime(model)
 
 # ## Data collection
+# %% #src
 
-# Data collection also works almost identically to [`StandardABM`](@ref).
+# The entirety of the Agents.jl [API](@ref) is orthogonal/agnostic to what
+# model we have. This means that whatever we do, plotting, data collection, etc.,
+# has identical syntax irrespectively of whether we have a `StandardABM` or `EventQueueABM`.
 
-# Here we will simply collect the number of each agent type.
-adata = [(a -> a isa X, count) for X in (Rock, Paper, Scissors)]
+# Hence, data collection also works almost identically to [`StandardABM`](@ref).
 
-run!(model, 10.0; adata, when = 0.2)
+# Here we will simply collect the number of each agent kind.
+
+model = initialize_rps()
+
+adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+
+adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.01)
+
+adf[1:10, :]
+
+# Let's visualize the population sizes versus time:
+
+tvec = adf[!, :time]
+populations = adf[:, Not(:time)]
+alabels = ["rocks", "papers", "scissorss"]
+
+fig = Figure()
+ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
+for (i, l) in enumerate(alabels)
+    lines!(ax, tvec, populations[!, i]; label = l)
+end
+axislegend(ax)
+fig
+
+
+# ## Visualization
+
+# Visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
+# that we learned in the [visualization tutorial](@ref vis_tutorial).
+# Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
+# corresponds to continuous time and does not have to be an integer.
+
+using CairoMakie
+
+const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
+agent_color(agent) = colormap[kindof(agent)]
+plotkw = (agent_color, agent_marker = :rect, agent_size = 5)
+fig, ax, abmobs = abmplot(model; plotkw...)
+
+fig
+
+#
+
+model = initialize_rps()
+abmvideo("rps_eventqueue.mp4", model;
+    dt = 0.5, frames = 300,
+    title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
+)
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rps_eventqueue.mp4" type="video/mp4">
+# </video>
+# ```
+
+# We see model dynamics similar to Schelling's segregation model:
+# neighborhoods for same-type agents form! But they are not static,
+# but rather expand and contract over time!
+
+# We could explore this interactively by launching the interactive GUI
+# with the [`abmexploration`](@ref) function!
+
+# Let's first define the data we want to visualize, which in this
+# case is just the count of each agent kind
+
+model = initialize_rps()
+fig, abmobs = abmexploration(model; adata, alabels, when = 0.5, plotkw...)
+fig
+
+# We can then step the observable and see the updates in the plot:
+for _ in 1:100 # this loop simulates pressing the `run!` button
+    step!(abmobs, 1.0)
+end
+
+fig

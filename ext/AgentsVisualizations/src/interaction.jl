@@ -1,7 +1,7 @@
 function Agents.add_interaction!(ax, p)
     if p.add_controls[]
         @assert !isnothing(ax) "Need `ax` to add model controls."
-        stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.spu)
+        stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.dt[])
         if !isempty(p.params[])
             @assert !isnothing(ax) "Need `ax` to add plots and parameter sliders."
             add_param_sliders!(ax.parent, p.abmobs[].model, p.params[], resetclick)
@@ -16,13 +16,10 @@ end
 Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
 
 "Initialize standard model control buttons."
-function add_controls!(fig, abmobs, spu)
+function add_controls!(fig, abmobs, dt)
 
-    model, agent_step!, model_step!, adata, mdata, adf, mdf, when =
-    getfield.(Ref(abmobs), (:model, :agent_step!, :model_step!, :adata, :mdata, :adf, :mdf, :when))
-
-    init_dataframes!(model[], adata, mdata, adf, mdf)
-    collect_data!(abmobs, model[], when, adata, mdata, adf, mdf)
+    model, adata, mdata, adf, mdf, when =
+    getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
 
     # Create new layout for control buttons
     controllayout = fig[end+1,:][1,1] = GridLayout(tellheight = true)
@@ -33,16 +30,21 @@ function add_controls!(fig, abmobs, spu)
     else
         _sleepr, _sleep0 = 0:0.01:2, 1
     end
-    sg = SliderGrid(controllayout[1,1], (label = "spu", range = spu[]),
+
+    dtrange = isnothing(dt) ? _default_dts_from_model(model[]) : dt
+    sg = SliderGrid(controllayout[1,1],
+        (label = "dt", range = dtrange, startvalue = 1),
         (label = "sleep", range = _sleepr, startvalue = _sleep0),
     )
-    speed, slep = [s.value for s in sg.sliders]
+    dtslider, slep = [s.value for s in sg.sliders]
 
     # Step button
+    # We need an additional observable that keep track of the last time data
+    # was collected. Here collection is the same for agent of models so we need 1 variable.
     step = Button(fig, label = "step\nmodel")
     on(step.clicks) do c
-        Agents.step!(abmobs, speed[])
-        collect_data!(abmobs, model[], when[], adata, mdata, adf, mdf)
+        # notice that stepping the abmobs both steps the model and collects data!!!
+        Agents.step!(abmobs, dtslider[])
     end
     # Run button
     run = Button(fig, label = "run\nmodel")
@@ -56,49 +58,49 @@ function add_controls!(fig, abmobs, spu)
         end
     end
     # Reset button
-    if agent_step! == Agents.dummystep && model_step! == Agents.dummystep
-        agent_step! = Agents.agent_step_field(model)
-        model_step! = Agents.model_step_field(model)
-    end
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
-        abmobs._offset_time[] += abmtime(model[])
+        !isnothing(adf) && update_offsets!(model[], abmobs.offset_time_adf[], adf[])
+        !isnothing(mdf) && update_offsets!(model[], abmobs.offset_time_mdf[], mdf[])
         model[] = deepcopy(model0)
+        # Also collect data when resetting to make it clear where the reset point is
+        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
+        abmobs.t_last_collect[] = abmtime(model0)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
-        init_dataframes!(model[], adata, mdata, adf, mdf)
-        collect_data!(abmobs, model[], when, adata, mdata, adf, mdf)
+        timetype = typeof(abmtime(model[]))
+        abmobs.offset_time_adf[] = (Ref(abmobs.offset_time_adf[][1][]), timetype[])
+        abmobs.offset_time_mdf[] = (Ref(abmobs.offset_time_mdf[][1][]), timetype[])
+        reinit_dataframes!(model[], adata, mdata, adf, mdf)
+        # always collect data after clear, as the dataframes have been emptied
+        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
+        abmobs.t_last_collect[] = abmtime(model[])
     end
     # Layout buttons
     controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
-
     return step.clicks, reset.clicks
 end
 
-"Initialize agent and model dataframes."
-function init_dataframes!(model, adata, mdata, adf, mdf)
+function update_offsets!(model, offsets, df)
+    nrow = Agents.DataFrames.nrow(df)
+    offsets_vec = offsets[2]
+    append!(offsets_vec, fill(offsets[1][], nrow - length(offsets_vec)))
+    offsets[1][] += abmtime(model)
+end
+
+_default_dts_from_model(::StandardABM) = 1:50
+_default_dts_from_model(::EventQueueABM) = 0.1:0.1:10.0
+
+"reinitialize agent and model dataframes."
+function reinit_dataframes!(model, adata, mdata, adf, mdf)
     if !isnothing(adata)
         adf.val = Agents.init_agent_dataframe(model, adata)
     end
     if !isnothing(mdata)
         mdf.val = Agents.init_model_dataframe(model, mdata)
-    end
-    return nothing
-end
-
-function collect_data!(abmobs, model, when, adata, mdata, adf, mdf)
-    if Agents.should_we_collect(abmtime(model), model, when)
-        if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
-            adf[] = adf[] # trigger Observable
-        end
-        if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata; _offset_time=abmobs._offset_time[])
-            mdf[] = mdf[] # trigger Observable
-        end
     end
     return nothing
 end

@@ -26,6 +26,7 @@ end
 
 containertype(::StandardABM{S,A,C}) where {S,A,C} = C
 agenttype(::StandardABM{S,A}) where {S,A} = A
+discretimeabm(::StandardABM) = true
 
 """
     union_types(U::Type)
@@ -144,10 +145,10 @@ function StandardABM(
         @warn """
         From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
         as keywords argument when defining the model. The old version is deprecated.
-        Passing these functions to methods of the library which required them before 
-        version 6.0 is also deprecated since they can be retrieved from the model instance. 
-        In particular this means it is not needed to pass the stepping functions in step!, 
-        run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and 
+        Passing these functions to methods of the library which required them before
+        version 6.0 is also deprecated since they can be retrieved from the model instance.
+        In particular this means it is not needed to pass the stepping functions in step!,
+        run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and
         ABMObservable.
         """ maxlog=1
     end
