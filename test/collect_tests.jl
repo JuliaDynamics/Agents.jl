@@ -1,6 +1,13 @@
-using Agents, Test
+using Agents, Test, DataFrames
 
 @testset "DataCollection" begin
+    @agent struct AgentWeight(GridAgent{2})
+        weight::Float64 = 2.0
+    end
+    @agent struct AgentInteger(GridAgent{2})
+        p::Int = 1
+    end
+
     mutable struct Nested
         data::Vector{Float64}
     end
@@ -22,7 +29,7 @@ using Agents, Test
 
     function initialize()
         model = StandardABM(
-            Agent3,
+            AgentWeight,
             GridSpace((10, 10));
             agent_step! = agent_step!,
             model_step! = model_step!,
@@ -321,9 +328,9 @@ using Agents, Test
     end
 
     @testset "Mixed-ABM collections" begin
-        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
-        add_agent!((10, 7), Agent4, model, 5)
+        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
+        add_agent!((10, 7), AgentInteger, model, 5)
 
         # Expect position type (both agents have it)
         props = [:pos]
@@ -334,7 +341,7 @@ using Agents, Test
         @test df[1, :pos] == model[1].pos
         @test df[2, :pos] == model[2].pos
 
-        # Expect weight for Agent3, but missing for Agent4
+        # Expect weight for AgentWeight, but missing for AgentInteger
         props = [:weight]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
@@ -359,8 +366,8 @@ using Agents, Test
         @test df[1, dataname(props[1])] == model[1].pos[1] + model[1].weight
         @test ismissing(df[2, dataname(props[2])])
 
-        add_agent!((2, 4), Agent3, model, 19.81)
-        add_agent!((4, 1), Agent4, model, 3)
+        add_agent!((2, 4), AgentWeight, model, 19.81)
+        add_agent!((4, 1), AgentInteger, model, 3)
 
         props = [:pos, :weight, :p, wpos]
         df = init_agent_dataframe(model, props)
@@ -386,8 +393,8 @@ using Agents, Test
         @test typeof(df.sum_pos1) <: Vector{Int}
         @test df[1, :sum_pos1] == 22
 
-        # Expect aggregate to filter out Agent4's
-        a3(a) = a isa Agent3
+        # Expect aggregate to filter out AgentInteger's
+        a3(a) = a isa AgentWeight
         props = [(pos1, sum, a3)]
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
@@ -413,10 +420,10 @@ using Agents, Test
         @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = StandardABM(Union{Agent3,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
+        model = StandardABM(Union{AgentWeight,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
-        add_agent!((2, 4), Agent3, model, 19.81)
+        add_agent!((2, 4), AgentWeight, model, 19.81)
         add_agent!((4, 1), Agent3Int, model, 3)
 
         props = [:weight]
@@ -438,16 +445,16 @@ using Agents, Test
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = StandardABM(Union{Agent3,Agent4}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
-        add_agent!((6, 8), Agent3, model, 54.65)
+        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        add_agent!((6, 8), AgentWeight, model, 54.65)
 
-        # get fieldtype from Agent4 struct definition when agent is absent
+        # get fieldtype from AgentInteger struct definition when agent is absent
         props = [:weight, :p]
         df = init_agent_dataframe(model, props)
         @test eltype(df[!, :p]) == Union{Int, Missing}
 
-        # Add Agent4 and check data collection
-        add_agent!((4, 1), Agent4, model, 3)
+        # Add AgentInteger and check data collection
+        add_agent!((4, 1), AgentInteger, model, 3)
         collect_agent_data!(df, model, props)
         @test size(df) == (2, 5)
         @test df[1, :weight] == model[1].weight
@@ -505,7 +512,7 @@ using Agents, Test
         end
 
         model = StandardABM(
-            Agent3,
+            AgentWeight,
             GridSpace((10, 10));
             properties=Props(1, false),
             warn_deprecation = false
@@ -714,7 +721,7 @@ end
 @testset "ensemblerun! and different seeds" begin
     as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = StandardABM(Agent4, GridSpace((4, 4)); agent_step! = as!,
+        abm = StandardABM(AgentInteger, GridSpace((4, 4)); agent_step! = as!,
                   rng = MersenneTwister(seed), warn_deprecation = false)
         fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm
