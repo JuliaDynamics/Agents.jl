@@ -61,12 +61,8 @@ function add_controls!(fig, abmobs, dt)
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
-        adf_nrow, mdf_nrow = Agents.DataFrames.nrow(adf[]), Agents.DataFrames.nrow(mdf[])
-        offsets_adf, offsets_mdf = abmobs.offset_time_adf[][2], abmobs.offset_time_mdf[][2]
-        append!(offsets_adf, fill(abmobs.offset_time_adf[][1][], adf_nrow - length(offsets_adf)))
-        append!(offsets_mdf, fill(abmobs.offset_time_mdf[][1][], mdf_nrow - length(offsets_mdf)))
-        abmobs.offset_time_adf[][1][] += abmtime(model[])
-        abmobs.offset_time_mdf[][1][] += abmtime(model[])
+        adf != nothing && update_offsets!(model[], abmobs.offset_time_adf[], adf[])
+        mdf != nothing && update_offsets!(model[], abmobs.offset_time_mdf[], mdf[])
         model[] = deepcopy(model0)
         # Also collect data when resetting to make it clear where the reset point is
         collect_data!(abmobs, model[], adata, mdata, adf, mdf)
@@ -86,6 +82,13 @@ function add_controls!(fig, abmobs, dt)
     # Layout buttons
     controllayout[2, :] = Makie.hbox!(step, run, reset, clear; tellwidth = false)
     return step.clicks, reset.clicks
+end
+
+function update_offsets!(model, offsets, df)
+    nrow = Agents.DataFrames.nrow(df)
+    offsets_vec = offsets[2]
+    append!(offsets_vec, fill(offsets[1][], nrow - length(offsets_vec)))
+    offsets[1][] += abmtime(model)
 end
 
 _default_dts_from_model(::StandardABM) = 1:50
