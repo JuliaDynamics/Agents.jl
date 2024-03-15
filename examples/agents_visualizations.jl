@@ -34,11 +34,10 @@ using Agents, CairoMakie
 try
     using Pkg
     Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
-    using AgentsExampleZoo
 catch
     Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
-    using AgentsExampleZoo
 end
+using AgentsExampleZoo
 
 model = AgentsExampleZoo.daisyworld(;
     solar_luminosity = 1.0, solar_change = 0.0, scenario = :change
@@ -48,9 +47,9 @@ model
 # Now, to plot daisyworld we provide a function for the color
 # for the agents that depend on the agent properties, and
 # a size and marker style that are constants,
-daisycolor(a) = a.breed # agent color
-agent_size = 20    # agent size
-agent_marker = '✿'  # agent marker
+daisycolor(a) = a.breed
+agent_size = 20
+agent_marker = '✿'
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
 fig, ax, abmobs = abmplot(model;
     agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
@@ -90,6 +89,11 @@ fig
 # Note that [`GLMakie`](https://makie.juliaplots.org/v0.15/documentation/backends_and_output/)
 # should be used instead of `CairoMakie` when wanting to use the interactive
 # aspects of the plots!
+
+# ```julia
+# using GLMakie
+# ```
+
 fig, ax, abmobs = abmplot(model; add_controls = true, plotkwargs...)
 fig
 
@@ -104,6 +108,7 @@ fig
 
 # One can furthermore collect data while the model evolves and visualize them using the
 # convenience function [`abmexploration`](@ref)
+
 using Statistics: mean
 black(a) = a.breed == :black
 white(a) = a.breed == :white

@@ -31,7 +31,7 @@ function add_controls!(fig, abmobs, dt)
         _sleepr, _sleep0 = 0:0.01:2, 1
     end
 
-    dtrange = isnothing(dt) ? _default_dts_from_model(abmobs.model[]) : dt
+    dtrange = isnothing(dt) ? _default_dts_from_model(model[]) : dt
     sg = SliderGrid(controllayout[1,1],
         (label = "dt", range = dtrange, startvalue = 1),
         (label = "sleep", range = _sleepr, startvalue = _sleep0),
@@ -63,6 +63,7 @@ function add_controls!(fig, abmobs, dt)
     on(reset.clicks) do c
         abmobs._offset_time[] += abmtime(model[])
         model[] = deepcopy(model0)
+        abmobs.t_last_collect[] = abmtime(model0)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")
