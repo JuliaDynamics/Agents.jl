@@ -61,7 +61,12 @@ function add_controls!(fig, abmobs, dt)
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
-        abmobs._offset_time[] += abmtime(model[])
+        adf_nrow, mdf_nrow = Agents.DataFrames.nrow(adf[]), Agents.DataFrames.nrow(mdf[])
+        offsets_adf, offsets_mdf = abmobs.offset_time_adf[][2], abmobs.offset_time_mdf[][2]
+        append!(offsets_adf, fill(abmobs.offset_time_adf[][1][], adf_nrow - length(offsets_adf)))
+        append!(offsets_mdf, fill(abmobs.offset_time_mdf[][1][], mdf_nrow - length(offsets_mdf)))
+        abmobs.offset_time_adf[][1][] += abmtime(model[])
+        abmobs.offset_time_mdf[][1][] += abmtime(model[])
         model[] = deepcopy(model0)
         # Also collect data when resetting to make it clear where the reset point is
         collect_data!(abmobs, model[], adata, mdata, adf, mdf)
@@ -70,6 +75,9 @@ function add_controls!(fig, abmobs, dt)
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
+        timetype = typeof(abmtime(model[]))
+        abmobs.offset_time_adf[] = (Ref(abmobs.offset_time_adf[][1][]), timetype[])
+        abmobs.offset_time_mdf[] = (Ref(abmobs.offset_time_mdf[][1][]), timetype[])
         reinit_dataframes!(model[], adata, mdata, adf, mdf)
         # always collect data after clear, as the dataframes have been emptied
         collect_data!(abmobs, model[], adata, mdata, adf, mdf)

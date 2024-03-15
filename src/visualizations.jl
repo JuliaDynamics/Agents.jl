@@ -156,15 +156,16 @@ keywords. All three observables are updated on stepping (when it makes sense).
 
 All plotting and interactivity should be defined by `lift`ing these observables.
 """
-struct ABMObservable{M, AD, MD, ADF, MDF, W, S}
+struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
     model::M # Observable{AgentBasedModel}
     adata::AD
     mdata::MD
     adf::ADF # this is `nothing` or `Observable`
     mdf::MDF # this is `nothing` or `Observable`
-    _offset_time::S # Observable{ModelTimeType}
     when::W
     t_last_collect::S # observable of last timepoint where data was collected (for `when`)
+    offset_time_adf::K
+    offset_time_mdf::K
 end
 export ABMObservable
 

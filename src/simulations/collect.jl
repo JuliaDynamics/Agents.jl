@@ -201,7 +201,8 @@ should_we_collect(s, ds, model, when::Function) = when(model, s)
     offline_run!(model, t::Union{Real, Function}; kwargs...)
 
 Do the same as [`run`](@ref), but instead of collecting all the data into an in-memory
-dataframe, write the output directly into a file, line-by-line, each time data are collected.
+dataframe, write the output to a file after collecting data `writing_interval` times and
+empty the dataframe after each write.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
 
@@ -213,6 +214,8 @@ during execution.
   Appends to the file if it already exists, otherwise creates the file.
 * `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
+* `writing_interval=1` : write to file every `writing_interval` times data 
+  collection is triggered (which is set by the `when` and `when_model` keywords).
 - All other keywords are propagated to [`run!`](@ref).
 """
 function offline_run! end
@@ -229,14 +232,10 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         backend::Symbol = :csv,
         adata_filename = "adata.$backend",
         mdata_filename = "mdata.$backend",
-        writing_interval = nothing,
+        writing_interval = 1,
         init = true,
         dt = 0.01,
     )
-    if !isnothing(writing_interval)
-        error("`writing_interval` keyword has been removed from `offline_run!`.
-        Simpluy adjust the `when/when_model` keywords to the desired frequency.")
-    end
     if discretimeabm(model)
         dt = 1
     else
@@ -267,7 +266,7 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, init, dt
+        writer, adata_filename, mdata_filename, writing_interval, init, dt
     )
 end
 
@@ -290,6 +289,9 @@ function run_and_write!(model, df_agent, df_model, n;
         collect_model_data!(df_model, model, mdata; obtainer)
     end
 
+    agent_count_collections = 0
+    model_count_collections = 0
+
     t0 = s = abmtime(model)
     s_last_collect = s
     s_last_collect_model = s
@@ -300,14 +302,20 @@ function run_and_write!(model, df_agent, df_model, n;
         if should_we_collect(s, s - s_last_collect, model, when)
             s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
-            writer(adata_filename, df_agent, isfile(adata_filename))
-            empty!(df_agent)
+            agent_count_collections += 1
+            if agent_count_collections % writing_interval == 0
+                writer(adata_filename, df_agent, isfile(adata_filename))
+                empty!(df_agent)
+            end
         end
         if should_we_collect(s, s - s_last_collect_model, model, when_model)
             s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
-            writer(mdata_filename, df_model, isfile(mdata_filename))
-            empty!(df_model)
+            model_count_collections += 1
+            if model_count_collections % writing_interval == 0
+                writer(mdata_filename, df_model, isfile(mdata_filename))
+                empty!(df_model)
+            end
         end
         ProgressMeter.next!(p)
     end
@@ -447,14 +455,14 @@ Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
 of `properties` and `obtainer`).
 """
 collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; _offset_time = 0, kwargs...)
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :time] = fill(abmtime(model)+_offset_time, length(alla))
+    dd[!, :time] = fill(abmtime(model), length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -471,7 +479,6 @@ function collect_agent_data!(
     model::ABM,
     properties::Vector{<:Tuple},
     step::Int = 0;
-    _offset_time = 0,
     kwargs...,
 )
     if step != 0
@@ -479,7 +486,7 @@ function collect_agent_data!(
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = allagents(model)
-    push!(df[!, 1], abmtime(model)+_offset_time)
+    push!(df[!, 1], abmtime(model))
     for (i, prop) in enumerate(properties)
         _add_col_data!(df[!, i+1], prop, alla; kwargs...)
     end
@@ -496,14 +503,13 @@ function collect_model_data!(
     model,
     properties::Vector,
     step::Real = 0;
-    _offset_time = 0,
     obtainer = identity,
 )
     if step != 0
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
-    push!(df[!, :time], abmtime(model)+_offset_time)
+    push!(df[!, :time], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end

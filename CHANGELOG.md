@@ -9,8 +9,6 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   - We anyways recommend using exclusively the API function `add_agent!` to create new model agents. This means you never have to care about the id!
 - Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. `NTuple` usage in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples, e.g., doing `agent.pos == (0.5, 0.5)`. This will always be `false` in v6 as `agent.pos` is an `SVector`. The rest of the functionality should all work without problems, such as moving agents to tuple-based positions etc.
 - The `:step` column name of the dataframes resulting from `run!` has been renamed to `:time`, to accommodate for the fact that now both discrete time and continuous time models are possible in Agents.jl.
-- `writing_interval` keyword has been removed from `offline_run!` in favor of the
-  new and better logical handling of `when` in `run!`.
 
 ## New features
 
