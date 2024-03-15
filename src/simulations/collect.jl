@@ -201,21 +201,19 @@ should_we_collect(s, ds, model, when::Function) = when(model, s)
     offline_run!(model, t::Union{Real, Function}; kwargs...)
 
 Do the same as [`run`](@ref), but instead of collecting the whole run into an in-memory
-dataframe, write the output to a file after collecting data `writing_interval` times and
-empty the dataframe after each write.
+dataframe, write the output directly into a file, line-by-line, each time data are collected.
 Useful when the amount of collected data is expected to exceed the memory available
 during execution.
 
 ## Keywords
 
 * `backend=:csv` : backend to use for writing data.
-  Currently supported backends: `:csv`, `:arrow`
+  Currently supported backends: `:csv`, `:arrow`.
 * `adata_filename="adata.\$backend"` : a file to write agent data on.
   Appends to the file if it already exists, otherwise creates the file.
 * `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
-* `writing_interval=1` : write to file every `writing_interval` times data collection
-  is triggered (which is set by the `when` and `when_model` keywords).
+- All other keywords are propagated to [`run!`](@ref).
 """
 function offline_run! end
 
@@ -231,9 +229,23 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         backend::Symbol = :csv,
         adata_filename = "adata.$backend",
         mdata_filename = "mdata.$backend",
-        writing_interval = 1,
+        writing_interval = nothing,
         init = true,
+        dt = 0.01,
     )
+    if !isnothing(writing_interval)
+        error("`writing_interval` keyword has been removed from `offline_run!`.
+        Simpluy adjust the `when/when_model` keywords to the desired frequency.")
+    end
+    if discretimeabm(model)
+        dt = 1
+    else
+        w1 = when isa Real ? when : Inf
+        w2 = when_model isa Real ? when : Inf
+        if dt > min(w1, w2)
+            throw(ArgumentError("Given `dt` in `run!` is larger than `when/when_model`"))
+        end
+    end
     df_agent = init_agent_dataframe(model, adata)
     df_model = init_model_dataframe(model, mdata)
     if n isa Integer
@@ -255,7 +267,7 @@ function offline_run!(model::ABM, n::Union{Function, Real};
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, writing_interval, init
+        writer, adata_filename, mdata_filename, init, dt
     )
 end
 
@@ -264,15 +276,13 @@ function run_and_write!(model, df_agent, df_model, n;
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, writing_interval, init
+        writer, adata_filename, mdata_filename, init, dt
     )
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
     else
         ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
     end
-    agent_count_collections = 0
-    model_count_collections = 0
 
     # this part of the data collection is practically identical to `run!`
     if init
@@ -283,27 +293,21 @@ function run_and_write!(model, df_agent, df_model, n;
     t0 = s = abmtime(model)
     s_last_collect = s
     s_last_collect_model = s
-    while until(t[], t0, n, model)
+    while until(abmtime(model), t0, n, model)
         step!(model, dt)
-        s = abmtime(dt)
+        s = abmtime(model)
 
         if should_we_collect(s, s - s_last_collect, model, when)
             s_last_collect = s
             collect_agent_data!(df_agent, model, adata; obtainer)
-            agent_count_collections += 1
-            if agent_count_collections % writing_interval == 0
-                writer(adata_filename, df_agent, isfile(adata_filename))
-                empty!(df_agent)
-            end
+            writer(adata_filename, df_agent, isfile(adata_filename))
+            empty!(df_agent)
         end
         if should_we_collect(s, s - s_last_collect_model, model, when_model)
             s_last_collect_model = s
             collect_model_data!(df_model, model, mdata; obtainer)
-            model_count_collections += 1
-            if model_count_collections % writing_interval == 0
-                writer(mdata_filename, df_model, isfile(mdata_filename))
-                empty!(df_model)
-            end
+            writer(mdata_filename, df_model, isfile(mdata_filename))
+            empty!(df_model)
         end
         ProgressMeter.next!(p)
     end
@@ -313,6 +317,7 @@ end
 
 """
     get_writer(backend)
+
 Return a function to write to file using a given `backend`.
 The returned writer function will take three arguments:
 filename, data to write, whether to append to existing file or not.
