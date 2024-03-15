@@ -527,12 +527,11 @@ using CSV, Arrow
             model,
             365 * 5;
             when_model = [1, 365 * 5],
-            when = false,
+            init = false,
             mdata = [:flag, :year, :container, :deep],
-            adata = [(:weight, mean)],
             obtainer = deepcopy,
         )
-        @test size(agent_data) == (0, 2)
+        @test size(agent_data) == (0, 0)
         @test size(model_data) == (2, 5)
     end
 
