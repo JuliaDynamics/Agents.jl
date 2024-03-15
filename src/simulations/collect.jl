@@ -275,7 +275,7 @@ function run_and_write!(model, df_agent, df_model, n;
         mdata, adata,
         obtainer,
         showprogress,
-        writer, adata_filename, mdata_filename, init, dt
+        writer, adata_filename, mdata_filename, writing_interval, init, dt
     )
     p = if typeof(n) <: Int
         ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
@@ -703,4 +703,3 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
-
