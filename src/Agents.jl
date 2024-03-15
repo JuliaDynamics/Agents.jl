@@ -48,7 +48,7 @@ include("spaces/walk.jl")
 # Stepping and data collection functionality
 include("simulations/step.jl")
 include("simulations/step_standard.jl")
-include("simulations/step_eventque.jl")
+include("simulations/step_eventqueue.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
