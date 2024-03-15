@@ -1,12 +1,12 @@
 # v6 - New Major release!
 
-## Major and/or BREAKING
+## Potentially BREAKING changes
 
 _We tried to deprecate every major change, resulting in practically no breakage from v5 to v6. However, in version v6.2 we will remove all deprecations (and hence un-updated code will break)_
 
-- The `step` column in collected dataframes has been renamed to `time` in `run!`.
 - The `@agent` macro has been rewritten to support fields with default and const values. It has a new usage syntax now that parallelizes more Julia's native `struct` declaration. The old macro version still works but it's deprecated. Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
-- Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. Due to this, the `nextid` function is no longer public API. As a consequence, new constructor of agents which accept the model as first argument have been created with the agent macro e.g. `A(model, pos)`, so that to handle the id assignment automatically.
+- Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. Due to this, the `nextid` function is no longer public API. As a consequence, new constructor of agents which accept the model as first argument have been created with the agent macro e.g. `A(model, pos; kwargs...)`, so that to handle the id assignment automatically.
+  - We anyways recommend using exclusively the API function `add_agent!` to create new model agents. This means you never have to care about the id!
 - Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. `NTuple` usage in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples, e.g., doing `agent.pos == (0.5, 0.5)`. This will always be `false` in v6 as `agent.pos` is an `SVector`. The rest of the functionality should all work without problems, such as moving agents to tuple-based positions etc.
 - The `:step` column name of the dataframes resulting from `run!` has been renamed to `:time`, to accommodate for the fact that now both discrete time and continuous time models are possible in Agents.jl.
 - `writing_interval` keyword has been removed from `offline_run!` in favor of the
@@ -18,8 +18,8 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   This opens the door for making new types of models as well as better integration
   of other agent based modelling frameworks with Agents.jl.
 - Every aspect of Agents.jl is orthogonal to `AgentBasedModel`: movement and neighbor searching in any space, data collection, visualizations, etc., are independent of the specific type of `AgentBasedModel` and work out of the box with any model.
-- Logic of `run!` has been improved to accommodate both discrete and continuous time models. This is reflected in the new options for the keyword `when`.
-  - A new keyword `init` is now available for `run!` to data collect from the model before evolving it.
+- Logic of when to collect data in `run!` has been improved to accommodate both discrete and continuous time models. This is reflected in the new options for the keyword `when`.
+  - A new keyword `init` is now available for `run!` to data collect from the model before evolving it. Whether data were collected at time 0 or not was not really obvious in the original version of `run!` due to the ambiguity of the previous handling of `when`.
 - A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
   two version: In `:opt_speed` the created agents are optimized such as there is virtually
   no performance difference between having 1 agent type at the cost of each agent occupying
@@ -30,11 +30,11 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - Both the visualization and the model abstract interface have been refactored to improve the user
   experience to conform to the Agents.jl API when creating a new model type and its visualizations.
 - Grid and continuous spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
-- `Arrow` backend in `offline_run! is now supported` also for Windows users.
-- The model time/step is tracked automatically, accessible through `abmtime(model)`.
+- `Arrow` backend in `offline_run!` is now supported also for Windows users.
+- The model time is now tracked automatically, accessible through `abmtime(model)`. This is part of the new `AgentBasedModel` API.
 - Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
-- A new function `swap_agents` can be used to swap an agents couple in a discrete space.
-- New function `hasid`
+- A new function `swap_agents` can be used to swap the positions of a pair of agents, which works even in spaces which allow 1 agent per position.
+- New function `hasid` to check if a model has an agent with a given id.
 
 ## Performance Improvements
 
@@ -45,7 +45,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 
 ## Deprecations
 
-- The way the evolution rule (`agent_step!, model_step!`) is handled has changed. Now, the stepping functions must be given to the agent based model during construction of the model   instead of given to `step!, run!, abmplot, ...`. This change is important and allows us to:
+- The way the evolution rule (`agent_step!, model_step!`) is handled has changed. Now, the stepping functions must be given to the agent based model during construction of the model instead of given to `step!, run!, abmplot, ...`. This change is important and allows us to:
   - Have Agents.jl have the same mental model as DifferentialEquations.jl, DynamicalSystems.jl, and other dynamical modelling packages, where the evolution rules are part of the central simulation struct.
   - Allows us to develop new types of models that may have rules that are defined differently, without being based on e.g., two particular functions.
   - Allows us to develop (in the future) a new model type that is optimized for multi-agent simulations.
