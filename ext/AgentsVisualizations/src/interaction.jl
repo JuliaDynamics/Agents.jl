@@ -63,6 +63,8 @@ function add_controls!(fig, abmobs, dt)
     on(reset.clicks) do c
         abmobs._offset_time[] += abmtime(model[])
         model[] = deepcopy(model0)
+        # Also collect data when resetting to make it clear where the reset point is
+        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
         abmobs.t_last_collect[] = abmtime(model0)
     end
     # Clear button
