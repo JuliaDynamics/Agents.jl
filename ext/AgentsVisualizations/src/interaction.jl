@@ -61,8 +61,8 @@ function add_controls!(fig, abmobs, dt)
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
-        adf != nothing && update_offsets!(model[], abmobs.offset_time_adf[], adf[])
-        mdf != nothing && update_offsets!(model[], abmobs.offset_time_mdf[], mdf[])
+        !isnothing(adf) && update_offsets!(model[], abmobs.offset_time_adf[], adf[])
+        !isnothing(mdf) && update_offsets!(model[], abmobs.offset_time_mdf[], mdf[])
         model[] = deepcopy(model0)
         # Also collect data when resetting to make it clear where the reset point is
         collect_data!(abmobs, model[], adata, mdata, adf, mdf)
