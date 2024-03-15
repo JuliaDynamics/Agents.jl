@@ -63,12 +63,20 @@ function add_controls!(fig, abmobs, spu)
     reset = Button(fig, label = "reset\nmodel")
     model0 = deepcopy(model[]) # backup initial model state
     on(reset.clicks) do c
-        abmobs._offset_time[] += abmtime(model[])
+        adf_nrow, mdf_nrow = Agents.DataFrames.nrow(adf[]), Agents.DataFrames.nrow(mdf[])
+        offsets_adf, offsets_mdf = abmobs.offset_time_adf[][2], abmobs.offset_time_mdf[][2]
+        append!(offsets_adf, fill(abmobs.offset_time_adf[][1][], adf_nrow - length(offsets_adf)))
+        append!(offsets_mdf, fill(abmobs.offset_time_mdf[][1][], mdf_nrow - length(offsets_mdf)))
+        abmobs.offset_time_adf[][1][] += abmtime(model[])
+        abmobs.offset_time_mdf[][1][] += abmtime(model[])
         model[] = deepcopy(model0)
     end
     # Clear button
     clear = Button(fig, label = "clear\ndata")
     on(clear.clicks) do c
+        timetype = typeof(abmtime(model[]))
+        abmobs.offset_time_adf[] = (Ref(abmobs.offset_time_adf[][1][]), timetype[])
+        abmobs.offset_time_mdf[] = (Ref(abmobs.offset_time_mdf[][1][]), timetype[])
         init_dataframes!(model[], adata, mdata, adf, mdf)
         collect_data!(abmobs, model[], when, adata, mdata, adf, mdf)
     end
@@ -92,11 +100,11 @@ end
 function collect_data!(abmobs, model, when, adata, mdata, adf, mdf)
     if Agents.should_we_collect(abmtime(model), model, when)
         if !isnothing(adata)
-            Agents.collect_agent_data!(adf[], model, adata; _offset_time=abmobs._offset_time[])
+            Agents.collect_agent_data!(adf[], model, adata)
             adf[] = adf[] # trigger Observable
         end
         if !isnothing(mdata)
-            Agents.collect_model_data!(mdf[], model, mdata; _offset_time=abmobs._offset_time[])
+            Agents.collect_model_data!(mdf[], model, mdata)
             mdf[] = mdf[] # trigger Observable
         end
     end

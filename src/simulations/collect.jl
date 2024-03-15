@@ -547,14 +547,14 @@ Collect and add agent data into `df` (see [`run!`](@ref) for the dispatch rules
 of `properties` and `obtainer`).
 """
 collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = df
-function collect_agent_data!(df, model, properties::Vector, step::Int = 0; _offset_time = 0, kwargs...)
+function collect_agent_data!(df, model, properties::Vector, step::Int = 0;kwargs...)
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = sort!(collect(allagents(model)), by = a -> a.id)
     dd = DataFrame()
-    dd[!, :time] = fill(abmtime(model)+_offset_time, length(alla))
+    dd[!, :time] = fill(abmtime(model), length(alla))
     dd[!, :id] = map(a -> a.id, alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
@@ -571,7 +571,6 @@ function collect_agent_data!(
     model::ABM,
     properties::Vector{<:Tuple}, 
     step::Int = 0;
-    _offset_time = 0,
     kwargs...,
 )
     if step != 0
@@ -579,7 +578,7 @@ function collect_agent_data!(
              now `abmtime(model)` is used automatically" maxlog=1
     end
     alla = allagents(model)
-    push!(df[!, 1], abmtime(model)+_offset_time)
+    push!(df[!, 1], abmtime(model))
     for (i, prop) in enumerate(properties)
         _add_col_data!(df[!, i+1], prop, alla; kwargs...)
     end
@@ -596,14 +595,13 @@ function collect_model_data!(
     model,
     properties::Vector,
     step::Real = 0;
-    _offset_time = 0,
     obtainer = identity,
 )
     if step != 0
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
-    push!(df[!, :time], abmtime(model)+_offset_time)
+    push!(df[!, :time], abmtime(model))
     for fn in properties
         push!(df[!, dataname(fn)], get_data(model, fn, obtainer))
     end
@@ -797,4 +795,3 @@ function _add_col_data!(
     res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
     push!(col, res)
 end
-
