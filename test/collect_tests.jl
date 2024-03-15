@@ -1,4 +1,4 @@
-using Agents, Test, DataFrames
+using Agents, Test, Agents.DataFrames
 using CSV, Arrow
 
 @testset "DataCollection" begin
