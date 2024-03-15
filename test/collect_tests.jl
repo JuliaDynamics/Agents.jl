@@ -154,6 +154,7 @@ using Agents, Test, DataFrames
     @testset "High-level API for Collections" begin
         # Extract data from the model every year for five years,
         # with the average `weight` of all agents every six months.
+        model = initialize()
         each_year(model, step) = step % 365 == 0
         six_months(model, step) = step % 182 == 0
         agent_data, model_data = run!(
@@ -165,7 +166,7 @@ using Agents, Test, DataFrames
             adata = [(:weight, mean)],
         )
 
-        @test size(agent_data) == (11, 2)
+        @test size(agent_data) == (11, 2) # note time 0 is also data collected!
         @test propertynames(agent_data) == [:time, :mean_weight]
         @test maximum(agent_data[!, :time]) == 1820
 
@@ -173,39 +174,53 @@ using Agents, Test, DataFrames
         @test propertynames(model_data) == [:time, :flag, :year]
         @test maximum(model_data[!, :time]) == 1825
 
+        # test when being a vector
+        model = initialize()
         agent_data, model_data = run!(
             model,
             365 * 5;
-            when_model = [1, 365 * 5],
-            when = false,
+            when_model = [1, 365],
             mdata = [:flag, :year],
-            adata = [(:weight, mean)],
         )
-        @test size(agent_data) == (0, 2)
+        @test size(agent_data) == (0, 0)
         @test size(model_data) == (2, 3)
+        @test model_data.time == [0, 1, 365]
 
+        # test without initial collection
+        model = initialize()
+        agent_data, model_data = run!(
+            model,
+            365 * 5;
+            when_model = [1, 365],
+            mdata = [:flag, :year],
+            init = false
+        )
+        @test model_data.time == [1, 365]
+
+        # test nested container
+        model = initialize()
         _, model_data = run!(
             model,
             365 * 5;
-            when_model = [1, 365 * 5],
-            when = false,
+            when_model = [365 * 3, 365*4],
             mdata = [:deep],
             obtainer = deepcopy,
         )
         @test model_data[1, :deep].data[1] < model_data[end, :deep].data[1]
 
+        model = initialize()
         _, model_data = run!(
             model,
             365 * 5;
             when_model = [365 * 5],
-            when = false,
+            init = false,
             mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
 
         @testset "Writing to file while running" begin
-
             # CSV
+            model = initialize()
             offline_run!(model, 365 * 5;
                 when_model = each_year,
                 when = six_months,
