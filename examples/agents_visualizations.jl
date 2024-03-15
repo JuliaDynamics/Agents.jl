@@ -29,14 +29,6 @@ Pkg.status(["Agents", "CairoMakie"];
 # To learn about this model you can visit the [example hosted at AgentsExampleZoo
 # ](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/),
 using Agents, CairoMakie
-
-# TODO: when AgentsExampleZoo is released, remove these Pkg commands #hide
-try
-    using Pkg
-    Pkg.develop(url="https://github.com/JuliaDynamics/AgentsExampleZoo.jl.git")
-catch
-    Pkg.develop(path=joinpath(DEPOT_PATH[1],"dev","AgentsExampleZoo"))
-end
 using AgentsExampleZoo
 
 model = AgentsExampleZoo.daisyworld(;
