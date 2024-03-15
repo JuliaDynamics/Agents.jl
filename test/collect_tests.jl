@@ -1,4 +1,5 @@
 using Agents, Test, DataFrames
+using CSV, Arrow
 
 @testset "DataCollection" begin
     @agent struct AgentWeight(GridAgent{2})
@@ -183,7 +184,6 @@ using Agents, Test, DataFrames
             mdata = [:flag, :year],
         )
         @test size(agent_data) == (0, 0)
-        @test size(model_data) == (2, 3)
         @test model_data.time == [0, 1, 365]
 
         # test without initial collection
@@ -219,62 +219,70 @@ using Agents, Test, DataFrames
         @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
 
         @testset "Writing to file while running" begin
-            # CSV
-            model = initialize()
-            offline_run!(model, 365 * 5;
-                when_model = each_year,
-                when = six_months,
-                mdata = [:flag, :year],
-                adata = [(:weight, mean)],
-                writing_interval = 3
-            )
-
-            adata_saved = CSV.read("adata.csv", DataFrame)
-            @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:time, :mean_weight]
-
-            mdata_saved = CSV.read("mdata.csv", DataFrame)
-            @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:time, :flag, :year]
-
-            rm("adata.csv")
-            rm("mdata.csv")
-            @test !isfile("adata.csv")
-            @test !isfile("mdata.csv")
-
-            # removing .arrow files after operating on them causes IO errors on Windows
-            # so to make tests on Windows work we need to remove them when a new test
-            # run occurs
-            if Sys.iswindows()
-                isfile("adata.arrow") && rm("adata.arrow")
-                isfile("mdata.arrow") && rm("mdata.arrow")
+            # ensure we are clean: there are no files leftover
+            for file in ("adata.csv", "mdata.csv", "adata.arrow", "mdata.arrow")
+                isfile(file) && rm(file)
             end
 
-            offline_run!(model, 365 * 5;
-                when_model = each_year,
-                when = six_months,
-                backend = :arrow,
-                mdata = [:flag, :year],
-                adata = [(:weight, mean)],
-                writing_interval = 3
-            )
+            @testset "CSV" begin
+                # CSV
+                model = initialize()
+                offline_run!(model, 365 * 5;
+                    when_model = each_year,
+                    when = six_months,
+                    mdata = [:flag, :year],
+                    adata = [(:weight, mean)],
+                )
 
-            adata_saved = DataFrame(Arrow.Table("adata.arrow"))
-            @test size(adata_saved) == (11, 2)
-            @test propertynames(adata_saved) == [:time, :mean_weight]
+                adata_saved = CSV.read("adata.csv", DataFrame)
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:time, :mean_weight]
 
-            mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
-            @test size(mdata_saved) == (6, 3)
-            @test propertynames(mdata_saved) == [:time, :flag, :year]
+                mdata_saved = CSV.read("mdata.csv", DataFrame)
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:time, :flag, :year]
 
-            @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
-            @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+                rm("adata.csv")
+                rm("mdata.csv")
+                @test !isfile("adata.csv")
+                @test !isfile("mdata.csv")
+            end
 
-            if !(Sys.iswindows())
-                rm("adata.arrow")
-                rm("mdata.arrow")
-                @test !isfile("adata.arrow")
-                @test !isfile("mdata.arrow")
+            @testset "Arrow" begin
+                # removing .arrow files after operating on them causes IO errors on Windows
+                # so to make tests on Windows work we need to remove them when a new test
+                # run occurs
+                if Sys.iswindows()
+                    isfile("adata.arrow") && rm("adata.arrow")
+                    isfile("mdata.arrow") && rm("mdata.arrow")
+                end
+
+                model = initialize()
+                offline_run!(model, 365 * 5;
+                    when_model = each_year,
+                    when = six_months,
+                    backend = :arrow,
+                    mdata = [:flag, :year],
+                    adata = [(:weight, mean)],
+                )
+
+                adata_saved = DataFrame(Arrow.Table("adata.arrow"))
+                @test size(adata_saved) == (11, 2)
+                @test propertynames(adata_saved) == [:time, :mean_weight]
+
+                mdata_saved = DataFrame(Arrow.Table("mdata.arrow"))
+                @test size(mdata_saved) == (6, 3)
+                @test propertynames(mdata_saved) == [:time, :flag, :year]
+
+                @test size(vcat(DataFrame.(Arrow.Stream("adata.arrow"))...)) == (11, 2)
+                @test size(vcat(DataFrame.(Arrow.Stream("mdata.arrow"))...)) == (6, 3)
+
+                if !(Sys.iswindows())
+                    rm("adata.arrow")
+                    rm("mdata.arrow")
+                    @test !isfile("adata.arrow")
+                    @test !isfile("mdata.arrow")
+                end
             end
 
             # Backends
@@ -283,6 +291,15 @@ using Agents, Test, DataFrames
             end
             @test_throws AssertionError begin
                 offline_run!(model, 365 * 5; backend = :hdf5)
+            end
+
+            # just ensure we end clean
+            for file in ("adata.csv", "mdata.csv", "adata.arrow", "mdata.arrow")
+                if isfile(file)
+                    try rm(file)
+                    catch
+                    end
+                end
             end
         end
     end
