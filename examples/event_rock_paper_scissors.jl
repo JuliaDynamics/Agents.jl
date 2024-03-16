@@ -279,7 +279,7 @@ using CairoMakie
 
 tvec = adf[!, :time]
 populations = adf[:, Not(:time)]
-alabels = ["rocks", "papers", "scissorss"]
+alabels = ["rocks", "papers", "scissors"]
 
 fig = Figure();
 ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
