@@ -36,6 +36,7 @@
 # We start by loading `Agents`
 
 using Agents
+using Agents.DataFrames
 
 # and defining the three agent types using [`multiagent`](@ref)
 # (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
@@ -275,7 +276,7 @@ adf[1:10, :]
 # Let's visualize the population sizes versus time:
 
 tvec = adf[!, :time]
-populations = adf[:, !(:time)]
+populations = adf[:, Not(:time)]
 alabels = ["rocks", "papers", "scissorss"]
 
 fig = Figure()
