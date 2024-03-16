@@ -1,4 +1,4 @@
-# [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
+# # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
