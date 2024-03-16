@@ -590,7 +590,6 @@ abmtime(schelling)
 # First, we load the plotting backend
 
 using CairoMakie # choosing a plotting backend
-CairoMakie.activate!() # hide
 
 # and then we simply define functions that given an agent
 # they return its color or marker.
@@ -601,7 +600,7 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
+figure, _ = abmplot(model; agent_color = groupcolor, agent_marker = groupmarker, as = 10)
 figure # returning the figure displays it
 
 # The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
@@ -609,7 +608,7 @@ figure # returning the figure displays it
 schelling = initialize()
 abmvideo(
     "schelling.mp4", schelling;
-    ac = groupcolor, am = groupmarker, as = 10,
+    agent_color = groupcolor, agent_marker = groupmarker, as = 10,
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
 )
