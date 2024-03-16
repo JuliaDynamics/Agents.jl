@@ -275,7 +275,7 @@ adf[1:10, :]
 # Let's visualize the population sizes versus time:
 
 tvec = adf[!, :time]
-populations = adf[:, Not(:time)]
+populations = adf[:, !(:time)]
 alabels = ["rocks", "papers", "scissorss"]
 
 fig = Figure()
