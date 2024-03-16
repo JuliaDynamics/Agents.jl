@@ -753,11 +753,11 @@ end
 # The syntax to use it is like so:
 
 @multiagent struct MultiSchelling{X}(GridAgent{2})
-    @agent struct Civilian # can't re-define existing `Schelling` name
+    @subagent struct Civilian # can't re-define existing `Schelling` name
         mood::Bool = false
         group::Int
     end
-    @agent struct Governor{X} # can't redefine existing `Politician` name
+    @subagent struct Governor{X} # can't redefine existing `Politician` name
         group::Int
         influence::X
     end
