@@ -274,11 +274,14 @@ adf[1:10, :]
 
 # Let's visualize the population sizes versus time:
 
+using Agents.DataFrames
+using CairoMakie
+
 tvec = adf[!, :time]
 populations = adf[:, Not(:time)]
-alabels = ["rocks", "papers", "scissorss"]
+alabels = ["rocks", "papers", "scissors"]
 
-fig = Figure()
+fig = Figure();
 ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
 for (i, l) in enumerate(alabels)
     lines!(ax, tvec, populations[!, i]; label = l)
@@ -286,15 +289,12 @@ end
 axislegend(ax)
 fig
 
-
 # ## Visualization
 
 # Visualization for [`EventQueueABM`](@ref) is identical to that for [`StandardABM`](@ref)
 # that we learned in the [visualization tutorial](@ref vis_tutorial).
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
-
-using CairoMakie
 
 const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
 agent_color(agent) = colormap[kindof(agent)]

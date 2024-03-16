@@ -14,6 +14,7 @@ pages = [
         "examples/zombies.md",
         "examples/predator_prey.md",
         "examples/rabbit_fox_hawk.md",
+        "examples/event_rock_paper_scissors.md",
         "examples.md"
     ],
     "api.md",
