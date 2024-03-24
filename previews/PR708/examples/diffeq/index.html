@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>DifferentialEquations.jl · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">Agents.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in a City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../agents_visualizations/">Plotting and Interactivity</a></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox" checked/><label class="tocitem" for="menuitem-6"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li class="is-active"><a class="tocitem" href>DifferentialEquations.jl</a><ul class="internal"><li><a class="tocitem" href="#Problem-setup-1"><span>Problem setup</span></a></li><li><a class="tocitem" href="#Coupling-DifferentialEquations.jl-to-Agents.jl-1"><span>Coupling DifferentialEquations.jl to Agents.jl</span></a></li><li><a class="tocitem" href="#Coupling-Agents.jl-to-DifferentialEquations.jl-1"><span>Coupling Agents.jl to DifferentialEquations.jl</span></a></li></ul></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li><li><a class="tocitem" href="../celllistmap/">CellListMap.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Ecosystem Integration</a></li><li class="is-active"><a href>DifferentialEquations.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>DifferentialEquations.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/diffeq.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Integrating-Agents.jl-with-DifferentialEquations.jl-1"><a class="docs-heading-anchor" href="#Integrating-Agents.jl-with-DifferentialEquations.jl-1">Integrating Agents.jl with DifferentialEquations.jl</a><a class="docs-heading-anchor-permalink" href="#Integrating-Agents.jl-with-DifferentialEquations.jl-1" title="Permalink"></a></h1><p>Leveraging other best-in-class packages from the Julia ecosystem is one of the many strengths Agents.jl provides over alternative ABMs.</p><p>The <a href="https://github.com/SciML/DifferentialEquations.jl">DifferentialEquations.jl</a> package is one excellent example. Here, we provide a few ways of leveraging <code>DifferentialEquations</code> to solve agent based models in an efficient and performant manner, whilst mitigating stability issues one may encounter.</p><p>It is common in discrete time step tools (such as <code>Agents</code>) to also discretise equations required for obtaining solutions. In the following example, we use the <a href="https://en.wikipedia.org/wiki/Euler_method">forward Euler method</a> to discretise a logistic function</p><p><span>$\frac{\mathrm{d}s}{\mathrm{d}t} = s \left(1-\frac{s}{120}\right) - h$</span></p><p>into</p><p><span>$s_{t+1} = s_t + s_t (1-s_t/120)-h.$</span></p><p>In this example, <span>$s$</span> denotes some fish <strong>s</strong>tock that increases over time until a maximum population (e.g. 120 here) is met, with the additional property that a <strong>h</strong>arvest (<span>$h$</span>) may also remove some population (we also assume a timestep of 1 normalised unit to simplify things).</p><h2 id="Problem-setup-1"><a class="docs-heading-anchor" href="#Problem-setup-1">Problem setup</a><a class="docs-heading-anchor-permalink" href="#Problem-setup-1" title="Permalink"></a></h2><p>Let&#39;s build a fishing community with fishers, each with differing methods and experience, culminating in a variety of competence when it comes to actually catching fish.</p><pre><code class="language-">using Agents
+using Distributions
+using CairoMakie
+CairoMakie.activate!() # hide
+using Random # hide
+
+@agent Fisher NoSpaceAgent begin
+    id::Int
+    competence::Int
+    yearly_catch::Float64
+end
+
+function agent_step!(agent, model)
+    # Make sure we sample from the fish distribution
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+end
+
+function dstock(model)
+    # Only allow fishing if stocks are high enough
+    h = model.stock &gt; model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
+        0.0
+
+    model.stock * (1 - (model.stock / model.max_population)) - h
+end
+
+function model_step!(model)
+    model.stock += dstock(model)
+end
+nothing #hide</code></pre><p>These methods should be quite straightforward: each step of the model (<code>agent_step!</code>), every agent will catch some fish based on their competency. There are some safeguards in place to not allow fishers to totally deplete the stock, thus <code>dstock</code> checks the total yearly catch and only harvests if the population is above a minimal threshold (in a more complete example, one should set a flag to state that this year&#39;s catch exceeded the limit and regulate fishing next year, but we&#39;ll ignore this complexity for this example).</p><p>Building this model is simple. Set some initial conditions for the stock, and add agents with some competence.</p><pre><code class="language-julia">function initialise(;
+    stock = 5.0, # Initial population of fish
+    max_population = 500.0, # Maximum value of fish stock
+    min_threshold = 60.0, # Regulate fishing if population drops below this value
+    nagents = 50,
+)
+    model = ABM(
+        Fisher;
+        properties = Dict(
+            :stock =&gt; stock,
+            :max_population =&gt; max_population,
+            :min_threshold =&gt; min_threshold,
+        ),
+    )
+    for _ in 1:nagents
+        add_agent!(
+            model,
+            # Competence level is a lognormal distribution between 1 and 5
+            floor(rand(model.rng, truncated(LogNormal(), 1, 6))),
+            # Yearly catch can start at 0
+            0.0,
+        )
+    end
+    model
+end</code></pre><p>We can now run the model and see how the fishery fairs over the next 20 years.</p><pre><code class="language-">Random.seed!(6549) #hide
+
+model = initialise()
+_, results = run!(model, agent_step!, model_step!, 20; mdata = [:stock])
+
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = &quot;Year&quot;,
+        ylabel = &quot;Stock&quot;,
+        title = &quot;Fishery Inventory&quot;,
+    )
+lines!(ax, results.stock, linewidth = 2, color = :blue)
+f</code></pre><h3 id="Add-in-some-bureaucracy-1"><a class="docs-heading-anchor" href="#Add-in-some-bureaucracy-1">Add in some bureaucracy</a><a class="docs-heading-anchor-permalink" href="#Add-in-some-bureaucracy-1" title="Permalink"></a></h3><p>OK, so let&#39;s add in some annoyances for the fishers. Of course, they wish to go out and catch regularly, but regulators only want to do their job once a year! Since it&#39;s the regulators who will monitor the total stock condition and advise fishers as to whether or not they can continue fishing, a systematic blind spot is inadvertently introduced into the system. Yearly catch and regulation occur on one day a year, whilst the stock will of course grow on a daily basis.</p><p>To achieve this, we extend the model like so:</p><pre><code class="language-julia">function agent_step!(agent, model)
+    if model.tick % 365 == 0
+        agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+    end
+end
+
+function dstock(model)
+    # Only allow fishing if stocks are high enough
+    # (monitored yearly, so this will return 0 364 days of the year)
+    h = model.tick % 365 == 0 &amp;&amp; model.stock &gt; model.min_threshold ?
+        sum(a.yearly_catch for a in allagents(model)) : 0.0
+
+    model.stock * (1 - (model.stock / model.max_population)) - h
+end
+
+function model_step!(model)
+    model.tick += 1
+    model.stock += dstock(model)
+end
+
+function initialise(;
+    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+    max_population = 500.0, # Maximum value of fish stock
+    min_threshold = 60.0, # Regulate fishing if population drops below this value
+    nagents = 50,
+)
+    model = ABM(
+        Fisher;
+        properties = Dict(
+            :stock =&gt; stock,
+            :max_population =&gt; max_population,
+            :min_threshold =&gt; min_threshold,
+            :tick =&gt; 0, # Time keeper in units of days
+        ),
+    )
+    for _ in 1:nagents
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
+    end
+    model
+end</code></pre><p>Now that our model is running with a daily timestep, we must extend the run length value, and we&#39;ll also start from a steady state population.</p><pre><code class="language-">Random.seed!(6549) #hide
+model = initialise()
+yearly(model, s) = s % 365 == 0
+_, results =
+    run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
+
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = &quot;Year&quot;,
+        ylabel = &quot;Stock&quot;,
+        title = &quot;Fishery Inventory&quot;,
+    )
+lines!(ax, results.stock, linewidth = 2, color = :blue)
+f</code></pre><h3 id="Baseline-benchmark-1"><a class="docs-heading-anchor" href="#Baseline-benchmark-1">Baseline benchmark</a><a class="docs-heading-anchor-permalink" href="#Baseline-benchmark-1" title="Permalink"></a></h3><p>Lets get a baseline performance result for our model.</p><pre><code class="language-">using BenchmarkTools
+
+Random.seed!(6549) #hide
+@btime Agents.step!(model, agent_step!, model_step!, 20 * 365) setup =
+    (model = initialise())</code></pre><p>So this is fairly quick since the model is a simple one, but it&#39;s certainly not as efficient as it could be. We calculate the stock value every single day, since the forward Eulerian method requires us to, so it can evolve correctly. In addition to this, Eulerian expansion introduces uncertainty into our results, which is tied to the choice of step size. For accurate results, one should never really use this approximate method - although it is almost ubiquitous throughout contemporary research code. For a thorough exposé on this, have a read of <a href="https://nextjournal.com/ChrisRackauckas/why-you-shouldnt-use-eulers-method-to-solve-odes">Why you shouldn&#39;t use Euler&#39;s method to solve ODEs</a>.</p><h2 id="Coupling-DifferentialEquations.jl-to-Agents.jl-1"><a class="docs-heading-anchor" href="#Coupling-DifferentialEquations.jl-to-Agents.jl-1">Coupling DifferentialEquations.jl to Agents.jl</a><a class="docs-heading-anchor-permalink" href="#Coupling-DifferentialEquations.jl-to-Agents.jl-1" title="Permalink"></a></h2><p>Lets therefore modify our system to solve the logistic equation in a continuous context, but discretely monitor and harvest.</p><pre><code class="language-julia">import OrdinaryDiffEq
+
+function agent_diffeq_step!(agent, model)
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+end
+
+function model_diffeq_step!(model)
+    # We step 364 days with this call.
+    OrdinaryDiffEq.step!(model.i, 364.0, true)
+    # Only allow fishing if stocks are high enough
+    model.i.p[2] =
+        model.i.u[1] &gt; model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
+        0.0
+    # Notify the integrator that conditions may be altered
+    OrdinaryDiffEq.u_modified!(model.i, true)
+    # Then apply our catch modifier
+    OrdinaryDiffEq.step!(model.i, 1.0, true)
+    # Store yearly stock in the model for plotting
+    model.stock = model.i.u[1]
+    # And reset for the next year
+    model.i.p[2] = 0.0
+    OrdinaryDiffEq.u_modified!(model.i, true)
+end
+
+function initialise_diffeq(;
+    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+    max_population = 500.0, # Maximum value of fish stock
+    min_threshold = 60.0, # Regulate fishing if population drops below this value
+    nagents = 50,
+)
+
+    function fish_stock!(ds, s, p, t)
+        max_population, h = p
+        ds[1] = s[1] * (1 - (s[1] / max_population)) - h
+    end
+    prob =
+        OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+    integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
+
+    model = ABM(
+        Fisher;
+        properties = Dict(
+            :stock =&gt; stock,
+            :max_population =&gt; max_population,
+            :min_threshold =&gt; min_threshold,
+            :i =&gt; integrator, # The OrdinaryDiffEq integrator
+        ),
+    )
+    for _ in 1:nagents
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
+    end
+    model
+end</code></pre><p>Notice that we&#39;ve reverted back to a yearly rather than daily timestep here, since the ODE solver is now in charge of evolving the logistic function forward. We&#39;ve used the <a href="https://docs.sciml.ai/stable/basics/integrator/">integrator interface</a> to achieve this.</p><p>Note that we use <a href="https://github.com/SciML/OrdinaryDiffEq.jl"><code>OrdinaryDiffEq</code></a> here, which is a component of <code>DifferentialEquations</code>. Users may switch this to any subcomponent of the <code>DifferentialEquations</code> ecosystem, or use <code>DifferentialEquations</code> directly. Since we don&#39;t need other components for this example, we&#39;ll stick with the subcomponent but speak in general terms since the packages are interchangeable in this context.</p><p>This implementation uses <code>import</code> to explicitly identify which functions are from <code>DifferentialEquations</code> and not <code>Agents</code>. However, since both <code>Agents</code> and <code>DifferentialEquations</code> provide a <code>step!</code> function, each use must be qualified explicitly if one were to choose to bring all of <code>DifferentialEquations</code> into scope via the <code>using</code> keyword.</p><pre><code class="language-">Random.seed!(6549) #hide
+modeldeq = initialise_diffeq()
+_, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
+
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = &quot;Year&quot;,
+        ylabel = &quot;Stock&quot;,
+        title = &quot;Fishery Inventory&quot;,
+    )
+lines!(ax, resultsdeq.stock, linewidth = 2, color = :blue)
+f</code></pre><p>The small complexity addition yields us a generous speed up of around 4.5x.</p><pre><code class="language-">Random.seed!(6549) #hide
+@btime Agents.step!(model, agent_diffeq_step!, model_diffeq_step!, 20) setup =
+    (model = initialise_diffeq())</code></pre><p>Digging into the results a little more, we can see that the <code>DifferentialEquations</code> solver did not need to solve the logistic equation at every agent step to achieve a stable solution for us:</p><pre><code class="language-">length(modeldeq.i.sol.t)</code></pre><pre><code class="language-">365 * 20 &gt; length(modeldeq.i.sol.t)</code></pre><p>With other initial conditions, there&#39;s the possibility that this may not be the case. When this occurs, these additional samples provide mathematical guarantees that the results are accurate (to a given tolerance), which is a safeguard not possible for our Euler example.</p><p>Compare our two results directly, both start with the same random seed and evolve in precisely the same manner:</p><pre><code class="language-">f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = &quot;Year&quot;,
+        ylabel = &quot;Stock&quot;,
+        title = &quot;Fishery Inventory&quot;,
+    )
+lineE = lines!(ax, results.stock, linewidth = 2, color = :blue)
+lineTS = lines!(ax, resultsdeq.stock, linewidth = 2, color = :red)
+leg = f[1, end+1] = Legend(f, [lineE, lineTS], [&quot;Euler&quot;, &quot;TSit5&quot;])
+f</code></pre><p>That&#39;s an average discrepancy of 30 fish! Optimising the step size in the Euler method can close this gap, but this is yet more analysis overhead we&#39;d prefer to avoid by using better solutions.</p><p>In addition, the ODE solver will be faster most of the time, regardless of how many steps it needs to take. If not, there are other, more effective solvers that can be used for your particular case.</p><h2 id="Coupling-Agents.jl-to-DifferentialEquations.jl-1"><a class="docs-heading-anchor" href="#Coupling-Agents.jl-to-DifferentialEquations.jl-1">Coupling Agents.jl to DifferentialEquations.jl</a><a class="docs-heading-anchor-permalink" href="#Coupling-Agents.jl-to-DifferentialEquations.jl-1" title="Permalink"></a></h2><p>Perhaps you&#39;re more familiar to the <code>DifferentialEquations</code> <code>solve</code> interface and you&#39;re new to <code>Agents</code>?</p><p>We can also couple the two systems the other way. Let&#39;s use <a href="https://docs.sciml.ai/stable/features/callback_functions/#Using-Callbacks-1">callbacks</a> to handle the agent based aspects of our problem.</p><pre><code class="language-">function agent_cb_step!(agent, model)
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+end
+
+function initialise_cb(; min_threshold = 60.0, nagents = 50)
+    model = ABM(Fisher; properties = Dict(:min_threshold =&gt; min_threshold))
+
+    for _ in 1:nagents
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
+    end
+    model
+end
+
+Random.seed!(759) #hide
+modelcb = initialise_cb()</code></pre><p>That&#39;s it for the <code>Agents</code> side of things! Now to build the ODE.</p><pre><code class="language-">import DiffEqCallbacks
+
+function fish!(integrator, model)
+    integrator.p[2] = integrator.u[1] &gt; model.min_threshold ?
+        sum(a.yearly_catch for a in allagents(model)) : 0.0
+    Agents.step!(model, agent_cb_step!, 1)
+end
+
+function fish_stock!(ds, s, p, t)
+    max_population, h = p
+    ds[1] = s[1] * (1 - (s[1] / max_population)) - h
+end
+
+tspan = (0.0, 20.0 * 365.0)
+const initial_stock = 400.0
+const max_population = 500.0
+
+prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [initial_stock], tspan, [max_population, 0.0])
+
+# Each Dec 31st, we call fish! that adds our catch modifier to the stock, and steps the model
+fish = DiffEqCallbacks.PeriodicCallback(i -&gt; fish!(i, modelcb), 364)
+# Stocks are replenished again
+reset = DiffEqCallbacks.PeriodicCallback(i -&gt; i.p[2] = 0.0, 365)
+
+sol = OrdinaryDiffEq.solve(
+    prob,
+    OrdinaryDiffEq.Tsit5();
+    callback = OrdinaryDiffEq.CallbackSet(fish, reset),
+)
+discrete = vcat(sol(0:365:(365 * 20))[:,:]...)
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = &quot;Year&quot;,
+        ylabel = &quot;Stock&quot;,
+        title = &quot;Fishery Inventory&quot;,
+    )
+lines!(ax, discrete, linewidth = 2, color = :blue)
+f</code></pre><p>The results are different here, since the construction of this version and the one above are quite different and cannot be randomly seeded in the same manner.</p><p>However, as you can see, it is for the most part just a re-arranged implementation of the integrator method - giving users flexibility in their architecture choices.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../optim/">« BlackBoxOptim.jl</a><a class="docs-footer-nextpage" href="../schoolyard/">Graphs.jl »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 17 November 2022 16:14">Thursday 17 November 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

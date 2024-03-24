@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Conway&#39;s game of life · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li class="is-active"><a class="tocitem" href>Conway&#39;s game of life</a><ul class="internal"><li><a class="tocitem" href="#.-Define-the-rules"><span>1. Define the rules</span></a></li><li><a class="tocitem" href="#.-Build-the-model"><span>2. Build the model</span></a></li><li><a class="tocitem" href="#.-Animate-the-model"><span>3. Animate the model</span></a></li></ul></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Conway&#39;s game of life</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Conway&#39;s game of life</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/game_of_life_2D_CA.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Conway&#39;s-game-of-life"><a class="docs-heading-anchor" href="#Conway&#39;s-game-of-life">Conway&#39;s game of life</a><a id="Conway&#39;s-game-of-life-1"></a><a class="docs-heading-anchor-permalink" href="#Conway&#39;s-game-of-life" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../game of life.mp4" type="video/mp4">
+</video><p><a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Game of life on wikipedia</a>.</p><p>It is also available from the <code>Models</code> module as <a href="../../models/#Agents.Models.game_of_life-Tuple{}"><code>Models.game_of_life</code></a>.</p><pre><code class="language-julia">using Agents, Random</code></pre><h2 id=".-Define-the-rules"><a class="docs-heading-anchor" href="#.-Define-the-rules">1. Define the rules</a><a id=".-Define-the-rules-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-the-rules" title="Permalink"></a></h2><p>Conway&#39;s game of life is a <em>cellular automaton</em>, where each cell of the discrete space contains one agent only.</p><p>The rules of Conway&#39;s game of life are defined based on four numbers: Death, Survival, Reproduction, Overpopulation, grouped as (D, S, R, O) Cells die if the number of their living neighbors is &lt;D or &gt;O, survive if the number of their living neighbors is ≤S, come to life if their living neighbors are  ≥R and ≤O.</p><pre><code class="language-julia">rules = (2, 3, 3, 3) # (D, S, R, O)</code></pre><h2 id=".-Build-the-model"><a class="docs-heading-anchor" href="#.-Build-the-model">2. Build the model</a><a id=".-Build-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Build-the-model" title="Permalink"></a></h2><p>First, define an agent type. It needs to have the compulsary <code>id</code> and <code>pos</code> fields, as well as a <code>status</code> field that is <code>true</code> for cells that are alive and <code>false</code> otherwise.</p><pre><code class="language-julia">mutable struct Cell &lt;: AbstractAgent
+    id::Int
+    pos::Dims{2}
+    status::Bool
+end</code></pre><p>The following function builds a 2D cellular automaton given some <code>rules</code>. <code>dims</code> is a tuple of integers determining the width and height of the grid environment. <code>metric</code> specifies how to measure distances in the space, and in our example it actually decides whether cells connect to their diagonal neighbors.</p><p>This function creates a model where all cells are dead.</p><pre><code class="language-julia">function build_model(; rules::Tuple, dims = (100, 100), metric = :chebyshev, seed = 120)
+    space = GridSpace(dims; metric)
+    properties = Dict(:rules =&gt; rules)
+    model = ABM(Cell, space; properties, rng = MersenneTwister(seed))
+    idx = 1
+    for x in 1:dims[1]
+        for y in 1:dims[2]
+            add_agent_pos!(Cell(idx, (x, y), false), model)
+            idx += 1
+        end
+    end
+    return model
+end</code></pre><p>Now we define a stepping function for the model to apply the rules to agents. We will also perform a synchronous agent update (meaning that the value of all agents changes after we have decided the new value for each agent individually).</p><pre><code class="language-julia">function ca_step!(model)
+    new_status = fill(false, nagents(model))
+    for agent in allagents(model)
+        n = alive_neighbors(agent, model)
+        if agent.status == true &amp;&amp; (n ≤ model.rules[4] &amp;&amp; n ≥ model.rules[1])
+            new_status[agent.id] = true
+        elseif agent.status == false &amp;&amp; (n ≥ model.rules[3] &amp;&amp; n ≤ model.rules[4])
+            new_status[agent.id] = true
+        end
+    end
+
+    for id in allids(model)
+        model[id].status = new_status[id]
+    end
+end
+
+function alive_neighbors(agent, model) # count alive neighboring cells
+    c = 0
+    for n in nearby_agents(agent, model)
+        if n.status == true
+            c += 1
+        end
+    end
+    return c
+end</code></pre><p>now we can instantiate the model:</p><pre><code class="language-julia">model = build_model(rules = rules, dims = (50, 50))</code></pre><pre class="documenter-example-output">AgentBasedModel with 2500 agents of type Cell
+ space: GridSpace with size (50, 50), metric=chebyshev, periodic=true
+ scheduler: fastest
+ properties: Dict(:rules =&gt; (2, 3, 3, 3))</pre><p>Let&#39;s make some random cells on</p><pre><code class="language-julia">for i in 1:nagents(model)
+    if rand(model.rng) &lt; 0.2
+        model.agents[i].status = true
+    end
+end</code></pre><h2 id=".-Animate-the-model"><a class="docs-heading-anchor" href="#.-Animate-the-model">3. Animate the model</a><a id=".-Animate-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Animate-the-model" title="Permalink"></a></h2><p>We use the <a href="../../interact/#InteractiveDynamics.abm_video"><code>InteractiveDynamics.abm_video</code></a> for creating an animation and saving it to an mp4</p><pre><code class="language-julia">using InteractiveDynamics
+import CairoMakie
+
+ac(x) = x.status == true ? :black : :white
+am(x) = x.status == true ? &#39;■&#39; : &#39;□&#39;
+abm_video(
+    &quot;game of life.mp4&quot;,
+    model,
+    dummystep,
+    ca_step!;
+    title = &quot;Game of Life&quot;,
+    ac = :black,
+    as = 12,
+    am,
+    framerate = 5,
+    scatterkwargs = (strokewidth = 0,),
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="../game of life.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../forest_fire/">« Forest fire</a><a class="docs-footer-nextpage" href="../wright-fisher/">Wright-Fisher model of evolution »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 13 April 2021 08:13">Tuesday 13 April 2021</span>. Using Julia version 1.6.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

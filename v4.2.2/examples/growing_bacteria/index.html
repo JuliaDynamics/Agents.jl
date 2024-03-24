@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bacteria Growth · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li class="is-active"><a class="tocitem" href>Bacteria Growth</a><ul class="internal"><li><a class="tocitem" href="#Stepping-functions"><span>Stepping functions</span></a></li><li><a class="tocitem" href="#Animating-bacterial-growth"><span>Animating bacterial growth</span></a></li></ul></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Bacteria Growth</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Bacteria Growth</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/growing_bacteria.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Bacterial-Growth"><a class="docs-heading-anchor" href="#Bacterial-Growth">Bacterial Growth</a><a id="Bacterial-Growth-1"></a><a class="docs-heading-anchor-permalink" href="#Bacterial-Growth" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../bacteria.mp4" type="video/mp4">
+</video><p>Bacterial colonies are a prime example for growing active matter, where systems are driven out of equilibrium by proliferation. This model is a simplified version of unpublished work by Yoav G. Pollack and <a href="https://www.ds.mpg.de/lmp/dyn-sys">Philip Bittihn</a>; similar models can be found in literature. Here, a bacterium is modelled by two soft disk &quot;nodes&quot; linked by a spring, whose rest length grows with a constant growth rate. When it has reached its full extension, the cell divides into two daughter cells with the same orientation.</p><p>This example is a showcase of a complex continuous system. Agents will be splitting into more agents, thus having agent generation in continuous space. The model also uses advanced agent movement in continuous space, where a specialized &quot;<code>move_agent</code>&quot; function is created. Advanced plotting is also done, since each agent is a specialized shape. It is also available from the <code>Models</code> module as <a href="../../models/#Agents.Models.growing_bacteria-Tuple{}"><code>Models.growing_bacteria</code></a>.</p><pre><code class="language-julia">using Agents, LinearAlgebra
+
+mutable struct SimpleCell &lt;: AbstractAgent
+    id::Int
+    pos::NTuple{2,Float64}
+    length::Float64
+    orientation::Float64
+    growthprog::Float64
+    growthrate::Float64
+
+    # node positions/forces
+    p1::NTuple{2,Float64}
+    p2::NTuple{2,Float64}
+    f1::NTuple{2,Float64}
+    f2::NTuple{2,Float64}
+end
+
+function SimpleCell(id, pos, l, φ, g, γ)
+    a = SimpleCell(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+    update_nodes!(a)
+    return a
+end</code></pre><pre class="documenter-example-output">Main.__atexample__named__growing_bacteria.SimpleCell</pre><p>In this model, the agents have to store their state in two redundant ways: the cell coordinates (position, length, orientation) are required for the equations of motion, while the positions of the disk-shaped nodes are necessary for calculating mechanical forces between cells. To transform from one set of coordinates to the other, we need to write a function</p><pre><code class="language-julia">function update_nodes!(a::SimpleCell)
+    offset = 0.5 * a.length .* unitvector(a.orientation)
+    a.p1 = a.pos .+ offset
+    a.p2 = a.pos .- offset
+end</code></pre><p>Some geometry convenience functions</p><pre><code class="language-julia">unitvector(φ) = reverse(sincos(φ))
+cross2D(a, b) = a[1] * b[2] - a[2] * b[1]</code></pre><h2 id="Stepping-functions"><a class="docs-heading-anchor" href="#Stepping-functions">Stepping functions</a><a id="Stepping-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Stepping-functions" title="Permalink"></a></h2><pre><code class="language-julia">function model_step!(model)
+    for a in allagents(model)
+        if a.growthprog ≥ 1
+            # When a cell has matured, it divides into two daughter cells on the
+            # positions of its nodes.
+            add_agent!(a.p1, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            add_agent!(a.p2, model, 0.0, a.orientation, 0.0, 0.1 * rand(model.rng) + 0.05)
+            kill_agent!(a, model)
+        else
+            # The rest lengh of the internal spring grows with time. This causes
+            # the nodes to physically separate.
+            uv = unitvector(a.orientation)
+            internalforce = model.hardness * (a.length - a.growthprog) .* uv
+            a.f1 = -1 .* internalforce
+            a.f2 = internalforce
+        end
+    end
+    # Bacteria can interact with more than on other cell at the same time, therefore,
+    # we need to specify the option `:all` in `interacting_pairs`
+    for (a1, a2) in interacting_pairs(model, 2.0, :all)
+        interact!(a1, a2, model)
+    end
+end</code></pre><p>Here we use a custom <a href="../../api/#Agents.move_agent!"><code>move_agent!</code></a> function, because the agents have several moving parts. Notice that the first derivatives of all degrees of freedom is directly proportional to the force applied to them. This overdamped approximation is valid for small length scales, where viscous forces dominate over inertia.</p><pre><code class="language-julia">function agent_step!(agent::SimpleCell, model::ABM)
+    fsym, compression, torque = transform_forces(agent)
+    new_pos = agent.pos .+ model.dt * model.mobility .* fsym
+    move_agent!(agent, new_pos, model)
+    agent.length += model.dt * model.mobility .* compression
+    agent.orientation += model.dt * model.mobility .* torque
+    agent.growthprog += model.dt * agent.growthrate
+    update_nodes!(agent)
+    return agent.pos
+end</code></pre><h3 id="Helper-functions"><a class="docs-heading-anchor" href="#Helper-functions">Helper functions</a><a id="Helper-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Helper-functions" title="Permalink"></a></h3><pre><code class="language-julia">function interact!(a1::SimpleCell, a2::SimpleCell, model)
+    n11 = noderepulsion(a1.p1, a2.p1, model)
+    n12 = noderepulsion(a1.p1, a2.p2, model)
+    n21 = noderepulsion(a1.p2, a2.p1, model)
+    n22 = noderepulsion(a1.p2, a2.p2, model)
+    a1.f1 = @. a1.f1 + (n11 + n12)
+    a1.f2 = @. a1.f2 + (n21 + n22)
+    a2.f1 = @. a2.f1 - (n11 + n21)
+    a2.f2 = @. a2.f2 - (n12 + n22)
+end
+
+function noderepulsion(p1::NTuple{2,Float64}, p2::NTuple{2,Float64}, model::ABM)
+    delta = p1 .- p2
+    distance = norm(delta)
+    if distance ≤ 1
+        uv = delta ./ distance
+        return (model.hardness * (1 - distance)) .* uv
+    end
+    return (0, 0)
+end
+
+function transform_forces(agent::SimpleCell)
+    # symmetric forces (CM movement)
+    fsym = agent.f1 .+ agent.f2
+    # antisymmetric forces (compression, torque)
+    fasym = agent.f1 .- agent.f2
+    uv = unitvector(agent.orientation)
+    compression = dot(uv, fasym)
+    torque = 0.5 * cross2D(uv, fasym)
+    return fsym, compression, torque
+end</code></pre><h2 id="Animating-bacterial-growth"><a class="docs-heading-anchor" href="#Animating-bacterial-growth">Animating bacterial growth</a><a id="Animating-bacterial-growth-1"></a><a class="docs-heading-anchor-permalink" href="#Animating-bacterial-growth" title="Permalink"></a></h2><p>Okay, we can now initialize a model and see what it does.</p><pre><code class="language-julia">space = ContinuousSpace((14, 9), 1.0; periodic = false)
+model = ABM(
+    SimpleCell,
+    space,
+    properties = Dict(:dt =&gt; 0.005, :hardness =&gt; 1e2, :mobility =&gt; 1.0),
+    rng = MersenneTwister(1680)
+)</code></pre><pre class="documenter-example-output">AgentBasedModel with 0 agents of type SimpleCell
+ space:  continuous space with 14×9 divisions
+ scheduler: fastest
+ properties: Dict(:hardness =&gt; 100.0, :dt =&gt; 0.005, :mobility =&gt; 1.0)</pre><p>Let&#39;s start with just two agents.</p><pre><code class="language-julia">add_agent!((6.5, 4.0), model, 0.0, 0.3, 0.0, 0.1)
+add_agent!((7.5, 4.0), model, 0.0, 0.0, 0.0, 0.1)</code></pre><p>The model has several parameters, and some of them are of interest. We could e.g. define</p><pre><code class="language-julia">adata = [:pos, :length, :orientation, :growthprog, :p1, :p2, :f1, :f2]</code></pre><p>and then <a href="../../tutorial/#Agents.run!"><code>run!</code></a> the model. But we&#39;ll animate the model directly.</p><p>Here we once again use the huge flexibility provided by <a href="../../interact/#Agents.plotabm"><code>plotabm</code></a> to plot the bacteria cells. We define a function that creates a custom <code>Shape</code> based on the agent:</p><pre><code class="language-julia">using InteractiveDynamics
+using CairoMakie # choose plotting backend
+
+function cassini_oval(agent)
+    t = LinRange(0, 2π, 50)
+    a = agent.growthprog
+    b = 1
+    m = @. 2 * sqrt((b^4 - a^4) + a^4 * cos(2 * t)^2) + 2 * a^2 * cos(2 * t)
+    C = sqrt.(m / 2)
+
+    x = C .* cos.(t)
+    y = C .* sin.(t)
+
+    uv = reverse(sincos(agent.orientation))
+    θ = atan(uv[2], uv[1])
+    R = [cos(θ) -sin(θ); sin(θ) cos(θ)]
+
+    bacteria = R * permutedims([x y])
+    coords = [Point2f0(x, y) for (x, y) in zip(bacteria[1, :], bacteria[2, :])]
+    scale(Polygon(coords), 0.5)
+end</code></pre><p>set up some nice colors</p><pre><code class="language-julia">bacteria_color(b) = CairoMakie.RGBf0(b.id * 3.14 % 1, 0.2, 0.2)</code></pre><p>and proceed with the animation</p><pre><code class="language-julia">abm_video(
+    &quot;bacteria.mp4&quot;, model, agent_step!, model_step!;
+    am = cassini_oval, ac = bacteria_color,
+    spf = 50, framerate = 30, frames = 200,
+    title = &quot;Growing bacteria&quot;
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="../bacteria.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../runners/">« Mountain Runners</a><a class="docs-footer-nextpage" href="../opinion_spread/">Opinion spread »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 13 April 2021 08:57">Tuesday 13 April 2021</span>. Using Julia version 1.6.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

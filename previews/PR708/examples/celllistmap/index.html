@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>CellListMap.jl · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">Agents.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in a City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../agents_visualizations/">Plotting and Interactivity</a></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox" checked/><label class="tocitem" for="menuitem-6"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li><li class="is-active"><a class="tocitem" href>CellListMap.jl</a><ul class="internal"><li><a class="tocitem" href="#The-system-simulated-1"><span>The system simulated</span></a></li><li><a class="tocitem" href="#Required-and-data-structures-for-CellListMap.jl-1"><span>Required and data structures for CellListMap.jl</span></a></li><li><a class="tocitem" href="#Model-initialization-1"><span>Model initialization</span></a></li><li><a class="tocitem" href="#Computing-the-pairwise-particle-forces-1"><span>Computing the pairwise particle forces</span></a></li><li><a class="tocitem" href="#Update-agent-positions-and-velocities-1"><span>Update agent positions and velocities</span></a></li><li><a class="tocitem" href="#The-simulation-1"><span>The simulation</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Ecosystem Integration</a></li><li class="is-active"><a href>CellListMap.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>CellListMap.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/celllistmap.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Integrating-Agents.jl-with-CellListMap.jl-1"><a class="docs-heading-anchor" href="#Integrating-Agents.jl-with-CellListMap.jl-1">Integrating Agents.jl with CellListMap.jl</a><a class="docs-heading-anchor-permalink" href="#Integrating-Agents.jl-with-CellListMap.jl-1" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../celllistmap.mp4" type="video/mp4">
+</video><p>This example illustrates how to integrate Agents.jl with <a href="examples/https::/github.com/m3g/CellListMap.jl">CellListMap.jl</a>, to accelerate the computation of short-ranged (within a cutoff) interactions in 2D and 3D continuous spaces. CellListMap.jl is a package that allows the computation of pairwise interactions using an efficient and parallel implementation of <a href="https://en.wikipedia.org/wiki/Cell_lists">cell lists</a>.</p><h2 id="The-system-simulated-1"><a class="docs-heading-anchor" href="#The-system-simulated-1">The system simulated</a><a class="docs-heading-anchor-permalink" href="#The-system-simulated-1" title="Permalink"></a></h2><p>The example will illustrate how to simulate a set of particles in 2 dimensions, interaction through a simple repulsive potential of the form:</p><div>\[U(r) = k_i k_j\left[r^2 - (r_i+r_j)^2\right]^2~~~\textrm{for}~~~r \leq (r_i+r_j)\]</div><div>\[U(r) = 0.0~~~\textrm{for}~~~r \gt (r_i+r_j)\]</div><p>where <span>$r_i$</span> and <span>$r_j$</span> are the radii of the two particles involved, and <span>$k_i$</span> and <span>$k_j$</span> are constants associated to each particle. The potential energy function is a smoothly decaying potential with a maximum when the particles overlap.</p><p>Thus, if the maximum sum of radii between particles is much smaller than the size of the system, cell lists can greatly accelerate the computation of the pairwise forces.</p><p>Each particle will have different radii and different repulsion force constants and masses.</p><pre><code class="language-julia">using Agents</code></pre><p>Below we define the <code>Particle</code> type, which represents the agents of the simulation. The <code>Particle</code> type, for the <code>ContinousAgent{2}</code> space, will have additionally an <code>id</code> and <code>pos</code> (positon) and <code>vel</code> (velocity) fields, which are automatically added by the <code>@agent</code> macro.</p><pre><code class="language-julia">@agent Particle ContinuousAgent{2} begin
+    r::Float64 # radius
+    k::Float64 # repulsion force constant
+    mass::Float64
+end
+Particle(; id, pos, vel, r, k, mass) = Particle(id, pos, vel, r, k, mass)</code></pre><pre><code class="language-none">Main.var&quot;ex-celllistmap&quot;.Particle</code></pre><h2 id="Required-and-data-structures-for-CellListMap.jl-1"><a class="docs-heading-anchor" href="#Required-and-data-structures-for-CellListMap.jl-1">Required and data structures for CellListMap.jl</a><a class="docs-heading-anchor-permalink" href="#Required-and-data-structures-for-CellListMap.jl-1" title="Permalink"></a></h2><p>We will use the high-level interface provided by the <code>PeriodicSystems</code> module (requires version ≥0.7.22):</p><pre><code class="language-julia">using CellListMap.PeriodicSystems
+using StaticArrays</code></pre><p><code>StaticArrays</code> provides the <code>SVector</code> type, which is practical for the representation of various vector types (e.g., positions or velocities) in small amount of dimensions. Agents.jl uses <code>NTuple{D, Float64}</code> for that, which does not support vector operations out of the box. In the future, Agents.jl may also switch the <code>pos</code> type to a static vector.</p><p>Two auxiliary arrays will be created on model initialization, to be passed to the <code>PeriodicSystem</code> data structure:</p><ol><li><code>positions</code>: <code>CellListMap</code> requires a vector of (preferentially) static vectors as the positions of the particles. To avoid creating this array on every call, a buffer to which the <code>agent.pos</code> positions will be copied is stored in this data structure.</li><li><code>forces</code>: In this example, the property to be computed using <code>CellListMap.jl</code> is the forces between particles, which are stored here in a <code>Vector{&lt;:SVector}</code>, of the same type as the positions. These forces will be updated by the <code>map_pairwise!</code> function.</li></ol><p>Additionally, the computation with <code>CellListMap.jl</code> requires the definition of a <code>cutoff</code>, which will be twice the maximum interacting radii of the particles, and the geometry of the the system, given by the <code>unitcell</code> of the periodic box.</p><p>More complex output data, variable system geometries and other options are supported, according to the <a href="https://m3g.github.io/CellListMap.jl/stable/PeriodicSystems/">CellListMap.PeriodicSystems</a> user guide.</p><h2 id="Model-initialization-1"><a class="docs-heading-anchor" href="#Model-initialization-1">Model initialization</a><a class="docs-heading-anchor-permalink" href="#Model-initialization-1" title="Permalink"></a></h2><p>We create the model with a keyword-accepting function as is recommended in Agents.jl. The keywords here control number of particles and sizes.</p><pre><code class="language-julia">function initialize_model(;
+    number_of_particles=10_000,
+    sides=SVector(500.0, 500.0),
+    dt=0.001,
+    max_radius=10.0,
+    parallel=true
+)
+    # initial random positions
+    positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
+
+    # We will use CellListMap to compute forces, with similar structure as the positions
+    forces = similar(positions)
+
+    # Space and agents
+    space2d = ContinuousSpace(Tuple(sides); periodic=true)
+
+    # Initialize CellListMap periodic system
+    system = PeriodicSystem(
+        positions=positions,
+        unitcell=sides,
+        cutoff=2 * max_radius,
+        output=forces,
+        output_name=:forces, # allows the system.forces alias for clarity
+        parallel=parallel,
+    )
+
+    # define the model properties
+    # The clmap_system field contains the data required for CellListMap.jl
+    properties = (
+        dt=dt,
+        number_of_particles=number_of_particles,
+        system=system,
+    )
+    model = ABM(Particle,
+        space2d,
+        properties=properties
+    )
+
+    # Create active agents
+    for id in 1:number_of_particles
+        add_agent_pos!(
+            Particle(
+                id=id,
+                r=(0.5 + 0.9 * rand()) * max_radius,
+                k=(10 + 20 * rand()), # random force constants
+                mass=10.0 + 100 * rand(), # random masses
+                pos=Tuple(positions[id]),
+                vel=(100 * randn(), 100 * randn()), # initial velocities
+            ),
+            model)
+    end
+
+    return model
+end</code></pre><pre><code class="language-none">initialize_model (generic function with 1 method)</code></pre><h2 id="Computing-the-pairwise-particle-forces-1"><a class="docs-heading-anchor" href="#Computing-the-pairwise-particle-forces-1">Computing the pairwise particle forces</a><a class="docs-heading-anchor-permalink" href="#Computing-the-pairwise-particle-forces-1" title="Permalink"></a></h2><p>To follow the <code>CellListMap</code> interface, we first need a function that computes the force between a single pair of particles. This function receives the positions of the two particles (already considering the periodic boundary conditions), <code>x</code> and <code>y</code>, their indices in the array of positions, <code>i</code> and <code>j</code>, the squared distance between them, <code>d2</code>, the <code>forces</code> array to be updated and the <code>model</code> properties.</p><p>Given these input parameters, the function obtains the properties of each particle from the model, and computes the force between the particles as (minus) the gradient of the potential energy function defined above.</p><p>The function <em>must</em> return the <code>forces</code> array, to follow the <code>CellListMap</code> API.</p><pre><code class="language-julia">function calc_forces!(x, y, i, j, d2, forces, model)
+    pᵢ = model[i]
+    pⱼ = model[j]
+    d = sqrt(d2)
+    if d ≤ (pᵢ.r + pⱼ.r)
+        dr = y - x
+        fij = 2 * (pᵢ.k * pⱼ.k) * (d2 - (pᵢ.r + pⱼ.r)^2) * (dr / d)
+        forces[i] += fij
+        forces[j] -= fij
+    end
+    return forces
+end</code></pre><pre><code class="language-none">calc_forces! (generic function with 1 method)</code></pre><p>The <code>model_step!</code> function will use <code>CellListMap</code> to update the forces for all particles. The first argument of the call is the function to be computed for each pair of particles, which closes-over the <code>model</code> data to call the <code>calc_forces!</code> function defined above.</p><pre><code class="language-julia">function model_step!(model::ABM)
+    # Update the pairwise forces at this step
+    map_pairwise!(
+        (x, y, i, j, d2, forces) -&gt; calc_forces!(x, y, i, j, d2, forces, model),
+        model.system,
+    )
+    return nothing
+end</code></pre><pre><code class="language-none">model_step! (generic function with 1 method)</code></pre><h2 id="Update-agent-positions-and-velocities-1"><a class="docs-heading-anchor" href="#Update-agent-positions-and-velocities-1">Update agent positions and velocities</a><a class="docs-heading-anchor-permalink" href="#Update-agent-positions-and-velocities-1" title="Permalink"></a></h2><p>The <code>agent_step!</code> function will update the particle positions and velocities, given the forces, which are computed in the <code>model_step!</code> function. A simple Euler step is used here for simplicity. We need to convert the static vectors to tuples to conform the <code>Agents</code> API for the positions and velocities of the agents. Finally, the positions within the <code>CellListMap.PeriodicSystem</code> structure are updated.</p><pre><code class="language-julia">function agent_step!(agent, model::ABM)
+    id = agent.id
+    dt = model.properties.dt
+    # Retrieve the forces on agent id
+    f = model.system.forces[id]
+    a = f / agent.mass
+    # Update positions and velocities
+    v = SVector(agent.vel) + a * dt
+    x = SVector(agent.pos) + v * dt + (a / 2) * dt^2
+    x = normalize_position(Tuple(x), model)
+    agent.vel = Tuple(v)
+    move_agent!(agent, x, model)
+    # !!! IMPORTANT: Update positions in the CellListMap.PeriodicSystem
+    model.system.positions[id] = SVector(agent.pos)
+    return nothing
+end</code></pre><pre><code class="language-none">agent_step! (generic function with 1 method)</code></pre><h2 id="The-simulation-1"><a class="docs-heading-anchor" href="#The-simulation-1">The simulation</a><a class="docs-heading-anchor-permalink" href="#The-simulation-1" title="Permalink"></a></h2><p>Finally, the function below runs an example simulation, for 1000 steps.</p><pre><code class="language-julia">function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
+    if isnothing(model)
+        model = initialize_model(number_of_particles=number_of_particles)
+    end
+    Agents.step!(
+        model, agent_step!, model_step!, nsteps, false,
+    )
+end</code></pre><pre><code class="language-none">simulate (generic function with 2 methods)</code></pre><p>Which should be quite fast</p><pre><code class="language-julia">model = initialize_model()
+simulate(model) # compile
+@time simulate(model)</code></pre><pre><code class="language-none"> 17.401159 seconds (21.00 k allocations: 1.678 MiB)</code></pre><p>and let&#39;s make a nice video with less particles, to see them bouncing around. The marker size is set by the radius of each particle, and the marker color by the corresponding repulsion constant.</p><pre><code class="language-julia">using InteractiveDynamics
+using CairoMakie
+model = initialize_model(number_of_particles=1000)
+abmvideo(
+    &quot;celllistmap.mp4&quot;, model, agent_step!, model_step!;
+    framerate=20, frames=200, spf=5,
+    title=&quot;Bouncing particles with CellListMap.jl acceleration&quot;,
+    as=p -&gt; p.r, # marker size
+    ac=p -&gt; p.k # marker color
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="../celllistmap.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../measurements/">« Measurements.jl</a><a class="docs-footer-nextpage" href="../../performance_tips/">Performance Tips »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 17 November 2022 16:14">Thursday 17 November 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
