@@ -33,10 +33,10 @@ function one_step!(queue, model_t, stop_time, model)
         model_t[] = stop_time
         return
     end
-    event_tuple, t_event = dequeue_pair!(queue)
+    event_tuple, t_event = pop!(queue)
     if t_event > stop_time
         model_t[] = stop_time
-        enqueue!(queue, event_tuple => t_event)
+        push!(queue, event_tuple => t_event)
     else
         model_t[] = t_event
         process_event!(event_tuple, model)
@@ -45,7 +45,7 @@ function one_step!(queue, model_t, stop_time, model)
 end
 function one_step!(queue, model_t, model)
     isempty(queue) && return
-    event_tuple, t_event = dequeue_pair!(queue)
+    event_tuple, t_event = pop!(queue)
     model_t[] = t_event
     process_event!(event_tuple, model)
     return
