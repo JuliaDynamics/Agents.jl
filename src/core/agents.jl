@@ -375,6 +375,7 @@ function _multiagent(version, struct_repr)
                $expr
                $expr_multiagent
                $expr_multiagent_p
+               nothing
            end
 
     return expr
