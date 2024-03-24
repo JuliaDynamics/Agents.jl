@@ -167,7 +167,7 @@ function EventQueueABM(
     agents = C()
     I = events isa Tuple ? Int : keytype(events) # `Tuple` doesn't define `keytype`...
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
-    queue = PriorityQueue{Tuple{I, Int}, Float64}()
+    queue = BinaryHeap(Base.By(last), Pair{Tuple{I, Int}, Float64}[])
 
     agent_kinds = allkinds(A)
     kind_to_index = Dict(kind => i for (i, kind) in enumerate(agent_kinds))
@@ -275,7 +275,7 @@ function add_event!(agent, model) # TODO: Study type stability of this function
 end
 
 function add_event!(agent::AbstractAgent, event_idx, t::Real, model::EventQueueABM)
-    enqueue!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
+    push!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
     return
 end
 

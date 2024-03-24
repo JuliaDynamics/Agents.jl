@@ -308,7 +308,7 @@ fig
 model = initialize_rps()
 abmvideo("rps_eventqueue.mp4", model;
     dt = 0.5, frames = 300,
-    title = "Rock Paper Scissors evolutionary (event based)", plotkw...,
+    title = "Rock Paper Scissors (event based)", plotkw...,
 )
 
 # ```@raw html
