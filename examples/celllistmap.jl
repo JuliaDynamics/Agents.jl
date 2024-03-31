@@ -142,12 +142,12 @@ end
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
 function calc_forces!(x, y, i, j, d2, forces, model)
-    pi = model[i]
-    pj = model[j]
+    p_i = model[i]
+    p_j = model[j]
     d = sqrt(d2)
-    if d ≤ (pi.r + pj.r)
+    if d ≤ (p_i.r + p_j.r)
         dr = y - x # x and y are minimum-image relative coordinates
-        fij = 2 * (pi.k * pj.k) * (d2 - (pi.r + pj.r)^2) * (dr / d)
+        fij = 2 * (p_i.k * p_j.k) * (d2 - (p_i.r + p_j.r)^2) * (dr / d)
         forces[i] += fij
         forces[j] -= fij
     end
