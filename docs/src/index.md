@@ -140,6 +140,26 @@ Any contribution to Agents.jl is welcome! For example you can:
 
 Have a look at [contributor's guide](https://github.com/SciML/ColPrac) of the SciML organization for some good information on contributing to Julia packages!
 
+## Citation
+
+If you use this package in work that leads to a publication, then please cite the paper below:
+
+```
+@article{Agents.jl,
+  doi = {10.1177/00375497211068820},
+  url = {https://doi.org/10.1177/00375497211068820},
+  year = {2022},
+  month = jan,
+  publisher = {{SAGE} Publications},
+  pages = {003754972110688},
+  author = {George Datseris and Ali R. Vahdati and Timothy C. DuBois},
+  title = {Agents.jl: a performant and feature-full agent-based modeling software of minimal code complexity},
+  journal = {{SIMULATION}},
+  volume = {0},
+  number = {0},
+}
+```
+
 ## Reproducibility
 
 ```@raw html
@@ -198,22 +218,3 @@ file.
 """)
 ```
 
-## Citation
-
-If you use this package in work that leads to a publication, then please cite the paper below:
-
-```
-@article{Agents.jl,
-  doi = {10.1177/00375497211068820},
-  url = {https://doi.org/10.1177/00375497211068820},
-  year = {2022},
-  month = jan,
-  publisher = {{SAGE} Publications},
-  pages = {003754972110688},
-  author = {George Datseris and Ali R. Vahdati and Timothy C. DuBois},
-  title = {Agents.jl: a performant and feature-full agent-based modeling software of minimal code complexity},
-  journal = {{SIMULATION}},
-  volume = {0},
-  number = {0},
-}
-```
