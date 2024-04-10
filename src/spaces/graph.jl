@@ -119,38 +119,7 @@ end
 #######################################################################################
 # Mutable graph functions
 #######################################################################################
-export rem_node!, add_node!, rem_vertex!, add_vertex!, add_edge!, rem_edge!
-
-"""
-     rem_node!(model::ABM{<: GraphSpace}, n::Int)
-Remove node (i.e. position) `n` from the model's graph. All agents in that node are removed from the model.
-**Warning:** Graphs.jl (and thus Agents.jl) swaps the index of the last node with
-that of the one to be removed, while every other node remains as is. This means that
- when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
- `n`-th node (and all its edges and agents) are deleted.
- """
- function rem_node!(model::ABM{<:GraphSpace}, n::Int)
-     for id in copy(ids_in_position(n, model))
-         remove_agent!(model[id], model)
-     end
-    V = nv(model)
-    success = Graphs.rem_vertex!(abmspace(model).graph, n)
-    n > V && error("Node number exceeds amount of nodes in graph!")
-    s = abmspace(model).stored_ids
-    s[V], s[n] = s[n], s[V]
-    pop!(s)
-end
-
-"""
-    add_node!(model::ABM{<: GraphSpace})
- Add a new node (i.e. possible position) to the model's graph and return it.
- You can connect this new node with existing ones using [`add_edge!`](@ref).
- """
- function add_node!(model::ABM{<:GraphSpace})
-     add_vertex!(abmspace(model).graph)
-     push!(abmspace(model).stored_ids, Int[])
-     return nv(model)
- end
+export rem_vertex!, add_vertex!, add_edge!, rem_edge!
 
 """
     rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
