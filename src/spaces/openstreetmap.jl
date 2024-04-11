@@ -509,16 +509,14 @@ function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     # extra checks to ensure consistency between both versions of `lonlat`
     if pos[3] == 0.0 || pos[1] == pos[2]
         return lonlat(pos[1], model)
-    elseif pos[3] == 1.0
+    elseif pos[3] == road_length(pos, model)
         return lonlat(pos[2], model)
     else
-        # find the geolocation that is a fraction `pos[3]` along the straight
-        # line between `pos[1]` and `pos[2]`
         gloc1 = get_geoloc(pos[1], model)
         gloc2 = get_geoloc(pos[2], model)
         dist = norm(LightOSM.to_cartesian(gloc1) .- LightOSM.to_cartesian(gloc2))
         dir = heading(gloc1, gloc2)
-        geoloc = calculate_location(gloc1, dir, pos[3] * dist)
+        geoloc = calculate_location(gloc1, dir, pos[3] / road_length(pos, model) * dist)
         return (geoloc.lon, geoloc.lat)
     end
 end
