@@ -241,6 +241,7 @@ function Agents.plan_route!(
         kwargs...
     )
 
+    isa_valid_position(dest, model) || return false
     delete!(abmspace(model).routes, agent.id) # clear old route
     same_position(agent.pos, dest, model) && return true
 
@@ -366,6 +367,12 @@ function Agents.plan_route!(
         return_trip,
     )
     return true
+end
+
+function isa_valid_position(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    index_to_node = abmspace(model).map.index_to_node
+    return haskey(index_to_node, pos[1]) && haskey(index_to_node, pos[2]) &&
+        0.0 ≤ pos[3] ≤ road_length(pos, model)
 end
 
 # Allows passing destination as a node number
