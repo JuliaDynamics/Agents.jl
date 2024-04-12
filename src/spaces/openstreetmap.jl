@@ -230,8 +230,12 @@ keywords are passed to
 [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
 
 Return `true` if a path to `dest` exists, and hence the route planning was successful.
-Otherwise return `false`. Specifying `return_trip = true` also requires the existence
-of a return path for a route to be planned.
+Otherwise return `false`. When `dest` is an invalid position, i.e. if it contains node
+indices that are not in the graph, or if the distance along the road is not between zero and
+the length of the road, return `false` as well. 
+
+Specifying `return_trip = true` also requires the existence of a return path for a route to
+be planned.
 """
 function Agents.plan_route!(
         agent::AbstractAgent,
@@ -241,6 +245,7 @@ function Agents.plan_route!(
         kwargs...
     )
 
+    isa_valid_position(dest, model) || return false
     delete!(abmspace(model).routes, agent.id) # clear old route
     same_position(agent.pos, dest, model) && return true
 
@@ -366,6 +371,12 @@ function Agents.plan_route!(
         return_trip,
     )
     return true
+end
+
+function isa_valid_position(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+    index_to_node = abmspace(model).map.index_to_node
+    return haskey(index_to_node, pos[1]) && haskey(index_to_node, pos[2]) &&
+        0.0 ≤ pos[3] ≤ road_length(pos, model)
 end
 
 # Allows passing destination as a node number

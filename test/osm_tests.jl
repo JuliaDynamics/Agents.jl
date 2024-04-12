@@ -65,6 +65,18 @@ end
 
         @test OSM.road_length(model[1].pos, model) ≈ 0.0002591692620559716
         @test OSM.road_length(finish_road[1], finish_road[2], model) ≈ 0.00030269737299400725
+
+        # Test that if the destination is invalid, route planning fails (returns `false`)
+        @testset "test invalid destination: $dest" for dest in (
+            # Distance along road is greater than the length of the road:
+            (finish_road[1], finish_road[2], 1.2 * OSM.road_length(finish_road, model)),
+            # Distance along road is negative:
+            (finish_road[1], finish_road[2], -1.0),
+            # Road does not exist:
+            (finish_road[1], Graphs.nv(abmspace(model).map.graph) + 1, 0.5)
+        )
+            @test !plan_route!(model[1], dest, model)
+        end
     end
 
     @testset "Moving along routes" begin
