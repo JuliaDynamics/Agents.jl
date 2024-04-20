@@ -12,7 +12,7 @@ using DataStructures
 using Distributed
 using Graphs
 using DataFrames
-using IteratorSampling
+using StreamSampling
 using MacroTools
 using MixedStructTypes
 export MixedStructTypes
