@@ -12,7 +12,6 @@ using DataStructures
 using Distributed
 using Graphs
 using DataFrames
-using StreamSampling
 using MacroTools
 using MixedStructTypes
 export MixedStructTypes
@@ -21,6 +20,7 @@ using Random
 using StaticArrays: SVector
 export SVector
 import LinearAlgebra
+import StreamSampling: itsample
 
 # Core structures of Agents.jl
 include("core/agents.jl")
