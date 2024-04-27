@@ -20,7 +20,7 @@ using Random
 using StaticArrays: SVector
 export SVector
 import LinearAlgebra
-import StreamSampling: itsample
+import StreamSampling: StreamSampling, itsample
 
 # Core structures of Agents.jl
 include("core/agents.jl")
