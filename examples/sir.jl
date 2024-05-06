@@ -47,7 +47,6 @@ using Agents.DataFrames, Agents.Graphs
 using StatsBase: sample, Weights
 using DrWatson: @dict
 using CairoMakie
-CairoMakie.activate!() # hide
 
 @agent struct PoorSoul(GraphAgent)
     days_infected::Int  # number of days since is infected
@@ -65,7 +64,6 @@ function model_initiation(;
     death_rate = 0.02,
     Is = [zeros(Int, length(Ns) - 1)..., 1],
     seed = 0,
-    step = 0,
 )
 
     rng = Xoshiro(seed)
