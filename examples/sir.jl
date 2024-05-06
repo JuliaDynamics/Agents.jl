@@ -96,7 +96,6 @@ function model_initiation(;
         detection_time,
         C,
         death_rate,
-        step
     )
     space = GraphSpace(complete_graph(C))
     model = StandardABM(PoorSoul, space; agent_step!, model_step!, properties, rng)
@@ -173,10 +172,6 @@ end
 
 # Now we define the functions for modelling the virus spread in time
 
-function model_step!(model)
-  model.step += 1
-end
-
 function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
@@ -245,7 +240,7 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (m) -> "step = $(m.step), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
+    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
     abmobs.model
 )
 
