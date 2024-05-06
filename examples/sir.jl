@@ -96,7 +96,7 @@ function model_initiation(;
         death_rate,
     )
     space = GraphSpace(complete_graph(C))
-    model = StandardABM(PoorSoul, space; agent_step!, model_step!, properties, rng)
+    model = StandardABM(PoorSoul, space; agent_step!, properties, rng)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -238,7 +238,7 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
+    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100*infected_fraction(m, allids(m))))%",
     abmobs.model
 )
 
