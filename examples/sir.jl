@@ -65,6 +65,7 @@ function model_initiation(;
     death_rate = 0.02,
     Is = [zeros(Int, length(Ns) - 1)..., 1],
     seed = 0,
+    step = 0,
 )
 
     rng = Xoshiro(seed)
@@ -94,10 +95,11 @@ function model_initiation(;
         reinfection_probability,
         detection_time,
         C,
-        death_rate
+        death_rate,
+        step
     )
     space = GraphSpace(complete_graph(C))
-    model = StandardABM(PoorSoul, space; agent_step!, properties, rng)
+    model = StandardABM(PoorSoul, space; agent_step!, model_step!, properties, rng)
 
     ## Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -171,6 +173,10 @@ end
 
 # Now we define the functions for modelling the virus spread in time
 
+function model_step!(model)
+  model.step += 1
+end
+
 function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
@@ -239,8 +245,8 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
-    abmobs.s, abmobs.model
+    (m) -> "step = $(m.step), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
+    abmobs.model
 )
 
 # And lastly we use them to plot things in a figure
