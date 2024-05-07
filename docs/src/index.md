@@ -126,7 +126,7 @@ You're looking for support for Agents.jl? Look no further! Here's some things yo
 
 1. Read the online documentation! It is likely that the thing you want to know is already documented, so use the search bar and search away!
 2. Chat with us in the channel `#dynamics-bridged` in the [Julia Slack](https://julialang.org/slack/)!
-3. Post a question in the [Julia discourse](https://discourse.julialang.org/) in the category “Modelling and simulations”, using “agent” as a tag!
+3. Post a question in the [Julia discourse](https://discourse.julialang.org/) in the category “Modelling and simulations”, using `agents` as a tag!
 4. If you believe that you have encountered unexpected behavior or a bug in Agents.jl, then please do open an issue on our [GitHub page](https://github.com/JuliaDynamics/Agents.jl) providing a minimal working example!
 
 ## Contributing
