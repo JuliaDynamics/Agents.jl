@@ -241,8 +241,9 @@ function ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
 end
 
 function (sched::ByKind)(model::ABM)
+
     n_agents = zeros(Int, length(sched.kind_inds))
-    for agent in allagents(model)
+    @inbounds for agent in allagents(model)
         cont_idx = sched.kind_inds[kindof(agent)]
         n_agents[cont_idx] += 1
         curr_idx = n_agents[cont_idx]
@@ -254,13 +255,13 @@ function (sched::ByKind)(model::ABM)
         end
     end
 
-    for i in 1:length(sched.kind_inds)
+    @inbounds for i in 1:length(sched.kind_inds)
         resize!(sched.ids[i], n_agents[i])
     end
 
     sched.shuffle_kinds && shuffle!(abmrng(model), sched.ids)
 
-    if sched.shuffle_agents
+    @inbounds if sched.shuffle_agents
         for i in 1:length(sched.ids)
             shuffle!(abmrng(model), sched.ids[i])
         end
