@@ -215,7 +215,7 @@ end
     Schedulers.ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
 
 A scheduler useful only for mixed agent models using the [`@multiagent`](@ref) macro.
-- `agent_kinds` is a `Tuple` of all valid agent kinds e.g. (:B, :A, :C).
+- `agent_kinds` is a `Tuple` of all valid agent kinds e.g. `(:B, :A, :C)`.
 
 ## Keyword arguments
 
