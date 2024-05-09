@@ -295,6 +295,7 @@ Schedulers.Randomly
 Schedulers.Partially
 Schedulers.ByProperty
 Schedulers.ByType
+Schedulers.ByKind
 ```
 
 ### Advanced scheduling
