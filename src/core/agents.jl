@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof, allkinds
+export AbstractAgent, @agent, @multiagent, @dispatch, NoSpaceAgent, kindof, allkinds
 using MixedStructTypes: allkinds
 
 ###########################################################################################
