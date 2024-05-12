@@ -817,11 +817,11 @@ end
 # syntax by using the `@dispatch` macro exported from `MixedStructTypes.jl`
 
 @dispatch function multi_step!(agent::Civilian, model)
-    # the step for the civilian agent
+    ## the step for the civilian agent
 end
 
 @dispatch function multi_step!(agent::Politician, model)
-    # the step for the politician agent
+    ## the step for the politician agent
 end
 
 # which essentially reconstructs the version previously described.
