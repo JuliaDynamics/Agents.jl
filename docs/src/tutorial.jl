@@ -805,7 +805,7 @@ function multi_step!(agent, model)
     end
 end
 
-function schelling_step!(agent, model)
+function civilian_step!(agent, model)
     # the step for the civilian agent
 end
 
