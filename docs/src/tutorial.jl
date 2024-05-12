@@ -730,7 +730,7 @@ model = StandardABM(
 )
 
 # This approach also works with the [`@multiagent`](@ref) possibility we discuss below.
-# `Union` types however also offer the unique possibility of utilizing Julia's
+# `Union` types however also offer the unique possibility of utilizing fully the Julia's
 # [multiple dispatch system](https://docs.julialang.org/en/v1/manual/methods/).
 # Hence, we can use the same function name and add dispatch to it, such as:
 
@@ -746,10 +746,10 @@ end
 
 # ## Multiple agent types with `@multiagent`
 
-# [`@multiagent`](@ref) does not offer the multiple dispatch possibility, but in the
-# majority of cases leads to better computational performance. Intentionally
-# the command has been designed to be as similar to [`@agent`](@ref) as possible.
-# The syntax to use it is like so:
+# [`@multiagent`](@ref) does not offer multiple dispatch at its full potential 
+# (more on this later), but in the majority of cases leads to better computational 
+# performance. Intentionally the command has been designed to be as similar to 
+# [`@agent`](@ref) as possible. The syntax to use it is like so:
 
 @multiagent struct MultiSchelling{X}(GridAgent{2})
     @subagent struct Civilian # can't re-define existing `Schelling` name
@@ -806,25 +806,28 @@ function multi_step!(agent, model)
 end
 
 function civilian_step!(agent, model)
-    # the step for the civilian agent
+    ## stuff.
 end
 
 function politician_step!(agent, model)
-    # the step for the politician agent
+    ## other stuff.
 end
 
 # it can be more conveniently written with a multiple dispatch like
 # syntax by using the `@dispatch` macro exported from `MixedStructTypes.jl`
 
 @dispatch function multi_step!(agent::Civilian, model)
-    ## the step for the civilian agent
+    ## stuff.
 end
 
 @dispatch function multi_step!(agent::Politician, model)
-    ## the step for the politician agent
+    ## other stuff.
 end
 
-# which essentially reconstructs the version previously described.
+# which essentially reconstructs the version previously described. Unlike
+# with a `Union` type though it is possible to dispatch only on the kinds,
+# but not on any type containing them, e.g. dispatching on `Vector{Civilian}`
+# with the macro will not work.
 
 # After that, we can create the model
 
