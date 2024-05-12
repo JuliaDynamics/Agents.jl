@@ -793,17 +793,40 @@ typeof(gov)
 
 kindof(gov)
 
-# instead. Hence, the agent stepping function should be something like
+# instead. 
+
+# While the agent stepping function can be then something like
 
 function multi_step!(agent, model)
     if kindof(agent) == :Civilian
-        schelling_step!(agent, model)
+        civilian_step!(agent, model)
     elseif kindof(agent) == :Governor
         politician_step!(agent, model)
     end
 end
 
-# and give that to the model creation
+function schelling_step!(agent, model)
+    # the step for the civilian agent
+end
+
+function politician_step!(agent, model)
+    # the step for the politician agent
+end
+
+# it can be more conveniently written with a multiple dispatch like
+# syntax by using the `@dispatch` macro exported from `MixedStructTypes.jl`
+
+@dispatch function multi_step!(agent::Civilian, model)
+    # the step for the civilian agent
+end
+
+@dispatch function multi_step!(agent::Politician, model)
+    # the step for the politician agent
+end
+
+# which effectively reconstructs the manual version previously described.
+
+# After that, we can create the model
 
 model = StandardABM(
     MultiSchelling, # the multi-agent supertype is given as the type
