@@ -824,7 +824,7 @@ end
     # the step for the politician agent
 end
 
-# which effectively reconstructs the manual version previously described.
+# which essentially reconstructs the version previously described.
 
 # After that, we can create the model
 
