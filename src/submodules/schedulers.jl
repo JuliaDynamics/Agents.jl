@@ -211,4 +211,63 @@ function (sched::ByType)(model::ABM)
     return Iterators.flatten(it for it in sched.ids)
 end
 
+"""
+    Schedulers.ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
+
+A scheduler useful only for mixed agent models using the [`@multiagent`](@ref) macro.
+- `agent_kinds` is a `Tuple` of all valid agent kinds e.g. `(:B, :A, :C)`.
+
+## Keyword arguments
+
+- `shuffle_kinds = true` groups by agent kind, but randomizes the kind order.
+  Otherwise returns agent IDs grouped in order of appearance in `agent_kinds`.
+- `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
+  the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+"""
+struct ByKind{K}
+    shuffle_kinds::Bool
+    shuffle_agents::Bool
+    kind_inds::K
+    ids::Vector{Vector{Int}}
+end
+
+function ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
+    return ByKind(
+        shuffle_kinds,
+        shuffle_agents,
+        NamedTuple(t => i for (i, t) in enumerate(agent_kinds)),
+        [Int[] for _ in 1:length(agent_kinds)]
+    )
+end
+
+function (sched::ByKind)(model::ABM)
+
+    n_agents = zeros(Int, length(sched.kind_inds))
+    @inbounds for agent in allagents(model)
+        cont_idx = sched.kind_inds[kindof(agent)]
+        n_agents[cont_idx] += 1
+        curr_idx = n_agents[cont_idx]
+        ids_kind = sched.ids[cont_idx]
+        if curr_idx <= length(ids_kind)
+            ids_kind[curr_idx] = agent.id
+        else
+            push!(ids_kind, agent.id)
+        end
+    end
+
+    @inbounds for i in 1:length(sched.kind_inds)
+        resize!(sched.ids[i], n_agents[i])
+    end
+
+    sched.shuffle_kinds && shuffle!(abmrng(model), sched.ids)
+
+    @inbounds if sched.shuffle_agents
+        for i in 1:length(sched.ids)
+            shuffle!(abmrng(model), sched.ids[i])
+        end
+    end
+
+    return Iterators.flatten(sched.ids)
+end
+
 end # Schedulers submodule

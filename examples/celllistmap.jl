@@ -45,12 +45,11 @@ PropParticle(; vel, r, k, mass) = (vel, r, k, mass)
 
 # ## Required and data structures for CellListMap.jl
 #
-# We will use the high-level interface provided by the `PeriodicSystems` module
-# (requires version ≥0.7.22):
-using CellListMap.PeriodicSystems
+# We will use the high-level `ParticleSystem` interface (requires version ≥0.9.0):
+using CellListMap
 
 # Two auxiliary arrays will be created on model initialization, to be passed to
-# the `PeriodicSystem` data structure:
+# the `ParticleSystem` data structure:
 #
 # 1. `positions`: `CellListMap` requires a vector of (preferentially) static vectors as the positions
 #    of the particles. To avoid creating this array on every call, a buffer to
@@ -62,10 +61,11 @@ using CellListMap.PeriodicSystems
 #
 # Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
 # which will be twice the maximum interacting radii of the particles, and the geometry of the
-# the system, given by the `unitcell` of the periodic box.
+# the system, given by the `unitcell` of the periodic box. For non-periodic systems, 
+# use `unitcell = nothing`. 
 #
 # More complex output data, variable system geometries and other options are supported,
-# according to the [CellListMap.PeriodicSystems](https://m3g.github.io/CellListMap.jl/stable/PeriodicSystems/)
+# according to the [CellListMap](https://m3g.github.io/CellListMap.jl/stable/ParticleSystem/)
 # user guide.
 #
 # ## Model initialization
@@ -87,8 +87,8 @@ function initialize_bouncing(;
     ## Space and agents
     space2d = ContinuousSpace(sides; periodic=true)
 
-    ## Initialize CellListMap periodic system
-    system = PeriodicSystem(
+    ## Initialize CellListMap particle system
+    system = ParticleSystem(
         positions=positions,
         unitcell=sides,
         cutoff=2 * max_radius,
@@ -171,7 +171,7 @@ end
 # ## Update agent positions and velocities
 # The `agent_step!` function will update the particle positions and velocities,
 # given the forces, which are computed in the `model_step!` function. A simple
-# Euler step is used here for simplicity. Finally, the positions within the `CellListMap.PeriodicSystem`
+# Euler step is used here for simplicity. Finally, the positions stored in the `ParticleSystem`
 # structure are updated.
 function agent_step!(agent, model::ABM)
     id = agent.id
@@ -185,7 +185,7 @@ function agent_step!(agent, model::ABM)
     x = normalize_position(x, model)
     agent.vel = v
     move_agent!(agent, x, model)
-    ## !!! IMPORTANT: Update positions in the CellListMap.PeriodicSystem
+    ## !!! IMPORTANT: Update positions in the ParticleSystem
     model.system.positions[id] = agent.pos
     return nothing
 end

@@ -47,7 +47,6 @@ using Agents.DataFrames, Agents.Graphs
 using StatsBase: sample, Weights
 using DrWatson: @dict
 using CairoMakie
-CairoMakie.activate!() # hide
 
 @agent struct PoorSoul(GraphAgent)
     days_infected::Int  # number of days since is infected
@@ -94,7 +93,7 @@ function model_initiation(;
         reinfection_probability,
         detection_time,
         C,
-        death_rate
+        death_rate,
     )
     space = GraphSpace(complete_graph(C))
     model = StandardABM(PoorSoul, space; agent_step!, properties, rng)
@@ -239,8 +238,8 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
-    abmobs.s, abmobs.model
+    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100*infected_fraction(m, allids(m))))%",
+    abmobs.model
 )
 
 # And lastly we use them to plot things in a figure
