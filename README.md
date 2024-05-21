@@ -5,7 +5,7 @@
 [![CI](https://github.com/JuliaDynamics/Agents.jl/workflows/CI/badge.svg)](https://github.com/JuliaDynamics/Agents.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/JuliaDynamics/Agents.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaDynamics/Agents.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-[![Package Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FAgents&query=total_requests&suffix=%2Fmonth&label=Downloads)](http://juliapkgstats.com/pkg/Agents)
+[![Package Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Ftotal_downloads%2FAgents&query=total_requests&label=Downloads)](http://juliapkgstats.com/pkg/Agents)
 
 Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM): a computational simulation methodology where autonomous agents react to their environment (including other agents) given a predefined set of rules.
 Some major highlights of Agents.jl are:
