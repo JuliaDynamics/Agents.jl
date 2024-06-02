@@ -67,6 +67,23 @@ function attack!(agent, model)
     return
 end
 
+# for the attack!(agent, contender) function we could either use some
+# branches based on the values of `kindof`
+
+function attack(agent::RPS, contender::RPS)
+    kind = kindof(agent)
+    kindc = kindof(contender)
+    if kind === :Rock && kindc === :Scissors
+        remove_agent!(contender, model)
+    elseif kind === :Scissors && kindc === :Paper
+        remove_agent!(contender, model)
+    elseif kind === :Paper && kindc === :Rock
+        remove_agent!(contender, model)
+    end
+end
+
+# or use the @dispatch macro for convenience
+
 @dispatch attack!(::RPS, ::RPS) = nothing
 @dispatch attack!(::Rock, contender::Scissors) = remove_agent!(contender, model)
 @dispatch attack!(::Scissors, contender::Paper) = remove_agent!(contender, model)
