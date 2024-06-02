@@ -369,8 +369,6 @@ function _multiagent(version, struct_repr)
         expr_multiagent_p = :()
     end
 
-    expr = macroexpand(Agents, expr)
-
     expr = quote
                $expr
                $expr_multiagent
