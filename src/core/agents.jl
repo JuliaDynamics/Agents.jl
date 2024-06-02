@@ -94,7 +94,7 @@ will create an agent appropriate for using with 2-dimensional [`GridSpace`](@ref
 mutable struct Person{T} <: AbstractAgent
     id::Int
     pos::NTuple{2, Int}
-    const age::Int
+    age::Int
     moneyz::T
 end
 ```
