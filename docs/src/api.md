@@ -11,8 +11,19 @@ In this page we list the remaining API functions, which constitute the bulk of A
 
 ```@docs
 AgentBasedModel
+```
+
+### Discrete time models
+
+```@docs
 StandardABM
+```
+
+### Continuous time models
+
+```@docs
 EventQueueABM
+AgentEvent
 ```
 
 ## Agent types
