@@ -287,7 +287,7 @@ Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
-    n = nearby_ids(agent, model, r; search=:exact)
+    n = nearby_ids_exact(agent, model, r)
     d, j = Inf, 0
     for id in n
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
@@ -398,8 +398,8 @@ The following keywords can be used:
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
   on whether `a` was scheduler first or not).
-- `nearby_f = nearby_ids_exact` is the function that decides how to find nearby IDs
-  in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
+- `search = :exact` decides how to find nearby IDs in the `:all, :types` cases. 
+  Must be `:exact` or `:approximate`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
 
@@ -411,16 +411,16 @@ Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/exampl
 
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
-        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact,
+        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact, search = :exact
     )
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r, scheduler)
     elseif method == :all
-        all_pairs!(pairs, model, r, nearby_f)
+        all_pairs!(pairs, model, r, search)
     elseif method == :types
-        type_pairs!(pairs, model, r, scheduler, nearby_f)
+        type_pairs!(pairs, model, r, scheduler, search)
     end
     return PairIterator(pairs, agent_container(model))
 end
@@ -428,10 +428,11 @@ end
 function all_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real, nearby_f,
+    r::Real,
+    search
 )
     for a in allagents(model)
-        for nid in nearby_f(a, model, r)
+        for nid in nearby_ids(a, model, r; search)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -487,12 +488,12 @@ end
 function type_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real, scheduler, nearby_f,
+    r::Real, scheduler, search,
 )
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in nearby_f(model[id], model, r)
+        for nid in nearby_ids(model[id], model, r; search)
             neighbor_type = typeof(model[nid])
             if neighbor_type ∈ available_types && neighbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues
