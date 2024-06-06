@@ -413,6 +413,10 @@ Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/exampl
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
         scheduler = abmscheduler(model), nearby_f = nearby_ids_exact, search = :exact
     )
+    if nearby_f isa typeof(nearby_ids)
+        @warn "The nearby_f keyword is deprecated, use search = :exact or search = :approximate instead" maxlog=1
+        search = :approximate
+    end
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
