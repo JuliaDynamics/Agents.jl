@@ -381,7 +381,6 @@ function schedule(model::ABM, scheduler)
     Iterators.filter(id -> id in allids(model), scheduler(model))
 end
 
-
 # Do the standard extensions for `_exact` as in space API
 function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
     @warn "`nearby_ids_exact` is deprecated in favor of `nearby_ids(...; search=:exact)`." maxlog=1
@@ -389,6 +388,6 @@ function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
 function nearby_agents_exact(a, model, r=1)
-    @warn "`nearby_agents_exact` deprecated in favor of `nearby_agents(...; search=:exact)`." maxlog=1
+    @warn "`nearby_agents_exact` is deprecated in favor of `nearby_agents(...; search=:exact)`." maxlog=1
     return (model[id] for id in nearby_ids_exact(a, model, r))
 end
