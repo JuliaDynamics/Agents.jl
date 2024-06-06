@@ -162,7 +162,6 @@ rem_vertex!
 
 ## `ContinuousSpace` exclusives
 ```@docs
-nearby_ids_exact
 nearest_neighbor
 get_spatial_property
 get_spatial_index

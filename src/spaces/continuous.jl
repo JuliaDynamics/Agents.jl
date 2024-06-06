@@ -59,14 +59,16 @@ See also [Continuous space exclusives](@ref) on the online docs for more functio
 An example using continuous space is the [Flocking model](@ref).
 
 ## Distance specification
+
 Distances specified by `r` in functions like [`nearby_ids`](@ref) are always based
 on the Euclidean distance between two points in `ContinuousSpace`.
 
 In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, see
-discussion around the keyword `spacing` below. [`nearby_ids`](@ref) is not an exact
-search, but can be a possible over-estimation, including agent IDs whose distance
-slightly exceeds `r` with "slightly" being as much as `spacing`.
-If you want exact searches use the slower [`nearby_ids_exact`](@ref).
+discussion around the keyword `spacing` below. By default, `nearby_*` have keyword 
+`search` set to `:approximate`, which means that they doesn't do an exact search, but 
+can be a possible over-estimation, including agent IDs whose distance slightly exceeds 
+`r` with "slightly" being as much as `spacing`. If you want exact searches set the keyword 
+`search` to `:exact` in `nearby_*`.
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -199,30 +201,32 @@ function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
     return offsets_within_radius(abmspace(model).grid, r)
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1; search = :approximate)
+    if search === :approximate
+        return nearby_ids_approx(pos, model, r)
+    elseif search === :exact
+        return nearby_ids_exact(pos, model, r)
+    end
+    error("`search` keyword should be either `:approximate` or `:exact`")
+end
+
+function nearby_ids_approx(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
     grid_r = ceil(Int, (r + δ) / abmspace(model).spacing)
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
-    focal_cell = Tuple(pos2cell(pos, model))
+    focal_cell = pos2cell(pos, model)
     return nearby_ids(focal_cell, abmspace(model).grid, grid_r)
 end
 
-"""
-    nearby_ids_exact(x, model, r = 1)
-Return an iterator over agent IDs nearby `x` (a position or an agent).
-Only valid for `ContinuousSpace` models.
-Use instead of [`nearby_ids`](@ref) for a slower, but 100% accurate version.
-See [`ContinuousSpace`](@ref) for more details.
-"""
-function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     # TODO:
-    # Simply filtering the output leads to 4x faster code than the commented-out logic.
+    # Simply filtering nearby_ids_approx leads to 4x faster code than the commented-out logic.
     # It is because the code of the "fast logic" is actually super type unstable.
     # Hence, we need to re-think how we do this, and probably create dedicated structs
-    iter = nearby_ids(pos, model, r)
+    iter = nearby_ids_approx(pos, model, r)
     return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, iter)
 
     # Remaining code isn't used, but is based on
@@ -266,13 +270,6 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
     =#
 end
 
-# Do the standard extensions for `_exact` as in space API
-function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
-    all = nearby_ids_exact(agent.pos, model, r)
-    Iterators.filter(i -> i ≠ agent.id, all)
-end
-nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
-
 function remove_all_from_space!(model::ABM{<:ContinuousSpace})
     internal_grid = abmspace(model).grid
     for p in positions(internal_grid)
@@ -290,7 +287,7 @@ Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
-    n = nearby_ids(agent, model, r)
+    n = nearby_ids_exact(agent, model, r)
     d, j = Inf, 0
     for id in n
         dnew = euclidean_distance(agent.pos, model[id].pos, model)

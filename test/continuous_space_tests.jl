@@ -199,9 +199,9 @@ using LinearAlgebra: norm, dot
             rs = SVector(1, 2, 3.4) .* 0.1 .+ 0.001 # multiply with spacing and add ε for accuracy
             ns = (4, 12, 36)
             for j in 1:3
-                nids = nearby_ids_exact(center, model, rs[j])
+                nids = nearby_ids(center, model, rs[j], search=:exact)
                 @test length(collect(nids)) == ns[j] + 1
-                nids = nearby_agents_exact(model[center_id], model, rs[j])
+                nids = nearby_agents(model[center_id], model, rs[j], search=:exact)
                 @test length(collect(nids)) == ns[j]
                 nids = nearby_ids(center, model, rs[j])
                 @test length(collect(nids)) ≥ ns[j] + 1
@@ -224,15 +224,15 @@ using LinearAlgebra: norm, dot
             # Not true, but we are not using the exact method
             @test collect(nearby_ids(a, model, r0)) == [2]
             # Here it's empty:
-            @test collect(nearby_ids_exact(a, model, r0)) == Int[]
+            @test collect(nearby_ids(a, model, r0; search=:exact)) == Int[]
             # and now all valid, and we use 1st clause of exact method (more than 1 cell)
             @test collect(nearby_ids(a, model, r1)) == [2]
-            @test collect(nearby_ids_exact(a, model, r1)) == [2]
+            @test collect(nearby_ids(a, model, r1, search=:exact)) == [2]
             # With position everything includes ID 1
             @test collect(nearby_ids(a.pos, model, r0)) == [1,2]
-            @test collect(nearby_ids_exact(a.pos, model, r0)) == Int[1]
+            @test collect(nearby_ids(a.pos, model, r0; search=:exact)) == Int[1]
             @test collect(nearby_ids(a.pos, model, r1)) == [1,2]
-            @test collect(nearby_ids_exact(a.pos, model, r1)) == [1,2]
+            @test collect(nearby_ids(a.pos, model, r1; search=:exact)) == [1,2]
         end
     end
 
