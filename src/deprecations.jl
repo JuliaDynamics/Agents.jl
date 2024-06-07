@@ -384,10 +384,10 @@ end
 # Do the standard extensions for `_exact` as in space API
 function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
     @warn "`nearby_ids_exact` is deprecated in favor of `nearby_ids(...; search=:exact)`." maxlog=1
-    all = nearby_ids_exact(agent.pos, model, r)
+    all = nearby_ids(agent.pos, model, r; search=:exact)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
 function nearby_agents_exact(a, model, r=1)
     @warn "`nearby_agents_exact` is deprecated in favor of `nearby_agents(...; search=:exact)`." maxlog=1
-    return (model[id] for id in nearby_ids_exact(a, model, r))
+    return (model[id] for id in nearby_ids(a, model, r; search=:exact))
 end
