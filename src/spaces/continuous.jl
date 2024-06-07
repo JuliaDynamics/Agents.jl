@@ -285,19 +285,16 @@ end
 
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
-
-The following keywords can be used:
-- `search = :exact` decides how to find nearby IDs. Must be `:exact` or `:approximate`.
 """
-function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r; search=:exact)
+function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
     d, j = Inf, 0
-    for id in nearby_ids(agent, model, r; search)
+    for id in nearby_ids_approx(agent, model, r)
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
             d, j = dnew, id
         end
     end
-    return d == Inf ? nothing : model[j]
+    return d == Inf || euclidean_distance(agent.pos, model[j].pos, model) > r ? nothing : model[j]
 end
 
 using LinearAlgebra
