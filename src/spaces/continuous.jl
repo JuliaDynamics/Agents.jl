@@ -288,13 +288,13 @@ Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
     d, j = Inf, 0
-    for id in nearby_ids_approx(agent, model, r)
+    for id in nearby_ids(agent, model, r; search=:approximate)
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
             d, j = dnew, id
         end
     end
-    return d == Inf || euclidean_distance(agent.pos, model[j].pos, model) > r ? nothing : model[j]
+    return d > r ? nothing : model[j]
 end
 
 using LinearAlgebra
