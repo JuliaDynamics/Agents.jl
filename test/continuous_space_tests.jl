@@ -328,24 +328,22 @@ using LinearAlgebra: norm, dot
         for i in pos
             add_agent!(i,model,SVector(0.0,0.0),nothing)
         end
-
         for agent in allagents(model)
             agent.f1 = nearest_neighbor(agent, model, sqrt(2)).id
         end
-
         @test model[1].f1 == 2
         @test model[2].f1 == 1
         @test model[3].f1 == 2
         @test model[4].f1 == 3
-
-        for agent in allagents(model)
-            agent.f1 = nearest_neighbor(agent, model, 10^-100)
-        end
         
-        @test model[1].f1 === nothing
-        @test model[2].f1 === nothing
-        @test model[3].f1 === nothing
-        @test model[4].f1 === nothing
+        space = ContinuousSpace((1,1); spacing = 0.02, periodic = false)
+        model = StandardABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
+        pos = SVector.([(0.30386961108678245, 0.17690859963285543),(0.33020500850053125, 0.178391311081449)])
+        for i in pos
+            add_agent!(i,model,SVector(0.0,0.0))
+        end
+        @test nearest_neighbor(model[1], model, 10^-100) === nothing
+        @test nearest_neighbor(model[2], model, 10^-100) === nothing
     end
 
     @testset "walk" begin
