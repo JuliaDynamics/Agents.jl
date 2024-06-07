@@ -59,14 +59,16 @@ See also [Continuous space exclusives](@ref) on the online docs for more functio
 An example using continuous space is the [Flocking model](@ref).
 
 ## Distance specification
+
 Distances specified by `r` in functions like [`nearby_ids`](@ref) are always based
 on the Euclidean distance between two points in `ContinuousSpace`.
 
 In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, see
-discussion around the keyword `spacing` below. [`nearby_ids`](@ref) is not an exact
-search, but can be a possible over-estimation, including agent IDs whose distance
-slightly exceeds `r` with "slightly" being as much as `spacing`.
-If you want exact searches use the slower [`nearby_ids_exact`](@ref).
+discussion around the keyword `spacing` below. By default, `nearby_*` have keyword 
+`search` set to `:approximate`, which means that they doesn't do an exact search, but 
+can be a possible over-estimation, including agent IDs whose distance slightly exceeds 
+`r` with "slightly" being as much as `spacing`. If you want exact searches set the keyword 
+`search` to `:exact` in `nearby_*`.
 
 ## Keywords
 * `periodic = true`: Whether the space is periodic or not. If set to
@@ -199,30 +201,32 @@ function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
     return offsets_within_radius(abmspace(model).grid, r)
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1; search = :approximate)
+    if search === :approximate
+        return nearby_ids_approx(pos, model, r)
+    elseif search === :exact
+        return nearby_ids_exact(pos, model, r)
+    end
+    error("`search` keyword should be either `:approximate` or `:exact`")
+end
+
+function nearby_ids_approx(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
     grid_r = ceil(Int, (r + δ) / abmspace(model).spacing)
     # Then return the ids within this distance, using the internal grid space
     # and iteration via `GridSpaceIdIterator`, see spaces/grid_multi.jl
-    focal_cell = Tuple(pos2cell(pos, model))
+    focal_cell = pos2cell(pos, model)
     return nearby_ids(focal_cell, abmspace(model).grid, grid_r)
 end
 
-"""
-    nearby_ids_exact(x, model, r = 1)
-Return an iterator over agent IDs nearby `x` (a position or an agent).
-Only valid for `ContinuousSpace` models.
-Use instead of [`nearby_ids`](@ref) for a slower, but 100% accurate version.
-See [`ContinuousSpace`](@ref) for more details.
-"""
-function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r = 1) where {D,A,T}
+function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     # TODO:
-    # Simply filtering the output leads to 4x faster code than the commented-out logic.
+    # Simply filtering nearby_ids_approx leads to 4x faster code than the commented-out logic.
     # It is because the code of the "fast logic" is actually super type unstable.
     # Hence, we need to re-think how we do this, and probably create dedicated structs
-    iter = nearby_ids(pos, model, r)
+    iter = nearby_ids_approx(pos, model, r)
     return Iterators.filter(i -> euclidean_distance(pos, model[i].pos, model) ≤ r, iter)
 
     # Remaining code isn't used, but is based on
@@ -266,13 +270,6 @@ function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace{D,A,T}}, r
     =#
 end
 
-# Do the standard extensions for `_exact` as in space API
-function nearby_ids_exact(agent::AbstractAgent, model::ABM, r = 1)
-    all = nearby_ids_exact(agent.pos, model, r)
-    Iterators.filter(i -> i ≠ agent.id, all)
-end
-nearby_agents_exact(a, model, r=1) = (model[id] for id in nearby_ids_exact(a, model, r))
-
 function remove_all_from_space!(model::ABM{<:ContinuousSpace})
     internal_grid = abmspace(model).grid
     for p in positions(internal_grid)
@@ -284,25 +281,20 @@ end
 # Continuous space exclusives: collisions, nearest neighbors
 #######################################################################################
 """
-    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r) → nearest
+    nearest_neighbor(agent, model::ABM{<:ContinuousSpace}, r; search=:exact) → nearest
 
 Return the agent that has the closest distance to given `agent`.
 Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
-    n = nearby_ids(agent, model, r)
     d, j = Inf, 0
-    for id in n
+    for id in nearby_ids(agent, model, r; search=:approximate)
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
             d, j = dnew, id
         end
     end
-    if d == Inf
-        return nothing
-    else
-        return model[j]
-    end
+    return d > r ? nothing : model[j]
 end
 
 using LinearAlgebra
@@ -401,8 +393,8 @@ The following keywords can be used:
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
   on whether `a` was scheduler first or not).
-- `nearby_f = nearby_ids_exact` is the function that decides how to find nearby IDs
-  in the `:all, :types` cases. Must be `nearby_ids_exact` or `nearby_ids`.
+- `search = :exact` decides how to find nearby IDs in the `:all, :types` cases. 
+  Must be `:exact` or `:approximate`.
 
 Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
 
@@ -414,16 +406,20 @@ Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/exampl
 
 """
 function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
-        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact,
+        scheduler = abmscheduler(model), nearby_f = nearby_ids_exact, search = :exact
     )
+    if nearby_f isa typeof(nearby_ids)
+        @warn "The nearby_f keyword is deprecated, use search = :exact or search = :approximate instead" maxlog=1
+        search = :approximate
+    end
     @assert method ∈ (:nearest, :all, :types)
     pairs = Tuple{Int,Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r, scheduler)
     elseif method == :all
-        all_pairs!(pairs, model, r, nearby_f)
+        all_pairs!(pairs, model, r, search)
     elseif method == :types
-        type_pairs!(pairs, model, r, scheduler, nearby_f)
+        type_pairs!(pairs, model, r, scheduler, search)
     end
     return PairIterator(pairs, agent_container(model))
 end
@@ -431,10 +427,11 @@ end
 function all_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real, nearby_f,
+    r::Real,
+    search
 )
     for a in allagents(model)
-        for nid in nearby_f(a, model, r)
+        for nid in nearby_ids(a, model, r; search)
             # Sort the pair to overcome any uniqueness issues
             new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
             new_pair ∉ pairs && push!(pairs, new_pair)
@@ -490,12 +487,12 @@ end
 function type_pairs!(
     pairs::Vector{Tuple{Int,Int}},
     model::ABM{<:ContinuousSpace},
-    r::Real, scheduler, nearby_f,
+    r::Real, scheduler, search,
 )
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
-        for nid in nearby_f(model[id], model, r)
+        for nid in nearby_ids(model[id], model, r; search)
             neighbor_type = typeof(model[nid])
             if neighbor_type ∈ available_types && neighbor_type !== typeof(model[id])
                 # Sort the pair to overcome any uniqueness issues
