@@ -337,6 +337,15 @@ using LinearAlgebra: norm, dot
         @test model[2].f1 == 1
         @test model[3].f1 == 2
         @test model[4].f1 == 3
+
+        for agent in allagents(model)
+            agent.f1 = nearest_neighbor(agent, model, 10^-100)
+        end
+        
+        @test model[1].f1 === nothing
+        @test model[2].f1 === nothing
+        @test model[3].f1 === nothing
+        @test model[4].f1 === nothing
     end
 
     @testset "walk" begin
