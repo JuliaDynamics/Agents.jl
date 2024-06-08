@@ -70,7 +70,7 @@ end
 # for the attack!(agent, contender) function we could either use some
 # branches based on the values of `kindof`
 
-function attack(agent::RPS, contender::RPS, model)
+function attack!(agent::RPS, contender::RPS, model)
     kind = kindof(agent)
     kindc = kindof(contender)
     if kind === :Rock && kindc === :Scissors
