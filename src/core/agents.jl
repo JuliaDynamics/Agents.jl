@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @multiagent, @dispatch, NoSpaceAgent, kindof, allkinds
+export AbstractAgent, @agent, @multiagent, @pattern, NoSpaceAgent, kindof, allkinds
 using DynamicSumTypes: allkinds
 
 ###########################################################################################

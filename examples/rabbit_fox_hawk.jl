@@ -173,7 +173,7 @@ end
 # ones contributing more to the chosen direction. If there are no predators to flee from,
 # rabbits walk around randomly.
 
-@dispatch function animal_step!(rabbit::Rabbit, model)
+@pattern function animal_step!(rabbit::Rabbit, model)
     ## Eat grass at this position, if any
     if get_spatial_property(rabbit.pos, model.grass, model) == 1
         model.grass[get_spatial_index(rabbit.pos, model.grass, model)] = 0
@@ -241,7 +241,7 @@ end
 
 # Foxes hunt for rabbits, and eat rabbits within a unit radius of its position.
 
-@dispatch function animal_step!(fox::Fox, model)
+@pattern function animal_step!(fox::Fox, model)
     ## Look for nearby rabbits that can be eaten
     food = [x for x in nearby_agents(fox, model) if kindof(x) == :rabbit]
     if !isempty(food)
@@ -285,7 +285,7 @@ end
 # Hawks function similarly to foxes, except they can also fly. They dive down for prey and
 # fly back up after eating it.
 
-@dispatch function animal_step!(hawk::Hawk, model)
+@pattern function animal_step!(hawk::Hawk, model)
     ## Look for rabbits nearby
     food = [x for x in nearby_agents(hawk, model) if kindof(x) == :rabbit]
     if !isempty(food)
@@ -359,9 +359,9 @@ model = initialize_model()
 # using GLMakie # CairoMakie doesn't do 3D plots well
 # ```
 
-@dispatch animalcolor(a::Rabbit) = :brown
-@dispatch animalcolor(a::Fox) = :orange
-@dispatch animalcolor(a::Hawk) = :blue
+@pattern animalcolor(a::Rabbit) = :brown
+@pattern animalcolor(a::Fox) = :orange
+@pattern animalcolor(a::Hawk) = :blue
 
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
