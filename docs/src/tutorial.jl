@@ -814,7 +814,7 @@ function politician_step!(agent, model)
 end
 
 # it can be more conveniently written with a multiple dispatch like
-# syntax by using the `@dispatch` macro exported from `DynamicSumTypes.jl`
+# syntax by using the `@dispatch` macro:
 
 @dispatch function multi_step!(agent::Civilian, model)
     ## stuff.
