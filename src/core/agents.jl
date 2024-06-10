@@ -433,8 +433,9 @@ end
 
 """
 An indirection to the DynamicSumTypes.@pattern macro used in Agents.jl, its usage is 
-described in the Agents.jl tutorial in the documentation, but you can also visit the 
-docstring of DynamicSumTypes.@pattern for its usage because they are equivalent.
+described in the Agents.jl tutorial in the documentation, alternatively, you can 
+also look at the docstring of DynamicSumTypes.@pattern for its usage because they are 
+equivalent.
 """
 macro dispatch(f_def)
     return esc(:(DynamicSumTypes.@pattern $f_def))
