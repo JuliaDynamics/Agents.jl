@@ -82,12 +82,12 @@ function attack!(agent::RPS, contender::RPS, model)
     end
 end
 
-# or use the @pattern macro for convenience
+# or use the @dispatch macro for convenience
 
-@pattern attack!(::RPS, ::RPS, model) = nothing
-@pattern attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
-@pattern attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
-@pattern attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
+@dispatch attack!(::RPS, ::RPS, model) = nothing
+@dispatch attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
+@dispatch attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
+@dispatch attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
 
 # The movement function is equally simple due to
 # the many functions offered by Agents.jl [API](@ref).

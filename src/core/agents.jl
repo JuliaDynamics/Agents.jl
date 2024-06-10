@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @multiagent, @pattern, NoSpaceAgent, kindof, allkinds
+export AbstractAgent, @agent, @multiagent, @dispatch, NoSpaceAgent, kindof, allkinds
 using DynamicSumTypes: allkinds
 
 ###########################################################################################
@@ -429,4 +429,13 @@ the [`@multiagent`](@ref) macro. The kinds are returned as a tuple of `Symbol`s.
 """
 function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
     (nameof(a), ) # this function is extended automatically in the macro
+end
+
+"""
+An alternative naming for the pattern macro used in Agents.jl, this is just
+an indirection to that macro so refer to the docstring of DynamicSumTypes.@pattern 
+for its usage
+"""
+macro dispatch(f_def)
+    return esc(:(DynamicSumTypes.@pattern $f_def))
 end
