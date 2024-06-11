@@ -122,38 +122,21 @@ end
     end
 end
 
-function agent_step!(agent::GridAgent2All, model2)
-    kind = kindof(agent)
-    if kind === :GridAgent2One
-        agent_step_one!(agent, model2)
-    elseif kind === :GridAgent2Two
-        agent_step_two!(agent, model2)
-    elseif kind === :GridAgent2Three
-        agent_step_three!(agent, model2)
-    elseif kind === :GridAgent2Four
-        agent_step_four!(agent, model2)
-    elseif kind === :GridAgent2Five
-        agent_step_five!(agent, model2)
-    else
-        agent_step_six!(agent, model2)
-    end
-end
-
-agent_step_one!(agent, model2) = randomwalk!(agent, model2)
-function agent_step_two!(agent, model2)
+@dispatch agent_step!(agent::GridAgent2One, model2) = randomwalk!(agent, model2)
+@dispatch function agent_step!(agent::GridAgent2Two, model2)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
 end
-function agent_step_three!(agent, model2)
+@dispatch function agent_step!(agent::GridAgent2Three, model2)
     if any(a-> kindof(a) == :gridagenttwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
 end
-function agent_step_four!(agent, model2)
+@dispatch function agent_step!(agent::GridAgent2Four, model2)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
-function agent_step_five!(agent, model2)
+@dispatch function agent_step!(agent::GridAgent2Five, model2)
     targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
     if !isempty(targets)
         idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
@@ -161,7 +144,7 @@ function agent_step_five!(agent, model2)
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end
 end
-function agent_step_six!(agent, model2)
+@dispatch function agent_step!(agent::GridAgent2Six, model2)
     agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 

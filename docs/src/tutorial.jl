@@ -680,11 +680,12 @@ adf
 
 # In realistic modelling situations it is often the case the the ABM is composed
 # of different types of agents. Agents.jl supports two approaches for multi-agent ABMs.
-# The first uses the `Union` type (this subsection), and the second
-# uses the [`@multiagent`](@ref) command (next subsection). `@multiagent` is recommended
+# The first uses the `Union` type, and the second
+# uses the [`@multiagent`](@ref) command. `@multiagent` is recommended
 # as default, because in many cases it will have performance advantages over the `Union` approach
-# without having tangible disadvantages. However, we strongly recommend you to read through
-# the [comparison of the two approaches](@ref multi_vs_union).
+# without having tangible disadvantages. However, you should read through
+# the [comparison of the two approaches](@ref multi_vs_union) to
+# be better informed on which one to choose.
 
 # _Note that using multiple agent types is a possibility entirely orthogonal to
 # the type of `AgentBasedModel` or the type of space. Everything we describe here
@@ -694,7 +695,9 @@ adf
 
 # The simplest way to add more agent types is to make more of them with
 # [`@agent`](@ref) and then give a `Union` of agent types as the agent type when
-# making the `AgentBasedModel`. For example, let's say that a new type of agent enters
+# making the `AgentBasedModel`. This is the most "native Julia" approach.
+
+# For example, let's say that a new type of agent enters
 # the simulation; a politician that would "attract" a preferred demographic.
 # We then would make
 
@@ -730,7 +733,7 @@ model = StandardABM(
 )
 
 # This approach also works with the [`@multiagent`](@ref) possibility we discuss below.
-# `Union` types however also offer the unique possibility of utilizing Julia's
+# `Union` types however also offer the unique possibility of utilizing fully the Julia's
 # [multiple dispatch system](https://docs.julialang.org/en/v1/manual/methods/).
 # Hence, we can use the same function name and add dispatch to it, such as:
 
@@ -746,9 +749,8 @@ end
 
 # ## Multiple agent types with `@multiagent`
 
-# [`@multiagent`](@ref) does not offer the multiple dispatch possibility, but in the
-# majority of cases leads to better computational performance. Intentionally
-# the command has been designed to be as similar to [`@agent`](@ref) as possible.
+# [`@multiagent`](@ref) is a macro, and hence not "native Julia" syntax like `Union`,
+# however it has been designed to be as similar to [`@agent`](@ref) as possible.
 # The syntax to use it is like so:
 
 @multiagent struct MultiSchelling{X}(GridAgent{2})
@@ -776,7 +778,10 @@ fieldnames(Civilian)
 
 # doesn't have any fields. Instead,
 # you should think of `Civilian` and `Governor` as just convenience functions that have been
-# defined for you to "behave like" types. E.g., you can initialize
+# defined for you to "behave like" types. That's why we call these **kinds** and not
+# **types**.
+
+# E.g., you can initialize
 
 civ = Civilian(; id = 2, pos = (2, 2), group = 2) # default `mood`
 
@@ -793,17 +798,48 @@ typeof(gov)
 
 kindof(gov)
 
-# instead. Hence, the agent stepping function should be something like
+# instead.
+
+# Since these kinds are not truly different Julia types, multiple dispatch cannot
+# be used to create different agent stepping functions for them.
+# The simplest "native Julia" solution here is to create a function where `if`
+# clauses decide what to do:
 
 function multi_step!(agent, model)
     if kindof(agent) == :Civilian
-        schelling_step!(agent, model)
+        civilian_step!(agent, model)
     elseif kindof(agent) == :Governor
         politician_step!(agent, model)
     end
 end
 
-# and give that to the model creation
+function civilian_step!(agent, model)
+    ## stuff.
+end
+
+function politician_step!(agent, model)
+    ## other stuff.
+end
+
+# This however can be made to look much more like multiple dispatch with the
+# introduction of another macro, `@dispatch`:
+
+@dispatch function multi_step!(agent::Civilian, model)
+    ## stuff.
+end
+
+@dispatch function multi_step!(agent::Politician, model)
+    ## other stuff.
+end
+
+# This essentially reconstructs the version previously described with the `if`
+# clauses. In general you can use this macro with anything you would dispatch 
+# normally, but this allows also kinds, unlike normal multiple dispatch, for example
+# this would also work:
+
+@dispatch sub_multi_step!(k::Int, agent::Civilian) = ...
+
+# After we defined the functions with `@dispatch` or the `if` clauses, we can create the model
 
 model = StandardABM(
     MultiSchelling, # the multi-agent supertype is given as the type

@@ -1,5 +1,5 @@
-export AbstractAgent, @agent, @multiagent, NoSpaceAgent, kindof, allkinds
-using MixedStructTypes: allkinds
+export AbstractAgent, @agent, @multiagent, @dispatch, NoSpaceAgent, kindof, allkinds
+using DynamicSumTypes: allkinds
 
 ###########################################################################################
 # @agent
@@ -255,7 +255,8 @@ See also the [`allkinds`](@ref) function for a convenient way to obtain all kind
 
 See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
 for why in most cases it is better to use `@multiagent` than making multiple
-agent types manually.
+agent types manually. See [`@dispatch`](@ref) (also highlighted in the [Tutorial](@ref))
+for a multiple-dispatch-like syntax to use with `@multiagent`.
 
 Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
 `:opt_memory` as the first argument (before the `struct` keyword).
@@ -340,12 +341,12 @@ function _multiagent(version, struct_repr)
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed)
         expr = quote
-                   MixedStructTypes.@compact_structs $t $a_specs
+                   DynamicSumTypes.@sum_structs :opt_speed $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
-                   MixedStructTypes.@sum_structs $t $a_specs
+                   DynamicSumTypes.@sum_structs :opt_memory $t $a_specs
                    Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
                end
     else
@@ -368,8 +369,6 @@ function _multiagent(version, struct_repr)
     else
         expr_multiagent_p = :()
     end
-
-    expr = macroexpand(Agents, expr)
 
     expr = quote
                $expr
@@ -419,7 +418,7 @@ end
 Return the "kind" (instead of type) of the agent, which is the name given to the
 agent subtype when it was created with [`@multiagent`](@ref).
 """
-function MixedStructTypes.kindof(a::AbstractAgent)
+function DynamicSumTypes.kindof(a::AbstractAgent)
     throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
 end
 
@@ -429,6 +428,17 @@ end
 Return all "kinds" that compose the given agent type that was generated via
 the [`@multiagent`](@ref) macro. The kinds are returned as a tuple of `Symbol`s.
 """
-function MixedStructTypes.allkinds(a::Type{<:AbstractAgent})
+function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
     (nameof(a), ) # this function is extended automatically in the macro
+end
+
+"""
+    @dispatch f(args...)
+
+A macro to enable multiple-dispatch-like behavior for the function `f`,
+for various agent kinds generated via the [`@multiagent`](@ref) macro.
+For an illustration of its usage see the [Tutorial](@ref).
+"""
+macro dispatch(f_def)
+    return esc(:(DynamicSumTypes.@pattern $f_def))
 end

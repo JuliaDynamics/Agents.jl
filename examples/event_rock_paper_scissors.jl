@@ -63,8 +63,14 @@ function attack!(agent, model)
     isnothing(contender) && return
     ## else perform standard rock paper scissors logic
     ## and remove the contender if you win.
-    ## Remember to compare agents with `kindof` instead of
-    ## `typeof` since we use `@multiagent` (see main Tutorial)
+    attack!(agent, contender, model)
+    return
+end
+
+# for the attack!(agent, contender) function we could either use some
+# branches based on the values of `kindof`
+
+function attack!(agent::RPS, contender::RPS, model)
     kind = kindof(agent)
     kindc = kindof(contender)
     if kind === :Rock && kindc === :Scissors
@@ -74,8 +80,14 @@ function attack!(agent, model)
     elseif kind === :Paper && kindc === :Rock
         remove_agent!(contender, model)
     end
-    return
 end
+
+# or use the @dispatch macro for convenience
+
+@dispatch attack!(::RPS, ::RPS, model) = nothing
+@dispatch attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
+@dispatch attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
+@dispatch attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
 
 # The movement function is equally simple due to
 # the many functions offered by Agents.jl [API](@ref).

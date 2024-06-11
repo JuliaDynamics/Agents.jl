@@ -13,8 +13,8 @@ using Distributed
 using Graphs
 using DataFrames
 using MacroTools
-using MixedStructTypes
-export MixedStructTypes
+using DynamicSumTypes
+export DynamicSumTypes
 import ProgressMeter
 using Random
 using StaticArrays: SVector
