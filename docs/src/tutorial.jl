@@ -833,8 +833,11 @@ end
 end
 
 # This essentially reconstructs the version previously described with the `if`
-# clauses. This `@dispatch` works with dispatch only on the agent kinds and
-# nothing else (ulike true multiple dispatch that can in principle be applied to anything).
+# clauses. In general you can use this macro with anything you would dispatch 
+# normally, but this allows also kinds, unlike normal multiple dispatch, for example
+# this would also work:
+
+@dispatch sub_multi_step!(k::Int, agent::Civilian) = ...
 
 # After we defined the functions with `@dispatch` or the `if` clauses, we can create the model
 
