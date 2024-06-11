@@ -23,6 +23,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   no performance difference between having 1 agent type at the cost of each agent occupying
   more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
   the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+- `@multiagent` kinds support multiple dispatch like syntax with the `@dispatch` macro.
 - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
   the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
 - Both the visualization and the model abstract interface have been refactored to improve the user
