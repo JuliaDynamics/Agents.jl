@@ -433,9 +433,9 @@ function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
 end
 
 """
-    @dispatch f(agent::Kind, args...)
+    @dispatch f(args...)
 
-A macro to enable multiple-dispatch-like behavior for the function `f`
+A macro to enable multiple-dispatch-like behavior for the function `f`,
 for various agent kinds generated via the [`@multiagent`](@ref) macro.
 For an illustration of its usage see the [Tutorial](@ref).
 """
