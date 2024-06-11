@@ -255,7 +255,8 @@ See also the [`allkinds`](@ref) function for a convenient way to obtain all kind
 
 See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
 for why in most cases it is better to use `@multiagent` than making multiple
-agent types manually.
+agent types manually. See [`@dispatch`](@ref) (also highlighted in the [Tutorial](@ref))
+for a multiple-dispatch-like syntax to use with `@multiagent`.
 
 Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
 `:opt_memory` as the first argument (before the `struct` keyword).
@@ -432,10 +433,11 @@ function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
 end
 
 """
-An indirection to the DynamicSumTypes.@pattern macro used in Agents.jl, its usage is 
-described in the Agents.jl tutorial in the documentation, alternatively, you can 
-also look at the docstring of DynamicSumTypes.@pattern for its usage because they are 
-equivalent.
+    @dispatch f(agent::Kind, args...)
+
+A macro to enable multiple-dispatch-like behavior for the function `f`
+for various agent kinds generated via the [`@multiagent`](@ref) macro.
+For an illustration of its usage see the [Tutorial](@ref).
 """
 macro dispatch(f_def)
     return esc(:(DynamicSumTypes.@pattern $f_def))
