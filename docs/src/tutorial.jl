@@ -834,10 +834,12 @@ end
 
 # This essentially reconstructs the version previously described with the `if`
 # clauses. In general you can use this macro with anything you would dispatch 
-# normally, but this allows also kinds, unlike normal multiple dispatch, for example
+# on, but this allows also kinds, unlike normal multiple dispatch, for example
 # this would also work:
 
-@dispatch sub_multi_step!(k::Int, agent::Civilian) = ...
+@dispatch sub_multi_step!(k::Int, agent::Civilian)
+    ## some more stuff.
+end
 
 # After we defined the functions with `@dispatch` or the `if` clauses, we can create the model
 
