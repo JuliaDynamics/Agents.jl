@@ -837,7 +837,7 @@ end
 # on, but this allows also kinds, unlike normal multiple dispatch, for example
 # this would also work:
 
-@dispatch sub_multi_step!(k::Int, agent::Civilian)
+@dispatch function sub_multi_step!(k::Int, agent::Civilian)
     ## some more stuff.
 end
 
