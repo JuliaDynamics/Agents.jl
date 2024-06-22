@@ -341,13 +341,15 @@ function _multiagent(version, struct_repr)
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed)
         expr = quote
-                   DynamicSumTypes.@sum_structs :opt_speed $t $a_specs
+                   DynamicSumTypes.@sum_structs :on_fields $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
+                   DynamicSumTypes.@export_variants($t)
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
-                   DynamicSumTypes.@sum_structs :opt_memory $t $a_specs
+                   DynamicSumTypes.@sum_structs :on_types $t $a_specs
                    Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
+                   DynamicSumTypes.@export_variants($t)
                end
     else
         error("The version of @multiagent chosen was not recognized, use either `:opt_speed` or `:opt_memory` instead.")
