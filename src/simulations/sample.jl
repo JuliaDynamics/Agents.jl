@@ -116,9 +116,9 @@ end
 
 function new_args_t(agent, model; kwargs...)
     # the id is always the first field
-    fields_no_id = fieldnames(typeof(agent))[2:end]
+    fields_no_id = propertynames(typeof(agent))[2:end]
     if isempty(kwargs)
-        new_args = (getfield(agent, x) for x in fields_no_id)
+        new_args = (getproperty(agent, x) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
         new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
