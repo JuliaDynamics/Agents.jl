@@ -440,6 +440,10 @@ end
 A macro to enable multiple-dispatch-like behavior for the function `f`,
 for various agent kinds generated via the [`@multiagent`](@ref) macro.
 For an illustration of its usage see the [Tutorial](@ref).
+
+If you are creating your own module/package that uses Agents.jl, and you 
+are using `@dispatch` inside it, then you need to put [`@finalize_dispatch`](@ref)`()`
+before the module end (but after all `@dispatch` calls).
 """
 macro dispatch(f_def)
     return esc(:(DynamicSumTypes.@pattern $f_def))
