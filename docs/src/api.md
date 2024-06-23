@@ -34,6 +34,8 @@ AbstractAgent
 @multiagent
 kindof
 allkinds
+@dispatch
+@finalize_dispatch
 ```
 
 ### Minimal agent types

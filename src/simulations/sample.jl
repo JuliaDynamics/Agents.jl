@@ -104,21 +104,21 @@ function replicate!(agent::AbstractAgent, model; kwargs...)
 end
 
 function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
-    if ismultiagentsumtype(A)
-        args_sum_t = new_args_sum_t(agent, model; kwargs...)
-        newagent = kindconstructor(agent)(id_new, args_sum_t...)
+    if ismultiagenttype(A)
+        args = ismultiagentsumtype(A) ? new_args_sum_t(agent, model; kwargs...) : new_args_t(agent, model; kwargs...)
+        newagent = variant_constructor(agent)(id_new, args...)
     else
-        args_t = new_args_t(agent, model; kwargs...)
-        newagent = A(id_new, args_t...)
+        args = new_args_t(agent, model; kwargs...)
+        newagent = A(id_new, args...)
     end
     return newagent
 end
 
 function new_args_t(agent, model; kwargs...)
     # the id is always the first field
-    fields_no_id = fieldnames(typeof(agent))[2:end]
+    fields_no_id = propertynames(agent)[2:end]
     if isempty(kwargs)
-        new_args = (getfield(agent, x) for x in fields_no_id)
+        new_args = (getproperty(agent, x) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
         new_args = (choose_arg(x, kwargs_nt, agent) for x in fields_no_id)
