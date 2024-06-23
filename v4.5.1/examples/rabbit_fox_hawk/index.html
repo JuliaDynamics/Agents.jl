@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Rabbit, Fox, Hawk · Agents.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li class="is-active"><a class="tocitem" href>Rabbit, Fox, Hawk</a><ul class="internal"><li><a class="tocitem" href="#Visualization"><span>Visualization</span></a></li></ul></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Rabbit, Fox, Hawk</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Rabbit, Fox, Hawk</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/rabbit_fox_hawk.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Rabbit,-Fox,-Hawk"><a class="docs-heading-anchor" href="#Rabbit,-Fox,-Hawk">Rabbit, Fox, Hawk</a><a id="Rabbit,-Fox,-Hawk-1"></a><a class="docs-heading-anchor-permalink" href="#Rabbit,-Fox,-Hawk" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+</video><p>This model is a variation on the <a href="../predator_prey_fast/#Predator-prey-dynamics">Predator-prey dynamics</a> example. It uses a 3-dimensional <a href="../../api/#Agents.ContinuousSpace"><code>ContinuousSpace</code></a>, a realistic terrain for the agents, and pathfinding (with multiple pathfinders).</p><p>Agents in this model are one of three species of animals: rabbits, foxes and hawks. Rabbits eat grass, and are hunted by foxes and hawks. While rabbits and foxes are restricted to walk on suitable portions of the map, hawks are capable of flight and can fly over a much larger region of the map.</p><p>Similar to the <a href="../predator_prey_fast/#Predator-prey-dynamics">Predator-prey dynamics</a> example, agent types are distinguished using a <code>type</code> field. Agents also have an additional <code>energy</code> field, which is consumed to move around and reproduce. Eating food (grass or rabbits) replenishes <code>energy</code> by a fixed amount.</p><pre><code class="language-julia hljs">using Agents, Agents.Pathfinding
+using Random
+using FileIO # To load images you also need ImageMagick available to your project
+
+mutable struct Animal &lt;: AbstractAgent
+    id::Int
+    pos::NTuple{3,Float64}
+    type::Symbol ## one of :rabbit, :fox or :hawk
+    energy::Float64
+end
+
+# Some utility functions to create specific types of agents, and find the norm of a vector
+Rabbit(id, pos, energy) = Animal(id, pos, :rabbit, energy)
+Fox(id, pos, energy) = Animal(id, pos, :fox, energy)
+Hawk(id, pos, energy) = Animal(id, pos, :hawk, energy)
+norm(vec) = √sum(vec .^ 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">norm (generic function with 1 method)</code></pre><p>The environment is generated from a heightmap: a 2D matrix, where each value denotes the height of the terrain at that point. We segregate the model into 4 regions based on the height:</p><ul><li>Anything below <code>water_level</code> is waster and cannot be walked on</li><li>The region between <code>water_level</code> and <code>grass_level</code> is flatland, that can be walked on</li><li>The part of the map between <code>grass_level</code> and <code>mountain_level</code> is too high for animals to walk over, but it can be flown over</li><li>The terrain above <code>mountain_level</code> is completely inaccessible</li></ul><p>Grass is the food source for rabbits. It can grow anywhere from <code>water_level</code> to <code>grass_level</code>. The spread of grass across the terrain is specified using a BitArray. A value of 1 at a location indicates the presence of grass there, which can be consumed when it is eaten by a rabbit. The probability of grass growing is proportional to how close it is to the water.</p><p>The <code>initialize_model</code> function takes in the URL to our heightmap, the thresholds for the 4 regions, and some additional parameters for the model. It then creates and returns a model with the specified heightmap and containing the specified number of rabbits, foxes and hawks.</p><pre><code class="language-julia hljs">function initialize_model(
+    heightmap_url,
+    water_level = 8,
+    grass_level = 20,
+    mountain_level = 35;
+    n_rabbits = 160,  ## initial number of rabbits
+    n_foxes = 30,  ## initial number of foxes
+    n_hawks = 30,  ## initial number of hawks
+    Δe_grass = 25,  ## energy gained from eating grass
+    Δe_rabbit = 30,  ## energy gained from eating one rabbit
+    rabbit_repr = 0.06,  ## probability for a rabbit to (asexually) reproduce at any step
+    fox_repr = 0.03,  ## probability for a fox to (asexually) reproduce at any step
+    hawk_repr = 0.02, ## probability for a hawk to (asexually) reproduce at any step
+    rabbit_vision = 6,  ## how far rabbits can see grass and spot predators
+    fox_vision = 10,  ## how far foxes can see rabbits to hunt
+    hawk_vision = 15,  ## how far hawks can see rabbits to hunt
+    rabbit_speed = 1.3, ## movement speed of rabbits
+    fox_speed = 1.1,  ## movement speed of foxes
+    hawk_speed = 1.2, ## movement speed of hawks
+    regrowth_chance = 0.03,  ## probability that a patch of grass regrows at any step
+    dt = 0.1,   ## discrete timestep each iteration of the model
+    seed = 42,  ## seed for random number generator
+)
+
+    # Download and load the heightmap. The grayscale value is converted to `Float64` and
+    # scaled from 1 to 40
+    heightmap = floor.(Int, convert.(Float64, load(download(heightmap_url))) * 39) .+ 1
+    # The x and y dimensions of the pathfinder are that of the heightmap
+    dims = (size(heightmap)..., 50)
+    # The region of the map that is accessible to each type of animal (land-based or flying)
+    # is defined using `BitArrays`
+    land_walkmap = BitArray(falses(dims...))
+    air_walkmap = BitArray(falses(dims...))
+    for i in 1:dims[1], j in 1:dims[2]
+        # land animals can only walk on top of the terrain between water_level and grass_level
+        if water_level &lt; heightmap[i, j] &lt; grass_level
+            land_walkmap[i, j, heightmap[i, j]+1] = true
+        end
+        # air animals can fly at any height upto mountain_level
+        if heightmap[i, j] &lt; mountain_level
+            air_walkmap[i, j, (heightmap[i, j]+1):mountain_level] .= true
+        end
+    end
+
+    # Generate the RNG for the model
+    rng = MersenneTwister(seed)
+
+    # Note that the dimensions of the space do not have to correspond to the dimensions
+    # of the pathfinder. Discretisation is handled by the pathfinding methods
+    space = ContinuousSpace((100., 100., 50.); periodic = false)
+
+    # Generate an array of random numbers, and threshold it by the probability of grass growing
+    # at that location. Although this causes grass to grow below `water_level`, it is
+    # effectively ignored by `land_walkmap`
+    grass = BitArray(
+        rand(rng, dims[1:2]...) .&lt; ((grass_level .- heightmap) ./ (grass_level - water_level)),
+    )
+    properties = (
+        # The pathfinder for rabbits and foxes
+        landfinder = AStar(space; walkmap = land_walkmap),
+        # The pathfinder for hawks
+        airfinder = AStar(space; walkmap = air_walkmap, cost_metric = MaxDistance{3}()),
+        Δe_grass = Δe_grass,
+        Δe_rabbit = Δe_rabbit,
+        rabbit_repr = rabbit_repr,
+        fox_repr = fox_repr,
+        hawk_repr = hawk_repr,
+        rabbit_vision = rabbit_vision,
+        fox_vision = fox_vision,
+        hawk_vision = hawk_vision,
+        rabbit_speed = rabbit_speed,
+        fox_speed = fox_speed,
+        hawk_speed = hawk_speed,
+        heightmap = heightmap,
+        grass = grass,
+        regrowth_chance = regrowth_chance,
+        water_level = water_level,
+        grass_level = grass_level,
+        dt = dt,
+    )
+
+    model = ABM(Animal, space; rng, properties)
+
+    # spawn each animal at a random walkable position according to its pathfinder
+    for _ in 1:n_rabbits
+        add_agent_pos!(
+            Rabbit(
+                nextid(model), ## Using `nextid` prevents us from having to manually keep track
+                               # of animal IDs
+                random_walkable(model, model.landfinder),
+                rand(model.rng, Δe_grass:2Δe_grass),
+            ),
+            model,
+        )
+    end
+    for _ in 1:n_foxes
+        add_agent_pos!(
+            Fox(
+                nextid(model),
+                random_walkable(model, model.landfinder),
+                rand(model.rng, Δe_rabbit:2Δe_rabbit),
+            ),
+            model,
+        )
+    end
+    for _ in 1:n_hawks
+        add_agent_pos!(
+            Hawk(
+                nextid(model),
+                random_walkable(model, model.airfinder),
+                rand(model.rng, Δe_rabbit:2Δe_rabbit),
+            ),
+            model,
+        )
+    end
+
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">initialize_model (generic function with 4 methods)</code></pre><p>The <code>animal_step!</code> function dispatches to the proper function depending on the type of agent. The stepping functions for each type of agent are similar: They lose energy per step, and die if their energy ever reaches 0. They also have a random probability to reproduce at an iteration. Agents all move towards their food. In the case of rabbits, they also move away from any nearby predators.</p><pre><code class="language-julia hljs">function animal_step!(animal, model)
+    if animal.type == :rabbit
+        rabbit_step!(animal, model)
+    elseif animal.type == :fox
+        fox_step!(animal, model)
+    else
+        hawk_step!(animal, model)
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">animal_step! (generic function with 1 method)</code></pre><p>Rabbits eat grass at their position, if it exists. If they see a predator, they run away. The direction in which they flee is dependent on all predators in their vision, with closer ones contributing more to the chosen direction. If there are no predators to flee from, rabbits walk around randomly.</p><pre><code class="language-julia hljs">function rabbit_step!(rabbit, model)
+    # Eat grass at this position, if any
+    if get_spatial_property(rabbit.pos, model.grass, model) == 1
+        model.grass[get_spatial_index(rabbit.pos, model.grass, model)] = 0
+        rabbit.energy += model.Δe_grass
+    end
+
+    # The energy cost at each step corresponds to the amount of time that has passed
+    # since the last step
+    rabbit.energy -= model.dt
+    # All animals die if their energy reaches 0
+    if rabbit.energy &lt;= 0
+        kill_agent!(rabbit, model, model.landfinder)
+        return
+    end
+
+    # Get a list of positions of all nearby predators
+    predators = [
+        x.pos for x in nearby_agents(rabbit, model, model.rabbit_vision) if
+            x.type == :fox || x.type == :hawk
+            ]
+    # If the rabbit sees a predator and isn&#39;t already moving somewhere
+    if !isempty(predators) &amp;&amp; is_stationary(rabbit, model.landfinder)
+        # Try and get an ideal direction away from predators
+        direction = (0., 0., 0.)
+        for predator in predators
+            # Get the direction away from the predator
+            away_direction = (rabbit.pos .- predator)
+            # In case there is already a predator at our location, moving anywhere is
+            # moving away from it, so it doesn&#39;t contribute to `direction`
+            all(away_direction .≈ 0.) &amp;&amp; continue
+            # Add this to the overall direction, scaling inversely with distance.
+            # As a result, closer predators contribute more to the direction to move in
+            direction = direction .+ away_direction ./ norm(away_direction) ^ 2
+        end
+        # If the only predator is right on top of the rabbit
+        if all(direction .≈ 0.)
+            # Move anywhere
+            chosen_position = random_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision)
+        else
+            # Normalize the resultant direction, and get the ideal position to move it
+            direction = direction ./ norm(direction)
+            # Move to a random position in the general direction of away from predators
+            position = rabbit.pos .+ direction .* (model.rabbit_vision / 2.)
+            chosen_position = random_walkable(position, model, model.landfinder, model.rabbit_vision / 2.)
+        end
+        set_target!(rabbit, chosen_position, model.landfinder)
+    end
+
+    # Reproduce with a random probability, scaling according to the time passed each
+    # step
+    rand(model.rng) &lt;= model.rabbit_repr * model.dt &amp;&amp; reproduce!(rabbit, model)
+
+    # If the rabbit isn&#39;t already moving somewhere, move to a random spot
+    if is_stationary(rabbit, model.landfinder)
+        set_target!(
+            rabbit,
+            random_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision),
+            model.landfinder
+        )
+    end
+
+    # Move along the route planned above
+    move_along_route!(rabbit, model, model.landfinder, model.rabbit_speed, model.dt)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">rabbit_step! (generic function with 1 method)</code></pre><p>Foxes hunt for rabbits, and eat rabbits within a unit radius of its position.</p><pre><code class="language-julia hljs">function fox_step!(fox, model)
+    # Look for nearby rabbits that can be eaten
+    food = [x for x in nearby_agents(fox, model) if x.type == :rabbit]
+    if !isempty(food)
+        kill_agent!(rand(model.rng, food), model, model.landfinder)
+        fox.energy += model.Δe_rabbit
+    end
+
+
+    # The energy cost at each step corresponds to the amount of time that has passed
+    # since the last step
+    fox.energy -= model.dt
+    # All animals die once their energy reaches 0
+    if fox.energy &lt;= 0
+        kill_agent!(fox, model, model.landfinder)
+        return
+    end
+
+    # Random chance to reproduce every step
+    rand(model.rng) &lt;= model.fox_repr * model.dt &amp;&amp; reproduce!(fox, model)
+
+    # If the fox isn&#39;t alreadu moving somewhere
+    if is_stationary(fox, model.landfinder)
+        # Look for any nearby rabbits
+        prey = [x for x in nearby_agents(fox, model, model.fox_vision) if x.type == :rabbit]
+        if isempty(prey)
+            # Move anywhere if no rabbits were found
+            set_target!(
+                fox,
+                random_walkable(fox.pos, model, model.landfinder, model.fox_vision),
+                model.landfinder,
+            )
+            return
+        end
+        # Move toward a random rabbit
+        set_target!(fox, rand(model.rng, map(x -&gt; x.pos, prey)), model.landfinder)
+    end
+
+    move_along_route!(fox, model, model.landfinder, model.fox_speed, model.dt)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">fox_step! (generic function with 1 method)</code></pre><p>Hawks function similarly to foxes, except they can also fly. They dive down for prey and fly back up after eating it.</p><pre><code class="language-julia hljs">function hawk_step!(hawk, model)
+    # Look for rabbits nearby
+    food = [x for x in nearby_agents(hawk, model) if x.type == :rabbit]
+    if !isempty(food)
+        # Eat (kill) the rabbit
+        kill_agent!(rand(model.rng, food), model, model.airfinder)
+        hawk.energy += model.Δe_rabbit
+        # Fly back up
+        set_target!(hawk, hawk.pos .+ (0., 0., 7.), model.airfinder)
+    end
+
+    # The rest of the stepping function is similar to that of foxes, except hawks use a
+    # different pathfinder
+    hawk.energy -= model.dt
+    if hawk.energy &lt;= 0
+        kill_agent!(hawk, model, model.airfinder)
+        return
+    end
+
+    rand(model.rng) &lt;= model.hawk_repr * model.dt &amp;&amp; reproduce!(hawk, model)
+
+    if is_stationary(hawk, model.airfinder)
+        prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if x.type == :rabbit]
+        if isempty(prey)
+            set_target!(
+                hawk,
+                random_walkable(hawk.pos, model, model.airfinder, model.hawk_vision),
+                model.airfinder,
+            )
+        else
+            set_target!(hawk, rand(model.rng, map(x -&gt; x.pos, prey)), model.airfinder)
+        end
+    end
+
+    move_along_route!(hawk, model, model.airfinder, model.hawk_speed, model.dt)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">hawk_step! (generic function with 1 method)</code></pre><p>This function is called when an animal reproduces. The animal loses half its energy, and a copy of it is created and added to the model.</p><pre><code class="language-julia hljs">function reproduce!(animal, model)
+    animal.energy = ceil(Int, animal.energy / 2)
+    add_agent_pos!(Animal(nextid(model), animal.pos, animal.type, animal.energy), model)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">reproduce! (generic function with 1 method)</code></pre><p>The model stepping function simulates the growth of grass</p><pre><code class="language-julia hljs">function model_step!(model)
+    # To prevent copying of data, obtain a view of the part of the grass matrix that
+    # doesn&#39;t have any grass, and grass can grow there
+    growable = view(
+        model.grass,
+        model.grass .== 0 .&amp; model.water_level .&lt; model.heightmap .&lt;= model.grass_level,
+    )
+    # Grass regrows with a random probability, scaling with the amount of time passing
+    # each step of the model
+    growable .= rand(model.rng, length(growable)) .&lt; model.regrowth_chance * model.dt
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">model_step! (generic function with 1 method)</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h2><p>Now we use <code>InteractiveDynamics</code> to create a visualization of the model running in 3D space</p><p>The agents are color-coded according to their <code>type</code>, to make them easily identifiable in the visualization.</p><pre><code class="language-julia hljs">using InteractiveDynamics
+using GLMakie
+
+animalcolor(a) =
+    if a.type == :rabbit
+        :brown
+    elseif a.type == :fox
+        :orange
+    else
+        :blue
+    end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">animalcolor (generic function with 1 method)</code></pre><p>We use <code>surface!</code> to plot the terrain as a mesh, and colour it using the <code>:terrain</code> colormap. Since the heightmap dimensions don&#39;t correspond to the dimensions of the space, we explicitly provide ranges to specify where the heightmap should be plotted.</p><pre><code class="language-julia hljs">function static_preplot!(ax, model)
+    surface!(
+        ax,
+        (100/205):(100/205):100,
+        (100/205):(100/205):100,
+        model.heightmap;
+        colormap = :terrain
+    )
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">static_preplot! (generic function with 1 method)</code></pre><p>Passing in a sample heightmap to the <code>initialize_model</code> function we created returns the generated model.</p><pre><code class="language-julia hljs">heightmap_url =
+    &quot;https://raw.githubusercontent.com/JuliaDynamics/&quot; *
+    &quot;JuliaDynamics/master/videos/agents/rabbit_fox_hawk_heightmap.png&quot;
+model = initialize_model(heightmap_url)
+
+abm_video(
+    &quot;rabbit_fox_hawk.mp4&quot;,
+    model,
+    animal_step!,
+    model_step!;
+    resolution = (700, 700),
+    frames = 300,
+    framerate = 20,
+    ac = animalcolor,
+    as = 1.0,
+    static_preplot!
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Makie/Makie is caching fonts, this may take a while. Needed only on first run!</code></pre><video width="auto" controls autoplay loop>
+<source src="../rabbit_fox_hawk.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../runners/">« Mountain Runners</a><a class="docs-footer-nextpage" href="../growing_bacteria/">Bacteria Growth »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.5 on <span class="colophon-date" title="Monday 2 August 2021 12:07">Monday 2 August 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
