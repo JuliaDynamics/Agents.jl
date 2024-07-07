@@ -746,11 +746,11 @@ act differently depending on the agent type
 
 ````@example tutorial
 function agent_step!(agent::Schelling, model)
-    # stuff.
+    "some stuff."
 end
 
 function agent_step!(agent::Politician, model)
-    # other stuff.
+    "other stuff."
 end
 ````
 
@@ -800,11 +800,11 @@ instead. Hence, the agent stepping function should become something like
 agent_step!(agent, model) = agent_step!(agent, model, variant(agent))
 
 function agent_step!(agent, model, ::Schelling)
-    # stuff.
+    "some stuff."
 end
 
 function agent_step!(agent, model, ::Politician)
-    # other stuff.
+    "other stuff."
 end
 ````
 
