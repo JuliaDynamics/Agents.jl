@@ -6,7 +6,7 @@
 # are split in a varying number of agents. It shows how much of a
 # performance hit is to have many different agent types.
 
-using Agents, Random, BenchmarkTools
+using Agents, DynamicSumTypes, Random, BenchmarkTools
 
 @agent struct Agent1(GridAgent{2})
     money::Int
@@ -68,27 +68,14 @@ end
     money::Int
 end
 
-agents_m = [Symbol(:AgentAllMemory, :($y)) for y in [2,3,4,5,10,15]]
-subagents_m = [[Symbol(:Agent, :($x), :m, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
-expr_subagents_m = [[:(@subagent struct $(Symbol(:Agent, :($x), :m, :($y)))
-                            money::Int
-                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
-for (a, subs) in zip(agents_m, expr_subagents_m)
-    @eval @multiagent :opt_memory struct $a(GridAgent{2})
-        $(subs...)
-    end
-end
-
-agents_s = [Symbol(:AgentAllSpeed, :($y)) for y in [2,3,4,5,10,15]]
-subagents_s = [[Symbol(:Agent, :($x), :s, :($y)) for x in 1:y] for y in [2,3,4,5,10,15]]
-expr_subagents_s = [[:(@subagent struct $(Symbol(:Agent, :($x), :s, :($y)))
-                           money::Int
-                       end) for x in 1:y] for y in [2,3,4,5,10,15]]
-for (a, subs) in zip(agents_s, expr_subagents_s)
-    @eval @multiagent :opt_speed struct $a(GridAgent{2})
-        $(subs...)
-    end
-end
+@sumtype AgentAll2(Agent1, Agent2) <: AbstractAgent
+@sumtype AgentAll3(Agent1, Agent2, Agent3) <: AbstractAgent
+@sumtype AgentAll4(Agent1, Agent2, Agent3, Agent4) <: AbstractAgent
+@sumtype AgentAll5(Agent1, Agent2, Agent3, Agent4, Agent5) <: AbstractAgent
+@sumtype AgentAll10(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
+    Agent7, Agent8, Agent9, Agent10) <: AbstractAgent
+@sumtype AgentAll15(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
+    Agent7, Agent8, Agent9, Agent10, Agent11, Agent12, Agent13, Agent14, Agent15) <: AbstractAgent
 
 function initialize_model_1(;n_agents=600,dims=(5,5))
     space = GridSpace(dims)
@@ -102,33 +89,23 @@ function initialize_model_1(;n_agents=600,dims=(5,5))
     return model
 end
 
-function initialize_model_multi_memory(;n_agents=600, n_types=1, dims=(5,5))
-    i = findfirst(x -> length(x) == n_types, subagents_m)
-    agents_used = [eval(sa) for sa in subagents_m[i]]
+function initialize_model_sum(;n_agents=600, n_types=1, dims=(5,5))
+    agent_types = [Agent1,Agent2,Agent3,Agent4,Agent5,Agent6,Agent7,Agent8,
+        Agent9,Agent10,Agent11,Agent12,Agent13,Agent14,Agent15]
+    agents_used = agent_types[1:n_types]
+    agent_all_t = Dict(2 => AgentAll2, 3 => AgentAll3, 
+                       4 => AgentAll4, 5 => AgentAll5,
+                       10 => AgentAll10, 15 => AgentAll15)
+    agent_all = agent_all_t[n_types]
     space = GridSpace(dims)
-    model = StandardABM(eval(agents_m[i]), space; agent_step!,
+    model = StandardABM(agent_all, space; agent_step!,
                         scheduler=Schedulers.Randomly(), warn=false,
                         rng = Xoshiro(42))
     agents_per_type = div(n_agents, n_types)
     for A in agents_used
         for _ in 1:agents_per_type
-            add_agent!(A, model, 10)
-        end
-    end
-    return model
-end
-
-function initialize_model_multi_speed(;n_agents=600, n_types=1, dims=(5,5))
-    i = findfirst(x -> length(x) == n_types, subagents_s)
-    agents_used = [eval(sa) for sa in subagents_s[i]]
-    space = GridSpace(dims)
-    model = StandardABM(eval(agents_s[i]), space; agent_step!,
-                        scheduler=Schedulers.Randomly(), warn=false,
-                        rng = Xoshiro(42))
-    agents_per_type = div(n_agents, n_types)
-    for A in agents_used
-        for _ in 1:agents_per_type
-            add_agent!(A, model, 10)
+            agent = agent_all(A(model, random_position(model), 10))
+            add_agent_own_pos!(agent, model)
         end
     end
     return model
@@ -178,12 +155,8 @@ function run_simulation_1(n_steps)
     Agents.step!(model, n_steps)
 end
 
-function run_simulation_multi_memory(n_steps; n_types)
-    model = initialize_model_multi_memory(; n_types=n_types)
-    Agents.step!(model, n_steps)
-end
-function run_simulation_multi_speed(n_steps; n_types)
-    model = initialize_model_multi_speed(; n_types=n_types)
+function run_simulation_sum(n_steps; n_types)
+    model = initialize_model_sum(; n_types=n_types)
     Agents.step!(model, n_steps)
 end
 
@@ -198,33 +171,29 @@ n_types = [2,3,4,5,10,15]
 
 time_1 = @belapsed run_simulation_1($n_steps)
 times_n = Float64[]
-times_multi_m = Float64[]
 times_multi_s = Float64[]
 for n in n_types
     println(n)
     t = @belapsed run_simulation_n($n_steps; n_types=$n)
     push!(times_n, t/time_1)
-    t_multi = @belapsed run_simulation_multi_memory($n_steps; n_types=$n)
-    push!(times_multi_m, t_multi/time_1)
-    t_multi_speed = @belapsed run_simulation_multi_speed($n_steps; n_types=$n)
-    push!(times_multi_s, t_multi_speed/time_1)
+    t_sum = @belapsed run_simulation_sum($n_steps; n_types=$n)
+    print(t/time_1, " ", t_sum/time_1)
+    push!(times_multi_s, t_sum/time_1)
 end
 
-println("relative time of model with 1 type: 1")
-for (n, t1, t2, t3) in zip(n_types, times_n, times_multi_m, times_multi_s)
+println("relative time of model with 1 type: 1.0")
+for (n, t1, t2) in zip(n_types, times_n, times_multi_s)
     println("relative time of model with $n types: $t1")
-    println("relative time of model with $n @multiagent :opt_memory: $t2")
-    println("relative time of model with $n @multiagent :opt_speed: $t3")
+    println("relative time of model with $n @sumtype: $t2")
 end
 
 using CairoMakie
 fig, ax = CairoMakie.scatterlines(n_types, times_n; label = "Union");
-scatterlines!(ax, n_types, times_multi_s; label = "@multi :opt_speed")
-scatterlines!(ax, n_types, times_multi_m; label = "@multi :opt_memory")
+scatterlines!(ax, n_types, times_multi_s; label = "@sumtype")
 ax.xlabel = "# types"
 ax.ylabel = "time relative to 1 type"
-ax.title = "Union types vs @multiagent macro"
+ax.title = "Union types vs @sumtype"
 axislegend(ax; position = :lt)
 ax.yticks = 0:1:ceil(Int, maximum(times_n))
-ax.xticks = 2:2:16
+ax.xticks = [2, 3, 4, 5, 10, 15]
 fig
