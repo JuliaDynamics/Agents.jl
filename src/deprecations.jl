@@ -391,3 +391,11 @@ function nearby_agents_exact(a, model, r=1)
     @warn "`nearby_agents_exact` is deprecated in favor of `nearby_agents(...; search=:exact)`." maxlog=1
     return (model[id] for id in nearby_ids(a, model, r; search=:exact))
 end
+
+export @multiagent
+macro multiagent(defs)
+    error("@multiagent was removed from Agents.jl because the underlying package
+           implementing the backend for it was updated to a much simpler methodology,
+           refer to the 'Performace Tips' section in the documentation to update your
+           model to use this new methodology.")
+end

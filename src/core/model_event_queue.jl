@@ -14,13 +14,7 @@ An event instance that can be given to [`EventQeueABM`](@ref).
 - `propensity = 1.0`: it can be either a constant real number,
   or a function `propensity(agent, model)` that returns the propensity of the event.
   This function is called when a new event is generated for the given `agent`.
-- `kinds = nothing`: the kinds of agents the `action!` function can be applied to.
-  As [`EventQueueABM`](@ref) only works with [`@multiagent`](@ref), the
-  agent kinds are `Symbol`s. The default value `nothing` means that the `action!`
-  may apply to any kind of agents. Otherwise, it must a be **tuple** of `Symbol`s
-  representing the agent kinds, such as `(:Rock, :Paper, :Scissors)`.
-  A tuple must still be used if the action applies to only one kind of agent,
-  such as `(:Rock, )` (notice the closing comma).
+- `types = AbstractAgent`: the types of agents the `action!` function can be applied to.
 - `timing = Agents.exp_propensity`: decides how long after its generation the event should
   trigger. By default the time is a randomly sampled time from an exponential distribution
   with parameter the total propensity of all applicable events to the agent.
@@ -31,10 +25,10 @@ An event instance that can be given to [`EventQeueABM`](@ref).
 Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored
 if `event_idx` and `t` are given.
 """
-@kwdef struct AgentEvent{F<:Function, P, A, T<:Function}
-    action!::F
+Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T<:Function}
+    action!::F = dummystep
     propensity::P = 1.0
-    kinds::A = nothing
+    types::A = AbstractAgent
     timing::T = exp_propensity
 end
 
@@ -44,7 +38,7 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,ET,PT,FPT,Q} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,ET,PT,FPT,TI,Q} <: AgentBasedModel{S}
     # core ABM stuff
     agents::C
     space::S
@@ -54,9 +48,9 @@ struct EventQueueABM{
     time::Base.RefValue{Float64}
     # Specific to event queue
     events::E
-    kind_to_index::Dict{Symbol, Int}
-    idx_events_each_kind::ET
-    propensities_each_kind::PT
+    type_to_idx::TI
+    idx_events_each_type::ET
+    propensities_each_type::PT
     idx_func_propensities_each_type::FPT
     event_queue::Q
     autogenerate_on_add::Bool
@@ -91,7 +85,7 @@ The events have four pieces of information:
    first all applicable events for that agent
    are collected. Then, their propensities are calculated. The event generated then
    is selected randomly by weighting each possible event by its propensity.
-3. The agent kinds(s) the event applies to. By default it applies to all kinds.
+3. The agent type(s) the event applies to. By default it applies to all types.
 4. The timing of the event, i.e., when should it be triggered once it is generated.
    By default this is an exponentially distributed random variable divided by the
    propensity of the event. I.e., it follows a Poisson process with the propensity
@@ -169,28 +163,26 @@ function EventQueueABM(
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
     queue = BinaryHeap(Base.By(last), Pair{Tuple{I, Int}, Float64}[])
 
-    agent_kinds = allkinds(A)
-    kind_to_index = Dict(kind => i for (i, kind) in enumerate(agent_kinds))
+    agent_types = union_types(A)
+    type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
 
     # precompute a vector mapping the agent kind index to a
     # vectors of indices, each vector corresponding
     # to all valid events that can apply to a given agent kind
-    idx_events_each_kind = [
-        [i for (i, e) in enumerate(events) if _haskind(e, kind)]
-        for kind in agent_kinds
-    ]
+    idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types] 
+                            for t in agent_types]
     # initialize vectors for the propensities (they are updated in-place later)
-    propensities_each_kind = [zeros(length(e)) for e in idx_events_each_kind]
+    propensities_each_type = [zeros(length(e)) for e in idx_events_each_type]
 
     # We loop over all propensities. For those that are functions, we can
     # update the corresponding propensities entry, which will stay fixed.
     # For the others, we keep track of the indices of the events whose
     # propensities is a function. Later on when we compute propensities,
     # only the indices with propensity <: Function are re-updated!
-    idx_func_propensities_each_type = [Int[] for _ in idx_events_each_kind]
-    for i in eachindex(agent_kinds)
-        propensities_type = propensities_each_kind[i]
-        for (q, j) in enumerate(idx_events_each_kind[i])
+    idx_func_propensities_each_type = [Int[] for _ in idx_events_each_type]
+    for i in eachindex(agent_types)
+        propensities_type = propensities_each_type[i]
+        for (q, j) in enumerate(idx_events_each_type[i])
             if events[j].propensity isa Real
                 propensities_type[q] = events[j].propensity
             else # propensity is a custom function!
@@ -203,27 +195,18 @@ function EventQueueABM(
     # because we use the index of `kind_to_index` to access them.
 
     # construct the type
-    ET,PT,FPT,Q = typeof.((
+    ET,PT,FPT,TI,Q = typeof.((
         idx_events_each_kind, propensities_each_kind,
-        idx_func_propensities_each_type, queue
+        idx_func_propensities_each_type, type_to_idx, queue
     ))
-    return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,Q}(
+    return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
 
         agents, space, properties, rng, Ref(0), Ref(0.0),
 
-        events, kind_to_index, idx_events_each_kind,
+        events, type_to_idx, idx_events_each_kind,
         propensities_each_kind, idx_func_propensities_each_type,
         queue, autogenerate_on_add, autogenerate_after_action,
     )
-end
-
-# functions used in the construction of the `EventQueueABM`
-function _haskind(e::AgentEvent, kind)
-    if isnothing(e.kinds)
-        return true
-    else
-        return kind ∈ e.kinds
-    end
 end
 
 ###########################################################################################
@@ -253,22 +236,21 @@ current time of the `model`.
 function add_event!(agent, model) # TODO: Study type stability of this function
     events = abmevents(model)
     # Here, we retrieve the applicable events for the agent and corresponding info
-    idx = getfield(model, :kind_to_index)[kindof(agent)]
-    valid_event_idxs = getfield(model, :idx_events_each_kind)[idx]
-    propensities = getfield(model, :propensities_each_kind)[idx]
-    func_propensities_idxs = getfield(model, :idx_func_propensities_each_type)[idx]
+    idx = getfield(model, :type_to_idx)[typeof(agent)]
+    events_type = getfield(model, :idx_events_each_type)[idx]
+    propensities_type = getfield(model, :propensities_each_type)[idx]
+    idx_func_propensities_type = getfield(model, :idx_func_propensities_each_type)[idx]
     # After, we update the propensity vector
     # (only the propensities that are custom functions need updating)
-    for i in func_propensities_idxs
-        event = events[valid_event_idxs[i]]
+    for i in idx_func_propensities_type
+        event = events[events_type[i]]
         p = event.propensity(agent, model)
-        propensities[i] = p
+        propensities_type[i] = p
     end
     # Then, select an event based on propensities
-    event_idx = valid_event_idxs[sample_propensity(abmrng(model), propensities)]
-    # The time to the event is generated from the selected event
+    event_idx = events_type[sample_propensity(abmrng(model), propensities_type)]    # The time to the event is generated from the selected event
     selected_event = abmevents(model)[event_idx]
-    selected_prop = propensities[event_idx]
+    selected_prop = propensities_type[event_idx]
     t = selected_event.timing(agent, model, selected_prop)
     # we then propagate to the direct function
     add_event!(agent, event_idx, t, model)

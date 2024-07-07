@@ -37,14 +37,11 @@
 
 using Agents
 
-# and defining the three agent types using [`multiagent`](@ref)
-# (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
+# and defining the three agent types
 
-@multiagent struct RPS(GridAgent{2})
-    @subagent struct Rock end
-    @subagent struct Paper end
-    @subagent struct Scissors end
-end
+@agent struct Rock(GridAgent{2}) end
+@agent struct Paper(GridAgent{2}) end
+@agent struct Scissors(GridAgent{2}) end
 
 # %% #src
 
@@ -67,27 +64,10 @@ function attack!(agent, model)
     return
 end
 
-# for the attack!(agent, contender) function we could either use some
-# branches based on the values of `kindof`
-
-function attack!(agent::RPS, contender::RPS, model)
-    kind = kindof(agent)
-    kindc = kindof(contender)
-    if kind === :Rock && kindc === :Scissors
-        remove_agent!(contender, model)
-    elseif kind === :Scissors && kindc === :Paper
-        remove_agent!(contender, model)
-    elseif kind === :Paper && kindc === :Rock
-        remove_agent!(contender, model)
-    end
-end
-
-# or use the @dispatch macro for convenience
-
-@dispatch attack!(::RPS, ::RPS, model) = nothing
-@dispatch attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
-@dispatch attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
-@dispatch attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
+attack!(::AbstractAgent, ::AbstractAgent, model) = nothing
+attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
+attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
+attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
 
 # The movement function is equally simple due to
 # the many functions offered by Agents.jl [API](@ref).
@@ -158,7 +138,7 @@ attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_propensity)
 
 # The movement event does not apply to rocks however,
-# so we need to specify the agent "kinds" that it applies to,
+# so we need to specify the agent types that it applies to,
 # which is `(:Scissors, :Paper)`.
 # Additionally, we would like to change how the timing of the movement events works.
 # We want to change it from an exponential distribution sample to something else.
