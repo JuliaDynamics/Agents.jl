@@ -728,7 +728,7 @@ end
 model = StandardABM(
     Union{Schelling, Politician}, # type of agents
     space; # space they live in
-    agent_step! = union_step!
+    agent_step!
 )
 
 # ## Multiple agent types with `@sumtype`
@@ -770,7 +770,7 @@ end
 model = StandardABM(
     MultiSchelling, # the sum type is given as the type
     space;
-    agent_step! = multi_step!
+    agent_step!
 )
 
 # ## Adding agents of different types to the model
