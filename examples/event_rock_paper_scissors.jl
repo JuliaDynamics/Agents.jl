@@ -35,7 +35,7 @@
 
 # We start by loading `Agents`
 
-using Agents
+using Agents, DynamicSumTypes
 
 # and defining the three agent types
 
@@ -155,7 +155,7 @@ end
 
 movement_event = AgentEvent(
     action! = move!, propensity = movement_propensity,
-    types = (Scissors, Paper), timing = movement_time
+    types = Union{Scissors, Paper}, timing = movement_time
 )
 
 # we wrap all events in a tuple and we are done with the setting up part!
@@ -174,6 +174,7 @@ space = GridSpaceSingle((100, 100))
 using Random: Xoshiro
 rng = Xoshiro(42)
 
+const RPS = Union{Rock, Paper, Scissors}
 model = EventQueueABM(RPS, events, space; rng, warn = false)
 
 # populating the model with agents is the same as in the main [Tutorial](@ref),

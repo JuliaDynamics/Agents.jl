@@ -148,16 +148,22 @@ end
 
 ################### Benchmarks ###############
 
-@btime step!($model1, 50)
-@btime step!($model2, 50)
+t1 = @belapsed step!($model1, 50)
+t2 = @belapsed step!($model2, 50)
 
 # Results:
 # multiple types: 3.778 s (38740900 allocations: 2.38 GiB)
 # @sumtype: 545.119 ms (22952850 allocations: 965.93 MiB)
 
-Base.summarysize(model1)
-Base.summarysize(model2)
+m1 = Base.summarysize(model1)
+m2 = Base.summarysize(model2)
 
 # Results:
 # multiple types: 543.496 KiB
 # @sumtype: 546.360 KiB
+
+println("Performance of the model with multiple types: $(t1) s")
+println("Performance of the model with @sumtype: $(t2) s")
+println()
+println("Memory occupied by the model with multiple types: $(m1/1000) Kib")
+println("Memory occupied by the model with @sumtype: $(m2/1000) Kib")

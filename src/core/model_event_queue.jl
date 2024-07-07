@@ -164,9 +164,9 @@ function EventQueueABM(
     agent_types = union_types(A)
     type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
 
-    # precompute a vector mapping the agent kind index to a
+    # precompute a vector mapping the agent type index to a
     # vectors of indices, each vector corresponding
-    # to all valid events that can apply to a given agent kind
+    # to all valid events that can apply to a given agent type
     idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types] 
                             for t in agent_types]
     # initialize vectors for the propensities (they are updated in-place later)
