@@ -736,7 +736,7 @@ and, when making the model we would specify
 
 ````@example tutorial
 model = StandardABM(
-    Union{SchellingAgent, Politician}, # type of agents
+    Union{Schelling, Politician}, # type of agents
     space; # space they live in
 )
 ````
@@ -745,7 +745,7 @@ Naturally, we would have to define a new agent stepping function that would
 act differently depending on the agent type
 
 ````@example tutorial
-function agent_step!(agent::SchellingAgent, model)
+function agent_step!(agent::Schelling, model)
     # stuff.
 end
 
@@ -758,7 +758,7 @@ and then passing
 
 ````@example tutorial
 model = StandardABM(
-    Union{SchellingAgent, Politician}, # type of agents
+    Union{Schelling, Politician}, # type of agents
     space; # space they live in
     agent_step! = union_step!
 )
@@ -773,7 +773,7 @@ everything works the same
 ````@example tutorial
 using DynamicSumTypes
 
-@sumtype MultiSchelling(SchellingAgent, Politician) <: AbstractAgent
+@sumtype MultiSchelling(Schelling, Politician) <: AbstractAgent
 ````
 
 Now when you create instances you will need to enclose them in `MultiSchelling`
@@ -799,7 +799,7 @@ instead. Hence, the agent stepping function should become something like
 ````@example tutorial
 agent_step!(agent, model) = agent_step!(agent, model, variant(agent))
 
-function agent_step!(agent, model, ::SchellingAgent)
+function agent_step!(agent, model, ::Schelling)
     # stuff.
 end
 
@@ -829,13 +829,13 @@ agent.
 For example, in the union case we provide the `Union` type when we create the model,
 
 ````@example tutorial
-model = StandardABM(Union{SchellingAgent, Politician}, space)
+model = StandardABM(Union{Schelling, Politician}, space)
 ````
 
 we add them by specifying the type
 
 ````@example tutorial
-add_agent_single!(SchellingAgent, model; group = 1, mood = true)
+add_agent_single!(Schelling, model; group = 1, mood = true)
 ````
 
 or
@@ -859,7 +859,7 @@ model = StandardABM(MultiSchelling, space)
 we add agents like so
 
 ````@example tutorial
-agent = MultiSchelling(SchellingAgent(model; pos = random_position(model), group = 1, mood = true))
+agent = MultiSchelling(Schelling(model; pos = random_position(model), group = 1, mood = true))
 add_agent_single!(agent, model)
 ````
 
