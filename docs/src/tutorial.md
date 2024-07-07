@@ -760,7 +760,7 @@ and then passing
 model = StandardABM(
     Union{Schelling, Politician}, # type of agents
     space; # space they live in
-    agent_step! = union_step!
+    agent_step!
 )
 ````
 
@@ -814,7 +814,7 @@ and you need to give `MultiSchelling` as the type of agents in model initializat
 model = StandardABM(
     MultiSchelling, # the sum type is given as the type
     space;
-    agent_step! = multi_step!
+    agent_step!
 )
 ````
 
