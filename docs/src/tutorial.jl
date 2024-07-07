@@ -707,7 +707,7 @@ end
 # and, when making the model we would specify
 
 model = StandardABM(
-    Union{SchellingAgent, Politician}, # type of agents
+    Union{Schelling, Politician}, # type of agents
     space; # space they live in
 )
 
@@ -715,7 +715,7 @@ model = StandardABM(
 # act differently depending on the agent type. This could be done by making
 # a function that calls other functions depending on the type, such as
 
-function agent_step!(agent::SchellingAgent, model)
+function agent_step!(agent::Schelling, model)
     # stuff.
 end
 
@@ -726,7 +726,7 @@ end
 # and then passing
 
 model = StandardABM(
-    Union{SchellingAgent, Politician}, # type of agents
+    Union{Schelling, Politician}, # type of agents
     space; # space they live in
     agent_step! = union_step!
 )
@@ -739,7 +739,7 @@ model = StandardABM(
 
 using DynamicSumTypes
 
-@sumtype MultiSchelling(SchellingAgent, Politician) <: AbstractAgent
+@sumtype MultiSchelling(Schelling, Politician) <: AbstractAgent
 
 # Now when you create instances you will need to enclose them in `MultiSchelling`
 
@@ -757,7 +757,7 @@ typeof(variant(gov))
 
 agent_step!(agent, model) = agent_step!(agent, model, variant(agent))
 
-function agent_step!(agent, model, ::SchellingAgent)
+function agent_step!(agent, model, ::Schelling)
     # stuff.
 end
 
@@ -783,11 +783,11 @@ model = StandardABM(
 
 # For example, in the union case we provide the `Union` type when we create the model,
 
-model = StandardABM(Union{SchellingAgent, Politician}, space)
+model = StandardABM(Union{Schelling, Politician}, space)
 
 # we add them by specifying the type
 
-add_agent_single!(SchellingAgent, model; group = 1, mood = true)
+add_agent_single!(Schelling, model; group = 1, mood = true)
 
 # or
 
@@ -803,7 +803,7 @@ model = StandardABM(MultiSchelling, space)
 
 # we add agents like so
 
-agent = MultiSchelling(SchellingAgent(model; pos = random_position(model), group = 1, mood = true))
+agent = MultiSchelling(Schelling(model; pos = random_position(model), group = 1, mood = true))
 add_agent_single!(agent, model)
 
 # or
