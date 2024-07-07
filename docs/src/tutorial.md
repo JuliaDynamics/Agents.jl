@@ -779,19 +779,19 @@ using DynamicSumTypes
 Now when you create instances you will need to enclose them in `MultiSchelling`
 
 ````@example tutorial
-gov = MultiSchelling(Governor(; id = 3 , pos = (2, 2), group = 2, influence = 0.5))
+p = MultiSchelling(Politician(model; pos = random_position(model), preferred_demographic = 1))
 ````
 
 agents are then all of type `MultiSchelling`
 
 ````@example tutorial
-typeof(gov)
+typeof(p)
 ````
 
 and hence you can't use only `typeof` to differentiate them. But you can use
 
 ````@example tutorial
-typeof(variant(gov))
+typeof(variant(p))
 ````
 
 instead. Hence, the agent stepping function should become something like
