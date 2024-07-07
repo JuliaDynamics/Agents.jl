@@ -1,8 +1,8 @@
 # This file compares approaching multi-agent models in two ways:
 # 1) using different Types to represent different agents. This leads to type
-# stability within `step!`.
-# 2) using a single type with some extra property `type` or `kind`, and then do
-# an `if`-based branching on this type to dispatch to different functions.
+# instabilities.
+# 2) using @sumtype to enclose all types in a single one. This removes type
+# instabilities.
 
 # The result is that (2) is much faster.
 
@@ -89,54 +89,25 @@ end
 
 ################### DEFINITION 2 ###############
 
-@multiagent :opt_speed struct GridAgent2All(GridAgent{2})
-    @subagent struct GridAgent2One
-        one::Float64
-        two::Bool
-        three::Int
-    end
-    @subagent struct GridAgent2Two
-        one::Float64
-        two::Bool
-        four::Float64
-    end
-    @subagent struct GridAgent2Three
-        one::Float64
-        two::Bool
-        five::Bool
-    end
-    @subagent struct GridAgent2Four
-        one::Float64
-        two::Bool
-        six::Int16
-    end
-    @subagent struct GridAgent2Five
-        one::Float64
-        two::Bool
-        seven::Int32
-    end
-    @subagent struct GridAgent2Six
-        one::Float64
-        two::Bool
-        eight::Int64
-    end
-end
+using DynamicSumTypes
 
-@dispatch agent_step!(agent::GridAgent2One, model2) = randomwalk!(agent, model2)
-@dispatch function agent_step!(agent::GridAgent2Two, model2)
+agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
+
+agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
+function agent_step!(agent, model2, ::GridAgentTwo)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
 end
-@dispatch function agent_step!(agent::GridAgent2Three, model2)
-    if any(a-> kindof(a) == :gridagenttwo, nearby_agents(agent, model2))
+function agent_step!(agent, model2, ::GridAgentThree)
+    if any(a-> variant(a) isa GridAgentTwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
 end
-@dispatch function agent_step!(agent::GridAgent2Four, model2)
+function agent_step!(agent, model2, ::GridAgentFour)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
-@dispatch function agent_step!(agent::GridAgent2Five, model2)
+function agent_step!(agent, model2, ::GridAgentFive)
     targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
     if !isempty(targets)
         idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
@@ -144,12 +115,16 @@ end
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end
 end
-@dispatch function agent_step!(agent::GridAgent2Six, model2)
+function agent_step!(agent, model2, ::GridAgentSix)
     agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 
+@sumtype GridAgentAll(
+    GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive, GridAgentSix
+) <: AbstractAgent
+
 model2 = StandardABM(
-    GridAgent2All,
+    GridAgentAll,
     GridSpace((15, 15));
     agent_step!,
     rng = MersenneTwister(42),
@@ -157,28 +132,32 @@ model2 = StandardABM(
 )
 
 for i in 1:500
-    add_agent!(GridAgent2One, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
-    add_agent!(GridAgent2Two, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i))
-    add_agent!(GridAgent2Three, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), true)
-    add_agent!(GridAgent2Four, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i))
-    add_agent!(GridAgent2Five, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i))
-    add_agent!(GridAgent2Six, model2, rand(abmrng(model2)), rand(abmrng(model2), Bool), i)
+    agent = GridAgentAll(GridAgentOne(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), i))
+    add_agent_own_pos!(agent, model2)
+    agent = GridAgentAll(GridAgentTwo(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), Float64(i)))
+    add_agent_own_pos!(agent, model2)
+    agent = GridAgentAll(GridAgentThree(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), true))
+    add_agent_own_pos!(agent, model2)
+    agent = GridAgentAll(GridAgentFour(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), Int16(i)))
+    add_agent_own_pos!(agent, model2)
+    agent = GridAgentAll(GridAgentFive(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), Int32(i)))
+    add_agent_own_pos!(agent, model2)
+    agent = GridAgentAll(GridAgentSix(model2, random_position(model2), rand(abmrng(model2)), rand(abmrng(model2), Bool), i))
+    add_agent_own_pos!(agent, model2)
 end
 
 ################### Benchmarks ###############
 
 @btime step!($model1, 50)
-@btime step!($model2, 50) # repeat also with :opt_memory
+@btime step!($model2, 50)
 
 # Results:
-# multiple types: 3.732 s (39242250 allocations: 2.45 GiB)
-# @multiagent :opt_speed: 577.185 ms (25818000 allocations: 1.05 GiB)
-# @multiagent :opt_memory: 870.460 ms (25868000 allocations: 1.05 GiB)
+# multiple types: 3.778 s (38740900 allocations: 2.38 GiB)
+# @sumtype: 545.119 ms (22952850 allocations: 965.93 MiB)
 
 Base.summarysize(model1)
-Base.summarysize(model2) # repeat also with :opt_memory
+Base.summarysize(model2)
 
 # Results:
-# multiple types: 491.20 KiB
-# @multiagent :opt_speed: 686.13 KiB
-# @multiagent :opt_memory: 563.12 KiB
+# multiple types: 543.496 KiB
+# @sumtype: 546.360 KiB

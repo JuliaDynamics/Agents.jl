@@ -680,12 +680,11 @@ adf
 
 # In realistic modelling situations it is often the case the the ABM is composed
 # of different types of agents. Agents.jl supports two approaches for multi-agent ABMs.
-# The first uses the `Union` type, and the second
-# uses the [`@multiagent`](@ref) command. `@multiagent` is recommended
-# as default, because in many cases it will have performance advantages over the `Union` approach
-# without having tangible disadvantages. However, you should read through
-# the [comparison of the two approaches](@ref multi_vs_union) to
-# be better informed on which one to choose.
+# The first uses the `Union` type (this subsection), and the second uses the [`@sumtype`](@ref)
+# command (next subsection) available in [DynamicSumTypes.jl](https://github.com/JuliaDynamics/DynamicSumTypes.jl). 
+# This approach is recommended as default, because in many cases it will have performance advantages 
+# over the `Union` approach without having tangible disadvantages. However, we strongly recommend you 
+# to read through the [comparison of the two approaches](@ref sum_vs_union).
 
 # _Note that using multiple agent types is a possibility entirely orthogonal to
 # the type of `AgentBasedModel` or the type of space. Everything we describe here
@@ -695,7 +694,7 @@ adf
 
 # The simplest way to add more agent types is to make more of them with
 # [`@agent`](@ref) and then give a `Union` of agent types as the agent type when
-# making the `AgentBasedModel`. This is the most "native Julia" approach.
+# making the `AgentBasedModel`. 
 
 # For example, let's say that a new type of agent enters
 # the simulation; a politician that would "attract" a preferred demographic.
@@ -716,12 +715,12 @@ model = StandardABM(
 # act differently depending on the agent type. This could be done by making
 # a function that calls other functions depending on the type, such as
 
-function union_step!(agent, model)
-    if typeof(agent) <: AgentSchelling
-        schelling_step!(agent, model)
-    elseif typeof(agent) <: Politician
-        politician_step!(agent, model)
-    end
+function agent_step!(agent::SchellingAgent, model)
+    # stuff.
+end
+
+function agent_step!(agent::Politician, model)
+    # other stuff.
 end
 
 # and then passing
@@ -732,129 +731,55 @@ model = StandardABM(
     agent_step! = union_step!
 )
 
-# This approach also works with the [`@multiagent`](@ref) possibility we discuss below.
-# `Union` types however also offer the unique possibility of utilizing fully the Julia's
-# [multiple dispatch system](https://docs.julialang.org/en/v1/manual/methods/).
-# Hence, we can use the same function name and add dispatch to it, such as:
+# ## Multiple agent types with `@sumtype`
 
-function dispatch_step!(agent::SchellingAgent, model)
-    ## stuff.
-end
+# By using `@sumtype` from `DynamicSumTypes.jl` it is possible to improve the 
+# computational performance of simulations requiring multiple types, while almost
+# everything works the same 
 
-function dispatch_step!(agent::Politician, model)
-    ## other stuff.
-end
+using DynamicSumTypes
 
-# and give `dispatch_step!` to the `agent_step!` keyword during model creation.
+@sumtype MultiSchelling(SchellingAgent, Politician) <: AbstractAgent
 
-# ## Multiple agent types with `@multiagent`
+# Now when you create instances you will need to enclose them in `MultiSchelling`
 
-# [`@multiagent`](@ref) is a macro, and hence not "native Julia" syntax like `Union`,
-# however it has been designed to be as similar to [`@agent`](@ref) as possible.
-# The syntax to use it is like so:
+gov = MultiSchelling(Governor(; id = 3 , pos = (2, 2), group = 2, influence = 0.5))
 
-@multiagent struct MultiSchelling{X}(GridAgent{2})
-    @subagent struct Civilian # can't re-define existing `Schelling` name
-        mood::Bool = false
-        group::Int
-    end
-    @subagent struct Governor{X} # can't redefine existing `Politician` name
-        group::Int
-        influence::X
-    end
-end
-
-# This macro created three names into scope:
-
-(MultiSchelling, Civilian, Governor)
-
-# however, only one of these names is an actual Julia type:
-
-fieldnames(MultiSchelling)
-
-# that contains all fields of all subtypes without duplication, while
-
-fieldnames(Civilian)
-
-# doesn't have any fields. Instead,
-# you should think of `Civilian` and `Governor` as just convenience functions that have been
-# defined for you to "behave like" types. That's why we call these **kinds** and not
-# **types**.
-
-# E.g., you can initialize
-
-civ = Civilian(; id = 2, pos = (2, 2), group = 2) # default `mood`
-
-# or
-
-gov = Governor(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
-
-# exactly as if these were types made with [`@agent`](@ref).
-# These are all of type `MultiSchelling`
+# agents are then all of type `MultiSchelling`
 
 typeof(gov)
 
-# and hence you can't use `typeof` to differentiate them. But you can use
+# and hence you can't use only `typeof` to differentiate them. But you can use
 
-kindof(gov)
+typeof(variant(gov))
 
-# instead.
+# instead. Hence, the agent stepping function should become something like
 
-# Since these kinds are not truly different Julia types, multiple dispatch cannot
-# be used to create different agent stepping functions for them.
-# The simplest "native Julia" solution here is to create a function where `if`
-# clauses decide what to do:
+agent_step!(agent, model) = agent_step!(agent, model, variant(agent))
 
-function multi_step!(agent, model)
-    if kindof(agent) == :Civilian
-        civilian_step!(agent, model)
-    elseif kindof(agent) == :Governor
-        politician_step!(agent, model)
-    end
+function agent_step!(agent, model, ::SchellingAgent)
+    # stuff.
 end
 
-function civilian_step!(agent, model)
-    ## stuff.
+function agent_step!(agent, model, ::Politician)
+    # other stuff.
 end
 
-function politician_step!(agent, model)
-    ## other stuff.
-end
-
-# This however can be made to look much more like multiple dispatch with the
-# introduction of another macro, `@dispatch`:
-
-@dispatch function multi_step!(agent::Civilian, model)
-    ## stuff.
-end
-
-@dispatch function multi_step!(agent::Politician, model)
-    ## other stuff.
-end
-
-# This essentially reconstructs the version previously described with the `if`
-# clauses. In general you can use this macro with anything you would dispatch 
-# on, but this allows also kinds, unlike normal multiple dispatch, for example
-# this would also work:
-
-@dispatch function sub_multi_step!(k::Int, agent::Civilian)
-    ## some more stuff.
-end
-
-# After we defined the functions with `@dispatch` or the `if` clauses, we can create the model
+# and you need to give `MultiSchelling` as the type of agents in model initialization
 
 model = StandardABM(
-    MultiSchelling, # the multi-agent supertype is given as the type
+    MultiSchelling, # the sum type is given as the type
     space;
     agent_step! = multi_step!
 )
 
 # ## Adding agents of different types to the model
 
-# Regardless of whether you went down the `Union` or `@multiagent` route,
+# Regardless of whether you went down the `Union` or `@sumtype` route,
 # the API of Agents.jl has been designed such that there is no difference in subsequent
-# usage. To add agents to a model, we use the existing [`add_agent_single!`](@ref)
-# command, but now specifying as a first argument the type of agent to add.
+# usage except when adding agents to a model, when doing that with `@sumtype` it is only
+# possible to use the existing [`add_agent!`](@ref) command adding an already defined 
+# agent.
 
 # For example, in the union case we provide the `Union` type when we create the model,
 
@@ -872,17 +797,19 @@ add_agent_single!(Politician, model; preferred_demographic = 1)
 
 collect(allagents(model))
 
-# For the `@multiagent` case, there is really no difference. We have
+# For the `@sumtype` case instead
 
 model = StandardABM(MultiSchelling, space)
 
-# we add
+# we add agents like so
 
-add_agent_single!(Civilian, model; group = 1)
+agent = MultiSchelling(SchellingAgent(model; pos = random_position(model), group = 1, mood = true))
+add_agent_single!(agent, model)
 
 # or
 
-add_agent_single!(Governor, model; influence = 0.5, group = 1)
+agent = MultiSchelling(Politician(model; pos = random_position(model), preferred_demographic = 1))
+add_agent_single!(agent, model)
 
 # and we see
 

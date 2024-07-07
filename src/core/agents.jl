@@ -50,7 +50,6 @@ as well as any additional ones the user may provide. The macro supports all synt
 that the standard Julia `mutable struct` command allows for, such as `const` field
 declaration or default values for some fields. Additionally, the resulting type
 will always have a keyword constructor defined for it (using `@kwdef`).
-See below for examples and see also [`@multiagent`](@ref).
 
 Using `@agent` is the recommended way to create agent types for Agents.jl.
 

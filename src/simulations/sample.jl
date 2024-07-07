@@ -104,7 +104,11 @@ function replicate!(agent::AbstractAgent, model; kwargs...)
 end
 
 function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
-    if is_sumtype(A)
+    # TODO: this first if statement should be removed as soon as @multiagent is removed
+    if ismultiagenttype(A)
+        args = ismultiagentsumtype(A) ? new_args_sum_t(agent, model; kwargs...) : new_args_t(agent, model; kwargs...)
+        newagent = variant_constructor(agent)(id_new, args...)
+    elseif is_sumtype(A)
         args = new_args_sum_t(agent, model; kwargs...)
         newagent = A(variant(agent)(id_new, args...))
     else

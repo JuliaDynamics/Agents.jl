@@ -155,7 +155,7 @@ end
 
 movement_event = AgentEvent(
     action! = move!, propensity = movement_propensity,
-    kinds = (:Scissors, :Paper), timing = movement_time
+    types = (Scissors, Paper), timing = movement_time
 )
 
 # we wrap all events in a tuple and we are done with the setting up part!
@@ -181,8 +181,10 @@ model = EventQueueABM(RPS, events, space; rng, warn = false)
 # By default, when an agent is added to the model
 # an event is also generated for it and added to the queue.
 
+const alltypes = (Rock, Paper, Scissors)
+
 for p in positions(model)
-    type = rand(abmrng(model), (Rock, Paper, Scissors))
+    type = rand(abmrng(model), alltypes)
     add_agent!(p, type, model)
 end
 
@@ -205,7 +207,7 @@ function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
     rng = Xoshiro(seed)
     model = EventQueueABM(RPS, events, space; rng, warn = false)
     for p in positions(model)
-        type = rand(abmrng(model), (Rock, Paper, Scissors))
+        type = rand(abmrng(model), alltypes)
         add_agent!(p, type, model)
     end
     return model
@@ -227,13 +229,12 @@ nagents(model)
 # than a threshold
 
 function terminate(model, t)
-    kinds = allkinds(RPS)
     threshold = 1000
     ## Alright, this code snippet loops over all kinds,
     ## and for each it checks if it is less than the threshold.
     ## if any is, it returns `true`, otherwise `false.`
-    logic = any(kinds) do kind
-        n = count(a -> kindof(a) == kind, allagents(model))
+    logic = any(alltypes) do type
+        n = count(a -> typeof(a) == type, allagents(model))
         return n < threshold
     end
     ## For safety, in case this never happens, we also add a trigger
@@ -258,7 +259,7 @@ abmtime(model)
 
 model = initialize_rps()
 
-adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+adata = [(a -> typeof(a) === X, count) for X in alltypes]
 
 adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.01)
 
@@ -288,8 +289,8 @@ fig
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
 
-const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
-agent_color(agent) = colormap[kindof(agent)]
+const colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
+agent_color(agent) = colormap[typeof(agent)]
 plotkw = (agent_color, agent_marker = :rect, agent_size = 5)
 fig, ax, abmobs = abmplot(model; plotkw...)
 

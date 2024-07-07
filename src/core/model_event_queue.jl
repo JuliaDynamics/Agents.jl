@@ -111,12 +111,10 @@ Here is how to construct an `EventQueueABM`:
     EventQueueABM(AgentType, events [, space]; kwargs...)
 
 Create an instance of an [`EventQueueABM`](@ref).
-`AgentType` is a _single_ agent type representing the agents that participate
-in the simulation. Unlike [`StandardABM`](@ref), `EventQueueABM` does not support
-`Union` agent types for multi-agent simulations (because multiple dispatch is not
-intended to be used to choose events, see the `events` argument below).
-Only the [`@multiagent`](@ref) macro is supported and agent "kinds" should be
-compared with the [`kindof`](@ref) function as instructed in the main [Tutorial](@ref).
+
+The model expects agents of type `AgentType(s)` living in the given `space`.
+`AgentType(s)` is the result of [`@agent`](@ref) or `@sumtype` or
+a `Union` of agent types.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
 
@@ -196,15 +194,15 @@ function EventQueueABM(
 
     # construct the type
     ET,PT,FPT,TI,Q = typeof.((
-        idx_events_each_kind, propensities_each_kind,
+        idx_events_each_type, propensities_each_type,
         idx_func_propensities_each_type, type_to_idx, queue
     ))
     return EventQueueABM{S,A,C,P,E,R,ET,PT,FPT,TI,Q}(
 
         agents, space, properties, rng, Ref(0), Ref(0.0),
 
-        events, type_to_idx, idx_events_each_kind,
-        propensities_each_kind, idx_func_propensities_each_type,
+        events, type_to_idx, idx_events_each_type,
+        propensities_each_type, idx_func_propensities_each_type,
         queue, autogenerate_on_add, autogenerate_after_action,
     )
 end
