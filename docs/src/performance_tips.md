@@ -120,7 +120,6 @@ For an example of how this is done, see the [Forest fire](@ref) model, which is 
 ## [Multiple agent types: `@sumtype` versus `Union` types](@id sum_vs_union)
 
 Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
-On the other hand, a `Union` of different types allows utilizing Julia's multiple dispatch system.
 
 The [`@sumtype`](@ref) macro enclose all types in a single one making working with it type stable.
 
