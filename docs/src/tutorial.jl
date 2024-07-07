@@ -716,11 +716,11 @@ model = StandardABM(
 # a function that calls other functions depending on the type, such as
 
 function agent_step!(agent::Schelling, model)
-    # stuff.
+    ## stuff.
 end
 
 function agent_step!(agent::Politician, model)
-    # other stuff.
+    ## other stuff.
 end
 
 # and then passing
@@ -758,11 +758,11 @@ typeof(variant(p))
 agent_step!(agent, model) = agent_step!(agent, model, variant(agent))
 
 function agent_step!(agent, model, ::Schelling)
-    # stuff.
+    ## stuff.
 end
 
 function agent_step!(agent, model, ::Politician)
-    # other stuff.
+    ## other stuff.
 end
 
 # and you need to give `MultiSchelling` as the type of agents in model initialization
