@@ -138,7 +138,7 @@ We see that Unions of up to three different Agent types do not suffer much.
 Hence, if you have less than four agent types in your model, using different types is still a valid option.
 For more agent types however we recommend using the [`@sumtype`](@ref) macro.
 
-Finally, we also have a more realist benchmark of the two approaches at `test/performance/sum_faster_than_multi.jl` where the
+Finally, we also have a more realistic benchmark of the two approaches at `test/performance/sum_faster_than_multi.jl` where the
 result of running the model with the two methodologies are
 
 ```@example performance_2
