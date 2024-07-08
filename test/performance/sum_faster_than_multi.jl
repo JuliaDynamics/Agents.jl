@@ -162,8 +162,7 @@ m2 = Base.summarysize(model2)
 # multiple types: 543.496 KiB
 # @sumtype: 546.360 KiB
 
-println("Performance of the model with multiple types: $(t1) s")
-println("Performance of the model with @sumtype: $(t2) s")
-println()
+println("Time to step the model with multiple types: $(t1) s")
+println("Time to step the model with @sumtype: $(t2) s")
 println("Memory occupied by the model with multiple types: $(m1/1000) Kib")
 println("Memory occupied by the model with @sumtype: $(m2/1000) Kib")
