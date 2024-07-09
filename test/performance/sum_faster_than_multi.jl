@@ -154,7 +154,7 @@ t1 = @belapsed step!($model1, 50)
 t2 = @belapsed step!($model2, 50)
 
 # Results:
-# multiple types: 3.778 s (38740900 allocations: 2.38 GiB)
+# multiple types: 1.849 s (34267900 allocations: 1.96 GiB)
 # @sumtype: 545.119 ms (22952850 allocations: 965.93 MiB)
 
 m1 = Base.summarysize(model1)
