@@ -60,13 +60,15 @@ function agent_step!(agent::GridAgentFour, model1)
     agent.one += sum(a.one for a in nearby_agents(agent, model1))
 end
 function agent_step!(agent::GridAgentFive, model1)
-    targets = filter!(a->a.one > 0.8, collect(nearby_agents(agent, model1, 3)))
-    idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
-    farthest = targets[idx]
-    walk!(agent, sign.(farthest.pos .- agent.pos), model1)
+    targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model1, 3)))
+    if !isempty(targets)
+        idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
+        farthest = targets[idx]
+        walk!(agent, sign.(farthest.pos .- agent.pos), model1)
+    end
 end
 function agent_step!(agent::GridAgentSix, model1)
-    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model1))
+    agent.eight += sum(rand(abmrng(model1), (0, 1)) for a in nearby_agents(agent, model1))
 end
 
 model1 = StandardABM(
