@@ -45,6 +45,8 @@ end
     eight::Int64
 end
 
+const types = Union{GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive, GridAgentSix}
+
 agent_step!(agent::GridAgentOne, model1) = randomwalk!(agent, model1)
 function agent_step!(agent::GridAgentTwo, model1)
     agent.one += rand(abmrng(model1))
@@ -60,7 +62,7 @@ function agent_step!(agent::GridAgentFour, model1)
     agent.one += sum(a.one for a in nearby_agents(agent, model1))
 end
 function agent_step!(agent::GridAgentFive, model1)
-    targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model1, 3)))
+    targets = filter!(a->a.one > 1.0, collect(types, nearby_agents(agent, model1, 3)))
     if !isempty(targets)
         idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
         farthest = targets[idx]
@@ -110,7 +112,7 @@ function agent_step!(agent, model2, ::GridAgentFour)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
 function agent_step!(agent, model2, ::GridAgentFive)
-    targets = filter!(a->a.one > 1.0, collect(nearby_agents(agent, model2, 3)))
+    targets = filter!(a->a.one > 1.0, collect(GridAgentAll, nearby_agents(agent, model2, 3)))
     if !isempty(targets)
         idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
         farthest = targets[idx]
