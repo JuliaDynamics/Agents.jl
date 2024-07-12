@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1'
+          - '1.11'
         os:  [ubuntu-latest, windows-latest, macos-latest]
         arch:
           - x64
