@@ -72,7 +72,7 @@ const ABM = AgentBasedModel
 # internal methods or the dev docs.
 
 notimplemented(::A) where {A<:ABM{S}} where {S} =
-    error("Function not implemented for model of type $(nameof(A)) with space type $S.")
+    error(lazy"Function not implemented for model of type $(nameof(A)) with space type $S.")
 
 ###########################################################################################
 # %% Mandatory methods - public

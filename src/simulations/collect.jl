@@ -591,7 +591,7 @@ function multi_agent_types!(
         unique!(current_types)
         if length(current_types) == 1
             current_types[1] <: Missing &&
-                error("$(k) does not yield a valid agent property.")
+                error(lazy"$(k) does not yield a valid agent property.")
             types[i+3] = current_types[1][]
         else
             types[i+3] = Union{current_types...}[]
@@ -638,9 +638,9 @@ function multi_agent_agg_types!(
         if length(current_types) == 1
             types[i+1] = current_types[1][]
         elseif length(current_types) > 1
-            error("Multiple types found for aggregate function $(agg) on key $(k).")
+            error(lazy"Multiple types found for aggregate function $(agg) on key $(k).")
         else
-            error("No possible aggregation for $(k) using $(agg)")
+            error(lazy"No possible aggregation for $(k) using $(agg)")
         end
     end
 end
