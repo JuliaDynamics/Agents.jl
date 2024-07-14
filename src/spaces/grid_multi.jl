@@ -96,6 +96,7 @@ end
 function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     prev = abmspace(model).stored_ids[a.pos...]
     ai = findfirst(i -> i == a.id, prev)
+    isnothing(ai) && error(lazy"Tried to remove $(a) from the space, but that agent is not on the space")
     deleteat!(prev, ai)
     return a
 end

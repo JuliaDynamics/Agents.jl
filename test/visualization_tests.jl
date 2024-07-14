@@ -142,7 +142,7 @@ end
 # Implementation of space API
 function Agents.add_agent_to_space!(a::AbstractAgent, model::ABM{<:CustomSpace})
     pos = a.pos
-    !isempty(pos, model) && error("Cannot add agent $(a) to occupied position $(pos)")
+    !isempty(pos, model) && error(lazy"Cannot add agent $(a) to occupied position $(pos)")
     abmspace(model).stored_ids[pos...] = a.id
     return a
 end
