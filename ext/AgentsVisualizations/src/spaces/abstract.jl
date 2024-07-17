@@ -3,7 +3,7 @@ Agents.agents_space_dimensionality(model::ABM) =
 
 function Agents.agentsplot!(ax::Axis, p::ABMP)
     if user_used_polygons(p.agent_marker[], p.marker[])
-        poly!(p, p.marker; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
+        poly!(p, p.marker; p.color, p.agentsplotkwargs...)
     else
         scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
     end
