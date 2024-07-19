@@ -399,7 +399,7 @@ end
 # as well as containing all information necessary to perform the simulation:
 # the evolution rules, the space, model-level properties, and more.
 
-# Additiohally [`AgentBasedModel`](@ref) defines an interface that research
+# Additionally [`AgentBasedModel`](@ref) defines an interface that research
 # can build upon to create new flavors of ABMs that can still benefit for the
 # thousands of functions Agents.jl offers out of the box such as [`move_agent!`](@ref).
 

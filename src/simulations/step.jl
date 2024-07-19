@@ -25,7 +25,7 @@ for, starting from the model's initial time.
 See also [Advanced stepping](@ref).
 """
 function CommonSolve.step!(model::AgentBasedModel, args...)
-    error("`step!` not implemented yet for model of type $(typeof(model)).")
+    error(lazy"`step!` not implemented yet for model of type $(typeof(model)).")
     return model
 end
 
