@@ -731,19 +731,17 @@ model = StandardABM(
     agent_step!
 )
 
-# ## Multiple agent types with `@sumtype`
+# ## Multiple agent types with `@multiagent`
 
-# By using `@sumtype` from `DynamicSumTypes.jl` it is possible to improve the 
-# computational performance of simulations requiring multiple types, while almost
-# everything works the same 
+# By using `@multiagent` it is often possible to improve the 
+# computational performance of simulations requiring multiple types,
+# while almost everything works the same 
 
-using DynamicSumTypes
+@multiagent MultiSchelling(Schelling, Politician) <: AbstractAgent
 
-@sumtype MultiSchelling(Schelling, Politician) <: AbstractAgent
+# Now you can create instances with
 
-# Now when you create instances you will need to enclose them in `MultiSchelling`
-
-p = MultiSchelling(Politician(model; pos = random_position(model), preferred_demographic = 1))
+p = MultiSchelling'.Politician(model; pos = random_position(model), preferred_demographic = 1)
 
 # agents are then all of type `MultiSchelling`
 
@@ -751,7 +749,7 @@ typeof(p)
 
 # and hence you can't use only `typeof` to differentiate them. But you can use
 
-typeof(variant(p))
+variantof(p)
 
 # instead. Hence, the agent stepping function should become something like
 
@@ -768,18 +766,16 @@ end
 # and you need to give `MultiSchelling` as the type of agents in model initialization
 
 model = StandardABM(
-    MultiSchelling, # the sum type is given as the type
+    MultiSchelling, # the multiagent type is given as the type
     space;
     agent_step!
 )
 
 # ## Adding agents of different types to the model
 
-# Regardless of whether you went down the `Union` or `@sumtype` route,
+# Regardless of whether you went down the `Union` or `@multiagent` route,
 # the API of Agents.jl has been designed such that there is no difference in subsequent
-# usage except when adding agents to a model, when doing that with `@sumtype` it is only
-# possible to use the existing [`add_agent!`](@ref) command adding an already defined 
-# agent.
+# usage.
 
 # For example, in the union case we provide the `Union` type when we create the model,
 
@@ -797,18 +793,18 @@ add_agent_single!(Politician, model; preferred_demographic = 1)
 
 collect(allagents(model))
 
-# For the `@sumtype` case instead
+# For the `@multiagent` case instead
 
 model = StandardABM(MultiSchelling, space)
 
-# we add agents like so
+# and we can add agents like so
 
-agent = MultiSchelling(Schelling(model; pos = random_position(model), group = 1, mood = true))
+agent = MultiSchelling'.Schelling(model; pos = random_position(model), group = 1, mood = true)
 add_agent_single!(agent, model)
 
 # or
 
-agent = MultiSchelling(Politician(model; pos = random_position(model), preferred_demographic = 1))
+agent = MultiSchelling'.Politician(model; pos = random_position(model), preferred_demographic = 1)
 add_agent_single!(agent, model)
 
 # and we see
