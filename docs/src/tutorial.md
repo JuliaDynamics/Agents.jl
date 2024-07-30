@@ -819,3 +819,55 @@ model = StandardABM(
 Regardless of whether you went down the `Union` or `@multiagent` route,
 the API of Agents.jl has been designed such that there is no difference in subsequent
 usage.
+
+For example, in the union case we provide the `Union` type when we create the model,
+
+````@example tutorial
+model = StandardABM(Union{Schelling, Politician}, space)
+````
+
+we add them by specifying the type
+
+````@example tutorial
+add_agent_single!(Schelling, model; group = 1, mood = true)
+````
+
+or
+
+````@example tutorial
+add_agent_single!(Politician, model; preferred_demographic = 1)
+````
+
+and we see
+
+````@example tutorial
+collect(allagents(model))
+````
+
+For the `@multiagent` case, there is really no difference. We have
+
+````@example tutorial
+model = StandardABM(MultiSchelling, space)
+````
+
+we add
+
+````@example tutorial
+add_agent_single!(MultiSchelling'.Schelling, model; group = 1)
+````
+
+or
+
+````@example tutorial
+add_agent_single!(MultiSchelling'.Politician, model; preferred_demographic = 1)
+````
+
+and we see
+
+````@example tutorial
+collect(allagents(model))
+````
+
+And that's the end of the tutorial!!!
+You can visit other examples to see other types of usage of Agents.jl,
+or go into the [API](@ref) to find the functions you need to make your own ABM!
