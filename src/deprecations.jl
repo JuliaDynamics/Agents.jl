@@ -392,84 +392,12 @@ function nearby_agents_exact(a, model, r=1)
     return (model[id] for id in nearby_ids(a, model, r; search=:exact))
 end
 
-export @multiagent, @dispatch, @finalize_dispatch, kindof, allkinds
+export @dispatch, @finalize_dispatch, kindof, allkinds
 export DynamicSumTypes
 using DynamicSumTypes: allkinds
 
-"""
-    @multiagent struct YourAgentType{X,Y}(AgentTypeToInherit) [<: OptionalSupertype]
-        @subagent FirstAgentSubType{X}
-            first_property::X # shared with second agent
-            second_property_with_default::Bool = true
-        end
-        @subagent SecondAgentSubType{X,Y}
-            first_property::X = 3
-            third_property::Y
-        end
-        # etc...
-    end
-Define multiple agent "subtypes", which are actually only variants of a unique
-overarching type `YourAgentType`. This means that all "subtypes" are conceptual: they are simply
-convenience functions defined that initialize the common proper type correctly
-(see examples below for more). Because the "subtypes" are not real Julia `Types`,
-you cannot use multiple dispatch on them. You also cannot distinguish them
-on the basis of `typeof`, but need to use instead the [`kindof`](@ref) function.
-That is why these "types" are often referred to as "kinds" in the documentation.
-See also the [`allkinds`](@ref) function for a convenient way to obtain all kinds.
-See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref sum_vs_union)
-for why in most cases it is better to use `@multiagent` than making multiple
-agent types manually. See [`@dispatch`](@ref) (also highlighted in the [Tutorial](@ref))
-for a multiple-dispatch-like syntax to use with `@multiagent`.
-Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
-`:opt_memory` as the first argument (before the `struct` keyword).
-The first optimizes the agents representation for
-speed, the second does the same for memory, at the cost of a moderate drop in performance.
-By default it uses `:opt_speed`.
-## Examples
-Let's say you have this definition:
-```
-@multiagent :opt_speed struct Animal{T}(GridAgent{2})
-    @subagent struct Wolf
-        energy::Float64 = 0.5
-        ground_speed::Float64
-        const fur_color::Symbol
-    end
-    @subagent struct Hawk{T}
-        energy::Float64 = 0.1
-        ground_speed::Float64
-        flight_speed::T
-    end
-end
-```
-Then you can create `Wolf` and `Hawk` agents normally, like so
-```
-hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
-hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
-wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
-wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
-```
-It is important to notice, though, that the `Wolf` and `Hawk` types are just
-conceptual and all agents are actually of type `Animal` in this case.
-The way to retrieve the variant of the agent is through the function `kindof` e.g.
-```
-kindof(hawk_1) # :Hawk
-kindof(wolf_2) # :Wolf
-```
-See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
-## Current limitations
-- Impossibility to inherit from a compactified agent.
-"""
 macro multiagent(version, struct_repr)
     expr = _multiagent(version, struct_repr)
-    return esc(expr)
-end
-
-macro multiagent(struct_repr)
-    @warn "@multiagent is deprecated because the underlying package
-         implementing the backend for it was updated to a much simpler methodology,
-         refer to the updated Tutorial in the documentation to update your
-         model to use this new methodology."
-    expr = _multiagent(QuoteNode(:opt_speed), struct_repr)
     return esc(expr)
 end
 
