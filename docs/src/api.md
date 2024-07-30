@@ -30,6 +30,7 @@ AgentEvent
 
 ```@docs
 @agent
+@multiagent
 AbstractAgent
 ```
 
