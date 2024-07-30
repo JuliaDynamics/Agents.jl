@@ -117,7 +117,7 @@ Specifically, you can represent this property as a standard Julia `Array` that i
 
 For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## [Multiple agent types: `@multiagent` versus `Union` types](@id sum_vs_union)
+## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 
 Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
 
@@ -151,5 +151,4 @@ include(t)
 In reality, we benchmarked the models also in Julia>=1.11 and from that version on a `Union` is considerably
 more performant. Though, there is still a general 1.5-2x advantage in many cases in favour of [`@multiagent`](@ref),
 so we suggest to use [`@multiagent`](@ref) only when the speed of the multi-agent simulation is really critical.
-
 
