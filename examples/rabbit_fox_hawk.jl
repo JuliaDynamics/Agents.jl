@@ -36,7 +36,7 @@ end
     energy::Float64
 end
 
-@multiagent Animal(Rabbit, Fox, Hawk) <: AbstractAgent
+@multiagent Animal(Rabbit, Fox, Hawk)
 
 # A utility function to find the euclidean norm of a Vector
 eunorm(vec) = √sum(vec .^ 2)
