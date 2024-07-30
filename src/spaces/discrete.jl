@@ -217,7 +217,7 @@ end
 Same as `add_agent!(A, model, properties...; kwargs...)` but ensures that it adds an agent
 into a position with no other agents (does nothing if no such position exists).
 """
-function add_agent_single!(A::Type, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
+function add_agent_single!(A::Union{Function, Type}, model::ABM, properties::Vararg{Any, N}; kwargs...) where {N}
     position = random_empty(model)
     isnothing(position) && return nothing
     agent = add_agent!(position, A, model, properties...; kwargs...)
@@ -248,7 +248,7 @@ function fill_space!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
 end
 
 function fill_space!(
-    A::Type, 
+    A::Union{Function, Type}, 
     model::ABM{<:DiscreteSpace},
     args::Vararg{Any, N};
     kwargs...,

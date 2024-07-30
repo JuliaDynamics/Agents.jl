@@ -771,46 +771,6 @@ model = StandardABM(
     agent_step!
 )
 
-# ## Adding agents of different types to the model
-
 # Regardless of whether you went down the `Union` or `@multiagent` route,
 # the API of Agents.jl has been designed such that there is no difference in subsequent
 # usage.
-
-# For example, in the union case we provide the `Union` type when we create the model,
-
-model = StandardABM(Union{Schelling, Politician}, space)
-
-# we add them by specifying the type
-
-add_agent_single!(Schelling, model; group = 1, mood = true)
-
-# or
-
-add_agent_single!(Politician, model; preferred_demographic = 1)
-
-# and we see
-
-collect(allagents(model))
-
-# For the `@multiagent` case instead
-
-model = StandardABM(MultiSchelling, space)
-
-# and we can add agents like so
-
-agent = MultiSchelling'.Schelling(model; pos = random_position(model), group = 1, mood = true)
-add_agent_single!(agent, model)
-
-# or
-
-agent = MultiSchelling'.Politician(model; pos = random_position(model), preferred_demographic = 1)
-add_agent_single!(agent, model)
-
-# and we see
-
-collect(allagents(model))
-
-# And that's the end of the tutorial!!!
-# You can visit other examples to see other types of usage of Agents.jl,
-# or go into the [API](@ref) to find the functions you need to make your own ABM!
