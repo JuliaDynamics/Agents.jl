@@ -315,6 +315,13 @@ macro multiagent(typedef)
              model to use the new methodology."
         return esc(_multiagent(QuoteNode(:opt_speed), typedef))
     else
-        return esc(:($DynamicSumTypes.@sumtype $typedef))
+        if typedef.head === :call
+            abstract_type = :AbstractAgent
+            type_with_variants = typedef
+        elseif typedef.head === :(<:)
+            abstract_type = typedef.args[2]
+            type_with_variants = typedef.args[1]
+        end
+        return esc(:($DynamicSumTypes.@sumtype $type_with_variants <: $abstract_type))
     end
 end 
