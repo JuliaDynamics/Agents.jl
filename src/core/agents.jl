@@ -252,3 +252,15 @@ function compute_base_fields(base_type_spec)
     @capture(base_agent, mutable struct _ <: _ base_fields__ end)
     return base_fields
 end
+
+macro multiagent(typedef)
+    if typedef.head == :struct
+        @warn "This version of @multiagent is deprecated because the underlying package
+             implementing the backend for it was updated to a much simpler methodology,
+             refer to the updated Tutorial in the documentation to update your
+             model to use the new methodology."
+        return esc(_multiagent(QuoteNode(:opt_speed), struct_repr))
+    else
+        return esc(:($DynamicSumTypes.@sumtype $typedef))
+    end
+end 
