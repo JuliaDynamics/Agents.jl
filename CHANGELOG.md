@@ -1,3 +1,8 @@
+# v6.1
+
+- The version of `@multiagent` introduced in Agents.jl v6.0 has been deprecated because a better metodology to run multiagent simulation efficiently was found. For this reason, a new
+  version was also introduced, its working is described in the tutorial and in the performance tips of the documentation.
+
 # v6 - New Major release!
 
 ## Potentially BREAKING changes
@@ -18,7 +23,12 @@ _We tried to deprecate every major change, resulting in practically no breakage 
 - Every aspect of Agents.jl is orthogonal to `AgentBasedModel`: movement and neighbor searching in any space, data collection, visualizations, etc., are independent of the specific type of `AgentBasedModel` and work out of the box with any model.
 - Logic of when to collect data in `run!` has been improved to accommodate both discrete and continuous time models. This is reflected in the new options for the keyword `when`.
   - A new keyword `init` is now available for `run!` to data collect from the model before evolving it. Whether data were collected at time 0 or not was not really obvious in the original version of `run!` due to the ambiguity of the previous handling of `when`.
-- Integration with `DynamicSumTypes.@sumtype` macro allows to run multi-agent simulations much more efficiently.
+- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
+  two version: In `:opt_speed` the created agents are optimized such as there is virtually
+  no performance difference between having 1 agent type at the cost of each agent occupying
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
+  the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+  `@multiagent` kinds support multiple dispatch like syntax with the `@dispatch` macro.
 - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
   the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
 - Both the visualization and the model abstract interface have been refactored to improve the user
