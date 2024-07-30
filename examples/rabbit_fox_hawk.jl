@@ -21,7 +21,6 @@
 # and reproduce. Eating food (grass or rabbits) replenishes `energy` by a fixed amount.
 using Agents, Agents.Pathfinding
 using Random
-using DynamicSumTypes
 import ImageMagick
 using FileIO: load
 
@@ -37,7 +36,7 @@ end
     energy::Float64
 end
 
-@sumtype Animal(Rabbit, Fox, Hawk) <: AbstractAgent
+@multiagent Animal(Rabbit, Fox, Hawk) <: AbstractAgent
 
 # A utility function to find the euclidean norm of a Vector
 eunorm(vec) = √sum(vec .^ 2)

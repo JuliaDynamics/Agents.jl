@@ -14,6 +14,7 @@ using Graphs
 using DataFrames
 using MacroTools
 using DynamicSumTypes
+export variant, variantof
 import ProgressMeter
 using Random
 using StaticArrays: SVector

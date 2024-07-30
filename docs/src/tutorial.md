@@ -708,7 +708,7 @@ _**And this concludes the main tutorial!**_
 
 In realistic modelling situations it is often the case the the ABM is composed
 of different types of agents. Agents.jl supports two approaches for multi-agent ABMs.
-The first uses the `Union` type (this subsection), and the second uses the [`@sumtype`](@ref)
+The first uses the `Union` type (this subsection), and the second uses the [`@multiagent`](@ref)
 command (next subsection) available in [DynamicSumTypes.jl](https://github.com/JuliaDynamics/DynamicSumTypes.jl). 
 This approach is recommended as default, because in many cases it will have performance advantages 
 over the `Union` approach without having tangible disadvantages. However, we strongly recommend you 

@@ -54,7 +54,7 @@ To construct a `StandardABM` use the syntax:
     StandardABM(AgentType(s) [, space]; properties, agent_step!, model_step!, kwargs...)
 
 The model expects agents of type `AgentType(s)` living in the given `space`.
-`AgentType(s)` is the result of [`@agent`](@ref) or `@sumtype` or
+`AgentType(s)` is the result of [`@agent`](@ref) or `@multiagent` or
 a `Union` of agent types.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.

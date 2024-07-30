@@ -6,7 +6,7 @@
 # are split in a varying number of agents. It shows how much of a
 # performance hit is to have many different agent types.
 
-using Agents, DynamicSumTypes, Random, BenchmarkTools
+using Agents, Random, BenchmarkTools
 
 @agent struct Agent1(GridAgent{2})
     money::Int
@@ -68,13 +68,13 @@ end
     money::Int
 end
 
-@sumtype AgentAll2(Agent1, Agent2) <: AbstractAgent
-@sumtype AgentAll3(Agent1, Agent2, Agent3) <: AbstractAgent
-@sumtype AgentAll4(Agent1, Agent2, Agent3, Agent4) <: AbstractAgent
-@sumtype AgentAll5(Agent1, Agent2, Agent3, Agent4, Agent5) <: AbstractAgent
-@sumtype AgentAll10(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
+@multiagent AgentAll2(Agent1, Agent2) <: AbstractAgent
+@multiagent AgentAll3(Agent1, Agent2, Agent3) <: AbstractAgent
+@multiagent AgentAll4(Agent1, Agent2, Agent3, Agent4) <: AbstractAgent
+@multiagent AgentAll5(Agent1, Agent2, Agent3, Agent4, Agent5) <: AbstractAgent
+@multiagent AgentAll10(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
     Agent7, Agent8, Agent9, Agent10) <: AbstractAgent
-@sumtype AgentAll15(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
+@multiagent AgentAll15(Agent1, Agent2, Agent3, Agent4, Agent5, Agent6, 
     Agent7, Agent8, Agent9, Agent10, Agent11, Agent12, Agent13, Agent14, Agent15) <: AbstractAgent
 
 function initialize_model_1(;n_agents=600,dims=(5,5))
@@ -184,15 +184,15 @@ end
 println("relative time of model with 1 type: 1.0")
 for (n, t1, t2) in zip(n_types, times_n, times_multi_s)
     println("relative time of model with $n types: $t1")
-    println("relative time of model with $n @sumtype: $t2")
+    println("relative time of model with $n @multiagent: $t2")
 end
 
 using CairoMakie
 fig, ax = CairoMakie.scatterlines(n_types, times_n; label = "Union");
-scatterlines!(ax, n_types, times_multi_s; label = "@sumtype")
+scatterlines!(ax, n_types, times_multi_s; label = "@multiagent")
 ax.xlabel = "# types"
 ax.ylabel = "time relative to 1 type"
-ax.title = "Union types vs @sumtype"
+ax.title = "Union types vs @multiagent"
 axislegend(ax; position = :lt)
 ax.yticks = 0:1:ceil(Int, maximum(times_n))
 ax.xticks = [2, 3, 4, 5, 10, 15]

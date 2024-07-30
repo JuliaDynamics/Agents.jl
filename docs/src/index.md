@@ -16,7 +16,7 @@ using CairoMakie, Agents
     Please see the online [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for a full list of changes.
     The most noteworthy ones are:
 
-    - Integration with `DynamicSumTypes.@sumtype` allows to run multi-agent simulations much more efficiently.
+    - A new macro `@multiagent` allows to run multi-agent simulations more efficiently.
     - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of "Gillespie-like" models.
     - `AgentBasedModel` defines an API that can be extended by other models.
     - Stronger inheritance capabilities in `@agent`.

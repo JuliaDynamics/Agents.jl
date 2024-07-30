@@ -1,7 +1,7 @@
 # This file compares approaching multi-agent models in two ways:
 # 1) using different Types to represent different agents. This leads to type
 # instabilities.
-# 2) using @sumtype to enclose all types in a single one. This removes type
+# 2) using @multiagent to enclose all types in a single one. This removes type
 # instabilities.
 
 # The result is that (2) is much faster.
@@ -93,8 +93,6 @@ end
 
 ################### DEFINITION 2 ###############
 
-using DynamicSumTypes
-
 agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
 
 agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
@@ -123,7 +121,7 @@ function agent_step!(agent, model2, ::GridAgentSix)
     agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 
-@sumtype GridAgentAll(
+@multiagent GridAgentAll(
     GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive, GridAgentSix
 ) <: AbstractAgent
 
@@ -157,16 +155,16 @@ t2 = @belapsed step!($model2, 50)
 
 # Results:
 # multiple types: 1.849 s (34267900 allocations: 1.96 GiB)
-# @sumtype: 545.119 ms (22952850 allocations: 965.93 MiB)
+# @multiagent: 545.119 ms (22952850 allocations: 965.93 MiB)
 
 m1 = Base.summarysize(model1)
 m2 = Base.summarysize(model2)
 
 # Results:
 # multiple types: 543.496 KiB
-# @sumtype: 546.360 KiB
+# @multiagent: 546.360 KiB
 
 println("Time to step the model with multiple types: $(t1) s")
-println("Time to step the model with @sumtype: $(t2) s")
+println("Time to step the model with @multiagent: $(t2) s")
 println("Memory occupied by the model with multiple types: $(m1/1000) Kib")
-println("Memory occupied by the model with @sumtype: $(m2/1000) Kib")
+println("Memory occupied by the model with @multiagent: $(m2/1000) Kib")
