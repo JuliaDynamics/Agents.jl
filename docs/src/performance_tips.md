@@ -117,11 +117,11 @@ Specifically, you can represent this property as a standard Julia `Array` that i
 
 For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## [Multiple agent types: `@sumtype` versus `Union` types](@id sum_vs_union)
+## [Multiple agent types: `@multiagent` versus `Union` types](@id sum_vs_union)
 
 Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
 
-The [`@sumtype`](@ref) macro enclose all types in a single one making working with it type stable.
+The [`@multiagent`](@ref) macro enclose all types in a single one making working with it type stable.
 
 In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
 We then compare the performance of the two versions for multiple agent types, incrementally employing more agents from 2 to 15.
@@ -136,15 +136,20 @@ include(t)
 
 We see that Unions of up to three different Agent types do not suffer much.
 Hence, if you have less than four agent types in your model, using different types is still a valid option.
-For more agent types however we recommend using the [`@sumtype`](@ref) macro.
+For more agent types however we recommend using the [`@multiagent`](@ref) macro.
 
-Finally, we also have a more realistic benchmark of the two approaches at `test/performance/sum_faster_than_multi.jl` where the
+Finally, we also have a more realistic benchmark of the two approaches at `test/performance/multiagent_vs_union.jl` where the
 result of running the model with the two methodologies are
 
 ```@example performance_2
 using Agents
 x = pathof(Agents)
-t = joinpath(dirname(dirname(x)), "test", "performance", "sum_faster_than_multi.jl")
+t = joinpath(dirname(dirname(x)), "test", "performance", "multiagent_vs_union.jl")
 include(t)
 ```
+
+In reality, we benchmarked the models also in Julia>=1.11 and from that version on a `Union` is considerably
+more performant. Though, there is still a general 1.5-2x advantage in many cases in favour of [`@multiagent`](@ref),
+so we suggest to use [`@multiagent`](@ref) only when the speed of the multi-agent simulation is really critical.
+
 
