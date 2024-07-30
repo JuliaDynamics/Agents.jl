@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, NoSpaceAgent
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent
 
 ###########################################################################################
 # @agent
