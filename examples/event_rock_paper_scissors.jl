@@ -45,7 +45,8 @@ using Agents
 @agent struct Scissors(GridAgent{2}) end
 
 # we use [`@multiagent`](@ref) in the simulation, but everything works 
-# also with a single agents or a `Union` of agents
+# also with a single agent type or a `Union` of types
+
 @multiagent RPS(Rock, Paper, Scissors)
 
 # %% #src
