@@ -110,7 +110,7 @@ function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
         newagent = variant_constructor(agent)(id_new, args...)
     elseif is_sumtype(A)
         args = new_args_sum_t(agent, model; kwargs...)
-        newagent = A(variant(agent)(id_new, args...))
+        newagent = A(variantof(agent)(id_new, args...))
     else
         args = new_args_t(agent, model; kwargs...)
         newagent = A(id_new, args...)

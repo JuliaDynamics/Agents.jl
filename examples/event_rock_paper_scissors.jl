@@ -1,3 +1,4 @@
+
 # # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
 # ```@raw html
@@ -35,13 +36,17 @@
 
 # We start by loading `Agents`
 
-using Agents, DynamicSumTypes
+using Agents
 
 # and defining the three agent types
 
 @agent struct Rock(GridAgent{2}) end
 @agent struct Paper(GridAgent{2}) end
 @agent struct Scissors(GridAgent{2}) end
+
+# we use a multiagent in the simulation, but everything works 
+# also with a single agents or a `Union` of agents
+@multiagent RPS(Rock, Paper, Scissors)
 
 # %% #src
 
@@ -60,14 +65,14 @@ function attack!(agent, model)
     isnothing(contender) && return
     ## else perform standard rock paper scissors logic
     ## and remove the contender if you win.
-    attack!(agent, contender, model)
+    attack!(variant(agent), variant(contender), contender, model)
     return
 end
 
-attack!(::AbstractAgent, ::AbstractAgent, model) = nothing
-attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
-attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
-attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
+attack!(::AbstractAgent, ::AbstractAgent, contender, model) = nothing
+attack!(::Rock, ::Scissors, contender, model) = remove_agent!(contender, model)
+attack!(::Scissors, ::Paper, contender, model) = remove_agent!(contender, model)
+attack!(::Paper, ::Rock, contender, model) = remove_agent!(contender, model)
 
 # The movement function is equally simple due to
 # the many functions offered by Agents.jl [API](@ref).
@@ -174,7 +179,6 @@ space = GridSpaceSingle((100, 100))
 using Random: Xoshiro
 rng = Xoshiro(42)
 
-const RPS = Union{Rock, Paper, Scissors}
 model = EventQueueABM(RPS, events, space; rng, warn = false)
 
 # populating the model with agents is the same as in the main [Tutorial](@ref),
@@ -186,7 +190,7 @@ const alltypes = (Rock, Paper, Scissors)
 
 for p in positions(model)
     type = rand(abmrng(model), alltypes)
-    add_agent!(p, type, model)
+    add_agent!(p, constructor(RPS, type), model)
 end
 
 # We can see the list of scheduled events via
@@ -209,7 +213,7 @@ function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
     model = EventQueueABM(RPS, events, space; rng, warn = false)
     for p in positions(model)
         type = rand(abmrng(model), alltypes)
-        add_agent!(p, type, model)
+        add_agent!(p, constructor(RPS, type), model)
     end
     return model
 end
@@ -235,7 +239,7 @@ function terminate(model, t)
     ## and for each it checks if it is less than the threshold.
     ## if any is, it returns `true`, otherwise `false.`
     logic = any(alltypes) do type
-        n = count(a -> typeof(a) == type, allagents(model))
+        n = count(a -> variantof(a) == type, allagents(model))
         return n < threshold
     end
     ## For safety, in case this never happens, we also add a trigger
@@ -260,7 +264,7 @@ abmtime(model)
 
 model = initialize_rps()
 
-adata = [(a -> typeof(a) === X, count) for X in alltypes]
+adata = [(a -> variantof(a) === X, count) for X in alltypes]
 
 adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.01)
 
@@ -291,7 +295,7 @@ fig
 # corresponds to continuous time and does not have to be an integer.
 
 const colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
-agent_color(agent) = colormap[typeof(agent)]
+agent_color(agent) = colormap[variantof(agent)]
 plotkw = (agent_color, agent_marker = :rect, agent_size = 5)
 fig, ax, abmobs = abmplot(model; plotkw...)
 
