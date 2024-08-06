@@ -305,7 +305,7 @@ variant(hawk_1) # Hawk(1, (1, 1), 1.0, 2.0, 3.0)
 variant(wolf_1) # Wolf(3, (2, 2), 2.0, 3.0, :black)
 ```
 
-See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
+See the [Rabbit-Fox-Hawk example](@ref rabbit_fox_hawk) to see how to use this macro in a model.
 """
 macro multiagent(typedef)
     if typedef.head == :struct

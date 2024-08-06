@@ -1,4 +1,4 @@
-# # 3D Mixed-Agent Ecosystem with Pathfinding
+# # [3D Mixed-Agent Ecosystem with Pathfinding](@id rabbit_fox_hawk)
 # ```@raw html
 # <video width="100%" height="auto" controls autoplay loop>
 # <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/rabbit_fox_hawk.mp4?raw=true" type="video/mp4">

@@ -192,7 +192,7 @@ function EventQueueABM(
     end
     # the above three containers have been created to accelerate
     # the creation and enqueing of new events. They are all vectors
-    # because we use the index of `kind_to_index` to access them.
+    # because we use the index of `type_to_idx` to access them.
 
     # construct the type
     TF,ET,PT,FPT,TI,Q = typeof.((
