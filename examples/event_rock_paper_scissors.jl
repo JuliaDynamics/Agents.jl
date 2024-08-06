@@ -44,7 +44,7 @@ using Agents
 @agent struct Paper(GridAgent{2}) end
 @agent struct Scissors(GridAgent{2}) end
 
-# we use a multiagent in the simulation, but everything works 
+# we use [`@multiagent`](@ref) in the simulation, but everything works 
 # also with a single agents or a `Union` of agents
 @multiagent RPS(Rock, Paper, Scissors)
 
