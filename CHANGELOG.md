@@ -1,7 +1,10 @@
 # v6.1
 
-- The version of `@multiagent` introduced in Agents.jl v6.0 has been deprecated because a better metodology to run multiagent simulation efficiently was found. For this reason,
-a new version was also introduced, its working is described in the tutorial and in the performance tips of the documentation.
+The `@multiagent` macro introduced in Agents.jl v6.0 has been completely overhauled. We found a better methodology to create performant multi-agent types that can re-use existing agent types. Please read the docstring of the new `@multiagent` and consult the updated tutorial in v6.1 for more details.
+
+All `@multiagent`-specific functions that were introduced in v6.0, such as `kindof`, have also been deprecated, see the main tutorial.
+
+For `EventQueueABM`, that was an experimental feature that used to work only with `kindof`, it is also now changed to work with the standard `typeof` of the base Julia language.
 
 # v6 - New Major release!
 
