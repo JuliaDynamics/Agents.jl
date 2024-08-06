@@ -1,5 +1,4 @@
-export AbstractAgent, @agent, @multiagent, @dispatch, @finalize_dispatch, NoSpaceAgent, kindof, allkinds
-using DynamicSumTypes: allkinds
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent, constructor
 
 ###########################################################################################
 # @agent
@@ -51,7 +50,6 @@ as well as any additional ones the user may provide. The macro supports all synt
 that the standard Julia `mutable struct` command allows for, such as `const` field
 declaration or default values for some fields. Additionally, the resulting type
 will always have a keyword constructor defined for it (using `@kwdef`).
-See below for examples and see also [`@multiagent`](@ref).
 
 Using `@agent` is the recommended way to create agent types for Agents.jl.
 
@@ -228,165 +226,6 @@ function _agent(struct_repr)
     return expr
 end
 
-###########################################################################################
-# @multiagent
-###########################################################################################
-"""
-    @multiagent struct YourAgentType{X,Y}(AgentTypeToInherit) [<: OptionalSupertype]
-        @subagent FirstAgentSubType{X}
-            first_property::X # shared with second agent
-            second_property_with_default::Bool = true
-        end
-        @subagent SecondAgentSubType{X,Y}
-            first_property::X = 3
-            third_property::Y
-        end
-        # etc...
-    end
-
-Define multiple agent "subtypes", which are actually only variants of a unique
-overarching type `YourAgentType`. This means that all "subtypes" are conceptual: they are simply
-convenience functions defined that initialize the common proper type correctly
-(see examples below for more). Because the "subtypes" are not real Julia `Types`,
-you cannot use multiple dispatch on them. You also cannot distinguish them
-on the basis of `typeof`, but need to use instead the [`kindof`](@ref) function.
-That is why these "types" are often referred to as "kinds" in the documentation.
-See also the [`allkinds`](@ref) function for a convenient way to obtain all kinds.
-
-See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
-for why in most cases it is better to use `@multiagent` than making multiple
-agent types manually. See [`@dispatch`](@ref) (also highlighted in the [Tutorial](@ref))
-for a multiple-dispatch-like syntax to use with `@multiagent`.
-
-Two different versions of `@multiagent` can be used by passing either `:opt_speed` or
-`:opt_memory` as the first argument (before the `struct` keyword).
-The first optimizes the agents representation for
-speed, the second does the same for memory, at the cost of a moderate drop in performance.
-By default it uses `:opt_speed`.
-
-## Examples
-
-Let's say you have this definition:
-
-```
-@multiagent :opt_speed struct Animal{T}(GridAgent{2})
-    @subagent struct Wolf
-        energy::Float64 = 0.5
-        ground_speed::Float64
-        const fur_color::Symbol
-    end
-    @subagent struct Hawk{T}
-        energy::Float64 = 0.1
-        ground_speed::Float64
-        flight_speed::T
-    end
-end
-```
-
-Then you can create `Wolf` and `Hawk` agents normally, like so
-
-```
-hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
-hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
-wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
-wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
-```
-
-It is important to notice, though, that the `Wolf` and `Hawk` types are just
-conceptual and all agents are actually of type `Animal` in this case.
-The way to retrieve the variant of the agent is through the function `kindof` e.g.
-
-```
-kindof(hawk_1) # :Hawk
-kindof(wolf_2) # :Wolf
-```
-
-See the [rabbit_fox_hawk](@ref) example to see how to use this macro in a model.
-
-## Current limitations
-
-- Impossibility to inherit from a compactified agent.
-"""
-macro multiagent(version, struct_repr)
-    expr = _multiagent(version, struct_repr)
-    return esc(expr)
-end
-
-macro multiagent(struct_repr)
-    expr = _multiagent(QuoteNode(:opt_speed), struct_repr)
-    return esc(expr)
-end
-
-function _multiagent(version, struct_repr)
-    new_type, base_type_spec, abstract_type, agent_specs = decompose_struct_base(struct_repr)
-    base_fields = compute_base_fields(base_type_spec)
-    agent_specs_with_base = []
-    for a_spec in agent_specs
-        @capture(a_spec, @subagent astruct_spec_)
-        int_type, new_fields = decompose_struct(astruct_spec)
-        push!(agent_specs_with_base,
-              :(@kwdef mutable struct $int_type
-                    $(base_fields...)
-                    $(new_fields...)
-                end))
-    end
-    t = :($new_type <: $abstract_type)
-    c = @capture(new_type, new_type_n_{new_params__})
-    if c == false
-        new_type_n = new_type
-        new_params = []
-    end
-    new_params_no_constr = [p isa Expr && p.head == :(<:) ? p.args[1] : p for p in new_params]
-    new_type_no_constr = :($new_type_n{$(new_params_no_constr...)})
-    a_specs = :(begin $(agent_specs_with_base...) end)
-    if version == QuoteNode(:opt_speed)
-        expr = quote
-                   DynamicSumTypes.@sum_structs :on_fields $t $a_specs
-                   Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
-                   DynamicSumTypes.export_variants($(namify(t)))
-               end
-    elseif version == QuoteNode(:opt_memory)
-        expr = quote
-                   DynamicSumTypes.@sum_structs :on_types $t $a_specs
-                   Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
-                   DynamicSumTypes.export_variants($(namify(t)))
-               end
-    else
-        error("The version of @multiagent chosen was not recognized, use either `:opt_speed` or `:opt_memory` instead.")
-    end
-
-    expr_multiagent = :(Agents.ismultiagenttype(::Type{$(namify(new_type))}) = true)
-    if new_params != []
-        if version == QuoteNode(:opt_speed)
-            expr_multiagent_p = quote
-                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
-                Agents.ismultiagentcompacttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
-            end
-        else
-            expr_multiagent_p = quote
-                Agents.ismultiagenttype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
-                Agents.ismultiagentsumtype(::Type{$(new_type_no_constr)}) where {$(new_params...)} = true
-            end
-        end
-    else
-        expr_multiagent_p = :()
-    end
-
-    expr = quote
-               $expr
-               $expr_multiagent
-               $expr_multiagent_p
-               nothing
-           end
-
-    return expr
-end
-
-# This function is extended in the `@multiagent` macro
-ismultiagenttype(::Type) = false
-ismultiagentsumtype(::Type) = false
-ismultiagentcompacttype(::Type) = false
-
 function decompose_struct_base(struct_repr)
     if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
         @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
@@ -414,67 +253,77 @@ function compute_base_fields(base_type_spec)
     return base_fields
 end
 
-"""
-    kindof(agent::AbstractAgent) → kind::Symbol
-
-Return the "kind" (instead of type) of the agent, which is the name given to the
-agent subtype when it was created with [`@multiagent`](@ref).
-"""
-function DynamicSumTypes.kindof(a::AbstractAgent)
-    throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
-end
+###########################################################################################
+# @multiagent
+###########################################################################################
 
 """
-    allkinds(AgentType::Type) → kinds::Tuple
+    @multiagent YourAgentType(AgentTypesToMerge) [<: OptionalSupertype]
 
-Return all "kinds" that compose the given agent type that was generated via
-the [`@multiagent`](@ref) macro. The kinds are returned as a tuple of `Symbol`s.
-"""
-function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
-    (nameof(a), ) # this function is extended automatically in the macro
-end
+Define multiple agent "subtypes", which are variants of a unique type `YourAgentType`. 
+This means that all "subtypes" are enclosed in the overarching type. Then, You cannot
+distinguish them on the basis of `typeof`, but need to use instead the `variantof`
+function. The `allvariants` function for a convenient way to obtain all variants types.
 
-"""
-    @dispatch f(args...)
-
-A macro to enable multiple-dispatch-like behavior for the function `f`,
-for various agent kinds generated via the [`@multiagent`](@ref) macro.
-For an illustration of its usage see the [Tutorial](@ref).
-
-If you are creating your own module/package that uses Agents.jl, and you 
-are using `@dispatch` inside it, then you need to put [`@finalize_dispatch`](@ref)`()`
-before the module end (but after all `@dispatch` calls).
-"""
-macro dispatch(f_def)
-    return esc(:(DynamicSumTypes.@pattern $f_def))
-end
-
-"""
-    @finalize_dispatch
-
-A macro to finalize the definitions of the methods generated by the 
-`@dispatch` macro when used in a module. It just needs to be used
-once at the end of the module if no `@dispatch` method is used inside
-of it. Otherwise use it also before the invocations of the methods.
+See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multiagent_vs_union)
+for why it is often better to use `@multiagent` than making multiple agent types. 
 
 ## Examples
-
-```julia
-module SomeModel
-
-@multiagent struct MultiAgent(NoSpaceAgent)
-    @subagent SubAgent1 end
-    @subagent SubAgent2 end
-end
-
-@dispatch MethodSub1(::SubAgent1) = 1
-@dispatch MethodSub1(::SubAgent2) = 1
-
-@finalize_dispatch()
-
-end
+Let's say you have this definition:
 ```
-"""
-macro finalize_dispatch()
-    return esc(:(DynamicSumTypes.@finalize_patterns))
+@agent struct Wolf
+    energy::Float64 = 0.5
+    ground_speed::Float64
+    const fur_color::Symbol
 end
+@agent struct Hawk{T}
+    energy::Float64 = 0.1
+    ground_speed::Float64
+    flight_speed::T
+end
+
+@multiagent Animal(Wolf, Hawk{Float64})
+```
+
+Then you can create `Wolf` and `Hawk` agents like so
+```
+hawk_1 = constructor(Animal, Hawk)(1, (1, 1), 1.0, 2.0, 3)
+hawk_2 = constructor(Animal, Hawk)(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+wolf_1 = constructor(Animal, Wolf)(3, (2, 2), 2.0, 3.0, :black)
+wolf_2 = constructor(Animal, Wolf)(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+```
+
+The way to retrieve the variant of the agent is through the function `variantof` e.g.
+```
+variantof(hawk_1) # Hawk
+variantof(wolf_2) # Wolf
+```
+
+You can also access the enclosed variant instance with the variant `function`
+```
+variant(hawk_1) # Hawk(1, (1, 1), 1.0, 2.0, 3.0)
+variant(wolf_1) # Wolf(3, (2, 2), 2.0, 3.0, :black)
+```
+
+See the [Rabbit-Fox-Hawk example](@ref rabbit_fox_hawk) to see how to use this macro in a model.
+"""
+macro multiagent(typedef)
+    if typedef.head == :struct
+        @warn "This version of @multiagent is deprecated because the underlying package
+             implementing the backend for it was updated to a much simpler methodology,
+             refer to the updated Tutorial in the documentation to update your
+             model to use the new methodology."
+        return esc(_multiagent(QuoteNode(:opt_speed), typedef))
+    else
+        if typedef.head === :call
+            abstract_type = :AbstractAgent
+            type_with_variants = typedef
+        elseif typedef.head === :(<:)
+            abstract_type = typedef.args[2]
+            type_with_variants = typedef.args[1]
+        end
+        return esc(:($DynamicSumTypes.@sumtype $type_with_variants <: $abstract_type))
+    end
+end
+
+constructor(MultiAgent::Type, Variant::Type) = (args...; kwargs...) -> MultiAgent(Variant(args...; kwargs...))

@@ -30,12 +30,8 @@ AgentEvent
 
 ```@docs
 @agent
-AbstractAgent
 @multiagent
-kindof
-allkinds
-@dispatch
-@finalize_dispatch
+AbstractAgent
 ```
 
 ### Minimal agent types

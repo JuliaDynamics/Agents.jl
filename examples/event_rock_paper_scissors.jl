@@ -1,3 +1,4 @@
+
 # # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
 # ```@raw html
@@ -37,14 +38,16 @@
 
 using Agents
 
-# and defining the three agent types using [`multiagent`](@ref)
-# (see the main [Tutorial](@ref) if you are unfamiliar with [`@multiagent`](@ref)).
+# and defining the three agent types
 
-@multiagent struct RPS(GridAgent{2})
-    @subagent struct Rock end
-    @subagent struct Paper end
-    @subagent struct Scissors end
-end
+@agent struct Rock(GridAgent{2}) end
+@agent struct Paper(GridAgent{2}) end
+@agent struct Scissors(GridAgent{2}) end
+
+# we use [`@multiagent`](@ref) in the simulation, but everything works 
+# also with a single agent type or a `Union` of types
+
+@multiagent RPS(Rock, Paper, Scissors)
 
 # %% #src
 
@@ -63,31 +66,14 @@ function attack!(agent, model)
     isnothing(contender) && return
     ## else perform standard rock paper scissors logic
     ## and remove the contender if you win.
-    attack!(agent, contender, model)
+    attack!(variant(agent), variant(contender), contender, model)
     return
 end
 
-# for the attack!(agent, contender) function we could either use some
-# branches based on the values of `kindof`
-
-function attack!(agent::RPS, contender::RPS, model)
-    kind = kindof(agent)
-    kindc = kindof(contender)
-    if kind === :Rock && kindc === :Scissors
-        remove_agent!(contender, model)
-    elseif kind === :Scissors && kindc === :Paper
-        remove_agent!(contender, model)
-    elseif kind === :Paper && kindc === :Rock
-        remove_agent!(contender, model)
-    end
-end
-
-# or use the @dispatch macro for convenience
-
-@dispatch attack!(::RPS, ::RPS, model) = nothing
-@dispatch attack!(::Rock, contender::Scissors, model) = remove_agent!(contender, model)
-@dispatch attack!(::Scissors, contender::Paper, model) = remove_agent!(contender, model)
-@dispatch attack!(::Paper, contender::Rock, model) = remove_agent!(contender, model)
+attack!(::AbstractAgent, ::AbstractAgent, contender, model) = nothing
+attack!(::Rock, ::Scissors, contender, model) = remove_agent!(contender, model)
+attack!(::Scissors, ::Paper, contender, model) = remove_agent!(contender, model)
+attack!(::Paper, ::Rock, contender, model) = remove_agent!(contender, model)
 
 # The movement function is equally simple due to
 # the many functions offered by Agents.jl [API](@ref).
@@ -158,7 +144,7 @@ attack_event = AgentEvent(action! = attack!, propensity = attack_propensity)
 reproduction_event = AgentEvent(action! = reproduce!, propensity = reproduction_propensity)
 
 # The movement event does not apply to rocks however,
-# so we need to specify the agent "kinds" that it applies to,
+# so we need to specify the agent types that it applies to,
 # which is `(:Scissors, :Paper)`.
 # Additionally, we would like to change how the timing of the movement events works.
 # We want to change it from an exponential distribution sample to something else.
@@ -175,7 +161,7 @@ end
 
 movement_event = AgentEvent(
     action! = move!, propensity = movement_propensity,
-    kinds = (:Scissors, :Paper), timing = movement_time
+    types = Union{Scissors, Paper}, timing = movement_time
 )
 
 # we wrap all events in a tuple and we are done with the setting up part!
@@ -201,9 +187,11 @@ model = EventQueueABM(RPS, events, space; rng, warn = false)
 # By default, when an agent is added to the model
 # an event is also generated for it and added to the queue.
 
+const alltypes = (Rock, Paper, Scissors)
+
 for p in positions(model)
-    type = rand(abmrng(model), (Rock, Paper, Scissors))
-    add_agent!(p, type, model)
+    type = rand(abmrng(model), alltypes)
+    add_agent!(p, constructor(RPS, type), model)
 end
 
 # We can see the list of scheduled events via
@@ -225,8 +213,8 @@ function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
     rng = Xoshiro(seed)
     model = EventQueueABM(RPS, events, space; rng, warn = false)
     for p in positions(model)
-        type = rand(abmrng(model), (Rock, Paper, Scissors))
-        add_agent!(p, type, model)
+        type = rand(abmrng(model), alltypes)
+        add_agent!(p, constructor(RPS, type), model)
     end
     return model
 end
@@ -247,13 +235,12 @@ nagents(model)
 # than a threshold
 
 function terminate(model, t)
-    kinds = allkinds(RPS)
     threshold = 1000
     ## Alright, this code snippet loops over all kinds,
     ## and for each it checks if it is less than the threshold.
     ## if any is, it returns `true`, otherwise `false.`
-    logic = any(kinds) do kind
-        n = count(a -> kindof(a) == kind, allagents(model))
+    logic = any(alltypes) do type
+        n = count(a -> variantof(a) == type, allagents(model))
         return n < threshold
     end
     ## For safety, in case this never happens, we also add a trigger
@@ -278,7 +265,7 @@ abmtime(model)
 
 model = initialize_rps()
 
-adata = [(a -> kindof(a) === X, count) for X in allkinds(RPS)]
+adata = [(a -> variantof(a) === X, count) for X in alltypes]
 
 adf, mdf = run!(model, 100.0; adata, when = 0.5, dt = 0.01)
 
@@ -308,8 +295,8 @@ fig
 # Naturally, for `EventQueueABM` the `dt` argument of [`abmvideo`](@ref)
 # corresponds to continuous time and does not have to be an integer.
 
-const colormap = Dict(:Rock => "black", :Scissors => "gray", :Paper => "orange")
-agent_color(agent) = colormap[kindof(agent)]
+const colormap = Dict(Rock => "black", Scissors => "gray", Paper => "orange")
+agent_color(agent) = colormap[variantof(agent)]
 plotkw = (agent_color, agent_marker = :rect, agent_size = 5)
 fig, ax, abmobs = abmplot(model; plotkw...)
 

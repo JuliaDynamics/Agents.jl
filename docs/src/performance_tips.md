@@ -120,14 +120,11 @@ For an example of how this is done, see the [Forest fire](@ref) model, which is 
 ## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 
 Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
-On the other hand, a `Union` of different types allows utilizing Julia's multiple dispatch system.
 
-The [`@multiagent`](@ref) macro does not make multiple types. It only makes one large type and defines convenience "constructors" on top of it, giving the illusion that multiple types exist. Therefore it completely eliminates type instability.
-[`@multiagent`](@ref) has two versions. In `:opt_speed` the created agents are optimized such as there is virtually no performance difference between having 1 agent type at the cost of each agent occupying more memory that in the `Union` case.
-In `:opt_memory` each agent is optimized to occupy practically the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+The [`@multiagent`](@ref) macro enclose all types in a single one making working with it type stable.
 
 In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
-We then compare the performance of the three versions for multiple agent types, incrementally employing more agents from 2 to 15.
+We then compare the performance of the two versions for multiple agent types, incrementally employing more agents from 2 to 15.
 Here are the results of how much time it took to run each version:
 
 ```@example performance
@@ -138,5 +135,20 @@ include(t)
 ```
 
 We see that Unions of up to three different Agent types do not suffer much.
-Hence, if you have less than four agent types in your model, using different types is still a valid option and allows you to utilize multiple dispatch.
+Hence, if you have less than four agent types in your model, using different types is still a valid option.
 For more agent types however we recommend using the [`@multiagent`](@ref) macro.
+
+Finally, we also have a more realistic benchmark of the two approaches at `test/performance/multiagent_vs_union.jl` where the
+result of running the model with the two methodologies are
+
+```@example performance_2
+using Agents
+x = pathof(Agents)
+t = joinpath(dirname(dirname(x)), "test", "performance", "multiagent_vs_union.jl")
+include(t)
+```
+
+In reality, we benchmarked the models also in Julia>=1.11 and from that version on a `Union` is considerably
+more performant. Though, there is still a general 1.5-2x advantage in many cases in favour of [`@multiagent`](@ref),
+so we suggest to use [`@multiagent`](@ref) only when the speed of the multi-agent simulation is really critical.
+

@@ -1,3 +1,11 @@
+# v6.1
+
+The `@multiagent` macro introduced in Agents.jl v6.0 has been completely overhauled. We found a better methodology to create performant multi-agent types that can re-use existing agent types. Please read the docstring of the new `@multiagent` and consult the updated tutorial in v6.1 for more details.
+
+All `@multiagent`-specific functions that were introduced in v6.0, such as `kindof`, have also been deprecated, see the main tutorial.
+
+For `EventQueueABM`, that was an experimental feature that used to work only with `kindof`, it is also now changed to work with the standard `typeof` of the base Julia language.
+
 # v6 - New Major release!
 
 ## Potentially BREAKING changes
@@ -23,7 +31,7 @@ _We tried to deprecate every major change, resulting in practically no breakage 
   no performance difference between having 1 agent type at the cost of each agent occupying
   more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
   the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
-- `@multiagent` kinds support multiple dispatch like syntax with the `@dispatch` macro.
+  `@multiagent` kinds support multiple dispatch like syntax with the `@dispatch` macro.
 - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
   the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
 - Both the visualization and the model abstract interface have been refactored to improve the user

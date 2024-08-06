@@ -54,7 +54,7 @@ To construct a `StandardABM` use the syntax:
     StandardABM(AgentType(s) [, space]; properties, agent_step!, model_step!, kwargs...)
 
 The model expects agents of type `AgentType(s)` living in the given `space`.
-`AgentType(s)` is the result of [`@agent`](@ref), [`@multiagent`](@ref) or
+`AgentType(s)` is the result of [`@agent`](@ref) or `@multiagent` or
 a `Union` of agent types.
 
 `space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
@@ -152,7 +152,7 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
-    !(ismultiagenttype(A)) && agent_validator(A, space, warn)
+    !(ismultiagenttype(A)) && !(is_sumtype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
     agents_types = union_types(A)

@@ -211,14 +211,13 @@ function (sched::ByType)(model::ABM)
     return Iterators.flatten(it for it in sched.ids)
 end
 
+# TODO: ByKind scheduler should be removed when deprecation of @multiagent is complete
+
 """
     Schedulers.ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
-
 A scheduler useful only for mixed agent models using the [`@multiagent`](@ref) macro.
 - `agent_kinds` is a `Tuple` of all valid agent kinds e.g. `(:B, :A, :C)`.
-
 ## Keyword arguments
-
 - `shuffle_kinds = true` groups by agent kind, but randomizes the kind order.
   Otherwise returns agent IDs grouped in order of appearance in `agent_kinds`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
