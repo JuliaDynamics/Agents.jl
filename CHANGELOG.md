@@ -5,7 +5,6 @@ The `@multiagent` macro introduced in Agents.jl v6.0 has been completely overhau
 All `@multiagent`-specific functions that were introduced in v6.0, such as `kindof`, have also been deprecated, see the main tutorial.
 
 For `EventQueueABM`, that was an experimental feature that used to work only with `kindof`, it is also now changed to work with the standard `typeof` of the base Julia language.
-a new version was also introduced, its working is described in the tutorial and in the performance tips of the documentation.
 
 # v6 - New Major release!
 
