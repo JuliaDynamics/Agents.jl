@@ -1,4 +1,4 @@
-export AbstractAgent, @agent, @multiagent, NoSpaceAgent
+export AbstractAgent, @agent, @multiagent, NoSpaceAgent, constructor
 
 ###########################################################################################
 # @agent
@@ -324,4 +324,6 @@ macro multiagent(typedef)
         end
         return esc(:($DynamicSumTypes.@sumtype $type_with_variants <: $abstract_type))
     end
-end 
+end
+
+constructor(MultiAgent::Type, Variant::Type) = (args...; kwargs...) -> MultiAgent(Variant(args...; kwargs...))

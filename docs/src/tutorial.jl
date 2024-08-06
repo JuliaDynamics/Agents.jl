@@ -741,7 +741,7 @@ model = StandardABM(
 
 # Now you can create instances with
 
-p = MultiSchelling'.Politician(model; pos = random_position(model), preferred_demographic = 1)
+p = constructor(MultiSchelling, Politician)(model; pos = random_position(model), preferred_demographic = 1)
 
 # agents are then all of type `MultiSchelling`
 
@@ -791,17 +791,18 @@ add_agent_single!(Politician, model; preferred_demographic = 1)
 
 collect(allagents(model))
 
-# For the `@multiagent` case, there is really no difference. We have
+# For the `@multiagent` case, there is really no difference apart from
+# the usage of a custom `constructor` function. We have
 
 model = StandardABM(MultiSchelling, space)
 
 # we add
 
-add_agent_single!(MultiSchelling'.Schelling, model; group = 1)
+add_agent_single!(constructor(MultiSchelling, Schelling), model; group = 1)
 
 # or
 
-add_agent_single!(MultiSchelling'.Politician, model; preferred_demographic = 1)
+add_agent_single!(constructor(MultiSchelling, Politician), model; preferred_demographic = 1)
 
 # and we see
 
