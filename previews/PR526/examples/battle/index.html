@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Battle Royale · Agents.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li class="is-active"><a class="tocitem" href>Battle Royale</a><ul class="internal"><li><a class="tocitem" href="#Rules-of-Engagement"><span>Rules of Engagement</span></a></li><li><a class="tocitem" href="#Model-Setup"><span>Model Setup</span></a></li><li><a class="tocitem" href="#Game-Dynamics"><span>Game Dynamics</span></a></li><li><a class="tocitem" href="#Let-the-Battle-Begin"><span>Let the Battle Begin</span></a></li></ul></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Battle Royale</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Battle Royale</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/battle.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Battle-Royale"><a class="docs-heading-anchor" href="#Battle-Royale">Battle Royale</a><a id="Battle-Royale-1"></a><a class="docs-heading-anchor-permalink" href="#Battle-Royale" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../battle.mp4" type="video/mp4">
+</video><p>This example illustrates how to leverage higher dimensions of a <code>GridSpace</code> to identify the distance from neighbors not just spatially, but also categorically. We&#39;ll also use the <a href="../../api/#Agents.walk!"><code>walk!</code></a> function extensively.</p><p>The <code>Models</code> module includes this example as <a href="../../models/#Agents.Models.battle-Tuple{}"><code>Models.battle</code></a>.</p><h2 id="Rules-of-Engagement"><a class="docs-heading-anchor" href="#Rules-of-Engagement">Rules of Engagement</a><a id="Rules-of-Engagement-1"></a><a class="docs-heading-anchor-permalink" href="#Rules-of-Engagement" title="Permalink"></a></h2><p>Agents wander around the map looking for opponents. When a grid space is occupied by two or more agents there will be a battle. With experience gained from the fight, the victor searches for more opponents to crush and losers scurry away defeated or possibly even die. This process repeats until there is a single, definitive winner.</p><p>For this battle ground to exist, the following rules must be followed:</p><ul><li>Agents have an experience level, starting at level 1 up to a maximum of 10.</li><li>Agents will search for the nearest worthy opponent (one with equal or ±1 experience level) and move towards them to attack, so long as something more important doesn&#39;t happen, which could be<ul><li>A tougher opponent (with experience level +2 or higher) is nearby: run!</li><li>There are no worthy opponents available, but there are weak ones (with experience level -2 or lower): chase them down.</li><li>Capture and taunt a weaker opponent, then kill them.</li><li>Notice a tough opponent is occupied, sneak up and kill them.</li><li>There is no-one worthy to fight, but also no-one left to taunt. All bets are off: THERE CAN BE ONLY ONE.</li></ul></li></ul><p>Battles are won by weighted chance - a higher level gives an agent a larger chance of winning, but does not guarantee it. When a victor is chosen</p><ul><li>The difference in experience between opponents is swapped.</li><li>If an agents experience reaches 0, they die.</li></ul><p>Captured opponents will be killed once taunted. The captor will gain half of their experience. If an opportunist manages to take the captor by surprise, they can gain up to half of the captor&#39;s experience. This means a level 1 agent may eliminate a level 10 captor and jump straight to level 6.</p><p>Once all rules of engagement have been exhausted, the final showdown begins. Opponents fight their closest adversary regardless of experience level. Winner takes all.</p><h2 id="Model-Setup"><a class="docs-heading-anchor" href="#Model-Setup">Model Setup</a><a id="Model-Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Setup" title="Permalink"></a></h2><pre><code class="language-julia">using Agents
+using InteractiveDynamics
+using CairoMakie
+
+mutable struct Fighter &lt;: AbstractAgent
+    id::Int
+    pos::Dims{3}
+    has_prisoner::Bool
+    capture_time::Int
+    shape::Symbol # For plotting
+end</code></pre><p>As you can see, the properties of out agent are very simple and contain only two parameters that are needed to store context from one time step to the next. All other properties needed are stored in the space. <code>pos</code> is three-dimensional, two for the actual space agents move within, and a third categorical dimension representing their level. <code>shape</code> is used solely for plotting (well, used once just for convenience).</p><p>Now let&#39;s set up the battle field:</p><pre><code class="language-julia">function battle(; fighters = 50)
+    model = ABM(
+        Fighter,
+        GridSpace((100, 100, 10); periodic = false);
+        scheduler = Schedulers.randomly,
+    )
+
+    n = 0
+    while n != fighters
+        pos = (rand(model.rng, 1:100, 2)..., 1) # Start at level 1
+        if isempty(pos, model)
+            add_agent!(pos, model, false, 0, :diamond)
+            n += 1
+        end
+    end
+
+    return model
+end
+
+model = battle()</code></pre><pre class="documenter-example-output">AgentBasedModel with 50 agents of type Fighter
+ space: GridSpace with size (100, 100, 10), metric=chebyshev, periodic=false
+ scheduler: randomly</pre><p>50 opponents positioned randomly on a 100x100 grid, with no escape (<code>periodic = false</code>). To leverage categorical dimensions fully, non-periodic chebyshev space is necessary.</p><h2 id="Game-Dynamics"><a class="docs-heading-anchor" href="#Game-Dynamics">Game Dynamics</a><a id="Game-Dynamics-1"></a><a class="docs-heading-anchor-permalink" href="#Game-Dynamics" title="Permalink"></a></h2><p>To implement the rules of engagement, only an <code>agent_step!</code> function is required, along with a few helper functions.</p><pre><code class="language-julia">space(agent) = agent.pos[1:2]
+level(agent) = agent.pos[3]</code></pre><pre class="documenter-example-output">level (generic function with 1 method)</pre><p><code>space</code> allows us to invoke a number of helpful utilities provided by Agents.jl but only operate on our spatial dimensions, <code>level</code> is a wrapper to access the agent&#39;s experience easily.</p><p>Nearest agents that satisfy our search criteria can be identified via Euclidean distance solely on the spatial dimensions of our <code>GridSpace</code>.</p><pre><code class="language-julia">function closest_target(agent::Fighter, ids::Vector{Int}, model::ABM)
+    if length(ids) == 1
+        closest = ids[1]
+    else
+        close_id = argmin(map(id -&gt; edistance(space(agent), space(model[id]), model), ids))
+        closest = ids[close_id]
+    end
+    return model[closest]
+end</code></pre><pre class="documenter-example-output">closest_target (generic function with 1 method)</pre><p>Since our battles are only between opponents with equal, or as much as one level apart, the odds can be set explicitly. Stronger opponents have twice the capacity of winning a match.</p><pre><code class="language-julia">function battle!(one::Fighter, two::Fighter, model)
+    if level(one) == level(two)
+        # Odds are equivalent
+        one_winner = rand(model.rng) &lt; 0.5
+    elseif level(one) &gt; level(two)
+        # Odds are in favor of one
+        one_winner = 2 * rand(model.rng) &gt; rand(model.rng)
+    else
+        # Odds are in favor of two
+        one_winner = rand(model.rng) &gt; 2 * rand(model.rng)
+    end
+
+    one_winner ? (up = one; down = two) : (up = two; down = one)
+
+    new_lvl_up = min(level(up) + 1, 10)
+    new_pos_up =
+        clamp.(rand(model.rng, -1:1, 2) .+ space(up), [1, 1], size(model.space)[1:2])
+    move_agent!(up, (new_pos_up..., new_lvl_up), model)
+    new_lvl_down = level(down) - 1
+    if new_lvl_down == 0
+        kill_agent!(down, model)
+    else
+        move_agent!(down, (space(down)..., new_lvl_down), model)
+    end
+end</code></pre><pre class="documenter-example-output">battle! (generic function with 1 method)</pre><p>If an agent has a prisoner, it will taunt it for a time, then kill it, so long as an opportunist doesn&#39;t sneak up on them first! Here we use the tuple constructor with <a href="../../api/#Agents.nearby_ids"><code>nearby_ids</code></a> to look for agents at the same position as the captor <code>(0, 0)</code>, and <em>any</em> level <code>(..., 10)</code>. We could also use the range constructor in this instance <code>nearby_ids(agent, model, [(1, 0:0), (2, 0:0)])</code>, meaning which is more performant but not as readable.</p><pre><code class="language-julia">function captor_behavior!(agent, model)
+    close_ids = collect(nearby_ids(agent, model, (0, 0, 10)))
+    if length(close_ids) == 1
+        # Taunt prisoner or kill it
+        prisoner = model[close_ids[1]]
+        if prisoner.capture_time &gt; 10
+            agent.shape = :rect
+            gain = ceil(Int, level(prisoner) / 2)
+            new_lvl = min(level(agent) + gain, 10)
+            kill_agent!(prisoner, model)
+            agent.has_prisoner = false
+            move_agent!(agent, (space(agent)..., new_lvl), model)
+        end
+    else
+        # Someone is here to kill the captor. Could be more than one opponent
+        prisoner = [model[id] for id in close_ids if model[id].capture_time &gt; 0][1]
+        exploiter = rand(
+            model.rng,
+            [
+                model[id]
+                for
+                id in close_ids if
+                model[id].capture_time == 0 &amp;&amp; model[id].has_prisoner == false
+            ],
+        )
+        exploiter.shape = :rect
+        gain = ceil(Int, level(agent) / 2)
+        new_lvl = min(level(agent) + rand(model.rng, 1:gain), 10)
+        kill_agent!(agent, model)
+        move_agent!(exploiter, (space(exploiter)..., new_lvl), model)
+        # Prisoner runs away in the commotion
+        prisoner.shape = :utriangle
+        prisoner.capture_time = 0
+        walk!(prisoner, (rand(model.rng, -1:1, 2)..., 0), model)
+    end
+end</code></pre><pre class="documenter-example-output">captor_behavior! (generic function with 1 method)</pre><p>When there are only few fighters standing, the stakes are higher. Prior experience is paramount since there is no gain, and fights are to the death.</p><pre><code class="language-julia">function endgame!(agent, model)
+    origin = space(agent)
+    end_ids = collect(Iterators.filter(
+        id -&gt; model[id].shape == :circle &amp;&amp; id != agent.id,
+        allids(model),
+    ))
+    agent.shape = :circle
+    if !isempty(end_ids)
+        opponent = closest_target(agent, end_ids, model)
+        target = space(opponent)
+        if origin == target
+            # Battle
+            agent.shape = :rect
+            opponent.shape = :rect
+            showdown!(agent, opponent, model)
+        else
+            walk!(agent, (sign.(target .- origin)..., 0), model)
+        end
+    end
+end
+
+function showdown!(one::Fighter, two::Fighter, model)
+    if level(one) == level(two)
+        # Odds are equivalent
+        one_winner = rand(model.rng) &lt; 0.5
+    elseif level(one) &gt; level(two)
+        # Odds are in favor of one
+        one_winner = level(one) - level(two) * rand(model.rng) &gt; rand(model.rng)
+    else
+        # Odds are in favor of two
+        one_winner = rand(model.rng) &gt; level(two) - level(one) * rand(model.rng)
+    end
+
+    one_winner ? kill_agent!(two, model) : kill_agent!(one, model)
+end</code></pre><pre class="documenter-example-output">showdown! (generic function with 1 method)</pre><p>The rest of our interactions flow down a hierarchy, so we&#39;ll place them directly in the <code>agent_step!</code> function. We use the tuple search for <code>occupied_ids</code> here, as we did with <code>close_ids</code> above. The rest of the searches however use the range search to provide a more precise criteria.</p><p>The easiest context to explore is <code>worthy_ids</code>: all we want to do is find an agent with a similar level. If we used the tuple search here, we would have to search <code>(100, 100, 1)</code> - even though we are not at all interested in the spatial location of the neighbors at this time. <code>(3, -1:1)</code> is therefore more accurate representation.</p><p>A more complex example is that of <code>strong_ids</code>. We are looking for agents with a level 2-4 points higher withing a distance of <code>(5, 5)</code>. The range search becomes a little verbose, but precise. An equivalent tuple search is not completely possible however. The closest solution is <code>(5, 5, 4)</code>, which also looks for <em>weaker</em> opponents and must be filtered to the correct neighbor set after the fact. In this instance the range search has significant performance gains.</p><pre><code class="language-julia">function agent_step!(agent, model)
+    if agent.capture_time &gt; 0
+        # Captured agents are powerless, but we need to keep track of how long
+        # they have been in this state
+        agent.capture_time += 1
+    elseif agent.has_prisoner
+        captor_behavior!(agent, model)
+    else
+        origin = space(agent)
+        # Find agents that have captives, they are not focused
+        occupied_ids = collect(Iterators.filter(
+            id -&gt; model[id].has_prisoner,
+            nearby_ids(agent, model, (7, 7, 10)),
+        ))
+        if !isempty(occupied_ids)
+            # Sneak up behind them
+            target = space(closest_target(agent, occupied_ids, model))
+            agent.shape = :pentagon
+            walk!(agent, (sign.(target .- origin)..., 0), model)
+        else
+            # Opponents that are greatly higher in rank that the current agent
+            strong_ids = collect(nearby_ids(agent, model, [(1, -5:5), (2, -5:5), (3, 2:4)]))
+            if !isempty(strong_ids)
+                # Run away from nearest
+                target = space(closest_target(agent, strong_ids, model))
+                agent.shape = :utriangle
+                walk!(agent, (sign.(origin .- target)..., 0), model)
+            else
+                # There are no distractions. Search for the closest worthy opponent
+                worthy_ids = collect(nearby_ids(agent, model, [(3, -1:1)]))
+                if !isempty(worthy_ids)
+                    opponent = closest_target(agent, worthy_ids, model)
+                    target = space(opponent)
+                    if origin == target
+                        # Battle
+                        agent.shape = :rect
+                        opponent.shape = :rect
+                        battle!(agent, opponent, model)
+                    else
+                        # Move towards worthy opponent
+                        agent.shape = :diamond
+                        walk!(agent, (sign.(target .- origin)..., 0), model)
+                    end
+                else
+                    # Find any weak targets in the vicinity
+                    weak_ids = collect(nearby_ids(
+                        agent,
+                        model,
+                        [(1, -10:10), (2, -10:10), (3, -4:-2)],
+                    ))
+                    if !isempty(weak_ids)
+                        prisoner = closest_target(agent, weak_ids, model)
+                        target = space(prisoner)
+                        if origin == target
+                            # Capture and taunt target
+                            agent.has_prisoner = true
+                            agent.shape = :vline
+                            prisoner.capture_time += 1
+                            prisoner.shape = :hline
+                        else
+                            # Chase down nearest (can move 2 steps at a time!)
+                            agent.shape = :star4
+                            walk!(agent, (2 .* sign.(target .- origin)..., 0), model)
+                        end
+                    else
+                        # Abandon honour. This is the end
+                        endgame!(agent, model)
+                    end
+                end
+            end
+        end
+    end
+
+    return nothing
+end</code></pre><pre class="documenter-example-output">agent_step! (generic function with 1 method)</pre><h2 id="Let-the-Battle-Begin"><a class="docs-heading-anchor" href="#Let-the-Battle-Begin">Let the Battle Begin</a><a id="Let-the-Battle-Begin-1"></a><a class="docs-heading-anchor-permalink" href="#Let-the-Battle-Begin" title="Permalink"></a></h2><p>Plotting is relatively straightforward. <a href="../../interact/#Agents.plotabm"><code>plotabm</code></a> cannot be used explicitly (yet) since it expects our categorical dimension is actually a third spatial one. We start with some custom legends to easier understand the dynamics.</p><pre><code class="language-julia">label_action = [&quot;Battle&quot;, &quot;Run&quot;, &quot;Showdown&quot;, &quot;Sneak&quot;, &quot;Duel&quot;, &quot;Captor&quot;, &quot;Prisoner&quot;, &quot;Chase&quot;]
+actions = [:rect, :utriangle, :circle, :pentagon, :diamond, :vline, :hline, :star4]
+group_action = [
+    MarkerElement(
+        marker = marker,
+        color = :black,
+        strokecolor = :transparent,
+        markersize = 15,
+    ) for marker in actions
+]
+group_level = [
+    PolyElement(color = color, strokecolor = :transparent) for color in cgrad(:tab10)[1:10]
+]</code></pre><p>And some complex internals that will be hidden away in the near future</p><pre><code class="language-julia">e = size(model.space.s)[1:2] .+ 2
+o = zero.(e) .- 2
+clr(agent) = cgrad(:tab10)[level(agent)]
+mkr(a) = a.shape
+colors = Observable(to_color.([clr(model[id]) for id in Schedulers.by_id(model)]))
+markers = Observable([mkr(model[id]) for id in Schedulers.by_id(model)])
+pos = Observable([model[id].pos for id in Schedulers.by_id(model)])
+stepper = InteractiveDynamics.ABMStepper(
+    clr,
+    mkr,
+    15,
+    nothing,
+    Schedulers.by_id,
+    pos,
+    colors,
+    Observable(15),
+    markers,
+    nothing,
+    nothing
+)</code></pre><p>Finally, the plot:</p><pre><code class="language-julia">f = Figure(resolution = (600, 700))
+ax = f[1, 1] = Axis(f, title = &quot;Battle Royale&quot;)
+hidedecorations!(ax)
+ax.xgridvisible = true
+ax.ygridvisible = true
+f[2, 1] = Legend(
+    f,
+    [group_action, group_level],
+    [label_action, string.(1:10)],
+    [&quot;Action&quot;, &quot;Level&quot;],
+    orientation = :horizontal,
+    tellheight = true,
+    tellwidth = false,
+    nbanks = 5,
+)
+
+scatter!(ax, pos; color = colors, markersize = 15, marker = markers, strokewidth = 0.0)
+xlims!(ax, o[1], e[1])
+ylims!(ax, o[2], e[2])
+record(f, &quot;battle.mp4&quot;, 0:225; framerate = 10) do i
+    Agents.step!(stepper, model, agent_step!, dummystep, 1)
+end</code></pre><video width="auto" controls autoplay loop>
+<source src="../battle.mp4" type="video/mp4">
+</video><p>Some interesting behaviour emerges: sometimes you see a group of diamonds chasing one triangle. What ends up happening here is usually a close pair that wishes to fight gets caught out by the weaker one of the two running away from an even stronger opponent. Problem is that this stronger opponent is chasing the stronger of the pair, but since the weakest of the pair is still closer to the newcomer, there is a stalemate. This is usually resolved by hitting a boundary or other opponents.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../opinion_spread/">« Opinion spread</a><a class="docs-footer-nextpage" href="../zombies/">Zombie Outbreak »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Tuesday 13 July 2021 15:19">Tuesday 13 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
