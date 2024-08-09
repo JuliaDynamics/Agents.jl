@@ -93,23 +93,23 @@ end
 
 ################### DEFINITION 2 ###############
 
-agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
+@inline agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
 
-agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
-function agent_step!(agent, model2, ::GridAgentTwo)
+@inline agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
+@inline function agent_step!(agent, model2, ::GridAgentTwo)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
 end
-function agent_step!(agent, model2, ::GridAgentThree)
+@inline function agent_step!(agent, model2, ::GridAgentThree)
     if any(a-> variant(a) isa GridAgentTwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
 end
-function agent_step!(agent, model2, ::GridAgentFour)
+@inline function agent_step!(agent, model2, ::GridAgentFour)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
-function agent_step!(agent, model2, ::GridAgentFive)
+@inline function agent_step!(agent, model2, ::GridAgentFive)
     targets = filter!(a->a.one > 1.0, collect(GridAgentAll, nearby_agents(agent, model2, 3)))
     if !isempty(targets)
         idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
@@ -117,7 +117,7 @@ function agent_step!(agent, model2, ::GridAgentFive)
         walk!(agent, sign.(farthest.pos .- agent.pos), model2)
     end
 end
-function agent_step!(agent, model2, ::GridAgentSix)
+@inline function agent_step!(agent, model2, ::GridAgentSix)
     agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 
