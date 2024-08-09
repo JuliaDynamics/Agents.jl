@@ -128,21 +128,21 @@ function initialize_model_n(;n_agents=600, n_types=1, dims=(5,5))
     return model
 end
 
-function agent_step!(agent, model)
+@inline function agent_step!(agent, model)
     move!(agent, model)
     agents = agents_in_position(agent.pos, model)
     for a in agents; exchange!(agent, a); end
     return nothing
 end
 
-function move!(agent, model)
+@inline function move!(agent, model)
     neighbors = nearby_positions(agent, model)
     cell = rand(abmrng(model), collect(neighbors))
     move_agent!(agent, cell, model)
     return nothing
 end
 
-function exchange!(agent, other_agent)
+@inline function exchange!(agent, other_agent)
     v1 = agent.money
     v2 = other_agent.money
     agent.money = v2
