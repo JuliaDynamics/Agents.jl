@@ -250,7 +250,7 @@ function add_event!(agent, model) # TODO: Study type stability of this function
     end
     # Then, select an event based on propensities
     event_idx = events_type[sample_propensity(abmrng(model), propensities_type)]    # The time to the event is generated from the selected event
-    selected_event = abmevents(model)[event_idx]
+    selected_event = events[event_idx]
     selected_prop = propensities_type[event_idx]
     t = selected_event.timing(agent, model, selected_prop)
     # we then propagate to the direct function
