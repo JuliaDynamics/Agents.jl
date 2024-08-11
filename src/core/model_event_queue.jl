@@ -141,7 +141,7 @@ can be evolved in time.
   event for an agent after an event affected said agent has been triggered.
 """
 function EventQueueABM(
-        ::Type{A}, events::E,
+        ::Type{A}, events,
         space::S = nothing;
         container::Type = Dict,
         properties::P = nothing,
@@ -149,7 +149,7 @@ function EventQueueABM(
         warn = true,
         autogenerate_on_add = true,
         autogenerate_after_action = true,
-    ) where {A<:AbstractAgent,S<:SpaceType,E,P,R<:AbstractRNG}
+    ) where {A<:AbstractAgent,S<:SpaceType,P,R<:AbstractRNG}
     if warn
         @warn "This model type is still experimental which means that it is subject to breaking changes in the
         future. Also, while all the core functionalities have been implemented, this model type
@@ -158,9 +158,10 @@ function EventQueueABM(
     end
     C = construct_agent_container(container, A)
     agents = C()
-    I = events isa Tuple ? Int : keytype(events) # `Tuple` doesn't define `keytype`...
+    events = SizedVector{length(events), Union{typeof.(events)...}}(events...)
+
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
-    queue = BinaryHeap(Base.By(last), Pair{Tuple{I, Int}, Float64}[])
+    queue = BinaryHeap(Base.By(last), Pair{Tuple{Int, Int}, Float64}[])
 
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
     type_func = is_sumtype(A) ? variantof : typeof
@@ -195,8 +196,8 @@ function EventQueueABM(
     # because we use the index of `type_to_idx` to access them.
 
     # construct the type
-    TF,ET,PT,FPT,TI,Q = typeof.((
-        type_func, idx_events_each_type, propensities_each_type,
+    E,TF,ET,PT,FPT,TI,Q = typeof.((
+        events, type_func, idx_events_each_type, propensities_each_type,
         idx_func_propensities_each_type, type_to_idx, queue
     ))
     return EventQueueABM{S,A,C,P,E,R,TF,ET,PT,FPT,TI,Q}(
@@ -249,7 +250,7 @@ function add_event!(agent, model) # TODO: Study type stability of this function
     end
     # Then, select an event based on propensities
     event_idx = events_type[sample_propensity(abmrng(model), propensities_type)]    # The time to the event is generated from the selected event
-    selected_event = abmevents(model)[event_idx]
+    selected_event = events[event_idx]
     selected_prop = propensities_type[event_idx]
     t = selected_event.timing(agent, model, selected_prop)
     # we then propagate to the direct function

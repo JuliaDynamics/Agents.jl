@@ -17,7 +17,7 @@ using DynamicSumTypes
 export variant, variantof
 import ProgressMeter
 using Random
-using StaticArrays: SVector
+using StaticArrays: SVector, SizedVector
 export SVector
 import LinearAlgebra
 import StreamSampling
