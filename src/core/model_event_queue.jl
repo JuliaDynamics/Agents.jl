@@ -160,7 +160,10 @@ function EventQueueABM(
     events = SizedVector{length(events), Union{typeof.(events)...}}(events...)
 
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
-    queue = BinaryHeap(Base.By(last), Pair{Tuple{Int, Int}, Float64}[])
+    queue = BinaryHeap(
+                Base.By(last, DataStructures.FasterForward()), 
+                Pair{Tuple{Int, Int}, Float64}[]
+            )
 
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
 
