@@ -65,7 +65,7 @@ abmtime
 abmevents
 ```
 
-## [Available spaces](@ref available_spaces)
+## [Available spaces](@id available_spaces)
 
 Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see the developer documentation on [creating a new space type](@ref make_new_space).
 
