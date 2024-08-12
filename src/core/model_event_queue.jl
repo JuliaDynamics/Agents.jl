@@ -161,7 +161,7 @@ function EventQueueABM(
 
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
     queue = BinaryHeap(
-                Base.Order.By{typeof(last), DataStructures.FasterForward}(last, DataStructures.FasterForward()), 
+                Base.By(last, DataStructures.FasterForward()), 
                 Pair{Tuple{Int, Int}, Float64}[]
             )
 
