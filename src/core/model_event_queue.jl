@@ -38,7 +38,7 @@ struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
     C<:ContainerType{A},
-    P,E,R<:AbstractRNG,TF,ET,PT,FPT,TI,Q} <: AgentBasedModel{S}
+    P,E,R<:AbstractRNG,TF,ET,PT,FPT,Q} <: AgentBasedModel{S}
     # core ABM stuff
     agents::C
     space::S
@@ -49,7 +49,6 @@ struct EventQueueABM{
     # Specific to event queue
     events::E
     type_func::TF
-    type_to_idx::TI
     idx_events_each_type::ET
     propensities_each_type::PT
     idx_func_propensities_each_type::FPT
@@ -164,8 +163,13 @@ function EventQueueABM(
     queue = BinaryHeap(Base.By(last), Pair{Tuple{Int, Int}, Float64}[])
 
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
-    type_func = is_sumtype(A) ? variantof : typeof
-    type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
+
+    if is_sumtype(A) 
+        type_func = DynamicSumTypes.variant_idx 
+    else 
+        type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
+        type_func = (agent) -> type_to_idx[typeof(agent)]
+    end
 
     # precompute a vector mapping the agent type index to a
     # vectors of indices, each vector corresponding
@@ -196,15 +200,15 @@ function EventQueueABM(
     # because we use the index of `type_to_idx` to access them.
 
     # construct the type
-    E,TF,ET,PT,FPT,TI,Q = typeof.((
+    E,TF,ET,PT,FPT,Q = typeof.((
         events, type_func, idx_events_each_type, propensities_each_type,
-        idx_func_propensities_each_type, type_to_idx, queue
+        idx_func_propensities_each_type, queue
     ))
-    return EventQueueABM{S,A,C,P,E,R,TF,ET,PT,FPT,TI,Q}(
+    return EventQueueABM{S,A,C,P,E,R,TF,ET,PT,FPT,Q}(
 
         agents, space, properties, rng, Ref(0), Ref(0.0),
 
-        events, type_func, type_to_idx, idx_events_each_type,
+        events, type_func, idx_events_each_type,
         propensities_each_type, idx_func_propensities_each_type,
         queue, autogenerate_on_add, autogenerate_after_action,
     )
@@ -237,7 +241,7 @@ current time of the `model`.
 function add_event!(agent, model) # TODO: Study type stability of this function
     events = abmevents(model)
     # Here, we retrieve the applicable events for the agent and corresponding info
-    idx = getfield(model, :type_to_idx)[getfield(model, :type_func)(agent)]
+    idx = getfield(model, :type_func)(agent)
     events_type = getfield(model, :idx_events_each_type)[idx]
     propensities_type = getfield(model, :propensities_each_type)[idx]
     idx_func_propensities_type = getfield(model, :idx_func_propensities_each_type)[idx]
