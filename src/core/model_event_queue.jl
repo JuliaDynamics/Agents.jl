@@ -163,8 +163,14 @@ function EventQueueABM(
     queue = BinaryHeap(Base.By(last), Pair{Tuple{Int, Int}, Float64}[])
 
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
-    type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
-    type_func = is_sumtype(A) ? DynamicSumTypes.variant_idx : (agent) -> type_to_idx[typeof(agent)]
+
+    if is_sumtype(A) 
+        type_func = DynamicSumTypes.variant_idx 
+    else 
+        type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
+        type_func = (agent) -> type_to_idx[typeof(agent)]
+    end
+
     # precompute a vector mapping the agent type index to a
     # vectors of indices, each vector corresponding
     # to all valid events that can apply to a given agent type
