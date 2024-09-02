@@ -258,7 +258,9 @@ function add_event!(agent, model) # TODO: Study type stability of this function
     # Then, select an event based on propensities
     event_idx = events_type[sample_propensity(abmrng(model), propensities_type)]    # The time to the event is generated from the selected event
     selected_event = events[event_idx]
-    selected_prop = propensities_type[event_idx]
+    # TODO: handle this hierarchically instead of flattening as a workaround
+    flat_propensities_each_type = reduce(vcat, getfield(model, :propensities_each_type))
+    selected_prop = flat_propensities_each_type[event_idx]
     t = selected_event.timing(agent, model, selected_prop)
     # we then propagate to the direct function
     add_event!(agent, event_idx, t, model)
