@@ -139,6 +139,7 @@ function remove_agent_from_space!(
 )
     prev = abmspace(model).grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == a.id, prev)
+    isnothing(ai) && error(lazy"Tried to remove $(a) from the space, but that agent is not on the space")
     deleteat!(prev, ai)
     return a
 end
