@@ -71,7 +71,7 @@ function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GraphSpace})
     ai = findfirst(id -> id == a.id, ids)
     isnothing(ai) && error(lazy"Tried to remove agent with ID $(a.id) from the space, but that agent is not on the space")
     deleteat!(ids, ai)
-    return agent
+    return a
 end
 
 function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
