@@ -65,11 +65,13 @@ end
 #######################################################################################
 random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 
-function remove_agent_from_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
-    agentpos = agent.pos
+function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GraphSpace})
+    agentpos = a.pos
     ids = ids_in_position(agentpos, model)
-    deleteat!(ids, findfirst(a -> a == agent.id, ids))
-    return model
+    ai = findfirst(id -> id == a.id, ids)
+    isnothing(ai) && error(lazy"Tried to remove agent with ID $(a.id) from the space, but that agent is not on the space")
+    deleteat!(ids, ai)
+    return a
 end
 
 function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
