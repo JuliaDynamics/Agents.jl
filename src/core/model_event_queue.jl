@@ -168,7 +168,7 @@ function EventQueueABM(
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
 
     if is_sumtype(A) 
-        type_func = DynamicSumTypes.variant_idx 
+        type_func = LightSumTypes.variant_idx 
     else 
         type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
         type_func = (agent) -> type_to_idx[typeof(agent)]
