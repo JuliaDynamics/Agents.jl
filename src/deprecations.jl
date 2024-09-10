@@ -393,8 +393,8 @@ function nearby_agents_exact(a, model, r=1)
 end
 
 export @dispatch, @finalize_dispatch, kindof, allkinds
-export DynamicSumTypes
-using DynamicSumTypes: allkinds
+export LightSumTypes
+using LightSumTypes: allkinds
 
 macro multiagent(version, struct_repr)
     expr = _multiagent(version, struct_repr)
@@ -425,15 +425,15 @@ function _multiagent(version, struct_repr)
     a_specs = :(begin $(agent_specs_with_base...) end)
     if version == QuoteNode(:opt_speed)
         expr = quote
-                   DynamicSumTypes.@sum_structs :on_fields $t $a_specs
+                   LightSumTypes.@sum_structs :on_fields $t $a_specs
                    Agents.ismultiagentcompacttype(::Type{$(namify(new_type))}) = true
-                   DynamicSumTypes.export_variants($(namify(t)))
+                   LightSumTypes.export_variants($(namify(t)))
                end
     elseif version == QuoteNode(:opt_memory)
         expr = quote
-                   DynamicSumTypes.@sum_structs :on_types $t $a_specs
+                   LightSumTypes.@sum_structs :on_types $t $a_specs
                    Agents.ismultiagentsumtype(::Type{$(namify(new_type))}) = true
-                   DynamicSumTypes.export_variants($(namify(t)))
+                   LightSumTypes.export_variants($(namify(t)))
                end
     else
         error("The version of @multiagent chosen was not recognized, use either `:opt_speed` or `:opt_memory` instead.")
@@ -470,18 +470,18 @@ ismultiagenttype(::Type) = false
 ismultiagentsumtype(::Type) = false
 ismultiagentcompacttype(::Type) = false
 
-function DynamicSumTypes.kindof(a::AbstractAgent)
+function LightSumTypes.kindof(a::AbstractAgent)
     throw(ArgumentError("Agent of type $(typeof(a)) has not been created via `@multiagent`."))
 end
 
-function DynamicSumTypes.allkinds(a::Type{<:AbstractAgent})
+function LightSumTypes.allkinds(a::Type{<:AbstractAgent})
     (nameof(a), ) # this function is extended automatically in the macro
 end
 
 macro dispatch(f_def)
-    return esc(:(DynamicSumTypes.@pattern $f_def))
+    return esc(:(LightSumTypes.@pattern $f_def))
 end
 
 macro finalize_dispatch()
-    return esc(:(DynamicSumTypes.@finalize_patterns))
+    return esc(:(LightSumTypes.@finalize_patterns))
 end
