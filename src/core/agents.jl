@@ -322,7 +322,7 @@ macro multiagent(typedef)
             abstract_type = typedef.args[2]
             type_with_variants = typedef.args[1]
         end
-        return esc(:($DynamicSumTypes.@sumtype $type_with_variants <: $abstract_type))
+        return esc(:($LightSumTypes.@sumtype $type_with_variants <: $abstract_type))
     end
 end
 
