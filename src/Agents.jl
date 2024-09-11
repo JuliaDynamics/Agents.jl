@@ -13,7 +13,7 @@ using Distributed
 using Graphs
 using DataFrames
 using MacroTools
-using DynamicSumTypes
+using LightSumTypes
 export variant, variantof
 import ProgressMeter
 using Random
