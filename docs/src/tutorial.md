@@ -69,7 +69,7 @@ end
 # make a container for model-level properties
 properties = Dict(:min_to_be_happy => 3)
 
-# Create the central `AgentBasedModel` that stores all simution information
+# Create the central `AgentBasedModel` that stores all simulation information
 model = StandardABM(
     Schelling, # type of agents
     space; # space they live in

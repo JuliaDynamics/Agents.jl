@@ -63,10 +63,10 @@ An example using continuous space is the [Flocking model](@ref).
 Distances specified by `r` in functions like [`nearby_ids`](@ref) are always based
 on the Euclidean distance between two points in `ContinuousSpace`.
 
-In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system, see
-discussion around the keyword `spacing` below. By default, `nearby_*` have keyword 
-`search` set to `:approximate`, which means that they doesn't do an exact search, but 
-can be a possible over-estimation, including agent IDs whose distance slightly exceeds 
+In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system; see
+discussion around the keyword `spacing` below. By default, `nearby_*` has the keyword 
+`search` set to `:approximate`, which means that it doesn't do an exact search, but 
+can be a possible overestimation, including agent IDs whose distance slightly exceeds 
 `r` with "slightly" being as much as `spacing`. If you want exact searches set the keyword 
 `search` to `:exact` in `nearby_*`.
 
