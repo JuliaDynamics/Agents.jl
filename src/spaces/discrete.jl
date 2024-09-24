@@ -109,7 +109,7 @@ function random_empty(model::ABM{<:DiscreteSpace}, cutoff = 0.998)
         end
     else
         empty = empty_positions(model)
-        return itsample(abmrng(model), empty, StreamSampling.AlgL())
+        return itsample(abmrng(model), empty, StreamSampling.AlgR())
     end
 end
 
