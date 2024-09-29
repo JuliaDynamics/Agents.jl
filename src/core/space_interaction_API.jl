@@ -349,13 +349,13 @@ algorithm which doesn't require to collect all elements to just sample one of th
 function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        return itsample(abmrng(model), iter, StreamSampling.AlgR())
+        return itsample(abmrng(model), iter, StreamSampling.AlgRSWRSKIP())
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(id -> f(id), iter)
-            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgR())
+            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
         end
     end
 end
@@ -378,13 +378,13 @@ position.
 function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter_ids = nearby_ids(a, model, r; kwargs...)
     if isnothing(f)
-        id = itsample(abmrng(model), iter_ids, StreamSampling.AlgR())
+        id = itsample(abmrng(model), iter_ids, StreamSampling.AlgRSWRSKIP())
     else
         if alloc
             id = sampling_with_condition_single(iter_ids, f, model, id -> model[id])
         else
             iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
-            id = itsample(abmrng(model), iter_filtered, StreamSampling.AlgR())
+            id = itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
         end
     end
     isnothing(id) && return nothing
@@ -406,13 +406,13 @@ is expensive since in this case the allocating version can be more performant.
 function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
-        return itsample(abmrng(model), iter, StreamSampling.AlgR())
+        return itsample(abmrng(model), iter, StreamSampling.AlgRSWRSKIP())
     else
         if alloc
             return sampling_with_condition_single(iter, f, model)
         else
             iter_filtered = Iterators.filter(pos -> f(pos), iter)
-            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgR())
+            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
         end
     end
 end
