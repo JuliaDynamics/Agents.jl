@@ -684,7 +684,7 @@ adf
 # command. 
 # This approach is recommended as default, because in many cases it will have performance advantages 
 # over the `Union` approach without having tangible disadvantages. However, we strongly recommend you 
-# to read through the [comparison of the two approaches](@ref sum_vs_union).
+# to read through the [comparison of the two approaches](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#multi_vs_union).
 
 # _Note that using multiple agent types is a possibility entirely orthogonal to
 # the type of `AgentBasedModel` or the type of space. Everything we describe here
