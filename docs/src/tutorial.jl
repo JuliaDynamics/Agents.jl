@@ -179,7 +179,7 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 
 # To create agent types, and define what properties they should have, it is strongly
 # recommended to use the [`@agent`](@ref) command. You can read its documentation in detail
-# if you wish to understand it deeply. But the long story made sort is that this command
+# if you wish to understand it deeply. But the long story made short is that this command
 # ensures that agents have the minimum amount of required necessary properties
 # to function within a given space and model by "inheriting" pre-defined agent properties
 # suited for each type of space.
