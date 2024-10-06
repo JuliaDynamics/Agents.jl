@@ -73,7 +73,7 @@ To implement this API for your custom space:
 
 1. Copy the methods from the list below.
     Make sure to also copy the first line defining the `ABMPlot` type in your working
-    environment which is necesary to be able to extend the API.
+    environment which is necessary to be able to extend the API.
     Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot
     properties that have been lifted from them (see the "Lifting" section of this API).
     You can then easily access them inside your functions via the dot syntax, e.g. with
