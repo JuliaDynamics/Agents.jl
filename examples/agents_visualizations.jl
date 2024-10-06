@@ -48,13 +48,6 @@ fig, ax, abmobs = abmplot(model;
 )
 fig # returning the figure displays it
 
-# !!! note "Supported keyword arguments"
-#     We do not check internally, if the keyword arguments passed to `abmplot` are
-#     supported. Please make sure that there are no typos and that the used kwargs are
-#     supported by the [`abmplot`](@ref) function. Otherwise they will be ignored.
-#     This is an unfortunate consequence of how Makie.jl recipes work, and we believe
-#     that in the future this problem will be addressed in Makie.jl.
-
 # Besides agents, we can also plot spatial properties as a heatmap.
 # Here we plot the temperature of the planet by providing the name
 # of the property as the "heat array":
