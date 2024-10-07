@@ -479,6 +479,7 @@ count_total(model) = num_solid_vertices(model.triangulation)
 # line segment between any two vertices of the cell. We also 
 # consider the average spring length, i.e. the average length 
 # of the edges in the Delaunay triangulation.
+using StatsBase
 function average_cell_area(model)
     area_itr = (get_area(model.tessellation, i) for i in each_solid_vertex(model.triangulation))
     mean_area = mean(area_itr)
