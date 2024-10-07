@@ -44,4 +44,4 @@ Graphs = "1"
 Measurements = "2"
 OrdinaryDiffEq = "6"
 Pkg = "1"
-StreamSampling
+StreamSampling = "0.5"
