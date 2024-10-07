@@ -33,6 +33,7 @@ SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+StreamSampling = "ff63dad9-3335-55d8-95ec-f8139d39e468"
 
 [compat]
 BlackBoxOptim = "0.6"
@@ -43,3 +44,4 @@ Graphs = "1"
 Measurements = "2"
 OrdinaryDiffEq = "6"
 Pkg = "1"
+StreamSampling
