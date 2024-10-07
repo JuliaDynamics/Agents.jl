@@ -317,14 +317,12 @@ function sample_triangle(tri::Triangulation, T)
 end
 
 # Next, we need to know how to select a random triangle from a triangulation. This is done by using a weighted 
-# sample according to the triangle areas. In the function below, there is some obvious room for improvement
-# to reduce allocations, but this is not a concern in this example.
-using StatsBase
+# sample according to the triangle areas.
+using StreamSampling
 function random_triangle(tri::Triangulation)
-    triangles = collect(DT.each_solid_triangle(tri)) # collect since we need to know the ordering of the areas
-    areas = [DT.triangle_area(get_point(tri, triangle_vertices(T)...)...) for T in triangles]
-    weights = Weights(areas)
-    T = sample(triangles, weights)
+    triangles = DT.each_solid_triangle(tri)
+    area(T) = DT.triangle_area(get_point(tri, triangle_vertices(T)...)...)
+    T = itsample(triangles, area)
     return T
 end
 
