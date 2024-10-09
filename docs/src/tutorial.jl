@@ -798,11 +798,11 @@ model = StandardABM(MultiSchelling, space)
 
 # we add
 
-add_agent_single!(constructor(MultiSchelling, Schelling), model; group = 1)
+add_agent_single!(MultiSchelling∘Schelling, model; group = 1)
 
 # or
 
-add_agent_single!(constructor(MultiSchelling, Politician), model; preferred_demographic = 1)
+add_agent_single!(MultiSchelling∘Politician, model; preferred_demographic = 1)
 
 # and we see
 
