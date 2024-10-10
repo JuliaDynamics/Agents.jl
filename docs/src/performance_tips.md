@@ -134,7 +134,7 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
-Finally, we also have a more realistic benchmark of the two approaches at `test/performance/multiagent_vs_union.jl` where each type has a different set of behaviour unlike in the previous benchmark. The result of running the model with the two methodologies are
+Finally, we also have a more realistic benchmark of the two approaches at `test/performance/multiagent_vs_union.jl` where each type has a different set of behaviours, unlike in the previous benchmark. The result of running the model with the two methodologies are
 
 ```@example performance_2
 using Agents
