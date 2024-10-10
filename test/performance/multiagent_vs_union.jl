@@ -62,11 +62,15 @@ function agent_step!(agent::GridAgentFour, model1)
     agent.one += sum(a.one for a in nearby_agents(agent, model1))
 end
 function agent_step!(agent::GridAgentFive, model1)
-    targets = filter!(a->a.one > 1.0, collect(types, nearby_agents(agent, model1, 3)))
+    targets = Iterators.filter(a->a.one > 1.0, nearby_agents(agent, model1, 3))
     if !isempty(targets)
-        idx = argmax(map(t->euclidean_distance(agent, t, model1), targets))
-        farthest = targets[idx]
-        walk!(agent, sign.(farthest.pos .- agent.pos), model1)
+        farthest = 0.0
+        a = first(targets)
+        for t in targets
+            d = euclidean_distance(agent, t, model1)
+            d > farthest && (a, farthest = t, d)
+        end
+        walk!(agent, sign.(a.pos .- agent.pos), model1)
     end
 end
 function agent_step!(agent::GridAgentSix, model1)
@@ -93,31 +97,35 @@ end
 
 ################### DEFINITION 2 ###############
 
-@inline agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
+agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
 
-@inline agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
-@inline function agent_step!(agent, model2, ::GridAgentTwo)
+agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
+function agent_step!(agent, model2, ::GridAgentTwo)
     agent.one += rand(abmrng(model2))
     agent.two = rand(abmrng(model2), Bool)
 end
-@inline function agent_step!(agent, model2, ::GridAgentThree)
+function agent_step!(agent, model2, ::GridAgentThree)
     if any(a-> variant(a) isa GridAgentTwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
 end
-@inline function agent_step!(agent, model2, ::GridAgentFour)
+function agent_step!(agent, model2, ::GridAgentFour)
     agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
-@inline function agent_step!(agent, model2, ::GridAgentFive)
-    targets = filter!(a->a.one > 1.0, collect(GridAgentAll, nearby_agents(agent, model2, 3)))
+function agent_step!(agent, model2, ::GridAgentFive)
+    targets = Iterators.filter(a->a.one > 1.0, nearby_agents(agent, model2, 3))
     if !isempty(targets)
-        idx = argmax(map(t->euclidean_distance(agent, t, model2), targets))
-        farthest = targets[idx]
-        walk!(agent, sign.(farthest.pos .- agent.pos), model2)
+        farthest = 0.0
+        a = first(targets)
+        for t in targets
+            d = euclidean_distance(agent, t, model2)
+            d > farthest && (a, farthest = t, d)
+        end
+        walk!(agent, sign.(a.pos .- agent.pos), model2)
     end
 end
-@inline function agent_step!(agent, model2, ::GridAgentSix)
+function agent_step!(agent, model2, ::GridAgentSix)
     agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 
