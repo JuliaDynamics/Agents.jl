@@ -143,8 +143,8 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "multiagent_vs_union.jl
 include(t)
 ```
 
-As you can see, [`@multiagent`](@ref) has the edge over a `Union`, but nonetheless the difference is not huge.
-This is true for Julia>=1.11, where we then suggest to go with [`@multiagent`](@ref) only if the speed of the
+As you can see, [`@multiagent`](@ref) has the edge over a `Union`: there is still a general 1.5-2x advantage in many cases
+in its favour. This is true for Julia>=1.11, where we then suggest to go with [`@multiagent`](@ref) only if the speed of the
 simulation is critical. However, keep in mind that on Julia<=1.10 the difference is much bigger: [`@multiagent`](@ref)
 is almost one order of magnitude faster than a `Union`.
 
