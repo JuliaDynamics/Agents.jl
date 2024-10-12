@@ -862,6 +862,13 @@ or
 add_agent_single!(MultiSchelling∘Politician, model; preferred_demographic = 1)
 ````
 
+Actually, if you are brave enough, the same result can be obtained by using
+the composition operator `∘` (available by typing \circ<tab> in the REPL)
+
+````@example tutorial
+add_agent_single!(MultiSchelling∘Politician, model; preferred_demographic = 1)
+````
+
 and we see
 
 ````@example tutorial
