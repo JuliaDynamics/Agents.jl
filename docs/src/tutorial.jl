@@ -758,15 +758,13 @@ MultiSchelling
 
 # This `MultiSchelling` is not a union type; it is an advanced construct
 # that wraps multipe types. When making a multi-agent directly (although it is not recommended,
-# use `add_agent!` instead), we need to use the special `constructor` function
+# use `add_agent!` instead), we can wrap the agent type in the multiagent type like so
 
-polit_constr = constructor(MultiSchelling, Politician)
-p = polit_constr(; id = 1, pos = random_position(model), preferred_demographic = 1)
+p = MultiSchelling(Politician(; id = 1, pos = random_position(model), preferred_demographic = 1))
 
 # or
 
-human_constr = constructor(MultiSchelling, Schelling)
-h = human_constr(; id = 1, pos = random_position(model), mood = true, group = 1)
+h = MultiSchelling(Schelliing(; id = 1, pos = random_position(model), mood = true, group = 1))
 
 # As you can tell, both of these are of the same `Type`:
 
@@ -800,7 +798,7 @@ model = StandardABM(
 )
 
 # Now, when it comes to adding agents to the model, we use the same approach
-# as with the `Union` types: we pass the "type" to make as a first argument
+# as with the `Union` types but we pass a constructor function as a first argument
 # to [`add_agent!`](@ref). The "type" here must actually be the constructor
 
 add_agent_single!(constructor(MultiSchelling, Schelling), model; group = 1)
