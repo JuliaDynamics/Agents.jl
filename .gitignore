@@ -16,3 +16,4 @@ test/adata.arrow
 test/mdata.arrow
 *.csv
 *.arrow
+tutorial.md
