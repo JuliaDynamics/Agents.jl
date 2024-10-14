@@ -149,17 +149,17 @@ function initialize_model(
     ## spawn each animal at a random walkable position according to its pathfinder
     for _ in 1:n_rabbits
         pos = random_walkable(model, model.landfinder)
-        agent = (Animal∘Rabbit)(model, pos, v0, rand(abmrng(model), Δe_grass:2Δe_grass))
+        agent = (Animal ∘ Rabbit)(model, pos, v0, rand(abmrng(model), Δe_grass:2Δe_grass))
         add_agent_own_pos!(agent, model)
     end
     for _ in 1:n_foxes
         pos = random_walkable(model, model.landfinder)
-        agent = (Animal∘Fox)(model, pos, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
+        agent = (Animal ∘ Fox)(model, pos, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
         add_agent_own_pos!(agent, model)
     end
     for _ in 1:n_hawks
         pos = random_walkable(model, model.airfinder)
-        agent = (Animal∘Hawk)(model, pos, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
+        agent = (Animal ∘ Hawk)(model, pos, v0, rand(abmrng(model), Δe_rabbit:2Δe_rabbit))
         add_agent_own_pos!(agent, model)
     end
     return model
