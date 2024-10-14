@@ -17,15 +17,6 @@ abstract type AbstractSpace end
 abstract type DiscreteSpace <: AbstractSpace end
 SpaceType = Union{Nothing, AbstractSpace}
 
-# This is a collection of valid position types, sometimes used for ambiguity resolution
-ValidPos = Union{
-    Int, # graph
-    NTuple{N,Int}, # grid
-    NTuple{M,<:AbstractFloat}, # continuous
-    SVector{M,<:AbstractFloat}, # continuous
-    Tuple{Int,Int,Float64} # osm
-} where {N,M}
-
 
 """
     AgentBasedModel

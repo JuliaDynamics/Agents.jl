@@ -24,8 +24,8 @@ in the discrete path to ensure continuous path is optimal.
 """
 function find_continuous_path(
     pathfinder::AStar{D},
-    from::Agents.ValidPos,
-    to::Agents.ValidPos,
+    from::Any,
+    to::Any,
 ) where {D}
     discrete_from = Tuple(to_discrete_position(from, pathfinder))
     discrete_to = Tuple(to_discrete_position(to, pathfinder))
@@ -64,7 +64,7 @@ end
 
 function Agents.plan_route!(
     agent::AbstractAgent,
-    dest::Agents.ValidPos,
+    dest::Any,
     pathfinder::AStar{D,P,M,Float64},
 ) where {D,P,M}
     path = find_continuous_path(pathfinder, agent.pos, dest)
@@ -191,7 +191,7 @@ Return a random position within radius `r` of `pos` which is walkable, as specif
 Return `pos` if no such position exists.
 """
 function random_walkable(
-    pos::Agents.ValidPos,
+    pos::Any,
     model::ABM{<:ContinuousSpace{D}},
     pathfinder::AStar{D},
     r = 1.0,

@@ -9,7 +9,8 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     spacing::T
     extent::SVector{D,T}
 end
-Base.eltype(s::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
+const ContinuousPos{D,T} = Union{SVector{D,T},NTuple{D,T}}
+Base.eltype(::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
 spacesize(space::ContinuousSpace) = space.extent
 function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
@@ -108,10 +109,10 @@ end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::ValidPos, model::ABM) = Tuple(max.(1, ceil.(Int, pos./abmspace(model).spacing)))
+pos2cell(pos::ContinuousPos, model::ABM) = Tuple(max.(1, ceil.(Int, pos./abmspace(model).spacing)))
 
 "given position in continuous space, return continuous space coordinates of cell center."
-function cell_center(pos::ValidPos, model)
+function cell_center(pos::ContinuousPos, model)
     abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
@@ -146,7 +147,7 @@ end
 
 # We re-write this for performance, because if cell doesn't change, we don't have to
 # move the agent in the GridSpace; only change its position field
-function move_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM{<:ContinuousSpace})
+function move_agent!(agent::AbstractAgent, pos::ContinuousPos, model::ABM{<:ContinuousSpace})
     space_size = spacesize(model)
     D = length(space_size)
     all(i -> 0 <= pos[i] <= space_size[i], 1:D) || error("position is outside space extent!")
@@ -202,7 +203,7 @@ function offsets_within_radius(model::ABM{<:ContinuousSpace}, r::Real)
     return offsets_within_radius(abmspace(model).grid, r)
 end
 
-function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1; search = :approximate)
+function nearby_ids(pos::ContinuousPos, model::ABM{<:ContinuousSpace}, r = 1; search = :approximate)
     if search === :approximate
         return nearby_ids_approx(pos, model, r)
     elseif search === :exact
@@ -211,7 +212,7 @@ function nearby_ids(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1; search 
     error("`search` keyword should be either `:approximate` or `:exact`")
 end
 
-function nearby_ids_approx(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
+function nearby_ids_approx(pos::ContinuousPos, model::ABM{<:ContinuousSpace}, r = 1)
     # Calculate maximum grid distance (distance + distance from cell center)
     δ = distance_from_cell_center(pos, model)
     # Ceiling since we want always to overestimate the radius
@@ -222,7 +223,7 @@ function nearby_ids_approx(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
     return nearby_ids(focal_cell, abmspace(model).grid, grid_r)
 end
 
-function nearby_ids_exact(pos::ValidPos, model::ABM{<:ContinuousSpace}, r = 1)
+function nearby_ids_exact(pos::ContinuousPos, model::ABM{<:ContinuousSpace}, r = 1)
     # TODO:
     # Simply filtering nearby_ids_approx leads to 4x faster code than the commented-out logic.
     # It is because the code of the "fast logic" is actually super type unstable.
