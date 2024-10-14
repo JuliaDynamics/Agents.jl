@@ -25,7 +25,7 @@ The minimal agent struct for usage with `D`-dimensional [`GridSpace`](@ref).
 It has an additional `pos::NTuple{D,Int}` field. See also [`@agent`](@ref).
 """
 @agent struct GridAgent{D}(NoSpaceAgent)
-    pos::NTuple{D,Int}
+    pos::NTuple{D, Int}
 end
 
 function positions(space::AbstractGridSpace)
@@ -51,7 +51,7 @@ function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims = min.(r, half_s)
-        from_to = (-rm:rm-(rm==hs&&os==0)
+        from_to = (-rm:rm-(rm == hs && os == 0)
                    for (rm, hs, os) in zip(r_dims, half_s, odd_s))
         hyperrect = Iterators.product(from_to...)
     end
@@ -60,7 +60,7 @@ end
 function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
     space_size = spacesize(space)
     if r < minimum(space_size)
-        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
     else
         r_dims = min.(r, space_size)
         hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
@@ -71,14 +71,14 @@ function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
     space_size = spacesize(space)
     r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
     if all(r_notover)
-        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims_P = min.(r, half_s)
         r_dims_notP = min.(r, space_size)
-        from_to = (P[i] ?
-                   (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i]==half_s[i]&&odd_s[i]==0)) :
-                   (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
+        from_to = (P[i] ? 
+                    (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 0)) : 
+                    (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
         hyperrect = Iterators.product(from_to...)
     end
     return hyperrect
@@ -134,7 +134,7 @@ end
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     hyperrect = calculate_hyperrectangle(space, r)
     if space.metric == :euclidean
-        βs = [β for β ∈ hyperrect if sum(β .^ 2) ≤ r^2]
+        βs = [β for β ∈ hyperrect if sum(β.^2) ≤ r^2]
     elseif space.metric == :manhattan
         βs = [β for β ∈ hyperrect if sum(abs.(β)) ≤ r]
     elseif space.metric == :chebyshev
@@ -206,7 +206,7 @@ function nearby_positions(
         return (n .+ pos for n in nindices)
     else
         stored_ids = space.stored_ids
-        return (checkbounds(Bool, stored_ids, (n .+ pos)...) ?
+        return (checkbounds(Bool, stored_ids, (n .+ pos)...) ? 
                 n .+ pos : mod1.(n .+ pos, space_size) for n in nindices)
     end
 end
@@ -225,12 +225,12 @@ function nearby_positions(
             checkbounds(Bool, stored_ids, (n .+ pos)...) ?
             n .+ pos : mod1.(n .+ pos, space_size)
             for n in nindices
-            if all(P[i] || checkbounds(Bool, axes(stored_ids, i), n[i] + pos[i]) for i in 1:D)
+            if all(P[i] || checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) for i in 1:D)
         )
     end
 end
 
-function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
+function random_nearby_position(pos::Any, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
     stored_ids = abmspace(model).stored_ids
     rng = abmrng(model)
