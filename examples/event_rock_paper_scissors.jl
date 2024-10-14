@@ -191,7 +191,7 @@ const alltypes = (Rock, Paper, Scissors)
 
 for p in positions(model)
     type = rand(abmrng(model), alltypes)
-    add_agent!(p, constructor(RPS, type), model)
+    add_agent!(p, RPS ∘ type, model)
 end
 
 # We can see the list of scheduled events via
@@ -214,7 +214,7 @@ function initialize_rps(; n = 100, nx = n, ny = n, seed = 42)
     model = EventQueueABM(RPS, events, space; rng, warn = false)
     for p in positions(model)
         type = rand(abmrng(model), alltypes)
-        add_agent!(p, constructor(RPS, type), model)
+        add_agent!(p, RPS ∘ type, model)
     end
     return model
 end
