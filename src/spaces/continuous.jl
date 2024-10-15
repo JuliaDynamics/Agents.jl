@@ -9,7 +9,7 @@ struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
     spacing::T
     extent::SVector{D,T}
 end
-const ContinuousPos{D,T} = Union{SVector{D,T},NTuple{D,T}}
+const ContinuousPos{D,T} = Union{SVector{D,T},NTuple{D,T}} where {T<:AbstractFloat}
 Base.eltype(::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
 no_vel_update(a, m) = nothing
 spacesize(space::ContinuousSpace) = space.extent
