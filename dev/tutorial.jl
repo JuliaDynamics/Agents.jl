@@ -680,10 +680,10 @@ adf
 
 # In realistic modelling situations it is often the case the the ABM is composed
 # of different types of agents. Agents.jl supports two approaches for multi-agent ABMs.
-# The first uses the `Union` type, and the second uses the [`@multiagent`](@ref)
-# command. 
-# This approach is recommended as default, because in many cases it will have performance advantages 
-# over the `Union` approach without having tangible disadvantages. However, we strongly recommend you 
+# The first uses the `Union` type from Base Julia, and the second uses the [`@multiagent`](@ref)
+# command that we have developed to accelerate handling different types.
+# The `@multiagent` approach is recommended as default, because in many cases it will have performance advantages
+# over the `Union` approach without having tangible disadvantages. However, we strongly recommend you
 # to read through the [comparison of the two approaches](https://juliadynamics.github.io/Agents.jl/stable/performance_tips/#multi_vs_union).
 
 # _Note that using multiple agent types is a possibility entirely orthogonal to
@@ -694,7 +694,7 @@ adf
 
 # The simplest way to add more agent types is to make more of them with
 # [`@agent`](@ref) and then give a `Union` of agent types as the agent type when
-# making the `AgentBasedModel`. 
+# making the `AgentBasedModel`.
 
 # For example, let's say that a new type of agent enters
 # the simulation; a politician that would "attract" a preferred demographic.
@@ -704,16 +704,10 @@ adf
     preferred_demographic::Int
 end
 
-# and, when making the model we would specify
-
-model = StandardABM(
-    Union{Schelling, Politician}, # type of agents
-    space; # space they live in
-)
-
-# Naturally, we would have to define a new agent stepping function that would
-# act differently depending on the agent type. This could be done by making
-# a function that calls other functions depending on the type, such as
+# When defining the agent stepping function, it would (likely)
+# act differently depending on the agent type. This could be done by utilizing
+# [Julia's Multiple Dispatch](https://docs.julialang.org/en/v1/manual/methods/)
+# to add a method to the agent stepping function depending on the type
 
 function agent_step!(agent::Schelling, model)
     ## stuff.
@@ -723,7 +717,13 @@ function agent_step!(agent::Politician, model)
     ## other stuff.
 end
 
-# and then passing
+
+# When making the model we specify the `Union` type for the agents
+
+model = StandardABM(
+    Union{Schelling, Politician}, # type of agents
+    space; # space they live in
+)
 
 model = StandardABM(
     Union{Schelling, Politician}, # type of agents
@@ -731,25 +731,48 @@ model = StandardABM(
     agent_step!
 )
 
+
+# When adding agents to the moedel example, we can explicitly make agents
+# with their constructors and add them. However, it is recommended
+# to use the automated [`add_agent!`](@ref) function and provide as a first argument
+# the type of agent to add. For example
+
+add_agent_single!(Schelling, model; group = 1, mood = true)
+
+# or
+
+add_agent_single!(Politician, model; preferred_demographic = 1)
+
+model
+
 # ## Multiple agent types with `@multiagent`
 
-# By using `@multiagent` it is often possible to improve the 
+# By using `@multiagent` it is often possible to improve the
 # computational performance of simulations requiring multiple types,
-# while almost everything works the same 
+# while almost everything works the same. First we make a
+# multi-agent type from existing agent types
 
 @multiagent MultiSchelling(Schelling, Politician) <: AbstractAgent
 
-# Now you can create instances with
+MultiSchelling
 
-p = constructor(MultiSchelling, Politician)(model; pos = random_position(model), preferred_demographic = 1)
+# This `MultiSchelling` is not a union type; it is an advanced construct
+# that wraps multipe types. When making a multi-agent directly (although it is not recommended,
+# use `add_agent!` instead), we can wrap the agent type in the multiagent type like so
 
-# agents are then all of type `MultiSchelling`
+p = MultiSchelling(Politician(; id = 1, pos = random_position(model), preferred_demographic = 1))
 
-typeof(p)
+# or
 
-# and hence you can't use only `typeof` to differentiate them. But you can use
+h = MultiSchelling(Schelliing(; id = 1, pos = random_position(model), mood = true, group = 1))
 
-variantof(p)
+# As you can tell, both of these are of the same `Type`:
+
+typeof(p), typeof(h)
+
+# and hence you can't use `typeof` to differentiate them. But you can use
+
+variantof(p), variantof(h)
 
 # instead. Hence, the agent stepping function should become something like
 
@@ -763,7 +786,10 @@ function agent_step!(agent, model, ::Politician)
     ## other stuff.
 end
 
-# and you need to give `MultiSchelling` as the type of agents in model initialization
+# to utilize Julia's dispatch system.
+
+# When constructing the model, we must give the multi-type as the agent type,
+# akin to giving the `Union` as the type before
 
 model = StandardABM(
     MultiSchelling, # the multiagent type is given as the type
@@ -771,42 +797,27 @@ model = StandardABM(
     agent_step!
 )
 
-# Regardless of whether you went down the `Union` or `@multiagent` route,
-# the API of Agents.jl has been designed such that there is no difference in subsequent
-# usage.
-
-# For example, in the union case we provide the `Union` type when we create the model,
-
-model = StandardABM(Union{Schelling, Politician}, space)
-
-# we add them by specifying the type
-
-add_agent_single!(Schelling, model; group = 1, mood = true)
-
-# or
-
-add_agent_single!(Politician, model; preferred_demographic = 1)
-
-# and we see
-
-collect(allagents(model))
-
-# For the `@multiagent` case, there is really no difference apart from
-# the usage of a custom `constructor` function. We have
-
-model = StandardABM(MultiSchelling, space)
-
-# we add
+# Now, when it comes to adding agents to the model, we use the same approach
+# as with the `Union` types but we pass a constructor function as a first argument
+# to [`add_agent!`](@ref). The "type" here must actually be the constructor
 
 add_agent_single!(constructor(MultiSchelling, Schelling), model; group = 1)
 
+# Thankfully, Julia's function composition `∘` simplifies this, and we can do instead
+
+add_agent_single!(MultiSchelling ∘ Schelling, model; group = 1)
+
 # or
 
-add_agent_single!(constructor(MultiSchelling, Politician), model; preferred_demographic = 1)
+add_agent_single!(MultiSchelling ∘ Politician, model; preferred_demographic = 1)
 
 # and we see
 
 collect(allagents(model))
+
+# Because the `∘` is more elegant, we will be using it when using `@multiagent`.
+
+# ---
 
 # And that's the end of the tutorial!!!
 # You can visit other examples to see other types of usage of Agents.jl,
