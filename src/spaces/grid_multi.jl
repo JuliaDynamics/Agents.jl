@@ -101,6 +101,8 @@ function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     return a
 end
 
+Base.isempty(pos::GridPos, model::ABM{<:GridSpace}) = isempty(abmspace(model).stored_ids[pos...])
+
 ##########################################################################################
 # nearby_stuff for GridSpace
 ##########################################################################################
