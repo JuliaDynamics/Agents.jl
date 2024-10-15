@@ -66,6 +66,8 @@ include("deprecations.jl")
 # visualizations (singleton methods for package extension)
 include("visualizations.jl")
 
+include("ambiguities.jl")
+
 include("precompile.jl")
 
 # Update messages:
