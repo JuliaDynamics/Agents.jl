@@ -166,7 +166,7 @@ This is similar to [`ids_in_position`](@ref), but specialized for `CustomSpace`.
 """
 Agents.ids_in_position(pos, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, abmspace(model))
 Agents.ids_in_position(pos, space::CustomSpace) = space.stored_ids[pos...]
-Base.isempty(pos::Agents.ValidPos, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, model) == 0 
+Base.isempty(pos::Any, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, model) == 0 
 
 #######################################################################################
 # Implementation of nearby_stuff

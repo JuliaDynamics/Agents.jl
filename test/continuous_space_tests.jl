@@ -367,7 +367,6 @@ using LinearAlgebra: norm, dot
         # Must use Float64 for continuousspace
         @test_throws MethodError walk!(a, SVector(1, 1, 5), model)
 
-
         @testset "periodic" begin
             model = StandardABM(ContinuousAgent{2,Float64}, ContinuousSpace((12, 10); periodic = true), warn_deprecation = false)
             a = add_agent!(SVector(11.0, 9.0), model, SVector(3.0, 1.0))

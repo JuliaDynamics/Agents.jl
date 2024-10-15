@@ -93,7 +93,7 @@ using StableRNGs
 
             @test positions(model, :population) ==
                 [pos_map[i] for i in [1, 2, 3, 4, 5, 6, 9, 7, 8]]
-            @test length(ids_in_position(5, model)) > length(ids_in_position(7, model))
+            @test length(ids_in_position(pos_map[5], model)) > length(ids_in_position(pos_map[7], model))
             @test_throws ErrorException positions(model, :notreal)
 
             #agents_in_position
