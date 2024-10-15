@@ -57,7 +57,7 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::Any,
+    direction::ContinuousPos,
     model::ABM{<:ContinuousSpace}
 )
     target = normalize_position(agent.pos .+ direction, model)
