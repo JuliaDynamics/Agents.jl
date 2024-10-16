@@ -120,7 +120,7 @@ end
 # Another way to think of propensities is the relative probability mass
 # for an event to happen.
 # The propensities may be constants or functions of the
-# currently actived agent and the model.
+# currently active agent and the model.
 
 # Here, the propensities for moving and attacking will be constants,
 attack_propensity = 1.0
