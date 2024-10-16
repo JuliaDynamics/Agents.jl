@@ -1,7 +1,7 @@
 # # Optimizing agent based models
 
 # Sometimes we need to fine-tune our ABMs parameters to a specific outcome.
-# The brute-force solution can quickly become infeasible for even for a few different
+# The brute-force solution can quickly become infeasible even for a few different
 # parameter settings over a number of valid scan ranges. Most of the time,
 # ABMs are also stochastic, so the effect of a parameter setting should be derived from
 # taking the average value only after running the model several times.
@@ -23,7 +23,7 @@
 # To look for optimal parameters, we need to define a cost function.
 # The cost function takes as arguments the model parameters that we want to tune;
 # in a SIR model, that would be the migration rate, death rate, transmission rate,
-# when an infected person has been detected (`β_det`), or when the remain undetected
+# when an infected person has been detected (`β_det`), or when they remain undetected
 # (`β_und`), infection period, reinfection probability, and time until the infection
 # is detected. The function returns an *objective*: this value takes the form one
 # or more numbers, which the optimiser will attempt to minimize.
