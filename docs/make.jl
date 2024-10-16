@@ -25,6 +25,7 @@ pages = [
         "Graphs.jl" => "examples/schoolyard.md",
         "Measurements.jl" => "examples/measurements.md",
         "CellListMap.jl" => "examples/celllistmap.md",
+        "DelaunayTriangulation.jl" => "examples/delaunay.md"
     ],
     "performance_tips.md",
     "comparison.md",
