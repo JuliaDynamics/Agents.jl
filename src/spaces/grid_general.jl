@@ -1,4 +1,4 @@
-export GridAgent
+export GridAgent, GridPos
 
 """
     AbstractGridSpace{D,P}
@@ -10,12 +10,14 @@ indices are the possible positions in the space.
 Furthermore, all spaces should have at least the fields
 * `offsets_within_radius`
 * `offsets_within_radius_no_0`
-which are `Dict{Float64,Vector{NTuple{D,Int}}}`, mapping radii
+which are `Dict{Float64,Vector{GridPos{D}}}`, mapping radii
 to vector of indices within each radius.
 
 `D` is the dimension and `P` is whether the space is periodic (boolean).
 """
 abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
+
+const GridPos{D} = NTuple{D,Int}
 
 """
     GridAgent{D} <: AbstractAgent
@@ -176,13 +178,13 @@ end
 # utilizes the above `offsets_within_radius_no_0`. We complicated it a bit more because
 # we want to be able to re-use it in `ContinuousSpace`, so we allow it to either
 # find positions with the 0 or without.
-function nearby_positions(pos::ValidPos, model::ABM{<:AbstractGridSpace}, args::Vararg{Any, N}) where {N}
+function nearby_positions(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D}}, args::Vararg{Any,N}) where {D,N}
     return nearby_positions(pos, abmspace(model), args...)
 end
 function nearby_positions(
-        pos::ValidPos, space::AbstractGridSpace{D,false}, r = 1,
-        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
-    ) where {D}
+    pos::GridPos{D}, space::AbstractGridSpace{D,false}, r=1,
+    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+) where {D}
     nindices = get_indices_f(space, r)
     space_size = spacesize(space)
     # check if we are far from the wall to skip bounds checks
@@ -194,9 +196,9 @@ function nearby_positions(
     end
 end
 function nearby_positions(
-        pos::ValidPos, space::AbstractGridSpace{D,true}, r = 1,
-        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
-    ) where {D}
+    pos::GridPos{D}, space::AbstractGridSpace{D,true}, r=1,
+    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+) where {D}
     nindices = get_indices_f(space, r)
     space_size = spacesize(space)
     # check if we are far from the wall to skip bounds checks
@@ -209,8 +211,8 @@ function nearby_positions(
     end
 end
 function nearby_positions(
-    pos::ValidPos, space::AbstractGridSpace{D,P}, r = 1,
-    get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+    pos::GridPos{D}, space::AbstractGridSpace{D,P}, r=1,
+    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
 ) where {D,P}
     stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
@@ -228,7 +230,7 @@ function nearby_positions(
     end
 end
 
-function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
+function random_nearby_position(pos::Any, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
     stored_ids = abmspace(model).stored_ids
     rng = abmrng(model)
@@ -239,7 +241,7 @@ function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,
     end
 end
 
-function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,true}}, r=1; kwargs...) where {D}
+function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,true}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
     stored_ids = abmspace(model).stored_ids
     chosen_offset = rand(abmrng(model), nindices)
@@ -247,7 +249,7 @@ function random_nearby_position(pos::ValidPos, model::ABM{<:AbstractGridSpace{D,
     checkbounds(Bool, stored_ids, chosen_pos...) && return chosen_pos
     return mod1.(chosen_pos, spacesize(model))
 end
-  
+
 ###################################################################
 # pretty printing
 ###################################################################

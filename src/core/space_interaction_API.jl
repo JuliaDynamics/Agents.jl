@@ -124,7 +124,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+function move_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -217,7 +217,7 @@ function add_agent!(agent::AbstractAgent, model::ABM)
     add_agent_own_pos!(agent, model)
 end
 
-function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+function add_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     agent.pos = pos
     add_agent_own_pos!(agent, model)
 end
@@ -268,7 +268,7 @@ function add_agent!(A::Union{Function, Type}, model::ABM,
 end
 
 function add_agent!(
-    pos::ValidPos,
+    pos::Any,
     model::ABM,
     args::Vararg{Any, N};
     kwargs...,
@@ -279,7 +279,7 @@ end
 
 # lowest level - actually constructs the agent
 function add_agent!(
-    pos::ValidPos,
+    pos::Any,
     A::Union{Function, Type},
     model::ABM,
     args::Vararg{Any, N};

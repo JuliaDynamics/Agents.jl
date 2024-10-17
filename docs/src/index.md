@@ -123,7 +123,7 @@ This is an example of emergent behavior from simple interactions of agents that 
 
 ## Getting help
 
-You're looking for support for Agents.jl? Look no further! Here's some things you can do to resolve your questions about Agents.jl:
+You're looking for support for Agents.jl? Look no further! Here are some things you can do to resolve your questions about Agents.jl:
 
 1. Read the online documentation! It is likely that the thing you want to know is already documented, so use the search bar and search away!
 2. Chat with us in the channel `#dynamics-bridged` in the [Julia Slack](https://julialang.org/slack/)!

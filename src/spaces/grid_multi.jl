@@ -101,6 +101,9 @@ function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     return a
 end
 
+Base.isempty(pos::GridPos, model::ABM{<:GridSpace}) = isempty(pos, abmspace(model))
+Base.isempty(pos::GridPos, space::GridSpace) = isempty(space.stored_ids[pos...])
+
 ##########################################################################################
 # nearby_stuff for GridSpace
 ##########################################################################################
@@ -230,17 +233,17 @@ invalid_access_nocheck(pos_index, iter::GridSpaceIdIterator) = @inbounds isempty
 # TODO: We can re-write this to create its own `indices_within_radius_tuple`.
 # This would also allow it to work for any metric, not just Chebyshev!
 
-function nearby_ids(pos::ValidPos, model::ABM{<:GridSpace}, r::NTuple{D,Int}) where {D}
+function nearby_ids(pos::GridPos{D}, model::ABM{<:GridSpace{D}}, r::NTuple{D,Int}) where {D}
     # simply transform `r` to the Vector format expected by the below function
     newr = [(i, -r[i]:r[i]) for i in 1:D]
     nearby_ids(pos, model, newr)
 end
 
 function nearby_ids(
-    pos::ValidPos,
+    pos::GridPos{D},
     model::ABM{<:GridSpace},
     r::Vector{Tuple{Int64, UnitRange{Int64}}},
-)
+) where D
     @assert abmspace(model).metric == :chebyshev
     dims = first.(r)
     vidx = []
@@ -261,7 +264,7 @@ end
 #######################################################################################
 # %% Further discrete space functions
 #######################################################################################
-ids_in_position(pos::ValidPos, model::ABM{<:GridSpace}) = ids_in_position(pos, abmspace(model))
-function ids_in_position(pos::ValidPos, space::GridSpace)
+ids_in_position(pos::GridPos, model::ABM{<:GridSpace}) = ids_in_position(pos, abmspace(model))
+function ids_in_position(pos::GridPos, space::GridSpace)
     return space.stored_ids[pos...]
 end

@@ -26,16 +26,16 @@ euclidean_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) =
 euclidean_distance(p1, p2, model::ABM) = euclidean_distance(p1, p2, abmspace(model))
 
 function euclidean_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sqrt(sum(abs2.(p1 .- p2)))
 end
 
 function euclidean_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}},
 ) where {D}
     direct = abs.(p1 .- p2)
@@ -43,8 +43,8 @@ function euclidean_distance(
 end
 
 function euclidean_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     s = spacesize(space)
@@ -79,24 +79,24 @@ manhattan_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) =
 manhattan_distance(p1, p2, model::ABM) = manhattan_distance(p1, p2, abmspace(model))
 
 function manhattan_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,false},AbstractGridSpace{D,false}},
 ) where {D}
     sum(manhattan_distance_direct.(p1, p2))
 end
 
 function manhattan_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}}
 ) where {D}
     sum(manhattan_distance_periodic.(p1, p2, spacesize(space)))
 end
 
 function manhattan_distance(
-    p1::ValidPos,
-    p2::ValidPos,
+    p1::Any,
+    p2::Any,
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     s = spacesize(space)
@@ -127,8 +127,8 @@ periodicity of the space.
 get_direction(from, to, model::ABM) = get_direction(from, to, abmspace(model))
 
 function get_direction(
-    from::ValidPos,
-    to::ValidPos,
+    from::Any,
+    to::Any,
     space::Union{ContinuousSpace{D,true},AbstractGridSpace{D,true}},
 ) where {D}
     direct_dir = to .- from
@@ -137,16 +137,16 @@ function get_direction(
 end
 
 function get_direction(
-    from::ValidPos,
-    to::ValidPos,
+    from::Any,
+    to::Any,
     space::Union{AbstractGridSpace{D,false},ContinuousSpace{D,false}},
 ) where {D}
     return to .- from
 end
 
 function get_direction(
-    from::ValidPos,
-    to::ValidPos,
+    from::Any,
+    to::Any,
     space::Union{ContinuousSpace{D,P},AbstractGridSpace{D,P}}
 ) where {D,P}
     direct_dir = to .- from

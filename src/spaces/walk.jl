@@ -57,7 +57,7 @@ end
 
 function walk!(
     agent::AbstractAgent,
-    direction::ValidPos,
+    direction::ContinuousPos,
     model::ABM{<:ContinuousSpace}
 )
     target = normalize_position(agent.pos .+ direction, model)
@@ -109,15 +109,15 @@ function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,P}) where {
 end
 #----
 
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,true}) where {D}
+function normalize_position(pos::Any, space::AbstractGridSpace{D,true}) where {D}
     return mod1.(pos, spacesize(space))
 end
 
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,false}) where {D}
+function normalize_position(pos::Any, space::AbstractGridSpace{D,false}) where {D}
     return clamp.(pos, 1, spacesize(space))
 end
 
-function normalize_position(pos::ValidPos, space::AbstractGridSpace{D,P}) where {D,P}
+function normalize_position(pos::Any, space::AbstractGridSpace{D,P}) where {D,P}
     s = spacesize(space)
     return ntuple(
         i -> P[i] ? mod1(pos[i], s[i]) : clamp(pos[i], 1, s[i]),
