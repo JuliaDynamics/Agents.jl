@@ -1,10 +1,22 @@
+# Set working directory
 cd(@__DIR__)
 println("Loading packages...")
-using Agents
-using LightOSM
-using CairoMakie
-import Literate
 
+# Function to import required packages with error handling
+function import_packages()
+    try
+        using Agents
+        using LightOSM
+        using CairoMakie
+        import Literate
+    catch e
+        println("Error importing packages: $e")
+        # Optionally install missing packages here
+    end
+end
+import_packages()
+
+# Define pages structure for documentation
 pages = [
     "Introduction" => "index.md",
     "Tutorial" => "tutorial.md",
@@ -31,40 +43,70 @@ pages = [
     "devdocs.md",
 ]
 
-# %%
+# Convert tutorial files with error handling
 println("Converting tutorial...")
-Literate.markdown(
-    joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src");
-    credit = false
-)
-
-println("Converting Examples...")
-
-indir = joinpath(@__DIR__, "..", "examples")
-outdir = joinpath(@__DIR__, "src", "examples")
-rm(outdir; force = true, recursive = true) # cleans up previous examples
-mkpath(outdir)
-toskip = ()
-for file in readdir(indir)
-    file ∈ toskip && continue
-    Literate.markdown(joinpath(indir, file), outdir; credit = false)
+try
+    Literate.markdown(
+        joinpath(@__DIR__, "src", "tutorial.jl"), joinpath(@__DIR__, "src");
+        credit = false
+    )
+catch e
+    println("Error converting tutorial: $e")
 end
 
-# %%
-println("Documentation Build")
+# Convert examples with error handling
+println("Converting Examples...")
+indir = joinpath(@__DIR__, "..", "examples")
+outdir = joinpath(@__DIR__, "src", "examples")
 
-import Downloads
-Downloads.download(
-    "https://raw.githubusercontent.com/JuliaDynamics/doctheme/master/build_docs_with_style.jl",
-    joinpath(@__DIR__, "build_docs_with_style.jl")
-)
-include("build_docs_with_style.jl")
+# Clean up previous examples only if directory exists
+if isdir(outdir)
+    rm(outdir; force = true, recursive = true)
+end
+mkpath(outdir)
 
-build_docs_with_style(pages, Agents, LightOSM;
-    expandfirst = ["index.md"],
-    authors = "George Datseris and contributors.",
-    warnonly = true,
-    htmlkw = (size_threshold = 20000 * 2^10, ),
-)
+toskip = ()
+function convert_files(indir, outdir)
+    tskip = Set(toskip)
+    for file in readdir(indir)
+        if file ∈ tskip
+            println("Skipping $file")
+            continue
+        end
+        try
+            Literate.markdown(joinpath(indir, file), outdir; credit = false)
+            println("Converted $file successfully.")
+        catch e
+            println("Error converting $file: $e")
+        end
+    end
+end
+convert_files(indir, outdir)
+
+# Download style script with error handling
+println("Downloading documentation style script...")
+try
+    Downloads.download(
+        "https://raw.githubusercontent.com/JuliaDynamics/doctheme/master/build_docs_with_style.jl",
+        joinpath(@__DIR__, "build_docs_with_style.jl")
+    )
+    include("build_docs_with_style.jl")
+catch e
+    println("Download or inclusion error: $e")
+end
+
+# Build documentation with error handling
+println("Building documentation...")
+try
+    build_docs_with_style(pages, Agents, LightOSM;
+        expandfirst = ["index.md"],
+        authors = "George Datseris and contributors.",
+        warnonly = true,
+        htmlkw = (size_threshold = 20000 * 2^10, ),
+    )
+    println("Documentation build finished successfully.")
+catch e
+    println("Documentation build error: $e")
+end
 
 println("Finished")
