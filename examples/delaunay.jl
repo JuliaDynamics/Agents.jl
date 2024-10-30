@@ -603,6 +603,6 @@ end
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
-# <source src="../celllistmap.mp4" type="video/mp4">
+# <source src="../delaunay_model.mp4" type="video/mp4">
 # </video>
 # ```
