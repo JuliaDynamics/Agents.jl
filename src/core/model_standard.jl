@@ -175,6 +175,12 @@ function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
 end
 
+function remove_all_from_space!(model)
+    for a in allagents(model)
+        remove_agent_from_space!(a, model)
+    end
+end
+
 
 """
     dummystep(model)
