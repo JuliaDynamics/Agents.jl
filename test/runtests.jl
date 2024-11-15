@@ -169,4 +169,5 @@ end
     include("csv_tests.jl")
     include("jld2_tests.jl")
     include("visualization_tests.jl")
+    include("new_space_tests.jl")
 end
