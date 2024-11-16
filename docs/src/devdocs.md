@@ -61,7 +61,7 @@ In principle, the following should be done:
 6. Extend `nearby_ids(pos, model, r)`.
 7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
 
-And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` for performance reasons.
+And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons.
 
 ### Visualization of a custom space
 
