@@ -301,7 +301,7 @@ function swap_agents!(agent1, agent2, model::ABM{<:DiscreteSpace})
     return nothing
 end
 
-function remove_all_from_space!(model)
+function remove_all_from_space!(model::ABM{<:DiscreteSpace})
     for p in positions(model)
         empty!(ids_in_position(p, model))
     end
