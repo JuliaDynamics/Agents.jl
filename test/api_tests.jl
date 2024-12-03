@@ -350,75 +350,53 @@ end
     @test agent2.pos == (2, 4)
 end
 
-@multiagent :opt_memory struct Animal{T,N,J}(GridAgent{2})
-    @subagent struct Wolf{T,N}
-        energy::T = 0.5
-        ground_speed::N
-        const fur_color::Symbol
-    end
-    @subagent struct Hawk{T,N,J}
-        energy::T = 0.1
-        ground_speed::N
-        flight_speed::J
-    end
+@agent struct Wolf{T,N}(GridAgent{2})
+    energy::T = 0.5
+    ground_speed::N
+    const fur_color::Symbol
 end
 
-@multiagent :opt_speed struct A{T}(NoSpaceAgent)
-    @subagent struct B{T}
-        a::T = 1
-        b::Int
-        c::Symbol
-    end
-    @subagent struct C
-        b::Int = 2
-        c::Symbol
-        d::Vector{Int}
-    end
-    @subagent struct D{T}
-        c::Symbol = :k
-        d::Vector{Int}
-        a::T
-    end
+@agent struct Hawk{T,N,J}(GridAgent{2})
+    energy::T = 0.1
+    ground_speed::N
+    flight_speed::J
 end
+
+@multiagent Animal{T,N,J}(Wolf, Hawk)
+
+@agent struct B{T}(NoSpaceAgent)
+    a::T = 1
+    b::Int
+    c::Symbol
+end
+@agent struct C(NoSpaceAgent)
+    b::Int = 2
+    c::Symbol
+    d::Vector{Int}
+end
+@agent struct D{T}(NoSpaceAgent)
+    c::Symbol = :k
+    d::Vector{Int}
+    a::T
+end
+@multiagent A{T}(B,C,D)
 
 abstract type AbstractE <: AbstractAgent end
-@multiagent struct E(NoSpaceAgent) <: AbstractE
-    @subagent struct F
-        x::Int
-    end
-    @subagent struct G
-        y::Int
-    end
-end
 
-@multiagent :opt_speed struct MultiSchelling1{X}(GridAgent{2})
-    @subagent struct Civilian1 # can't re-define existing `Schelling` name
-        mood::Bool = false
-        group::Int
-    end
-    @subagent struct Governor1{X<:Real} # can't redefine existing `Politician` name
-        group::Int
-        influence::X
-    end
+@agent struct F(NoSpaceAgent)
+    x::Int
 end
-
-@multiagent :opt_memory struct MultiSchelling2{X}(GridAgent{2})
-    @subagent struct Civilian2 # can't re-define existing `Schelling` name
-        mood::Bool = false
-        group::Int
-    end
-    @subagent struct Governor2{X<:Real} # can't redefine existing `Politician` name
-        group::Int
-        influence::X
-    end
+@agent struct G(NoSpaceAgent)
+    y::Int
 end
+@multiagent E(NoSpaceAgent) <: AbstractE
 
 @testset "@multiagent macro" begin
 
-    hawk_1 = Hawk(1, (1, 1), 1.0, 2.0, 3)
-    hawk_2 = Hawk(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
-    wolf_1 = Wolf(3, (2, 2), 2.0, 3.0, :black)
-    wolf_2 = Wolf(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+    hawk_1 = (Animal∘Hawk)(1, (1, 1), 1.0, 2.0, 3)
+    hawk_2 = (Animal∘Hawk)(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+    wolf_1 = (Animal∘Wolf)(3, (2, 2), 2.0, 3.0, :black)
+    wolf_2 = (Animal∘Wolf)(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
 
     @test hawk_1.energy == 1.0
     @test hawk_2.energy == 0.1
@@ -430,14 +408,14 @@ end
     @test wolf_2.fur_color == :white
     @test_throws "" hawk_1.fur_color
     @test_throws "" wolf_1.flight_speed
-    @test kindof(hawk_1) == kindof(hawk_2) == :Hawk
-    @test kindof(wolf_1) == kindof(wolf_2) == :Wolf
+    @test variant(hawk_1) isa Hawk && variant(hawk_2) isa Hawk
+    @test variant(wolf_1) isa Wolf && variant(wolf_2) isa Wolf
 
     fake_step!(a) = nothing
     model = StandardABM(Animal, GridSpace((5, 5)); agent_step! = fake_step!)
 
-    add_agent!(Hawk, model, 1.0, 2.0, 3)
-    add_agent!(Wolf, model, 2.0, 3.0, :black)
+    add_agent!(Animal∘Hawk, model, 1.0, 2.0, 3)
+    add_agent!(Animal∘Wolf, model, 2.0, 3.0, :black)
     @test nagents(model) == 2
     sample!(model, 2)
     @test nagents(model) == 2
@@ -452,9 +430,9 @@ end
     @test b2.a == 1
     @test c2.b == 2
     @test d2.c == :k
-    @test kindof(b1) == kindof(b2) == :B
-    @test kindof(c1) == kindof(c2) == :C
-    @test kindof(d1) == kindof(d2) == :D
+    @test variant(b1) isa B && variant(b2) isa B
+    @test variant(c1) isa C && variant(c2) isa C
+    @test variant(d1) isa D && variant(d2) isa D
     @test_throws "" b2.d
     @test_throws "" c1.a
     @test_throws "" d1.b
@@ -466,15 +444,15 @@ end
 
     model = StandardABM(A; agent_step! = fake_step!)
 
-    add_agent!(B, model, 2, 1, :s)
-    add_agent!(C, model, 1, :s, Int[])
-    add_agent!(D, model, :s, [1], 1.0)
+    add_agent!(A∘B, model, 2, 1, :s)
+    add_agent!(A∘C, model, 1, :s, Int[])
+    add_agent!(A∘D, model, :s, [1], 1.0)
     @test nagents(model) == 3
     sample!(model, 2)
     @test nagents(model) == 2
 
-    f = F(1, 1)
-    g = G(2, 2)
+    f = (E∘F)(1, 1)
+    g = (E∘G)(2, 2)
 
     @test f.id == 1
     @test g.id == 2
@@ -482,17 +460,8 @@ end
     @test g.y == 2
     @test_throws "" f.y
     @test_throws "" g.x
-    @test kindof(f) == :F
-    @test kindof(g) == :G
+    @test variant(f) isa F
+    @test variant(g) isa G
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
-
-
-    civ = Civilian1(; id = 2, pos = (2, 2), group = 2)
-    gov = Governor1(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
-    civ = Civilian2(; id = 2, pos = (2, 2), group = 2)
-    gov = Governor2(; id = 3 , pos = (2, 2), group = 2, influence = 0.5)
-
-    @test_throws "" Governor1(; id = 3 , pos = (2, 2), group = 2, influence = im)
-    @test_throws "" Governor2(; id = 3 , pos = (2, 2), group = 2, influence = im)
 end
