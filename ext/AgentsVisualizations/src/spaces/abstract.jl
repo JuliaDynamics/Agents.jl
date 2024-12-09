@@ -162,7 +162,7 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
         pos = getproperty(agent, :pos)
         if pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
             pos = round.(pos, sigdigits=2)
-        elseif pos isa Tuple{<:Int, <:Int, <:AbstractFloat}
+        elseif pos isa Tuple{Int, Int, AbstractFloat}
             pos = (pos[1], pos[2], round(pos[3], sigdigits=2))
         end
         agentstring *= "pos: $(pos)\n"
