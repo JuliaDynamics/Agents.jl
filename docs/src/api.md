@@ -24,6 +24,7 @@ StandardABM
 ```@docs
 EventQueueABM
 AgentEvent
+add_event!
 ```
 
 ## Agent types
