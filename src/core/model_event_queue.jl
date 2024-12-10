@@ -63,11 +63,6 @@ end
 A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
 continuous time, in contrast with the discrete time nature of [`StandardABM`](@ref).
 
-This is still experimental which means that it is subject to breaking changes in the
-future. Also, while all the core functionalities have been implemented, this model type
-has some more limited features than `StandardABM`: in particular, visualizations and
-IO functionalities are incomplete.
-
 Here is a summary of how the time evolution of this model works:
 
 A list of possible events that can be created is provided to the model.
@@ -138,6 +133,11 @@ can be evolved in time.
   an agent when the agent is added to the model.
 - `autogenerate_after_action::Bool = true`: whether to automatically generate a new
   event for an agent after an event affected said agent has been triggered.
+
+
+!!! warn "No IO yet"
+    This model does not yet IO support such as [`save_checkpoint`](@ref).
+    Pull Requests that implement this are welcomed!
 """
 function EventQueueABM(
         ::Type{A}, events,
