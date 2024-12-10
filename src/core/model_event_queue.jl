@@ -72,9 +72,8 @@ The events have four pieces of information:
    `action!(agent, model)` that will act on the agent corresponding to the event.
    Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
    and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
-   The `action!` function may spawn new events by using the automatic or the manual
-   of the [`add_event!`](@ref) function, the default behavior is to generate new events
-   automatically.
+   The `action!` function may spawn new events by using [`add_event!`](@ref) function, 
+   however the default behavior is to generate new events automatically, see below.
 2. The propensity of the event. A propensity is a concept similar to a probability mass.
    When automatically generating a new event for an agent,
    first all applicable events for that agent
