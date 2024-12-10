@@ -95,6 +95,11 @@ based on the propensities as discussed above. Then a time for the new event
 is generated and the new event is added back to the queue.
 In this way, an event always generates a new event after it has finished its action
 (by default; this can be overwritten).
+Keep in mind that the scheduling and triggering of events is agnostic to
+what the events actually do; even if an event does nothing, it would 
+still "use up" the agent's time if scheduled. You can avoid this by assigning
+propensity 0 to such events in the propensity function,
+according to the agent and model state.
 
 `EventQueueABM` is a generalization of "Gillespie"-like simulations, offering
 more power and flexibility than a standard Gillespie simulation,
