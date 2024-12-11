@@ -1,6 +1,6 @@
 # v6.2
 
-The `EventQueueABM` was moved from experimental to stable.
+The `EventQueueABM` which was previously considered experimental is now considered to be stable.
 
 # v6.1
 
