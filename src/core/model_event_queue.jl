@@ -63,11 +63,6 @@ end
 A concrete implementation of an [`AgentBasedModel`](@ref) which operates in
 continuous time, in contrast with the discrete time nature of [`StandardABM`](@ref).
 
-This is still experimental which means that it is subject to breaking changes in the
-future. Also, while all the core functionalities have been implemented, this model type
-has some more limited features than `StandardABM`: in particular, visualizations and
-IO functionalities are incomplete.
-
 Here is a summary of how the time evolution of this model works:
 
 A list of possible events that can be created is provided to the model.
@@ -77,9 +72,8 @@ The events have four pieces of information:
    `action!(agent, model)` that will act on the agent corresponding to the event.
    Similarly with `agent_step!` for [`StandardABM`](@ref), this function may do anything
    and utilize any function from the Agents.jl [API](@ref) or the entire Julia ecosystem.
-   The `action!` function may spawn new events by using the automatic or the manual
-   of the [`add_event!`](@ref) function, the default behavior is to generate new events
-   automatically.
+   The `action!` function may spawn new events by using [`add_event!`](@ref) function, 
+   however the default behavior is to generate new events automatically, see below.
 2. The propensity of the event. A propensity is a concept similar to a probability mass.
    When automatically generating a new event for an agent,
    first all applicable events for that agent
@@ -101,6 +95,11 @@ based on the propensities as discussed above. Then a time for the new event
 is generated and the new event is added back to the queue.
 In this way, an event always generates a new event after it has finished its action
 (by default; this can be overwritten).
+Keep in mind that the scheduling and triggering of events is agnostic to
+what the events actually do; even if an event does nothing, it would 
+still "use up" the agent's time if scheduled. You can avoid this by assigning
+propensity 0 to such events in the propensity function,
+according to the agent and model state.
 
 `EventQueueABM` is a generalization of "Gillespie"-like simulations, offering
 more power and flexibility than a standard Gillespie simulation,
@@ -138,6 +137,11 @@ can be evolved in time.
   an agent when the agent is added to the model.
 - `autogenerate_after_action::Bool = true`: whether to automatically generate a new
   event for an agent after an event affected said agent has been triggered.
+
+
+!!! warn "No IO yet"
+    This model does not yet support IO operations such as [`save_checkpoint`](@ref).
+    Pull Requests that implement this are welcomed!
 """
 function EventQueueABM(
         ::Type{A}, events,
