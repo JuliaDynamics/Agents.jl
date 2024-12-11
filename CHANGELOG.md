@@ -1,3 +1,7 @@
+# v6.2
+
+The `EventQueueABM` was moved from experimental to stable.
+
 # v6.1
 
 The `@multiagent` macro introduced in Agents.jl v6.0 has been completely overhauled. We found a better methodology to create performant multi-agent types that can re-use existing agent types. Please read the docstring of the new `@multiagent` and consult the updated tutorial in v6.1 for more details.
