@@ -14,7 +14,7 @@
 
 # The spatial rock-paper-scissors (RPS) is an ABM with the following rules:
 
-# * Agents can be any of three "kinds": Rock, Paper, or Scissors.
+# * Agents can be any of three types: Rock, Paper, or Scissors.
 # * Agents live in a 2D periodic grid space allowing only one
 #   agent per cell.
 # * When an agent activates, it can do one of three actions:
@@ -236,7 +236,7 @@ nagents(model)
 
 function terminate(model, t)
     threshold = 1000
-    ## Alright, this code snippet loops over all kinds,
+    ## Alright, this code snippet loops over all types,
     ## and for each it checks if it is less than the threshold.
     ## if any is, it returns `true`, otherwise `false.`
     logic = any(alltypes) do type
@@ -261,7 +261,7 @@ abmtime(model)
 
 # Hence, data collection also works almost identically to [`StandardABM`](@ref).
 
-# Here we will simply collect the number of each agent kind.
+# Here we will simply collect the number of each agent type.
 
 model = initialize_rps()
 
@@ -324,7 +324,7 @@ abmvideo("rps_eventqueue.mp4", model;
 # with the [`abmexploration`](@ref) function!
 
 # Let's first define the data we want to visualize, which in this
-# case is just the count of each agent kind
+# case is just the count of each agent type
 
 model = initialize_rps()
 fig, abmobs = abmexploration(model; adata, alabels, when = 0.5, plotkw...)
