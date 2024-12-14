@@ -152,7 +152,7 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
-    !(ismultiagenttype(A)) && !(is_sumtype(A)) && agent_validator(A, space, warn)
+    !(is_sumtype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
     agents_types = union_types(A)
