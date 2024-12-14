@@ -362,7 +362,7 @@ end
     flight_speed::J
 end
 
-@multiagent Animal{T,N,J}(Wolf, Hawk)
+@multiagent Animal(Wolf, Hawk)
 
 @agent struct B{T}(NoSpaceAgent)
     a::T = 1
@@ -379,7 +379,7 @@ end
     d::Vector{Int}
     a::T
 end
-@multiagent A{T}(B,C,D)
+@multiagent A(B,C,D)
 
 abstract type AbstractE <: AbstractAgent end
 
@@ -389,7 +389,7 @@ end
 @agent struct G(NoSpaceAgent)
     y::Int
 end
-@multiagent E(NoSpaceAgent) <: AbstractE
+@multiagent E(F,G) <: AbstractE
 
 @testset "@multiagent macro" begin
 
@@ -420,12 +420,12 @@ end
     sample!(model, 2)
     @test nagents(model) == 2
 
-    b1 = B(1, 2, 1, :s)
-    c1 = C(1, 1, :s, Int[])
-    d1 = D(1, :s, [1], 1.0)
-    b2 = B(; id = 1, b = 1, c = :s)
-    c2 = C(; id = 1, c = :s, d = [1,2])
-    d2 = D(; id = 1, d = [1], a = true)
+    b1 = (A∘B)(1, 2, 1, :s)
+    c1 = (A∘C)(1, 1, :s, Int[])
+    d1 = (A∘D)(1, :s, [1], 1.0)
+    b2 = (A∘B)(; id = 1, b = 1, c = :s)
+    c2 = (A∘C)(; id = 1, c = :s, d = [1,2])
+    d2 = (A∘D)(; id = 1, d = [1], a = true)
 
     @test b2.a == 1
     @test c2.b == 2
@@ -465,3 +465,4 @@ end
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
 end
+
