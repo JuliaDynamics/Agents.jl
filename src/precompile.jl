@@ -27,27 +27,5 @@ using PrecompileTools
                     c::Int16
                 end)
         _agent(expr)
-        expr = :(struct A(NoSpaceAgent) <: AbstractA
-                    @subagent struct B
-                        x::Int
-                    end
-                    @subagent struct C
-                        y::Int
-                    end
-                end)
-        _multiagent(QuoteNode(:opt_memory), expr)
-        _multiagent(QuoteNode(:opt_speed), expr)    
-        expr = :(struct A{X}(GridAgent{2})
-                    @subagent struct B
-                        x::Bool = false
-                        y::Int
-                    end
-                    @subagent struct C{X<:Real}
-                        y::Int
-                        z::X
-                    end
-                end)
-        _multiagent(QuoteNode(:opt_memory), expr)
-        _multiagent(QuoteNode(:opt_speed), expr)
     end
 end
