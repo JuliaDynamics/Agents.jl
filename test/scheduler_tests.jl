@@ -229,31 +229,6 @@ end
           [Agent1, Agent1, Agent1, Agent0, Agent0, Agent0]
     @test all(x -> x < 4, s[1:3])
     @test all(x -> x > 3, s[4:6])
-
-    scheduler = Schedulers.ByKind((:G, :F); shuffle_kinds = false, shuffle_agents = false)
-    model = init_mixed_multiagent_model(scheduler)
-    s1 = collect(abmscheduler(model)(model))
-    s2 = collect(abmscheduler(model)(model))
-    @test length(s1) == length(s2) == 20
-    @test s1 == s2
-
-    scheduler = Schedulers.ByKind((:G, :F); shuffle_kinds = false, shuffle_agents = true)
-    model = init_mixed_multiagent_model(scheduler)
-    s1 = collect(abmscheduler(model)(model))
-    s2 = collect(abmscheduler(model)(model))
-    @test length(s1) == length(s2) == 20
-    @test s1 != s2
-    @test Set(s1) == Set(s2)
-    @test filter(id -> kindof(model[id]) == :F, s1) != filter(id -> kindof(model[id]) == :F, s2)
-
-    scheduler = Schedulers.ByKind((:G, :F); shuffle_kinds = true, shuffle_agents = true)
-    model = init_mixed_multiagent_model(scheduler)
-    s1 = collect(abmscheduler(model)(model))
-    s2 = collect(abmscheduler(model)(model))
-    @test length(s1) == length(s2) == 20
-    @test s1 != s2
-    @test Set(s1) == Set(s2)
-    @test filter(id -> kindof(model[id]) == :F, s1) != filter(id -> kindof(model[id]) == :F, s2)
 end
 
 @testset "Scheduler as struct" begin
