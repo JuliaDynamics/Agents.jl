@@ -400,7 +400,7 @@ end
 # the evolution rules, the space, model-level properties, and more.
 
 # Additionally [`AgentBasedModel`](@ref) defines an interface that research
-# can build upon to create new flavors of ABMs that can still benefit for the
+# can build upon to create new flavors of ABMs that can still benefit from the
 # thousands of functions Agents.jl offers out of the box such as [`move_agent!`](@ref).
 
 # ## Step 4: initializing the model
