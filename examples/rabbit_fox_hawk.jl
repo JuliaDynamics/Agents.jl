@@ -366,7 +366,7 @@ model = initialize_model()
 #
 # using GLMakie # CairoMakie doesn't do 3D plots well
 # ```
-animalcolor(animal) = animalcolor(animal, variant(animal))
+animalcolor(animal) = animalcolor(variant(animal))
 animalcolor(a::Rabbit) = :brown
 animalcolor(a::Fox) = :orange
 animalcolor(a::Hawk) = :blue
