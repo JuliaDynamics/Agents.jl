@@ -42,7 +42,7 @@
 # ## Making the model
 # First we define the agent types
 # (here you can see that it isn't really that much
-# of an advantage to have two different agent types. Like in the [Rabbit, Fox, Wolf](@ref)
+# of an advantage to have two different agent types. Like in the [Rabbit, Fox, Hawk](@ref)
 # example, we could have only one type and one additional field to separate them.
 # Nevertheless, for the sake of example, we will use two different types.)
 using Agents, Random
