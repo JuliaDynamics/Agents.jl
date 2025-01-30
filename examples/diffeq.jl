@@ -274,7 +274,7 @@ nothing #hide
 
 # Notice that we've reverted back to a yearly rather than daily timestep here, since the
 # ODE solver is now in charge of evolving the logistic function forward.
-# We've used the [integrator interface](https://docs.sciml.ai/stable/basics/integrator/)
+# We've used the [integrator interface](https://docs.sciml.ai/DiffEqDocs/stable/basics/integrator/)
 # to achieve this.
 #
 # Note that we use [`OrdinaryDiffEq`](https://github.com/SciML/OrdinaryDiffEq.jl) here,
