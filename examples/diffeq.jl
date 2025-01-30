@@ -106,7 +106,7 @@ Random.seed!(6549) #hide
 model = initialise()
 _, results = run!(model, 20; mdata = [:stock])
 
-f = Figure(resolution = (600, 400))
+f = Figure(size = (600, 400))
 ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
@@ -180,7 +180,7 @@ model = initialise()
 yearly(model, s) = s % 365 == 0
 _, results = run!(model, 20 * 365; mdata = [:stock], when = yearly)
 
-f = Figure(resolution = (600, 400))
+f = Figure(size = (600, 400))
 ax =
     f[1, 1] = Axis(
         f,
@@ -294,7 +294,7 @@ Random.seed!(6549) #hide
 modeldeq = initialise_diffeq()
 _, resultsdeq = run!(modeldeq, 20; mdata = [:stock])
 
-f = Figure(resolution = (600, 400))
+f = Figure(size = (600, 400))
 ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
@@ -327,7 +327,7 @@ length(modeldeq.i.sol.t)
 # Compare our two results directly, both start with the same random seed and evolve in
 # precisely the same manner:
 
-f = Figure(resolution = (600, 400))
+f = Figure(size = (600, 400))
 ax =
     f[1, 1] = Axis(
         f,
@@ -405,7 +405,7 @@ sol = OrdinaryDiffEq.solve(
     callback = OrdinaryDiffEq.CallbackSet(fish, reset),
 )
 discrete = vcat(sol(0:365:(365 * 20))[:,:]...)
-f = Figure(resolution = (600, 400))
+f = Figure(size = (600, 400))
 ax = f[1, 1] = Axis(
         f,
         xlabel = "Year",
