@@ -225,7 +225,7 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
     group::Int # The group of the agent, determines mood as it interacts with neighbors
 end
 
-# Let's explicitily print the fields of the data structure `SchellingAgent` that we created:
+# Let's explicitly print the fields of the data structure `SchellingAgent` that we created:
 
 for (name, type) in zip(fieldnames(SchellingAgent), fieldtypes(SchellingAgent))
     println(name, "::", type)
