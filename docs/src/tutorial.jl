@@ -216,7 +216,7 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
 # ## Step 2: creating the agent type
 
 # With this knowledge, let's now make the agent type for the Schelling segregation model.
-# According to the rules of the game, the agent needs to have two auxilary properties:
+# According to the rules of the game, the agent needs to have two auxiliary properties:
 # its mood (boolean) and the group it belongs to (integer). The agent also needs to
 # inherit from `GridAgent{2}` as in the example above. So, we define:
 
@@ -225,7 +225,7 @@ space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
     group::Int # The group of the agent, determines mood as it interacts with neighbors
 end
 
-# Let's explitily print the fields of the data structure `SchellingAgent` that we created:
+# Let's explicitly print the fields of the data structure `SchellingAgent` that we created:
 
 for (name, type) in zip(fieldnames(SchellingAgent), fieldtypes(SchellingAgent))
     println(name, "::", type)
@@ -475,7 +475,7 @@ added_agent_1 = add_agent!((1, 1), schelling, false, 1)
 
 added_agent_2 = add_agent!(schelling, false, 1)
 
-# Notice also that agent fields may be specified by keyowrds as well,
+# Notice also that agent fields may be specified by keywords as well,
 # which is arguably the more readable syntax:
 
 added_agent_3 = add_agent!(schelling; mood = true, group = 2)
@@ -732,7 +732,7 @@ model = StandardABM(
 )
 
 
-# When adding agents to the moedel example, we can explicitly make agents
+# When adding agents to the model example, we can explicitly make agents
 # with their constructors and add them. However, it is recommended
 # to use the automated [`add_agent!`](@ref) function and provide as a first argument
 # the type of agent to add. For example
@@ -757,7 +757,7 @@ model
 MultiSchelling
 
 # This `MultiSchelling` is not a union type; it is an advanced construct
-# that wraps multipe types. When making a multi-agent directly (although it is not recommended,
+# that wraps multiple types. When making a multi-agent directly (although it is not recommended,
 # use `add_agent!` instead), we can wrap the agent type in the multiagent type like so
 
 p = MultiSchelling(Politician(; id = 1, pos = random_position(model), preferred_demographic = 1))
