@@ -600,7 +600,7 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, _ = abmplot(schelling; agent_color = groupcolor, agent_marker = groupmarker, as = 10)
+figure, _ = abmplot(schelling; agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10)
 figure # returning the figure displays it
 
 # The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
