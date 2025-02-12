@@ -239,7 +239,7 @@ for i in 1:100; step!(abmobs, 1); end
 fig
 
 # ## GraphSpace models
-# While the `ac, as, am` keyword arguments generally relate to *agent* colors, markersizes,
+# While the `agent_color, agent_size, agent_marker` keyword arguments generally relate to *agent* colors, markersizes,
 # and markers, they are handled a bit differently in the case of [`GraphSpace models`](https://juliadynamics.github.io/Agents.jl/stable/api/#Agents.GraphSpace).
 # Here, we collect those plot attributes for each node of the underlying graph which can
 # contain multiple agents.

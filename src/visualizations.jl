@@ -30,7 +30,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   ```
   Notice that for 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
-  creating the polygon. In this case, the keyword `as` is meaningless, as each polygon has
+  creating the polygon. In this case, the keyword `agent_size` is meaningless, as each polygon has
   its own size. Use the functions `scale, rotate_polygon` to transform this polygon.
 
   3D models currently do not support having different markers. As a result, `agent_marker` cannot be
