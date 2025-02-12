@@ -53,7 +53,7 @@ as a few more additional functions described in the Developer's Docs.
 Following this interface you can implement new variants of an `AgentBasedModel`.
 The interface allows instances of `AgentBasedModel` to be used with any of the [API](@ref).
 For example, functions such as [`random_agent`](@ref), [`move_agent!`](@ref) or
-[`add_agent`](@ref) do not need to be implemented manually but work out of the box
+[`add_agent!`](@ref) do not need to be implemented manually but work out of the box
 provided the `AgentBasedModel` interface is followed.
 """
 abstract type AgentBasedModel{S<:SpaceType} end
