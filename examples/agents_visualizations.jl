@@ -8,7 +8,7 @@
 
 # This page describes functions that can be used with the [Makie](https://docs.makie.org/stable/)
 # plotting ecosystem to animate and interact with agent based models.
-# ALl the functionality described here uses Julia's package extensions and therefore comes
+# All the functionality described here uses Julia's package extensions and therefore comes
 # into scope once `Makie` (or any of its backends such as `CairoMakie`) gets loaded.
 
 # The animation at the start of the page is created using the code of this page, see below.
