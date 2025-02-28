@@ -11,6 +11,7 @@ In this page we list the remaining API functions, which constitute the bulk of A
 
 ```@docs
 AgentBasedModel
+step!
 ```
 
 ### Discrete time models
