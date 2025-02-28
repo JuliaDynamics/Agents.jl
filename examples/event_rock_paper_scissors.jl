@@ -222,7 +222,7 @@ end
 # ## Time evolution
 # %% #src
 
-# Time evolution for [`EventBasedABM`](@ref) is identical
+# Time evolution for [`EventQueueABM`](@ref) is identical
 # to that of [`StandardABM`](@ref), but time is continuous.
 # So, when calling `step!` we pass in a real time.
 

@@ -265,7 +265,7 @@ This means that all "subtypes" are enclosed in the overarching type. Then, You c
 distinguish them on the basis of `typeof`, but need to use instead the `variantof`
 function. The `allvariants` function for a convenient way to obtain all variants types.
 
-See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multiagent_vs_union)
+See the [Tutorial](@ref) or the [performance comparison versus `Union` types](@ref multi_vs_union)
 for why it is often better to use `@multiagent` than making multiple agent types.
 
 `@multiagent` is based on LightSumTypes.jl.

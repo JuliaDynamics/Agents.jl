@@ -109,7 +109,7 @@ get_direction
 ```
 
 ### Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding.Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
 movement method is available.
 
 ```@docs

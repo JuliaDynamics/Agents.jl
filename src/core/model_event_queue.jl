@@ -5,7 +5,7 @@ using DataStructures: PriorityQueue
 """
     AgentEvent(; action!, propensity, kinds, timing)
 
-An event instance that can be given to [`EventQeueABM`](@ref).
+An event instance that can be given to [`EventQueueABM`](@ref).
 
 - `action! = dummystep`: is the function `action!(agent, model)` that will
   act on the agent the event corresponds to. This keyword is mandatory.
