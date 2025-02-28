@@ -160,7 +160,7 @@ add_vertex!
 rem_vertex!
 ```
 
-## `ContinuousSpace` exclusives
+## [`ContinuousSpace` exclusives](@id ContinuosSpace_exclusives)
 ```@docs
 nearest_neighbor
 get_spatial_property

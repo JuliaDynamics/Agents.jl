@@ -56,7 +56,7 @@ the position is automatically mapped into the discretization represented by the 
 Use [`get_spatial_property`](@ref) to access spatial properties in conjunction with
 `ContinuousSpace`.
 
-See also [Continuous space exclusives](@ref) on the online docs for more functionality.
+See also [`ContinuousSpace` exclusives](@ref ContinuosSpace_exclusives) on the online docs for more functionality.
 An example using continuous space is the [Flocking model](@ref).
 
 ## Distance specification
