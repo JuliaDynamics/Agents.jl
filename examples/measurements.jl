@@ -3,8 +3,8 @@
 # [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl) provides automatic
 # error propagation, and integrates seamlessly with much of the Julia ecosystem.
 #
-# Here, we'll slightly modify the [Daisyworld](@ref) example, to simulate some measurement
-# uncertainty in our world's parameters.
+# Here, we'll slightly modify the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
+# example, to simulate some measurement uncertainty in our world's parameters.
 #
 # ## Setup
 #
@@ -31,8 +31,8 @@ end
 # parameters with type `Measurement{Float64}` as well.
 #
 # Next, we'll implement all the important functions for DaisyWorld. If you want to know what
-# each of these functions do, see the [Daisyworld](@ref) example, as they are copied directly
-# from there.
+# each of these functions do, see the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
+# example, as they are copied directly from there.
 
 using CairoMakie
 using Statistics: mean
@@ -168,8 +168,9 @@ end
 
 # ## Visualizing the Result
 #
-# Similar to the [Daisyworld](@ref) example, we will now check out how the surface temperature
-# and daisy count fares when solar luminosity ramps up.
+# Similar to the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
+# example, we will now check out how the surface temperature and daisy count fares when solar
+# luminosity ramps up.
 #
 # First, some helper functions
 

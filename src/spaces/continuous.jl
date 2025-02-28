@@ -398,7 +398,8 @@ The following keywords can be used:
 - `search = :exact` decides how to find nearby IDs in the `:all, :types` cases. 
   Must be `:exact` or `:approximate`.
 
-Example usage in [https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/](@ref).
+Example usage in [Bacterial Growth](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/)
+model.
 
 !!! note "Better performance with CellListMap.jl"
     Notice that in most applications that [`interacting_pairs`](@ref) is useful, there is
