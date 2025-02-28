@@ -8,7 +8,6 @@ In this page we list the remaining API functions, which constitute the bulk of A
 - [`AgentBasedModel`](@ref)
 - [`StandardABM`](@ref)
 - [`EventQueueABM`](@ref)
-- [`step!(::Agent, args...)`](@ref): progress the model forwards in time.
 
 ```@docs
 AgentBasedModel
