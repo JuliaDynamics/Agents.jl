@@ -16,7 +16,7 @@ If you want to scan parameters and at the same time run multiple simulations at 
 parameter combination, simply use `seed` as a parameter, and use that parameter to
 tune the model's initial random seed and/or agent distribution.
 
-See example usage in [Schelling's segregation model](@ref).
+See example usage in [Schelling's segregation model](@ref Tutorial).
 
 ## Keywords
 The following keywords modify the `ensemblerun!` function:

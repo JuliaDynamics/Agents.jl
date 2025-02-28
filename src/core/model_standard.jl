@@ -57,7 +57,7 @@ The model expects agents of type `AgentType(s)` living in the given `space`.
 `AgentType(s)` is the result of [`@agent`](@ref) or `@multiagent` or
 a `Union` of agent types.
 
-`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
+`space` is a subtype of `AbstractSpace`, see [Space](@ref available_spaces) for all available spaces.
 If it is omitted then all agents are virtually in one position and there is no spatial
 structure.
 Spaces are mutable objects and are not designed to be shared between models.

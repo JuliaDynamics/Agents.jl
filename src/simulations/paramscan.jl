@@ -47,7 +47,7 @@ The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
 
 ## Example
-A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
+A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref Tutorial).
 There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
