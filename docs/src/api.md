@@ -340,7 +340,7 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 
 
 ### How to use `Distributed`
-To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. See the [Performance Tips](@ref) page for parallelization.
 
 ## Path-finding
 ```@docs
