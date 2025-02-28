@@ -140,7 +140,7 @@ can be evolved in time.
 
 
 !!! warn "No IO yet"
-    This model does not yet support IO operations such as [`save_checkpoint`](@ref).
+    This model does not yet support IO operations such as [`save_checkpoint`](@ref AgentsIO.save_checkpoint).
     Pull Requests that implement this are welcomed!
 """
 function EventQueueABM(
