@@ -59,7 +59,7 @@ to specify the level of discretisation of the space.
   metric used to approximate the distance between any two points.
 
 Utilization of all features of `AStar` occurs in the
-[3D Mixed-Agent Ecosystem with Pathfinding](https://juliadynamics.github.io/Agents.jl/stable/examples/rabbit_fox_hawk/)
+[3D Mixed-Agent Ecosystem with Pathfinding](@id rabbit_fox_hawk)
 example.
 """
 function AStar(
