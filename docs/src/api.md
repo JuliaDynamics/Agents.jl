@@ -1,6 +1,6 @@
 # API
 
-The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
+The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref available_spaces), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
 ## [AgentBasedModel](@id ABM_Implementations)
@@ -11,6 +11,7 @@ In this page we list the remaining API functions, which constitute the bulk of A
 
 ```@docs
 AgentBasedModel
+step!(::AgentBasedModel, args...)
 ```
 
 ### Discrete time models
@@ -108,7 +109,7 @@ get_direction
 ```
 
 ### Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding.Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
 movement method is available.
 
 ```@docs
@@ -159,7 +160,7 @@ add_vertex!
 rem_vertex!
 ```
 
-## `ContinuousSpace` exclusives
+## [`ContinuousSpace` exclusives](@id ContinuosSpace_exclusives)
 ```@docs
 nearest_neighbor
 get_spatial_property
@@ -339,7 +340,7 @@ step!(model, agentstep, modelstep, 100; scheduler = ms)
 
 
 ### How to use `Distributed`
-To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. See the [Performance Tips](@ref) page for parallelization.
 
 ## Path-finding
 ```@docs

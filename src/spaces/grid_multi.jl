@@ -19,7 +19,7 @@ Optionally decide whether the space will be periodic and what will be the distan
 The position type for this space is `NTuple{D, Int}`, use [`GridAgent`](@ref) for convenience.
 Valid positions have indices in the range `1:d[i]` for the `i`-th dimension.
 
-An example using `GridSpace` is [Schelling's segregation model](@ref).
+An example using `GridSpace` is [Schelling's segregation model](@ref Tutorial).
 
 ## Distance specification
 The typical terminology when searching neighbors in agent based modelling is

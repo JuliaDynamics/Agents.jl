@@ -42,7 +42,7 @@ The map is stored as a `Graph` by `LightOSM`, and hence each node also has a ver
 corresponding to the vertex representing it in this graph. Hence each node can be referred
 to by either the node ID or its graph index, and we can convert either way, using
 the function `LightOSM.index_to_node`.
-We use graph vertex indices consistently in [`OSMSpace`](@ref), because
+We use graph vertex indices consistently in [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace), because
 we access graph data more often than OSM data.
 
 ## Fields of `OpenStreetMapPath`
@@ -94,7 +94,7 @@ The distance travelled is in the units of `weight_type`. This ensures that the m
 is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
 
-Use [`OSMAgent`](@ref) for convenience.
+Use [`OSMAgent`](@ref OSM.OSMAgent) for convenience.
 
 ## Obtaining map files
 Maps files can be downloaded using the functions provided by
@@ -151,7 +151,7 @@ end
 
 """
     OSMAgent <: AbstractAgent
-The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
+The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace).
 It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
 """
 @agent struct OSMAgent(NoSpaceAgent)
@@ -165,7 +165,7 @@ Download a small test map of [Göttingen](https://www.openstreetmap.org/export#m
 as an artifact. Return a path to the downloaded file.
 
 Using this map requires `network_type = :none` to be passed as a keyword
-to [`OSMSpace`](@ref). The unit of distance used for this map is `:time`.
+to [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace). The unit of distance used for this map is `:time`.
 """
 test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 

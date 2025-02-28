@@ -35,6 +35,7 @@ see [the corresponding entry in the developer documentation](@ref make_new_model
 
 ## Interface of `AgentBasedModel`
 
+- `step!(model, args...)` progress the model forwards in time.
 - `model[id]` returns the agent with given `id`.
 - `abmproperties(model)` returns the `properties` container storing model-level properties.
 - `model.property`:  If the model `properties` is a dictionary with

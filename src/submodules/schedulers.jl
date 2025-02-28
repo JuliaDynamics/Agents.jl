@@ -25,7 +25,7 @@ Schedulers have many purposes:
 1. Can be given in [`StandardABM`](@ref) as a default scheduler.
    This functionality is only meaningful when the `agent_step!` has been configured.
    The function `schedule(model)` will return the scheduled IDs.
-2. Can be used by a user when performing [manual scheduling](@ref manual_scheduling)
+2. Can be used by a user when performing [manual scheduling](@ref Advanced_scheduling)
    in case `agent_step!` has not been configured.
 3. Can be used to globally filter agents by type/property/whatever. For example,
    one can use the [`ByProperty`](@ref) scheduler to simply obtain
@@ -156,7 +156,7 @@ A scheduler useful only for mixed agent models using `Union` types.
   Otherwise returns agent IDs grouped in order of appearance in the `Union`.
 - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
   the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
-- `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref))
+- `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref ABM_Implementations))
 
 
     Schedulers.ByType((C, B, A), shuffle_agents::Bool)

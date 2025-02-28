@@ -115,7 +115,7 @@ It might be tempting to represent this property as a specific type of agent like
 However, in Agents.jl this is not necessary and a much more performant approach can be followed.
 Specifically, you can represent this property as a standard Julia `Array` that is a property of the model. This will typically lead to a 5-10 fold increase in performance.
 
-For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
+For an example of how this is done, see the [Forest fire](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/forest_fire/) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/) model, which has both agents as well as a spatial property represented by an `Array`.
 
 ## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 

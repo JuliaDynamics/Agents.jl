@@ -200,7 +200,7 @@ should_we_collect(s, ds, model, when::Function) = when(model, s)
 """
     offline_run!(model, t::Union{Real, Function}; kwargs...)
 
-Do the same as [`run`](@ref), but instead of collecting all the data into an in-memory
+Do the same as [`run!`](@ref), but instead of collecting all the data into an in-memory
 dataframe, write the output to a file after collecting data `writing_interval` times and
 empty the dataframe after each write.
 Useful when the amount of collected data is expected to exceed the memory available

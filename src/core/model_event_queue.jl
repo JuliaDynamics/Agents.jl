@@ -5,7 +5,7 @@ using DataStructures: PriorityQueue
 """
     AgentEvent(; action!, propensity, kinds, timing)
 
-An event instance that can be given to [`EventQeueABM`](@ref).
+An event instance that can be given to [`EventQueueABM`](@ref).
 
 - `action! = dummystep`: is the function `action!(agent, model)` that will
   act on the agent the event corresponds to. This keyword is mandatory.
@@ -115,7 +115,7 @@ The model expects agents of type `AgentType(s)` living in the given `space`.
 `AgentType(s)` is the result of [`@agent`](@ref) or `@multiagent` or
 a `Union` of agent types.
 
-`space` is a subtype of `AbstractSpace`, see [Space](@ref Space) for all available spaces.
+`space` is a subtype of `AbstractSpace`, see [Space](@ref available_spaces) for all available spaces.
 
 `events` is a container of instances of [`AgentEvent`](@ref),
 which are the events that are scheduled and then affect agents.
@@ -140,7 +140,7 @@ can be evolved in time.
 
 
 !!! warn "No IO yet"
-    This model does not yet support IO operations such as [`save_checkpoint`](@ref).
+    This model does not yet support IO operations such as [`save_checkpoint`](@ref AgentsIO.save_checkpoint).
     Pull Requests that implement this are welcomed!
 """
 function EventQueueABM(
