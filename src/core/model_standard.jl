@@ -93,7 +93,7 @@ The evolution rules are functions given to the keywords `agent_step!`, `model_st
 - `warn=true`: some type tests for `AgentType(s)` are done, and by default
   warnings are thrown when appropriate.
 
-## Advanced stepping
+## [Advanced stepping](@id advanced_stepping)
 
 Some advanced models may require special handling for scheduling, or may need to
 schedule agents several times and act on different subsets of agents with different
