@@ -149,7 +149,7 @@ random_empty
 add_agent_single!
 move_agent_single!
 swap_agents!
-isempty(::Integer, ::ABM)
+isempty(::Int, ::ABM)
 ```
 
 ## `GraphSpace` exclusives
@@ -291,7 +291,7 @@ return df_agent, df_model
 
 ```@docs
 Schedulers
-schedule
+schedule(::ABM)
 ```
 
 ### Predefined schedulers
