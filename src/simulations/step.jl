@@ -22,7 +22,7 @@ Step the model forwards until `f(model, t)` returns `true`,
 where `t` is the current amount of time the model has been evolved
 for, starting from the model's initial time.
 
-See also [Advanced stepping](@ref).
+See also [Advanced stepping](@ref advanced_stepping).
 """
 function CommonSolve.step!(model::AgentBasedModel, args...)
     error(lazy"`step!` not implemented yet for model of type $(typeof(model)).")
