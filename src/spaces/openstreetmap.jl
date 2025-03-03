@@ -2,7 +2,7 @@ export OpenStreetMapSpace, OSMSpace, OSM, OSMAgent
 
 """
     OSM
-Submodule for functionality related to `OpenStreetMapSpace`.
+Submodule for functionality related to [`OpenStreetMapSpace`](@ref).
 See the docstring of the space for more info.
 """
 module OSM # OpenStreetMap
