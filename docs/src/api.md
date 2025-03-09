@@ -149,7 +149,7 @@ random_empty
 add_agent_single!
 move_agent_single!
 swap_agents!
-isempty(::Int, ::ABM)
+Base.isempty(pos::Int, model::ABM{<:DiscreteSpace})
 ```
 
 ## `GraphSpace` exclusives
