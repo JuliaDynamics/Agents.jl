@@ -132,7 +132,7 @@ normalize_position
 spacesize
 ```
 
-## Discrete space exclusives
+## [`DiscreteSpace` exclusives](@id DiscreteSpace_exclusives)
 ```@docs
 positions
 npositions

@@ -17,8 +17,9 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 arbitrary amount of agents, and each agent can move between the nodes of the graph.
 The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
 
-`Graphs.nv` and `Graphs.ne` can be used in a model with a `GraphSpace` to obtain
-the number of nodes or edges in the graph.
+`GraphSpace` inherits from `DiscreteSpace` and all functions for [`DiscreteSpace`](@ref DiscreteSpace_exclusives)
+are available. On top of that, `Graphs.nv` and `Graphs.ne` can be used in a model
+with a `GraphSpace` to obtain the number of nodes or edges in the graph.
 The underlying graph can be altered using [`add_vertex!`](@ref) and [`rem_vertex!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
