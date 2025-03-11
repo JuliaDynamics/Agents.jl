@@ -4,8 +4,8 @@ export euclidean_distance, manhattan_distance, get_direction, spacesize
 """
     spacesize(model::ABM)
 
-Return the size of the model's space. Works for [`AbstractGridSpace`](@ref) and
-[`ContinuousSpace`](@ref).
+Return the size of the model's space. Works for [`GridSpace`](@ref),
+[`GridSpaceSingle`](@ref) and [`ContinuousSpace`](@ref).
 """
 spacesize(model::ABM) = spacesize(abmspace(model))
 
