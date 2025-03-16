@@ -108,7 +108,7 @@ function initialize_bouncing(;
         space2d;
         agent_step!,
         model_step!,
-        agents_first=false,
+        agents_first = false,
         properties=properties
     )
 
