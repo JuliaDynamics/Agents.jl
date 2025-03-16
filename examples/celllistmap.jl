@@ -108,7 +108,7 @@ function initialize_bouncing(;
         space2d;
         agent_step!,
         model_step!,
-        agents_first = false,
+        agents_first=false,
         properties=properties
     )
 
@@ -116,11 +116,11 @@ function initialize_bouncing(;
     for id in 1:number_of_particles
         pos = positions[id]
         prop_particle = PropParticle(
-            r = (0.5 + 0.9 * rand()) * max_radius,
-            k = 10 + 20 * rand(), # random force constants
-            mass = 10.0 + 100 * rand(), # random masses
-            vel = 100 * randn(SVector{2}) # initial velocities)
-            )
+            r=(0.5 + 0.9 * rand()) * max_radius,
+            k=10 + 20 * rand(), # random force constants
+            mass=10.0 + 100 * rand(), # random masses
+            vel=100 * randn(SVector{2}) # initial velocities)
+        )
         add_agent!(pos, Particle, model, prop_particle...)
     end
 
@@ -213,9 +213,11 @@ model = initialize_bouncing(number_of_particles=1000)
 abmvideo(
     "celllistmap.mp4", model;
     framerate=20, frames=200, dt=5,
-    title="Softly bouncing particles with CellListMap.jl",
+    title="Softly Bouncing Particles – CellListMap.jl",
     agent_size=p -> p.r,
-    agent_color=p -> p.k
+    agent_color=p -> p.k,
+    figure=(size=(1280, 720),),
+    title_kwargs=(fontsize=18,),
 )
 
 # ```@raw html
