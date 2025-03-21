@@ -86,7 +86,7 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = StandardABM(Union{Sheep, Wolf}, space; 
+    model = StandardABM(Union{Sheep, Wolf}, space;
         agent_step! = sheepwolf_step!, model_step! = grass_step!,
         properties, rng, scheduler = Schedulers.Randomly(), warn = false
     )

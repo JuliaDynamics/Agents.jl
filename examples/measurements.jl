@@ -1,6 +1,39 @@
-# # Providing uncertainty with Measurements.jl
+# # [Enacpsulating uncertainty with Measurements.jl or MonteCarloMeasurements.jl](@id uncertainty)
 #
-# [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl) provides automatic
+# ## Uncertain numbers in Julia
+#
+# The Julia language and its multiple dispatch system make it straightforward
+# to incorporate uncertainty in any quantity represented by real number(s).
+# There are two packages in particular that provide such functionality,
+# both of which can be integrated trivially with Agents.jl (due to multiple dispatch).
+# These are:
+# - [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)
+# - [MonteCarloMeasurements.jl](https://github.com/baggepinnen/MonteCarloMeasurements.jl)
+
+# They both provide a numeric type that represent uncertainty in one way
+# or the other. For example, let's assume we have two numbers that are normally distributed
+
+xval = 1.0
+yval = 5.0
+uncertainty = 0.25
+
+# then
+
+import Measurements
+x = Measurements.measurement(xval, uncertainty)
+y = Measurements.measurement(yval, uncertainty)
+sqrt(x^2 + (y - 4)^2)
+
+# or
+
+import MonteCarloMeasurements
+using Distributions: Normal # could use any distribution(s) instead
+x = MonteCarloMeasurements.Particles(100, Normal(xval, uncertainty))
+y = Measurements.measurement(yval, uncertainty)
+x^2 + y^2
+
+# ## Uncertainty in the Daisyworld model
+
 # error propagation, and integrates seamlessly with much of the Julia ecosystem.
 #
 # Here, we'll slightly modify the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
@@ -13,10 +46,10 @@
 using Agents
 using Measurements
 
-@agent struct Daisy(GridAgent{2})
+@agent struct Daisy{T<:Number}(GridAgent{2})
     breed::Symbol
     age::Int
-    albedo::AbstractFloat # Allow Measurements
+    albedo::T # Allow Measurements
 end
 
 @agent struct Land(GridAgent{2})
@@ -136,7 +169,7 @@ function daisyworld(;
     model = StandardABM(
         Union{Daisy,Land},
         space;
-        agent_step!, 
+        agent_step!,
         model_step!,
         scheduler = daisysched,
         properties = properties,
