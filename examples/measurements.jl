@@ -77,7 +77,7 @@ function daisy_step!(agent::Daisy, model)
         remove_agent!(agent, model)
         return
     end
-    # if daisy stays alive, it may propagate an offspring
+    ## if daisy stays alive, it may propagate an offspring
     pos = agent.pos
     temperature = meanval(model.temperature[pos...]) # can't use uncertainty in Boolean operations
     seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
@@ -147,14 +147,14 @@ function daisyworld(;
 
     model = StandardABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
 
-    # populate the model with random white daisies
+    ## populate the model with random white daisies
     grid = collect(positions(model))
     L = length(grid)
     white_positions = sample(rng, grid, round(Int, init_white*L); replace = false)
     for wp in white_positions
         add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
-    # and black daisies
+    ## and black daisies
     possible_black = setdiff(grid, white_positions)
     black_positions = sample(rng, possible_black, Int(init_black*L); replace = false)
     for bp in black_positions
@@ -195,7 +195,7 @@ function run_plot_daisyworld(; steps = 500, kw...)
     adf, mdf = run!(abm, steps; mdata)
     t = 0:steps
 
-    # plot daisy populations
+    ## plot daisy populations
     fig, ax = lines(t, mdf.black_daisies; color = "black", label = "black")
     lines!(ax, t, mdf.white_daisies; color = "gray", linestyle = :dash, label = "white")
     axislegend(ax)
@@ -203,7 +203,7 @@ function run_plot_daisyworld(; steps = 500, kw...)
     ax.ylabel = "daisy populations"
     ntype = typeof(first(allagents(abm)).albedo)
     ax.title = "Numeric type: $(ntype)"
-    # plot planet temperature
+    ## plot planet temperature
     axt, = lines(fig[2, 1], t, mdf.temp_mean; color = "red")
     band!(axt, t, mdf.temp_mean .- mdf.temp_std, mdf.temp_mean .+ mdf.temp_std; color = ("red", 0.25))
     axt.ylabel = "temperature"
