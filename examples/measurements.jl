@@ -15,257 +15,229 @@
 
 xval = 1.0
 yval = 5.0
-uncertainty = 0.25
+σ = 0.25
 
 # then
 
 import Measurements
-x = Measurements.measurement(xval, uncertainty)
-y = Measurements.measurement(yval, uncertainty)
-sqrt(x^2 + (y - 4)^2)
+x = Measurements.measurement(xval, σ)
+y = Measurements.measurement(yval, σ)
+sqrt(x^2 - 2x*y + y^2)
 
 # or
 
 import MonteCarloMeasurements
-using Distributions: Normal # could use any distribution(s) instead
-x = MonteCarloMeasurements.Particles(100, Normal(xval, uncertainty))
-y = Measurements.measurement(yval, uncertainty)
-x^2 + y^2
+using Distributions: Normal, Cosine # can use any distributions
+x = MonteCarloMeasurements.Particles(100, Normal(xval, σ))
+y = MonteCarloMeasurements.Particles(100, Normal(yval, σ))
+sqrt(x^2 - 2x*y + y^2)
 
-# ## Uncertainty in the Daisyworld model
+# For convience we will define two functions that will give the mean and std
+# of an uncetain numeric type irrespectively of type used
 
-# error propagation, and integrates seamlessly with much of the Julia ecosystem.
-#
-# Here, we'll slightly modify the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
-# example, to simulate some measurement uncertainty in our world's parameters.
-#
-# ## Setup
-#
-# First we'll construct our agents.
+meanval(x::Float64) = x
+stdval(x::Float64) = 0.0 # no uncertainty for exact real number!
 
+meanval(x::Measurements.Measurement) = Measurements.value(x)
+stdval(x::Measurements.Measurement) = Measurements.uncertainty(x)
+
+meanval(x::MonteCarloMeasurements.Particles) = MonteCarloMeasurements.pmean(x)
+stdval(x::MonteCarloMeasurements.Particles) = MonteCarloMeasurements.pstd(x)
+
+# ## Defining the Daisyworld model with uncertainty
+
+# Here, we'll modify the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
+# model to incorporate uncertainty in the initial temperature of the planet
+# as well as the albedo of the daisies.
+
+# First, we define the daisy agent type as parameteric
 using Agents
-using Measurements
 
-@agent struct Daisy{T<:Number}(GridAgent{2})
+@agent struct Daisy{T}(GridAgent{2})
     breed::Symbol
     age::Int
-    albedo::T # Allow Measurements
+    albedo::T
 end
 
-@agent struct Land(GridAgent{2})
-    temperature::AbstractFloat # Allow Measurements
-end
+# The type parameter `T` will represent varius numeric types.
+# Now we need to define the rules of the Daisyworld.
+# There is practically at all in this step from the original Daisyworld example!
+# We only need to change using a logarithm (not defined for negative numbers)
+# and ensure that we are using the mean of an uncertain number in boolean operations,
+# as it is otherwise umbiguous which number to use to make the Boolean decision.
+# The rest of the functions do not
+# care about us wanting to use this uncertainty-representing numeric type.
+# This is one of the beauties of generic programming in Julia!
 
-# Notice that there is only one small difference between this version and the original
-# example model: the use of `AbstractFloat` instead of `Float64` for the `albedo` and
-# `temperature` parameters. Behaviour between these two types is practically equivalent
-# from our perspective, but it allows us to use an uncertain value for our two parameters.
-# `1.0 ± 0.1` rather than `1.0` for example. We could also be specific here and bind the
-# parameters with type `Measurement{Float64}` as well.
-#
-# Next, we'll implement all the important functions for DaisyWorld. If you want to know what
-# each of these functions do, see the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
-# example, as they are copied directly from there.
+# We first define the individual daisy dynamics
 
-using CairoMakie
-using Statistics: mean
-import DrWatson: @dict
-import StatsBase
-CairoMakie.activate!() # hide
-using Random # hide
-
-const DaisyWorld = ABM{<:GridSpace}
-
-function update_surface_temperature!(pos::Dims{2}, model::DaisyWorld)
-    ids = ids_in_position(pos, model)
-    absorbed_luminosity = if length(ids) == 1
-        (1 - model.surface_albedo) * model.solar_luminosity
-    else
-        (1 - model[ids[2]].albedo) * model.solar_luminosity
+function daisy_step!(agent::Daisy, model)
+    agent.age += 1
+    if agent.age ≥ model.max_age
+        remove_agent!(agent, model)
+        return
     end
-    local_heating = absorbed_luminosity > 0 ? 72 * log(absorbed_luminosity) + 80 : 80
-    T0 = model[ids[1]].temperature
-    model[ids[1]].temperature = (T0 + local_heating) / 2
-end
-
-function diffuse_temperature!(pos::Dims{2}, model::DaisyWorld)
-    ratio = get(abmproperties(model), :ratio, 0.5)
-    ids = nearby_ids(pos, model)
-    meantemp = sum(model[i].temperature for i in ids if model[i] isa Land) / 8
-    land = model[ids_in_position(pos, model)[1]]
-    land.temperature = (1 - ratio) * land.temperature + ratio * meantemp
-end
-
-function propagate!(pos::Dims{2}, model::DaisyWorld)
-    ids = ids_in_position(pos, model)
-    if length(ids) > 1
-        daisy = model[ids[2]]
-        temperature = model[ids[1]].temperature
-        seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-        if rand(abmrng(model)) < seed_threshold
-            filter_place_daisy(pos) = length(ids_in_position(pos, model)) == 1
-            seeding_place = random_nearby_position(pos, model, 1, filter_place_daisy)
-            if !isnothing(seeding_place)
-                add_agent!(seeding_place, Daisy, model, daisy.breed, 0, daisy.albedo)
-            end
+    # if daisy stays alive, it may propagate an offspring
+    pos = agent.pos
+    temperature = meanval(model.temperature[pos...]) # can't use uncertainty in Boolean operations
+    seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
+    if rand(abmrng(model)) < seed_threshold
+        empty_near_pos = random_nearby_position(pos, model, 1, npos -> isempty(npos, model))
+        if !isnothing(empty_near_pos)
+            add_agent!(empty_near_pos, model, agent.breed, 0, agent.albedo)
         end
     end
 end
 
-function agent_step!(agent::Daisy, model::DaisyWorld)
-    agent.age += 1
-    agent.age >= model.max_age && remove_agent!(agent, model)
-end
+# and then the dynamics of the Daisyworld
 
-agent_step!(agent::Land, model::DaisyWorld) = nothing
-
-function model_step!(model)
+function daisyworld_step!(model)
     for p in positions(model)
         update_surface_temperature!(p, model)
         diffuse_temperature!(p, model)
-        propagate!(p, model)
-    end
-    model.tick += 1
-    solar_activity!(model)
-end
-
-function solar_activity!(model::DaisyWorld)
-    if model.scenario == :ramp
-        if model.tick > 200 && model.tick <= 400
-            model.solar_luminosity += model.solar_change
-        end
-        if model.tick > 500 && model.tick <= 750
-            model.solar_luminosity -= model.solar_change / 2
-        end
-    elseif model.scenario == :change
-        model.solar_luminosity += model.solar_change
     end
 end
 
-# ## Adding Uncertainty
-#
-# Now, we can write a constructor function, and use uncertainly values which will propagate
-# automatically through our model.
+function update_surface_temperature!(pos, model)
+    if isempty(pos, model) # no daisy
+        absorbed_luminosity = (1 - model.surface_albedo) * model.solar_luminosity
+    else
+        daisy = model[id_in_position(pos, model)]
+        absorbed_luminosity = (1 - daisy.albedo) * model.solar_luminosity
+    end
+    ## Here we changed the rule to not use `log` because it isn't defined for negative numbers!
+    local_heating = meanval(absorbed_luminosity) > 0 ? 72 *(2absorbed_luminosity - 1.8) + 80 : 80
+    model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
+end
+
+function diffuse_temperature!(pos, model)
+    ratio = model.ratio # diffusion ratio
+    npos = nearby_positions(pos, model)
+    model.temperature[pos...] =
+        (1 - ratio) * model.temperature[pos...] +
+        sum(model.temperature[p...] for p in npos) * 0.125 * ratio
+end
+
+# Now as per usual in Agents.jl we will define a function that creates
+# the daisyworld and populates it with some daisies.
+# The starting temeprature
+
+using Random: Xoshiro
+using StatsBase: sample
 
 function daisyworld(;
-    griddims = (30, 30),
-    max_age = 25,
-    init_white = 0.2,
-    init_black = 0.2,
-    albedo_white = 0.75,
-    albedo_black = 0.25,
-    ## Surface albedo measurements are complicated for our satellites perhaps
-    surface_albedo = 0.4 ± 0.15,
-    ## Measurements from the sun are generally stable, but fluctuate around 10%
-    solar_change = 0.005 ± 0.002,
-    solar_luminosity = 1.0 ± 0.1,
-    scenario = :default,
-)
-
-    space = GridSpace(griddims)
-    properties = @dict max_age surface_albedo solar_luminosity solar_change scenario
-    properties[:tick] = 0
-    daisysched(model) = [a.id for a in allagents(model) if a isa Daisy]
-    model = StandardABM(
-        Union{Daisy,Land},
-        space;
-        agent_step!,
-        model_step!,
-        scheduler = daisysched,
-        properties = properties,
-        warn = false,
+        griddims = (30, 30),
+        max_age = 25,
+        init_white = 0.3, # % cover of the world surface of white breed
+        init_black = 0.3, # % cover of the world surface of black breed
+        albedo_white = 0.75,
+        albedo_black = 0.25,
+        surface_albedo = 0.4,
+        solar_luminosity = 1.0,
+        seed = 165,
+        starting_temperature = 0.0,
     )
 
-    ## An uncertain initial temperature, solely for type stability
-    fill_space!(Land, model, 0.0 ± 0.0)
+    rng = Xoshiro(seed)
+    space = GridSpaceSingle(griddims)
+    properties = (; # named tuple
+        max_age, surface_albedo, solar_luminosity,
+        ratio = 0.5, temperature = fill(starting_temperature, griddims)
+    )
+
+    model = StandardABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
+
+    # populate the model with random white daisies
     grid = collect(positions(model))
-    num_positions = prod(griddims)
-    white_positions =
-        StatsBase.sample(grid, Int(init_white * num_positions); replace = false)
+    L = length(grid)
+    white_positions = sample(rng, grid, round(Int, init_white*L); replace = false)
     for wp in white_positions
         add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
-    allowed = setdiff(grid, white_positions)
-    black_positions =
-        StatsBase.sample(allowed, Int(init_black * num_positions); replace = false)
+    # and black daisies
+    possible_black = setdiff(grid, white_positions)
+    black_positions = sample(rng, possible_black, Int(init_black*L); replace = false)
     for bp in black_positions
         add_agent!(bp, Daisy, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end
+
+    for p in positions(model)
+        update_surface_temperature!(p, model)
+    end
+
     return model
 end
 
-# You see we've included uncertainty in four places: surface albedo and initial temperature, and
-# the two solar luminosity values. We do not require changes to any model code, nor handle
-# these parameters in any special way; for example `2.0 * surface_albedo` is a regular operation.
-# Errors will be propagated under the hood automatically.
 
-# ## Visualizing the Result
-#
-# Similar to the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/)
-# example, we will now check out how the surface temperature and daisy count fares when solar
-# luminosity ramps up.
-#
-# First, some helper functions
+# ## Running Daisyworld without uncertainty
 
-black(a) = a.breed == :black
-white(a) = a.breed == :white
-daisies(a) = a isa Daisy
+# There isn't anything new here; we are doing the same as in the original Daisyworld example.
+# Let's define a convenience plotting function first
+using Statistics: mean
+using CairoMakie
 
-land(a) = a isa Land
-adata = [(black, count, daisies), (white, count, daisies), (:temperature, mean, land)]
+function run_plot_daisyworld(; steps = 500, kw...)
 
-mdata = [:solar_luminosity]
+    abm = daisyworld(; kw...)
 
-# And now the simulation
+    function temp_mean(abm)
+        T = abm.temperature
+        return mean(meanval(t) for t in T)
+    end
+    function temp_std(abm)
+        T = abm.temperature
+        return mean(stdval(t) for t in T)
+    end
+    black_daisies(abm) = count(a -> a.breed == :black, allagents(abm))
+    white_daisies(abm) = count(a -> a.breed == :white, allagents(abm))
+    mdata = [temp_mean, temp_std, black_daisies, white_daisies]
 
-Random.seed!(19) # hide
-model = daisyworld(scenario = :ramp)
-agent_df, model_df = run!(model, 1000; adata = adata, mdata = mdata)
+    adf, mdf = run!(abm, steps; mdata)
+    t = 0:steps
 
-f = Figure(resolution = (600, 800))
-ax = f[1, 1] = Axis(f, ylabel = "Daisy count", title = "Daisyworld Analysis")
-lb = lines!(ax, agent_df.time, agent_df.count_black_daisies, linewidth = 2, color = :blue)
-lw = lines!(ax, agent_df.time, agent_df.count_white_daisies, linewidth = 2, color = :red)
-leg = f[1, 1] = Legend(
-        f,
-        [lb, lw],
-        ["black", "white"],
-        tellheight = false,
-        tellwidth = false,
-        halign = :right,
-        valign = :top,
-        margin = (10, 10, 10, 10),
-    )
+    # plot daisy populations
+    fig, ax = lines(t, mdf.black_daisies; color = "black", label = "black")
+    lines!(ax, t, mdf.white_daisies; color = "gray", linestyle = :dash, label = "white")
+    axislegend(ax)
+    hidexdecorations!(ax, grid = false)
+    ax.ylabel = "daisy populations"
+    ntype = typeof(first(allagents(abm)).albedo)
+    ax.title = "Numeric type: $(ntype)"
+    # plot planet temperature
+    axt, = lines(fig[2, 1], t, mdf.temp_mean; color = "red")
+    band!(axt, t, mdf.temp_mean .- mdf.temp_std, mdf.temp_mean .+ mdf.temp_std; color = ("red", 0.25))
+    axt.ylabel = "temperature"
+    axt.xlabel = "time"
+    return fig
+end
 
-ax2 = f[2, 1] = Axis(f, ylabel = "Temperature")
-highband =
-    Measurements.value.(agent_df[!, dataname(adata[3])]) +
-    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
-lowband =
-    Measurements.value.(agent_df[!, dataname(adata[3])]) -
-    Measurements.uncertainty.(agent_df[!, dataname(adata[3])])
-band!(ax2, agent_df.time, lowband, highband, color = (:steelblue, 0.5))
-lines!(
-    ax2,
-    agent_df.time,
-    Measurements.value.(agent_df[!, dataname(adata[3])]),
-    linewidth = 2,
-    color = :blue,
+run_plot_daisyworld()
+
+# Right, this looks great! As expected, there is no band plot showed in the temperature
+# axis as there is no uncertainty yet. Let's change that!
+
+# %%
+# ## Running Daisyworld without uncertainty
+
+# All we have to do to enable uncertainty is change the daisy albedos and starting
+# temperature into numbers with uncertainty. This is as simple as changing three keywords:
+
+run_plot_daisyworld(;
+    starting_temperature = Measurements.measurement(0.0, 1.0),
+    albedo_white = Measurements.measurement(0.75, 0.1),
+    albedo_black = Measurements.measurement(0.25, 0.1),
 )
 
-ax3 = f[3, 1] = Axis(f, ylabel = "Luminosity")
-highband =
-    Measurements.value.(model_df.solar_luminosity) +
-    Measurements.uncertainty.(model_df.solar_luminosity)
-lowband =
-    Measurements.value.(model_df.solar_luminosity) -
-    Measurements.uncertainty.(model_df.solar_luminosity)
-band!(ax3, agent_df.time, lowband, highband, color = (:steelblue, 0.5))
-lines!(
-    ax3,
-    agent_df.time,
-    Measurements.value.(model_df.solar_luminosity),
-    linewidth = 2,
-    color = :blue,
+# Well that's great! It also works with the other type of uncertainty:
+
+run_plot_daisyworld(;
+    starting_temperature = MonteCarloMeasurements.Particles(100, Normal(0.0, 1.0)),
+    albedo_white = MonteCarloMeasurements.Particles(100, Normal(0.75, 0.2)),
+    albedo_black = MonteCarloMeasurements.Particles(100, Cosine(0.25, 0.1)),
 )
-f
+
+# We can see that:
+#
+# 1. The daisy populations do not change regardless of if we use uncertainty or not.
+#    This is expected as the uncertainty itself does not actually decide any model dynamics.
+# 2. The uncertainty in surface temperature does not increase over time.
