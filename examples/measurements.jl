@@ -1,4 +1,4 @@
-# # [Enacpsulating uncertainty with Measurements.jl or MonteCarloMeasurements.jl](@id uncertainty)
+# # [Encapsulating uncertainty with Measurements.jl or MonteCarloMeasurements.jl](@id uncertainty)
 #
 # ## Uncertain numbers in Julia
 #
@@ -10,7 +10,7 @@
 # - [Measurements.jl](https://github.com/JuliaPhysics/Measurements.jl)
 # - [MonteCarloMeasurements.jl](https://github.com/baggepinnen/MonteCarloMeasurements.jl)
 
-# They both provide a numeric type that represent uncertainty in one way
+# They both provide a numeric type that represents uncertainty in one way
 # or the other. For example, let's assume we have two numbers that are normally distributed
 
 xval = 1.0
@@ -33,7 +33,7 @@ y = MonteCarloMeasurements.Particles(100, Normal(yval, σ))
 sqrt(x^2 - 2x*y + y^2)
 
 # For convience we will define two functions that will give the mean and std
-# of an uncetain numeric type irrespectively of type used
+# of an uncertain numeric type irrespectively of type used
 
 meanval(x::Float64) = x
 stdval(x::Float64) = 0.0 # no uncertainty for exact real number!
@@ -120,7 +120,7 @@ end
 
 # Now as per usual in Agents.jl we will define a function that creates
 # the daisyworld and populates it with some daisies.
-# The starting temeprature
+# The starting temperature
 
 using Random: Xoshiro
 using StatsBase: sample
