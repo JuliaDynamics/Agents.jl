@@ -23,9 +23,9 @@ pages = [
         "BlackBoxOptim.jl" => "examples/optim.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",
         "Graphs.jl" => "examples/schoolyard.md",
-        "Measurements.jl" => "examples/measurements.md",
         "CellListMap.jl" => "examples/celllistmap.md",
-        "DelaunayTriangulation.jl" => "examples/delaunay.md"
+        "DelaunayTriangulation.jl" => "examples/delaunay.md",
+        "Uncertanty Propagation" => "examples/measurements.md",
     ],
     "performance_tips.md",
     "comparison.md",

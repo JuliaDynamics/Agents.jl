@@ -7,7 +7,7 @@ export run!, offline_run!, collect_agent_data!, collect_model_data!,
 """
     run!(model::ABM, t::Union{Real, Function}; kwargs...)
 
-Run the model (call [`step!`](@ref)`(model, t)` and collect
+Run the model (evolve via [`step!`](@ref)`(model, t)`) while at the same time collecting
 data specified by the keywords, explained one by one below. Return the data as
 two `DataFrame`s, `agent_df, model_df`,
 one for agent-level data and one for model-level data.
@@ -76,10 +76,10 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
   A lot of flexibility is offered based on the type of `when`. Let
   `t = abmtime(model)` (which is updated throughout the `run!` process).
   - `when::Real`: data are collected each time the model is evolved for at least `when`
-     units of time. For discrete time models like [`StandardABM`](@ref) this must be an
-     integer and in essence it means how many steps to evolve between each data collection.
-     For continuous time models like [`EventQueueABM`](@ref) `when` is the _least_ amount
-     of time to evolve the model (with maximum being until an upcoming event is triggered).
+    units of time. For discrete time models like [`StandardABM`](@ref) this must be an
+    integer and in essence it means how many steps to evolve between each data collection.
+    For continuous time models like [`EventQueueABM`](@ref) `when` is the _least_ amount
+    of time to evolve the model (with maximum being until an upcoming event is triggered).
   - `when::AbstractVector`: data are collected for `t ∈ when`.
   - `when::Function`: data are collected whenever `when(model, t)` returns `true`.
 * `when_model = when`: same as `when` but for model data.
@@ -214,7 +214,7 @@ during execution.
   Appends to the file if it already exists, otherwise creates the file.
 * `mdata_filename="mdata.\$backend"`: a file to write the model data on.
   Appends to the file if it already exists, otherwise creates the file.
-* `writing_interval=1` : write to file every `writing_interval` times data 
+* `writing_interval=1` : write to file every `writing_interval` times data
   collection is triggered (which is set by the `when` and `when_model` keywords).
 - All other keywords are propagated to [`run!`](@ref).
 """
