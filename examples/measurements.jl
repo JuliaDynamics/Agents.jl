@@ -214,7 +214,7 @@ end
 
 run_plot_daisyworld()
 
-# Right, this looks great! As expected, there is no band plot showed in the temperature
+# Right, this looks great! As expected, there is no band plot shown in the temperature
 # axis as there is no uncertainty yet. Let's change that!
 
 # %% #src
