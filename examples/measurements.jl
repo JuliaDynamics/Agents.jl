@@ -106,6 +106,8 @@ function update_surface_temperature!(pos, model)
         absorbed_luminosity = (1 - daisy.albedo) * model.solar_luminosity
     end
     ## Here we changed the rule to not use `log` because it isn't defined for negative numbers!
+    ## We also need to somehow extract a number from the uncertain number, because boolean
+    ## comparisons are not defined on uncertain numbers.
     local_heating = meanval(absorbed_luminosity) > 0 ? 72 *(2absorbed_luminosity - 1.8) + 80 : 80
     model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
 end
