@@ -218,7 +218,7 @@ run_plot_daisyworld()
 # axis as there is no uncertainty yet. Let's change that!
 
 # %% #src
-# ## Running Daisyworld without uncertainty
+# ## Running Daisyworld with uncertainty
 
 # All we have to do to enable uncertainty is change the daisy albedos and starting
 # temperature into numbers with uncertainty. This is as simple as changing three keywords:
