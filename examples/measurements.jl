@@ -145,7 +145,8 @@ function daisyworld(;
         ratio = 0.5, temperature = fill(starting_temperature, griddims)
     )
 
-    model = StandardABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
+    T = typeof(init_black)
+    model = StandardABM(Daisy{T}, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
 
     ## populate the model with random white daisies
     grid = collect(positions(model))
