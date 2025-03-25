@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SIR model for the spread of COVID-19 · Agents.jl</title><meta name="title" content="SIR model for the spread of COVID-19 · Agents.jl"/><meta property="og:title" content="SIR model for the spread of COVID-19 · Agents.jl"/><meta property="twitter:title" content="SIR model for the spread of COVID-19 · Agents.jl"/><meta name="description" content="Documentation for Agents.jl."/><meta property="og:description" content="Documentation for Agents.jl."/><meta property="twitter:description" content="Documentation for Agents.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>SIR model for the spread of COVID-19</a><ul class="internal"><li><a class="tocitem" href="#SIR-model"><span>SIR model</span></a></li><li><a class="tocitem" href="#Model-parameters"><span>Model parameters</span></a></li><li><a class="tocitem" href="#Making-the-model-in-Agents.jl"><span>Making the model in Agents.jl</span></a></li><li><a class="tocitem" href="#SIR-Stepping-functions"><span>SIR Stepping functions</span></a></li><li><a class="tocitem" href="#Example-animation"><span>Example animation</span></a></li><li><a class="tocitem" href="#Exponential-growth"><span>Exponential growth</span></a></li></ul></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in a City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li><a class="tocitem" href="../event_rock_paper_scissors/">Spatial rock-paper-scissors (event based)</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../agents_visualizations/">Plotting and Interactivity</a></li><li><span class="tocitem">Ecosystem Integration</span><ul><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li><li><a class="tocitem" href="../celllistmap/">CellListMap.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>SIR model for the spread of COVID-19</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>SIR model for the spread of COVID-19</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/sir.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="SIR-model-for-the-spread-of-COVID-19"><a class="docs-heading-anchor" href="#SIR-model-for-the-spread-of-COVID-19">SIR model for the spread of COVID-19</a><a id="SIR-model-for-the-spread-of-COVID-19-1"></a><a class="docs-heading-anchor-permalink" href="#SIR-model-for-the-spread-of-COVID-19" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../covid_evolution.mp4" type="video/mp4">
+</video><p>This example illustrates how to use <code>GraphSpace</code> and how to model agents on an graph (network) where the transition probabilities between each node (position) is not constant.</p><h2 id="SIR-model"><a class="docs-heading-anchor" href="#SIR-model">SIR model</a><a id="SIR-model-1"></a><a class="docs-heading-anchor-permalink" href="#SIR-model" title="Permalink"></a></h2><p>A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population. Here we add one more category of individuals: those who are infected, but do not know it. Transmission rate for infected and diagnosed individuals is lower than infected and undetected. We also allow a fraction of recovered individuals to catch the disease again, meaning that recovering the disease does not bring full immunity.</p><h2 id="Model-parameters"><a class="docs-heading-anchor" href="#Model-parameters">Model parameters</a><a id="Model-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Model-parameters" title="Permalink"></a></h2><p>Here are the model parameters, some of which have default values.</p><ul><li><code>Ns</code>: a vector of population sizes per city. The amount of cities is just <code>C=length(Ns)</code>.</li><li><code>β_und</code>: a vector for transmission probabilities β of the infected but undetected per city. Transmission probability is how many susceptible are infected per day by an infected individual. If social distancing is practiced, this number decreases.</li><li><code>β_det</code>: an array for transmission probabilities β of the infected and detected per city. If hospitals are full, this number increases.</li><li><code>infection_period = 30</code>: how many days before a person dies or recovers.</li><li><code>detection_time = 14</code>: how many days before an infected person is detected.</li><li><code>death_rate = 0.02</code>: the probability that the individual will die after the <code>infection_period</code>.</li><li><code>reinfection_probability = 0.05</code>: The probability that a recovered person can get infected again.</li><li><code>migration_rates</code>: A matrix of migration probability per individual per day from one city to another.</li><li><code>Is = [zeros(C-1)..., 1]</code>: An array for initial number of infected but undetected people per city. This starts as only one infected individual in the last city.</li></ul><p>Notice that <code>Ns, β, Is</code> all need to have the same length, as they are numbers for each city. We&#39;ve tried to add values to the infection parameters similar to the ones you would hear on the news about COVID-19.</p><p>The good thing with Agent based models is that you could easily extend the model we implement here to also include age as an additional property of each agent. This makes ABMs flexible and suitable for research of virus spreading.</p><h2 id="Making-the-model-in-Agents.jl"><a class="docs-heading-anchor" href="#Making-the-model-in-Agents.jl">Making the model in Agents.jl</a><a id="Making-the-model-in-Agents.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Making-the-model-in-Agents.jl" title="Permalink"></a></h2><p>We start by defining the <code>PoorSoul</code> agent type and the ABM</p><pre><code class="language-julia hljs">using Agents, Random
+using Agents.DataFrames, Agents.Graphs
+using StatsBase: sample, Weights
+using DrWatson: @dict
+using CairoMakie
+
+@agent struct PoorSoul(GraphAgent)
+    days_infected::Int  # number of days since is infected
+    status::Symbol  # 1: S, 2: I, 3:R
+end
+
+function model_initiation(;
+    Ns,
+    migration_rates,
+    β_und,
+    β_det,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, length(Ns) - 1)..., 1],
+    seed = 0,
+)
+
+    rng = Xoshiro(seed)
+    @assert length(Ns) ==
+    length(Is) ==
+    length(β_und) ==
+    length(β_det) ==
+    size(migration_rates, 1) &quot;length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same &quot;
+    @assert size(migration_rates, 1) == size(migration_rates, 2) &quot;migration_rates rates should be a square matrix&quot;
+
+    C = length(Ns)
+    # normalize migration_rates
+    migration_rates_sum = sum(migration_rates, dims = 2)
+    for c in 1:C
+        migration_rates[c, :] ./= migration_rates_sum[c]
+    end
+
+    properties = @dict(
+        Ns,
+        Is,
+        β_und,
+        β_det,
+        β_det,
+        migration_rates,
+        infection_period,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        C,
+        death_rate,
+    )
+    space = GraphSpace(complete_graph(C))
+    model = StandardABM(PoorSoul, space; agent_step!, properties, rng)
+
+    # Add initial individuals
+    for city in 1:C, n in 1:Ns[city]
+        ind = add_agent!(city, model, 0, :S) # Susceptible
+    end
+    # add infected individuals
+    for city in 1:C
+        inds = ids_in_position(city, model)
+        for n in 1:Is[city]
+            agent = model[inds[n]]
+            agent.status = :I # Infected
+            agent.days_infected = 1
+        end
+    end
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">model_initiation (generic function with 1 method)</code></pre><p>We will make a function that starts a model with <code>C</code> number of cities, and creates the other parameters automatically by attributing some random values to them. You could directly use the above constructor and specify all <code>Ns, β</code>, etc. for a given set of cities.</p><p>All cities are connected with each other, while it is more probable to travel from a city with small population into a city with large population.</p><pre><code class="language-julia hljs">using LinearAlgebra: diagind
+
+function create_params(;
+    C,
+    max_travel_rate,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, C - 1)..., 1],
+    seed = 19,
+)
+
+    Random.seed!(seed)
+    Ns = rand(50:5000, C)
+    β_und = rand(0.3:0.02:0.6, C)
+    β_det = β_und ./ 10
+
+    Random.seed!(seed)
+    migration_rates = zeros(C, C)
+    for c in 1:C
+        for c2 in 1:C
+            migration_rates[c, c2] = (Ns[c] + Ns[c2]) / Ns[c]
+        end
+    end
+    maxM = maximum(migration_rates)
+    migration_rates = (migration_rates .* max_travel_rate) ./ maxM
+    migration_rates[diagind(migration_rates)] .= 1.0
+
+    params = @dict(
+        Ns,
+        β_und,
+        β_det,
+        migration_rates,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        death_rate,
+        Is
+    )
+
+    return params
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_params (generic function with 1 method)</code></pre><h2 id="SIR-Stepping-functions"><a class="docs-heading-anchor" href="#SIR-Stepping-functions">SIR Stepping functions</a><a id="SIR-Stepping-functions-1"></a><a class="docs-heading-anchor-permalink" href="#SIR-Stepping-functions" title="Permalink"></a></h2><p>Now we define the functions for modelling the virus spread in time</p><pre><code class="language-julia hljs">function agent_step!(agent, model)
+    migrate!(agent, model)
+    transmit!(agent, model)
+    update!(agent, model)
+    recover_or_die!(agent, model)
+end
+
+function migrate!(agent, model)
+    pid = agent.pos
+    m = sample(abmrng(model), 1:(model.C), Weights(model.migration_rates[pid, :]))
+    if m ≠ pid
+        move_agent!(agent, m, model)
+    end
+end
+
+function transmit!(agent, model)
+    agent.status == :S &amp;&amp; return
+    rate = if agent.days_infected &lt; model.detection_time
+        model.β_und[agent.pos]
+    else
+        model.β_det[agent.pos]
+    end
+
+    n = rate * abs(randn(abmrng(model)))
+    n &lt;= 0 &amp;&amp; return
+
+    for contactID in ids_in_position(agent, model)
+        contact = model[contactID]
+        if contact.status == :S ||
+           (contact.status == :R &amp;&amp; rand(abmrng(model)) ≤ model.reinfection_probability)
+            contact.status = :I
+            n -= 1
+            n &lt;= 0 &amp;&amp; return
+        end
+    end
+end
+
+update!(agent, model) = agent.status == :I &amp;&amp; (agent.days_infected += 1)
+
+function recover_or_die!(agent, model)
+    if agent.days_infected ≥ model.infection_period
+        if rand(abmrng(model)) ≤ model.death_rate
+            remove_agent!(agent, model)
+        else
+            agent.status = :R
+            agent.days_infected = 0
+        end
+    end
+end
+
+params = create_params(C = 8, max_travel_rate = 0.01)
+model = model_initiation(; params...)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">StandardABM with 28540 agents of type PoorSoul
+ agents container: Dict
+ space: GraphSpace with 8 positions and 28 edges
+ scheduler: fastest
+ properties: Is, death_rate, infection_period, β_und, Ns, migration_rates, detection_time, reinfection_probability, β_det, C</code></pre><h2 id="Example-animation"><a class="docs-heading-anchor" href="#Example-animation">Example animation</a><a id="Example-animation-1"></a><a class="docs-heading-anchor-permalink" href="#Example-animation" title="Permalink"></a></h2><p>At the moment <a href="../../api/#Agents.abmplot"><code>abmplot</code></a> does not plot <code>GraphSpace</code>s, but we can still utilize the <a href="../../api/#Agents.ABMObservable"><code>ABMObservable</code></a>. We do not need to collect data here, only the current status of the model will be used in visualization</p><pre><code class="language-julia hljs">using CairoMakie
+abmobs = ABMObservable(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ABMObservable with model:
+StandardABM with 28540 agents of type PoorSoul
+ agents container: Dict
+ space: GraphSpace with 8 positions and 28 edges
+ scheduler: fastest
+ properties: Is, death_rate, infection_period, β_und, Ns, migration_rates, detection_time, reinfection_probability, β_det, C
+and with data collection:
+ adata: nothing
+ mdata: nothing</code></pre><p>We then initialize elements that are lifted observables from <code>abmobs</code>:</p><pre><code class="language-julia hljs">infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
+infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
+fracs = lift(infected_fractions, abmobs.model)
+color = lift(fs -&gt; [cgrad(:inferno)[f] for f in fs], fracs)
+title = lift(
+    (m) -&gt; &quot;step = $(abmtime(m)), infected = $(round(Int, 100*infected_fraction(m, allids(m))))%&quot;,
+    abmobs.model
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Observable(&quot;step = 0, infected = 0%&quot;)
+</code></pre><p>And lastly we use them to plot things in a figure</p><pre><code class="language-julia hljs">fig = Figure(size = (600, 400))
+ax = Axis(fig[1, 1]; title, xlabel = &quot;City&quot;, ylabel = &quot;Population&quot;)
+barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
+fig</code></pre><img src="4fac24b3.png" alt="Example block output"/><p>Now we can even make an animation of it</p><pre><code class="language-julia hljs">record(fig, &quot;covid_evolution.mp4&quot;; framerate = 5) do io
+    for j in 1:30
+        recordframe!(io)
+        Agents.step!(abmobs, 1)
+    end
+    recordframe!(io)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;covid_evolution.mp4&quot;</code></pre><video width="auto" controls autoplay loop>
+<source src="../covid_evolution.mp4" type="video/mp4">
+</video><p>One can really see &quot;explosive growth&quot; in this animation. Things look quite calm for a while and then suddenly supermarkets have no toilet paper anymore!</p><h2 id="Exponential-growth"><a class="docs-heading-anchor" href="#Exponential-growth">Exponential growth</a><a id="Exponential-growth-1"></a><a class="docs-heading-anchor-permalink" href="#Exponential-growth" title="Permalink"></a></h2><p>We now run the model and collect data. We define two useful functions for data collection:</p><pre><code class="language-julia hljs">infected(x) = count(i == :I for i in x)
+recovered(x) = count(i == :R for i in x)</code></pre><p>and then collect data</p><pre><code class="language-julia hljs">model = model_initiation(; params...)
+
+to_collect = [(:status, f) for f in (infected, recovered, length)]
+data, _ = run!(model, 100; adata = to_collect)
+data[1:10, :]</code></pre><div><div style = "float: left;"><span>10×4 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">time</th><th style = "text-align: left;">infected_status</th><th style = "text-align: left;">recovered_status</th><th style = "text-align: left;">length_status</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th><th title = "Int64" style = "text-align: left;">Int64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">0</td><td style = "text-align: right;">1</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">1</td><td style = "text-align: right;">2</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: right;">2</td><td style = "text-align: right;">4</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: right;">3</td><td style = "text-align: right;">10</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: right;">4</td><td style = "text-align: right;">32</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">6</td><td style = "text-align: right;">5</td><td style = "text-align: right;">98</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">7</td><td style = "text-align: right;">6</td><td style = "text-align: right;">281</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">8</td><td style = "text-align: right;">7</td><td style = "text-align: right;">829</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">9</td><td style = "text-align: right;">8</td><td style = "text-align: right;">2376</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">10</td><td style = "text-align: right;">9</td><td style = "text-align: right;">4256</td><td style = "text-align: right;">0</td><td style = "text-align: right;">28540</td></tr></tbody></table></div><p>We now plot how quantities evolved in time to show the exponential growth of the virus</p><pre><code class="language-julia hljs">N = sum(model.Ns) # Total initial population
+fig = Figure(size = (600, 400))
+ax = fig[1, 1] = Axis(fig, xlabel = &quot;steps&quot;, ylabel = &quot;log10(count)&quot;)
+li = lines!(ax, data.time, log10.(data[:, dataname((:status, infected))]), color = :blue)
+lr = lines!(ax, data.time, log10.(data[:, dataname((:status, recovered))]), color = :red)
+dead = log10.(N .- data[:, dataname((:status, length))])
+ld = lines!(ax, data.time, dead, color = :green)
+Legend(fig[1, 2], [li, lr, ld], [&quot;infected&quot;, &quot;recovered&quot;, &quot;dead&quot;])
+fig</code></pre><img src="d9557b5a.png" alt="Example block output"/><p>The exponential growth is clearly visible since the logarithm of the number of infected increases linearly, until everyone is infected.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../flock/">Flocking model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Sunday 6 October 2024 11:48">Sunday 6 October 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
