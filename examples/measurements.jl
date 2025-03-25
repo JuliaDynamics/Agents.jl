@@ -106,6 +106,8 @@ function update_surface_temperature!(pos, model)
         absorbed_luminosity = (1 - daisy.albedo) * model.solar_luminosity
     end
     ## Here we changed the rule to not use `log` because it isn't defined for negative numbers!
+    ## We also need to somehow extract a number from the uncertain number, because boolean
+    ## comparisons are not defined on uncertain numbers.
     local_heating = meanval(absorbed_luminosity) > 0 ? 72 *(2absorbed_luminosity - 1.8) + 80 : 80
     model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
 end
@@ -145,20 +147,21 @@ function daisyworld(;
         ratio = 0.5, temperature = fill(starting_temperature, griddims)
     )
 
-    model = StandardABM(Daisy, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
+    T = typeof(albedo_black)
+    model = StandardABM(Daisy{T}, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
 
     ## populate the model with random white daisies
     grid = collect(positions(model))
     L = length(grid)
     white_positions = sample(rng, grid, round(Int, init_white*L); replace = false)
     for wp in white_positions
-        add_agent!(wp, Daisy, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
+        add_agent!(wp, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
     ## and black daisies
     possible_black = setdiff(grid, white_positions)
     black_positions = sample(rng, possible_black, Int(init_black*L); replace = false)
     for bp in black_positions
-        add_agent!(bp, Daisy, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
+        add_agent!(bp, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end
 
     for p in positions(model)
@@ -213,11 +216,11 @@ end
 
 run_plot_daisyworld()
 
-# Right, this looks great! As expected, there is no band plot showed in the temperature
+# Right, this looks great! As expected, there is no band plot shown in the temperature
 # axis as there is no uncertainty yet. Let's change that!
 
-# %%
-# ## Running Daisyworld without uncertainty
+# %% #src
+# ## Running Daisyworld with uncertainty
 
 # All we have to do to enable uncertainty is change the daisy albedos and starting
 # temperature into numbers with uncertainty. This is as simple as changing three keywords:
