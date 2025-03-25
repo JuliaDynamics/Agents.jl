@@ -11,7 +11,7 @@
   journal = {{SIMULATION}},
   volume = {0},
   number = {0},
-}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/12746cf63713a3f861e48b73e93b2d1ec7d85701/src/Agents.jl#L4-L46">source</a></section></article><div class="admonition is-info"><header class="admonition-header">Star us on GitHub!</header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success"><header class="admonition-header">Latest news: Agents.jl v6.0</header><div class="admonition-body"><p>This is a new major release of Agents.jl with great new content and massive performance increases all across the board! Please see the online <a href="https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md">CHANGELOG</a> for a full list of changes. The most noteworthy ones are:</p><ul><li>A new macro <code>@multiagent</code> allows to run multi-agent simulations more efficiently.</li><li>A new experimental model type <code>EventQueueABM</code> has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of &quot;Gillespie-like&quot; models.</li><li><code>AgentBasedModel</code> defines an API that can be extended by other models.</li><li>Stronger inheritance capabilities in <code>@agent</code>.</li><li>Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.</li></ul></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><h3 id="Software-quality"><a class="docs-heading-anchor" href="#Software-quality">Software quality</a><a id="Software-quality-1"></a><a class="docs-heading-anchor-permalink" href="#Software-quality" title="Permalink"></a></h3><ul><li>Free and open source.</li><li>Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.</li><li>Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>User-created models typically have much smaller source code versus implementations in other open source ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>High quality, extensive documentation featuring tutorials, example ABM implementations, an <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/">extra zoo of ABM examples</a>, and integration examples with other Julia packages</li></ul><video width="auto" controls autoplay loop>
+}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/7296f35aae1e9ef6f8f043523a9cdc5314d01e83/src/Agents.jl#L4-L46">source</a></section></article><div class="admonition is-info"><header class="admonition-header">Star us on GitHub!</header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success"><header class="admonition-header">Latest news: Agents.jl v6.0</header><div class="admonition-body"><p>This is a new major release of Agents.jl with great new content and massive performance increases all across the board! Please see the online <a href="https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md">CHANGELOG</a> for a full list of changes. The most noteworthy ones are:</p><ul><li>A new macro <code>@multiagent</code> allows to run multi-agent simulations more efficiently.</li><li>A new experimental model type <code>EventQueueABM</code> has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of &quot;Gillespie-like&quot; models.</li><li><code>AgentBasedModel</code> defines an API that can be extended by other models.</li><li>Stronger inheritance capabilities in <code>@agent</code>.</li><li>Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.</li></ul></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><h3 id="Software-quality"><a class="docs-heading-anchor" href="#Software-quality">Software quality</a><a id="Software-quality-1"></a><a class="docs-heading-anchor-permalink" href="#Software-quality" title="Permalink"></a></h3><ul><li>Free and open source.</li><li>Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.</li><li>Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>User-created models typically have much smaller source code versus implementations in other open source ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>High quality, extensive documentation featuring tutorials, example ABM implementations, an <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/">extra zoo of ABM examples</a>, and integration examples with other Julia packages</li></ul><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
 </video><h3 id="Agent-based-modelling"><a class="docs-heading-anchor" href="#Agent-based-modelling">Agent based modelling</a><a id="Agent-based-modelling-1"></a><a class="docs-heading-anchor-permalink" href="#Agent-based-modelling" title="Permalink"></a></h3><ul><li>Universal model structure where agents are identified by a unique id: <a href="api/#Agents.AgentBasedModel"><code>AgentBasedModel</code></a>.</li><li>Extendable <a href="api/#API">API</a> that provides out of the box thousands of possible agent actions.</li><li>Support for many types of space: arbitrary graphs, regular grids, continuous space</li><li>Support for simulations on Open Street Maps including support for utilizing the road&#39;s max speed limit, finding nearby agents/roads/destinations and pathfinding</li><li>Multi-agent support, for interactions between disparate agent species</li><li>Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)</li><li>Automatic data collection in a <code>DataFrame</code> at desired intervals</li><li>Aggregating collected data during model evolution</li><li>Distributed computing</li><li>Batch running and batch data collection</li><li>Extensive pathfinding capabilities in continuous or discrete spaces</li><li>Customizable visualization support for all kinds of models via the <a href="https://makie.juliaplots.org/stable/">Makie</a> ecosystem: publication-quality graphics and video output</li><li>Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:</li></ul><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
@@ -28,7 +28,7 @@
   volume = {0},
   number = {0},
 }</code></pre><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of Agents.jl was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/work/Agents.jl/Agents.jl/docs/Project.toml`
-  <span class="sgr90">[46ada45e] </span>Agents v6.2.8 `~/work/Agents.jl/Agents.jl`
+  <span class="sgr90">[46ada45e] </span>Agents v6.2.9 `~/work/Agents.jl/Agents.jl`
   <span class="sgr90">[88acaeb2] </span>AgentsExampleZoo v0.1.2
   <span class="sgr90">[6e4b80f9] </span>BenchmarkTools v1.6.0
   <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.3
@@ -47,14 +47,14 @@
 <span class="sgr32">⌃</span> <span class="sgr90">[1ecd5474] </span>GraphMakie v0.5.12
   <span class="sgr90">[bd48cda9] </span>GraphRecipes v0.5.13
   <span class="sgr90">[86223c79] </span>Graphs v1.12.0
-  <span class="sgr90">[6218d12a] </span>ImageMagick v1.4.0
+  <span class="sgr90">[6218d12a] </span>ImageMagick v1.4.1
   <span class="sgr90">[d1922b25] </span>LightOSM v0.3.1
   <span class="sgr90">[f56206fc] </span>LightSumTypes v5.1.0
   <span class="sgr90">[98b081ad] </span>Literate v2.20.1
   <span class="sgr90">[eff96d63] </span>Measurements v2.12.0
   <span class="sgr90">[0987c9cc] </span>MonteCarloMeasurements v1.4.5
   <span class="sgr90">[76b6901f] </span>OSMMakie v0.0.10
-  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v6.92.0
+  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v6.93.0
   <span class="sgr90">[3cdcf5f2] </span>RecipesBase v1.3.4
   <span class="sgr90">[47aef6b3] </span>SimpleWeightedGraphs v1.5.0
   <span class="sgr90">[90137ffa] </span>StaticArrays v1.9.13
@@ -83,7 +83,7 @@ Environment:
   <span class="sgr90">[7d9f7c33] </span>Accessors v0.1.42
   <span class="sgr90">[79e6a3ab] </span>Adapt v4.3.0
   <span class="sgr90">[35492f91] </span>AdaptivePredicates v1.2.0
-  <span class="sgr90">[46ada45e] </span>Agents v6.2.8 `~/work/Agents.jl/Agents.jl`
+  <span class="sgr90">[46ada45e] </span>Agents v6.2.9 `~/work/Agents.jl/Agents.jl`
   <span class="sgr90">[88acaeb2] </span>AgentsExampleZoo v0.1.2
   <span class="sgr90">[66dad0bd] </span>AliasTables v1.1.3
   <span class="sgr90">[27a7e980] </span>Animations v0.4.2
@@ -132,7 +132,7 @@ Environment:
   <span class="sgr90">[864edb3b] </span>DataStructures v0.18.22
   <span class="sgr90">[e2d170a0] </span>DataValueInterfaces v1.0.0
   <span class="sgr90">[927a84f5] </span>DelaunayTriangulation v1.6.4
-  <span class="sgr90">[2b5f629d] </span>DiffEqBase v6.165.1
+  <span class="sgr90">[2b5f629d] </span>DiffEqBase v6.167.0
   <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.3.0
   <span class="sgr90">[163ba53b] </span>DiffResults v1.1.0
   <span class="sgr90">[b552c78f] </span>DiffRules v1.15.1
@@ -195,13 +195,13 @@ Environment:
   <span class="sgr90">[c817782e] </span>ImageBase v0.1.7
   <span class="sgr90">[a09fc81d] </span>ImageCore v0.10.5
   <span class="sgr90">[82e4d734] </span>ImageIO v0.6.9
-  <span class="sgr90">[6218d12a] </span>ImageMagick v1.4.0
+  <span class="sgr90">[6218d12a] </span>ImageMagick v1.4.1
   <span class="sgr90">[bc367c6b] </span>ImageMetadata v0.9.10
   <span class="sgr90">[9b13fd28] </span>IndirectArrays v1.0.0
   <span class="sgr90">[d25df0c9] </span>Inflate v0.1.5
   <span class="sgr90">[842dd82b] </span>InlineStrings v1.4.3
   <span class="sgr90">[a98d9a8b] </span>Interpolations v0.15.1
-  <span class="sgr90">[d1acc4aa] </span>IntervalArithmetic v0.22.25
+  <span class="sgr90">[d1acc4aa] </span>IntervalArithmetic v0.22.26
   <span class="sgr90">[8197267c] </span>IntervalSets v0.7.10
   <span class="sgr90">[3587e190] </span>InverseFunctions v0.1.17
   <span class="sgr90">[41ab1584] </span>InvertedIndices v1.3.1
@@ -226,7 +226,7 @@ Environment:
   <span class="sgr90">[9c8b4983] </span>LightXML v0.9.1
   <span class="sgr90">[87fe0de2] </span>LineSearch v0.1.4
   <span class="sgr90">[d3d80556] </span>LineSearches v7.3.0
-  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v3.6.0
+  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v3.7.0
   <span class="sgr90">[98b081ad] </span>Literate v2.20.1
   <span class="sgr90">[2ab3a3ac] </span>LogExpFunctions v0.3.29
   <span class="sgr90">[e6f89c97] </span>LoggingExtras v1.1.0
@@ -254,7 +254,7 @@ Environment:
   <span class="sgr90">[f09324ee] </span>Netpbm v1.1.1
   <span class="sgr90">[46757867] </span>NetworkLayout v0.4.9
   <span class="sgr90">[8913a72c] </span>NonlinearSolve v4.5.0
-  <span class="sgr90">[be0214bd] </span>NonlinearSolveBase v1.5.0
+  <span class="sgr90">[be0214bd] </span>NonlinearSolveBase v1.5.1
   <span class="sgr90">[5959db7a] </span>NonlinearSolveFirstOrder v1.3.0
   <span class="sgr90">[9a2c21bd] </span>NonlinearSolveQuasiNewton v1.2.0
   <span class="sgr90">[26075421] </span>NonlinearSolveSpectralMethods v1.1.0
@@ -265,16 +265,16 @@ Environment:
   <span class="sgr90">[52e1d378] </span>OpenEXR v0.3.3
   <span class="sgr90">[4d8831e6] </span>OpenSSL v1.4.3
   <span class="sgr90">[bac558e1] </span>OrderedCollections v1.8.0
-  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v6.92.0
+  <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v6.93.0
   <span class="sgr90">[89bda076] </span>OrdinaryDiffEqAdamsBashforthMoulton v1.2.0
   <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v1.3.0
-  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v1.19.0
+  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v1.20.0
   <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v1.3.0
   <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v1.4.0
   <span class="sgr90">[9286f039] </span>OrdinaryDiffEqExplicitRK v1.1.0
   <span class="sgr90">[e0540318] </span>OrdinaryDiffEqExponentialRK v1.4.0
   <span class="sgr90">[becaefa8] </span>OrdinaryDiffEqExtrapolation v1.5.0
-  <span class="sgr90">[5960d6e9] </span>OrdinaryDiffEqFIRK v1.8.0
+  <span class="sgr90">[5960d6e9] </span>OrdinaryDiffEqFIRK v1.9.0
   <span class="sgr90">[101fe9f7] </span>OrdinaryDiffEqFeagin v1.1.0
   <span class="sgr90">[d3585ca7] </span>OrdinaryDiffEqFunctionMap v1.1.1
   <span class="sgr90">[d28bc4f8] </span>OrdinaryDiffEqHighOrderRK v1.1.0
@@ -288,7 +288,7 @@ Environment:
   <span class="sgr90">[5b33eab2] </span>OrdinaryDiffEqPRK v1.1.0
   <span class="sgr90">[04162be5] </span>OrdinaryDiffEqQPRK v1.1.0
   <span class="sgr90">[af6ede74] </span>OrdinaryDiffEqRKN v1.1.0
-  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v1.7.0
+  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v1.8.0
   <span class="sgr90">[2d112036] </span>OrdinaryDiffEqSDIRK v1.3.0
   <span class="sgr90">[669c94d9] </span>OrdinaryDiffEqSSPRK v1.2.1
   <span class="sgr90">[e3e12d00] </span>OrdinaryDiffEqStabilizedIRK v1.3.0
@@ -337,9 +337,9 @@ Environment:
   <span class="sgr90">[94e857df] </span>SIMDTypes v0.1.0
   <span class="sgr90">[476501e8] </span>SLEEFPirates v0.6.43
   <span class="sgr90">[322a6be2] </span>Sass v0.2.0
-  <span class="sgr90">[0bca4576] </span>SciMLBase v2.77.1
+  <span class="sgr90">[0bca4576] </span>SciMLBase v2.79.0
   <span class="sgr90">[19f34311] </span>SciMLJacobianOperators v0.1.1
-  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v0.3.12
+  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v0.3.13
   <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.7.0
   <span class="sgr90">[6c6a2e73] </span>Scratch v1.2.1
   <span class="sgr90">[91c51154] </span>SentinelArrays v1.4.8
@@ -411,7 +411,7 @@ Environment:
   <span class="sgr90">[61579ee1] </span>Ghostscript_jll v9.55.0+4
   <span class="sgr90">[59f7168a] </span>Giflib_jll v5.2.3+0
   <span class="sgr90">[f8c6e375] </span>Git_jll v2.47.1+0
-  <span class="sgr90">[7746bdde] </span>Glib_jll v2.82.4+0
+<span class="sgr32">⌃</span> <span class="sgr90">[7746bdde] </span>Glib_jll v2.82.4+0
   <span class="sgr90">[3b182d85] </span>Graphite2_jll v1.3.14+1
   <span class="sgr90">[528830af] </span>Gumbo_jll v0.10.2+0
   <span class="sgr90">[2e76f6c2] </span>HarfBuzz_jll v8.5.0+0
@@ -529,4 +529,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.11.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.59.0+0
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.4.0+2
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.8/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.8/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Saturday 22 March 2025 08:59">Saturday 22 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Tuesday 25 March 2025 14:41">Tuesday 25 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
