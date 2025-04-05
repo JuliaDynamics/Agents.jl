@@ -19,12 +19,12 @@ using Agents
 using Random, LinearAlgebra
 
 @agent struct Bird(ContinuousAgent{2,Float64})
-    speed::Float64
-    cohere_factor::Float64
-    separation::Float64
-    separate_factor::Float64
-    match_factor::Float64
-    visual_distance::Float64
+    const speed::Float64
+    const cohere_factor::Float64
+    const separation::Float64
+    const separate_factor::Float64
+    const match_factor::Float64
+    const visual_distance::Float64
 end
 
 # The fields `id` and `pos`, which are required for agents on [`ContinuousSpace`](@ref),
@@ -44,7 +44,7 @@ end
 # a model object using default values.
 function initialize_model(;
     n_birds = 100,
-    speed = 1.5,
+    speed = 1.0,
     cohere_factor = 0.1,
     separation = 2.0,
     separate_factor = 0.25,
@@ -53,12 +53,12 @@ function initialize_model(;
     extent = (100, 100),
     seed = 42,
 )
-    space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
+    space2d = ContinuousSpace(extent; spacing = visual_distance / 1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = StandardABM(Bird, space2d; rng, agent_step!, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, agent_step!, container = Vector, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
+        vel = SVector{2}(rand(abmrng(model)) * 2 - 1 for _ in 1:2)
         add_agent!(
             model,
             vel,
@@ -78,32 +78,31 @@ end
 # according to the three rules defined above.
 function agent_step!(bird, model)
     ## Obtain the ids of neighbors within the bird's visual distance
-    neighbor_ids = nearby_ids(bird, model, bird.visual_distance)
+    neighbor_agents = nearby_agents(bird, model, bird.visual_distance)
     N = 0
-    match = separate = cohere = (0.0, 0.0)
+    match = separate = cohere = SVector{2}(0.0, 0.0)
     ## Calculate behaviour properties based on neighbors
-    for id in neighbor_ids
+    for neighbor in neighbor_agents
         N += 1
-        neighbor = model[id].pos
-        heading = get_direction(bird.pos, neighbor, model)
+        heading = get_direction(bird.pos, neighbor.pos, model)
 
         ## `cohere` computes the average position of neighboring birds
-        cohere = cohere .+ heading
-        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
-            ## `separate` repels the bird away from neighboring birds
-            separate = separate .- heading
-        end
+        cohere += heading
         ## `match` computes the average trajectory of neighboring birds
-        match = match .+ model[id].vel
+        match += neighbor.vel
+        if sum(heading .^ 2) < bird.separation^2
+            ## `separate` repels the bird away from neighboring birds
+            separate -= heading
+        end
     end
-    N = max(N, 1)
+
     ## Normalise results based on model input and neighbor count
-    cohere = cohere ./ N .* bird.cohere_factor
-    separate = separate ./ N .* bird.separate_factor
-    match = match ./ N .* bird.match_factor
+    cohere *= bird.cohere_factor
+    separate *= bird.separate_factor
+    match *= bird.match_factor
     ## Compute velocity based on rules defined above
-    bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
-    bird.vel = bird.vel ./ norm(bird.vel)
+    bird.vel += (cohere + separate + match) / max(N, 1)
+    bird.vel /= norm(bird.vel)
     ## Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
