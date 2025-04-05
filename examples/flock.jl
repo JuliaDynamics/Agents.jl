@@ -58,7 +58,7 @@ function initialize_model(;
 
     model = StandardABM(Bird, space2d; rng, agent_step!, container = Vector, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
-        vel = SVector{2}(rand(abmrng(model)) * 2 - 1 for _ in 1:2)
+        vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
             model,
             vel,
