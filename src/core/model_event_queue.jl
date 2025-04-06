@@ -154,7 +154,13 @@ function EventQueueABM(
         autogenerate_after_action = true,
     ) where {A<:AbstractAgent,S<:SpaceType,P,R<:AbstractRNG}
     C = construct_agent_container(container, A)
-    agents = C()
+    if C <: StructVector
+        fields_with_types = zip(fieldnames(A), fieldtypes(A))
+	    tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
+	    agents = C(tuple_init)
+    else
+        agents = C()
+    end
     events = SizedVector{length(events), Union{typeof.(events)...}}(events...)
 
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
