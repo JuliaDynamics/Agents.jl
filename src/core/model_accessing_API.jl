@@ -2,10 +2,14 @@ const DictABM = Union{StandardABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
                       EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,<:AbstractVector{A}} where {S,A},
                      EventQueueABM{S,A,<:AbstractVector{A}} where {S,A}}
+const StructABM = Union{StandardABM{S,A,<:StructVector{A}} where {S,A},
+                         EventQueueABM{S,A,<:StructVector{A}} where {S,A}}
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::VecABM) = nagents(model) + 1
 hasid(model::VecABM, id::Int) = id ≤ nagents(model)
+nextid(model::StructABM) = nagents(model) + 1
+hasid(model::StructABM, id::Int) = id ≤ nagents(model)
 
 function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     if haskey(agent_container(model), agent.id)
@@ -27,6 +31,14 @@ function add_agent_to_model!(agent::AbstractAgent, model::VecABM)
     return
 end
 
+function add_agent_to_model!(agent::AbstractAgent, model::StructABM)
+    agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
+    tuple_agent = NamedTuple(x => getfield(agent, x) for x in fieldnames(typeof(agent)))
+    push!(agent_container(model), tuple_agent)
+    extra_actions_after_add!(tuple_agent, model)
+    return
+end
+
 # This is extended for event based models (in their file)
 extra_actions_after_add!(agent, model::StandardABM) = nothing
 
@@ -36,6 +48,10 @@ function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
 end
 
 function remove_agent_from_model!(agent::AbstractAgent, model::VecABM)
+    error("Cannot remove agents in a `StandardABM` with a vector container.")
+end
+
+function remove_agent_from_model!(agent::AbstractAgent, model::StructABM)
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
