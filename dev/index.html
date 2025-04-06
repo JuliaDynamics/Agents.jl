@@ -11,7 +11,7 @@
   journal = {{SIMULATION}},
   volume = {0},
   number = {0},
-}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/7296f35aae1e9ef6f8f043523a9cdc5314d01e83/src/Agents.jl#L4-L46">source</a></section></article><div class="admonition is-info"><header class="admonition-header">Star us on GitHub!</header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success"><header class="admonition-header">Latest news: Agents.jl v6.0</header><div class="admonition-body"><p>This is a new major release of Agents.jl with great new content and massive performance increases all across the board! Please see the online <a href="https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md">CHANGELOG</a> for a full list of changes. The most noteworthy ones are:</p><ul><li>A new macro <code>@multiagent</code> allows to run multi-agent simulations more efficiently.</li><li>A new experimental model type <code>EventQueueABM</code> has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of &quot;Gillespie-like&quot; models.</li><li><code>AgentBasedModel</code> defines an API that can be extended by other models.</li><li>Stronger inheritance capabilities in <code>@agent</code>.</li><li>Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.</li></ul></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><h3 id="Software-quality"><a class="docs-heading-anchor" href="#Software-quality">Software quality</a><a id="Software-quality-1"></a><a class="docs-heading-anchor-permalink" href="#Software-quality" title="Permalink"></a></h3><ul><li>Free and open source.</li><li>Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.</li><li>Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>User-created models typically have much smaller source code versus implementations in other open source ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>High quality, extensive documentation featuring tutorials, example ABM implementations, an <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/">extra zoo of ABM examples</a>, and integration examples with other Julia packages</li></ul><video width="auto" controls autoplay loop>
+}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/dc38b5a51bbe1f605fc85c0fb7a0f757e56211eb/src/Agents.jl#L4-L46">source</a></section></article><div class="admonition is-info"><header class="admonition-header">Star us on GitHub!</header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success"><header class="admonition-header">Latest news: Agents.jl v6.0</header><div class="admonition-body"><p>This is a new major release of Agents.jl with great new content and massive performance increases all across the board! Please see the online <a href="https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md">CHANGELOG</a> for a full list of changes. The most noteworthy ones are:</p><ul><li>A new macro <code>@multiagent</code> allows to run multi-agent simulations more efficiently.</li><li>A new experimental model type <code>EventQueueABM</code> has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of &quot;Gillespie-like&quot; models.</li><li><code>AgentBasedModel</code> defines an API that can be extended by other models.</li><li>Stronger inheritance capabilities in <code>@agent</code>.</li><li>Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.</li></ul></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><h3 id="Software-quality"><a class="docs-heading-anchor" href="#Software-quality">Software quality</a><a id="Software-quality-1"></a><a class="docs-heading-anchor-permalink" href="#Software-quality" title="Permalink"></a></h3><ul><li>Free and open source.</li><li>Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.</li><li>Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>User-created models typically have much smaller source code versus implementations in other open source ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>)</li><li>High quality, extensive documentation featuring tutorials, example ABM implementations, an <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/">extra zoo of ABM examples</a>, and integration examples with other Julia packages</li></ul><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
 </video><h3 id="Agent-based-modelling"><a class="docs-heading-anchor" href="#Agent-based-modelling">Agent based modelling</a><a id="Agent-based-modelling-1"></a><a class="docs-heading-anchor-permalink" href="#Agent-based-modelling" title="Permalink"></a></h3><ul><li>Universal model structure where agents are identified by a unique id: <a href="api/#Agents.AgentBasedModel"><code>AgentBasedModel</code></a>.</li><li>Extendable <a href="api/#API">API</a> that provides out of the box thousands of possible agent actions.</li><li>Support for many types of space: arbitrary graphs, regular grids, continuous space</li><li>Support for simulations on Open Street Maps including support for utilizing the road&#39;s max speed limit, finding nearby agents/roads/destinations and pathfinding</li><li>Multi-agent support, for interactions between disparate agent species</li><li>Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)</li><li>Automatic data collection in a <code>DataFrame</code> at desired intervals</li><li>Aggregating collected data during model evolution</li><li>Distributed computing</li><li>Batch running and batch data collection</li><li>Extensive pathfinding capabilities in continuous or discrete spaces</li><li>Customizable visualization support for all kinds of models via the <a href="https://makie.juliaplots.org/stable/">Makie</a> ecosystem: publication-quality graphics and video output</li><li>Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:</li></ul><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
@@ -39,17 +39,17 @@
   <span class="sgr90">[927a84f5] </span>DelaunayTriangulation v1.6.4
   <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.3.0
   <span class="sgr90">[31c24e10] </span>Distributions v0.25.118
-  <span class="sgr90">[e30172f5] </span>Documenter v1.9.0
+  <span class="sgr90">[e30172f5] </span>Documenter v1.10.1
   <span class="sgr90">[35a29f4d] </span>DocumenterTools v0.1.20
   <span class="sgr90">[634d3b9d] </span>DrWatson v2.18.0
   <span class="sgr90">[5789e2e9] </span>FileIO v1.17.0
 <span class="sgr32">⌃</span> <span class="sgr90">[e9467ef8] </span>GLMakie v0.10.18
 <span class="sgr32">⌃</span> <span class="sgr90">[1ecd5474] </span>GraphMakie v0.5.12
   <span class="sgr90">[bd48cda9] </span>GraphRecipes v0.5.13
-  <span class="sgr90">[86223c79] </span>Graphs v1.12.0
+  <span class="sgr90">[86223c79] </span>Graphs v1.12.1
   <span class="sgr90">[6218d12a] </span>ImageMagick v1.4.1
   <span class="sgr90">[d1922b25] </span>LightOSM v0.3.1
-  <span class="sgr90">[f56206fc] </span>LightSumTypes v5.1.0
+  <span class="sgr90">[f56206fc] </span>LightSumTypes v5.2.0
   <span class="sgr90">[98b081ad] </span>Literate v2.20.1
   <span class="sgr90">[eff96d63] </span>Measurements v2.12.0
   <span class="sgr90">[0987c9cc] </span>MonteCarloMeasurements v1.4.5
@@ -98,7 +98,7 @@ Environment:
   <span class="sgr90">[d1d4a3ce] </span>BitFlags v0.1.9
   <span class="sgr90">[62783981] </span>BitTwiddlingConvenienceFunctions v0.1.6
   <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.3
-  <span class="sgr90">[70df07ce] </span>BracketingNonlinearSolve v1.1.1
+  <span class="sgr90">[70df07ce] </span>BracketingNonlinearSolve v1.1.2
   <span class="sgr90">[fa961155] </span>CEnum v0.5.0
   <span class="sgr90">[2a0fbf3d] </span>CPUSummary v0.2.6
   <span class="sgr90">[a9c8d775] </span>CPUTime v1.0.0
@@ -108,7 +108,7 @@ Environment:
   <span class="sgr90">[49dc2e85] </span>Calculus v0.5.2
   <span class="sgr90">[69e1c6dd] </span>CellListMap v0.9.8
   <span class="sgr90">[d360d2e6] </span>ChainRulesCore v1.25.1
-  <span class="sgr90">[ae650224] </span>ChunkSplitters v3.1.1
+  <span class="sgr90">[ae650224] </span>ChunkSplitters v3.1.2
   <span class="sgr90">[fb6a15b2] </span>CloseOpenIntervals v0.1.13
   <span class="sgr90">[944b1d66] </span>CodecZlib v0.7.8
   <span class="sgr90">[a2cac450] </span>ColorBrewer v0.4.1
@@ -132,18 +132,18 @@ Environment:
   <span class="sgr90">[864edb3b] </span>DataStructures v0.18.22
   <span class="sgr90">[e2d170a0] </span>DataValueInterfaces v1.0.0
   <span class="sgr90">[927a84f5] </span>DelaunayTriangulation v1.6.4
-  <span class="sgr90">[2b5f629d] </span>DiffEqBase v6.167.0
+  <span class="sgr90">[2b5f629d] </span>DiffEqBase v6.167.2
   <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.3.0
   <span class="sgr90">[163ba53b] </span>DiffResults v1.1.0
   <span class="sgr90">[b552c78f] </span>DiffRules v1.15.1
-  <span class="sgr90">[a0c0ee7d] </span>DifferentiationInterface v0.6.48
+  <span class="sgr90">[a0c0ee7d] </span>DifferentiationInterface v0.6.50
   <span class="sgr90">[b4f34e82] </span>Distances v0.10.12
   <span class="sgr90">[31c24e10] </span>Distributions v0.25.118
-  <span class="sgr90">[ffbed154] </span>DocStringExtensions v0.9.3
-  <span class="sgr90">[e30172f5] </span>Documenter v1.9.0
+  <span class="sgr90">[ffbed154] </span>DocStringExtensions v0.9.4
+  <span class="sgr90">[e30172f5] </span>Documenter v1.10.1
   <span class="sgr90">[35a29f4d] </span>DocumenterTools v0.1.20
   <span class="sgr90">[634d3b9d] </span>DrWatson v2.18.0
-  <span class="sgr90">[4e289a0a] </span>EnumX v1.0.4
+  <span class="sgr90">[4e289a0a] </span>EnumX v1.0.5
   <span class="sgr90">[f151be2c] </span>EnzymeCore v0.8.8
   <span class="sgr90">[429591f6] </span>ExactPredicates v2.2.8
   <span class="sgr90">[460bff9d] </span>ExceptionUnwrapping v0.1.11
@@ -155,7 +155,7 @@ Environment:
   <span class="sgr90">[7034ab61] </span>FastBroadcast v0.3.5
   <span class="sgr90">[9aa1b823] </span>FastClosures v0.3.2
   <span class="sgr90">[442a2c76] </span>FastGaussQuadrature v1.0.2
-  <span class="sgr90">[a4df4552] </span>FastPower v1.1.1
+  <span class="sgr90">[a4df4552] </span>FastPower v1.1.2
   <span class="sgr90">[5789e2e9] </span>FileIO v1.17.0
 <span class="sgr33">⌅</span> <span class="sgr90">[8fc22ac5] </span>FilePaths v0.8.3
   <span class="sgr90">[48062228] </span>FilePathsBase v0.9.24
@@ -163,7 +163,7 @@ Environment:
   <span class="sgr90">[6a86dc24] </span>FiniteDiff v2.27.0
   <span class="sgr90">[53c48c17] </span>FixedPointNumbers v0.8.5
   <span class="sgr90">[1fa38f19] </span>Format v1.3.7
-  <span class="sgr90">[f6369f11] </span>ForwardDiff v0.10.38
+<span class="sgr33">⌅</span> <span class="sgr90">[f6369f11] </span>ForwardDiff v0.10.38
   <span class="sgr90">[b38be410] </span>FreeType v4.1.1
   <span class="sgr90">[663a7486] </span>FreeTypeAbstraction v0.10.6
   <span class="sgr90">[069b7b12] </span>FunctionWrappers v1.1.3
@@ -181,7 +181,7 @@ Environment:
 <span class="sgr32">⌃</span> <span class="sgr90">[1ecd5474] </span>GraphMakie v0.5.12
   <span class="sgr90">[bd48cda9] </span>GraphRecipes v0.5.13
   <span class="sgr90">[a2bd30eb] </span>Graphics v1.1.3
-  <span class="sgr90">[86223c79] </span>Graphs v1.12.0
+  <span class="sgr90">[86223c79] </span>Graphs v1.12.1
   <span class="sgr90">[3955a311] </span>GridLayoutBase v0.11.1
   <span class="sgr90">[42e2da0e] </span>Grisu v1.0.2
   <span class="sgr90">[708ec375] </span>Gumbo v0.8.3
@@ -201,7 +201,7 @@ Environment:
   <span class="sgr90">[d25df0c9] </span>Inflate v0.1.5
   <span class="sgr90">[842dd82b] </span>InlineStrings v1.4.3
   <span class="sgr90">[a98d9a8b] </span>Interpolations v0.15.1
-  <span class="sgr90">[d1acc4aa] </span>IntervalArithmetic v0.22.26
+  <span class="sgr90">[d1acc4aa] </span>IntervalArithmetic v0.22.28
   <span class="sgr90">[8197267c] </span>IntervalSets v0.7.10
   <span class="sgr90">[3587e190] </span>InverseFunctions v0.1.17
   <span class="sgr90">[41ab1584] </span>InvertedIndices v1.3.1
@@ -222,11 +222,11 @@ Environment:
   <span class="sgr90">[5078a376] </span>LazyArrays v2.6.1
   <span class="sgr90">[8cdb02fc] </span>LazyModules v0.3.1
   <span class="sgr90">[d1922b25] </span>LightOSM v0.3.1
-  <span class="sgr90">[f56206fc] </span>LightSumTypes v5.1.0
+  <span class="sgr90">[f56206fc] </span>LightSumTypes v5.2.0
   <span class="sgr90">[9c8b4983] </span>LightXML v0.9.1
   <span class="sgr90">[87fe0de2] </span>LineSearch v0.1.4
   <span class="sgr90">[d3d80556] </span>LineSearches v7.3.0
-  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v3.7.0
+  <span class="sgr90">[7ed4a6bd] </span>LinearSolve v3.7.2
   <span class="sgr90">[98b081ad] </span>Literate v2.20.1
   <span class="sgr90">[2ab3a3ac] </span>LogExpFunctions v0.3.29
   <span class="sgr90">[e6f89c97] </span>LoggingExtras v1.1.0
@@ -248,11 +248,11 @@ Environment:
   <span class="sgr90">[e94cdb99] </span>MosaicViews v0.3.4
   <span class="sgr90">[2e0e35c7] </span>Moshi v0.3.5
   <span class="sgr90">[46d2c3a1] </span>MuladdMacro v0.2.4
-  <span class="sgr90">[d41bc354] </span>NLSolversBase v7.9.0
-  <span class="sgr90">[77ba4419] </span>NaNMath v1.1.2
+  <span class="sgr90">[d41bc354] </span>NLSolversBase v7.9.1
+  <span class="sgr90">[77ba4419] </span>NaNMath v1.1.3
   <span class="sgr90">[b8a86587] </span>NearestNeighbors v0.4.21
   <span class="sgr90">[f09324ee] </span>Netpbm v1.1.1
-  <span class="sgr90">[46757867] </span>NetworkLayout v0.4.9
+  <span class="sgr90">[46757867] </span>NetworkLayout v0.4.10
   <span class="sgr90">[8913a72c] </span>NonlinearSolve v4.5.0
   <span class="sgr90">[be0214bd] </span>NonlinearSolveBase v1.5.1
   <span class="sgr90">[5959db7a] </span>NonlinearSolveFirstOrder v1.3.0
@@ -267,14 +267,14 @@ Environment:
   <span class="sgr90">[bac558e1] </span>OrderedCollections v1.8.0
   <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v6.93.0
   <span class="sgr90">[89bda076] </span>OrdinaryDiffEqAdamsBashforthMoulton v1.2.0
-  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v1.3.0
-  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v1.20.0
+  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v1.4.0
+  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v1.22.0
   <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v1.3.0
-  <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v1.4.0
+  <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v1.6.0
   <span class="sgr90">[9286f039] </span>OrdinaryDiffEqExplicitRK v1.1.0
   <span class="sgr90">[e0540318] </span>OrdinaryDiffEqExponentialRK v1.4.0
   <span class="sgr90">[becaefa8] </span>OrdinaryDiffEqExtrapolation v1.5.0
-  <span class="sgr90">[5960d6e9] </span>OrdinaryDiffEqFIRK v1.9.0
+  <span class="sgr90">[5960d6e9] </span>OrdinaryDiffEqFIRK v1.10.0
   <span class="sgr90">[101fe9f7] </span>OrdinaryDiffEqFeagin v1.1.0
   <span class="sgr90">[d3585ca7] </span>OrdinaryDiffEqFunctionMap v1.1.1
   <span class="sgr90">[d28bc4f8] </span>OrdinaryDiffEqHighOrderRK v1.1.0
@@ -282,13 +282,13 @@ Environment:
   <span class="sgr90">[521117fe] </span>OrdinaryDiffEqLinear v1.1.0
   <span class="sgr90">[1344f307] </span>OrdinaryDiffEqLowOrderRK v1.2.0
   <span class="sgr90">[b0944070] </span>OrdinaryDiffEqLowStorageRK v1.3.0
-  <span class="sgr90">[127b3ac7] </span>OrdinaryDiffEqNonlinearSolve v1.5.0
+  <span class="sgr90">[127b3ac7] </span>OrdinaryDiffEqNonlinearSolve v1.6.0
   <span class="sgr90">[c9986a66] </span>OrdinaryDiffEqNordsieck v1.1.0
   <span class="sgr90">[5dd0a6cf] </span>OrdinaryDiffEqPDIRK v1.3.0
   <span class="sgr90">[5b33eab2] </span>OrdinaryDiffEqPRK v1.1.0
   <span class="sgr90">[04162be5] </span>OrdinaryDiffEqQPRK v1.1.0
   <span class="sgr90">[af6ede74] </span>OrdinaryDiffEqRKN v1.1.0
-  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v1.8.0
+  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v1.9.0
   <span class="sgr90">[2d112036] </span>OrdinaryDiffEqSDIRK v1.3.0
   <span class="sgr90">[669c94d9] </span>OrdinaryDiffEqSSPRK v1.2.1
   <span class="sgr90">[e3e12d00] </span>OrdinaryDiffEqStabilizedIRK v1.3.0
@@ -296,7 +296,7 @@ Environment:
   <span class="sgr90">[fa646aed] </span>OrdinaryDiffEqSymplecticRK v1.3.0
   <span class="sgr90">[b1df2697] </span>OrdinaryDiffEqTsit5 v1.1.0
   <span class="sgr90">[79d7bb75] </span>OrdinaryDiffEqVerner v1.1.1
-  <span class="sgr90">[90014a1f] </span>PDMats v0.11.32
+  <span class="sgr90">[90014a1f] </span>PDMats v0.11.33
   <span class="sgr90">[f57f5aa1] </span>PNGFiles v0.4.4
   <span class="sgr90">[65ce6f38] </span>PackageExtensionCompat v1.0.2
   <span class="sgr90">[19eb6ba3] </span>Packing v0.5.1
@@ -310,11 +310,11 @@ Environment:
   <span class="sgr90">[647866c9] </span>PolygonOps v0.1.2
   <span class="sgr90">[3a141323] </span>PolynomialRoots v1.0.0
   <span class="sgr90">[2dfb63ee] </span>PooledArrays v1.4.3
-  <span class="sgr90">[d236fae5] </span>PreallocationTools v0.4.25
-  <span class="sgr90">[aea7be01] </span>PrecompileTools v1.2.1
+  <span class="sgr90">[d236fae5] </span>PreallocationTools v0.4.26
+<span class="sgr33">⌅</span> <span class="sgr90">[aea7be01] </span>PrecompileTools v1.2.1
   <span class="sgr90">[21216c6a] </span>Preferences v1.4.3
   <span class="sgr90">[08abe8d2] </span>PrettyTables v2.4.0
-  <span class="sgr90">[92933f4c] </span>ProgressMeter v1.10.2
+  <span class="sgr90">[92933f4c] </span>ProgressMeter v1.10.4
   <span class="sgr90">[43287f4e] </span>PtrArrays v1.3.0
   <span class="sgr90">[4b34888f] </span>QOI v1.0.1
   <span class="sgr90">[1fd47b50] </span>QuadGK v2.11.2
@@ -324,7 +324,7 @@ Environment:
   <span class="sgr90">[c84ed2f1] </span>Ratios v0.4.5
   <span class="sgr90">[c1ae055f] </span>RealDot v0.1.0
   <span class="sgr90">[3cdcf5f2] </span>RecipesBase v1.3.4
-  <span class="sgr90">[731186ca] </span>RecursiveArrayTools v3.31.1
+  <span class="sgr90">[731186ca] </span>RecursiveArrayTools v3.31.2
   <span class="sgr90">[189a3867] </span>Reexport v1.2.2
   <span class="sgr90">[2792f1a3] </span>RegistryInstances v0.1.0
   <span class="sgr90">[05181044] </span>RelocatableFolders v1.0.1
@@ -337,7 +337,7 @@ Environment:
   <span class="sgr90">[94e857df] </span>SIMDTypes v0.1.0
   <span class="sgr90">[476501e8] </span>SLEEFPirates v0.6.43
   <span class="sgr90">[322a6be2] </span>Sass v0.2.0
-  <span class="sgr90">[0bca4576] </span>SciMLBase v2.79.0
+  <span class="sgr90">[0bca4576] </span>SciMLBase v2.82.0
   <span class="sgr90">[19f34311] </span>SciMLJacobianOperators v0.1.1
   <span class="sgr90">[c0aeaf25] </span>SciMLOperators v0.3.13
   <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.7.0
@@ -355,7 +355,7 @@ Environment:
   <span class="sgr90">[45858cf5] </span>Sixel v0.1.3
   <span class="sgr90">[a2af1166] </span>SortingAlgorithms v1.2.1
   <span class="sgr90">[47a9eef4] </span>SparseDiffTools v2.24.0
-  <span class="sgr90">[0a514795] </span>SparseMatrixColorings v0.4.14
+  <span class="sgr90">[0a514795] </span>SparseMatrixColorings v0.4.16
   <span class="sgr90">[d4ead438] </span>SpatialIndexing v0.1.6
   <span class="sgr90">[276daf66] </span>SpecialFunctions v2.5.0
   <span class="sgr90">[860ef19b] </span>StableRNGs v1.0.2
@@ -368,7 +368,7 @@ Environment:
   <span class="sgr90">[10745b16] </span>Statistics v1.11.1
   <span class="sgr90">[82ae8749] </span>StatsAPI v1.7.0
   <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.4
-  <span class="sgr90">[4c63d2b9] </span>StatsFuns v1.3.2
+  <span class="sgr90">[4c63d2b9] </span>StatsFuns v1.4.0
   <span class="sgr90">[ff63dad9] </span>StreamSampling v0.6.8
   <span class="sgr90">[7792a7ef] </span>StrideArraysCore v0.5.7
   <span class="sgr90">[892a3eda] </span>StringManipulation v0.4.1
@@ -384,7 +384,7 @@ Environment:
   <span class="sgr90">[3bb67fe8] </span>TranscodingStreams v0.11.3
   <span class="sgr90">[981d1d27] </span>TriplotBase v0.1.0
   <span class="sgr90">[781d530d] </span>TruncatedStacktraces v1.4.0
-  <span class="sgr90">[5c2747f8] </span>URIs v1.5.1
+  <span class="sgr90">[5c2747f8] </span>URIs v1.5.2
   <span class="sgr90">[3a884ed6] </span>UnPack v1.0.2
   <span class="sgr90">[1cfade01] </span>UnicodeFun v0.4.1
   <span class="sgr90">[1986cc42] </span>Unitful v1.22.0
@@ -397,22 +397,22 @@ Environment:
   <span class="sgr90">[6e34b625] </span>Bzip2_jll v1.0.9+0
   <span class="sgr90">[4e9b3aee] </span>CRlibm_jll v1.0.1+0
   <span class="sgr90">[83423d85] </span>Cairo_jll v1.18.4+0
-  <span class="sgr90">[ee1fde0b] </span>Dbus_jll v1.14.10+0
+  <span class="sgr90">[ee1fde0b] </span>Dbus_jll v1.16.2+0
   <span class="sgr90">[5ae413db] </span>EarCut_jll v2.2.4+0
   <span class="sgr90">[2702e6a9] </span>EpollShim_jll v0.0.20230411+1
   <span class="sgr90">[2e619515] </span>Expat_jll v2.6.5+0
 <span class="sgr33">⌅</span> <span class="sgr90">[b22a6f82] </span>FFMPEG_jll v6.1.2+0
-  <span class="sgr90">[f5851436] </span>FFTW_jll v3.3.10+3
-  <span class="sgr90">[a3f928ae] </span>Fontconfig_jll v2.15.0+0
-  <span class="sgr90">[d7e528f0] </span>FreeType2_jll v2.13.3+1
-  <span class="sgr90">[559328eb] </span>FriBidi_jll v1.0.16+0
+  <span class="sgr90">[f5851436] </span>FFTW_jll v3.3.11+0
+  <span class="sgr90">[a3f928ae] </span>Fontconfig_jll v2.16.0+0
+  <span class="sgr90">[d7e528f0] </span>FreeType2_jll v2.13.4+0
+  <span class="sgr90">[559328eb] </span>FriBidi_jll v1.0.17+0
   <span class="sgr90">[0656b61e] </span>GLFW_jll v3.4.0+2
   <span class="sgr90">[78b55507] </span>Gettext_jll v0.21.0+0
   <span class="sgr90">[61579ee1] </span>Ghostscript_jll v9.55.0+4
   <span class="sgr90">[59f7168a] </span>Giflib_jll v5.2.3+0
-  <span class="sgr90">[f8c6e375] </span>Git_jll v2.47.1+0
+  <span class="sgr90">[f8c6e375] </span>Git_jll v2.49.0+0
 <span class="sgr32">⌃</span> <span class="sgr90">[7746bdde] </span>Glib_jll v2.82.4+0
-  <span class="sgr90">[3b182d85] </span>Graphite2_jll v1.3.14+1
+  <span class="sgr90">[3b182d85] </span>Graphite2_jll v1.3.15+0
   <span class="sgr90">[528830af] </span>Gumbo_jll v0.10.2+0
   <span class="sgr90">[2e76f6c2] </span>HarfBuzz_jll v8.5.0+0
   <span class="sgr90">[c73af94c] </span>ImageMagick_jll v7.1.1+1
@@ -424,13 +424,13 @@ Environment:
   <span class="sgr90">[1d63c593] </span>LLVMOpenMP_jll v18.1.7+0
   <span class="sgr90">[dd4b983a] </span>LZO_jll v2.10.3+0
 <span class="sgr33">⌅</span> <span class="sgr90">[e9f186c6] </span>Libffi_jll v3.2.2+2
-  <span class="sgr90">[d4300ac3] </span>Libgcrypt_jll v1.11.0+0
+  <span class="sgr90">[d4300ac3] </span>Libgcrypt_jll v1.11.1+0
   <span class="sgr90">[7e76a0d4] </span>Libglvnd_jll v1.7.0+0
   <span class="sgr90">[7add5ba3] </span>Libgpg_error_jll v1.51.1+0
   <span class="sgr90">[94ce4f54] </span>Libiconv_jll v1.18.0+0
-  <span class="sgr90">[4b2f31a3] </span>Libmount_jll v2.40.3+0
+  <span class="sgr90">[4b2f31a3] </span>Libmount_jll v2.41.0+0
 <span class="sgr33">⌅</span> <span class="sgr90">[89763e89] </span>Libtiff_jll v4.4.0+0
-  <span class="sgr90">[38a345b3] </span>Libuuid_jll v2.40.3+0
+  <span class="sgr90">[38a345b3] </span>Libuuid_jll v2.41.0+0
 <span class="sgr32">⌃</span> <span class="sgr90">[d3a379c0] </span>LittleCMS_jll v2.12.0+0
   <span class="sgr90">[856f044c] </span>MKL_jll v2025.0.1+1
   <span class="sgr90">[e7412a2a] </span>Ogg_jll v1.3.5+1
@@ -444,10 +444,10 @@ Environment:
   <span class="sgr90">[36c8627f] </span>Pango_jll v1.56.1+0
   <span class="sgr90">[30392449] </span>Pixman_jll v0.44.2+0
   <span class="sgr90">[f50d1b31] </span>Rmath_jll v0.5.1+0
-  <span class="sgr90">[a2964d1f] </span>Wayland_jll v1.21.0+2
+<span class="sgr32">⌃</span> <span class="sgr90">[a2964d1f] </span>Wayland_jll v1.21.0+2
   <span class="sgr90">[2381bf8a] </span>Wayland_protocols_jll v1.36.0+0
   <span class="sgr90">[02c8fc9c] </span>XML2_jll v2.13.6+1
-  <span class="sgr90">[aed1982a] </span>XSLT_jll v1.1.42+0
+  <span class="sgr90">[aed1982a] </span>XSLT_jll v1.1.43+0
   <span class="sgr90">[4f6342f7] </span>Xorg_libX11_jll v1.8.6+3
   <span class="sgr90">[0c0b7dd1] </span>Xorg_libXau_jll v1.0.12+0
   <span class="sgr90">[935fb764] </span>Xorg_libXcursor_jll v1.2.3+0
@@ -463,7 +463,7 @@ Environment:
   <span class="sgr90">[cc61e674] </span>Xorg_libxkbfile_jll v1.1.2+1
   <span class="sgr90">[35661453] </span>Xorg_xkbcomp_jll v1.4.6+1
   <span class="sgr90">[33bec58e] </span>Xorg_xkeyboard_config_jll v2.39.0+0
-  <span class="sgr90">[c5fb5394] </span>Xorg_xtrans_jll v1.5.1+0
+  <span class="sgr90">[c5fb5394] </span>Xorg_xtrans_jll v1.6.0+0
   <span class="sgr90">[3161d3a3] </span>Zstd_jll v1.5.7+1
   <span class="sgr90">[9a68df92] </span>isoband_jll v0.2.3+0
   <span class="sgr90">[a4ae2306] </span>libaom_jll v3.11.0+0
@@ -529,4 +529,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.11.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.59.0+0
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.4.0+2
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Tuesday 25 March 2025 14:41">Tuesday 25 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v6.2.9/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Sunday 6 April 2025 11:14">Sunday 6 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

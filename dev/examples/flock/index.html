@@ -5,15 +5,15 @@
 using Random, LinearAlgebra
 
 @agent struct Bird(ContinuousAgent{2,Float64})
-    speed::Float64
-    cohere_factor::Float64
-    separation::Float64
-    separate_factor::Float64
-    match_factor::Float64
-    visual_distance::Float64
+    const speed::Float64
+    const cohere_factor::Float64
+    const separation::Float64
+    const separate_factor::Float64
+    const match_factor::Float64
+    const visual_distance::Float64
 end</code></pre><p>The fields <code>id</code> and <code>pos</code>, which are required for agents on <a href="../../api/#Agents.ContinuousSpace"><code>ContinuousSpace</code></a>, are part of the struct. The field <code>vel</code>, which is also added by using <a href="../../api/#Agents.ContinuousAgent"><code>ContinuousAgent</code></a> is required for using <a href="../../api/#Agents.move_agent!"><code>move_agent!</code></a> in <code>ContinuousSpace</code> with a time-stepping method. <code>speed</code> defines how far the bird travels in the direction defined by <code>vel</code> per <code>step</code>. <code>separation</code> defines the minimum distance a bird must maintain from its neighbors. <code>visual_distance</code> refers to the distance a bird can see and defines a radius of neighboring birds. The contribution of each rule defined above receives an importance weight: <code>cohere_factor</code> is the importance of maintaining the average position of neighbors, <code>match_factor</code> is the importance of matching the average trajectory of neighboring birds, and <code>separate_factor</code> is the importance of maintaining the minimum distance from neighboring birds.</p><p>The function <code>initialize_model</code> generates birds and returns a model object using default values.</p><pre><code class="language-julia hljs">function initialize_model(;
     n_birds = 100,
-    speed = 1.5,
+    speed = 1.0,
     cohere_factor = 0.1,
     separation = 2.0,
     separate_factor = 0.25,
@@ -22,10 +22,10 @@ end</code></pre><p>The fields <code>id</code> and <code>pos</code>, which are re
     extent = (100, 100),
     seed = 42,
 )
-    space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
+    space2d = ContinuousSpace(extent; spacing = visual_distance / 1.5)
     rng = Random.MersenneTwister(seed)
 
-    model = StandardABM(Bird, space2d; rng, agent_step!, scheduler = Schedulers.Randomly())
+    model = StandardABM(Bird, space2d; rng, agent_step!, container = Vector, scheduler = Schedulers.Randomly())
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) * 2 .- 1
         add_agent!(
@@ -42,38 +42,37 @@ end</code></pre><p>The fields <code>id</code> and <code>pos</code>, which are re
     return model
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">initialize_model (generic function with 1 method)</code></pre><h2 id="Defining-the-agent_step!"><a class="docs-heading-anchor" href="#Defining-the-agent_step!">Defining the agent_step!</a><a id="Defining-the-agent_step!-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-agent_step!" title="Permalink"></a></h2><p><code>agent_step!</code> is the primary function called for each step and computes velocity according to the three rules defined above.</p><pre><code class="language-julia hljs">function agent_step!(bird, model)
     # Obtain the ids of neighbors within the bird&#39;s visual distance
-    neighbor_ids = nearby_ids(bird, model, bird.visual_distance)
+    neighbor_agents = nearby_agents(bird, model, bird.visual_distance)
     N = 0
-    match = separate = cohere = (0.0, 0.0)
+    match = separate = cohere = SVector{2}(0.0, 0.0)
     # Calculate behaviour properties based on neighbors
-    for id in neighbor_ids
+    for neighbor in neighbor_agents
         N += 1
-        neighbor = model[id].pos
-        heading = get_direction(bird.pos, neighbor, model)
+        heading = get_direction(bird.pos, neighbor.pos, model)
 
         # `cohere` computes the average position of neighboring birds
-        cohere = cohere .+ heading
-        if euclidean_distance(bird.pos, neighbor, model) &lt; bird.separation
-            # `separate` repels the bird away from neighboring birds
-            separate = separate .- heading
-        end
+        cohere += heading
         # `match` computes the average trajectory of neighboring birds
-        match = match .+ model[id].vel
+        match += neighbor.vel
+        if sum(heading .^ 2) &lt; bird.separation^2
+            # `separate` repels the bird away from neighboring birds
+            separate -= heading
+        end
     end
-    N = max(N, 1)
+
     # Normalise results based on model input and neighbor count
-    cohere = cohere ./ N .* bird.cohere_factor
-    separate = separate ./ N .* bird.separate_factor
-    match = match ./ N .* bird.match_factor
+    cohere *= bird.cohere_factor
+    separate *= bird.separate_factor
+    match *= bird.match_factor
     # Compute velocity based on rules defined above
-    bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
-    bird.vel = bird.vel ./ norm(bird.vel)
+    bird.vel += (cohere + separate + match) / max(N, 1)
+    bird.vel /= norm(bird.vel)
     # Move bird according to new velocity and speed
     move_agent!(bird, model, bird.speed)
 end
 
 model = initialize_model()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">StandardABM with 100 agents of type Bird
- agents container: Dict
+ agents container: Vector
  space: periodic continuous space with [100.0, 100.0] extent and spacing=3.3333333333333335
  scheduler: Agents.Schedulers.Randomly</code></pre><h2 id="Plotting-the-flock"><a class="docs-heading-anchor" href="#Plotting-the-flock">Plotting the flock</a><a id="Plotting-the-flock-1"></a><a class="docs-heading-anchor-permalink" href="#Plotting-the-flock" title="Permalink"></a></h2><pre><code class="language-julia hljs">using CairoMakie</code></pre><p>The great thing about <a href="../../api/#Agents.abmplot"><code>abmplot</code></a> is its flexibility. We can incorporate the direction of the birds when plotting them, by making the &quot;marker&quot; function <code>agent_marker</code> create a <code>Polygon</code>: a triangle with same orientation as the bird&#39;s velocity. It is as simple as defining the following function:</p><pre><code class="language-julia hljs">const bird_polygon = Makie.Polygon(Point2f[(-1, -1), (2, 0), (-1, 1)])
 function bird_marker(b::Bird)
@@ -81,11 +80,11 @@ function bird_marker(b::Bird)
     rotate_polygon(bird_polygon, φ)
 end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">bird_marker (generic function with 1 method)</code></pre><p>Where we have used the utility functions <code>scale_polygon</code> and <code>rotate_polygon</code> to act on a predefined polygon. <code>translate_polygon</code> is also available. We now give <code>bird_marker</code> to <code>abmplot</code>, and notice how the <code>agent_size</code> keyword is meaningless when using polygons as markers.</p><pre><code class="language-julia hljs">model = initialize_model()
 figure, = abmplot(model; agent_marker = bird_marker)
-figure</code></pre><img src="faf8d659.png" alt="Example block output"/><p>And let&#39;s also do a nice little video for it:</p><pre><code class="language-julia hljs">abmvideo(
+figure</code></pre><img src="edd20c79.png" alt="Example block output"/><p>And let&#39;s also do a nice little video for it:</p><pre><code class="language-julia hljs">abmvideo(
     &quot;flocking.mp4&quot;, model;
     agent_marker = bird_marker,
     framerate = 20, frames = 150,
     title = &quot;Flocking&quot;
 )</code></pre><video width="auto" controls autoplay loop>
 <source src="../flocking.mp4" type="video/mp4">
-</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../sir/">« SIR model for the spread of COVID-19</a><a class="docs-footer-nextpage" href="../zombies/">Zombie Outbreak in a City »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Tuesday 25 March 2025 14:41">Tuesday 25 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../sir/">« SIR model for the spread of COVID-19</a><a class="docs-footer-nextpage" href="../zombies/">Zombie Outbreak in a City »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Sunday 6 April 2025 11:14">Sunday 6 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
