@@ -49,9 +49,5 @@ function remove_agent_from_model!(agent::AbstractAgent, model::VecABM)
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::StructABM)
-    error("Cannot remove agents in a `StandardABM` with a vector container.")
-end
-
 random_id(model::DictABM) = rand(abmrng(model), agent_container(model)).first
 random_agent(model::DictABM) = rand(abmrng(model), agent_container(model)).second
