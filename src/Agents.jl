@@ -22,6 +22,8 @@ export SVector
 import LinearAlgebra
 import StreamSampling
 import StreamSampling: itsample
+using StructArrays: StructVector
+export StructVector
 
 # Core structures of Agents.jl
 include("core/agents.jl")

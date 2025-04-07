@@ -154,10 +154,16 @@ function StandardABM(
     end
     !(is_sumtype(A)) && agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
-    agents = C()
+    if C <: StructVector
+        fields_with_types = zip(fieldnames(A), fieldtypes(A))
+	tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
+	agents = C(tuple_init)
+    else
+        agents = C()
+    end
     agents_types = union_types(A)
     T = typeof(agents_types)
-    return StandardABM{S,A,C,T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+    return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
                                         properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
@@ -167,8 +173,9 @@ end
 
 construct_agent_container(::Type{T}, A) where {T<:AbstractDict} = T{Int,A}
 construct_agent_container(::Type{T}, A) where {T<:AbstractVector} = T{A}
+construct_agent_container(::Type{T}, A) where {T<:StructVector} = T{A}
 construct_agent_container(container, A) = throw(
-    "Unrecognised container $container, please specify either `Dict` or `Vector`."
+    "Unrecognised container $container, please specify `Dict`, `Vector` or `StructVector`."
 )
 
 function remove_all_from_model!(model::StandardABM)
@@ -181,6 +188,23 @@ function remove_all_from_space!(model)
     end
 end
 
+struct AgentWrapperSoA{C} <: AbstractAgent
+  soa::C
+  id::Int
+end
+
+function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
+  return getproperty(getfield(agent, :soa), name)[getfield(agent, :id)]
+end
+
+function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
+  getproperty(getfield(agent, :soa), name)[getfield(agent, :id)] = x
+  return agent
+end
+
+function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
+  return AgentWrapperSoA(agent_container(model), id)
+end
 
 """
     dummystep(model)
@@ -199,7 +223,13 @@ dummystep(agent, model) = nothing
 #######################################################################################
 function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
   n = isconcretetype(A) ? nameof(A) : string(A)
-  typecontainer = C <: AbstractDict ? "Dict" : "Vector"
+  if C <: AbstractDict
+    typecontainer = "Dict"
+  elseif C <: StructVector
+    typecontainer = "StructVector"
+  elseif C <: AbstractVector
+    typecontainer = "Vector"
+  end
   s = "StandardABM with $(nagents(abm)) agents of type $(n)"
   s *= "\n agents container: $(typecontainer)"
   if abmspace(abm) === nothing
