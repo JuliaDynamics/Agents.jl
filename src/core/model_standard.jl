@@ -188,7 +188,7 @@ function remove_all_from_space!(model)
     end
 end
 
-struct AgentWrapperSoA{C}
+struct AgentWrapperSoA{C} <: AbstractAgent
   soa::C
   id::Int
 end
