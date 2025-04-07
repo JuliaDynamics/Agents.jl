@@ -206,7 +206,6 @@ function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructV
   return AgentWrapperSoA(agent_container(model), id)
 end
 
-
 """
     dummystep(model)
 
@@ -218,7 +217,6 @@ Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be 
 """
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
-
 
 #######################################################################################
 # %% Pretty printing
