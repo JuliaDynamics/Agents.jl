@@ -163,7 +163,7 @@ function StandardABM(
     end
     agents_types = union_types(A)
     T = typeof(agents_types)
-    return StandardABM{S,A,C,T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+    return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
                                         properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
