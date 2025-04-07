@@ -156,8 +156,8 @@ function StandardABM(
     C = construct_agent_container(container, A)
     if C <: StructVector
         fields_with_types = zip(fieldnames(A), fieldtypes(A))
-	    tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
-	    agents = C(tuple_init)
+	tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
+	agents = C(tuple_init)
     else
         agents = C()
     end
