@@ -45,7 +45,7 @@ function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
     return
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::VecABM)
+function remove_agent_from_model!(agent::AbstractAgent, model::Union{VecABM, StructABM})
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
