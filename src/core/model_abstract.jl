@@ -15,7 +15,7 @@ Supertype of all concrete space implementations for Agents.jl.
 """
 abstract type AbstractSpace end
 abstract type DiscreteSpace <: AbstractSpace end
-SpaceType = Union{Nothing,AbstractSpace}
+SpaceType = Union{Nothing, AbstractSpace}
 
 
 """
@@ -126,7 +126,7 @@ end
 function Base.setproperty!(m::ABM, s::Symbol, x)
     properties = abmproperties(m)
     exception = ErrorException(
-        "Cannot set property $(s) for model $(nameof(typeof(m))) with " *
+        "Cannot set property $(s) for model $(nameof(typeof(m))) with "*
         "properties container type $(typeof(properties))."
     )
     properties === nothing && throw(exception)
