@@ -202,7 +202,6 @@ function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
   return agent
 end
 
-
 function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
   return AgentWrapperSoA(agent_container(model), id)
 end
