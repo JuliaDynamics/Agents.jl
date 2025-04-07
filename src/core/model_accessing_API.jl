@@ -6,10 +6,8 @@ const StructABM = Union{StandardABM{S,A,<:StructVector{A}} where {S,A},
                          EventQueueABM{S,A,<:StructVector{A}} where {S,A}}
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
-nextid(model::VecABM) = nagents(model) + 1
-hasid(model::VecABM, id::Int) = id ≤ nagents(model)
-nextid(model::StructABM) = nagents(model) + 1
-hasid(model::StructABM, id::Int) = id ≤ nagents(model)
+nextid(model::Union{VecABM, StructABM}) = nagents(model) + 1
+hasid(model::Union{VecABM, StructABM}, id::Int) = id ≤ nagents(model)
 
 function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     if haskey(agent_container(model), agent.id)
