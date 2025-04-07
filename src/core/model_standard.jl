@@ -188,6 +188,25 @@ function remove_all_from_space!(model)
     end
 end
 
+struct AgentWrapperSoA{C}
+  soa::C
+  id::Int
+end
+
+function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
+  return getproperty(getfield(agent, :soa), name)[getfield(agent, :id)]
+end
+
+function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
+  getproperty(getfield(agent, :soa), name)[getfield(agent, :id)] = x
+  return agent
+end
+
+
+function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
+  return AgentWrapperSoA(agent_container(model), id)
+end
+
 
 """
     dummystep(model)
@@ -201,31 +220,6 @@ Used instead of `agent_step!` in [`step!`](@ref) if no function is useful to be 
 dummystep(model) = nothing
 dummystep(agent, model) = nothing
 
-#struct AgentWrapperSoA{C}
-#  soa::C # The actual StructVector agent container
-#  id::Int # The index (row number) in the StructVector, treating 1-based indexing
-#end
-#
-#function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
-#  # Assumes field 'id' stores the 1-based index
-#  return getproperty(getfield(agent, :soa), name)[getfield(agent, :id)]
-#end
-#
-#function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
-#  # Assumes field 'id' stores the 1-based index
-#  getproperty(getfield(agent, :soa), name)[getfield(agent, :id)] = x
-#  return agent # Return the wrapper or the value `x`, standard practice varies
-#end
-#
-## Dispatch getindex on StandardABM with a StructVector container
-#function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
-#  # Add bounds checking for safety if desired
-#  if !(1 <= id <= nagents(model))
-#       throw(BoundsError(agent_container(model), id))
-#  end
-#  # Return the wrapper, linking it to the container and the requested ID (index)
-#  return AgentWrapperSoA(agent_container(model), id)
-#end
 
 #######################################################################################
 # %% Pretty printing
