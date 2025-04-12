@@ -31,8 +31,7 @@ end
 
 function add_agent_to_model!(agent::AbstractAgent, model::StructABM)
     agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
-    tuple_agent = NamedTuple(x => getfield(agent, x) for x in fieldnames(typeof(agent)))
-    push!(agent_container(model), tuple_agent)
+    push!(agent_container(model), agent)
     extra_actions_after_add!(model[agent.id], model)
     return
 end
