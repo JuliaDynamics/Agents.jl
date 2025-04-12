@@ -1,12 +1,13 @@
-# # SIR model for the spread of COVID-19
+# # [SIR model for the spread of COVID-19](@id sir_graphspace)
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../covid_evolution.mp4" type="video/mp4">
 # </video>
 # ```
 #
-# This example illustrates how to use `GraphSpace` and how to model agents on an graph
+# This example illustrates how to use [`GraphSpace`](@ref) and how to model agents moving an graph
 # (network) where the transition probabilities between each node (position) is not constant.
+
 # ## SIR model
 
 # A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population.
