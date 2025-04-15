@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Zombie Outbreak · Agents.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">Rabbit, Fox, Hawk</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li class="is-active"><a class="tocitem" href>Zombie Outbreak</a><ul class="internal"><li><a class="tocitem" href="#Constructing-the-end-of-days"><span>Constructing the end of days</span></a></li><li><a class="tocitem" href="#Visualising-the-fall-of-humanity"><span>Visualising the fall of humanity</span></a></li></ul></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Zombie Outbreak</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Zombie Outbreak</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/zombies.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Zombie-Outbreak"><a class="docs-heading-anchor" href="#Zombie-Outbreak">Zombie Outbreak</a><a id="Zombie-Outbreak-1"></a><a class="docs-heading-anchor-permalink" href="#Zombie-Outbreak" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+</video><p>This model showcases an ABM running on a map, using <a href="../../api/#Agents.OpenStreetMapSpace"><code>OpenStreetMapSpace</code></a>.</p><h2 id="Constructing-the-end-of-days"><a class="docs-heading-anchor" href="#Constructing-the-end-of-days">Constructing the end of days</a><a id="Constructing-the-end-of-days-1"></a><a class="docs-heading-anchor-permalink" href="#Constructing-the-end-of-days" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Agents</code></pre><p>We&#39;ll simulate a zombie outbreak in a city. To do so, we start with an agent which satisfies the OSMSpace conditions of having a <code>pos</code>ition of type <code>Tuple{Int,Int,Float64}</code>, a <code>route</code> vector and a <code>destination</code> with the same type as <code>pos</code>. For simplicity though we shall build this with the <a href="../../api/#Agents.@agent"><code>@agent</code></a> macro.</p><pre><code class="language-julia hljs">@agent Zombie OSMAgent begin
+    infected::Bool
+end</code></pre><p>To be explicit, this macro builds the following type:</p><pre><code class="language-julia hljs">mutable struct Zombie &lt;: AbstractAgent
+    id::Int
+    pos::Tuple{Int,Int,Float64}
+    route::Vector{Int}
+    destination::Tuple{Int,Int,Float64}
+    infected::Bool
+end</code></pre><p>where a tuple <code>(i, j, x)::Tuple{Int,Int,Float64}</code> means a position on the road between nodes <code>i, j</code> of the map, having progressed <code>x</code> meters along the road.</p><p>The model constructor we build consists of a map, and 100 agents scattered randomly around it. They have their own agenda and need to travel to some new destination. Unfortunately one of the population has turned and will begin infecting anyone who comes close.</p><pre><code class="language-julia hljs">function initialise(; map_path = OSM.TEST_MAP)
+    model = ABM(Zombie, OpenStreetMapSpace(map_path))
+
+    for id in 1:100
+        start = random_position(model) # At an intersection
+        finish = OSM.random_road_position(model) # Somewhere on a road
+        route = OSM.plan_route(start, finish, model)
+        human = Zombie(id, start, route, finish, false)
+        add_agent_pos!(human, model)
+    end
+    # We&#39;ll add patient zero at a specific (latitude, longitude)
+    start = OSM.road((39.52320181536525, -119.78917553184259), model)
+    finish = OSM.intersection((39.510773, -119.75916700000002), model)
+    route = OSM.plan_route(start, finish, model)
+    # This function call creates &amp; adds an agent, see `add_agent!`
+    zombie = add_agent!(start, model, route, finish, true)
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">initialise (generic function with 1 method)</code></pre><p>In our model, zombies are seemingly oblivious to their state, since they keep going about their business, but start eating people along the way. Perhaps they can finally express their distaste for city commuting.</p><pre><code class="language-julia hljs">function agent_step!(agent, model)
+    # Each agent will progress 25 meters along their route
+    move_along_route!(agent, model, 25)
+
+    if is_stationary(agent, model) &amp;&amp; rand(model.rng) &lt; 0.1
+        # When stationary, give the agent a 10% chance of going somewhere else
+        OSM.random_route!(agent, model)
+        # Start on new route
+        move_along_route!(agent, model, 25)
+    end
+
+    if agent.infected
+        # Agents will be infected if they get within 50 meters of a zombie.
+        map(i -&gt; model[i].infected = true, nearby_ids(agent, model, 50))
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">agent_step! (generic function with 1 method)</code></pre><h2 id="Visualising-the-fall-of-humanity"><a class="docs-heading-anchor" href="#Visualising-the-fall-of-humanity">Visualising the fall of humanity</a><a id="Visualising-the-fall-of-humanity-1"></a><a class="docs-heading-anchor-permalink" href="#Visualising-the-fall-of-humanity" title="Permalink"></a></h2><p>Plotting this space in a seamless manner is a work in progress. For now we use <a href="https://github.com/pszufe/OpenStreetMapXPlot.jl">OpenStreetMapXPlot</a> and a custom routine.</p><pre><code class="language-julia hljs">using OpenStreetMapXPlot
+using Plots
+gr()</code></pre><pre><code class="language-julia hljs">ac(agent) = agent.infected ? :green : :black
+as(agent) = agent.infected ? 6 : 5
+
+function plotagents(model)
+    ids = model.scheduler(model)
+    colors = [ac(model[i]) for i in ids]
+    sizes = [as(model[i]) for i in ids]
+    markers = :circle
+    pos = [OSM.map_coordinates(model[i], model) for i in ids]
+
+    scatter!(
+        pos;
+        markercolor = colors,
+        markersize = sizes,
+        markershapes = markers,
+        label = &quot;&quot;,
+        markerstrokewidth = 0.5,
+        markerstrokecolor = :black,
+        markeralpha = 0.7,
+    )
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">plotagents (generic function with 1 method)</code></pre><p>Let&#39;s see how this plays out!</p><pre><code class="language-julia hljs">model = initialise()
+
+frames = @animate for i in 0:200
+    i &gt; 0 &amp;&amp; step!(model, agent_step!, 1)
+    plotmap(model.space.m)
+    plotagents(model)
+end
+
+gif(frames, &quot;outbreak.gif&quot;, fps = 15)</code></pre><video width="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/zombies.mp4?raw=true" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../battle/">« Battle Royale</a><a class="docs-footer-nextpage" href="../fractal_growth/">Fractal Growth »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.5 on <span class="colophon-date" title="Saturday 21 August 2021 14:31">Saturday 21 August 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
