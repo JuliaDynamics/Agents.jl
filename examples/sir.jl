@@ -5,7 +5,7 @@
 # </video>
 # ```
 #
-# This example illustrates how to use [`GraphSpace`](@ref) and how to model agents moving an graph
+# This example illustrates how to use [`GraphSpace`](@ref) and how to model agents moving on a graph
 # (network) where the transition probabilities between each node (position) is not constant.
 
 # ## SIR model
