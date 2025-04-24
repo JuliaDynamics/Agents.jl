@@ -1,4 +1,4 @@
-export AgentWrapperSoA, construct_agent_container, ContainerType, SoAType
+export SoAType
 
 """
     ContainerType{A}
@@ -12,17 +12,15 @@ ContainerType{A} = Union{AbstractDict{Int,A},AbstractVector{A}}
 
 Wrapper type for agents in a StructVector container.
 """
-struct AgentWrapperSoA{A<:AbstractAgent, C} <: AbstractAgent
+struct AgentWrapperSoA{A, C} <: AbstractAgent
     soa::C
     id::Int
-    agent_type::Type{A}
 end
+const SoAType = AgentWrapperSoA
 
 function AgentWrapperSoA{A}(soa::C, id::Int, ::Type{A}) where {A<:AbstractAgent, C}
-    return AgentWrapperSoA{A,C}(soa, id, A)
+    return AgentWrapperSoA{A,C}(soa, id)
 end
-
-const SoAType = AgentWrapperSoA
 
 function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
     return getproperty(getfield(agent, :soa), name)[getfield(agent, :id)]
