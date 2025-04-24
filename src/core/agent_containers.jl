@@ -18,7 +18,7 @@ struct AgentWrapperSoA{A, C} <: AbstractAgent
 end
 const SoAType = AgentWrapperSoA
 
-function AgentWrapperSoA{A}(soa::C, id::Int, ::Type{A}) where {A<:AbstractAgent, C}
+function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent, C}
     return AgentWrapperSoA{A,C}(soa, id)
 end
 
