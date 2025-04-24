@@ -176,7 +176,7 @@ function remove_all_from_space!(model)
 end
 
 function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
-    return AgentWrapperSoA{A}(agent_container(model), id, A)
+    return AgentWrapperSoA{A}(agent_container(model), id)
 end
 
 """
