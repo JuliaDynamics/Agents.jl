@@ -127,7 +127,7 @@ end
 ```
 """
 function StandardABM(
-    TypeAgent::Type{A},
+    A::Type,
     space::S = nothing;
     agent_step!::G = dummystep,
     model_step!::K = dummystep,
@@ -138,7 +138,7 @@ function StandardABM(
     agents_first::Bool = true,
     warn = true,
     warn_deprecation = true
-) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+) where {S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn """
         From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
@@ -150,8 +150,7 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
-    println(TypeAgent.parameters)
-  
+    container == StructVector && (A = A.body.parameters[1])
     !(is_sumtype(A)) && agent_validator(A, space, warn)
     agents = construct_agent_container(container, A)
     
