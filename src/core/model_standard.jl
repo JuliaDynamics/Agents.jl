@@ -2,8 +2,6 @@ export StandardABM, UnremovableABM
 export abmscheduler
 export dummystep
 
-ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
-
 struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
@@ -129,7 +127,7 @@ end
 ```
 """
 function StandardABM(
-    ::Type{A},
+    TypeAgent::Type{A},
     space::S = nothing;
     agent_step!::G = dummystep,
     model_step!::K = dummystep,
@@ -152,15 +150,11 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
+    println(TypeAgent.parameters)
+  
     !(is_sumtype(A)) && agent_validator(A, space, warn)
-    C = construct_agent_container(container, A)
-    if C <: StructVector
-        fields_with_types = zip(fieldnames(A), fieldtypes(A))
-	tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
-	agents = C(tuple_init)
-    else
-        agents = C()
-    end
+    agents = construct_agent_container(container, A)
+    
     agents_types = union_types(A)
     T = typeof(agents_types)
     return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
@@ -170,13 +164,6 @@ end
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
     return StandardABM(typeof(agent), args...; kwargs...)
 end
-
-construct_agent_container(::Type{T}, A) where {T<:AbstractDict} = T{Int,A}
-construct_agent_container(::Type{T}, A) where {T<:AbstractVector} = T{A}
-construct_agent_container(::Type{T}, A) where {T<:StructVector} = T{A}
-construct_agent_container(container, A) = throw(
-    "Unrecognised container $container, please specify `Dict`, `Vector` or `StructVector`."
-)
 
 function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
@@ -188,22 +175,8 @@ function remove_all_from_space!(model)
     end
 end
 
-struct AgentWrapperSoA{C} <: AbstractAgent
-  soa::C
-  id::Int
-end
-
-function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
-  return getproperty(getfield(agent, :soa), name)[getfield(agent, :id)]
-end
-
-function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
-  getproperty(getfield(agent, :soa), name)[getfield(agent, :id)] = x
-  return agent
-end
-
 function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
-  return AgentWrapperSoA(agent_container(model), id)
+    return AgentWrapperSoA{A}(agent_container(model), id, A)
 end
 
 """
