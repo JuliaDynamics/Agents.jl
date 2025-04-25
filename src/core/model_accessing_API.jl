@@ -6,8 +6,8 @@ const StructVecABM = Union{StandardABM{S,A,<:StructVector{A}} where {S,A},
                          EventQueueABM{S,A,<:StructVector{A}} where {S,A}}
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
-nextid(model::Union{VecABM, StructABM}) = nagents(model) + 1
-hasid(model::Union{VecABM, StructABM}, id::Int) = id ≤ nagents(model)
+nextid(model::Union{VecABM, StructVecABM}) = nagents(model) + 1
+hasid(model::Union{VecABM, StructVecABM}, id::Int) = id ≤ nagents(model)
 
 function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     if haskey(agent_container(model), agent.id)
@@ -29,7 +29,7 @@ function add_agent_to_model!(agent::AbstractAgent, model::VecABM)
     return
 end
 
-function add_agent_to_model!(agent::AbstractAgent, model::StructABM)
+function add_agent_to_model!(agent::AbstractAgent, model::StructVecABM)
     agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     extra_actions_after_add!(model[agent.id], model)
@@ -44,7 +44,7 @@ function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
     return
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::Union{VecABM, StructABM})
+function remove_agent_from_model!(agent::AbstractAgent, model::Union{VecABM, StructVecABM})
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
