@@ -156,7 +156,9 @@ function StandardABM(
     end
     if container == StructVector
       if !(A <: SoAType)
-          @warn "The agent type passed to the model constructor is of type $A but a model with a StructVector container will have agents of type SoAType{$A}. Pass this to the constructor to remove this warning." maxlog=1
+          @warn "The agent type passed to the model constructor is of type $A but a model with a 
+          StructVector container will have agents of type SoAType{$A}. Pass this to the constructor 
+          to remove this warning." maxlog=1
       end
       A = A.body.parameters[1]
     end
