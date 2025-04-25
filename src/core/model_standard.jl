@@ -75,6 +75,10 @@ The evolution rules are functions given to the keywords `agent_step!`, `model_st
   Use `Vector` if no agents are removed during the simulation.
   This allows storing agents more efficiently, yielding faster retrieval and
   iteration over agents. Use `Dict` if agents are expected to be removed during the simulation.
+  **Experimental**: Use `StructVector` from StructArrays.jl to enable struct-of-arrays (SoA) storage 
+  for performance benefits in some applications with large numbers of agents and fixed fields.  
+  The agent type should be wrapped in `SoAType` (e.g., `SoAType{MyAgent}`). 
+  `StructVector` currently only works for single agent models.
 - `properties = nothing`: additional model-level properties that the user may
   include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
@@ -150,7 +154,13 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
-    container == StructVector && (A = A.body.parameters[1])
+    if container == StructVector
+      if !(A <: SoAType)
+          @warn "The agent type passed to the model constructor is of type $A but a model with a StructVector container will have agents of type SoAType{$A}. Pass this to the constructor to remove this warning." maxlog=1
+      end
+      A = A.body.parameters[1]
+    end
+
     !(is_sumtype(A)) && agent_validator(A, space, warn)
     agents = construct_agent_container(container, A)
     

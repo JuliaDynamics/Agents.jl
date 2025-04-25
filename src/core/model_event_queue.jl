@@ -144,7 +144,7 @@ can be evolved in time.
     Pull Requests that implement this are welcomed!
 """
 function EventQueueABM(
-        ::Type{A}, events,
+        A::Type, events,
         space::S = nothing;
         container::Type = Dict,
         properties::P = nothing,
@@ -152,15 +152,14 @@ function EventQueueABM(
         warn = true,
         autogenerate_on_add = true,
         autogenerate_after_action = true,
-    ) where {A<:AbstractAgent,S<:SpaceType,P,R<:AbstractRNG}
-    C = construct_agent_container(container, A)
-    if C <: StructVector
-        fields_with_types = zip(fieldnames(A), fieldtypes(A))
-	tuple_init = NamedTuple(x => T[] for (x, T) in fields_with_types)
-	agents = C(tuple_init)
-    else
-        agents = C()
+    ) where {S<:SpaceType,P,R<:AbstractRNG}
+    if container == StructVector
+        if !(A <: SoAType)
+            @warn "The agent type passed to the model constructor is of type $A but a model with a StructVector container will have agents of type SoAType{$A}. Pass this to the constructor to remove this warning." maxlog=1
+        end
+        A = A.body.parameters[1]
     end
+    agents = construct_agent_container(container, A)
     events = SizedVector{length(events), Union{typeof.(events)...}}(events...)
 
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
@@ -211,7 +210,7 @@ function EventQueueABM(
         events, type_func, idx_events_each_type, propensities_each_type,
         idx_func_propensities_each_type, queue
     ))
-    return EventQueueABM{S,A,C,P,E,R,TF,ET,PT,FPT,Q}(
+    return EventQueueABM{S,A,typeof(agents),P,E,R,TF,ET,PT,FPT,Q}(
 
         agents, space, properties, rng, Ref(0), Ref(0.0),
 
@@ -221,6 +220,9 @@ function EventQueueABM(
     )
 end
 
+function Base.getindex(model::EventQueueABM{S, A, C}, id::Int) where {S,A,C<:StructVector}
+    return AgentWrapperSoA{A}(agent_container(model), id)
+end
 ###########################################################################################
 # %% Adding events to the queue
 ###########################################################################################
