@@ -36,7 +36,7 @@ function extra_actions_after_add!(agent, model::EventQueueABM{S,A,<:StructVector
     getfield(model, :autogenerate_on_add) && add_event!(model[agent.id], model)
 end
 
-function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
+function remove_agent_from_container!(agent::AbstractAgent, model::DictABM)
     delete!(agent_container(model), agent.id)
     return
 end
