@@ -197,7 +197,7 @@ end
 Add the agent to the `model` at the agent's own position.
 """
 function add_agent_own_pos!(agent::AbstractAgent, model::ABM)
-    add_agent_to_model!(agent, model)
+    add_agent_to_container!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
 end

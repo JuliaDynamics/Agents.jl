@@ -231,7 +231,7 @@ end
 ###########################################################################################
 # This function ensures that once an agent is added into the model,
 # an event is created and added for it. It is called internally
-# by `add_agent_to_model!`.
+# by `add_agent_to_container!`.
 function extra_actions_after_add!(agent, model::EventQueueABM)
     if getfield(model, :autogenerate_on_add)
         add_event!(agent, model)

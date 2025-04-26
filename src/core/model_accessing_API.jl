@@ -9,7 +9,7 @@ nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::Union{VecABM, StructVecABM}) = nagents(model) + 1
 hasid(model::Union{VecABM, StructVecABM}, id::Int) = id ≤ nagents(model)
 
-function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
+function add_agent_to_container!(agent::AbstractAgent, model::DictABM)
     if haskey(agent_container(model), agent.id)
         error(lazy"Can't add agent to model. There is already an agent with id=$(agent.id)")
     else
@@ -22,14 +22,14 @@ function add_agent_to_model!(agent::AbstractAgent, model::DictABM)
     return
 end
 
-function add_agent_to_model!(agent::AbstractAgent, model::VecABM)
+function add_agent_to_container!(agent::AbstractAgent, model::VecABM)
     agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     extra_actions_after_add!(agent, model)
     return
 end
 
-function add_agent_to_model!(agent::AbstractAgent, model::StructVecABM)
+function add_agent_to_container!(agent::AbstractAgent, model::StructVecABM)
     agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
     push!(agent_container(model), agent)
     extra_actions_after_add!(model[agent.id], model)
