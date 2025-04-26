@@ -29,10 +29,6 @@ end
 
 # This is extended for event based models
 extra_actions_after_add!(agent, model::StandardABM) = nothing
-
-# This function ensures that once an agent is added into the model,
-# an event is created and added for it. It is called internally
-# by `add_agent_to_container!`.
 function extra_actions_after_add!(agent, model::EventQueueABM{S,A,<:Union{AbstractDict, AbstractVector}} where {S,A})
     getfield(model, :autogenerate_on_add) && add_event!(agent, model)
 end
@@ -44,7 +40,6 @@ function remove_agent_from_model!(agent::AbstractAgent, model::DictABM)
     delete!(agent_container(model), agent.id)
     return
 end
-
 function remove_agent_from_model!(agent::AbstractAgent, model::Union{VecABM, StructVecABM})
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
