@@ -141,7 +141,7 @@ end
 Remove an agent from the model.
 """
 function remove_agent!(a::AbstractAgent, model::ABM)
-    remove_agent_from_model!(a, model)
+    remove_agent_from_container!(a, model)
     remove_agent_from_space!(a, model)
 end
 remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)

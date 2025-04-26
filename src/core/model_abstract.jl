@@ -179,10 +179,10 @@ given the agent's ID and those already in the model. Otherwise error.
 add_agent_to_container!(agent, model) = notimplemented(model)
 
 """
-    remove_agent_from_model!(agent, model)
+    remove_agent_from_container!(agent, model)
 Remove the agent from the model's internal container.
 """
-remove_agent_from_model!(agent, model) = notimplemented(model)
+remove_agent_from_container!(agent, model) = notimplemented(model)
 
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
