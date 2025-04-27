@@ -1,4 +1,4 @@
-# # Social networks with Graphs.jl
+# # [Social networks with Graphs.jl](@id social_networks)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -6,18 +6,20 @@
 # </video>
 # ```
 
-# Many ABM frameworks provide graph infrastructure for analysing network properties of agents.
-# Agents.jl is no different in that aspect, we have [`GraphSpace`](@ref) for when spatial structure
-# is not important, but connections are.
+# Many ABM frameworks provide graph infrastructure for implementing network-based interactions
+# properties of agents. Agents.jl does not provide any graph infrastructure for network-based
+# interactions because it doesn't have to!
+# Since Agents.jl is implemented in Julia, it can integrate directly
+# with Julia's premier package for graphs, Graphs.jl.
 
-# What if you wish to model something a little more complex? Perhaps a school yard full of students
-# running around (in space), interacting via some social network. This is precisely the scenario that
-# the [MASON](https://cs.gmu.edu/~eclab/projects/mason/) ABM framework uses as an introductory example
-# in their [documentation](https://cs.gmu.edu/~eclab/projects/mason/manual.pdf).
+# _Note as mentioned in the documentation of [`GraphSpace`](@ref) that network-based
+# interactions should not be modeled as a space, even though other ABM frameworks
+# implement it as such as an only option!_
 
-# Rather than implementing an Agents.jl⸺specific graph structure, we can interface with
-# [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl): a high class library for managing
-# and implementing graphs, which can be re-used to establish social networks within existing spaces.
+# In this example we will model the situation where there is both a network structure
+# in agent interactions, but also a completely independent spatial structure in the model.
+# We will model a school yard full of students
+# running around (in space) _and_ interacting via some social network.
 
 # To begin, we load in some dependencies
 
@@ -47,14 +49,14 @@ const Student = ContinuousAgent{2,Float64}
 # ## Initialising the model
 
 function schoolyard(;
-    numStudents = 50,
-    teacher_attractor = 0.15,
-    noise = 0.1,
-    max_force = 1.7,
-    spacing = 4.0,
-    seed = 6998,
-    velocity = (0, 0),
-)
+        numStudents = 50,
+        teacher_attractor = 0.15,
+        noise = 0.1,
+        max_force = 1.7,
+        spacing = 4.0,
+        seed = 6998,
+        velocity = (0, 0),
+    )
     model = StandardABM(
         Student,
         ContinuousSpace((100, 100); spacing=spacing, periodic=false);
@@ -62,6 +64,7 @@ function schoolyard(;
         properties = Dict(
             :teacher_attractor => teacher_attractor,
             :noise => noise,
+            ## This is the graph
             :buddies => SimpleWeightedDiGraph(numStudents),
             :max_force => max_force,
         ),
@@ -81,9 +84,10 @@ function schoolyard(;
     model
 end
 
-# Our model contains the `buddies` property, which is our Graphs.jl directed, weighted graph.
-# As we can see in the loop, we choose one `friend` and one `foe` at random for each `student` and
-# assign their relationship as a weighted edge on the graph.
+# Our model contains the `buddies` property, which is our Graphs.jl directed and weighted graph.
+# Here we chose one `friend` and one `foe` at random for each student` and assign their
+# relationship as a weighted edge on the graph.
+# By construction, the agent ID and graph node ID coincide.
 
 # ## Movement dynamics
 
@@ -132,7 +136,7 @@ end
 # that force should be in a positive or negative direction (*friend* or *foe*?).
 
 # The `findnz` function is something that may require some further explanation.
-# Graphs uses sparse vectors internally to efficiently represent data.
+# Graphs.jl uses sparse vectors internally to efficiently represent data.
 # When we find the `network` of our `student`, we want to convert the result to
 # a dense representation by **find**ing the **n**on-**z**ero (`findnz`) elements.
 

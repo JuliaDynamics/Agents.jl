@@ -24,12 +24,20 @@ The underlying graph can be altered using [`add_vertex!`](@ref) and [`rem_vertex
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
 
-If you want to model social networks, where each agent is equivalent with a node of
-a graph, you're better of using `nothing` as the model space, and using
-a graph from Graphs.jl directly in the model parameters, as shown in the
-[Social networks with Graphs.jl](@ref) integration example.
+!!! note "Not for social networks!"
+    `GraphSpace` is not intended for "social-network-like" agent based
+    modelling, where each agent is equivalent with a node of a network/graph and
+    the graph represents connections between agents. Rather, `GraphSpace` is
+    suitable for when the coordinates of spatial locations are not as important as the
+    connections between them. `GraphSpace` is suited for e.g., modelling cities
+    where each can host many agents.
+
+    If you want to make a "social-network" like simulation, see [the integration with
+    Graphs.jl example](@ref social_networks). Typically you won't need a space structure at all!
+
 
 ## Distance specification
+
 In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
 the degree of neighbors in the graph (thus distance is always an integer).
 For example, for `r=2` includes first and second degree neighbors.
