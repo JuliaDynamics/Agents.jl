@@ -1,3 +1,7 @@
+# v6.3
+
+**Experimental**: The `StructVector` container type, that supports a Struct-of-Arrays (SoA) layout, has been added. It currently only works with single agent types.
+
 # v6.2
 
 The `EventQueueABM` which was previously considered experimental is now considered to be stable.
