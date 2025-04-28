@@ -2,8 +2,6 @@ export StandardABM, UnremovableABM
 export abmscheduler
 export dummystep
 
-ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
-
 struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
@@ -77,6 +75,10 @@ The evolution rules are functions given to the keywords `agent_step!`, `model_st
   Use `Vector` if no agents are removed during the simulation.
   This allows storing agents more efficiently, yielding faster retrieval and
   iteration over agents. Use `Dict` if agents are expected to be removed during the simulation.
+  **Experimental**: Use `StructVector` from StructArrays.jl to enable struct-of-arrays (SoA) storage 
+  for performance benefits in some applications with large numbers of agents and fixed fields.  
+  The agent type should be wrapped in `SoAType` (e.g., `SoAType{MyAgent}`). 
+  `StructVector` currently only works for single agent models.
 - `properties = nothing`: additional model-level properties that the user may
   include in the model. `properties` can be an arbitrary container of data,
   however it is most typically a `Dict` with `Symbol` keys, or a composite type (`struct`).
@@ -129,7 +131,7 @@ end
 ```
 """
 function StandardABM(
-    ::Type{A},
+    A::Type,
     space::S = nothing;
     agent_step!::G = dummystep,
     model_step!::K = dummystep,
@@ -140,7 +142,7 @@ function StandardABM(
     agents_first::Bool = true,
     warn = true,
     warn_deprecation = true
-) where {A<:AbstractAgent,S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+) where {S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn """
         From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
@@ -152,24 +154,28 @@ function StandardABM(
         ABMObservable.
         """ maxlog=1
     end
+    if container == StructVector
+        if !(A <: SoAType)
+            @warn "The agent type passed to the model constructor is of type $A but a model with a 
+            StructVector container will have agents of type SoAType{$A}. Pass this to the constructor 
+            to remove this warning." maxlog=1
+        else
+            A = A.body.parameters[1]
+        end
+    end
+
     !(is_sumtype(A)) && agent_validator(A, space, warn)
-    C = construct_agent_container(container, A)
-    agents = C()
+    agents = construct_agent_container(container, A)
+    
     agents_types = union_types(A)
     T = typeof(agents_types)
-    return StandardABM{S,A,C,T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
+    return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
                                         properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
     return StandardABM(typeof(agent), args...; kwargs...)
 end
-
-construct_agent_container(::Type{T}, A) where {T<:AbstractDict} = T{Int,A}
-construct_agent_container(::Type{T}, A) where {T<:AbstractVector} = T{A}
-construct_agent_container(container, A) = throw(
-    "Unrecognised container $container, please specify either `Dict` or `Vector`."
-)
 
 function remove_all_from_model!(model::StandardABM)
     empty!(agent_container(model))
@@ -181,6 +187,9 @@ function remove_all_from_space!(model)
     end
 end
 
+function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
+    return AgentWrapperSoA{A}(agent_container(model), id)
+end
 
 """
     dummystep(model)
@@ -199,7 +208,13 @@ dummystep(agent, model) = nothing
 #######################################################################################
 function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
   n = isconcretetype(A) ? nameof(A) : string(A)
-  typecontainer = C <: AbstractDict ? "Dict" : "Vector"
+  if C <: AbstractDict
+    typecontainer = "Dict"
+  elseif C <: StructVector
+    typecontainer = "StructVector"
+  elseif C <: AbstractVector
+    typecontainer = "Vector"
+  end
   s = "StandardABM with $(nagents(abm)) agents of type $(n)"
   s *= "\n agents container: $(typecontainer)"
   if abmspace(abm) === nothing

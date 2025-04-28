@@ -1,7 +1,7 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["George Datseris", "Tim DuBois", "Aayush Sabharwal", "Ali Vahdati", "Adriano Meligrana"]
-version = "6.2.10"
+version = "6.3.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -26,6 +26,7 @@ Scratch = "6c6a2e73-6563-6170-7368-637461726353"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StreamSampling = "ff63dad9-3335-55d8-95ec-f8139d39e468"
+StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [weakdeps]
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
@@ -66,4 +67,5 @@ Scratch = "1"
 StaticArrays = "1"
 StatsBase = "0.32, 0.33, 0.34"
 StreamSampling = "0.6"
+StructArrays = "0.5, 0.6, 0.7"
 julia = "1.9"

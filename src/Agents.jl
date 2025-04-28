@@ -22,11 +22,14 @@ export SVector
 import LinearAlgebra
 import StreamSampling
 import StreamSampling: itsample
+using StructArrays: StructVector
+export StructVector
 
 # Core structures of Agents.jl
 include("core/agents.jl")
 include("core/model_abstract.jl")
 include("core/model_free_extensions.jl")
+include("core/agent_containers.jl")
 include("core/model_standard.jl")
 include("core/model_event_queue.jl")
 include("core/model_validation.jl")

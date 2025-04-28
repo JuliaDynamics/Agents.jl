@@ -247,6 +247,6 @@ from `pathfinder`.
 """
 function Agents.remove_agent!(agent::AbstractAgent, model::ABM, pathfinder::AStar)
     delete!(pathfinder.agent_paths, agent.id)
-    Agents.remove_agent_from_model!(agent, model)
+    Agents.remove_agent_from_container!(agent, model)
     Agents.remove_agent_from_space!(agent, model)
 end

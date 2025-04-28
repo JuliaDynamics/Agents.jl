@@ -172,17 +172,17 @@ Return a valid `id` for creating a new agent with it.
 nextid(model::ABM) = notimplemented(model)
 
 """
-    add_agent_to_model!(agent, model)
+    add_agent_to_container!(agent, model)
 Add the agent to the model's internal container, if the addition is valid
 given the agent's ID and those already in the model. Otherwise error.
 """
-add_agent_to_model!(agent, model) = notimplemented(model)
+add_agent_to_container!(agent, model) = add_agent_to_container!(agent, agent_container(model))
 
 """
-    remove_agent_from_model!(agent, model)
+    remove_agent_from_container!(agent, model)
 Remove the agent from the model's internal container.
 """
-remove_agent_from_model!(agent, model) = notimplemented(model)
+remove_agent_from_container!(agent, model) = notimplemented(model)
 
 function Base.setindex!(m::ABM, args...; kwargs...)
     error("`setindex!` or `model[id] = agent` are invalid. Use `add_agent!` instead.")
