@@ -183,6 +183,6 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     return agentstring
 end
 
-Agents.convert_element_pos(s::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos[1:length(s.dims)])
+Agents.convert_element_pos(s::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos[1:length(spacesize(s))])
 
 Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)
